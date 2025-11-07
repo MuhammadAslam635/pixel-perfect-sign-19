@@ -42,14 +42,13 @@ const SignIn = () => {
 
   return (
     <div className="min-h-screen w-full relative overflow-hidden bg-[#1a1d23]">
-      {/* Geometric Pattern Background - Subtle dark grid */}
+      {/* Horizontal Lines Background */}
       <div className="absolute inset-0">
         <div className="absolute inset-0" style={{
           backgroundImage: `
-            linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px)
+            linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px)
           `,
-          backgroundSize: '60px 60px'
+          backgroundSize: '100% 60px'
         }} />
       </div>
 
@@ -103,7 +102,7 @@ const SignIn = () => {
                     placeholder="Enter Your Email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="h-12 bg-[#3a3d4a] border-[#565b6b] text-foreground placeholder:text-muted-foreground/50 rounded-xl focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                    className="h-10 bg-[#3a3d4a] border-[#565b6b] text-foreground placeholder:text-muted-foreground/50 rounded-xl focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                     disabled={loading}
                   />
                 </div>
@@ -121,7 +120,7 @@ const SignIn = () => {
                     placeholder="Enter Your Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="h-12 bg-[#3a3d4a] border-[#565b6b] text-foreground placeholder:text-muted-foreground/50 rounded-xl focus:border-primary focus:ring-1 focus:ring-primary transition-all pr-10"
+                    className="h-10 bg-[#3a3d4a] border-[#565b6b] text-foreground placeholder:text-muted-foreground/50 rounded-xl focus:border-primary focus:ring-1 focus:ring-primary transition-all pr-10"
                     disabled={loading}
                   />
                   <button
