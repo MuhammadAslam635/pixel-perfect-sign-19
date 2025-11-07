@@ -49,15 +49,15 @@ const SignUp = () => {
   };
 
   return (
-    <div className="min-h-screen w-full relative overflow-hidden bg-[#2a2d35]">
-      {/* Geometric Pattern Background - Large visible squares */}
+    <div className="min-h-screen w-full relative overflow-hidden bg-[#1a1d23]">
+      {/* Geometric Pattern Background - Subtle dark grid */}
       <div className="absolute inset-0">
         <div className="absolute inset-0" style={{
           backgroundImage: `
-            linear-gradient(rgba(79, 209, 197, 0.05) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(79, 209, 197, 0.05) 1px, transparent 1px)
+            linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px)
           `,
-          backgroundSize: '80px 80px'
+          backgroundSize: '60px 60px'
         }} />
       </div>
 
@@ -70,9 +70,9 @@ const SignUp = () => {
       <div className="min-h-screen flex items-center justify-center py-12 relative z-10">
         {/* Register Card */}
         <div className="w-full max-w-[420px] relative">
-          {/* Solid Cyan Gradient Circle at top-right corner behind card */}
+          {/* Gradient Circle at top-right corner behind card */}
           <div className="absolute -top-20 -right-20 w-[260px] h-[260px] -z-10">
-            <div className="w-full h-full rounded-full bg-gradient-to-br from-[#4FD1C5] to-[#4299E1] border-2 border-[#4FD1C5]/40" />
+            <div className="w-full h-full rounded-full bg-gradient-to-br from-[#66B0B7] to-[#3E64B3]" />
           </div>
 
           <div className="bg-[#3f4451]/60 backdrop-blur-2xl rounded-3xl p-10 border border-[#565b6b]/40 shadow-2xl">
@@ -200,7 +200,7 @@ const SignUp = () => {
               {/* Submit Button */}
               <Button
                 type="submit"
-                className="w-full h-12 bg-gradient-to-r from-[#4FD1C5] to-[#4299E1] hover:from-[#5FE1D5] hover:to-[#52A9F1] text-white font-medium text-base rounded-xl shadow-lg shadow-primary/20 transition-all duration-300 mt-8"
+                className="w-full h-12 bg-gradient-to-r from-[#66B0B7] to-[#3E64B3] hover:from-[#76C0C7] hover:to-[#4E74C3] text-white font-medium text-base rounded-xl shadow-lg transition-all duration-300 mt-8"
                 disabled={loading}
               >
                 {loading ? 'Registering...' : 'Register'}
