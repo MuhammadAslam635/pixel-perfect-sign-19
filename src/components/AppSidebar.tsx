@@ -27,7 +27,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar className={state === 'collapsed' ? 'w-14' : 'w-20'} collapsible="icon">
-      <SidebarContent className="bg-card/80 backdrop-blur-sm border-r border-border/50">
+      <SidebarContent className="bg-[#2A2A2A] backdrop-blur-sm border-r border-[#3A3A3A]/50">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-2 mt-4">
@@ -37,8 +37,8 @@ export function AppSidebar() {
                     <NavLink
                       to={item.url}
                       end
-                      className="flex items-center justify-center w-12 h-12 mx-auto rounded-xl hover:bg-muted/50 transition-smooth"
-                      activeClassName="bg-primary/20 text-primary"
+                      className="flex items-center justify-center w-12 h-12 mx-auto rounded-xl hover:bg-[#4A4A4A]/50 transition-smooth text-muted-foreground/70"
+                      activeClassName="bg-[#4A4A4A]/50 text-foreground"
                     >
                       <item.icon className="w-5 h-5" />
                     </NavLink>

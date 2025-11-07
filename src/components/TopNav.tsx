@@ -21,35 +21,35 @@ const navItems = [
 
 export function TopNav() {
   return (
-    <header className="h-16 border-b border-border/50 bg-card/30 backdrop-blur-sm flex items-center px-6 gap-4">
+    <header className="h-16 border-b border-[#3A3A3A]/50 bg-[#2A2A2A] backdrop-blur-sm flex items-center px-6 gap-4">
       <Logo />
       
-      <nav className="flex items-center gap-2 flex-1">
+      <nav className="flex items-center gap-1.5 flex-1">
         {navItems.map((item) => (
           <NavLink
             key={item.url}
             to={item.url}
             end
-            className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-muted/50 transition-smooth text-muted-foreground"
-            activeClassName="bg-primary/20 text-primary"
+            className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-[#4A4A4A]/50 transition-smooth text-muted-foreground/70"
+            activeClassName="bg-[#5B8FA9] text-foreground"
           >
             <item.icon className="w-5 h-5" />
           </NavLink>
         ))}
       </nav>
 
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="w-5 h-5" />
+      <div className="flex items-center gap-3">
+        <Button variant="ghost" size="icon" className="relative rounded-full hover:bg-[#4A4A4A]/50">
+          <Bell className="w-5 h-5 text-muted-foreground/70" />
           <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
         </Button>
         
-        <div className="flex items-center gap-3 bg-muted/20 rounded-full pl-3 pr-4 py-1.5">
+        <div className="flex items-center gap-3 bg-[#3A3A3A]/60 rounded-full pl-3 pr-4 py-1.5 border border-[#4A4A4A]/40">
           <Avatar className="w-8 h-8">
             <AvatarImage src="" />
-            <AvatarFallback className="bg-primary text-primary-foreground text-sm">ZK</AvatarFallback>
+            <AvatarFallback className="bg-primary/20 text-primary text-sm">ZK</AvatarFallback>
           </Avatar>
-          <span className="text-sm font-medium">Zubair Khan</span>
+          <span className="text-sm font-normal text-foreground">Zubair Khan</span>
         </div>
       </div>
     </header>

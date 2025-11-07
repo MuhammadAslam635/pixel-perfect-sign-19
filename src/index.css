@@ -8,17 +8,17 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Empa Tech Dark Theme - Exact colors from PDF */
-    --background: 220 20% 10%;
-    --background-gradient-start: 220 25% 8%;
-    --background-gradient-end: 210 50% 25%;
-    --foreground: 0 0% 98%;
+    /* Exact Dark Theme from Dashboard */
+    --background: 0 0% 16%;
+    --background-gradient-start: 0 0% 14%;
+    --background-gradient-end: 0 0% 18%;
+    --foreground: 0 0% 95%;
 
-    --card: 220 20% 12%;
-    --card-foreground: 0 0% 98%;
+    --card: 0 0% 20%;
+    --card-foreground: 0 0% 95%;
 
-    --popover: 220 20% 12%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 0 0% 20%;
+    --popover-foreground: 0 0% 95%;
 
     /* Primary Teal (#69B4B7) */
     --primary: 183 34% 56%;
@@ -29,29 +29,34 @@ All colors MUST be HSL.
     --secondary: 221 49% 47%;
     --secondary-foreground: 0 0% 98%;
 
-    --muted: 220 15% 20%;
-    --muted-foreground: 220 10% 60%;
+    --muted: 0 0% 25%;
+    --muted-foreground: 0 0% 55%;
 
     /* Accent */
     --accent: 183 34% 56%;
     --accent-foreground: 0 0% 98%;
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 70% 55%;
     --destructive-foreground: 0 0% 98%;
+    
+    /* Success/Green for badges */
+    --success: 140 70% 45%;
+    --success-foreground: 0 0% 98%;
 
-    --border: 220 15% 25%;
-    --input: 220 15% 18%;
+    --border: 0 0% 30%;
+    --input: 0 0% 22%;
     --ring: 183 34% 56%;
 
     --radius: 0.75rem;
 
-    /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(183 34% 56%), hsl(221 49% 47%));
-    --gradient-orb: radial-gradient(circle, hsl(183 34% 56% / 0.3), hsl(221 49% 47% / 0.2), transparent);
+    /* Gradients - Exact cyan to blue */
+    --gradient-primary: linear-gradient(135deg, hsl(183 34% 56%) 0%, hsl(221 49% 47%) 100%);
+    --gradient-chart: linear-gradient(180deg, hsl(183 34% 56% / 0.4) 0%, hsl(221 49% 47% / 0.2) 100%);
+    --gradient-orb: radial-gradient(circle, hsl(183 34% 56% / 0.2), hsl(221 49% 47% / 0.15), transparent);
     
     /* Shadows and Glows */
-    --shadow-cyan-glow: 0 0 40px hsl(183 34% 56% / 0.5), 0 0 80px hsl(183 34% 56% / 0.3);
-    --shadow-card: 0 10px 40px hsl(220 25% 5% / 0.5);
+    --shadow-cyan-glow: 0 0 40px hsl(183 34% 56% / 0.3), 0 0 80px hsl(183 34% 56% / 0.2);
+    --shadow-card: 0 4px 20px hsl(0 0% 0% / 0.3);
   }
 }
 
