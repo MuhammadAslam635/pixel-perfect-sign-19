@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Provider } from 'react-redux';
 import { store } from './store/store';
 import Index from "./pages/Index";
+import SignUpPage from "./pages/SignUpPage";
 import NotFound from "./pages/NotFound";
 import "./App.css";
 
@@ -20,6 +21,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/signup" element={<SignUpPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -7,6 +7,8 @@ import { Label } from '@/components/ui/label';
 import { loginStart, loginSuccess, loginFailure } from '@/store/slices/authSlice';
 import { RootState } from '@/store/store';
 import { toast } from 'sonner';
+import { Link } from 'react-router-dom';
+import Logo from './Logo';
 import orbImage from '@/assets/orb-cyan.jpg';
 
 const SignIn = () => {
@@ -14,7 +16,7 @@ const SignIn = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const dispatch = useDispatch();
-  const { loading, error } = useSelector((state: RootState) => state.auth);
+  const { loading } = useSelector((state: RootState) => state.auth);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,7 +28,6 @@ const SignIn = () => {
 
     dispatch(loginStart());
     
-    // Simulate API call
     setTimeout(() => {
       if (email && password.length >= 6) {
         dispatch(loginSuccess({ email, name: 'User' }));
@@ -39,120 +40,117 @@ const SignIn = () => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-empa-gradient flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Floating Orbs - Background */}
-      <div className="absolute top-10 right-10 w-96 h-96 orb-glow float-animation opacity-30" />
-      <div className="absolute bottom-20 left-10 w-72 h-72 orb-glow float-animation opacity-20" style={{ animationDelay: '2s' }} />
-      
-      {/* Main Orb with Image */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] pointer-events-none opacity-40">
+    <div className="min-h-screen w-full relative overflow-hidden bg-[#1a1d29]">
+      {/* Logo */}
+      <div className="absolute top-8 left-8 z-20">
+        <Logo />
+      </div>
+
+      {/* Large Orb on Right */}
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] translate-x-[200px] -translate-y-[100px]">
         <img 
           src={orbImage} 
           alt="" 
-          className="w-full h-full object-contain"
+          className="w-full h-full object-contain opacity-60"
         />
       </div>
 
-      {/* Sign In Card */}
-      <div className="relative z-10 w-full max-w-md">
-        <div className="card-glow bg-card/90 backdrop-blur-xl rounded-2xl p-8 border border-border/50">
-          {/* Logo/Title */}
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold gradient-text mb-2">EMPA TECH</h1>
-            <p className="text-muted-foreground text-sm">Sign in to your account</p>
-          </div>
-
-          {/* Sign In Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Email Field */}
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-foreground text-sm font-medium">
-                Email Address
-              </Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10 input-glow bg-input border-border text-foreground placeholder:text-muted-foreground h-12"
-                  disabled={loading}
-                />
-              </div>
-            </div>
-
-            {/* Password Field */}
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-foreground text-sm font-medium">
-                Password
-              </Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 pr-10 input-glow bg-input border-border text-foreground placeholder:text-muted-foreground h-12"
-                  disabled={loading}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+      {/* Content */}
+      <div className="min-h-screen flex items-center justify-start pl-[10%] relative z-10">
+        {/* Login Card */}
+        <div className="w-full max-w-[420px]">
+          <div className="bg-[#252836]/80 backdrop-blur-xl rounded-3xl p-10 border border-[#363948]">
+            {/* Icon */}
+            <div className="flex justify-center mb-6">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  className="w-8 h-8"
+                  stroke="currentColor"
+                  strokeWidth="2"
                 >
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </button>
+                  <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="currentColor" opacity="0.3" />
+                  <path d="M2 17L12 22L22 17" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M2 12L12 17L22 12" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
               </div>
             </div>
 
-            {/* Remember Me & Forgot Password */}
-            <div className="flex items-center justify-between text-sm">
-              <label className="flex items-center space-x-2 cursor-pointer">
-                <input 
-                  type="checkbox" 
-                  className="w-4 h-4 rounded border-border bg-input accent-primary"
-                />
-                <span className="text-muted-foreground">Remember me</span>
-              </label>
-              <a href="#" className="text-primary hover:text-primary-glow transition-colors font-medium">
-                Forgot password?
-              </a>
-            </div>
+            {/* Title */}
+            <h2 className="text-3xl font-semibold text-center text-foreground mb-2">
+              Login
+            </h2>
+            <p className="text-center text-muted-foreground text-sm mb-8">
+              <Link to="/signup" className="hover:text-primary transition-colors">
+                Register to continue
+              </Link>
+            </p>
 
-            {/* Error Message */}
-            {error && (
-              <div className="text-destructive text-sm bg-destructive/10 border border-destructive/20 rounded-lg p-3">
-                {error}
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Email */}
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-foreground/80 text-sm font-normal">
+                  Email
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="Enter Your Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="h-12 bg-[#1a1d29] border-[#363948] text-foreground placeholder:text-muted-foreground/50 rounded-xl focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                    disabled={loading}
+                  />
+                </div>
               </div>
-            )}
 
-            {/* Submit Button */}
-            <Button
-              type="submit"
-              className="w-full h-12 bg-primary hover:bg-primary-glow text-primary-foreground font-semibold text-base btn-glow"
-              disabled={loading}
-            >
-              {loading ? 'Signing in...' : 'Sign In'}
-            </Button>
+              {/* Password */}
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-foreground/80 text-sm font-normal">
+                  Password
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Enter Your Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="h-12 bg-[#1a1d29] border-[#363948] text-foreground placeholder:text-muted-foreground/50 rounded-xl focus:border-primary focus:ring-1 focus:ring-primary transition-all pr-10"
+                    disabled={loading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
+              </div>
 
-            {/* Sign Up Link */}
-            <div className="text-center text-sm">
-              <span className="text-muted-foreground">Don't have an account? </span>
-              <a href="#" className="text-primary hover:text-primary-glow font-medium transition-colors">
-                Sign up
-              </a>
-            </div>
-          </form>
+              {/* Submit Button */}
+              <Button
+                type="submit"
+                className="w-full h-12 bg-gradient-to-r from-[#4FD1C5] to-[#4299E1] hover:from-[#5FE1D5] hover:to-[#52A9F1] text-white font-medium text-base rounded-xl shadow-lg shadow-primary/20 transition-all duration-300 mt-8"
+                disabled={loading}
+              >
+                {loading ? 'Logging in...' : 'Login'}
+              </Button>
+
+              {/* Sign Up Link */}
+              <p className="text-center text-sm text-muted-foreground mt-6">
+                Don't have an account?{' '}
+                <Link to="/signup" className="text-primary hover:text-primary-glow font-medium transition-colors">
+                  Register here
+                </Link>
+              </p>
+            </form>
+          </div>
         </div>
-
-        {/* Footer Text */}
-        <p className="text-center text-muted-foreground text-xs mt-6">
-          © 2024 Empa Tech. All rights reserved.
-        </p>
       </div>
     </div>
   );
