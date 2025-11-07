@@ -2,26 +2,20 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { SidebarProvider } from '@/components/ui/sidebar';
-import { AppSidebar } from '@/components/AppSidebar';
 import { TopNav } from '@/components/TopNav';
 import { List, Edit, Sparkles, Send, Bell, ArrowRight, TrendingUp, Phone, Mail, Calendar, Target } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 const Dashboard = () => {
   return (
-    <SidebarProvider>
-      <div className="min-h-screen w-full bg-[#2A2A2A] flex">
-        <AppSidebar />
-        
-        <div className="flex-1 flex flex-col w-full">
-          <TopNav />
-          
-          <main className="flex-1 p-6 overflow-auto bg-[#2A2A2A]">
-            <div className="max-w-[1600px] mx-auto grid grid-cols-12 gap-6">
-              {/* Left Section - Greeting */}
-              <div className="col-span-12 lg:col-span-5">
-                <Card className="p-8 bg-[#3A3A3A]/60 backdrop-blur-sm border-[#4A4A4A]/40 h-[400px] flex flex-col justify-center relative overflow-hidden shadow-lg">
+    <div className="min-h-screen w-full bg-[#2A2A2A] flex flex-col">
+      <TopNav />
+      
+      <main className="flex-1 flex overflow-hidden bg-[#2A2A2A]">
+        <div className="w-full max-w-[1600px] mx-auto flex gap-6 p-6">
+          {/* Left Section - Fixed/Sticky */}
+          <div className="w-[500px] flex-shrink-0">
+            <Card className="p-8 bg-[#3A3A3A]/60 backdrop-blur-sm border-[#4A4A4A]/40 h-full flex flex-col justify-center relative overflow-hidden shadow-lg">
                   {/* Decorative icons */}
                   <div className="absolute top-6 left-6 flex gap-3">
                     <Button size="icon" variant="ghost" className="bg-[#4A4A4A]/50 rounded-xl hover:bg-[#5A5A5A]/50">
@@ -58,10 +52,10 @@ const Dashboard = () => {
                     </div>
                   </div>
                 </Card>
-              </div>
+          </div>
 
-              {/* Right Section - Stats & Widgets */}
-              <div className="col-span-12 lg:col-span-7 space-y-6">
+          {/* Right Section - Scrollable Cards */}
+          <div className="flex-1 overflow-y-auto scrollbar-hide space-y-6 pr-2">
                 {/* Campaign Stats */}
                 <Card className="p-6 bg-[#3A3A3A]/60 backdrop-blur-sm border-[#4A4A4A]/40 shadow-lg">
                   <div className="flex items-start justify-between mb-4">
@@ -247,12 +241,10 @@ const Dashboard = () => {
                     </div>
                   </Card>
                 </div>
-              </div>
-            </div>
-          </main>
+          </div>
         </div>
-      </div>
-    </SidebarProvider>
+      </main>
+    </div>
   );
 };
 
