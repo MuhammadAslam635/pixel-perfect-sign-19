@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { loginStart, loginSuccess, loginFailure } from '@/store/slices/authSlice';
 import { RootState } from '@/store/store';
 import { toast } from 'sonner';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Logo from './Logo';
 import orbImage from '@/assets/orb-cyan.jpg';
 import iconCyan from '@/assets/icon-cyan.png';
@@ -19,6 +19,7 @@ const SignIn = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { loading } = useSelector((state: RootState) => state.auth);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -35,6 +36,7 @@ const SignIn = () => {
       if (email && password.length >= 6) {
         dispatch(loginSuccess({ email, name: 'User' }));
         toast.success('Login successful!');
+        navigate('/dashboard');
       } else {
         dispatch(loginFailure('Invalid credentials'));
         toast.error('Invalid credentials');

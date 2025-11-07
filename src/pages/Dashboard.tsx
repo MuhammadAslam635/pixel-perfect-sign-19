@@ -1,158 +1,256 @@
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import Logo from '@/components/Logo';
-import { useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
-import { logout } from '@/store/slices/authSlice';
-import { LogOut, User, Settings, BarChart3, FileText } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { SidebarProvider } from '@/components/ui/sidebar';
+import { AppSidebar } from '@/components/AppSidebar';
+import { TopNav } from '@/components/TopNav';
+import { List, Edit, Sparkles, Send, Bell, ArrowRight, TrendingUp, Phone, Mail, Calendar, Target } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 const Dashboard = () => {
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
-
-  const handleLogout = () => {
-    dispatch(logout());
-    navigate('/');
-  };
-
   return (
-    <div className="min-h-screen bg-empa-gradient relative overflow-hidden">
-      {/* Background Grid Pattern */}
-      <div 
-        className="absolute inset-0 opacity-10"
-        style={{
-          backgroundImage: `url('/src/assets/grid-pattern.png')`,
-          backgroundSize: '100px 100px',
-          backgroundRepeat: 'repeat',
-        }}
-      />
-
-      {/* Glowing Orbs */}
-      <div className="absolute top-20 right-20 w-96 h-96 orb-glow opacity-40 float-animation" />
-      <div className="absolute bottom-20 left-20 w-80 h-80 orb-glow opacity-30" style={{ animationDelay: '2s' }} />
-
-      {/* Header */}
-      <header className="relative z-10 border-b border-border/50 bg-card/30 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Logo />
-          <Button 
-            variant="ghost" 
-            onClick={handleLogout}
-            className="flex items-center gap-2"
-          >
-            <LogOut className="w-4 h-4" />
-            Logout
-          </Button>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="relative z-10 container mx-auto px-4 py-12">
-        <div className="max-w-6xl mx-auto">
-          {/* Welcome Section */}
-          <div className="mb-12">
-            <h1 className="text-4xl font-bold mb-2 gradient-text">
-              Welcome to Your Dashboard
-            </h1>
-            <p className="text-muted-foreground text-lg">
-              Manage your account and explore your data
-            </p>
-          </div>
-
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-            <Card className="p-6 card-glow bg-card/50 backdrop-blur-sm border-border/50">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-primary/20 rounded-lg">
-                  <User className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Users</p>
-                  <p className="text-2xl font-bold">1,234</p>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-6 card-glow bg-card/50 backdrop-blur-sm border-border/50">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-secondary/20 rounded-lg">
-                  <BarChart3 className="w-6 h-6 text-secondary" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Analytics</p>
-                  <p className="text-2xl font-bold">89%</p>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-6 card-glow bg-card/50 backdrop-blur-sm border-border/50">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-accent/20 rounded-lg">
-                  <FileText className="w-6 h-6 text-accent" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Reports</p>
-                  <p className="text-2xl font-bold">45</p>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-6 card-glow bg-card/50 backdrop-blur-sm border-border/50">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-primary-glow/20 rounded-lg">
-                  <Settings className="w-6 h-6 text-primary-glow" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Settings</p>
-                  <p className="text-2xl font-bold">12</p>
-                </div>
-              </div>
-            </Card>
-          </div>
-
-          {/* Main Content Area */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Recent Activity */}
-            <Card className="lg:col-span-2 p-6 card-glow bg-card/50 backdrop-blur-sm border-border/50">
-              <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
-              <div className="space-y-4">
-                {[1, 2, 3, 4].map((item) => (
-                  <div key={item} className="flex items-center gap-4 p-3 rounded-lg bg-muted/20 hover:bg-muted/30 transition-smooth">
-                    <div className="w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center text-sm font-bold">
-                      {item}
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium">Activity Item {item}</p>
-                      <p className="text-sm text-muted-foreground">Description of the activity</p>
-                    </div>
-                    <p className="text-sm text-muted-foreground">2h ago</p>
+    <SidebarProvider>
+      <div className="min-h-screen w-full bg-empa-gradient flex">
+        <AppSidebar />
+        
+        <div className="flex-1 flex flex-col w-full">
+          <TopNav />
+          
+          <main className="flex-1 p-6 overflow-auto">
+            <div className="max-w-[1600px] mx-auto grid grid-cols-12 gap-6">
+              {/* Left Section - Greeting */}
+              <div className="col-span-12 lg:col-span-5">
+                <Card className="p-8 bg-card/50 backdrop-blur-sm border-border/50 card-glow h-[400px] flex flex-col justify-center relative overflow-hidden">
+                  {/* Decorative icons */}
+                  <div className="absolute top-6 left-6 flex gap-3">
+                    <Button size="icon" variant="ghost" className="bg-muted/30 rounded-xl">
+                      <List className="w-5 h-5" />
+                    </Button>
+                    <Button size="icon" variant="ghost" className="bg-muted/30 rounded-xl">
+                      <Edit className="w-5 h-5" />
+                    </Button>
                   </div>
-                ))}
-              </div>
-            </Card>
 
-            {/* Quick Actions */}
-            <Card className="p-6 card-glow bg-card/50 backdrop-blur-sm border-border/50">
-              <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
-              <div className="space-y-3">
-                <Button className="w-full btn-glow" variant="default">
-                  New Project
-                </Button>
-                <Button className="w-full" variant="outline">
-                  View Reports
-                </Button>
-                <Button className="w-full" variant="secondary">
-                  Settings
-                </Button>
-                <Button className="w-full" variant="ghost">
-                  Help & Support
-                </Button>
+                  {/* Glowing orb effect */}
+                  <div className="absolute bottom-10 left-10 w-32 h-32 bg-primary/20 rounded-full blur-3xl" />
+                  
+                  <div className="relative z-10">
+                    <h1 className="text-4xl font-bold mb-3">
+                      Good Morning, Zubair!
+                    </h1>
+                    <p className="text-xl text-muted-foreground">
+                      How can I assist You?
+                    </p>
+                  </div>
+
+                  {/* AI Assistant Input */}
+                  <div className="absolute bottom-6 left-6 right-6">
+                    <div className="flex items-center gap-2 bg-muted/30 backdrop-blur-sm rounded-2xl px-4 py-3 border border-border/50">
+                      <Sparkles className="w-5 h-5 text-primary" />
+                      <Input 
+                        placeholder="Ask CSOA Assistant"
+                        className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                      />
+                      <Button size="icon" className="rounded-xl bg-primary hover:bg-primary/90">
+                        <Send className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
               </div>
-            </Card>
-          </div>
+
+              {/* Right Section - Stats & Widgets */}
+              <div className="col-span-12 lg:col-span-7 space-y-6">
+                {/* Campaign Stats */}
+                <Card className="p-6 bg-card/50 backdrop-blur-sm border-border/50 card-glow">
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Total Campaigns</p>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary" className="bg-primary/20 text-primary border-0">
+                          <TrendingUp className="w-3 h-3 mr-1" />
+                          +3.4%
+                        </Badge>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm text-muted-foreground mb-1">Campaigns</p>
+                      <p className="text-lg font-semibold">200</p>
+                    </div>
+                  </div>
+                  
+                  <div className="mb-4">
+                    <h2 className="text-4xl font-bold">220,342.76</h2>
+                  </div>
+
+                  {/* Mini Chart Visualization */}
+                  <div className="h-20 flex items-end gap-1">
+                    {[40, 65, 45, 70, 55, 80, 60, 75, 50, 85, 70, 90].map((height, i) => (
+                      <div 
+                        key={i} 
+                        className="flex-1 bg-gradient-primary rounded-t opacity-60 transition-all hover:opacity-100"
+                        style={{ height: `${height}%` }}
+                      />
+                    ))}
+                  </div>
+                </Card>
+
+                <div className="grid grid-cols-2 gap-6">
+                  {/* Communication Hub */}
+                  <Card className="p-5 bg-card/50 backdrop-blur-sm border-border/50 card-glow">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <Target className="w-5 h-5 text-primary" />
+                        <h3 className="font-semibold">Communication Hub</h3>
+                      </div>
+                      <Button size="icon" variant="ghost" className="w-8 h-8 rounded-full">
+                        <Bell className="w-4 h-4" />
+                      </Button>
+                    </div>
+
+                    <div className="space-y-1 mb-4">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Recents</span>
+                        <Button variant="link" className="h-auto p-0 text-xs">View All</Button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3 p-2 rounded-lg bg-muted/20 hover:bg-muted/30 transition-smooth">
+                        <Avatar className="w-8 h-8">
+                          <AvatarFallback className="bg-primary/20 text-primary text-xs">SJ</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">Call with Sarah Johnson</p>
+                          <p className="text-xs text-muted-foreground">3m 45s</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3 p-2 rounded-lg bg-muted/20 hover:bg-muted/30 transition-smooth">
+                        <Avatar className="w-8 h-8">
+                          <AvatarFallback className="bg-secondary/20 text-secondary text-xs">ME</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">Email from Mark Evans</p>
+                          <p className="text-xs text-muted-foreground">9:12 AM</p>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+
+                  {/* Proposals */}
+                  <Card className="p-5 bg-card/50 backdrop-blur-sm border-border/50 card-glow">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-semibold">Proposals To Send</h3>
+                      <Button variant="link" className="h-auto p-0 text-xs">
+                        View All <ArrowRight className="w-3 h-3 ml-1" />
+                      </Button>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="p-3 rounded-lg bg-muted/20 hover:bg-muted/30 transition-smooth">
+                        <p className="text-sm font-medium mb-1">Send Proposal to ABC Corp</p>
+                        <p className="text-xs text-muted-foreground mb-2">Website Redesign</p>
+                        <Badge variant="secondary" className="bg-primary/20 text-primary text-xs border-0">
+                          Sent ✓
+                        </Badge>
+                      </div>
+
+                      <div className="p-3 rounded-lg bg-muted/20 hover:bg-muted/30 transition-smooth">
+                        <p className="text-sm font-medium mb-1">Prepare Deck for Delta Group</p>
+                        <p className="text-xs text-muted-foreground mb-2">Branding Presentation</p>
+                        <Badge variant="secondary" className="bg-destructive/20 text-destructive text-xs border-0">
+                          Pending
+                        </Badge>
+                      </div>
+                    </div>
+                  </Card>
+                </div>
+
+                <div className="grid grid-cols-2 gap-6">
+                  {/* Top Leads */}
+                  <Card className="p-5 bg-card/50 backdrop-blur-sm border-border/50 card-glow">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <Target className="w-5 h-5 text-primary" />
+                        <h3 className="font-semibold">Top Leads</h3>
+                      </div>
+                      <Button variant="link" className="h-auto p-0 text-xs">
+                        View All <ArrowRight className="w-3 h-3 ml-1" />
+                      </Button>
+                    </div>
+
+                    <div className="space-y-3">
+                      {[
+                        { name: 'Sarah Malik', score: 92 },
+                        { name: 'John Doe', score: 85 },
+                        { name: 'Emily Chen', score: 78 },
+                      ].map((lead) => (
+                        <div key={lead.name} className="flex items-center justify-between p-2 rounded-lg bg-muted/20">
+                          <span className="text-sm font-medium">{lead.name}</span>
+                          <div className="flex items-center gap-2">
+                            <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-gradient-primary rounded-full"
+                                style={{ width: `${lead.score}%` }}
+                              />
+                            </div>
+                            <span className="text-xs text-muted-foreground">Score: {lead.score}%</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </Card>
+
+                  {/* Calendar */}
+                  <Card className="p-5 bg-card/50 backdrop-blur-sm border-border/50 card-glow">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-5 h-5 text-primary" />
+                        <h3 className="font-semibold">Calendar</h3>
+                      </div>
+                      <Button variant="link" className="h-auto p-0 text-xs">
+                        View All <ArrowRight className="w-3 h-3 ml-1" />
+                      </Button>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-2">Today</p>
+                        <div className="flex items-start gap-3 p-2 rounded-lg bg-muted/20">
+                          <div className="w-1 h-12 bg-primary rounded-full" />
+                          <div className="flex-1">
+                            <p className="text-sm font-medium">Meeting with Sarah Malik</p>
+                            <div className="flex items-center gap-1 mt-1">
+                              <Avatar className="w-5 h-5">
+                                <AvatarFallback className="bg-primary/20 text-primary text-[10px]">SM</AvatarFallback>
+                              </Avatar>
+                              <span className="text-xs text-muted-foreground">10:00 AM</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-2">Tomorrow</p>
+                        <div className="flex items-start gap-3 p-2 rounded-lg bg-muted/20">
+                          <div className="w-1 h-12 bg-secondary rounded-full" />
+                          <div className="flex-1">
+                            <p className="text-sm font-medium">Meeting with Sarah Malik</p>
+                            <span className="text-xs text-muted-foreground">2:00 PM</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                </div>
+              </div>
+            </div>
+          </main>
         </div>
-      </main>
-    </div>
+      </div>
+    </SidebarProvider>
   );
 };
 
