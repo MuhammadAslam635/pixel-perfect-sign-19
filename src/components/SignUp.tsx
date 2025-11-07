@@ -55,20 +55,20 @@ const SignUp = () => {
         <Logo />
       </div>
 
-      {/* Large Orb on Right */}
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] translate-x-[200px] -translate-y-[100px]">
-        <img 
-          src={iconCyan} 
-          alt="" 
-          className="w-full h-full object-contain opacity-60"
-        />
-      </div>
-
       {/* Content */}
       <div className="min-h-screen flex items-center justify-center py-12 relative z-10">
         {/* Register Card */}
-        <div className="w-full max-w-[420px]">
-          <div className="bg-[#252836]/80 backdrop-blur-xl rounded-3xl p-10 border border-[#363948]">
+        <div className="w-full max-w-[420px] relative">
+          {/* Cyan circle at top-right corner behind card */}
+          <div className="absolute -top-16 -right-16 w-[200px] h-[200px] -z-10">
+            <img 
+              src={iconCyan} 
+              alt="" 
+              className="w-full h-full object-contain opacity-50"
+            />
+          </div>
+
+          <div className="bg-[#252836]/40 backdrop-blur-2xl rounded-3xl p-10 border border-[#363948]/50 shadow-2xl">
             {/* Icon */}
             <div className="flex justify-center mb-6">
               <div className="w-16 h-16 rounded-full overflow-hidden">
