@@ -49,13 +49,15 @@ const SignUp = () => {
   };
 
   return (
-    <div className="min-h-screen w-full relative overflow-hidden bg-[#1a1d29]">
-      {/* Geometric Pattern Background */}
-      <div className="absolute inset-0 opacity-[0.08]">
+    <div className="min-h-screen w-full relative overflow-hidden bg-[#2a2d35]">
+      {/* Geometric Pattern Background - Large visible squares */}
+      <div className="absolute inset-0">
         <div className="absolute inset-0" style={{
-          backgroundImage: `linear-gradient(rgba(79, 209, 197, 0.3) 1px, transparent 1px),
-                           linear-gradient(90deg, rgba(79, 209, 197, 0.3) 1px, transparent 1px)`,
-          backgroundSize: '60px 60px'
+          backgroundImage: `
+            linear-gradient(rgba(79, 209, 197, 0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(79, 209, 197, 0.05) 1px, transparent 1px)
+          `,
+          backgroundSize: '80px 80px'
         }} />
       </div>
 
@@ -68,13 +70,12 @@ const SignUp = () => {
       <div className="min-h-screen flex items-center justify-center py-12 relative z-10">
         {/* Register Card */}
         <div className="w-full max-w-[420px] relative">
-          {/* Large Gradient Circle at top-right corner behind card */}
-          <div className="absolute -top-24 -right-24 w-[280px] h-[280px] -z-10">
-            <div className="w-full h-full rounded-full bg-gradient-to-br from-[#4FD1C5] via-[#5FB8E8] to-[#4299E1] blur-3xl opacity-40" />
-            <div className="absolute inset-0 rounded-full border-2 border-[#4FD1C5]/30" />
+          {/* Solid Cyan Gradient Circle at top-right corner behind card */}
+          <div className="absolute -top-20 -right-20 w-[260px] h-[260px] -z-10">
+            <div className="w-full h-full rounded-full bg-gradient-to-br from-[#4FD1C5] to-[#4299E1] border-2 border-[#4FD1C5]/40" />
           </div>
 
-          <div className="bg-[#252836]/40 backdrop-blur-2xl rounded-3xl p-10 border border-[#363948]/50 shadow-2xl">
+          <div className="bg-[#3f4451]/60 backdrop-blur-2xl rounded-3xl p-10 border border-[#565b6b]/40 shadow-2xl">
             {/* Icon */}
             <div className="flex justify-center mb-6">
               <div className="w-16 h-16 rounded-full overflow-hidden">
@@ -109,7 +110,7 @@ const SignUp = () => {
                   placeholder="Enter Your Company Name"
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
-                  className="h-12 bg-[#1a1d29] border-[#363948] text-foreground placeholder:text-muted-foreground/50 rounded-xl focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                  className="h-12 bg-[#3a3d4a] border-[#565b6b] text-foreground placeholder:text-muted-foreground/50 rounded-xl focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                   disabled={loading}
                 />
               </div>
@@ -125,7 +126,7 @@ const SignUp = () => {
                   placeholder="Enter Your Industry Name"
                   value={industry}
                   onChange={(e) => setIndustry(e.target.value)}
-                  className="h-12 bg-[#1a1d29] border-[#363948] text-foreground placeholder:text-muted-foreground/50 rounded-xl focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                  className="h-12 bg-[#3a3d4a] border-[#565b6b] text-foreground placeholder:text-muted-foreground/50 rounded-xl focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                   disabled={loading}
                 />
               </div>
@@ -141,7 +142,7 @@ const SignUp = () => {
                   placeholder="Enter Your Email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="h-12 bg-[#1a1d29] border-[#363948] text-foreground placeholder:text-muted-foreground/50 rounded-xl focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                  className="h-12 bg-[#3a3d4a] border-[#565b6b] text-foreground placeholder:text-muted-foreground/50 rounded-xl focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                   disabled={loading}
                 />
               </div>
@@ -158,7 +159,7 @@ const SignUp = () => {
                     placeholder="Enter Your Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="h-12 bg-[#1a1d29] border-[#363948] text-foreground placeholder:text-muted-foreground/50 rounded-xl focus:border-primary focus:ring-1 focus:ring-primary transition-all pr-10"
+                    className="h-12 bg-[#3a3d4a] border-[#565b6b] text-foreground placeholder:text-muted-foreground/50 rounded-xl focus:border-primary focus:ring-1 focus:ring-primary transition-all pr-10"
                     disabled={loading}
                   />
                   <button
@@ -183,7 +184,7 @@ const SignUp = () => {
                     placeholder="Enter Your Password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="h-12 bg-[#1a1d29] border-[#363948] text-foreground placeholder:text-muted-foreground/50 rounded-xl focus:border-primary focus:ring-1 focus:ring-primary transition-all pr-10"
+                    className="h-12 bg-[#3a3d4a] border-[#565b6b] text-foreground placeholder:text-muted-foreground/50 rounded-xl focus:border-primary focus:ring-1 focus:ring-primary transition-all pr-10"
                     disabled={loading}
                   />
                   <button
