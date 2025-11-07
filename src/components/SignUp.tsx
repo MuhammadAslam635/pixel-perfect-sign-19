@@ -8,6 +8,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import Logo from './Logo';
 import orbImage from '@/assets/orb-cyan.jpg';
 import iconCyan from '@/assets/icon-cyan.png';
+import gridPattern from '@/assets/grid-pattern.png';
 
 const SignUp = () => {
   const [companyName, setCompanyName] = useState('');
@@ -49,20 +50,18 @@ const SignUp = () => {
   };
 
   return (
-    <div className="min-h-screen w-full relative overflow-hidden bg-[#1a1d23]">
-      {/* Horizontal Lines Background at bottom */}
+    <div className="min-h-screen w-full relative overflow-hidden bg-[#1A1A1A]">
+      {/* Grid Pattern Background */}
       <div className="absolute inset-0">
-        <div className="absolute bottom-0 left-0 right-0 h-[300px]" style={{
-          backgroundImage: `
-            repeating-linear-gradient(
-              to bottom,
-              transparent,
-              transparent 39px,
-              rgba(255, 255, 255, 0.02) 39px,
-              rgba(255, 255, 255, 0.02) 40px
-            )
-          `
-        }} />
+        <div 
+          className="absolute bottom-0 left-0 right-0 h-[400px] opacity-30"
+          style={{
+            backgroundImage: `url(${gridPattern})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'bottom center',
+            backgroundRepeat: 'no-repeat'
+          }}
+        />
       </div>
 
       {/* Logo */}
