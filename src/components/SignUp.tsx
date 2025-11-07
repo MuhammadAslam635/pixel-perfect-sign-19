@@ -54,9 +54,9 @@ const SignUp = () => {
       <div className="absolute inset-0">
         <div className="absolute inset-0" style={{
           backgroundImage: `
-            linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px)
+            linear-gradient(transparent 0%, transparent calc(100% - 1px), rgba(255, 255, 255, 0.015) calc(100% - 1px), rgba(255, 255, 255, 0.015) 100%)
           `,
-          backgroundSize: '100% 60px'
+          backgroundSize: '100% 40px'
         }} />
       </div>
 
