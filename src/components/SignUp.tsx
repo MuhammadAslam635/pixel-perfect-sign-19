@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { Link, useNavigate } from 'react-router-dom';
 import Logo from './Logo';
 import orbImage from '@/assets/orb-cyan.jpg';
+import iconCyan from '@/assets/icon-cyan.png';
 
 const SignUp = () => {
   const [companyName, setCompanyName] = useState('');
@@ -57,7 +58,7 @@ const SignUp = () => {
       {/* Large Orb on Right */}
       <div className="absolute top-0 right-0 w-[600px] h-[600px] translate-x-[200px] -translate-y-[100px]">
         <img 
-          src={orbImage} 
+          src={iconCyan} 
           alt="" 
           className="w-full h-full object-contain opacity-60"
         />
@@ -72,7 +73,7 @@ const SignUp = () => {
             <div className="flex justify-center mb-6">
               <div className="w-16 h-16 rounded-full overflow-hidden">
                 <img 
-                  src={orbImage} 
+                  src={iconCyan} 
                   alt="" 
                   className="w-full h-full object-cover"
                 />
