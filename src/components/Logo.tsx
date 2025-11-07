@@ -1,21 +1,36 @@
 const Logo = () => {
   return (
     <div className="flex items-center gap-3">
-      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent" />
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          className="w-6 h-6 relative z-10"
-          stroke="currentColor"
-          strokeWidth="2"
-        >
-          <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="currentColor" opacity="0.3" />
-          <path d="M2 17L12 22L22 17" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M2 12L12 17L22 12" strokeLinecap="round" strokeLinejoin="round" />
+      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#66B0B7] to-[#3E64B3] flex items-center justify-center p-1.5">
+        <svg viewBox="0 0 38 34" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+          <path opacity="0.7" d="M21.2201 3.13507C15.5524 3.13507 10.6715 6.5898 8.58143 11.5076H10.2781C12.2697 7.4627 16.413 4.68417 21.2078 4.68417C27.6746 4.68417 32.9735 9.73717 33.3669 16.0934H33.3424C33.7972 16.4991 34.2767 16.9294 34.7439 17.372C34.8669 17.2367 34.9283 17.0646 34.9283 16.8679C34.9529 9.29457 28.7934 3.13507 21.2201 3.13507ZM21.2201 6.1595C17.2736 6.1595 13.8188 8.31102 11.9624 11.5076H13.8065C15.4786 9.20851 18.1711 7.70859 21.2201 7.70859C24.8592 7.70859 28.0803 9.81093 29.5557 13.0567C29.5557 13.0567 30.2442 13.5361 31.2523 14.3353C31.2646 14.3107 31.2892 14.2984 31.3015 14.2738C31.449 14.0771 31.4859 13.8189 31.4121 13.5853C29.986 9.14703 25.8919 6.1595 21.2201 6.1595ZM21.2201 0C13.7943 0 7.47493 4.8317 5.23735 11.5076H6.87251C9.04862 5.69231 14.6672 1.5368 21.2324 1.5368C29.6786 1.5368 36.5635 8.40937 36.5635 16.8556C36.5635 17.581 36.5143 18.3187 36.4037 19.0317C36.8217 19.4866 37.2274 19.9661 37.5962 20.4333C37.7069 20.3226 37.7806 20.1874 37.8052 20.0399C38.0019 18.9949 38.1003 17.9252 38.1003 16.8556C38.1003 7.56105 30.5269 0 21.2201 0Z" fill="url(#paint0_linear)"/>
+          <path d="M34.3874 26.1625C34.0555 25.9043 33.5637 25.9658 33.3055 26.2977C30.3795 30.0475 25.9781 32.1867 21.2201 32.1867C14.6303 32.1867 8.9995 28.0066 6.84798 22.1545H5.21283C7.43811 28.8673 13.7697 33.7235 21.2201 33.7235C26.4453 33.7235 31.2893 31.363 34.5104 27.2321C34.7809 26.9124 34.7194 26.433 34.3874 26.1625ZM21.2201 0C13.7943 0 7.475 4.8317 5.23741 11.5076H6.87257C9.04868 5.69231 14.6672 1.5368 21.2324 1.5368C29.6787 1.5368 36.5635 8.40937 36.5635 16.8556C36.5635 17.581 36.5144 18.3187 36.4037 19.0317C36.4037 19.0563 36.3914 19.0932 36.3914 19.1178H0.774547C0.344243 19.1178 0 19.462 0 19.8923C0 20.3226 0.344243 20.6669 0.762253 20.6669H36.957C37.1414 20.6792 37.3135 20.6423 37.461 20.5317C37.4979 20.5071 37.5471 20.4702 37.5717 20.4333C37.6823 20.3226 37.7561 20.1874 37.7807 20.0399C37.9774 18.9949 38.0758 17.9252 38.0758 16.8556C38.1003 7.56105 30.527 0 21.2201 0Z" fill="url(#paint1_linear)"/>
+          <path d="M32.2113 23.7773C31.8671 23.5314 31.3753 23.6052 31.1294 23.9617C28.8427 27.1583 25.1421 29.0639 21.2201 29.0639C16.4007 29.0639 12.2329 26.2485 10.2535 22.179H8.5569C10.6347 27.1214 15.5278 30.613 21.2201 30.613C25.6338 30.613 29.8139 28.4615 32.3957 24.8715C32.6416 24.5027 32.5679 24.0232 32.2113 23.7773Z" fill="url(#paint2_linear)"/>
+          <defs>
+            <linearGradient id="paint0_linear" x1="24.8206" y1="11.0304" x2="18.2069" y2="18.8346" gradientUnits="userSpaceOnUse">
+              <stop stopColor="white"/>
+              <stop offset="1"/>
+            </linearGradient>
+            <linearGradient id="paint1_linear" x1="0.351952" y1="14.0232" x2="53.3614" y2="21.2415" gradientUnits="userSpaceOnUse">
+              <stop stopColor="#69B4B7"/>
+              <stop offset="0.1587" stopColor="#66AFB7"/>
+              <stop offset="0.3504" stopColor="#5EA0B6"/>
+              <stop offset="0.5591" stopColor="#5188B6"/>
+              <stop offset="0.7795" stopColor="#3F66B4"/>
+              <stop offset="1" stopColor="#283CB3"/>
+            </linearGradient>
+            <linearGradient id="paint2_linear" x1="-4.28199" y1="18.3786" x2="41.2836" y2="15.6717" gradientUnits="userSpaceOnUse">
+              <stop stopColor="#69B4B7"/>
+              <stop offset="0.1587" stopColor="#66AFB7"/>
+              <stop offset="0.3504" stopColor="#5EA0B6"/>
+              <stop offset="0.5591" stopColor="#5188B6"/>
+              <stop offset="0.7795" stopColor="#3F66B4"/>
+              <stop offset="1" stopColor="#283CB3"/>
+            </linearGradient>
+          </defs>
         </svg>
       </div>
-      <span className="text-xl font-semibold text-primary">EmpaTech OS</span>
+      <span className="text-xl font-semibold bg-gradient-to-r from-[#66B0B7] to-[#3E64B3] bg-clip-text text-transparent">EmpaTech OS</span>
     </div>
   );
 };

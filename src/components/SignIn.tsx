@@ -42,13 +42,18 @@ const SignIn = () => {
 
   return (
     <div className="min-h-screen w-full relative overflow-hidden bg-[#1a1d23]">
-      {/* Horizontal Lines Background */}
+      {/* Horizontal Lines Background at bottom */}
       <div className="absolute inset-0">
-        <div className="absolute inset-0" style={{
+        <div className="absolute bottom-0 left-0 right-0 h-[300px]" style={{
           backgroundImage: `
-            linear-gradient(transparent 0%, transparent calc(100% - 1px), rgba(255, 255, 255, 0.015) calc(100% - 1px), rgba(255, 255, 255, 0.015) 100%)
-          `,
-          backgroundSize: '100% 40px'
+            repeating-linear-gradient(
+              to bottom,
+              transparent,
+              transparent 39px,
+              rgba(255, 255, 255, 0.02) 39px,
+              rgba(255, 255, 255, 0.02) 40px
+            )
+          `
         }} />
       </div>
 
@@ -68,21 +73,25 @@ const SignIn = () => {
 
           <div className="bg-[#3f4451]/60 backdrop-blur-2xl rounded-3xl p-10 border border-[#565b6b]/40 shadow-2xl">
             {/* Icon */}
-            <div className="flex justify-center mb-6">
-              <div className="w-16 h-16 rounded-full overflow-hidden">
-                <img 
-                  src={iconCyan} 
-                  alt="" 
-                  className="w-full h-full object-cover"
-                />
+            <div className="flex justify-center mb-4">
+              <div className="w-12 h-12">
+                <svg width="48" height="48" viewBox="0 0 222 222" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path opacity="0.7" d="M21.2201 3.13507C15.5524 3.13507 10.6715 6.5898 8.58143 11.5076H10.2781C12.2697 7.4627 16.413 4.68417 21.2078 4.68417C27.6746 4.68417 32.9735 9.73717 33.3669 16.0934H33.3424C33.7972 16.4991 34.2767 16.9294 34.7439 17.372C34.8669 17.2367 34.9283 17.0646 34.9283 16.8679C34.9529 9.29457 28.7934 3.13507 21.2201 3.13507ZM21.2201 6.1595C17.2736 6.1595 13.8188 8.31102 11.9624 11.5076H13.8065C15.4786 9.20851 18.1711 7.70859 21.2201 7.70859C24.8592 7.70859 28.0803 9.81093 29.5557 13.0567C29.5557 13.0567 30.2442 13.5361 31.2523 14.3353C31.2646 14.3107 31.2892 14.2984 31.3015 14.2738C31.449 14.0771 31.4859 13.8189 31.4121 13.5853C29.986 9.14703 25.8919 6.1595 21.2201 6.1595ZM21.2201 0C13.7943 0 7.47493 4.8317 5.23735 11.5076H6.87251C9.04862 5.69231 14.6672 1.5368 21.2324 1.5368C29.6786 1.5368 36.5635 8.40937 36.5635 16.8556C36.5635 17.581 36.5143 18.3187 36.4037 19.0317C36.8217 19.4866 37.2274 19.9661 37.5962 20.4333C37.7069 20.3226 37.7806 20.1874 37.8052 20.0399C38.0019 18.9949 38.1003 17.9252 38.1003 16.8556C38.1003 7.56105 30.5269 0 21.2201 0Z" fill="url(#paint0_linear_112_188)"/>
+                  <defs>
+                    <linearGradient id="paint0_linear_112_188" x1="24.8206" y1="11.0304" x2="18.2069" y2="18.8346" gradientUnits="userSpaceOnUse">
+                      <stop stopColor="#66B0B7"/>
+                      <stop offset="1" stopColor="#3E64B3"/>
+                    </linearGradient>
+                  </defs>
+                </svg>
               </div>
             </div>
 
             {/* Title */}
-            <h2 className="text-3xl font-semibold text-center text-foreground mb-2">
+            <h2 className="text-2xl font-semibold text-center text-foreground mb-1">
               Login
             </h2>
-            <p className="text-center text-muted-foreground text-sm mb-8">
+            <p className="text-center text-muted-foreground/60 text-xs mb-6">
               <Link to="/signup" className="hover:text-primary transition-colors">
                 Register to continue
               </Link>
