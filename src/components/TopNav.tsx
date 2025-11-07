@@ -12,7 +12,7 @@ const navItems = [
   { icon: MessageCircle, label: 'Messages', url: '/dashboard/messages' },
   { icon: Calendar, label: 'Calendar', url: '/dashboard/calendar' },
   { icon: FileText, label: 'Files', url: '/dashboard/files' },
-  { icon: Users, label: 'Team', url: '/dashboard/team' },
+  { icon: Users, label: 'Team', url: '/dashboard/companies' },
   { icon: Rocket, label: 'Projects', url: '/dashboard/projects' },
   { icon: Car, label: 'Fleet', url: '/dashboard/fleet' },
   { icon: Map, label: 'Map', url: '/dashboard/map' },
