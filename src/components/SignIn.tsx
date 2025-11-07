@@ -43,11 +43,11 @@ const SignIn = () => {
   return (
     <div className="min-h-screen w-full relative overflow-hidden bg-[#1a1d29]">
       {/* Geometric Pattern Background */}
-      <div className="absolute inset-0 opacity-[0.03]">
+      <div className="absolute inset-0 opacity-[0.08]">
         <div className="absolute inset-0" style={{
-          backgroundImage: `linear-gradient(rgba(79, 209, 197, 0.1) 1px, transparent 1px),
-                           linear-gradient(90deg, rgba(79, 209, 197, 0.1) 1px, transparent 1px)`,
-          backgroundSize: '50px 50px'
+          backgroundImage: `linear-gradient(rgba(79, 209, 197, 0.3) 1px, transparent 1px),
+                           linear-gradient(90deg, rgba(79, 209, 197, 0.3) 1px, transparent 1px)`,
+          backgroundSize: '60px 60px'
         }} />
       </div>
 
@@ -61,7 +61,10 @@ const SignIn = () => {
         {/* Login Card */}
         <div className="w-full max-w-[420px] relative">
           {/* Large Gradient Circle at top-right corner behind card */}
-          <div className="absolute -top-24 -right-24 w-[280px] h-[280px] -z-10 rounded-full bg-gradient-to-br from-[#4FD1C5] via-[#5FB8E8] to-[#4299E1] blur-3xl opacity-40" />
+          <div className="absolute -top-24 -right-24 w-[280px] h-[280px] -z-10">
+            <div className="w-full h-full rounded-full bg-gradient-to-br from-[#4FD1C5] via-[#5FB8E8] to-[#4299E1] blur-3xl opacity-40" />
+            <div className="absolute inset-0 rounded-full border-2 border-[#4FD1C5]/30" />
+          </div>
 
           <div className="bg-[#252836]/40 backdrop-blur-2xl rounded-3xl p-10 border border-[#363948]/50 shadow-2xl">
             {/* Icon */}
