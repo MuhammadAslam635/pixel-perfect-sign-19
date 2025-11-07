@@ -1,42 +1,122 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+/* Empa Tech Custom Styles */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+* {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+/* Background Gradient */
+.bg-empa-gradient {
+  background: linear-gradient(135deg, 
+    hsl(var(--background-gradient-start)) 0%, 
+    hsl(var(--background-gradient-end)) 100%
+  );
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
+/* Glowing Orb Effect */
+.orb-glow {
+  position: relative;
+  background: radial-gradient(circle at center,
+    hsl(190 100% 50% / 0.4) 0%,
+    hsl(190 100% 50% / 0.2) 30%,
+    hsl(210 100% 50% / 0.15) 50%,
+    transparent 70%
+  );
+  filter: blur(40px);
+  animation: pulse-glow 4s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.8;
+    transform: scale(1);
   }
-  to {
-    transform: rotate(360deg);
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
+/* Card with glow effect */
+.card-glow {
+  box-shadow: 
+    0 0 30px hsl(190 100% 50% / 0.1),
+    0 10px 40px hsl(220 25% 5% / 0.5);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-glow:hover {
+  box-shadow: 
+    0 0 40px hsl(190 100% 50% / 0.2),
+    0 15px 50px hsl(220 25% 5% / 0.6);
+  transform: translateY(-2px);
+}
+
+/* Input with cyan glow focus */
+.input-glow:focus {
+  outline: none;
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 20px hsl(190 100% 50% / 0.3);
+}
+
+/* Button glow effect */
+.btn-glow {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.btn-glow::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: hsl(190 100% 70% / 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.btn-glow:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.btn-glow:active {
+  transform: scale(0.98);
+}
+
+/* Text glow */
+.text-glow {
+  text-shadow: 0 0 20px hsl(190 100% 50% / 0.5);
+}
+
+/* Smooth transitions */
+.transition-smooth {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Floating animation for orbs */
+.float-animation {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
   }
 }
 
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, hsl(190 100% 50%), hsl(210 100% 60%));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
