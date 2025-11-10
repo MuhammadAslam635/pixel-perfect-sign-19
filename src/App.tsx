@@ -5,8 +5,12 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Provider } from 'react-redux';
 import { store } from './store/store';
-import Index from "./pages/Index";
-import SignUpPage from "./pages/SignUpPage";
+import Index from "./pages/auth/Index";
+import SignUpPage from "./pages/auth/SignUpPage";
+import ForgotPassword from "./pages/auth/ForgotPassword";
+import ResetPassword from "./pages/auth/ResetPassword";
+import VerifyEmail from "./pages/auth/VerifyEmail";
+import ResendEmail from "./pages/auth/ResendEmail";
 import Dashboard from "./pages/Dashboard";
 import Companies from "./pages/Companies";
 import CompanyDetail from "./pages/CompanyDetail";
@@ -25,6 +29,10 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/signup" element={<SignUpPage />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/resend-email" element={<ResendEmail />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/dashboard/companies" element={<Companies />} />
             <Route path="/dashboard/companies/:id" element={<CompanyDetail />} />

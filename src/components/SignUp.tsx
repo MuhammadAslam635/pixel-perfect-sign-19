@@ -52,8 +52,9 @@ const SignUp = () => {
 
   return (
     <div className="min-h-screen w-full relative overflow-hidden bg-[#1A1A1A]">
-      {/* Grid Pattern Background */}
+      {/* Grid Pattern Background with teal glow overlay (keep PNG) */}
       <div className="absolute inset-0">
+        {/* Base grid image */}
         <div 
           className="absolute bottom-0 left-0 right-0 h-[400px] opacity-30"
           style={{
@@ -61,6 +62,16 @@ const SignUp = () => {
             backgroundSize: 'cover',
             backgroundPosition: 'bottom center',
             backgroundRepeat: 'no-repeat'
+          }}
+        />
+        {/* Teal glow overlay */}
+        <div
+          className="absolute bottom-0 left-0 right-0 h-[400px] pointer-events-none"
+          style={{
+            background:
+              'radial-gradient(800px 180px at 75% 20%, rgba(105,179,183,0.20), transparent 60%),\n' +
+              'radial-gradient(600px 160px at 30% 40%, rgba(105,179,183,0.12), transparent 65%)',
+            mixBlendMode: 'screen',
           }}
         />
       </div>
@@ -71,34 +82,48 @@ const SignUp = () => {
       </div>
 
       {/* Content */}
-      <div className="min-h-screen flex items-center justify-center py-12 relative z-10">
+      <div className="min-h-screen flex items-center justify-center py-6 relative z-10">
         {/* Register Card */}
-        <div className="w-full max-w-[420px] relative">
+        <div className="w-full max-w-[500px] relative">
           {/* Gradient Circle at top-right corner behind card */}
           <div className="absolute -top-20 -right-20 w-[260px] h-[260px] -z-10">
             <div className="w-full h-full rounded-full bg-gradient-to-br from-[#66B0B7] to-[#3E64B3]" />
           </div>
 
-          <div className="bg-[#3f4451]/60 backdrop-blur-2xl rounded-3xl p-10 border border-[#565b6b]/40 shadow-2xl">
+          {/* Under-card teal glow (appears behind form, on grid) */}
+          <div
+            className="absolute -bottom-10 left-1/2 -translate-x-1/2 w-[85%] h-36 pointer-events-none -z-10"
+            style={{
+              background:
+                'radial-gradient(60% 90% at 50% 0%, rgba(105,179,183,0.35), rgba(105,179,183,0.15) 35%, transparent 70%)',
+              filter: 'blur(18px)',
+              opacity: 0.6,
+              mixBlendMode: 'screen',
+            }}
+          />
+
+          {/* Glassmorphism Card with tighter spacing */}
+          <div className="relative rounded-3xl p-7 border border-white/15 bg-white/10 backdrop-blur-3xl shadow-card ring-1 ring-white/10">
+            <div className="pointer-events-none absolute inset-0 rounded-3xl bg-gradient-to-br from-white/20 via-white/10 to-transparent" />
             {/* Icon */}
             <div className="flex justify-center mb-4">
-              <img src={cardIcon} alt="Logo" className="w-12 h-12" />
+              <img src={cardIcon} alt="Logo" className="w-6 h-6" />
             </div>
 
             {/* Title */}
             <h2 className="text-2xl font-semibold text-center text-foreground mb-1">
               Register
             </h2>
-            <p className="text-center text-muted-foreground/60 text-xs mb-6">
+            <p className="text-center text-muted-foreground/60 text-xs mb-4">
               <Link to="/" className="hover:text-primary transition-colors">
                 Sign in to continue
               </Link>
             </p>
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-3">
               {/* Company Name */}
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label htmlFor="companyName" className="text-foreground/80 text-sm font-normal">
                   Company Name
                 </Label>
@@ -108,13 +133,13 @@ const SignUp = () => {
                   placeholder="Enter Your Company Name"
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
-                  className="h-10 bg-[#3a3d4a] border-[#565b6b] text-foreground placeholder:text-muted-foreground/50 rounded-xl focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                  className="text-foreground placeholder:text-muted-foreground/60 transition-all"
                   disabled={loading}
                 />
               </div>
 
               {/* Industry */}
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label htmlFor="industry" className="text-foreground/80 text-sm font-normal">
                   Industry
                 </Label>
@@ -124,13 +149,13 @@ const SignUp = () => {
                   placeholder="Enter Your Industry Name"
                   value={industry}
                   onChange={(e) => setIndustry(e.target.value)}
-                  className="h-10 bg-[#3a3d4a] border-[#565b6b] text-foreground placeholder:text-muted-foreground/50 rounded-xl focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                  className="text-foreground placeholder:text-muted-foreground/60 transition-all"
                   disabled={loading}
                 />
               </div>
 
               {/* Email */}
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label htmlFor="email" className="text-foreground/80 text-sm font-normal">
                   Email
                 </Label>
@@ -140,13 +165,13 @@ const SignUp = () => {
                   placeholder="Enter Your Email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="h-10 bg-[#3a3d4a] border-[#565b6b] text-foreground placeholder:text-muted-foreground/50 rounded-xl focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                  className="text-foreground placeholder:text-muted-foreground/60 transition-all"
                   disabled={loading}
                 />
               </div>
 
               {/* Password */}
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label htmlFor="password" className="text-foreground/80 text-sm font-normal">
                   Password
                 </Label>
@@ -157,7 +182,7 @@ const SignUp = () => {
                     placeholder="Enter Your Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="h-10 bg-[#3a3d4a] border-[#565b6b] text-foreground placeholder:text-muted-foreground/50 rounded-xl focus:border-primary focus:ring-1 focus:ring-primary transition-all pr-10"
+                    className="text-foreground placeholder:text-muted-foreground/60 transition-all pr-10"
                     disabled={loading}
                   />
                   <button
@@ -171,7 +196,7 @@ const SignUp = () => {
               </div>
 
               {/* Confirm Password */}
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label htmlFor="confirmPassword" className="text-foreground/80 text-sm font-normal">
                   Confirm Password
                 </Label>
@@ -182,7 +207,7 @@ const SignUp = () => {
                     placeholder="Enter Your Password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="h-10 bg-[#3a3d4a] border-[#565b6b] text-foreground placeholder:text-muted-foreground/50 rounded-xl focus:border-primary focus:ring-1 focus:ring-primary transition-all pr-10"
+                    className="text-foreground placeholder:text-muted-foreground/60 transition-all pr-10"
                     disabled={loading}
                   />
                   <button
@@ -198,7 +223,7 @@ const SignUp = () => {
               {/* Submit Button */}
               <Button
                 type="submit"
-                className="w-full h-12 bg-gradient-to-r from-[#66B0B7] to-[#3E64B3] hover:from-[#76C0C7] hover:to-[#4E74C3] text-white font-medium text-base rounded-xl shadow-lg transition-all duration-300 mt-8"
+                className="w-full h-[46px] bg-gradient-to-r from-[#66B0B7] to-[#3E64B3] hover:from-[#76C0C7] hover:to-[#4E74C3] text-white font-medium text-base rounded-xl shadow-lg transition-all duration-300 mt-4"
                 disabled={loading}
               >
                 {loading ? 'Registering...' : 'Register'}

@@ -1,0 +1,100 @@
+import React, { useEffect, useRef, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom';
+import {
+  Home,
+  BarChart3,
+  Users,
+  MessageSquare,
+  CalendarDays,
+  TrendingUp,
+  ArrowUpRight,
+  Target,
+  BookOpen,
+  Settings,
+  Bell,
+} from 'lucide-react';
+type NavLink = {
+    id: string;
+    label: string;
+    icon: typeof Home;
+    path: string;
+    match?: (pathname: string) => boolean;
+  };
+  
+  const navLinks: NavLink[] = [
+    { id: 'home', label: 'Home', icon: Home, path: '/dashboard' },
+    {
+      id: 'companies',
+      label: 'Companies',
+      icon: BarChart3,
+      path: '/dashboard/companies',
+      match: (pathname: string) => pathname.startsWith('/dashboard/companies'),
+    },
+    { id: 'users', label: 'Users', icon: Users, path: '/dashboard/users' },
+    { id: 'chat', label: 'Chat', icon: MessageSquare, path: '/dashboard/chat' },
+    { id: 'Booking', label: 'Booking', icon: CalendarDays, path: '/dashboard/booking' },
+    { id: 'Leads', label: 'Leads', icon: TrendingUp, path: '/dashboard/leads' },
+    { id: 'Prospects', label: 'Prospects', icon: ArrowUpRight, path: '/dashboard/prospects' },
+    { id: 'Results', label: 'Results', icon: Target, path: '/dashboard/results' },
+    { id: 'docs', label: 'Docs', icon: BookOpen, path: '/dashboard/knowledge-base' },
+    { id: 'settings', label: 'Settings', icon: Settings, path: '/dashboard' },
+  ];
+  
+  const notifications = [
+    { title: 'Meeting starts in 30 minutes', meta: 'Calendar' },
+    { title: 'New lead: Sarah Malik', meta: 'CRM' },
+    { title: 'Proposal sent to ABC Corp', meta: 'Sales' },
+  ];
+  
+  const profileMenu = [
+    { title: 'Profile', meta: 'View your profile' },
+    { title: 'Settings', meta: 'Manage preferences' },
+    { title: 'Sign out', meta: 'Log out of EmpaTech OS' },
+  ];
+  
+  const resolveActiveNav = (pathname: string) => {
+    const match = navLinks.find((link) => (link.match ? link.match(pathname) : link.path === pathname));
+    return match?.id ?? 'home';
+  };
+export const Navigation = () => {
+    const navigate = useNavigate();
+    const location = useLocation();
+    const [activeNav, setActiveNav] = useState(resolveActiveNav(location.pathname));
+  
+    const actionsRef = useRef<HTMLDivElement>(null);
+  
+    useEffect(() => {
+      setActiveNav(resolveActiveNav(location.pathname));
+    }, [location.pathname]);
+  
+    const handleNavigate = (link: NavLink) => {
+      setActiveNav(link.id);
+      navigate(link.path);
+    };
+  return (
+    <nav className="scrollbar-hide flex-1 min-w-0 w-full lg:w-[780px] flex items-center justify-start lg:justify-center gap-2 overflow-x-auto flex-nowrap snap-x snap-mandatory pl-2 sm:pl-3 md:pl-4 pr-2 sm:pr-4">
+        {navLinks.map((link) => {
+          const Icon = link.icon;
+          const isActive = activeNav === link.id;
+          return (
+            <button
+              key={link.id}
+              className={`group relative overflow-visible flex-none aspect-square flex h-10 w-10 items-center justify-center rounded-full border border-white/40 px-0 text-xs font-medium tracking-wide transition sm:text-sm ${isActive
+                  ? 'bg-[#2F2F2F]/60 text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] justify-start w-auto h-10 px-2.5 gap-2 before:from-white/25 z-10'
+                  : 'bg-white/5 text-white/85 hover:bg-[#2F2F2F]/60 hover:text-white hover:shadow-[0_16px_28px_rgba(0,0,0,0.35)] hover:justify-start hover:w-auto hover:h-10 hover:px-2.5 hover:gap-2 hover:z-10'
+                } snap-start lg:snap-center before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/15 before:to-transparent hover:before:from-white/25`}
+              onClick={() => handleNavigate(link)}
+              aria-label={link.label}
+              type="button"
+            >
+              <Icon
+                className={`h-[20px] w-[20px] flex-shrink-0 transition ${isActive ? 'text-white drop-shadow-[0_8px_18px_rgba(62,100,180,0.45)]' : 'text-white/85 group-hover:text-white'
+                  }`}
+               />
+              <span className={`${isActive ? 'inline ml-2' : 'hidden group-hover:inline ml-2'}`}>{link.label}</span>
+            </button>
+          );
+        })}
+      </nav>
+  )
+}
