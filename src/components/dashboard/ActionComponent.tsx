@@ -31,7 +31,7 @@ export const ActionComponent = () => {
       ];
       
   return (
-    <div className="flex min-w-[100px] justify-end" ref={actionsRef}>
+    <div className="flex min-w-[100px] justify-end relative" ref={actionsRef}>
         <div className="flex items-center gap-1 rounded-full border border-white/15 bg-[linear-gradient(135deg,rgba(58,62,75,0.82),rgba(28,30,40,0.94))] py-1.5 px-3 shadow-[0_20px_34px_rgba(0,0,0,0.38)] backdrop-blur">
           <button
           aria-label="Toggle notifications"
