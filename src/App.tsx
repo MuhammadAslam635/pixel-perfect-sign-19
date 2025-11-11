@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Provider } from "react-redux";
 import { store } from "./store/store";
+import ProtectedRoute from "./components/ProtectedRoute";
+import PublicRoute from "./components/PublicRoute";
 import Index from "./pages/auth/Index";
 import SignUpPage from "./pages/auth/SignUpPage";
 import ForgotPassword from "./pages/auth/ForgotPassword";
@@ -27,18 +29,82 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/signup" element={<SignUpPage />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/verify-email" element={<VerifyEmail />} />
-            <Route path="/resend-email" element={<ResendEmail />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/dashboard/companies" element={<Companies />} />
+            {/* Public Routes - Redirect to dashboard if already logged in */}
+            <Route
+              path="/"
+              element={
+                <PublicRoute>
+                  <Index />
+                </PublicRoute>
+              }
+            />
+            <Route
+              path="/signup"
+              element={
+                <PublicRoute>
+                  <SignUpPage />
+                </PublicRoute>
+              }
+            />
+            <Route
+              path="/forgot-password"
+              element={
+                <PublicRoute>
+                  <ForgotPassword />
+                </PublicRoute>
+              }
+            />
+            <Route
+              path="/reset-password"
+              element={
+                <PublicRoute>
+                  <ResetPassword />
+                </PublicRoute>
+              }
+            />
+            <Route
+              path="/verify-email"
+              element={
+                <PublicRoute>
+                  <VerifyEmail />
+                </PublicRoute>
+              }
+            />
+            <Route
+              path="/resend-email"
+              element={
+                <PublicRoute>
+                  <ResendEmail />
+                </PublicRoute>
+              }
+            />
+
+            {/* Protected Routes - Only accessible when logged in */}
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/companies"
+              element={
+                <ProtectedRoute>
+                  <Companies />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/dashboard/companies/:id"
-              element={<CompanyDetail />}
+              element={
+                <ProtectedRoute>
+                  <CompanyDetail />
+                </ProtectedRoute>
+              }
             />
+
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
