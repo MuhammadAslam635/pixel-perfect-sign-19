@@ -6,6 +6,11 @@ import { Badge } from '@/components/ui/badge';
 import { Search, Download, Plus, Trash2, MoreVertical, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
+const TotalCompanies = 512;
+const TotalLeads = 8542;
+const TotalOutreach = 5236;
+const TotalResponse = 3256;
+
 const companiesData = [
   {
     id: 1,
@@ -85,7 +90,7 @@ const Companies = () => {
           </div>
 
           {/* Table Card */}
-          <div className="bg-[#2A2A2A] rounded-2xl border border-[#3A3A3A] overflow-hidden">
+          <div className="bg-[#222B2C] rounded-2xl border border-[#3A3A3A] overflow-hidden">
             {/* Search and Filters */}
             <div className="p-6 flex items-center justify-between border-b border-[#3A3A3A]">
               <div className="relative w-80">

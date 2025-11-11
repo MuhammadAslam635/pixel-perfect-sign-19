@@ -14,8 +14,8 @@ import ResetPassword from "./pages/auth/ResetPassword";
 import VerifyEmail from "./pages/auth/VerifyEmail";
 import ResendEmail from "./pages/auth/ResendEmail";
 import Dashboard from "./pages/Dashboard";
-import Companies from "./pages/Companies";
-import CompanyDetail from "./pages/CompanyDetail";
+import Companies from "./pages/companies/Indexbasic";
+import CompanyDetail from "./pages/companies";
 import NotFound from "./pages/NotFound";
 import "./App.css";
 
