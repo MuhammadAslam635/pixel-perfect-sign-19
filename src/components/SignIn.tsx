@@ -113,7 +113,8 @@ const SignIn = () => {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors z-20 cursor-pointer"
+              aria-label="Toggle password visibility"
             >
               {showPassword ? (
                 <EyeOff className="h-5 w-5" />

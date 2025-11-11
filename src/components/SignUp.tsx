@@ -119,7 +119,7 @@ const SignUp = () => {
         <div className="w-full max-w-[500px] relative">
           {/* Gradient Circle at top-right corner behind card */}
           <div className="absolute -top-20 -right-20 w-[260px] h-[260px] -z-10">
-            <div className="w-full h-full rounded-full bg-gradient-to-br from-[#66B0B7] to-[#3E64B3]" />
+            <div className="mt-16 w-full h-full rounded-full bg-gradient-to-br from-[#66B0B7] to-[#3E64B3]" />
           </div>
 
           {/* Under-card teal glow (appears behind form, on grid) */}
@@ -135,7 +135,7 @@ const SignUp = () => {
           />
 
           {/* Glassmorphism Card with tighter spacing */}
-          <div className="relative rounded-3xl p-7 border border-white/15 bg-white/10 backdrop-blur-3xl shadow-card ring-1 ring-white/10">
+          <div className="mt-24 relative rounded-3xl p-7 border border-white/15 bg-white/1 backdrop-blur-[200px] shadow-card ring-1 ring-white/10 back">
             <div className="pointer-events-none absolute inset-0 rounded-3xl bg-gradient-to-br from-white/20 via-white/10 to-transparent" />
             {/* Icon */}
             <div className="flex justify-center mb-4">
@@ -232,7 +232,8 @@ const SignUp = () => {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors z-20 cursor-pointer"
+                    aria-label="Toggle password visibility"
                   >
                     {showPassword ? (
                       <EyeOff className="h-5 w-5" />
@@ -264,7 +265,8 @@ const SignUp = () => {
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors z-20 cursor-pointer"
+                    aria-label="Toggle confirm password visibility"
                   >
                     {showConfirmPassword ? (
                       <EyeOff className="h-5 w-5" />

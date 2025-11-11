@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +11,8 @@ import { authService } from "@/services/auth.service";
 const ResetPassword = () => {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -87,13 +90,29 @@ const ResetPassword = () => {
           >
             New Password
           </Label>
-          <Input
-            id="password"
-            type="password"
-            placeholder="Enter New Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+          <div className="relative">
+            <Input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              placeholder="Enter New Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="text-foreground placeholder:text-muted-foreground/60 transition-all pr-10"
+              disabled={loading}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors z-20 cursor-pointer"
+              aria-label="Toggle password visibility"
+            >
+              {showPassword ? (
+                <EyeOff className="h-5 w-5" />
+              ) : (
+                <Eye className="h-5 w-5" />
+              )}
+            </button>
+          </div>
         </div>
         <div className="space-y-1">
           <Label
@@ -102,13 +121,29 @@ const ResetPassword = () => {
           >
             Confirm Password
           </Label>
-          <Input
-            id="confirm"
-            type="password"
-            placeholder="Confirm New Password"
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-          />
+          <div className="relative">
+            <Input
+              id="confirm"
+              type={showConfirmPassword ? "text" : "password"}
+              placeholder="Confirm New Password"
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              className="text-foreground placeholder:text-muted-foreground/60 transition-all pr-10"
+              disabled={loading}
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors z-20 cursor-pointer"
+              aria-label="Toggle confirm password visibility"
+            >
+              {showConfirmPassword ? (
+                <EyeOff className="h-5 w-5" />
+              ) : (
+                <Eye className="h-5 w-5" />
+              )}
+            </button>
+          </div>
         </div>
         <Button
           type="submit"
