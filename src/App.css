@@ -7,11 +7,7 @@
 html,
 body {
   margin: 0;
-  /* Global background is driven by Tailwind variables in index.css */
-  /* Allow the document to scroll; scrolling is managed per container */
-  overflow: visible;
-  /* Remove positional offsets that can interfere with layout */
-  position: static;
+  overflow-x: hidden;
 }
 
 /* Background Gradient */

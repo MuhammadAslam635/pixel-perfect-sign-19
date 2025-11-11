@@ -84,6 +84,8 @@ All colors MUST be HSL.
     min-height: 100vh;
     height: auto;
     width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
   }
 
   body {

@@ -31,13 +31,13 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout>
-      <main className="relative px-5 sm:px-8 lg:px-12 xl:px-[66px] mt-16 sm:mt-20 lg:mt-24 xl:mt-28 mb-0 flex flex-col lg:flex-row items-start gap-5 md:gap-6 lg:gap-8 text-white flex-1 min-h-0 overflow-hidden ">
+      <main className="relative px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] mt-16 sm:mt-20 lg:mt-24 xl:mt-28 mb-0 flex flex-col lg:flex-row items-start gap-5 md:gap-6 lg:gap-8 text-white flex-1 min-h-0 overflow-hidden max-w-full">
         <div className="w-full lg:basis-1/2 lg:min-w-0 h-full flex-1 min-h-0">
           <AssistantPanel isDesktop={isDesktop} />
         </div>
 
         <div
-          className="scrollbar-hide  lg:flex w-full flex-col gap-4 overflow-y-scroll pr-1 md:gap-5 lg:basis-1/2 lg:min-w-0 lg:pr-3 h-full min-h-0 bg-transparent"
+          className="scrollbar-hide lg:flex w-full flex-col gap-4 overflow-y-scroll pr-1 md:gap-5 lg:basis-1/2 lg:min-w-0 lg:pr-3 h-full min-h-0 bg-transparent"
         >
           <StatsCard />
 

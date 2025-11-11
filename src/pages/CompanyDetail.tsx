@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { TopNav } from '@/components/TopNav';
+import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
@@ -69,10 +69,10 @@ const CompanyDetail = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen w-full bg-[#1A1A1A] flex flex-col">
-      <TopNav />
-      
-      <main className="flex-1 p-6 bg-[#1A1A1A]">
+    <div className="min-h-screen w-full bg-[#1A1A1A] flex flex-col overflow-x-hidden">
+      <DashboardHeader />
+
+      <main className="flex-1 p-6 bg-[#1A1A1A] mt-20">
         <div className="max-w-[1600px] mx-auto">
           {/* Tabs */}
           <div className="flex items-center gap-3 mb-6">

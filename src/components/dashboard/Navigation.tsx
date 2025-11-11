@@ -79,19 +79,19 @@ export const Navigation = () => {
           return (
             <button
               key={link.id}
-              className={`group relative overflow-visible flex-none aspect-square flex h-10 w-10 items-center justify-center rounded-full border border-white/40 px-0 text-xs font-medium tracking-wide transition sm:text-sm ${isActive
+              className={`group relative overflow-visible flex-none aspect-square flex h-10 w-10 items-center justify-center rounded-full border border-white/40 px-0 text-xs font-medium tracking-wide transition-[width,background-color,box-shadow,padding,gap] duration-[400ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] sm:text-sm ${isActive
                   ? 'bg-[#2F2F2F]/60 text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] justify-start w-auto h-10 px-2.5 gap-2 before:from-white/25 z-10'
                   : 'bg-white/5 text-white/85 hover:bg-[#2F2F2F]/60 hover:text-white hover:shadow-[0_16px_28px_rgba(0,0,0,0.35)] hover:justify-start hover:w-auto hover:h-10 hover:px-2.5 hover:gap-2 hover:z-10'
-                } snap-start lg:snap-center before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/15 before:to-transparent hover:before:from-white/25`}
+                } snap-start lg:snap-center before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/15 before:to-transparent before:transition-all before:duration-300 before:ease-[cubic-bezier(0.4,0,0.2,1)] hover:before:from-white/25 hover:before:duration-200`}
               onClick={() => handleNavigate(link)}
               aria-label={link.label}
               type="button"
             >
               <Icon
-                className={`h-[20px] w-[20px] flex-shrink-0 transition ${isActive ? 'text-white drop-shadow-[0_8px_18px_rgba(62,100,180,0.45)]' : 'text-white/85 group-hover:text-white'
+                className={`h-[20px] w-[20px] flex-shrink-0 transition-[color,filter] duration-[250ms] ease-[cubic-bezier(0.4,0,0.2,1)] ${isActive ? 'text-white drop-shadow-[0_8px_18px_rgba(62,100,180,0.45)]' : 'text-white/85 group-hover:text-white group-hover:drop-shadow-[0_4px_12px_rgba(255,255,255,0.3)]'
                   }`}
                />
-              <span className={`${isActive ? 'inline ml-2' : 'hidden group-hover:inline ml-2'}`}>{link.label}</span>
+              <span className={`whitespace-nowrap transition-[opacity,transform] duration-[350ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] ${isActive ? 'inline ml-2 opacity-100 scale-100 translate-x-0' : 'hidden group-hover:inline ml-2 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 -translate-x-1 group-hover:translate-x-0'}`}>{link.label}</span>
             </button>
           );
         })}
