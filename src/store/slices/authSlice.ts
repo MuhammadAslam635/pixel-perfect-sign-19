@@ -1,31 +1,46 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { getUserData, clearAuthData } from "@/utils/authHelpers";
+
+interface User {
+  email: string;
+  name: string;
+  company?: string;
+  role?: string;
+  _id?: string;
+  [key: string]: any;
+}
 
 interface AuthState {
   isAuthenticated: boolean;
-  user: {
-    email: string;
-    name: string;
-  } | null;
+  user: User | null;
   loading: boolean;
   error: string | null;
 }
 
+// Initialize state from localStorage
+const userData = getUserData();
 const initialState: AuthState = {
-  isAuthenticated: false,
-  user: null,
+  isAuthenticated: !!userData?.token,
+  user: userData
+    ? {
+        email: userData.email,
+        name: userData.company || userData.email,
+        ...userData,
+      }
+    : null,
   loading: false,
   error: null,
 };
 
 const authSlice = createSlice({
-  name: 'auth',
+  name: "auth",
   initialState,
   reducers: {
     loginStart: (state) => {
       state.loading = true;
       state.error = null;
     },
-    loginSuccess: (state, action: PayloadAction<{ email: string; name: string }>) => {
+    loginSuccess: (state, action: PayloadAction<User>) => {
       state.loading = false;
       state.isAuthenticated = true;
       state.user = action.payload;
@@ -39,9 +54,16 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.user = null;
       state.error = null;
+      clearAuthData();
+    },
+    updateUser: (state, action: PayloadAction<Partial<User>>) => {
+      if (state.user) {
+        state.user = { ...state.user, ...action.payload };
+      }
     },
   },
 });
 
-export const { loginStart, loginSuccess, loginFailure, logout } = authSlice.actions;
+export const { loginStart, loginSuccess, loginFailure, logout, updateUser } =
+  authSlice.actions;
 export default authSlice.reducer;
