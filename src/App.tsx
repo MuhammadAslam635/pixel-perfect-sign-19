@@ -16,6 +16,7 @@ import ResendEmail from "./pages/auth/ResendEmail";
 import Dashboard from "./pages/Dashboard";
 import Companies from "./pages/companies/Indexbasic";
 import CompanyDetail from "./pages/companies";
+import ChatPage from "./pages/Chat";
 import NotFound from "./pages/NotFound";
 import "./App.css";
 
@@ -104,6 +105,7 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            <Route path="/dashboard/chat" element={<ChatPage />} />
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

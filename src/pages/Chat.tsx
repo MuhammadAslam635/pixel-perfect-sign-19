@@ -1,0 +1,174 @@
+import { useEffect, useMemo, useState } from "react";
+import { AxiosError } from "axios";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import DashboardLayout from "@/components/dashboard/DashboardLayout";
+import ChatList from "@/components/chat/ChatList";
+import ChatMessages from "@/components/chat/ChatMessages";
+import ChatComposer from "@/components/chat/ChatComposer";
+import {
+  fetchChatById,
+  fetchChatList,
+  sendChatMessage,
+  SendChatMessagePayload,
+} from "@/services/chat.service";
+import { ChatDetail, ChatSummary } from "@/types/chat.types";
+import { useToast } from "@/components/ui/use-toast";
+import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
+
+const ChatPage = () => {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
+  const [composerValue, setComposerValue] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+
+  const {
+    data: chatList = [],
+    isLoading: isChatListLoading,
+    isFetching: isChatListFetching,
+  } = useQuery({
+    queryKey: ["chatList"],
+    queryFn: fetchChatList,
+    staleTime: 30_000,
+  });
+
+  const {
+    data: selectedChat,
+    isFetching: isChatDetailFetching,
+    isLoading: isChatDetailLoading,
+  } = useQuery<ChatDetail | null>({
+    queryKey: ["chatDetail", selectedChatId],
+    queryFn: () => fetchChatById(selectedChatId ?? ""),
+    enabled: Boolean(selectedChatId),
+    staleTime: 10_000,
+  });
+
+  useEffect(() => {
+    if (chatList.length === 0 || selectedChatId) {
+      return;
+    }
+    setSelectedChatId(chatList[0]._id);
+  }, [chatList, selectedChatId]);
+
+  const selectChatFromList = (chatId: string) => {
+    setSelectedChatId(chatId);
+  };
+
+  const { mutate: mutateSendMessage, isPending: isSendingMessage } =
+    useMutation({
+      mutationFn: (payload: SendChatMessagePayload) => sendChatMessage(payload),
+      onSuccess: (response) => {
+        const newChatId = response.data.chatId;
+        setComposerValue("");
+        setPendingFile(null);
+        setSelectedChatId(newChatId);
+        queryClient.invalidateQueries({ queryKey: ["chatList"] });
+        queryClient.invalidateQueries({
+          queryKey: ["chatDetail", newChatId],
+        });
+      },
+      onError: (error: AxiosError<{ message?: string }>) => {
+        toast({
+          title: "Unable to send message",
+          description:
+            error.response?.data?.message ??
+            "We could not deliver your message. Please try again.",
+          variant: "destructive",
+        });
+      },
+    });
+
+  const handleSendMessage = () => {
+    if (!composerValue.trim()) {
+      return;
+    }
+
+    mutateSendMessage({
+      message: composerValue.trim(),
+      chatId: selectedChatId,
+      file: pendingFile ?? undefined,
+    });
+  };
+
+  const handleStartNewChat = () => {
+    setSelectedChatId(null);
+    setComposerValue("");
+    setPendingFile(null);
+  };
+
+  const resolvedChatTitle = useMemo(() => {
+    if (selectedChat?.title) {
+      return selectedChat.title;
+    }
+    const summary =
+      chatList.find((chat) => chat._id === selectedChatId) ?? null;
+    return summary?.title;
+  }, [chatList, selectedChat, selectedChatId]);
+
+  const isConversationLoading =
+    isChatDetailLoading || isChatDetailFetching || isChatListFetching;
+
+  const selectedMessages = selectedChat?.messages ?? [];
+
+  return (
+    <DashboardLayout>
+      <main className="relative mt-24 flex w-full flex-1 justify-center px-4 pb-10 sm:px-6 md:px-10 lg:px-12 xl:px-16">
+        <div className="flex w-full max-w-7xl flex-col gap-6 pb-10">
+          <section className="flex flex-col gap-6 lg:flex-row lg:items-stretch">
+            <ChatList
+              chats={chatList as ChatSummary[]}
+              isLoading={isChatListLoading}
+              onSelectChat={selectChatFromList}
+              onStartNewChat={handleStartNewChat}
+              searchTerm={searchTerm}
+              onSearchTermChange={setSearchTerm}
+              selectedChatId={selectedChatId}
+            />
+
+            <div className="flex min-h-[70vh] flex-1 flex-col gap-5 rounded-[32px] bg-transparent">
+              <ChatMessages
+                chatTitle={resolvedChatTitle}
+                hasSelection={Boolean(selectedChatId)}
+                isLoading={isConversationLoading && Boolean(selectedChatId)}
+                isSending={isSendingMessage}
+                messages={selectedMessages}
+              />
+
+              <div className="space-y-3">
+                {pendingFile ? (
+                  <div className="flex items-center justify-between rounded-2xl border border-primary/30 bg-primary/10 px-4 py-2 text-sm text-primary">
+                    <span className="truncate">
+                      Attached file: {pendingFile.name}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-8 text-primary hover:text-primary"
+                      onClick={() => setPendingFile(null)}
+                    >
+                      <X className="size-4" />
+                    </Button>
+                  </div>
+                ) : null}
+
+                <ChatComposer
+                  value={composerValue}
+                  onChange={setComposerValue}
+                  onSend={handleSendMessage}
+                  isSending={isSendingMessage}
+                  disabled={isConversationLoading}
+                  onUploadFile={setPendingFile}
+                />
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </DashboardLayout>
+  );
+};
+
+export default ChatPage;
