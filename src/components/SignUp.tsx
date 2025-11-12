@@ -210,9 +210,9 @@ const SignUp = () => {
               Register
             </h2>
             <p className="text-center text-muted-foreground/60 text-xs mb-4">
-              <Link to="/" className="hover:text-primary transition-colors">
-                Sign in to continue
-              </Link>
+              <div className="font-[poppins] font-normal text-lg text-[#FFFFFF4D] underline">
+                Sign up to continue
+              </div>
             </p>
 
             {/* Form */}
@@ -221,7 +221,7 @@ const SignUp = () => {
               <div className="space-y-1">
                 <Label
                   htmlFor="companyName"
-                  className="text-foreground/80 text-sm font-normal"
+                  className="text-white text-base font-light font-[poppins]"
                 >
                   Company Name
                 </Label>
@@ -232,7 +232,7 @@ const SignUp = () => {
                   placeholder="Enter Your Company Name"
                   value={companyName}
                   onChange={(e) => handleChange(e, "companyName")}
-                  className="text-foreground placeholder:text-muted-foreground/60 transition-all"
+                  className="font-[poppins] font-normal text-[#FFFFFF4D] text-sm"
                   disabled={loading}
                 />
                 {errors.companyName && (
@@ -244,7 +244,7 @@ const SignUp = () => {
               <div className="space-y-1">
                 <Label
                   htmlFor="industry"
-                  className="text-foreground/80 text-sm font-normal"
+                  className="text-white text-base font-light font-[poppins]"
                 >
                   Industry
                 </Label>
@@ -255,7 +255,7 @@ const SignUp = () => {
                   placeholder="Enter Your Industry Name"
                   value={industry}
                   onChange={(e) => handleChange(e, "industry")}
-                  className="text-foreground placeholder:text-muted-foreground/60 transition-all"
+                  className="font-[poppins] font-normal text-[#FFFFFF4D] text-sm"
                   disabled={loading}
                 />
               </div>
@@ -264,7 +264,7 @@ const SignUp = () => {
               <div className="space-y-1">
                 <Label
                   htmlFor="email"
-                  className="text-foreground/80 text-sm font-normal"
+                  className="text-white text-base font-light font-[poppins]"
                 >
                   Email
                 </Label>
@@ -275,7 +275,7 @@ const SignUp = () => {
                   placeholder="Enter Your Email"
                   value={email}
                   onChange={(e) => handleChange(e, "email")}
-                  className="text-foreground placeholder:text-muted-foreground/60 transition-all"
+                  className="font-[poppins] font-normal text-[#FFFFFF4D] text-sm"
                   disabled={loading}
                 />
                 {errors.email && (
@@ -287,7 +287,7 @@ const SignUp = () => {
               <div className="space-y-1">
                 <Label
                   htmlFor="password"
-                  className="text-foreground/80 text-sm font-normal"
+                  className="text-white text-base font-light font-[poppins]"
                 >
                   Password
                 </Label>
@@ -299,7 +299,7 @@ const SignUp = () => {
                     placeholder="Enter Your Password"
                     value={password}
                     onChange={(e) => handleChange(e, "password")}
-                    className="text-foreground placeholder:text-muted-foreground/60 transition-all pr-10"
+                    className="font-[poppins] font-normal text-[#FFFFFF4D] text-sm"
                     disabled={loading}
                   />
                   <button
@@ -324,7 +324,7 @@ const SignUp = () => {
               <div className="space-y-1">
                 <Label
                   htmlFor="confirmPassword"
-                  className="text-foreground/80 text-sm font-normal"
+                  className="text-white text-base font-light font-[poppins]"
                 >
                   Confirm Password
                 </Label>
@@ -336,7 +336,7 @@ const SignUp = () => {
                     placeholder="Enter Your Password"
                     value={confirmPassword}
                     onChange={(e) => handleChange(e, "confirmPassword")}
-                    className="text-foreground placeholder:text-muted-foreground/60 transition-all pr-10"
+                    className="font-[poppins] font-normal text-[#FFFFFF4D] text-sm"
                     disabled={loading}
                   />
                   <button
@@ -369,11 +369,11 @@ const SignUp = () => {
               </Button>
 
               {/* Sign In Link */}
-              <p className="text-center text-sm text-muted-foreground mt-6">
+              <p className="text-center text-lg text-[#FFFFFF66] mt-6">
                 Already have an account?{" "}
                 <Link
                   to="/"
-                  className="text-primary hover:text-primary-glow font-medium transition-colors"
+                  className="hover:opacity-80 font-normal transition-opacity bg-gradient-to-r from-[#8B36E9] via-[#6586FF] to-[#2C5FEC] bg-clip-text text-transparent"
                 >
                   Login here
                 </Link>
