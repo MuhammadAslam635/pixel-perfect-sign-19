@@ -60,7 +60,7 @@ const ChatMessages = ({
 
   return (
     <div className="flex h-full flex-1 flex-col overflow-hidden">
-      <header className="flex items-center justify-between border-b border-white/5 px-6 py-4">
+      <header className="flex items-center justify-between border-b border-white/5 py-4">
         <div className="flex items-center gap-4">
           <div className="flex h-16 w-16 items-center justify-center">
             <svg
