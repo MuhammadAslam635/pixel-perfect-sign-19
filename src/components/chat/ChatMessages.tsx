@@ -62,12 +62,14 @@ const ChatMessages = ({
     <div className="flex h-full flex-1 flex-col overflow-hidden">
       <header className="flex items-center justify-between border-b border-white/5 px-6 py-4">
         <div className="flex items-center gap-4">
-          <div className="flex h-12 w-12 items-center justify-center">
+          <div className="flex h-16 w-16 items-center justify-center">
             <svg
               viewBox="0 0 80 80"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
+              preserveAspectRatio="xMidYMid meet"
               className="h-full w-full"
+              style={{ transform: "translateY(20%)" }}
             >
               <g filter="url(#filter0_d_269_544)" data-figma-bg-blur-radius="38.8358">
                 <rect
@@ -158,7 +160,7 @@ const ChatMessages = ({
               </defs>
             </svg>
           </div>
-          <div className="flex flex-col justify-center">
+          <div className="flex flex-col justify-center gap-1">
             <h2 className="text-lg font-semibold leading-tight text-white">
               {chatTitle ?? "A Simple Hello"}
             </h2>
