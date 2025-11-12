@@ -1,22 +1,89 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Bell } from "lucide-react";
-import { useDispatch } from "react-redux";
+import { Bell, User as UserIcon } from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { logout } from "@/store/slices/authSlice";
+import { logout, updateUser } from "@/store/slices/authSlice";
 import { toast } from "sonner";
-import profileImage from "@/assets/user.jpg";
+import {
+  notificationService,
+  Notification,
+} from "@/services/notification.service";
+import { userService } from "@/services/user.service";
+import { RootState } from "@/store/store";
 
 export const ActionComponent = () => {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [loadingNotifications, setLoadingNotifications] = useState(false);
   const actionsRef = useRef<HTMLDivElement>(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  // Get user from Redux store
+  const currentUser = useSelector((state: RootState) => state.auth.user);
+
+  // Fetch and sync user profile from API
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const response = await userService.getCurrentUser();
+        // Update Redux store with fresh user data
+        dispatch(updateUser(response.user));
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+      }
+    };
+
+    if (currentUser) {
+      fetchUserProfile();
+    }
+  }, [dispatch]);
+
+  // Fetch notifications
+  const fetchNotifications = async () => {
+    setLoadingNotifications(true);
+    try {
+      const response = await notificationService.getNotifications(1, 10);
+      setNotifications(response.notifications || []);
+      setUnreadCount(response.pagination?.unreadCount || 0);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+      toast.error("Failed to load notifications");
+    } finally {
+      setLoadingNotifications(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+    // Poll for new notifications every 30 seconds
+    const interval = setInterval(fetchNotifications, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleLogout = () => {
     dispatch(logout());
     toast.success("Logged out successfully");
     navigate("/");
+  };
+
+  const handleMarkAsRead = async (notificationId: string) => {
+    try {
+      await notificationService.markAsRead(notificationId);
+      // Update local state
+      setNotifications((prev) =>
+        prev.map((notif) =>
+          notif._id === notificationId ? { ...notif, read: true } : notif
+        )
+      );
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+      toast.success("Notification marked as read");
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      toast.error("Failed to mark notification as read");
+    }
   };
 
   useEffect(() => {
@@ -33,12 +100,6 @@ export const ActionComponent = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  const notifications = [
-    { title: "Meeting starts in 30 minutes", meta: "Calendar" },
-    { title: "New lead: Sarah Malik", meta: "CRM" },
-    { title: "Proposal sent to ABC Corp", meta: "Sales" },
-  ];
 
   const profileMenu = [
     { title: "Profile", meta: "View your profile" },
@@ -63,7 +124,11 @@ export const ActionComponent = () => {
           aria-expanded={notificationsOpen}
         >
           <Bell className="h-5 w-5" />
-          <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]" />
+          {unreadCount > 0 && (
+            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-semibold shadow-[0_0_8px_rgba(239,68,68,0.6)]">
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </span>
+          )}
         </button>
 
         <span className="h-6 w-px rounded-full bg-white/15" />
@@ -79,16 +144,22 @@ export const ActionComponent = () => {
           aria-haspopup="true"
           aria-expanded={profileOpen}
         >
-          <div className="h-8 w-8 overflow-hidden rounded-full border border-white/25">
-            <img
-              src={profileImage}
-              alt="Zubair Khan"
-              className="h-8 w-8 object-cover"
-            />
+          <div className="h-8 w-8 flex items-center justify-center overflow-hidden rounded-full border border-white/25 bg-gradient-to-br from-cyan-500/20 to-blue-600/20">
+            {currentUser?.profileImage ? (
+              <img
+                src={currentUser.profileImage}
+                alt={currentUser?.name || currentUser?.email || "User"}
+                className="h-8 w-8 object-cover"
+              />
+            ) : (
+              <UserIcon className="h-4 w-4 text-white/70" />
+            )}
           </div>
           <div className="hidden lg:flex flex-col text-left text-xs leading-tight text-white/70">
-            <span className="font-medium text-white">Zubair Khan</span>
-            <span className="text-white/50">zubair@gmail.com</span>
+            <span className="font-medium text-white">
+              {currentUser?.name || currentUser?.email?.split("@")[0] || "User"}
+            </span>
+            <span className="text-white/50">{currentUser?.email || ""}</span>
           </div>
         </button>
 
@@ -96,15 +167,42 @@ export const ActionComponent = () => {
           <div className="dropdown-menu combined-dropdown">
             {notificationsOpen && (
               <>
-                <header className="dropdown-header">Notifications</header>
-                <ul>
-                  {notifications.map((item) => (
-                    <li key={item.title}>
-                      <span className="dropdown-item__title">{item.title}</span>
-                      <span className="dropdown-item__meta">{item.meta}</span>
-                    </li>
-                  ))}
-                </ul>
+                <header className="dropdown-header">
+                  Notifications {unreadCount > 0 && `(${unreadCount} unread)`}
+                </header>
+                {loadingNotifications ? (
+                  <div className="p-4 text-center text-white/50 text-sm">
+                    Loading notifications...
+                  </div>
+                ) : notifications.length === 0 ? (
+                  <div className="p-4 text-center text-white/50 text-sm">
+                    No notifications
+                  </div>
+                ) : (
+                  <ul>
+                    {notifications.map((item) => (
+                      <li
+                        key={item._id}
+                        className={`${!item.read ? "bg-white/5" : ""}`}
+                        onClick={() => !item.read && handleMarkAsRead(item._id)}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1">
+                            <span className="dropdown-item__title">
+                              {item.title}
+                            </span>
+                            <span className="dropdown-item__meta">
+                              {item.meta || item.type}
+                            </span>
+                          </div>
+                          {!item.read && (
+                            <span className="mt-1 h-2 w-2 rounded-full bg-cyan-400"></span>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
                 {profileOpen && <div className="dropdown-separator" />}
               </>
             )}
