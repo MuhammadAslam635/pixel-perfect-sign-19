@@ -61,7 +61,7 @@ export default function AuthLayout({
             }}
           />
 
-          <div className="relative rounded-3xl p-7 border border-white/15 bg-white/10 backdrop-blur-3xl shadow-card ring-1 ring-white/10">
+          <div className="relative rounded-3xl p-7 border-[2.5px] border-white/15 bg-white/10 backdrop-blur-3xl shadow-card ring-1 ring-white/10">
             <div className="pointer-events-none absolute inset-0 rounded-3xl bg-gradient-to-br from-white/20 via-white/10 to-transparent" />
             <div className="flex justify-center mb-4">
               <img src={cardIcon} alt="Logo" className="w-12 h-12" />
