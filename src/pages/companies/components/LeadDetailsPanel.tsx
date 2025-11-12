@@ -1,8 +1,9 @@
-import { FC } from "react";
+import { FC, useState } from "react";
 import { Users, Phone, Mail, Linkedin, MessageCircle } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Lead } from "@/services/leads.service";
 import { CompanyPerson } from "@/services/companies.service";
+import { PhoneCallModal } from "@/pages/companies/components/PhoneCallModal";
 
 type LeadDetailsPanelProps = {
   lead?: Lead;
@@ -18,6 +19,8 @@ const LeadDetailsPanel: FC<LeadDetailsPanelProps> = ({
   onEmailClick,
   fallbackExecutive,
 }) => {
+  const [callModalOpen, setCallModalOpen] = useState(false);
+
   const fallbackEmail = toStringOrUndefined(fallbackExecutive?.email);
   const fallbackPhone = toStringOrUndefined(fallbackExecutive?.phone);
   const fallbackLinkedin = toStringOrUndefined(fallbackExecutive?.linkedin);
@@ -53,7 +56,7 @@ const LeadDetailsPanel: FC<LeadDetailsPanelProps> = ({
             className="h-8 w-8 rounded-full bg-white hover:bg-white/20 flex items-center justify-center transition-colors disabled:opacity-40"
             onClick={() => {
               if (phone) {
-                window.open(`tel:${phone}`);
+                setCallModalOpen(true);
               }
             }}
             disabled={!phone}
@@ -127,6 +130,13 @@ const LeadDetailsPanel: FC<LeadDetailsPanelProps> = ({
           </p>
         )}
       </div>
+      <PhoneCallModal
+        open={callModalOpen}
+        onClose={() => setCallModalOpen(false)}
+        leadName={displayName || undefined}
+        phoneNumber={phone}
+        transcript={lead?.description}
+      />
     </>
   );
 };

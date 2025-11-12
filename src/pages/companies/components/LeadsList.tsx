@@ -9,7 +9,8 @@ import {
   Send,
 } from "lucide-react";
 import { Lead } from "@/services/leads.service";
-import { LinkedinMessageModal } from "@/components/LinkedinMessageModal";
+import { LinkedinMessageModal } from "@/pages/companies/components/LinkedinMessageModal";
+import { PhoneCallModal } from "@/pages/companies/components/PhoneCallModal";
 
 type LeadsListProps = {
   leads: Lead[];
@@ -27,6 +28,7 @@ const LeadsList: FC<LeadsListProps> = ({
   onEmailClick,
 }) => {
   const [linkedinModalLead, setLinkedinModalLead] = useState<Lead | null>(null);
+  const [callModalLead, setCallModalLead] = useState<Lead | null>(null);
 
   if (loading) {
     return (
@@ -88,8 +90,8 @@ const LeadsList: FC<LeadsListProps> = ({
                   className="h-8 w-8 rounded-full bg-white hover:bg-white/20 flex items-center justify-center transition-colors"
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (displayPhone !== "N/A") {
-                      window.open(`tel:${displayPhone}`);
+                    if (lead.phone) {
+                      setCallModalLead(lead);
                     }
                   }}
                 >
@@ -161,6 +163,13 @@ const LeadsList: FC<LeadsListProps> = ({
         onClose={() => setLinkedinModalLead(null)}
         leadName={linkedinModalLead?.name}
         leadLinkedin={linkedinModalLead?.linkedinUrl}
+      />
+      <PhoneCallModal
+        open={Boolean(callModalLead)}
+        onClose={() => setCallModalLead(null)}
+        leadName={callModalLead?.name}
+        phoneNumber={callModalLead?.phone}
+        transcript={callModalLead?.description}
       />
     </>
   );

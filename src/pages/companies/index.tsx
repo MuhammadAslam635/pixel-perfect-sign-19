@@ -1,27 +1,21 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Building2, Filter, Users, ArrowRight } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import {
-  companiesService,
-  Company,
-  CompanyPerson,
-} from "@/services/companies.service";
-import { leadsService, Lead } from "@/services/leads.service";
-import { EmailDraftModal } from "@/components/EmailDraftModal";
+import { ArrowRight } from "lucide-react";
+import { Company, CompanyPerson } from "@/services/companies.service";
+import { Lead } from "@/services/leads.service";
+import { EmailDraftModal } from "@/pages/companies/components/EmailDraftModal";
 import { toast } from "sonner";
 import CompaniesList from "./components/CompaniesList";
 import LeadsList from "./components/LeadsList";
 import DetailsSidebar from "./components/DetailsSidebar";
-
-const statsCards = [
-  { title: "Total Companies", value: "512", icon: Building2, link: "View All" },
-  { title: "Total leads", value: "8542", icon: Filter, link: "View All" },
-  { title: "Total Outreach", value: "5236", icon: Users, link: "View All" },
-  { title: "Total Response", value: "3256", icon: Users, link: "View All" },
-];
+import {
+  defaultStatsCards,
+  useCompaniesData,
+  useLeadsData,
+  buildStats,
+} from "./hooks";
 
 const index = () => {
   type TabKey = "companies" | "leads";
@@ -35,11 +29,6 @@ const index = () => {
     null
   );
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
-  const [companies, setCompanies] = useState<Company[]>([]);
-  const [leads, setLeads] = useState<Lead[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [leadsLoading, setLeadsLoading] = useState<boolean>(false);
-  const [stats, setStats] = useState(statsCards);
   const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [selectedExecutiveFallback, setSelectedExecutiveFallback] =
@@ -48,7 +37,6 @@ const index = () => {
     email?: string;
     name?: string;
   } | null>(null);
-  const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const tabRefs = useRef<Record<TabKey, HTMLButtonElement | null>>({
     companies: null,
@@ -56,110 +44,59 @@ const index = () => {
   });
   const [indicatorStyles, setIndicatorStyles] = useState({ width: 0, left: 0 });
 
-  // Fetch companies data and leads count
+  const companiesParams = useMemo(
+    () => ({
+      page: 1,
+      limit: 50,
+    }),
+    []
+  );
+
+  const {
+    query: companiesQuery,
+    companies,
+    totalCompanies,
+  } = useCompaniesData(companiesParams);
+
+  const {
+    query: leadsQuery,
+    leads,
+    totalLeads,
+  } = useLeadsData({
+    enabled: activeTab === "leads" || pendingLeadIdentifier !== null,
+  });
+
+  const loading = companiesQuery.isLoading;
+  const leadsLoading = leadsQuery.isLoading || leadsQuery.isFetching;
+
+  const stats = useMemo(
+    () =>
+      buildStats(
+        totalCompanies,
+        leadsQuery.isSuccess ? totalLeads : undefined,
+        defaultStatsCards
+      ),
+    [totalCompanies, totalLeads, leadsQuery.isSuccess]
+  );
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-
-        // Fetch companies
-        const companiesResponse = await companiesService.getCompanies({
-          page: 1,
-          limit: 50,
-        });
-
-        // Fetch leads to get total count
-        const leadsResponse = await leadsService.getLeads();
-
-        if (companiesResponse.success) {
-          setCompanies(companiesResponse.data.docs);
-
-          // Update stats with real data including leads count
-          const totalLeads = leadsResponse.success
-            ? leadsResponse.data.length
-            : 0;
-          setStats([
-            {
-              title: "Total Companies",
-              value: companiesResponse.data.totalDocs.toString(),
-              icon: Building2,
-              link: "View All",
-            },
-            {
-              title: "Total leads",
-              value: totalLeads.toString(),
-              icon: Filter,
-              link: "View All",
-            },
-            {
-              title: "Total Outreach",
-              value: "0",
-              icon: Users,
-              link: "View All",
-            },
-            {
-              title: "Total Response",
-              value: "0",
-              icon: Users,
-              link: "View All",
-            },
-          ]);
-        }
-      } catch (error: any) {
-        console.error("Error fetching data:", error);
-        toast.error(error.response?.data?.message || "Failed to fetch data");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  // Fetch leads data when leads tab is active
-  useEffect(() => {
-    if (activeTab === "leads") {
-      const fetchLeads = async () => {
-        try {
-          setLeadsLoading(true);
-          const response = await leadsService.getLeads();
-
-          if (response.success) {
-            setLeads(response.data);
-
-            // Update stats with real data
-            setStats((prev) => {
-              const newStats = [...prev];
-              newStats[1] = {
-                title: "Total leads",
-                value: response.data.length.toString(),
-                icon: Filter,
-                link: "View All",
-              };
-              return newStats;
-            });
-          }
-        } catch (error: any) {
-          console.error("Error fetching leads:", error);
-          toast.error(error.response?.data?.message || "Failed to fetch leads");
-        } finally {
-          setLeadsLoading(false);
-        }
-      };
-
-      fetchLeads();
+    if (companiesQuery.error) {
+      const error = companiesQuery.error as any;
+      toast.error(
+        error?.response?.data?.message || "Failed to fetch companies"
+      );
     }
-  }, [activeTab]);
+  }, [companiesQuery.error]);
+
+  useEffect(() => {
+    if (leadsQuery.error) {
+      const error = leadsQuery.error as any;
+      toast.error(error?.response?.data?.message || "Failed to fetch leads");
+    }
+  }, [leadsQuery.error]);
 
   useEffect(() => {
     if (!pendingLeadIdentifier) return;
-
-    if (leads.length === 0) {
-      if (!leadsLoading) {
-        setPendingLeadIdentifier(null);
-      }
-      return;
-    }
 
     const { email, name } = pendingLeadIdentifier;
 
@@ -309,7 +246,7 @@ const index = () => {
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-lg bg-white/10 flex items-center justify-center border border-white/15 shadow-sm">
-                        <stat.icon className="w-6 h-6 text-white/80" />
+                        <stat.icon />
                       </div>
                       <p className="text-3xl font-bold text-white">
                         {stat.value}
