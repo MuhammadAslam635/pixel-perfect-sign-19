@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from "react";
-import { Download, Loader2, Sparkles } from "lucide-react";
+import { Download, Loader2, Menu, Sparkles } from "lucide-react";
 import { ChatMessage } from "@/types/chat.types";
 import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
@@ -13,6 +13,7 @@ type ChatMessagesProps = {
   isLoading: boolean;
   isSending: boolean;
   hasSelection: boolean;
+  onOpenChatList?: () => void;
 };
 
 const ChatMessages = ({
@@ -21,6 +22,7 @@ const ChatMessages = ({
   isLoading,
   isSending,
   hasSelection,
+  onOpenChatList,
 }: ChatMessagesProps) => {
   const conversation = useMemo(() => messages ?? [], [messages]);
   const scrollAreaRef = useRef<HTMLDivElement | null>(null);
@@ -60,16 +62,26 @@ const ChatMessages = ({
 
   return (
     <div className="flex h-full flex-1 flex-col overflow-hidden">
-      <header className="flex items-center justify-between border-b border-white/5 py-4">
-        <div className="flex items-center gap-4">
-          <div className="flex h-16 w-16 items-center justify-center">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-white/5 py-4 sm:flex-nowrap">
+        <div className="flex items-center gap-3">
+          {onOpenChatList ? (
+            <button
+              type="button"
+              onClick={onOpenChatList}
+              className="flex size-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white transition hover:border-white/20 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 lg:hidden"
+              aria-label="Open chat list"
+            >
+              <Menu className="size-5" />
+            </button>
+          ) : null}
+          <div className="flex h-12 w-12 items-center justify-center sm:h-16 sm:w-16">
             <svg
               viewBox="0 0 80 80"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
               preserveAspectRatio="xMidYMid meet"
               className="h-full w-full"
-              style={{ transform: "translateY(20%)" }}
+              style={{ transform: "translate(-10%, 10%)" }}
             >
               <g filter="url(#filter0_d_269_544)" data-figma-bg-blur-radius="38.8358">
                 <rect
@@ -161,19 +173,21 @@ const ChatMessages = ({
             </svg>
           </div>
           <div className="flex flex-col justify-center gap-1">
-            <h2 className="text-lg font-semibold leading-tight text-white">
+            <h2 className="text-base font-semibold leading-tight text-white sm:text-lg">
               {chatTitle ?? "A Simple Hello"}
             </h2>
             <p className="text-xs text-muted-foreground/70">The Sales Outreach Agent</p>
           </div>
         </div>
-        <button
-          type="button"
-          className="flex size-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white transition hover:border-white/20 hover:bg-white/10"
-          aria-label="Download conversation"
-        >
-          <Download className="size-4" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            className="flex size-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white transition hover:border-white/20 hover:bg-white/10"
+            aria-label="Download conversation"
+          >
+            <Download className="size-4" />
+          </button>
+        </div>
       </header>
 
       <div

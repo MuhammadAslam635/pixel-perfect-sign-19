@@ -1,6 +1,5 @@
 import { useMemo } from "react";
 import { Search, MessageCircle, Loader2, PenSquare, EllipsisVertical } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
 import { ChatSummary } from "@/types/chat.types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -16,6 +15,7 @@ type ChatListProps = {
   searchTerm: string;
   onSearchTermChange: (value: string) => void;
   isLoading?: boolean;
+  className?: string;
 };
 
 const ChatList = ({
@@ -27,6 +27,7 @@ const ChatList = ({
   searchTerm,
   onSearchTermChange,
   isLoading = false,
+  className,
 }: ChatListProps) => {
   const truncateText = (text: string, limit: number) =>
     text.length > limit ? `${text.slice(0, limit - 1)}…` : text;
@@ -51,7 +52,13 @@ const ChatList = ({
   };
 
   return (
-    <aside className="flex h-screen w-full max-w-[17rem] flex-col overflow-hidden rounded-[40px] border border-[#FFFFFF1A] bg-[linear-gradient(173.83deg,_rgba(255,255,255,0.08)_4.82%,_rgba(255,255,255,0.00002)_38.08%,_rgba(255,255,255,0.00002)_56.68%,_rgba(255,255,255,0.02)_95.1%)] p-5 backdrop-blur-xl lg:max-w-[18rem] lg:self-stretch">
+    <aside
+      className={cn(
+        "flex h-full w-full max-w-[20rem] flex-col overflow-hidden rounded-[32px] border border-[#FFFFFF1A] bg-[linear-gradient(173.83deg,_rgba(255,255,255,0.08)_4.82%,_rgba(255,255,255,0.00002)_38.08%,_rgba(255,255,255,0.00002)_56.68%,_rgba(255,255,255,0.02)_95.1%)] p-5 backdrop-blur-xl",
+        "lg:max-w-[18rem]",
+        className,
+      )}
+    >
       <div className="mb-6 space-y-4">
         <Button
           variant="ghost"
