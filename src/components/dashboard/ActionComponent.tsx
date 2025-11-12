@@ -46,8 +46,15 @@ export const ActionComponent = () => {
     setLoadingNotifications(true);
     try {
       const response = await notificationService.getNotifications(1, 10);
-      setNotifications(response.notifications || []);
-      setUnreadCount(response.pagination?.unreadCount || 0);
+      // API returns "notification" not "notifications"
+      const notificationList =
+        response.notification || response.notifications || [];
+      setNotifications(notificationList);
+      setUnreadCount(
+        response.unreadNotificationCount ||
+          response.pagination?.unreadCount ||
+          0
+      );
     } catch (error) {
       console.error("Error fetching notifications:", error);
       toast.error("Failed to load notifications");
@@ -70,16 +77,23 @@ export const ActionComponent = () => {
   };
 
   const handleMarkAsRead = async (notificationId: string) => {
+    // Find the notification to check if it's already read
+    const notification = notifications.find((n) => n._id === notificationId);
+
+    // If already read, don't do anything
+    if (notification?.is_read === "Yes") {
+      return;
+    }
+
     try {
       await notificationService.markAsRead(notificationId);
       // Update local state
       setNotifications((prev) =>
         prev.map((notif) =>
-          notif._id === notificationId ? { ...notif, read: true } : notif
+          notif._id === notificationId ? { ...notif, is_read: "Yes" } : notif
         )
       );
       setUnreadCount((prev) => Math.max(0, prev - 1));
-      toast.success("Notification marked as read");
     } catch (error) {
       console.error("Error marking notification as read:", error);
       toast.error("Failed to mark notification as read");
@@ -179,29 +193,36 @@ export const ActionComponent = () => {
                     No notifications
                   </div>
                 ) : (
-                  <ul>
-                    {notifications.map((item) => (
-                      <li
-                        key={item._id}
-                        className={`${!item.read ? "bg-white/5" : ""}`}
-                        onClick={() => !item.read && handleMarkAsRead(item._id)}
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1">
-                            <span className="dropdown-item__title">
-                              {item.title}
-                            </span>
-                            <span className="dropdown-item__meta">
-                              {item.meta || item.type}
-                            </span>
-                          </div>
-                          {!item.read && (
-                            <span className="mt-1 h-2 w-2 rounded-full bg-cyan-400"></span>
-                          )}
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
+                  <div className="max-h-[300px] overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent hover:scrollbar-thumb-white/30">
+                    <ul>
+                      {notifications.map((item) => {
+                        const isUnread = item.is_read === "No";
+                        return (
+                          <li
+                            key={item._id}
+                            className={`${
+                              isUnread ? "bg-white/5" : ""
+                            } cursor-pointer hover:bg-white/10 transition-colors`}
+                            onClick={() => handleMarkAsRead(item._id)}
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1">
+                                <span className="dropdown-item__title">
+                                  {item.message}
+                                </span>
+                                <span className="dropdown-item__meta">
+                                  {item.type.replace(/_/g, " ")}
+                                </span>
+                              </div>
+                              {isUnread && (
+                                <span className="mt-1 h-2 w-2 flex-shrink-0 rounded-full bg-cyan-400"></span>
+                              )}
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
                 )}
                 {profileOpen && <div className="dropdown-separator" />}
               </>

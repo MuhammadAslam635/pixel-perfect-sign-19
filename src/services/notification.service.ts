@@ -2,17 +2,23 @@ import API from "@/utils/api";
 
 export interface Notification {
   _id: string;
-  title: string;
-  message: string;
+  sender_id?: string;
+  receiver_id?: string;
   type: string;
-  read: boolean;
+  type_id?: string;
+  message: string;
+  is_read: string; // "Yes" or "No"
   createdAt: string;
+  updatedAt?: string;
+  title?: string;
   meta?: string;
 }
 
 export interface NotificationResponse {
   success: boolean;
-  notifications: Notification[];
+  notification?: Notification[]; // API returns "notification" not "notifications"
+  notifications?: Notification[]; // Keep for backwards compatibility
+  unreadNotificationCount?: number;
   pagination?: {
     page: number;
     limit: number;

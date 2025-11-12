@@ -531,17 +531,21 @@ body {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  padding: 8px 12px;
+  border-radius: 8px;
 }
 
 .dropdown-item__title {
   font-size: 13px;
   font-weight: 500;
   color: #ffffff;
+  line-height: 1.4;
 }
 
 .dropdown-item__meta {
   font-size: 11px;
   color: rgba(255, 255, 255, 0.6);
+  text-transform: capitalize;
 }
 
 .combined-dropdown {
@@ -552,6 +556,24 @@ body {
   height: 1px;
   background: rgba(255, 255, 255, 0.08);
   margin: 16px -16px;
+}
+
+/* Custom Scrollbar for Notifications */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .assistant-panel {
