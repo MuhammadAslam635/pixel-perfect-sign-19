@@ -210,9 +210,9 @@ export const ActionComponent = () => {
                                 <span className="dropdown-item__title">
                                   {item.message}
                                 </span>
-                                <span className="dropdown-item__meta">
+                                {/* <span className="dropdown-item__meta">
                                   {item.type.replace(/_/g, " ")}
-                                </span>
+                                </span> */}
                               </div>
                               {isUnread && (
                                 <span className="mt-1 h-2 w-2 flex-shrink-0 rounded-full bg-cyan-400"></span>
