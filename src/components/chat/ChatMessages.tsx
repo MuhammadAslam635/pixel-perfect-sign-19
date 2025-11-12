@@ -192,7 +192,7 @@ const ChatMessages = ({
 
       <div
         ref={scrollAreaRef}
-        className="flex-1 space-y-4 overflow-y-auto scrollbar-hide px-6 py-6 sm:px-10 sm:py-8 max-h-[70vh]"
+        className="flex-1 min-h-0 space-y-4 overflow-y-auto scrollbar-hide px-6 py-6 sm:px-10 sm:py-8"
       >
         {conversation.map((message) => {
           const isAssistant = message.role !== "user";

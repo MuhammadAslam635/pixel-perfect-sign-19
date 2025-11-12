@@ -155,10 +155,10 @@ const ChatPage = () => {
   return (
     <DashboardLayout>
       <Sheet open={isMobileListOpen} onOpenChange={setIsMobileListOpen}>
-        <main className="relative mt-24 flex w-full flex-1 justify-center px-4 pb-10 sm:px-6 md:px-10 lg:px-12 xl:px-16">
-          <div className="flex w-full max-w-7xl flex-col gap-6 pb-10">
-            <section className="flex flex-col gap-6 lg:h-[70vh] lg:flex-row lg:items-stretch">
-              <div className="hidden lg:block lg:h-full lg:shrink-0">
+        <main className="relative mt-24 flex w-full flex-1 min-h-0 max-h-[calc(100vh-6rem)] justify-center overflow-hidden px-4 pb-6 sm:px-6 md:px-10 lg:px-12 xl:px-16">
+          <div className="flex w-full max-w-7xl flex-1 min-h-0 flex-col gap-6 overflow-hidden">
+            <section className="flex flex-1 min-h-0 flex-col gap-6 overflow-hidden lg:flex-row lg:items-stretch">
+              <div className="hidden lg:flex lg:h-full lg:shrink-0">
                 <ChatList
                   chats={chatList as ChatSummary[]}
                   isLoading={isChatListLoading}
@@ -171,7 +171,7 @@ const ChatPage = () => {
                 />
               </div>
 
-              <div className="flex min-h-[70vh] flex-1 flex-col gap-5 rounded-[32px] bg-transparent lg:min-h-0">
+              <div className="flex flex-1 min-h-0 flex-col gap-5 rounded-[32px] bg-transparent">
                 <ChatMessages
                   chatTitle={resolvedChatTitle}
                   hasSelection={Boolean(selectedChatId)}
