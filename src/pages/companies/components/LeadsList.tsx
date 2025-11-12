@@ -1,7 +1,15 @@
-import { FC } from "react";
+import { FC, useState } from "react";
 import { Card } from "@/components/ui/card";
-import { ArrowRight, Linkedin, Mail, MessageCircle, Phone } from "lucide-react";
+import {
+  ArrowRight,
+  Linkedin,
+  Mail,
+  MessageCircle,
+  Phone,
+  Send,
+} from "lucide-react";
 import { Lead } from "@/services/leads.service";
+import { LinkedinMessageModal } from "@/components/LinkedinMessageModal";
 
 type LeadsListProps = {
   leads: Lead[];
@@ -18,6 +26,8 @@ const LeadsList: FC<LeadsListProps> = ({
   onSelectLead,
   onEmailClick,
 }) => {
+  const [linkedinModalLead, setLinkedinModalLead] = useState<Lead | null>(null);
+
   if (loading) {
     return (
       <div className="text-center text-white/70 py-8">Loading leads...</div>
@@ -122,13 +132,22 @@ const LeadsList: FC<LeadsListProps> = ({
                 >
                   <MessageCircle className="w-3.5 h-3.5 text-gray-800" />
                 </button>
+                <button
+                  className="h-8 w-8 rounded-full bg-white hover:bg-white/20 flex items-center justify-center transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setLinkedinModalLead(lead);
+                  }}
+                >
+                  <Send className="w-3.5 h-3.5 text-gray-800" />
+                </button>
               </div>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   onSelectLead(lead._id);
                 }}
-                className="bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded-full px-8 py-1.5 flex items-center gap-3 transition-colors"
+                className="bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded-full px-12 py-1.5 flex items-center gap-3 transition-colors"
               >
                 View Details
                 <ArrowRight className="w-3 h-3" />
@@ -137,6 +156,12 @@ const LeadsList: FC<LeadsListProps> = ({
           </Card>
         );
       })}
+      <LinkedinMessageModal
+        open={Boolean(linkedinModalLead)}
+        onClose={() => setLinkedinModalLead(null)}
+        leadName={linkedinModalLead?.name}
+        leadLinkedin={linkedinModalLead?.linkedinUrl}
+      />
     </>
   );
 };
