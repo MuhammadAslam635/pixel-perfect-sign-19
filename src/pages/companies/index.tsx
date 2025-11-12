@@ -303,84 +303,86 @@ const CompanyDetail = () => {
                       primaryExecutive?.email ||
                       primaryExecutive?.emails?.[0] ||
                       null;
-                    const companyLinkedIn = primaryExecutive?.linkedin || null;
+                    const companyLinkedIn =
+                      primaryExecutive?.linkedin || company.website || null;
 
                     return (
                       <Card
                         key={company._id}
                         onClick={() => handleCompanyClick(company._id)}
-                        className={`relative flex flex-col gap-5 md:flex-row md:items-center bg-gradient-to-r from-[#1f2a2b] via-[#254345] to-[#1a2627] border ${
-                          isActive ? "border-primary/60" : "border-[#31494A]"
-                        } rounded-[26px] px-6 py-5 cursor-pointer transition-all duration-300`}
+                        className={`relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between overflow-hidden bg-gradient-to-r from-[#13363b] via-[#1f4c55] to-[#16383f] border ${
+                          isActive ? "border-primary/60" : "border-[#274a4f]"
+                        } rounded-[30px] px-7 py-6 cursor-pointer transition-all duration-300 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] before:absolute before:content-[''] before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[55%] before:w-[5px] before:rounded-full ${
+                          isActive ? "before:bg-primary" : "before:bg-white/75"
+                        }`}
                       >
-                        <span
-                          className={`absolute left-4 top-1/2 -translate-y-1/2 h-[50%] w-[4px] rounded-full ${
-                            isActive ? "bg-primary/80" : "bg-white/70"
-                          }`}
-                        />
-
-                        <div className="flex-1 md:pl-6">
-                          <div className="flex flex-wrap items-center gap-2 text-white">
-                            <h3 className="text-lg font-semibold">
+                        <div className="flex-1">
+                          <div className="flex flex-wrap items-center gap-2 text-white/90">
+                            <h3 className="text-xl font-semibold text-white">
                               {company.name}
                             </h3>
                             {company.industry && (
-                              <span className="text-sm text-white/60">
+                              <span className="text-sm text-white/70 font-medium">
                                 | {company.industry}
                               </span>
                             )}
                           </div>
-                          <p className="mt-2 text-sm text-white/70 leading-relaxed max-w-[460px]">
+                          <p className="mt-2 text-xs text-white/65 truncate max-w-[460px]">
                             {company.description ||
                               company.about ||
                               "No description available"}
                           </p>
-                          <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-white/70">
-                            <Badge className="rounded-full bg-white/15 text-white border-white/10 px-4 py-1">
+                          <div className="mt-5 flex flex-wrap items-center gap-3 text-xs text-white/75">
+                            <Badge className="rounded-full bg-white/15 text-white border-white/20 px-4 py-1">
                               {employeeCount}
                             </Badge>
                             {companyLinkedIn && (
-                              <div className="flex items-center gap-2 bg-white/10 border border-white/10 rounded-full px-3 py-1 max-w-[180px]">
-                                <Linkedin className="w-3.5 h-3.5 text-white/80" />
-                                <span className="font-medium text-white/80 truncate">
+                              <div className="flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 max-w-[220px]">
+                                <Linkedin className="w-3.5 h-3.5 text-white/85" />
+                                <span className="font-medium text-white/85 truncate">
                                   {companyLinkedIn
                                     .replace(/^https?:\/\//, "")
                                     .replace(/^www\./, "")}
                                 </span>
                               </div>
                             )}
-                            {company.website && (
-                              <span className="text-white/60 truncate max-w-[160px]">
-                                {company.website}
+                            {primaryEmail && (
+                              <span className="rounded-full border border-white/15 bg-white/10 px-4 py-1 font-medium text-white/80">
+                                {primaryEmail}
                               </span>
                             )}
                           </div>
                         </div>
-                        <div className="w-full md:w-[240px] flex flex-col items-center md:items-end gap-4 text-white/80">
-                          <div className="text-center md:text-right space-y-1">
-                            {company.website && (
-                              <p className="text-sm font-medium text-white">
-                                {company.website}
-                              </p>
-                            )}
-                            {primaryEmail && (
-                              <p className="text-xs text-white/60">
-                                {primaryEmail}
-                              </p>
-                            )}
-                            {company.address && (
-                              <p className="text-xs text-white/50">
-                                {company.address}
-                              </p>
-                            )}
-                          </div>
+                        <div className="w-full md:w-[260px] flex flex-col items-center md:items-end gap-3 text-white/80">
+                          {(company.website || primaryEmail) && (
+                            <p className="text-sm font-semibold text-white/75 text-center md:text-right">
+                              {company.website && (
+                                <span className="text-white/85">
+                                  {company.website}
+                                </span>
+                              )}
+                              {company.website && primaryEmail && (
+                                <span className="mx-2 text-white/40">|</span>
+                              )}
+                              {primaryEmail && (
+                                <span className="text-white/70">
+                                  {primaryEmail}
+                                </span>
+                              )}
+                            </p>
+                          )}
+                          {company.address && (
+                            <p className="text-xs text-white/55 text-center md:text-right max-w-[220px]">
+                              {company.address}
+                            </p>
+                          )}
                           <Button
                             size="sm"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleCompanyClick(company._id);
                             }}
-                            className="rounded-full bg-white/10 px-5 py-1.5 text-xs font-medium text-white hover:bg-white/20 border border-white/20"
+                            className="rounded-full bg-white/15 px-6 py-1.5 text-xs font-semibold text-white hover:bg-white/25 border border-white/20"
                           >
                             {isActive ? "Close Executives" : "View Executives"}
                             <ArrowRight className="ml-2 w-3 h-3" />
@@ -408,30 +410,30 @@ const CompanyDetail = () => {
                     <Card
                       key={lead._id}
                       onClick={() => handleLeadClick(lead._id)}
-                      className={`bg-gradient-to-b from-[#2d4041] to-[#283637] backdrop-blur-sm border ${
-                        isActive
-                          ? "border-primary/60 shadow-[0_0_0_1px_rgba(0,0,0,0.2)]"
-                          : "border-[#3A3A3A]"
-                      } p-4 hover:bg-[#3A3A3A]/50 transition-smooth cursor-pointer`}
+                      className={`relative bg-gradient-to-r from-[#13363b] via-[#1f4c55] to-[#16383f] border ${
+                        isActive ? "border-primary/60" : "border-[#274a4f]"
+                      } px-7 py-4 pl-10 rounded-[24px] transition-all duration-300 hover:shadow-[0_16px_38px_rgba(0,0,0,0.28)] before:absolute before:content-[''] before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[55%] before:w-[5px] before:rounded-full ${
+                        isActive ? "before:bg-primary" : "before:bg-white/75"
+                      } cursor-pointer`}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
-                            <h3 className="text-base font-medium text-white">
+                            <h3 className="text-lg font-semibold text-white">
                               {lead.name}
                             </h3>
                             {lead.companyName && (
-                              <span className="text-sm text-muted-foreground/">
+                              <span className="text-xs text-white/70">
                                 | {lead.companyName}
                               </span>
                             )}
                           </div>
-                          <div className="flex items-center gap-4 text-xs text-white/70">
-                            <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-4 text-xs text-white/75">
+                            <div className="flex items-center gap-1.5 bg-white/10 rounded-full px-3 py-1 border border-white/20">
                               <Mail className="w-3 h-3" />
                               <span>{displayEmail}</span>
                             </div>
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-1.5 bg-white/10 rounded-full px-3 py-1 border border-white/20">
                               <Linkedin className="w-3 h-3" />
                               <span>{lead.linkedinUrl || "N/A"}</span>
                             </div>
@@ -568,21 +570,21 @@ const CompanyDetail = () => {
                           selectedCompany.people.map((exec, index) => (
                             <div
                               key={exec._id || exec.id || index}
-                              className="p-3 rounded-lg bg-gradient-to-b from-[#2d4041] to-[#283637]  hover:bg-[#4A4A4A]/40 transition-smooth border-l-4 border-primary/50"
+                              className="relative overflow-hidden rounded-2xl border border-white/15 bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] px-4 py-3 transition-all duration-300 hover:shadow-[0_12px_32px_rgba(0,0,0,0.3)] before:absolute before:content-[''] before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[55%] before:w-[4px] before:rounded-full before:bg-white/70"
                             >
-                              <p className="text-sm font-medium text-foreground mb-0.5">
-                                {exec.name || "N/A"}{" "}
+                              <p className="text-sm font-semibold text-white mb-0.5">
+                                {exec.name || "N/A"}
                               </p>
-                              <p className="text-xs text-muted-foreground/60 mb-1">
+                              <p className="text-xs text-white/60 mb-2">
                                 {exec.title || exec.position || "N/A"}
                                 {exec.email && ` | ${exec.email}`}
                               </p>
-                              <div className="mt-2 flex justify-end">
+                              <div className="flex justify-end">
                                 {exec.linkedin && (
                                   <Button
                                     size="icon"
                                     variant="ghost"
-                                    className="w-6 h-6 rounded-full hover:bg-[#5A5A5A]/50"
+                                    className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 text-white/70"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       window.open(
@@ -593,7 +595,7 @@ const CompanyDetail = () => {
                                       );
                                     }}
                                   >
-                                    <Linkedin className="w-3.5 h-3.5 text-primary" />
+                                    <Linkedin className="w-3.5 h-3.5" />
                                   </Button>
                                 )}
                               </div>
