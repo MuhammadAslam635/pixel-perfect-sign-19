@@ -1,29 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { TopNav } from "@/components/TopNav";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Building2,
-  Filter,
-  Users,
-  ArrowRight,
-  Linkedin,
-  Mail,
-  Phone,
-  Copy,
-  MessageCircle,
-} from "lucide-react";
+import { Building2, Filter, Users, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import {
-  companiesService,
-  Company,
-  CompanyPerson,
-} from "@/services/companies.service";
+import { companiesService, Company } from "@/services/companies.service";
 import { leadsService, Lead } from "@/services/leads.service";
 import { EmailDraftModal } from "@/components/EmailDraftModal";
 import { toast } from "sonner";
+import CompaniesList from "./components/CompaniesList";
+import LeadsList from "./components/LeadsList";
+import DetailsSidebar from "./components/DetailsSidebar";
 
 const statsCards = [
   { title: "Total Companies", value: "512", icon: Building2, link: "View All" },
@@ -284,441 +271,32 @@ const CompanyDetail = () => {
             {/* Left: Companies/Leads List */}
             <div className="space-y-3 bg-[#222B2C] p-6 rounded-2xl min-h-[600px] flex-1">
               {activeTab === "companies" ? (
-                loading ? (
-                  <div className="text-center text-white/70 py-8">
-                    Loading companies...
-                  </div>
-                ) : companies.length === 0 ? (
-                  <div className="text-center text-white/70 py-8">
-                    No companies found
-                  </div>
-                ) : (
-                  companies.map((company) => {
-                    const isActive = selectedCompanyId === company._id;
-                    const employeeCount = company.employees
-                      ? `${company.employees} employees`
-                      : "N/A";
-                    const primaryExecutive = company.people?.[0];
-                    const primaryEmail =
-                      primaryExecutive?.email ||
-                      primaryExecutive?.emails?.[0] ||
-                      null;
-                    const companyLinkedIn =
-                      primaryExecutive?.linkedin || company.website || null;
-
-                    return (
-                      <Card
-                        key={company._id}
-                        onClick={() => handleCompanyClick(company._id)}
-                        className={`relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between overflow-hidden bg-gradient-to-r from-[#13363b] via-[#1f4c55] to-[#16383f] border ${
-                          isActive ? "border-primary/60" : "border-[#274a4f]"
-                        } rounded-[30px] px-7 py-6 cursor-pointer transition-all duration-300 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] before:absolute before:content-[''] before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[55%] before:w-[5px] before:rounded-full ${
-                          isActive ? "before:bg-primary" : "before:bg-white/75"
-                        }`}
-                      >
-                        <div className="flex-1">
-                          <div className="flex flex-wrap items-center gap-2 text-white/90">
-                            <h3 className="text-xl font-semibold text-white">
-                              {company.name}
-                            </h3>
-                            {company.industry && (
-                              <span className="text-sm text-white/70 font-medium">
-                                | {company.industry}
-                              </span>
-                            )}
-                          </div>
-                          <p className="mt-2 text-xs text-white/65 truncate max-w-[460px]">
-                            {company.description ||
-                              company.about ||
-                              "No description available"}
-                          </p>
-                          <div className="mt-5 flex flex-wrap items-center gap-3 text-xs text-white/75">
-                            <Badge className="rounded-full bg-white/15 text-white border-white/20 px-4 py-1">
-                              {employeeCount}
-                            </Badge>
-                            {companyLinkedIn && (
-                              <div className="flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 max-w-[220px]">
-                                <Linkedin className="w-3.5 h-3.5 text-white/85" />
-                                <span className="font-medium text-white/85 truncate">
-                                  {companyLinkedIn
-                                    .replace(/^https?:\/\//, "")
-                                    .replace(/^www\./, "")}
-                                </span>
-                              </div>
-                            )}
-                            {primaryEmail && (
-                              <span className="rounded-full border border-white/15 bg-white/10 px-4 py-1 font-medium text-white/80">
-                                {primaryEmail}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <div className="w-full md:w-[260px] flex flex-col items-center md:items-end gap-3 text-white/80">
-                          {(company.website || primaryEmail) && (
-                            <p className="text-sm font-semibold text-white/75 text-center md:text-right">
-                              {company.website && (
-                                <span className="text-white/85">
-                                  {company.website}
-                                </span>
-                              )}
-                              {company.website && primaryEmail && (
-                                <span className="mx-2 text-white/40">|</span>
-                              )}
-                              {primaryEmail && (
-                                <span className="text-white/70">
-                                  {primaryEmail}
-                                </span>
-                              )}
-                            </p>
-                          )}
-                          {company.address && (
-                            <p className="text-xs text-white/55 text-center md:text-right max-w-[220px]">
-                              {company.address}
-                            </p>
-                          )}
-                          <Button
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleCompanyClick(company._id);
-                            }}
-                            className="rounded-full bg-white/15 px-6 py-1.5 text-xs font-semibold text-white hover:bg-white/25 border border-white/20"
-                          >
-                            {isActive ? "Close Executives" : "View Executives"}
-                            <ArrowRight className="ml-2 w-3 h-3" />
-                          </Button>
-                        </div>
-                      </Card>
-                    );
-                  })
-                )
-              ) : leadsLoading ? (
-                <div className="text-center text-white/70 py-8">
-                  Loading leads...
-                </div>
-              ) : leads.length === 0 ? (
-                <div className="text-center text-white/70 py-8">
-                  No leads found
-                </div>
+                <CompaniesList
+                  companies={companies}
+                  loading={loading}
+                  selectedCompanyId={selectedCompanyId}
+                  onSelectCompany={handleCompanyClick}
+                />
               ) : (
-                leads.map((lead) => {
-                  const isActive = selectedLeadId === lead._id;
-                  const displayEmail = lead.email || "N/A";
-                  const displayPhone = lead.phone || "N/A";
-
-                  return (
-                    <Card
-                      key={lead._id}
-                      onClick={() => handleLeadClick(lead._id)}
-                      className={`relative flex items-center justify-between gap-6 bg-gradient-to-r from-[#13363b] via-[#1f4c55] to-[#16383f] border ${
-                        isActive ? "border-primary/60" : "border-[#274a4f]"
-                      } rounded-[26px] px-8 py-3 pl-4 transition-all duration-300 hover:shadow-[0_18px_40px_rgba(0,0,0,0.3)] before:absolute before:content-[''] before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[60%] before:w-[5px] before:rounded-full ${
-                        isActive ? "before:bg-primary" : "before:bg-white/75"
-                      } cursor-pointer`}
-                    >
-                      <div className="flex-1">
-                        <div className="flex flex-wrap items-center gap-2 text-white">
-                          <h3 className="text-lg font-semibold">{lead.name}</h3>
-                          {lead.companyName && (
-                            <span className="text-sm text-white/70">
-                              | {lead.companyName}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs text-white/60 mt-1">
-                          {lead.position || "Chief Executive Officer"}
-                        </p>
-                        <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-white/75">
-                          <div className="flex items-center gap-1.5">
-                            <Linkedin className="w-6 h-6 rounded-full text-gray-800 bg-white border p-1 border-white/20" />
-                            <span className="font-medium truncate max-w-[200px]">
-                              {lead.linkedinUrl || "linkedin.com"}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <Mail className="w-6 h-6 rounded-full text-gray-800 bg-white border p-1 border-white/20" />
-                            <span className="font-medium truncate max-w-[200px]">
-                              {displayEmail}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex flex-col items-center gap-4">
-                        <div className="flex items-center gap-2">
-                          <button
-                            className="h-8 w-8 rounded-full bg-white hover:bg-white/20 flex items-center justify-center transition-colors"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (displayPhone !== "N/A") {
-                                window.open(`tel:${displayPhone}`);
-                              }
-                            }}
-                          >
-                            <Phone className="w-3.5 h-3.5 text-gray-800" />
-                          </button>
-                          <button
-                            className="h-8 w-8 rounded-full bg-white hover:bg-white/20 flex items-center justify-center transition-colors"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEmailClick(lead);
-                            }}
-                          >
-                            <Mail className="w-3.5 h-3.5 text-gray-800" />
-                          </button>
-                          <button
-                            className="h-8 w-8 rounded-full bg-white hover:bg-white/20 flex items-center justify-center transition-colors"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (lead.linkedinUrl) {
-                                window.open(
-                                  lead.linkedinUrl.startsWith("http")
-                                    ? lead.linkedinUrl
-                                    : `https://${lead.linkedinUrl}`,
-                                  "_blank"
-                                );
-                              }
-                            }}
-                          >
-                            <Linkedin className="w-3.5 h-3.5 text-gray-800" />
-                          </button>
-                          <button
-                            className="h-8 w-8 rounded-full bg-white hover:bg-white/20 flex items-center justify-center transition-colors"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (displayPhone !== "N/A") {
-                                const whatsappPhone = displayPhone.replace(
-                                  /\D/g,
-                                  ""
-                                );
-                                window.open(
-                                  `https://wa.me/${whatsappPhone}`,
-                                  "_blank"
-                                );
-                              }
-                            }}
-                          >
-                            <MessageCircle className="w-3.5 h-3.5 text-gray-800" />
-                          </button>
-                        </div>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleLeadClick(lead._id);
-                          }}
-                          className="bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded-full px-8 py-1.5 flex items-center gap-3 transition-colors"
-                        >
-                          View Details
-                          <ArrowRight className="w-3 h-3" />
-                        </button>
-                      </div>
-                    </Card>
-                  );
-                })
+                <LeadsList
+                  leads={leads}
+                  loading={leadsLoading}
+                  selectedLeadId={selectedLeadId}
+                  onSelectLead={handleLeadClick}
+                  onEmailClick={handleEmailClick}
+                />
               )}
             </div>
 
             {/* Right: Executives/Details Panel */}
-            <div
-              className={`flex-shrink-0 overflow-hidden transition-all duration-300 ease-in-out sticky top-6 ${
-                isSidebarOpen
-                  ? "w-[400px] opacity-100"
-                  : "w-0 opacity-0 pointer-events-none"
-              }`}
-            >
-              <Card
-                className={`bg-[#222B2C] border-[#3A3A3A] p-5 min-h-[600px] max-h-[calc(100vh-200px)] overflow-y-auto transition-all duration-300 ease-in-out ${
-                  isSidebarOpen
-                    ? "opacity-100 translate-x-0"
-                    : "opacity-0 translate-x-6"
-                }`}
-              >
-                {activeTab === "companies" ? (
-                  // Executives Panel
-                  <>
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-2">
-                        <div className="p-4 mr-2 rounded-full bg-black/10 hover:bg-black/20 text-white flex items-center justify-center">
-                          <Users className="w-5 h-5" />
-                        </div>
-                        <h3 className="text-base font-medium text-foreground">
-                          Executives
-                        </h3>
-                      </div>
-                      <Button
-                        variant="link"
-                        className="h-auto p-0 text-xs text-foreground/60 hover:text-foreground/80"
-                        onClick={() => {
-                          setActiveTab("leads");
-                        }}
-                      >
-                        View All <ArrowRight className="w-3 h-3 ml-1" />
-                      </Button>
-                    </div>
-
-                    <div className="space-y-3">
-                      {selectedCompany ? (
-                        selectedCompany.people &&
-                        selectedCompany.people.length > 0 ? (
-                          selectedCompany.people.map((exec, index) => (
-                            <div
-                              key={exec._id || exec.id || index}
-                              className="relative overflow-hidden rounded-2xl border border-white/15 bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] px-4 py-3 transition-all duration-300 hover:shadow-[0_12px_32px_rgba(0,0,0,0.3)] before:absolute before:content-[''] before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[55%] before:w-[4px] before:rounded-full before:bg-white/70"
-                            >
-                              <p className="text-sm font-semibold text-white mb-0.5">
-                                {exec.name || "N/A"}
-                              </p>
-                              <p className="text-xs text-white/60 mb-2">
-                                {exec.title || exec.position || "N/A"}
-                                {exec.email && ` | ${exec.email}`}
-                              </p>
-                              <div className="flex justify-end">
-                                {exec.linkedin && (
-                                  <Button
-                                    size="icon"
-                                    variant="ghost"
-                                    className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 text-white/70"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      window.open(
-                                        exec.linkedin.startsWith("http")
-                                          ? exec.linkedin
-                                          : `https://${exec.linkedin}`,
-                                        "_blank"
-                                      );
-                                    }}
-                                  >
-                                    <Linkedin className="w-3.5 h-3.5" />
-                                  </Button>
-                                )}
-                              </div>
-                            </div>
-                          ))
-                        ) : (
-                          <p className="text-sm text-muted-foreground/60">
-                            No executives found for this company.
-                          </p>
-                        )
-                      ) : (
-                        <p className="text-sm text-muted-foreground/60">
-                          Select a company to view its executives.
-                        </p>
-                      )}
-                    </div>
-                  </>
-                ) : (
-                  // Lead Details Panel
-                  <>
-                    <div className="flex items-center justify-between mb-6 px-4">
-                      <div className="flex items-center gap-2">
-                        <div className="p-2 rounded-full bg-white/10 text-white flex items-center justify-center">
-                          <Users className="w-4 h-4" />
-                        </div>
-                        <h3 className="text-sm font-medium text-foreground">
-                          Details
-                        </h3>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        {/* Phone Icon */}
-                        <button
-                          className="h-8 w-8 rounded-full bg-white hover:bg-white/20 flex items-center justify-center transition-colors"
-                          onClick={() => {
-                            if (selectedLeadDetails?.phone) {
-                              window.open(`tel:${selectedLeadDetails.phone}`);
-                            }
-                          }}
-                        >
-                          <Phone className="w-3.5 h-3.5 text-gray-800" />
-                        </button>
-
-                        {/* Email Icon */}
-                        <button
-                          className="h-8 w-8 rounded-full bg-white hover:bg-white/20 flex items-center justify-center transition-colors"
-                          onClick={() => {
-                            if (selectedLeadDetails) {
-                              handleEmailClick(selectedLeadDetails);
-                            }
-                          }}
-                        >
-                          <Mail className="w-3.5 h-3.5 text-gray-800" />
-                        </button>
-
-                        {/* LinkedIn Icon */}
-                        <button
-                          className="h-8 w-8 rounded-full bg-white hover:bg-white/20 flex items-center justify-center transition-colors"
-                          onClick={() => {
-                            if (selectedLeadDetails?.linkedinUrl) {
-                              window.open(
-                                selectedLeadDetails.linkedinUrl.startsWith(
-                                  "http"
-                                )
-                                  ? selectedLeadDetails.linkedinUrl
-                                  : `https://${selectedLeadDetails.linkedinUrl}`,
-                                "_blank"
-                              );
-                            }
-                          }}
-                        >
-                          <Linkedin className="w-3.5 h-3.5 text-gray-800" />
-                        </button>
-
-                        {/* WhatsApp Icon */}
-                        <button
-                          className="h-8 w-8 rounded-full bg-white hover:bg-white/20 flex items-center justify-center transition-colors"
-                          onClick={() => {
-                            if (selectedLeadDetails?.phone) {
-                              const whatsappPhone =
-                                selectedLeadDetails.phone.replace(/\D/g, "");
-                              window.open(
-                                `https://wa.me/${whatsappPhone}`,
-                                "_blank"
-                              );
-                            }
-                          }}
-                        >
-                          <MessageCircle className="w-3.5 h-3.5 text-gray-800" />
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="space-y-4 px-4">
-                      {selectedLeadDetails ? (
-                        <>
-                          {/* Lead Avatar and Name */}
-                          <div className="flex flex-col items-center text-center py-8">
-                            <Avatar className="h-32 w-32 mb-4 border-4 border-white/10">
-                              <AvatarImage
-                                src={selectedLeadDetails.pictureUrl}
-                                alt={selectedLeadDetails.name}
-                              />
-                              <AvatarFallback className="bg-[#3d4f51] text-white text-3xl">
-                                {selectedLeadDetails.name
-                                  .charAt(0)
-                                  .toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
-                            <h4 className="text-xl font-semibold text-white mb-2">
-                              {selectedLeadDetails.name}
-                            </h4>
-                            <p className="text-sm text-white/50 mb-1">
-                              {selectedLeadDetails.companyName ||
-                                "Company not specified"}
-                            </p>
-                            <p className="text-xs text-white/40">
-                              {selectedLeadDetails.position ||
-                                "Chief Executive Officer"}
-                            </p>
-                          </div>
-                        </>
-                      ) : (
-                        <p className="text-sm text-muted-foreground/60 text-center py-8">
-                          Select a lead to view details.
-                        </p>
-                      )}
-                    </div>
-                  </>
-                )}
-              </Card>
-            </div>
+            <DetailsSidebar
+              activeTab={activeTab}
+              isOpen={isSidebarOpen}
+              selectedCompany={selectedCompany}
+              selectedLead={selectedLeadDetails}
+              onSwitchToLeads={() => setActiveTab("leads")}
+              onEmailLead={handleEmailClick}
+            />
           </div>
         </div>
       </main>
