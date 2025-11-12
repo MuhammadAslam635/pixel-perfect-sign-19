@@ -4,19 +4,13 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { logout, updateUser } from "@/store/slices/authSlice";
 import { toast } from "sonner";
-import {
-  notificationService,
-  Notification,
-} from "@/services/notification.service";
 import { userService } from "@/services/user.service";
 import { RootState } from "@/store/store";
+import { useNotifications, useMarkNotificationAsRead } from "@/hooks/useNotifications";
 
 export const ActionComponent = () => {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [loadingNotifications, setLoadingNotifications] = useState(false);
   const actionsRef = useRef<HTMLDivElement>(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -41,34 +35,23 @@ export const ActionComponent = () => {
     }
   }, [dispatch]);
 
-  // Fetch notifications
-  const fetchNotifications = async () => {
-    setLoadingNotifications(true);
-    try {
-      const response = await notificationService.getNotifications(1, 10);
-      // API returns "notification" not "notifications"
-      const notificationList =
-        response.notification || response.notifications || [];
-      setNotifications(notificationList);
-      setUnreadCount(
-        response.unreadNotificationCount ||
-          response.pagination?.unreadCount ||
-          0
-      );
-    } catch (error) {
-      console.error("Error fetching notifications:", error);
-      toast.error("Failed to load notifications");
-    } finally {
-      setLoadingNotifications(false);
-    }
-  };
+  // Use custom hook for notifications with real-time updates
+  const {
+    notifications,
+    unreadCount,
+    isLoading: loadingNotifications,
+    error: notificationsError,
+  } = useNotifications(1, 10);
 
+  // Use custom hook for marking notification as read
+  const markAsReadMutation = useMarkNotificationAsRead();
+
+  // Show error toast if notifications fail to load
   useEffect(() => {
-    fetchNotifications();
-    // Poll for new notifications every 30 seconds
-    const interval = setInterval(fetchNotifications, 30000);
-    return () => clearInterval(interval);
-  }, []);
+    if (notificationsError) {
+      console.error("Error fetching notifications:", notificationsError);
+    }
+  }, [notificationsError]);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -76,7 +59,7 @@ export const ActionComponent = () => {
     navigate("/");
   };
 
-  const handleMarkAsRead = async (notificationId: string) => {
+  const handleMarkAsRead = (notificationId: string) => {
     // Find the notification to check if it's already read
     const notification = notifications.find((n) => n._id === notificationId);
 
@@ -85,19 +68,8 @@ export const ActionComponent = () => {
       return;
     }
 
-    try {
-      await notificationService.markAsRead(notificationId);
-      // Update local state
-      setNotifications((prev) =>
-        prev.map((notif) =>
-          notif._id === notificationId ? { ...notif, is_read: "Yes" } : notif
-        )
-      );
-      setUnreadCount((prev) => Math.max(0, prev - 1));
-    } catch (error) {
-      console.error("Error marking notification as read:", error);
-      toast.error("Failed to mark notification as read");
-    }
+    // Call the mutation
+    markAsReadMutation.mutate(notificationId);
   };
 
   useEffect(() => {
