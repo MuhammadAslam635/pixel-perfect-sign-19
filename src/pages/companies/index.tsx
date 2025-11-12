@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { TopNav } from "@/components/TopNav";
+import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Building2, Filter, Users, ArrowRight } from "lucide-react";
@@ -191,9 +191,9 @@ const CompanyDetail = () => {
 
   return (
     <div className="min-h-screen w-full bg-[#1A1A1A] flex flex-col">
-      <TopNav />
+      <DashboardHeader />
 
-      <main className="flex-1 p-6 bg-[#1A1A1A]">
+      <main className="relative flex-1 w-full bg-[#1A1A1A] px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] mt-24 lg:mt-28 pb-10 text-white">
         <div className="max-w-[1600px] mx-auto">
           {/* Tabs */}
           <div
