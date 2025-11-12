@@ -3,13 +3,32 @@ import * as ScrollAreaPrimitive from "@radix-ui/react-scroll-area";
 
 import { cn } from "@/lib/utils";
 
+type ScrollAreaProps = React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.Root> & {
+  viewportClassName?: string;
+  hideScrollbars?: boolean;
+};
+
 const ScrollArea = React.forwardRef<
   React.ElementRef<typeof ScrollAreaPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.Root>
->(({ className, children, ...props }, ref) => (
+  ScrollAreaProps
+>(({ className, children, viewportClassName, hideScrollbars = false, ...props }, ref) => (
   <ScrollAreaPrimitive.Root ref={ref} className={cn("relative overflow-hidden", className)} {...props}>
-    <ScrollAreaPrimitive.Viewport className="h-full w-full rounded-[inherit]">{children}</ScrollAreaPrimitive.Viewport>
-    <ScrollBar />
+    <ScrollAreaPrimitive.Viewport
+      className={cn(
+        "h-full w-full overflow-auto rounded-[inherit]",
+        hideScrollbars && "scrollbar-hide",
+        viewportClassName,
+      )}
+    >
+      {children}
+    </ScrollAreaPrimitive.Viewport>
+    <ScrollBar
+      forceMount={hideScrollbars}
+      className={cn(
+        hideScrollbars &&
+          "pointer-events-none opacity-0 [&_*]:pointer-events-none [&_*]:opacity-0 [&[data-orientation='vertical']]:w-0 [&[data-orientation='horizontal']]:h-0",
+      )}
+    />
     <ScrollAreaPrimitive.Corner />
   </ScrollAreaPrimitive.Root>
 ));

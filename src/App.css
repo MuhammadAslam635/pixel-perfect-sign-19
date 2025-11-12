@@ -1230,3 +1230,16 @@ body {
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+.chat-scroll-area [data-radix-scroll-area-viewport] {
+  -ms-overflow-style: none;
+  scrollbar-width: none !important;
+}
+
+.chat-scroll-area [data-radix-scroll-area-viewport]::-webkit-scrollbar {
+  display: none !important;
+}
+
+.chat-scroll-area [data-radix-scroll-area-scrollbar] {
+  display: none !important;
+}

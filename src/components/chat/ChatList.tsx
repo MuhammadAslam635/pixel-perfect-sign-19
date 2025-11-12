@@ -80,7 +80,7 @@ const ChatList = ({
       <div className="mb-3 text-sm font-semibold text-white/80">Chats</div>
 
       <div className="flex-1 overflow-hidden">
-        <ScrollArea className="h-full">
+        <ScrollArea className="h-full" hideScrollbars>
           <div className="space-y-1.5 pr-1">
             {isLoading ? (
               <div className="flex h-64 items-center justify-center text-muted-foreground/70">
