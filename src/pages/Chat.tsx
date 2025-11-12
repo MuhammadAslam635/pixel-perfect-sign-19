@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { AxiosError } from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import ChatList from "@/components/chat/ChatList";
 import ChatMessages from "@/components/chat/ChatMessages";
@@ -25,6 +26,7 @@ const getMessageSignature = (message: ChatMessage) =>
 const ChatPage = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
   const [composerValue, setComposerValue] = useState("");
@@ -83,12 +85,28 @@ const ChatPage = () => {
       return;
     }
 
-    const newChatIsInList = chatList.some((chat) => chat._id === selectedChatId);
+    const newChatIsInList = chatList.some(
+      (chat) => chat._id === selectedChatId
+    );
 
     if (newChatIsInList) {
       setIsCreatingNewChat(false);
     }
   }, [chatList, isCreatingNewChat, selectedChatId]);
+
+  // Handle incoming message from URL parameter
+  useEffect(() => {
+    const messageFromUrl = searchParams.get("message");
+    if (messageFromUrl) {
+      // Set the message in composer
+      setComposerValue(messageFromUrl);
+      // Start a new chat
+      setIsCreatingNewChat(true);
+      setSelectedChatId(null);
+      // Clear the URL parameter
+      setSearchParams({});
+    }
+  }, [searchParams, setSearchParams]);
 
   useEffect(() => {
     if (!selectedChatId || !selectedChat?.messages?.length) {
@@ -189,7 +207,9 @@ const ChatPage = () => {
             return updated;
           });
 
-          queryClient.invalidateQueries({ queryKey: ["chatDetail", newChatId] });
+          queryClient.invalidateQueries({
+            queryKey: ["chatDetail", newChatId],
+          });
         } else if (variables.chatId) {
           queryClient.invalidateQueries({
             queryKey: ["chatDetail", variables.chatId],
