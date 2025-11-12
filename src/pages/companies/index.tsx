@@ -23,6 +23,7 @@ import {
   EmailCopy,
   EmailCopyMetadata,
   PhoneScriptMetadata,
+  ConnectionMessageData,
 } from "@/services/connectionMessages.service";
 
 const index = () => {
@@ -56,6 +57,8 @@ const index = () => {
   const [linkedinMessage, setLinkedinMessage] = useState<string | null>(null);
   const [linkedinLoading, setLinkedinLoading] = useState(false);
   const [linkedinError, setLinkedinError] = useState<string | null>(null);
+  const [linkedinMetadata, setLinkedinMetadata] =
+    useState<ConnectionMessageData | null>(null);
   const [phoneModalOpen, setPhoneModalOpen] = useState(false);
   const [phoneLead, setPhoneLead] = useState<Lead | null>(null);
   const [phoneFallbackExecutive, setPhoneFallbackExecutive] =
@@ -119,11 +122,13 @@ const index = () => {
         const message = "Missing company or person identifiers for this lead.";
         setLinkedinMessage(null);
         setLinkedinError(message);
+        setLinkedinMetadata(null);
         return;
       }
 
       setLinkedinLoading(true);
       setLinkedinError(null);
+      setLinkedinMetadata(null);
 
       try {
         const response =
@@ -133,12 +138,14 @@ const index = () => {
           });
 
         setLinkedinMessage(response.data.connectionMessage);
+        setLinkedinMetadata(response.data);
       } catch (error) {
         const message = resolveErrorMessage(
           error,
           "Failed to generate LinkedIn message."
         );
         setLinkedinError(message);
+        setLinkedinMetadata(null);
         toast.error(message);
       } finally {
         setLinkedinLoading(false);
@@ -206,6 +213,7 @@ const index = () => {
       setLinkedinModalOpen(true);
       setLinkedinMessage(null);
       setLinkedinError(null);
+      setLinkedinMetadata(null);
       fetchLinkedinMessage(lead);
     },
     [fetchLinkedinMessage]
@@ -542,6 +550,7 @@ const index = () => {
         message={linkedinMessage}
         loading={linkedinLoading}
         error={linkedinError}
+        metadata={linkedinMetadata}
         onRegenerate={handleLinkedinRegenerate}
       />
       <PhoneCallModal

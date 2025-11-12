@@ -87,13 +87,31 @@ export interface GenerateConnectionMessageInput {
   tone?: string;
 }
 
+export interface ConnectionMessagePerson {
+  id: string;
+  name: string;
+  position?: string;
+  company?: string;
+  linkedinUrl?: string;
+}
+
+export interface ConnectionMessageCompany {
+  id: string;
+  name: string;
+  industry?: string;
+}
+
+export interface ConnectionMessageData {
+  connectionMessage: string;
+  characterCount?: number;
+  person?: ConnectionMessagePerson;
+  company?: ConnectionMessageCompany;
+}
+
 export interface GenerateConnectionMessageResponse {
   success: boolean;
   message?: string;
-  data: {
-    connectionMessage: string;
-    characterCount?: number;
-  };
+  data: ConnectionMessageData;
 }
 
 export const connectionMessagesService = {

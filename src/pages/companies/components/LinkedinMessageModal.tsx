@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -8,6 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Bold, Italic, List, Edit, Sparkles, Send } from "lucide-react";
+import { ConnectionMessageData } from "@/services/connectionMessages.service";
 
 const defaultMessage = (name?: string) =>
   `Hi ${
@@ -22,6 +23,7 @@ interface LinkedinMessageModalProps {
   message?: string | null;
   loading?: boolean;
   error?: string | null;
+  metadata?: ConnectionMessageData | null;
   onRegenerate?: () => void;
 }
 
@@ -33,9 +35,14 @@ export const LinkedinMessageModal = ({
   message,
   loading = false,
   error,
+  metadata,
   onRegenerate,
 }: LinkedinMessageModalProps) => {
   const [draft, setDraft] = useState(() => defaultMessage(leadName));
+
+  const charactersUsed = useMemo(() => draft.length, [draft]);
+  const characterLimit = 300;
+  const isOverLimit = charactersUsed > characterLimit;
 
   useEffect(() => {
     if (open) {
@@ -141,6 +148,7 @@ export const LinkedinMessageModal = ({
           <Textarea
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
+            disabled={loading}
             className="min-h-[220px] bg-[#2A3435]/50 border-white/5 text-white/90 resize-none focus-visible:ring-1 focus-visible:ring-primary/50 text-sm leading-relaxed"
             placeholder="Type your LinkedIn connection message here..."
           />
@@ -157,6 +165,25 @@ export const LinkedinMessageModal = ({
             </div>
           )}
 
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-white/60">
+            <span>
+              Characters:&nbsp;
+              <span
+                className={
+                  isOverLimit ? "text-red-300 font-semibold" : "text-white/90"
+                }
+              >
+                {charactersUsed}
+              </span>
+              /{characterLimit}
+            </span>
+            {metadata?.company?.name && metadata?.person?.position && (
+              <span className="text-white/50">
+                Target: {metadata.person.position} @ {metadata.company.name}
+              </span>
+            )}
+          </div>
+
           <div className="flex justify-end gap-3 pt-2">
             <Button
               variant="ghost"
@@ -167,7 +194,8 @@ export const LinkedinMessageModal = ({
             </Button>
             <Button
               onClick={handleSend}
-              className="bg-primary hover:bg-primary/90 text-white rounded-full px-8 py-2 flex items-center gap-2"
+              disabled={loading}
+              className="bg-primary hover:bg-primary/90 disabled:bg-primary/40 disabled:text-white/60 text-white rounded-full px-8 py-2 flex items-center gap-2"
             >
               Send Connection
               <Send className="h-4 w-4" />
