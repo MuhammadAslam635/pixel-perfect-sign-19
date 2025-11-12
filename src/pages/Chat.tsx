@@ -24,6 +24,7 @@ const ChatPage = () => {
   const [composerValue, setComposerValue] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [isCreatingNewChat, setIsCreatingNewChat] = useState(false);
 
   const {
     data: chatList = [],
@@ -47,13 +48,40 @@ const ChatPage = () => {
   });
 
   useEffect(() => {
-    if (chatList.length === 0 || selectedChatId) {
+    if (chatList.length === 0) {
       return;
     }
-    setSelectedChatId(chatList[0]._id);
-  }, [chatList, selectedChatId]);
+
+    const selectedChatExists = selectedChatId
+      ? chatList.some((chat) => chat._id === selectedChatId)
+      : false;
+
+    if (!selectedChatId) {
+      if (!isCreatingNewChat) {
+        setSelectedChatId(chatList[0]._id);
+      }
+      return;
+    }
+
+    if (!selectedChatExists && !isCreatingNewChat) {
+      setSelectedChatId(chatList[0]._id);
+    }
+  }, [chatList, isCreatingNewChat, selectedChatId]);
+
+  useEffect(() => {
+    if (!isCreatingNewChat || !selectedChatId) {
+      return;
+    }
+
+    const newChatIsInList = chatList.some((chat) => chat._id === selectedChatId);
+
+    if (newChatIsInList) {
+      setIsCreatingNewChat(false);
+    }
+  }, [chatList, isCreatingNewChat, selectedChatId]);
 
   const selectChatFromList = (chatId: string) => {
+    setIsCreatingNewChat(false);
     setSelectedChatId(chatId);
   };
 
@@ -64,6 +92,12 @@ const ChatPage = () => {
         const newChatId = response.data.chatId;
         setComposerValue("");
         setPendingFile(null);
+
+        if (!newChatId) {
+          queryClient.invalidateQueries({ queryKey: ["chatList"] });
+          return;
+        }
+
         setSelectedChatId(newChatId);
         queryClient.invalidateQueries({ queryKey: ["chatList"] });
         queryClient.invalidateQueries({
@@ -94,6 +128,7 @@ const ChatPage = () => {
   };
 
   const handleStartNewChat = () => {
+    setIsCreatingNewChat(true);
     setSelectedChatId(null);
     setComposerValue("");
     setPendingFile(null);
