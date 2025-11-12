@@ -11,11 +11,16 @@ import {
   sendChatMessage,
   SendChatMessagePayload,
 } from "@/services/chat.service";
-import { ChatDetail, ChatSummary } from "@/types/chat.types";
+import { ChatDetail, ChatSummary, ChatMessage } from "@/types/chat.types";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
+
+const NEW_CHAT_KEY = "__new_chat__";
+
+const getMessageSignature = (message: ChatMessage) =>
+  `${message.role}-${message.content}`;
 
 const ChatPage = () => {
   const { toast } = useToast();
@@ -27,6 +32,9 @@ const ChatPage = () => {
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [isCreatingNewChat, setIsCreatingNewChat] = useState(false);
   const [isMobileListOpen, setIsMobileListOpen] = useState(false);
+  const [optimisticMessagesByChat, setOptimisticMessagesByChat] = useState<
+    Record<string, ChatMessage[]>
+  >({});
 
   const {
     data: chatList = [],
@@ -82,32 +90,147 @@ const ChatPage = () => {
     }
   }, [chatList, isCreatingNewChat, selectedChatId]);
 
+  useEffect(() => {
+    if (!selectedChatId || !selectedChat?.messages?.length) {
+      return;
+    }
+
+    const serverSignatures = new Set(
+      selectedChat.messages.map((message) => getMessageSignature(message))
+    );
+
+    setOptimisticMessagesByChat((prev) => {
+      const currentPending = prev[selectedChatId];
+      if (!currentPending?.length) {
+        return prev;
+      }
+
+      const filtered = currentPending.filter(
+        (message) => !serverSignatures.has(getMessageSignature(message))
+      );
+
+      if (filtered.length === currentPending.length) {
+        return prev;
+      }
+
+      const updated = { ...prev };
+      if (filtered.length > 0) {
+        updated[selectedChatId] = filtered;
+      } else {
+        delete updated[selectedChatId];
+      }
+      return updated;
+    });
+  }, [selectedChatId, selectedChat?.messages]);
+
   const selectChatFromList = (chatId: string) => {
     setIsCreatingNewChat(false);
     setSelectedChatId(chatId);
     setIsMobileListOpen(false);
   };
 
+  type SendMessageContext = {
+    chatKey: string;
+    tempMessage: ChatMessage;
+  };
+
   const { mutate: mutateSendMessage, isPending: isSendingMessage } =
-    useMutation({
-      mutationFn: (payload: SendChatMessagePayload) => sendChatMessage(payload),
-      onSuccess: (response) => {
-        const newChatId = response.data.chatId;
+    useMutation<
+      Awaited<ReturnType<typeof sendChatMessage>>,
+      AxiosError<{ message?: string }>,
+      SendChatMessagePayload,
+      SendMessageContext
+    >({
+      mutationFn: sendChatMessage,
+      onMutate: (variables) => {
+        const trimmedMessage = variables.message.trim();
+        const chatKey = variables.chatId ?? NEW_CHAT_KEY;
+        const tempMessage: ChatMessage = {
+          _id: `temp-${Date.now()}`,
+          chatId: variables.chatId ?? "temp",
+          role: "user",
+          content: trimmedMessage,
+          createdAt: new Date().toISOString(),
+        };
+
         setComposerValue("");
         setPendingFile(null);
+        setOptimisticMessagesByChat((prev) => ({
+          ...prev,
+          [chatKey]: [...(prev[chatKey] ?? []), tempMessage],
+        }));
 
-        if (!newChatId) {
-          queryClient.invalidateQueries({ queryKey: ["chatList"] });
-          return;
+        return { chatKey, tempMessage };
+      },
+      onSuccess: (response, variables) => {
+        const newChatId = response.data.chatId;
+
+        if (newChatId) {
+          if (!variables.chatId) {
+            setSelectedChatId(newChatId);
+          }
+
+          setOptimisticMessagesByChat((prev) => {
+            if (variables.chatId) {
+              return prev;
+            }
+
+            const pendingNewMessages = prev[NEW_CHAT_KEY];
+            if (!pendingNewMessages?.length) {
+              return prev;
+            }
+
+            const updated = { ...prev };
+            delete updated[NEW_CHAT_KEY];
+            updated[newChatId] = pendingNewMessages.map((message) => ({
+              ...message,
+              chatId: newChatId,
+            }));
+            return updated;
+          });
+
+          queryClient.invalidateQueries({ queryKey: ["chatDetail", newChatId] });
+        } else if (variables.chatId) {
+          queryClient.invalidateQueries({
+            queryKey: ["chatDetail", variables.chatId],
+          });
         }
 
-        setSelectedChatId(newChatId);
         queryClient.invalidateQueries({ queryKey: ["chatList"] });
-        queryClient.invalidateQueries({
-          queryKey: ["chatDetail", newChatId],
-        });
       },
-      onError: (error: AxiosError<{ message?: string }>) => {
+      onError: (
+        error: AxiosError<{ message?: string }>,
+        variables,
+        context
+      ) => {
+        if (context?.chatKey) {
+          setOptimisticMessagesByChat((prev) => {
+            const pendingMessages = prev[context.chatKey];
+            if (!pendingMessages?.length) {
+              return prev;
+            }
+
+            const filtered = pendingMessages.filter(
+              (message) => message._id !== context.tempMessage._id
+            );
+
+            if (filtered.length === pendingMessages.length) {
+              return prev;
+            }
+
+            const updated = { ...prev };
+            if (filtered.length > 0) {
+              updated[context.chatKey] = filtered;
+            } else {
+              delete updated[context.chatKey];
+            }
+            return updated;
+          });
+        }
+
+        setComposerValue(variables.message);
+        setPendingFile(variables.file ?? null);
+
         toast({
           title: "Unable to send message",
           description:
@@ -119,12 +242,17 @@ const ChatPage = () => {
     });
 
   const handleSendMessage = () => {
-    if (!composerValue.trim()) {
+    if (isSendingMessage) {
+      return;
+    }
+
+    const trimmedMessage = composerValue.trim();
+    if (!trimmedMessage) {
       return;
     }
 
     mutateSendMessage({
-      message: composerValue.trim(),
+      message: trimmedMessage,
       chatId: selectedChatId,
       file: pendingFile ?? undefined,
     });
@@ -147,10 +275,38 @@ const ChatPage = () => {
     return summary?.title;
   }, [chatList, selectedChat, selectedChatId]);
 
-  const isConversationLoading =
-    isChatDetailLoading || isChatDetailFetching || isChatListFetching;
+  const currentChatKey = selectedChatId ?? NEW_CHAT_KEY;
+  const optimisticMessages = optimisticMessagesByChat[currentChatKey] ?? [];
 
-  const selectedMessages = selectedChat?.messages ?? [];
+  const selectedMessages = useMemo(() => {
+    const apiMessages = selectedChat?.messages ?? [];
+
+    if (!apiMessages.length) {
+      return optimisticMessages;
+    }
+
+    if (!optimisticMessages.length) {
+      return apiMessages;
+    }
+
+    const apiSignatures = new Set(
+      apiMessages.map((message) => getMessageSignature(message))
+    );
+
+    const filteredOptimistic = optimisticMessages.filter(
+      (message) => !apiSignatures.has(getMessageSignature(message))
+    );
+
+    return [...apiMessages, ...filteredOptimistic];
+  }, [optimisticMessages, selectedChat?.messages]);
+
+  const hasActiveConversation =
+    Boolean(selectedChatId) || optimisticMessages.length > 0;
+
+  const isConversationLoading =
+    Boolean(selectedChatId) &&
+    (isChatDetailLoading || isChatDetailFetching) &&
+    optimisticMessages.length === 0;
 
   return (
     <DashboardLayout>
@@ -174,8 +330,8 @@ const ChatPage = () => {
               <div className="flex flex-1 min-h-0 flex-col gap-5 rounded-[32px] bg-transparent">
                 <ChatMessages
                   chatTitle={resolvedChatTitle}
-                  hasSelection={Boolean(selectedChatId)}
-                  isLoading={isConversationLoading && Boolean(selectedChatId)}
+                  hasSelection={hasActiveConversation}
+                  isLoading={isConversationLoading}
                   isSending={isSendingMessage}
                   messages={selectedMessages}
                   onOpenChatList={() => setIsMobileListOpen(true)}
@@ -203,6 +359,7 @@ const ChatPage = () => {
                     onChange={setComposerValue}
                     onSend={handleSendMessage}
                     isSending={isSendingMessage}
+                    isAwaitingResponse={isSendingMessage}
                     disabled={isConversationLoading}
                     onUploadFile={setPendingFile}
                   />

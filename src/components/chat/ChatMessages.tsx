@@ -285,10 +285,10 @@ const ChatMessages = ({
           );
         })}
         {isSending ? (
-          <div className="flex justify-end">
-            <div className="flex items-center gap-2 rounded-3xl bg-gradient-to-r from-primary/20 to-primary/10 px-4 py-2 text-xs text-primary/80">
+          <div className="flex justify-start">
+            <div className="flex items-center gap-2 rounded-3xl bg-white/5 px-4 py-2 text-xs text-white/80">
               <Loader2 className="size-4 animate-spin" />
-              Sending…
+              Thinking…
             </div>
           </div>
         ) : null}

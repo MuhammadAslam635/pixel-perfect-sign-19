@@ -10,6 +10,7 @@ type ChatComposerProps = {
   isSending: boolean;
   disabled?: boolean;
   onUploadFile?: (file: File) => void;
+  isAwaitingResponse?: boolean;
 };
 
 const ChatComposer = ({
@@ -19,11 +20,12 @@ const ChatComposer = ({
   isSending,
   disabled = false,
   onUploadFile,
+  isAwaitingResponse = false,
 }: ChatComposerProps) => {
   const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
-      if (!disabled && value.trim()) {
+      if (!disabled && !isAwaitingResponse && value.trim()) {
         onSend();
       }
     }
@@ -37,7 +39,7 @@ const ChatComposer = ({
     }
   };
 
-  const isSendDisabled = disabled || !value.trim() || isSending;
+  const isSendDisabled = disabled || !value.trim() || isSending || isAwaitingResponse;
 
   return (
     <div className="w-full rounded-full border border-white/10 bg-[#282828] p-2 shadow-[0_18px_48px_rgba(12,17,28,0.4)] backdrop-blur">
@@ -51,7 +53,7 @@ const ChatComposer = ({
             type="file"
             className="hidden"
             onChange={handleFileChange}
-            disabled={disabled}
+        disabled={disabled || isAwaitingResponse}
           />
         </label>
 
@@ -69,7 +71,7 @@ const ChatComposer = ({
           size="icon"
           className="size-12 shrink-0 rounded-full bg-gradient-to-r from-[#55a0ff] to-[#64d5ff] text-white shadow-[0_16px_36px_rgba(92,182,255,0.45)] transition hover:shadow-[0_18px_40px_rgba(92,182,255,0.6)] disabled:opacity-60 disabled:shadow-none"
           onClick={onSend}
-          disabled={isSendDisabled}
+      disabled={isSendDisabled}
         >
           {isSending ? (
             <Loader2 className="size-5 animate-spin" />
