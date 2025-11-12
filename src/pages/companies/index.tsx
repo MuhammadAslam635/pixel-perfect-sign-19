@@ -410,114 +410,106 @@ const CompanyDetail = () => {
                     <Card
                       key={lead._id}
                       onClick={() => handleLeadClick(lead._id)}
-                      className={`relative bg-gradient-to-r from-[#13363b] via-[#1f4c55] to-[#16383f] border ${
+                      className={`relative flex items-center justify-between gap-6 bg-gradient-to-r from-[#13363b] via-[#1f4c55] to-[#16383f] border ${
                         isActive ? "border-primary/60" : "border-[#274a4f]"
-                      } px-7 py-4 pl-10 rounded-[24px] transition-all duration-300 hover:shadow-[0_16px_38px_rgba(0,0,0,0.28)] before:absolute before:content-[''] before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[55%] before:w-[5px] before:rounded-full ${
+                      } rounded-[26px] px-8 py-3 pl-4 transition-all duration-300 hover:shadow-[0_18px_40px_rgba(0,0,0,0.3)] before:absolute before:content-[''] before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[60%] before:w-[5px] before:rounded-full ${
                         isActive ? "before:bg-primary" : "before:bg-white/75"
                       } cursor-pointer`}
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <h3 className="text-lg font-semibold text-white">
-                              {lead.name}
-                            </h3>
-                            {lead.companyName && (
-                              <span className="text-xs text-white/70">
-                                | {lead.companyName}
-                              </span>
-                            )}
+                      <div className="flex-1">
+                        <div className="flex flex-wrap items-center gap-2 text-white">
+                          <h3 className="text-lg font-semibold">{lead.name}</h3>
+                          {lead.companyName && (
+                            <span className="text-sm text-white/70">
+                              | {lead.companyName}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-white/60 mt-1">
+                          {lead.position || "Chief Executive Officer"}
+                        </p>
+                        <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-white/75">
+                          <div className="flex items-center gap-1.5">
+                            <Linkedin className="w-6 h-6 rounded-full text-gray-800 bg-white border p-1 border-white/20" />
+                            <span className="font-medium truncate max-w-[200px]">
+                              {lead.linkedinUrl || "linkedin.com"}
+                            </span>
                           </div>
-                          <div className="flex items-center gap-4 text-xs text-white/75">
-                            <div className="flex items-center gap-1.5 bg-white/10 rounded-full px-3 py-1 border border-white/20">
-                              <Mail className="w-3 h-3" />
-                              <span>{displayEmail}</span>
-                            </div>
-                            <div className="flex items-center gap-1.5 bg-white/10 rounded-full px-3 py-1 border border-white/20">
-                              <Linkedin className="w-3 h-3" />
-                              <span>{lead.linkedinUrl || "N/A"}</span>
-                            </div>
+                          <div className="flex items-center gap-1.5">
+                            <Mail className="w-6 h-6 rounded-full text-gray-800 bg-white border p-1 border-white/20" />
+                            <span className="font-medium truncate max-w-[200px]">
+                              {displayEmail}
+                            </span>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                          {/* Small circular icon buttons */}
-                          <div className="flex items-center gap-1">
-                            {/* Phone Icon */}
-                            <button
-                              className="h-7 w-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (displayPhone !== "N/A") {
-                                  window.open(`tel:${displayPhone}`);
-                                }
-                              }}
-                            >
-                              <Phone className="w-3.5 h-3.5 text-white/80" />
-                            </button>
-
-                            {/* Email Icon */}
-                            <button
-                              className="h-7 w-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleEmailClick(lead);
-                              }}
-                            >
-                              <Mail className="w-3.5 h-3.5 text-white/80" />
-                            </button>
-
-                            {/* LinkedIn Icon */}
-                            <button
-                              className="h-7 w-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (lead.linkedinUrl) {
-                                  window.open(
-                                    lead.linkedinUrl.startsWith("http")
-                                      ? lead.linkedinUrl
-                                      : `https://${lead.linkedinUrl}`,
-                                    "_blank"
-                                  );
-                                }
-                              }}
-                            >
-                              <Linkedin className="w-3.5 h-3.5 text-white/80" />
-                            </button>
-
-                            {/* WhatsApp Icon */}
-                            <button
-                              className="h-7 w-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (displayPhone !== "N/A") {
-                                  // Format phone for WhatsApp (remove spaces, dashes, etc)
-                                  const whatsappPhone = displayPhone.replace(
-                                    /\D/g,
-                                    ""
-                                  );
-                                  window.open(
-                                    `https://wa.me/${whatsappPhone}`,
-                                    "_blank"
-                                  );
-                                }
-                              }}
-                            >
-                              <MessageCircle className="w-3.5 h-3.5 text-white/80" />
-                            </button>
-                          </div>
-
-                          {/* View Details Button */}
+                      </div>
+                      <div className="flex flex-col items-center gap-4">
+                        <div className="flex items-center gap-2">
                           <button
+                            className="h-8 w-8 rounded-full bg-white hover:bg-white/20 flex items-center justify-center transition-colors"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleLeadClick(lead._id);
+                              if (displayPhone !== "N/A") {
+                                window.open(`tel:${displayPhone}`);
+                              }
                             }}
-                            className="bg-white/10 hover:bg-white/20 text-white/90 text-xs rounded-full px-4 py-1.5 flex items-center gap-1.5 transition-colors"
                           >
-                            View Details
-                            <ArrowRight className="w-3 h-3" />
+                            <Phone className="w-3.5 h-3.5 text-gray-800" />
+                          </button>
+                          <button
+                            className="h-8 w-8 rounded-full bg-white hover:bg-white/20 flex items-center justify-center transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEmailClick(lead);
+                            }}
+                          >
+                            <Mail className="w-3.5 h-3.5 text-gray-800" />
+                          </button>
+                          <button
+                            className="h-8 w-8 rounded-full bg-white hover:bg-white/20 flex items-center justify-center transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (lead.linkedinUrl) {
+                                window.open(
+                                  lead.linkedinUrl.startsWith("http")
+                                    ? lead.linkedinUrl
+                                    : `https://${lead.linkedinUrl}`,
+                                  "_blank"
+                                );
+                              }
+                            }}
+                          >
+                            <Linkedin className="w-3.5 h-3.5 text-gray-800" />
+                          </button>
+                          <button
+                            className="h-8 w-8 rounded-full bg-white hover:bg-white/20 flex items-center justify-center transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (displayPhone !== "N/A") {
+                                const whatsappPhone = displayPhone.replace(
+                                  /\D/g,
+                                  ""
+                                );
+                                window.open(
+                                  `https://wa.me/${whatsappPhone}`,
+                                  "_blank"
+                                );
+                              }
+                            }}
+                          >
+                            <MessageCircle className="w-3.5 h-3.5 text-gray-800" />
                           </button>
                         </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleLeadClick(lead._id);
+                          }}
+                          className="bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded-full px-8 py-1.5 flex items-center gap-3 transition-colors"
+                        >
+                          View Details
+                          <ArrowRight className="w-3 h-3" />
+                        </button>
                       </div>
                     </Card>
                   );
@@ -628,31 +620,31 @@ const CompanyDetail = () => {
                       <div className="flex items-center gap-1">
                         {/* Phone Icon */}
                         <button
-                          className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                          className="h-8 w-8 rounded-full bg-white hover:bg-white/20 flex items-center justify-center transition-colors"
                           onClick={() => {
                             if (selectedLeadDetails?.phone) {
                               window.open(`tel:${selectedLeadDetails.phone}`);
                             }
                           }}
                         >
-                          <Phone className="w-3.5 h-3.5 text-white/80" />
+                          <Phone className="w-3.5 h-3.5 text-gray-800" />
                         </button>
 
                         {/* Email Icon */}
                         <button
-                          className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                          className="h-8 w-8 rounded-full bg-white hover:bg-white/20 flex items-center justify-center transition-colors"
                           onClick={() => {
                             if (selectedLeadDetails) {
                               handleEmailClick(selectedLeadDetails);
                             }
                           }}
                         >
-                          <Mail className="w-3.5 h-3.5 text-white/80" />
+                          <Mail className="w-3.5 h-3.5 text-gray-800" />
                         </button>
 
                         {/* LinkedIn Icon */}
                         <button
-                          className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                          className="h-8 w-8 rounded-full bg-white hover:bg-white/20 flex items-center justify-center transition-colors"
                           onClick={() => {
                             if (selectedLeadDetails?.linkedinUrl) {
                               window.open(
@@ -666,12 +658,12 @@ const CompanyDetail = () => {
                             }
                           }}
                         >
-                          <Linkedin className="w-3.5 h-3.5 text-white/80" />
+                          <Linkedin className="w-3.5 h-3.5 text-gray-800" />
                         </button>
 
                         {/* WhatsApp Icon */}
                         <button
-                          className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                          className="h-8 w-8 rounded-full bg-white hover:bg-white/20 flex items-center justify-center transition-colors"
                           onClick={() => {
                             if (selectedLeadDetails?.phone) {
                               const whatsappPhone =
@@ -683,7 +675,7 @@ const CompanyDetail = () => {
                             }
                           }}
                         >
-                          <MessageCircle className="w-3.5 h-3.5 text-white/80" />
+                          <MessageCircle className="w-3.5 h-3.5 text-gray-800" />
                         </button>
                       </div>
                     </div>
