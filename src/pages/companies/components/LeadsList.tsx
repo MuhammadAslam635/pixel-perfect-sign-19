@@ -41,7 +41,7 @@ const LeadsList: FC<LeadsListProps> = ({
             onClick={() => onSelectLead(lead._id)}
             className={`relative flex items-center justify-between gap-6 bg-gradient-to-r from-[#13363b] via-[#1f4c55] to-[#16383f] border ${
               isActive ? "border-primary/60" : "border-[#274a4f]"
-            } rounded-[26px] px-8 py-3 pl-3 transition-all duration-300 hover:shadow-[0_18px_40px_rgba(0,0,0,0.3)] before:absolute before:content-[''] before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[60%] before:w-[5px] before:rounded-full ${
+            } rounded-[26px] px-8 py-4 pl-6 transition-all duration-300 hover:shadow-[0_18px_40px_rgba(0,0,0,0.3)] before:absolute before:content-[''] before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[60%] before:w-[5px] before:rounded-full ${
               isActive ? "before:bg-primary" : "before:bg-white/75"
             } cursor-pointer`}
           >
