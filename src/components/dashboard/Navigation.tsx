@@ -36,19 +36,19 @@ const navLinks: NavLink[] = [
     path: "/companies",
     match: (pathname: string) => pathname.startsWith("/companies"),
   },
-  { id: "users", label: "Users", icon: Users, path: "/users" },
+  // { id: "users", label: "Users", icon: Users, path: "/users" },
   { id: "chat", label: "Chat", icon: MessageSquare, path: "/chat" },
-  { id: "Booking", label: "Booking", icon: CalendarDays, path: "/booking" },
-  { id: "Leads", label: "Leads", icon: TrendingUp, path: "/leads" },
-  {
-    id: "Prospects",
-    label: "Prospects",
-    icon: ArrowUpRight,
-    path: "/prospects",
-  },
-  { id: "Results", label: "Results", icon: Target, path: "/results" },
-  { id: "docs", label: "Docs", icon: BookOpen, path: "/knowledge-base" },
-  { id: "settings", label: "Settings", icon: Settings, path: "/settings" },
+  // { id: "Booking", label: "Booking", icon: CalendarDays, path: "/booking" },
+  // { id: "Leads", label: "Leads", icon: TrendingUp, path: "/leads" },
+  // {
+  //   id: "Prospects",
+  //   label: "Prospects",
+  //   icon: ArrowUpRight,
+  //   path: "/prospects",
+  // },
+  // { id: "Results", label: "Results", icon: Target, path: "/results" },
+  // { id: "docs", label: "Docs", icon: BookOpen, path: "/knowledge-base" },
+  // { id: "settings", label: "Settings", icon: Settings, path: "/settings" },
 ];
 
 const notifications = [
