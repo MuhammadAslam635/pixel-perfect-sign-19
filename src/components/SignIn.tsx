@@ -67,9 +67,9 @@ const SignIn = () => {
     <AuthLayout
       title="Login"
       subtitle={
-        <Link to="/signup" className="hover:text-primary transition-colors">
-          Register to continue
-        </Link>
+        <div className="font-[poppins] font-normal text-lg text-[#FFFFFF4D] underline">
+          Sign in to continue
+        </div>
       }
     >
       <form onSubmit={handleSubmit} className="space-y-3">
@@ -77,7 +77,7 @@ const SignIn = () => {
         <div className="space-y-1">
           <Label
             htmlFor="email"
-            className="text-foreground/80 text-sm font-normal"
+            className="text-white text-base font-light font-[poppins]"
           >
             Email
           </Label>
@@ -87,7 +87,7 @@ const SignIn = () => {
             placeholder="Enter Your Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="text-foreground placeholder:text-muted-foreground/60 transition-all"
+            className="font-[poppins] font-normal text-[#FFFFFF4D] text-sm"
             disabled={loading}
           />
         </div>
@@ -96,7 +96,7 @@ const SignIn = () => {
         <div className="space-y-1">
           <Label
             htmlFor="password"
-            className="text-foreground/80 text-sm font-normal"
+            className="text-white text-base font-light font-poppins"
           >
             Password
           </Label>
@@ -107,7 +107,7 @@ const SignIn = () => {
               placeholder="Enter Your Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="text-foreground placeholder:text-muted-foreground/60 transition-all pr-10"
+              className="font-[poppins] font-normal text-[#FFFFFF4D] text-sm"
               disabled={loading}
             />
             <button
@@ -126,7 +126,7 @@ const SignIn = () => {
           <div className="flex justify-end">
             <Link
               to="/forgot-password"
-              className="text-xs text-muted-foreground hover:text-primary transition-colors"
+              className="font-[Poppins] font-medium text-base  text-white hover:text-primary transition-colors"
             >
               Forgot password?
             </Link>
@@ -136,20 +136,20 @@ const SignIn = () => {
         {/* Submit Button */}
         <Button
           type="submit"
-          className="w-full h-[46px] bg-gradient-to-r from-[#66B0B7] to-[#3E64B3] hover:from-[#76C0C7] hover:to-[#4E74C3] text-white font-medium text-base rounded-xl shadow-lg transition-all duration-300 mt-4"
+          className="w-full h-[46px] bg-gradient-to-r from-[#66B0B7] to-[#3E64B3] hover:from-[#76C0C7] hover:to-[#4E74C3] text-white font-normal text-lg rounded-xl shadow-lg transition-all duration-300 mt-4"
           disabled={loading}
         >
           {loading ? "Logging in..." : "Login"}
         </Button>
 
         {/* Sign Up Link */}
-        <p className="text-center text-sm text-muted-foreground mt-6">
+        <p className="text-center text-lg text-[#FFFFFF66] mt-6">
           Don't have an account?{" "}
           <Link
             to="/signup"
-            className="text-primary hover:text-primary-glow font-medium transition-colors"
+            className="hover:opacity-80 font-normal transition-opacity bg-gradient-to-r from-[#8B36E9] via-[#6586FF] to-[#2C5FEC] bg-clip-text text-transparent"
           >
-            Register here
+            Sign Up here
           </Link>
         </p>
       </form>

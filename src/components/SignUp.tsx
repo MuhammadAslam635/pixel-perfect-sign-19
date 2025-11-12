@@ -83,12 +83,12 @@ const SignUp = () => {
   };
 
   return (
-    <div className="min-h-screen w-full relative overflow-hidden bg-[#1A1A1A]">
+    <div className="min-h-[850px] w-full relative overflow-hidden bg-[#1A1A1A]">
       {/* Grid Pattern Background with teal glow overlay (keep PNG) */}
       <div className="absolute inset-0">
         {/* Base grid image */}
         <div
-          className="absolute bottom-0 left-0 right-0 h-[400px] opacity-30"
+          className="absolute bottom-0 left-0 right-0 h-[400px] opacity-100"
           style={{
             backgroundImage: `url(${gridPattern})`,
             backgroundSize: "cover",
@@ -101,8 +101,8 @@ const SignUp = () => {
           className="absolute bottom-0 left-0 right-0 h-[400px] pointer-events-none"
           style={{
             background:
-              "radial-gradient(800px 180px at 75% 20%, rgba(105,179,183,0.20), transparent 60%),\n" +
-              "radial-gradient(600px 160px at 30% 40%, rgba(105,179,183,0.12), transparent 65%)",
+              "radial-gradient(800px 180px at 50% 90%, rgba(105,179,183,0.20), transparent 80%),\n" +
+              "radial-gradient(600px 160px at 40% 90%, rgba(105,179,183,0.12), transparent 80%)",
             mixBlendMode: "screen",
           }}
         />
