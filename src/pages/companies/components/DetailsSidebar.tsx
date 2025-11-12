@@ -14,6 +14,7 @@ type DetailsSidebarProps = {
   onEmailLead: (lead: Lead) => void;
   onExecutiveSelect?: (executive: CompanyPerson) => void;
   executiveFallback?: CompanyPerson | null;
+  onPhoneLead?: (lead?: Lead, fallback?: CompanyPerson | null) => void;
 };
 
 const DetailsSidebar: FC<DetailsSidebarProps> = ({
@@ -25,6 +26,7 @@ const DetailsSidebar: FC<DetailsSidebarProps> = ({
   onEmailLead,
   onExecutiveSelect,
   executiveFallback,
+  onPhoneLead,
 }) => (
   <div
     className={`flex-shrink-0 overflow-hidden transition-all duration-300 ease-in-out sticky top-6 ${
@@ -47,6 +49,7 @@ const DetailsSidebar: FC<DetailsSidebarProps> = ({
           lead={selectedLead}
           onEmailClick={onEmailLead}
           fallbackExecutive={executiveFallback}
+          onPhoneClick={onPhoneLead}
         />
       )}
     </Card>

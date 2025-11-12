@@ -1,30 +1,72 @@
-import { useState } from 'react';
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Bold, Italic, List, Edit, Sparkles } from 'lucide-react';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Bold, Italic, List, Edit, Sparkles } from "lucide-react";
+import {
+  EmailCopy,
+  EmailCopyMetadata,
+} from "@/services/connectionMessages.service";
+
+const DEFAULT_EMAIL_BODY =
+  "Hi there,\n\nI hope you're doing well. I wanted to reach out personally to introduce myself and learn more about what you're working on.\n\nWould you be open to a brief conversation sometime next week?\n\nBest regards,\n[Your Name]";
 
 interface EmailDraftModalProps {
   open: boolean;
   onClose: () => void;
   leadName?: string;
   leadEmail?: string;
+  content?: EmailCopy | null;
+  metadata?: EmailCopyMetadata | null;
+  loading?: boolean;
+  error?: string | null;
+  onRegenerate?: () => void;
 }
 
-export const EmailDraftModal = ({ open, onClose, leadName, leadEmail }: EmailDraftModalProps) => {
+export const EmailDraftModal = ({
+  open,
+  onClose,
+  leadName,
+  leadEmail,
+  content,
+  metadata,
+  loading = false,
+  error,
+  onRegenerate,
+}: EmailDraftModalProps) => {
+  const [subject, setSubject] = useState(content?.subject ?? "");
   const [emailContent, setEmailContent] = useState(
-    "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type.\n\nMore recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
+    content?.body ?? DEFAULT_EMAIL_BODY
   );
 
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    setSubject(content?.subject ?? "");
+    if (content?.body) {
+      setEmailContent(content.body);
+    } else {
+      setEmailContent(
+        DEFAULT_EMAIL_BODY.replace("Hi there", `Hi ${leadName ?? "there"}`)
+      );
+    }
+  }, [open, content, leadName]);
+
   const handleSend = () => {
-    // Implement send logic here
-    console.log('Sending email to:', leadEmail);
+    console.log("Sending email to:", leadEmail);
     onClose();
+  };
+
+  const handleDraftRegenerate = () => {
+    onRegenerate?.();
   };
 
   return (
@@ -37,7 +79,8 @@ export const EmailDraftModal = ({ open, onClose, leadName, leadEmail }: EmailDra
                 Email Draft
               </DialogTitle>
               <p className="text-sm text-white/60 mt-1">
-                Here's a drafted email message Made edits or send as is
+                Generated outreach copy tailored for {leadName ?? "this lead"}.
+                Review and tweak before sending.
               </p>
             </div>
             <Button
@@ -51,7 +94,17 @@ export const EmailDraftModal = ({ open, onClose, leadName, leadEmail }: EmailDra
         </DialogHeader>
 
         <div className="space-y-4 mt-4">
-          {/* Toolbar with Draft with AI button */}
+          <div className="space-y-2">
+            <p className="text-xs uppercase tracking-wide text-white/40">
+              Subject
+            </p>
+            <Input
+              value={subject}
+              onChange={(event) => setSubject(event.target.value)}
+              placeholder="Add a compelling subject line"
+            />
+          </div>
+
           <div className="flex items-center justify-between gap-2 p-2 bg-[#2A3435]/50 rounded-lg border border-white/5">
             <div className="flex items-center gap-1">
               <Button
@@ -77,26 +130,53 @@ export const EmailDraftModal = ({ open, onClose, leadName, leadEmail }: EmailDra
               </Button>
             </div>
 
-            {/* Draft with AI button */}
             <Button
               variant="ghost"
               size="sm"
-              className="text-xs text-white/80 hover:bg-white/10 bg-primary/20 rounded-full px-4 h-7 flex items-center gap-1.5"
+              onClick={handleDraftRegenerate}
+              disabled={loading}
+              className="text-xs text-white/80 hover:bg-white/10 bg-primary/20 rounded-full px-4 h-7 flex items-center gap-1.5 disabled:opacity-50"
             >
               <Sparkles className="w-3 h-3" />
-              Draft with AI
+              {loading ? "Generating…" : "Regenerate with AI"}
             </Button>
           </div>
 
-          {/* Email Content */}
-          <Textarea
-            value={emailContent}
-            onChange={(e) => setEmailContent(e.target.value)}
-            className="min-h-[220px] bg-[#2A3435]/50 border-white/5 text-white/90 resize-none focus-visible:ring-1 focus-visible:ring-primary/50 text-sm leading-relaxed"
-            placeholder="Type your email content here..."
-          />
+          <div className="relative">
+            <Textarea
+              value={emailContent}
+              onChange={(event) => setEmailContent(event.target.value)}
+              className="min-h-[220px] bg-[#2A3435]/50 border-white/5 text-white/90 resize-none focus-visible:ring-1 focus-visible:ring-primary/50 text-sm leading-relaxed"
+              placeholder="Type your email content here..."
+            />
+            {loading && (
+              <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-[#1e2829]/70 backdrop-blur-sm">
+                <span className="text-sm text-white/70">
+                  Generating personalized copy…
+                </span>
+              </div>
+            )}
+          </div>
 
-          {/* Action Buttons */}
+          {content?.cta && (
+            <div className="rounded-lg border border-white/10 bg-[#2A3435]/40 px-4 py-3 text-xs text-white/60">
+              Suggested CTA:{" "}
+              <span className="text-white/90 font-medium">{content.cta}</span>
+            </div>
+          )}
+
+          {content?.ps && (
+            <div className="rounded-lg border border-primary/20 bg-primary/10 px-4 py-3 text-xs text-primary/90">
+              P.S. {content.ps}
+            </div>
+          )}
+
+          {error && (
+            <div className="rounded-md border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs text-red-200">
+              {error}
+            </div>
+          )}
+
           <div className="flex justify-end gap-3 pt-2">
             <Button
               variant="ghost"
@@ -107,7 +187,8 @@ export const EmailDraftModal = ({ open, onClose, leadName, leadEmail }: EmailDra
             </Button>
             <Button
               onClick={handleSend}
-              className="bg-primary hover:bg-primary/90 text-white rounded-full px-8 py-2"
+              disabled={loading}
+              className="bg-primary hover:bg-primary/90 disabled:bg-primary/40 disabled:text-white/60 text-white rounded-full px-8 py-2"
             >
               Send
             </Button>

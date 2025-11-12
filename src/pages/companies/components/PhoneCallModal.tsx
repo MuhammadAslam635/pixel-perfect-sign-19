@@ -6,14 +6,19 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Phone } from "lucide-react";
+import { AlertCircle, Phone, RefreshCcw } from "lucide-react";
+import { PhoneScriptMetadata } from "@/services/connectionMessages.service";
 
 type PhoneCallModalProps = {
   open: boolean;
   onClose: () => void;
   leadName?: string;
   phoneNumber?: string;
-  transcript?: string;
+  script?: string | null;
+  metadata?: PhoneScriptMetadata | null;
+  loading?: boolean;
+  error?: string | null;
+  onRegenerate?: () => void;
 };
 
 export const PhoneCallModal: FC<PhoneCallModalProps> = ({
@@ -21,7 +26,11 @@ export const PhoneCallModal: FC<PhoneCallModalProps> = ({
   onClose,
   leadName,
   phoneNumber,
-  transcript,
+  script,
+  metadata,
+  loading = false,
+  error,
+  onRegenerate,
 }) => {
   const sanitizedPhoneNumber = useMemo(
     () => phoneNumber?.replace(/\D/g, "") || "",
@@ -36,16 +45,23 @@ export const PhoneCallModal: FC<PhoneCallModalProps> = ({
     window.open(`tel:${phoneNumber}`);
     onClose();
   };
+  const handleRegenerate = () => {
+    onRegenerate?.();
+  };
+
+  const displayScript =
+    script?.trim() ??
+    "No phone script is available yet. Generate one to prepare for your call.";
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[520px] bg-[#1e2829] border-[#3A3A3A] text-white">
+      <DialogContent className="sm:max-w-[560px] bg-[#1e2829] border-[#3A3A3A] text-white">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold text-white">
             Call {leadName || "Lead"}
           </DialogTitle>
           <p className="text-sm text-white/60 mt-1">
-            Review the most recent call notes before reaching out again.
+            Review the recommended talking points before placing your call.
           </p>
         </DialogHeader>
 
@@ -66,18 +82,53 @@ export const PhoneCallModal: FC<PhoneCallModalProps> = ({
                 </span>
               )}
             </div>
+            {metadata?.callObjective && (
+              <p className="mt-3 text-xs text-white/50">
+                Objective:{" "}
+                <span className="text-white">
+                  {metadata.callObjective.replace(/_/g, " ")}
+                </span>
+              </p>
+            )}
+            {metadata?.estimatedDuration && (
+              <p className="text-xs text-white/40">
+                Estimated duration: {metadata.estimatedDuration}
+              </p>
+            )}
           </div>
 
           <div className="rounded-lg border border-white/10 bg-[#2A3435]/40 p-4">
-            <p className="text-xs uppercase tracking-wide text-white/40 mb-2">
-              Call Transcript
-            </p>
-            <div className="max-h-64 overflow-y-auto rounded-md border border-white/5 bg-[#253032]/40 p-3 text-sm text-white/80 whitespace-pre-wrap leading-relaxed">
-              {transcript?.trim()
-                ? transcript
-                : "No call transcript is available for this lead yet."}
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs uppercase tracking-wide text-white/40">
+                Call Script
+              </p>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleRegenerate}
+                disabled={loading}
+                className="text-xs text-white/80 hover:bg-white/10 rounded-full px-3 h-7 flex items-center gap-1.5 disabled:opacity-50"
+              >
+                <RefreshCcw className="h-3.5 w-3.5" />
+                {loading ? "Refreshing…" : "Regenerate"}
+              </Button>
+            </div>
+            <div className="relative max-h-64 overflow-y-auto rounded-md border border-white/5 bg-[#253032]/40 p-3 text-sm text-white/80 whitespace-pre-wrap leading-relaxed">
+              {displayScript}
+              {loading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-[#1b2627]/80 backdrop-blur-sm text-sm text-white/70">
+                  Generating call script…
+                </div>
+              )}
             </div>
           </div>
+
+          {error && (
+            <div className="flex items-start gap-2 rounded-md border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs text-red-200">
+              <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+              <span>{error}</span>
+            </div>
+          )}
 
           <div className="flex justify-end gap-3 pt-2">
             <Button
@@ -89,8 +140,8 @@ export const PhoneCallModal: FC<PhoneCallModalProps> = ({
             </Button>
             <Button
               onClick={handleCall}
-              disabled={!phoneNumber}
-              className="bg-primary hover:bg-primary/90 disabled:bg-white/10 disabled:text-white/40 text-white rounded-full px-6 py-2 flex items-center gap-2"
+              disabled={!phoneNumber || loading}
+              className="bg-primary hover:bg-primary/90 disabled:bg-primary/40 disabled:text-white/60 text-white rounded-full px-6 py-2 flex items-center gap-2"
             >
               <Phone className="h-4 w-4" />
               Call Now

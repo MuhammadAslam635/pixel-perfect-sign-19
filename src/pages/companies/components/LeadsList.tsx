@@ -1,4 +1,4 @@
-import { FC, useState } from "react";
+import { FC } from "react";
 import { Card } from "@/components/ui/card";
 import {
   ArrowRight,
@@ -9,8 +9,6 @@ import {
   Send,
 } from "lucide-react";
 import { Lead } from "@/services/leads.service";
-import { LinkedinMessageModal } from "@/pages/companies/components/LinkedinMessageModal";
-import { PhoneCallModal } from "@/pages/companies/components/PhoneCallModal";
 
 type LeadsListProps = {
   leads: Lead[];
@@ -18,6 +16,8 @@ type LeadsListProps = {
   selectedLeadId: string | null;
   onSelectLead: (leadId: string) => void;
   onEmailClick: (lead: Lead) => void;
+  onPhoneClick: (lead: Lead) => void;
+  onLinkedinClick: (lead: Lead) => void;
 };
 
 const LeadsList: FC<LeadsListProps> = ({
@@ -26,10 +26,9 @@ const LeadsList: FC<LeadsListProps> = ({
   selectedLeadId,
   onSelectLead,
   onEmailClick,
+  onPhoneClick,
+  onLinkedinClick,
 }) => {
-  const [linkedinModalLead, setLinkedinModalLead] = useState<Lead | null>(null);
-  const [callModalLead, setCallModalLead] = useState<Lead | null>(null);
-
   if (loading) {
     return (
       <div className="text-center text-white/70 py-8">Loading leads...</div>
@@ -91,7 +90,7 @@ const LeadsList: FC<LeadsListProps> = ({
                   onClick={(e) => {
                     e.stopPropagation();
                     if (lead.phone) {
-                      setCallModalLead(lead);
+                      onPhoneClick(lead);
                     }
                   }}
                 >
@@ -138,7 +137,7 @@ const LeadsList: FC<LeadsListProps> = ({
                   className="h-8 w-8 rounded-full bg-white hover:bg-white/20 flex items-center justify-center transition-colors"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setLinkedinModalLead(lead);
+                    onLinkedinClick(lead);
                   }}
                 >
                   <Send className="w-3.5 h-3.5 text-gray-800" />
@@ -158,19 +157,6 @@ const LeadsList: FC<LeadsListProps> = ({
           </Card>
         );
       })}
-      <LinkedinMessageModal
-        open={Boolean(linkedinModalLead)}
-        onClose={() => setLinkedinModalLead(null)}
-        leadName={linkedinModalLead?.name}
-        leadLinkedin={linkedinModalLead?.linkedinUrl}
-      />
-      <PhoneCallModal
-        open={Boolean(callModalLead)}
-        onClose={() => setCallModalLead(null)}
-        leadName={callModalLead?.name}
-        phoneNumber={callModalLead?.phone}
-        transcript={callModalLead?.description}
-      />
     </>
   );
 };

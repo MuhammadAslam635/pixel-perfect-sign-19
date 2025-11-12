@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -6,6 +6,8 @@ import { ArrowRight } from "lucide-react";
 import { Company, CompanyPerson } from "@/services/companies.service";
 import { Lead } from "@/services/leads.service";
 import { EmailDraftModal } from "@/pages/companies/components/EmailDraftModal";
+import { LinkedinMessageModal } from "@/pages/companies/components/LinkedinMessageModal";
+import { PhoneCallModal } from "@/pages/companies/components/PhoneCallModal";
 import { toast } from "sonner";
 import CompaniesList from "./components/CompaniesList";
 import LeadsList from "./components/LeadsList";
@@ -16,6 +18,12 @@ import {
   useLeadsData,
   buildStats,
 } from "./hooks";
+import {
+  connectionMessagesService,
+  EmailCopy,
+  EmailCopyMetadata,
+  PhoneScriptMetadata,
+} from "@/services/connectionMessages.service";
 
 const index = () => {
   type TabKey = "companies" | "leads";
@@ -37,6 +45,222 @@ const index = () => {
     email?: string;
     name?: string;
   } | null>(null);
+  const [emailDraft, setEmailDraft] = useState<EmailCopy | null>(null);
+  const [emailMetadata, setEmailMetadata] = useState<EmailCopyMetadata | null>(
+    null
+  );
+  const [emailLoading, setEmailLoading] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [linkedinModalOpen, setLinkedinModalOpen] = useState(false);
+  const [linkedinLead, setLinkedinLead] = useState<Lead | null>(null);
+  const [linkedinMessage, setLinkedinMessage] = useState<string | null>(null);
+  const [linkedinLoading, setLinkedinLoading] = useState(false);
+  const [linkedinError, setLinkedinError] = useState<string | null>(null);
+  const [phoneModalOpen, setPhoneModalOpen] = useState(false);
+  const [phoneLead, setPhoneLead] = useState<Lead | null>(null);
+  const [phoneFallbackExecutive, setPhoneFallbackExecutive] =
+    useState<CompanyPerson | null>(null);
+  const [phoneScript, setPhoneScript] = useState<string | null>(null);
+  const [phoneMetadata, setPhoneMetadata] =
+    useState<PhoneScriptMetadata | null>(null);
+  const [phoneLoading, setPhoneLoading] = useState(false);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+  const resolveErrorMessage = useCallback(
+    (error: unknown, fallback: string) => {
+      const err = error as any;
+      return (
+        err?.response?.data?.message ||
+        err?.data?.message ||
+        err?.message ||
+        fallback
+      );
+    },
+    []
+  );
+
+  const fetchEmailDraft = useCallback(
+    async (lead: Lead) => {
+      if (!lead.companyId || !lead._id) {
+        const message = "Missing company or person identifiers for this lead.";
+        setEmailDraft(null);
+        setEmailMetadata(null);
+        setEmailError(message);
+        return;
+      }
+
+      setEmailLoading(true);
+      setEmailError(null);
+
+      try {
+        const response = await connectionMessagesService.generateEmailCopy({
+          companyId: lead.companyId,
+          personId: lead._id,
+        });
+
+        setEmailDraft(response.data.email);
+        setEmailMetadata(response.data.metadata ?? null);
+      } catch (error) {
+        const message = resolveErrorMessage(
+          error,
+          "Failed to generate email copy."
+        );
+        setEmailError(message);
+        toast.error(message);
+      } finally {
+        setEmailLoading(false);
+      }
+    },
+    [resolveErrorMessage]
+  );
+
+  const fetchLinkedinMessage = useCallback(
+    async (lead: Lead) => {
+      if (!lead.companyId || !lead._id) {
+        const message = "Missing company or person identifiers for this lead.";
+        setLinkedinMessage(null);
+        setLinkedinError(message);
+        return;
+      }
+
+      setLinkedinLoading(true);
+      setLinkedinError(null);
+
+      try {
+        const response =
+          await connectionMessagesService.generateConnectionMessage({
+            companyId: lead.companyId,
+            personId: lead._id,
+          });
+
+        setLinkedinMessage(response.data.connectionMessage);
+      } catch (error) {
+        const message = resolveErrorMessage(
+          error,
+          "Failed to generate LinkedIn message."
+        );
+        setLinkedinError(message);
+        toast.error(message);
+      } finally {
+        setLinkedinLoading(false);
+      }
+    },
+    [resolveErrorMessage]
+  );
+
+  const fetchPhoneScript = useCallback(
+    async (lead: Lead) => {
+      if (!lead.companyId || !lead._id) {
+        const message = "Missing company or person identifiers for this lead.";
+        setPhoneScript(null);
+        setPhoneMetadata(null);
+        setPhoneError(message);
+        return;
+      }
+
+      setPhoneLoading(true);
+      setPhoneError(null);
+
+      try {
+        const response = await connectionMessagesService.generatePhoneScript({
+          companyId: lead.companyId,
+          personId: lead._id,
+        });
+
+        setPhoneScript(response.data.script);
+        setPhoneMetadata(response.data.metadata ?? null);
+      } catch (error) {
+        const message = resolveErrorMessage(
+          error,
+          "Failed to generate phone script."
+        );
+        setPhoneError(message);
+        toast.error(message);
+      } finally {
+        setPhoneLoading(false);
+      }
+    },
+    [resolveErrorMessage]
+  );
+
+  const handleEmailClick = useCallback(
+    (lead: Lead) => {
+      setSelectedLead(lead);
+      setEmailModalOpen(true);
+      setEmailDraft(null);
+      setEmailMetadata(null);
+      setEmailError(null);
+      fetchEmailDraft(lead);
+    },
+    [fetchEmailDraft]
+  );
+
+  const handleEmailRegenerate = useCallback(() => {
+    if (selectedLead) {
+      fetchEmailDraft(selectedLead);
+    }
+  }, [fetchEmailDraft, selectedLead]);
+
+  const handleLinkedinClick = useCallback(
+    (lead: Lead) => {
+      setLinkedinLead(lead);
+      setLinkedinModalOpen(true);
+      setLinkedinMessage(null);
+      setLinkedinError(null);
+      fetchLinkedinMessage(lead);
+    },
+    [fetchLinkedinMessage]
+  );
+
+  const handleLinkedinRegenerate = useCallback(() => {
+    if (linkedinLead) {
+      fetchLinkedinMessage(linkedinLead);
+    }
+  }, [fetchLinkedinMessage, linkedinLead]);
+
+  const openPhoneModal = useCallback(
+    (lead: Lead | null, fallback: CompanyPerson | null = null) => {
+      setPhoneLead(lead);
+      setPhoneFallbackExecutive(fallback);
+      setPhoneScript(null);
+      setPhoneMetadata(null);
+      setPhoneError(null);
+      setPhoneModalOpen(true);
+
+      if (!lead) {
+        setPhoneError(
+          "AI phone scripts are available only for leads synced from the database."
+        );
+        return;
+      }
+
+      fetchPhoneScript(lead);
+    },
+    [fetchPhoneScript]
+  );
+
+  const handlePhoneClickFromList = useCallback(
+    (lead: Lead) => {
+      openPhoneModal(lead, null);
+    },
+    [openPhoneModal]
+  );
+
+  const handlePhoneClickFromSidebar = useCallback(
+    (lead?: Lead, fallback?: CompanyPerson | null) => {
+      openPhoneModal(lead ?? null, fallback ?? null);
+    },
+    [openPhoneModal]
+  );
+
+  const handlePhoneRegenerate = useCallback(() => {
+    if (phoneLead) {
+      fetchPhoneScript(phoneLead);
+    } else {
+      setPhoneError(
+        "Cannot generate a phone script without selecting a synced lead."
+      );
+    }
+  }, [fetchPhoneScript, phoneLead]);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const tabRefs = useRef<Record<TabKey, HTMLButtonElement | null>>({
     companies: null,
@@ -170,11 +394,6 @@ const index = () => {
     }
   };
 
-  const handleEmailClick = (lead: Lead) => {
-    setSelectedLead(lead);
-    setEmailModalOpen(true);
-  };
-
   const isSidebarOpen =
     activeTab === "companies"
       ? selectedCompanyId !== null
@@ -281,6 +500,8 @@ const index = () => {
                   selectedLeadId={selectedLeadId}
                   onSelectLead={handleLeadClick}
                   onEmailClick={handleEmailClick}
+                  onPhoneClick={handlePhoneClickFromList}
+                  onLinkedinClick={handleLinkedinClick}
                 />
               )}
             </div>
@@ -295,6 +516,7 @@ const index = () => {
               onEmailLead={handleEmailClick}
               onExecutiveSelect={handleExecutiveSelect}
               executiveFallback={selectedExecutiveFallback}
+              onPhoneLead={handlePhoneClickFromSidebar}
             />
           </div>
         </div>
@@ -306,6 +528,32 @@ const index = () => {
         onClose={() => setEmailModalOpen(false)}
         leadName={selectedLead?.name}
         leadEmail={selectedLead?.email}
+        content={emailDraft}
+        metadata={emailMetadata}
+        loading={emailLoading}
+        error={emailError}
+        onRegenerate={handleEmailRegenerate}
+      />
+      <LinkedinMessageModal
+        open={linkedinModalOpen}
+        onClose={() => setLinkedinModalOpen(false)}
+        leadName={linkedinLead?.name}
+        leadLinkedin={linkedinLead?.linkedinUrl}
+        message={linkedinMessage}
+        loading={linkedinLoading}
+        error={linkedinError}
+        onRegenerate={handleLinkedinRegenerate}
+      />
+      <PhoneCallModal
+        open={phoneModalOpen}
+        onClose={() => setPhoneModalOpen(false)}
+        leadName={phoneLead?.name ?? phoneFallbackExecutive?.name}
+        phoneNumber={phoneLead?.phone ?? phoneFallbackExecutive?.phone}
+        script={phoneScript}
+        metadata={phoneMetadata}
+        loading={phoneLoading}
+        error={phoneError}
+        onRegenerate={handlePhoneRegenerate}
       />
     </div>
   );
