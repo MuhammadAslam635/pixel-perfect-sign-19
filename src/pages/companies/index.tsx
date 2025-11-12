@@ -274,223 +274,222 @@ const CompanyDetail = () => {
             ))}
           </div>
 
+          <div className="flex-1">
+            <h2 className="text-lg font-medium text-foreground mb-4">
+              {activeTab === "companies" ? "Companies" : "Leads"}
+            </h2>
+          </div>
           {/* Split View */}
           <div className="flex gap-6 items-start">
             {/* Left: Companies/Leads List */}
-            <div className="flex-1">
-              <h2 className="text-lg font-medium text-foreground mb-4">
-                {activeTab === "companies" ? "Companies" : "Leads"}
-              </h2>
-              <div className="space-y-3 bg-[#222B2C] p-6 rounded-2xl min-h-[600px]">
-                {activeTab === "companies" ? (
-                  loading ? (
-                    <div className="text-center text-white/70 py-8">
-                      Loading companies...
-                    </div>
-                  ) : companies.length === 0 ? (
-                    <div className="text-center text-white/70 py-8">
-                      No companies found
-                    </div>
-                  ) : (
-                    companies.map((company) => {
-                      const isActive = selectedCompanyId === company._id;
-                      const employeeCount = company.employees
-                        ? `${company.employees} employees`
-                        : "N/A";
-
-                      return (
-                        <Card
-                          key={company._id}
-                          onClick={() => handleCompanyClick(company._id)}
-                          className={`bg-gradient-to-b from-[#2d4041] to-[#283637] backdrop-blur-sm border ${
-                            isActive
-                              ? "border-primary/60 shadow-[0_0_0_1px_rgba(0,0,0,0.2)]"
-                              : "border-[#3A3A3A]"
-                          } p-4 hover:bg-[#3A3A3A]/50 transition-smooth cursor-pointer`}
-                        >
-                          <div className="flex items-start justify-between mb-2">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <h3 className="text-base font-medium text-white">
-                                  {company.name}
-                                </h3>
-                                {company.industry && (
-                                  <span className="text-sm text-muted-foreground/">
-                                    | {company.industry}
-                                  </span>
-                                )}
-                              </div>
-                              <p className="text-xs text-white/70 mb-3 leading-relaxed">
-                                {company.description ||
-                                  company.about ||
-                                  "No description available"}
-                              </p>
-                              <div className="flex items-center gap-4">
-                                <Badge className="bg-[#BEC3C3] text-[#283637] border-0 text-xs font-normal">
-                                  {employeeCount}
-                                </Badge>
-                                {company.website && (
-                                  <div className="flex items-center gap-1 text-xs">
-                                    <div className="p-2 mr-2 rounded-full bg-foreground text-[#283637] flex items-center justify-center">
-                                      <Linkedin className="w-3 h-3" />
-                                    </div>
-                                    <span className="text-foreground">
-                                      {company.website}
-                                    </span>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                            <div className="text-right text-white/70 text-xs space-y-1">
-                              {company.website && <p>{company.website}</p>}
-                              {company.address && <p>{company.address}</p>}
-                            </div>
-                          </div>
-                          <div className="flex justify-end mt-3">
-                            <Button
-                              size="sm"
-                              className="bg-black/10 hover:bg-black/20 text-white text-xs rounded-2xl backdrop-blur-sm border border-white/10 shadow"
-                            >
-                              View Executives{" "}
-                              <ArrowRight className="w-3 h-3 ml-1" />
-                            </Button>
-                          </div>
-                        </Card>
-                      );
-                    })
-                  )
-                ) : leadsLoading ? (
+            <div className="space-y-3 bg-[#222B2C] p-6 rounded-2xl min-h-[600px] flex-1">
+              {activeTab === "companies" ? (
+                loading ? (
                   <div className="text-center text-white/70 py-8">
-                    Loading leads...
+                    Loading companies...
                   </div>
-                ) : leads.length === 0 ? (
+                ) : companies.length === 0 ? (
                   <div className="text-center text-white/70 py-8">
-                    No leads found
+                    No companies found
                   </div>
                 ) : (
-                  leads.map((lead) => {
-                    const isActive = selectedLeadId === lead._id;
-                    const displayEmail = lead.email || "N/A";
-                    const displayPhone = lead.phone || "N/A";
+                  companies.map((company) => {
+                    const isActive = selectedCompanyId === company._id;
+                    const employeeCount = company.employees
+                      ? `${company.employees} employees`
+                      : "N/A";
 
                     return (
                       <Card
-                        key={lead._id}
-                        onClick={() => handleLeadClick(lead._id)}
+                        key={company._id}
+                        onClick={() => handleCompanyClick(company._id)}
                         className={`bg-gradient-to-b from-[#2d4041] to-[#283637] backdrop-blur-sm border ${
                           isActive
                             ? "border-primary/60 shadow-[0_0_0_1px_rgba(0,0,0,0.2)]"
                             : "border-[#3A3A3A]"
                         } p-4 hover:bg-[#3A3A3A]/50 transition-smooth cursor-pointer`}
                       >
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-start justify-between mb-2">
                           <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
+                            <div className="flex items-center gap-2 mb-1">
                               <h3 className="text-base font-medium text-white">
-                                {lead.name}
+                                {company.name}
                               </h3>
-                              {lead.companyName && (
+                              {company.industry && (
                                 <span className="text-sm text-muted-foreground/">
-                                  | {lead.companyName}
+                                  | {company.industry}
                                 </span>
                               )}
                             </div>
-                            <div className="flex items-center gap-4 text-xs text-white/70">
-                              <div className="flex items-center gap-1">
-                                <Mail className="w-3 h-3" />
-                                <span>{displayEmail}</span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <Linkedin className="w-3 h-3" />
-                                <span>{lead.linkedinUrl || "N/A"}</span>
-                              </div>
+                            <p className="text-xs text-white/70 mb-3 leading-relaxed">
+                              {company.description ||
+                                company.about ||
+                                "No description available"}
+                            </p>
+                            <div className="flex items-center gap-4">
+                              <Badge className="bg-[#BEC3C3] text-[#283637] border-0 text-xs font-normal">
+                                {employeeCount}
+                              </Badge>
+                              {company.website && (
+                                <div className="flex items-center gap-1 text-xs">
+                                  <div className="p-2 mr-2 rounded-full bg-foreground text-[#283637] flex items-center justify-center">
+                                    <Linkedin className="w-3 h-3" />
+                                  </div>
+                                  <span className="text-foreground">
+                                    {company.website}
+                                  </span>
+                                </div>
+                              )}
                             </div>
                           </div>
-                          <div className="flex items-center gap-3">
-                            {/* Small circular icon buttons */}
-                            <div className="flex items-center gap-1">
-                              {/* Phone Icon */}
-                              <button
-                                className="h-7 w-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (displayPhone !== "N/A") {
-                                    window.open(`tel:${displayPhone}`);
-                                  }
-                                }}
-                              >
-                                <Phone className="w-3.5 h-3.5 text-white/80" />
-                              </button>
-
-                              {/* Email Icon */}
-                              <button
-                                className="h-7 w-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleEmailClick(lead);
-                                }}
-                              >
-                                <Mail className="w-3.5 h-3.5 text-white/80" />
-                              </button>
-
-                              {/* LinkedIn Icon */}
-                              <button
-                                className="h-7 w-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (lead.linkedinUrl) {
-                                    window.open(
-                                      lead.linkedinUrl.startsWith("http")
-                                        ? lead.linkedinUrl
-                                        : `https://${lead.linkedinUrl}`,
-                                      "_blank"
-                                    );
-                                  }
-                                }}
-                              >
-                                <Linkedin className="w-3.5 h-3.5 text-white/80" />
-                              </button>
-
-                              {/* WhatsApp Icon */}
-                              <button
-                                className="h-7 w-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (displayPhone !== "N/A") {
-                                    // Format phone for WhatsApp (remove spaces, dashes, etc)
-                                    const whatsappPhone = displayPhone.replace(
-                                      /\D/g,
-                                      ""
-                                    );
-                                    window.open(
-                                      `https://wa.me/${whatsappPhone}`,
-                                      "_blank"
-                                    );
-                                  }
-                                }}
-                              >
-                                <MessageCircle className="w-3.5 h-3.5 text-white/80" />
-                              </button>
-                            </div>
-
-                            {/* View Details Button */}
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleLeadClick(lead._id);
-                              }}
-                              className="bg-white/10 hover:bg-white/20 text-white/90 text-xs rounded-full px-4 py-1.5 flex items-center gap-1.5 transition-colors"
-                            >
-                              View Details
-                              <ArrowRight className="w-3 h-3" />
-                            </button>
+                          <div className="text-right text-white/70 text-xs space-y-1">
+                            {company.address && <p>{company.address}</p>}
                           </div>
+                        </div>
+                        <div className="flex justify-end mt-3">
+                          <Button
+                            size="sm"
+                            className="bg-black/10 hover:bg-black/20 text-white text-xs rounded-2xl backdrop-blur-sm border border-white/10 shadow"
+                          >
+                            View Executives{" "}
+                            <ArrowRight className="w-3 h-3 ml-1" />
+                          </Button>
                         </div>
                       </Card>
                     );
                   })
-                )}
-              </div>
+                )
+              ) : leadsLoading ? (
+                <div className="text-center text-white/70 py-8">
+                  Loading leads...
+                </div>
+              ) : leads.length === 0 ? (
+                <div className="text-center text-white/70 py-8">
+                  No leads found
+                </div>
+              ) : (
+                leads.map((lead) => {
+                  const isActive = selectedLeadId === lead._id;
+                  const displayEmail = lead.email || "N/A";
+                  const displayPhone = lead.phone || "N/A";
+
+                  return (
+                    <Card
+                      key={lead._id}
+                      onClick={() => handleLeadClick(lead._id)}
+                      className={`bg-gradient-to-b from-[#2d4041] to-[#283637] backdrop-blur-sm border ${
+                        isActive
+                          ? "border-primary/60 shadow-[0_0_0_1px_rgba(0,0,0,0.2)]"
+                          : "border-[#3A3A3A]"
+                      } p-4 hover:bg-[#3A3A3A]/50 transition-smooth cursor-pointer`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h3 className="text-base font-medium text-white">
+                              {lead.name}
+                            </h3>
+                            {lead.companyName && (
+                              <span className="text-sm text-muted-foreground/">
+                                | {lead.companyName}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-4 text-xs text-white/70">
+                            <div className="flex items-center gap-1">
+                              <Mail className="w-3 h-3" />
+                              <span>{displayEmail}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Linkedin className="w-3 h-3" />
+                              <span>{lead.linkedinUrl || "N/A"}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          {/* Small circular icon buttons */}
+                          <div className="flex items-center gap-1">
+                            {/* Phone Icon */}
+                            <button
+                              className="h-7 w-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (displayPhone !== "N/A") {
+                                  window.open(`tel:${displayPhone}`);
+                                }
+                              }}
+                            >
+                              <Phone className="w-3.5 h-3.5 text-white/80" />
+                            </button>
+
+                            {/* Email Icon */}
+                            <button
+                              className="h-7 w-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEmailClick(lead);
+                              }}
+                            >
+                              <Mail className="w-3.5 h-3.5 text-white/80" />
+                            </button>
+
+                            {/* LinkedIn Icon */}
+                            <button
+                              className="h-7 w-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (lead.linkedinUrl) {
+                                  window.open(
+                                    lead.linkedinUrl.startsWith("http")
+                                      ? lead.linkedinUrl
+                                      : `https://${lead.linkedinUrl}`,
+                                    "_blank"
+                                  );
+                                }
+                              }}
+                            >
+                              <Linkedin className="w-3.5 h-3.5 text-white/80" />
+                            </button>
+
+                            {/* WhatsApp Icon */}
+                            <button
+                              className="h-7 w-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (displayPhone !== "N/A") {
+                                  // Format phone for WhatsApp (remove spaces, dashes, etc)
+                                  const whatsappPhone = displayPhone.replace(
+                                    /\D/g,
+                                    ""
+                                  );
+                                  window.open(
+                                    `https://wa.me/${whatsappPhone}`,
+                                    "_blank"
+                                  );
+                                }
+                              }}
+                            >
+                              <MessageCircle className="w-3.5 h-3.5 text-white/80" />
+                            </button>
+                          </div>
+
+                          {/* View Details Button */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleLeadClick(lead._id);
+                            }}
+                            className="bg-white/10 hover:bg-white/20 text-white/90 text-xs rounded-full px-4 py-1.5 flex items-center gap-1.5 transition-colors"
+                          >
+                            View Details
+                            <ArrowRight className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                    </Card>
+                  );
+                })
+              )}
             </div>
 
             {/* Right: Executives/Details Panel */}
