@@ -1,5 +1,5 @@
 import { ChangeEvent, KeyboardEvent } from "react";
-import { Mic, Paperclip, Send } from "lucide-react";
+import { Loader2, Plus, Send } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 
@@ -37,26 +37,16 @@ const ChatComposer = ({
     }
   };
 
-  return (
-    <div className="flex flex-col gap-3 rounded-3xl border border-white/10 bg-black/40 p-4 shadow-[0_24px_80px_rgba(14,23,43,0.45)] backdrop-blur-xl sm:flex-row sm:items-center sm:gap-4 sm:p-5">
-      <div className="relative w-full flex-1">
-        <Textarea
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          onKeyDown={handleKeyDown}
-          rows={2}
-          placeholder="Type your message to the CSOA assistant…"
-          className="min-h-[48px] resize-none rounded-2xl border border-transparent bg-white/5 px-4 py-3 text-sm text-white placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-primary/60"
-          disabled={disabled}
-        />
-        <span className="pointer-events-none absolute right-4 top-3 text-[10px] uppercase tracking-[0.3em] text-muted-foreground/40">
-          Shift + Enter for new line
-        </span>
-      </div>
+  const isSendDisabled = disabled || !value.trim() || isSending;
 
-      <div className="flex items-center justify-end gap-2 sm:gap-3">
-        <label className="flex size-11 cursor-pointer items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/70 transition hover:border-primary/40 hover:text-primary">
-          <Paperclip className="size-4" />
+  return (
+    <div className="w-full rounded-full border border-white/10 bg-[#282828] p-2 shadow-[0_18px_48px_rgba(12,17,28,0.4)] backdrop-blur">
+      <div className="flex items-center gap-3 px-2">
+        <label
+          className="flex size-11 cursor-pointer items-center justify-center rounded-full text-white/70 transition hover:border-white/20 hover:bg-white/10 focus-within:border-white/30 focus-within:bg-white/15 focus-within:text-white"
+          aria-label="Attach file"
+        >
+          <Plus className="size-7 bg-white/40 rounded-full" />
           <input
             type="file"
             className="hidden"
@@ -65,23 +55,27 @@ const ChatComposer = ({
           />
         </label>
 
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-11 rounded-full border border-white/10 bg-white/5 text-white transition hover:border-primary/40 hover:bg-primary/15 hover:text-white"
-          disabled
-          title="Voice input coming soon"
-        >
-          <Mic className="size-4" />
-        </Button>
+        <Textarea
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          onKeyDown={handleKeyDown}
+          rows={1}
+          placeholder="Type Message"
+          className="flex-1 min-h-0 resize-none border-0 bg-transparent px-0 py-2 text-sm text-white placeholder:text-white focus-visible:ring-0 focus-visible:ring-offset-0"
+          disabled={disabled}
+        />
 
         <Button
           size="icon"
-          className="size-12 rounded-full bg-gradient-to-r from-[#5ba7ff] to-[#6be5f5] text-gray-900 shadow-[0_16px_40px_rgba(104,196,255,0.45)] transition hover:shadow-[0_20px_40px_rgba(104,196,255,0.6)]"
+          className="size-12 shrink-0 rounded-full bg-gradient-to-r from-[#55a0ff] to-[#64d5ff] text-white shadow-[0_16px_36px_rgba(92,182,255,0.45)] transition hover:shadow-[0_18px_40px_rgba(92,182,255,0.6)] disabled:opacity-60 disabled:shadow-none"
           onClick={onSend}
-          disabled={disabled || !value.trim() || isSending}
+          disabled={isSendDisabled}
         >
-          <Send className="size-5" />
+          {isSending ? (
+            <Loader2 className="size-5 animate-spin" />
+          ) : (
+            <Send className="size-5" />
+          )}
         </Button>
       </div>
     </div>
