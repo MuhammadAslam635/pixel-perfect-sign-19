@@ -75,14 +75,21 @@ const AppRoutes = () => {
         }
       />
       <Route
-        path="/dashboard/companies"
+        path="/companies"
         element={
           <ProtectedRoute>
             <CompanyDetail />
           </ProtectedRoute>
         }
       />
-      <Route path="/dashboard/chat" element={<ChatPage />} />
+      <Route
+        path="/chat"
+        element={
+          <ProtectedRoute>
+            <ChatPage />
+          </ProtectedRoute>
+        }
+      />
 
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />

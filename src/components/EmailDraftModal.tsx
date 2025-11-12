@@ -7,7 +7,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Bold, Italic, List, Edit } from 'lucide-react';
+import { Bold, Italic, List, Edit, Sparkles } from 'lucide-react';
 
 interface EmailDraftModalProps {
   open: boolean;
@@ -20,13 +20,6 @@ export const EmailDraftModal = ({ open, onClose, leadName, leadEmail }: EmailDra
   const [emailContent, setEmailContent] = useState(
     "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type.\n\nMore recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
   );
-  const [isCopied, setIsCopied] = useState(false);
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(emailContent);
-    setIsCopied(true);
-    setTimeout(() => setIsCopied(false), 2000);
-  };
 
   const handleSend = () => {
     // Implement send logic here
@@ -39,9 +32,14 @@ export const EmailDraftModal = ({ open, onClose, leadName, leadEmail }: EmailDra
       <DialogContent className="sm:max-w-[600px] bg-[#1e2829] border-[#3A3A3A] text-white">
         <DialogHeader>
           <div className="flex items-center justify-between">
-            <DialogTitle className="text-xl font-semibold text-white">
-              Email Draft
-            </DialogTitle>
+            <div>
+              <DialogTitle className="text-xl font-semibold text-white">
+                Email Draft
+              </DialogTitle>
+              <p className="text-sm text-white/60 mt-1">
+                Here's a drafted email message Made edits or send as is
+              </p>
+            </div>
             <Button
               variant="ghost"
               size="icon"
@@ -50,45 +48,43 @@ export const EmailDraftModal = ({ open, onClose, leadName, leadEmail }: EmailDra
               <Edit className="h-4 w-4 text-white" />
             </Button>
           </div>
-          <p className="text-sm text-white/60 mt-1">
-            Here's a drafted email message Made edits or send as is
-          </p>
         </DialogHeader>
 
         <div className="space-y-4 mt-4">
-          {/* Toolbar */}
-          <div className="flex items-center gap-2 p-2 bg-[#2A3435] rounded-lg border border-white/10">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 hover:bg-white/10"
-            >
-              <Bold className="h-4 w-4 text-white" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 hover:bg-white/10"
-            >
-              <Italic className="h-4 w-4 text-white" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 hover:bg-white/10"
-            >
-              <List className="h-4 w-4 text-white" />
-            </Button>
+          {/* Toolbar with Draft with AI button */}
+          <div className="flex items-center justify-between gap-2 p-2 bg-[#2A3435]/50 rounded-lg border border-white/5">
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 hover:bg-white/10"
+              >
+                <Bold className="h-3.5 w-3.5 text-white/80" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 hover:bg-white/10"
+              >
+                <Italic className="h-3.5 w-3.5 text-white/80" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 hover:bg-white/10"
+              >
+                <List className="h-3.5 w-3.5 text-white/80" />
+              </Button>
+            </div>
 
-            <div className="flex-1" />
-
+            {/* Draft with AI button */}
             <Button
               variant="ghost"
               size="sm"
-              onClick={handleCopy}
-              className="text-xs text-white hover:bg-white/10 border border-white/20 rounded-full px-4"
+              className="text-xs text-white/80 hover:bg-white/10 bg-primary/20 rounded-full px-4 h-7 flex items-center gap-1.5"
             >
-              {isCopied ? 'Copied!' : 'Copy text'}
+              <Sparkles className="w-3 h-3" />
+              Draft with AI
             </Button>
           </div>
 
@@ -96,7 +92,7 @@ export const EmailDraftModal = ({ open, onClose, leadName, leadEmail }: EmailDra
           <Textarea
             value={emailContent}
             onChange={(e) => setEmailContent(e.target.value)}
-            className="min-h-[200px] bg-[#2A3435] border-white/10 text-white resize-none focus-visible:ring-primary"
+            className="min-h-[220px] bg-[#2A3435]/50 border-white/5 text-white/90 resize-none focus-visible:ring-1 focus-visible:ring-primary/50 text-sm leading-relaxed"
             placeholder="Type your email content here..."
           />
 
@@ -105,13 +101,13 @@ export const EmailDraftModal = ({ open, onClose, leadName, leadEmail }: EmailDra
             <Button
               variant="ghost"
               onClick={onClose}
-              className="bg-[#2A3435] hover:bg-[#364142] text-white border border-white/10 rounded-full px-6"
+              className="bg-[#2A3435] hover:bg-[#364142] text-white border-0 rounded-full px-8 py-2"
             >
               Back
             </Button>
             <Button
               onClick={handleSend}
-              className="bg-primary hover:bg-primary/90 text-white rounded-full px-6"
+              className="bg-primary hover:bg-primary/90 text-white rounded-full px-8 py-2"
             >
               Send
             </Button>

@@ -10,15 +10,15 @@ import { cn } from '@/lib/utils';
 
 const navItems = [
   { icon: LayoutGrid, label: 'Home', url: '/dashboard' },
-  { icon: BarChart3, label: 'Analytics', url: '/dashboard/analytics' },
-  { icon: Diamond, label: 'Premium', url: '/dashboard/premium' },
-  { icon: Users, label: 'Team', url: '/dashboard/companies' },
-  { icon: MessageCircle, label: 'Messages', url: '/dashboard/messages' },
-  { icon: Calendar, label: 'Calendar', url: '/dashboard/calendar' },
-  { icon: BookOpen, label: 'Docs', url: '/dashboard/docs' },
-  { icon: Megaphone, label: 'Announcements', url: '/dashboard/announcements' },
-  { icon: Mail, label: 'Inbox', url: '/dashboard/inbox' },
-  { icon: Settings, label: 'Settings', url: '/dashboard/settings' },
+  { icon: BarChart3, label: 'Analytics', url: '/analytics' },
+  { icon: Diamond, label: 'Premium', url: '/premium' },
+  { icon: Users, label: 'Companies', url: '/companies' },
+  { icon: MessageCircle, label: 'Messages', url: '/messages' },
+  { icon: Calendar, label: 'Calendar', url: '/calendar' },
+  { icon: BookOpen, label: 'Docs', url: '/docs' },
+  { icon: Megaphone, label: 'Announcements', url: '/announcements' },
+  { icon: Mail, label: 'Inbox', url: '/inbox' },
+  { icon: Settings, label: 'Settings', url: '/settings' },
 ];
 
 export function TopNav() {

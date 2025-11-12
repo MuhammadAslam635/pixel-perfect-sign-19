@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Building2, Filter, Users, ArrowRight, Linkedin, Mail, Phone, Copy } from 'lucide-react';
+import { Building2, Filter, Users, ArrowRight, Linkedin, Mail, Phone, Copy, MessageCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { companiesService, Company, CompanyPerson } from '@/services/companies.service';
 import { leadsService, Lead } from '@/services/leads.service';
@@ -43,36 +43,42 @@ const CompanyDetail = () => {
   });
   const [indicatorStyles, setIndicatorStyles] = useState({ width: 0, left: 0 });
 
-  // Fetch companies data
+  // Fetch companies data and leads count
   useEffect(() => {
-    const fetchCompanies = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await companiesService.getCompanies({
+
+        // Fetch companies
+        const companiesResponse = await companiesService.getCompanies({
           page: 1,
           limit: 50,
         });
 
-        if (response.success) {
-          setCompanies(response.data.docs);
+        // Fetch leads to get total count
+        const leadsResponse = await leadsService.getLeads();
 
-          // Update stats with real data
+        if (companiesResponse.success) {
+          setCompanies(companiesResponse.data.docs);
+
+          // Update stats with real data including leads count
+          const totalLeads = leadsResponse.success ? leadsResponse.data.length : 0;
           setStats([
-            { title: 'Total Companies', value: response.data.totalDocs.toString(), icon: Building2, link: 'View All' },
-            { title: 'Total leads', value: '8542', icon: Filter, link: 'View All' },
+            { title: 'Total Companies', value: companiesResponse.data.totalDocs.toString(), icon: Building2, link: 'View All' },
+            { title: 'Total leads', value: totalLeads.toString(), icon: Filter, link: 'View All' },
             { title: 'Total Outreach', value: '5236', icon: Users, link: 'View All' },
             { title: 'Total Response', value: '3256', icon: Users, link: 'View All' },
           ]);
         }
       } catch (error: any) {
-        console.error('Error fetching companies:', error);
-        toast.error(error.response?.data?.message || 'Failed to fetch companies');
+        console.error('Error fetching data:', error);
+        toast.error(error.response?.data?.message || 'Failed to fetch data');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchCompanies();
+    fetchData();
   }, []);
 
   // Fetch leads data when leads tab is active
@@ -318,57 +324,73 @@ const CompanyDetail = () => {
                                 </div>
                               </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 rounded-full hover:bg-white/10"
+                            <div className="flex items-center gap-3">
+                              {/* Small circular icon buttons */}
+                              <div className="flex items-center gap-1">
+                                {/* Phone Icon */}
+                                <button
+                                  className="h-7 w-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (displayPhone !== 'N/A') {
+                                      window.open(`tel:${displayPhone}`);
+                                    }
+                                  }}
+                                >
+                                  <Phone className="w-3.5 h-3.5 text-white/80" />
+                                </button>
+
+                                {/* Email Icon */}
+                                <button
+                                  className="h-7 w-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEmailClick(lead);
+                                  }}
+                                >
+                                  <Mail className="w-3.5 h-3.5 text-white/80" />
+                                </button>
+
+                                {/* LinkedIn Icon */}
+                                <button
+                                  className="h-7 w-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (lead.linkedinUrl) {
+                                      window.open(lead.linkedinUrl.startsWith('http') ? lead.linkedinUrl : `https://${lead.linkedinUrl}`, '_blank');
+                                    }
+                                  }}
+                                >
+                                  <Linkedin className="w-3.5 h-3.5 text-white/80" />
+                                </button>
+
+                                {/* WhatsApp Icon */}
+                                <button
+                                  className="h-7 w-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (displayPhone !== 'N/A') {
+                                      // Format phone for WhatsApp (remove spaces, dashes, etc)
+                                      const whatsappPhone = displayPhone.replace(/\D/g, '');
+                                      window.open(`https://wa.me/${whatsappPhone}`, '_blank');
+                                    }
+                                  }}
+                                >
+                                  <MessageCircle className="w-3.5 h-3.5 text-white/80" />
+                                </button>
+                              </div>
+
+                              {/* View Details Button */}
+                              <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  if (displayEmail !== 'N/A') {
-                                    navigator.clipboard.writeText(displayEmail);
-                                    toast.success('Email copied!');
-                                  }
+                                  handleLeadClick(lead._id);
                                 }}
+                                className="bg-white/10 hover:bg-white/20 text-white/90 text-xs rounded-full px-4 py-1.5 flex items-center gap-1.5 transition-colors"
                               >
-                                <Copy className="w-3.5 h-3.5 text-white/70" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 rounded-full hover:bg-white/10"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (displayPhone !== 'N/A') {
-                                    window.open(`tel:${displayPhone}`);
-                                  }
-                                }}
-                              >
-                                <Phone className="w-3.5 h-3.5 text-white/70" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 rounded-full hover:bg-white/10"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (lead.linkedinUrl) {
-                                    window.open(lead.linkedinUrl.startsWith('http') ? lead.linkedinUrl : `https://${lead.linkedinUrl}`, '_blank');
-                                  }
-                                }}
-                              >
-                                <Linkedin className="w-3.5 h-3.5 text-white/70" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleEmailClick(lead);
-                                }}
-                                className="bg-primary/20 hover:bg-primary/30 text-white text-xs rounded-full px-4"
-                              >
-                                Send Email
-                              </Button>
+                                View Details
+                                <ArrowRight className="w-3 h-3" />
+                              </button>
                             </div>
                           </div>
                         </Card>
@@ -443,90 +465,88 @@ const CompanyDetail = () => {
                 ) : (
                   // Lead Details Panel
                   <>
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center justify-between mb-6 px-4">
                       <div className="flex items-center gap-2">
-                        <div className="p-4 mr-2 rounded-full bg-black/10 hover:bg-black/20 text-white flex items-center justify-center">
-                          <Users className="w-5 h-5" />
+                        <div className="p-2 rounded-full bg-white/10 text-white flex items-center justify-center">
+                          <Users className="w-4 h-4" />
                         </div>
-                        <h3 className="text-base font-medium text-foreground">Details</h3>
+                        <h3 className="text-sm font-medium text-foreground">Details</h3>
                       </div>
-                      <Button variant="link" className="h-auto p-0 text-xs text-foreground/60 hover:text-foreground/80">
-                        View All <ArrowRight className="w-3 h-3 ml-1" />
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        {/* Phone Icon */}
+                        <button
+                          className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                          onClick={() => {
+                            if (selectedLeadDetails?.phone) {
+                              window.open(`tel:${selectedLeadDetails.phone}`);
+                            }
+                          }}
+                        >
+                          <Phone className="w-3.5 h-3.5 text-white/80" />
+                        </button>
+
+                        {/* Email Icon */}
+                        <button
+                          className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                          onClick={() => {
+                            if (selectedLeadDetails) {
+                              handleEmailClick(selectedLeadDetails);
+                            }
+                          }}
+                        >
+                          <Mail className="w-3.5 h-3.5 text-white/80" />
+                        </button>
+
+                        {/* LinkedIn Icon */}
+                        <button
+                          className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                          onClick={() => {
+                            if (selectedLeadDetails?.linkedinUrl) {
+                              window.open(
+                                selectedLeadDetails.linkedinUrl.startsWith('http')
+                                  ? selectedLeadDetails.linkedinUrl
+                                  : `https://${selectedLeadDetails.linkedinUrl}`,
+                                '_blank'
+                              );
+                            }
+                          }}
+                        >
+                          <Linkedin className="w-3.5 h-3.5 text-white/80" />
+                        </button>
+
+                        {/* WhatsApp Icon */}
+                        <button
+                          className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                          onClick={() => {
+                            if (selectedLeadDetails?.phone) {
+                              const whatsappPhone = selectedLeadDetails.phone.replace(/\D/g, '');
+                              window.open(`https://wa.me/${whatsappPhone}`, '_blank');
+                            }
+                          }}
+                        >
+                          <MessageCircle className="w-3.5 h-3.5 text-white/80" />
+                        </button>
+                      </div>
                     </div>
 
-                    <div className="space-y-4">
+                    <div className="space-y-4 px-4">
                       {selectedLeadDetails ? (
                         <>
                           {/* Lead Avatar and Name */}
-                          <div className="flex flex-col items-center text-center py-6">
-                            <Avatar className="h-24 w-24 mb-4 border-2 border-white/20">
+                          <div className="flex flex-col items-center text-center py-8">
+                            <Avatar className="h-32 w-32 mb-4 border-4 border-white/10">
                               <AvatarImage src={selectedLeadDetails.pictureUrl} alt={selectedLeadDetails.name} />
-                              <AvatarFallback className="bg-[#2d4041] text-white text-2xl">
+                              <AvatarFallback className="bg-[#3d4f51] text-white text-3xl">
                                 {selectedLeadDetails.name.charAt(0).toUpperCase()}
                               </AvatarFallback>
                             </Avatar>
-                            <h4 className="text-lg font-semibold text-white mb-1">{selectedLeadDetails.name}</h4>
-                            <p className="text-sm text-white/60">
-                              {selectedLeadDetails.position || 'Position not specified'}
+                            <h4 className="text-xl font-semibold text-white mb-2">{selectedLeadDetails.name}</h4>
+                            <p className="text-sm text-white/50 mb-1">
+                              {selectedLeadDetails.companyName || 'Company not specified'}
                             </p>
-                            {selectedLeadDetails.companyName && (
-                              <p className="text-xs text-white/50 mt-1">{selectedLeadDetails.companyName}</p>
-                            )}
-                          </div>
-
-                          {/* Action Buttons */}
-                          <div className="grid grid-cols-4 gap-2">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-12 w-12 rounded-full bg-[#2d4041] hover:bg-[#364142]"
-                              onClick={() => {
-                                if (selectedLeadDetails.email) {
-                                  navigator.clipboard.writeText(selectedLeadDetails.email);
-                                  toast.success('Email copied!');
-                                }
-                              }}
-                            >
-                              <Copy className="w-4 h-4 text-white" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-12 w-12 rounded-full bg-[#2d4041] hover:bg-[#364142]"
-                              onClick={() => {
-                                if (selectedLeadDetails.phone) {
-                                  window.open(`tel:${selectedLeadDetails.phone}`);
-                                }
-                              }}
-                            >
-                              <Phone className="w-4 h-4 text-white" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-12 w-12 rounded-full bg-[#2d4041] hover:bg-[#364142]"
-                              onClick={() => {
-                                if (selectedLeadDetails.linkedinUrl) {
-                                  window.open(
-                                    selectedLeadDetails.linkedinUrl.startsWith('http')
-                                      ? selectedLeadDetails.linkedinUrl
-                                      : `https://${selectedLeadDetails.linkedinUrl}`,
-                                    '_blank'
-                                  );
-                                }
-                              }}
-                            >
-                              <Linkedin className="w-4 h-4 text-white" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-12 w-12 rounded-full bg-[#2d4041] hover:bg-[#364142]"
-                              onClick={() => handleEmailClick(selectedLeadDetails)}
-                            >
-                              <Mail className="w-4 h-4 text-white" />
-                            </Button>
+                            <p className="text-xs text-white/40">
+                              {selectedLeadDetails.position || 'Chief Executive Officer'}
+                            </p>
                           </div>
                         </>
                       ) : (

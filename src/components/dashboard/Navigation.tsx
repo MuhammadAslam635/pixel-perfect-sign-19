@@ -22,22 +22,28 @@ type NavLink = {
   };
   
   const navLinks: NavLink[] = [
-    { id: 'home', label: 'Home', icon: Home, path: '/dashboard' },
+    {
+      id: 'home',
+      label: 'Home',
+      icon: Home,
+      path: '/dashboard',
+      match: (pathname: string) => pathname === '/dashboard',
+    },
     {
       id: 'companies',
       label: 'Companies',
       icon: BarChart3,
-      path: '/dashboard/companies',
-      match: (pathname: string) => pathname.startsWith('/dashboard/companies'),
+      path: '/companies',
+      match: (pathname: string) => pathname.startsWith('/companies'),
     },
-    { id: 'users', label: 'Users', icon: Users, path: '/dashboard/users' },
-    { id: 'chat', label: 'Chat', icon: MessageSquare, path: '/dashboard/chat' },
-    { id: 'Booking', label: 'Booking', icon: CalendarDays, path: '/dashboard/booking' },
-    { id: 'Leads', label: 'Leads', icon: TrendingUp, path: '/dashboard/leads' },
-    { id: 'Prospects', label: 'Prospects', icon: ArrowUpRight, path: '/dashboard/prospects' },
-    { id: 'Results', label: 'Results', icon: Target, path: '/dashboard/results' },
-    { id: 'docs', label: 'Docs', icon: BookOpen, path: '/dashboard/knowledge-base' },
-    { id: 'settings', label: 'Settings', icon: Settings, path: '/dashboard' },
+    { id: 'users', label: 'Users', icon: Users, path: '/users' },
+    { id: 'chat', label: 'Chat', icon: MessageSquare, path: '/chat' },
+    { id: 'Booking', label: 'Booking', icon: CalendarDays, path: '/booking' },
+    { id: 'Leads', label: 'Leads', icon: TrendingUp, path: '/leads' },
+    { id: 'Prospects', label: 'Prospects', icon: ArrowUpRight, path: '/prospects' },
+    { id: 'Results', label: 'Results', icon: Target, path: '/results' },
+    { id: 'docs', label: 'Docs', icon: BookOpen, path: '/knowledge-base' },
+    { id: 'settings', label: 'Settings', icon: Settings, path: '/settings' },
   ];
   
   const notifications = [
