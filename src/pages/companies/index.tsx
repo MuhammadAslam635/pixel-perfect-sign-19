@@ -298,61 +298,92 @@ const CompanyDetail = () => {
                     const employeeCount = company.employees
                       ? `${company.employees} employees`
                       : "N/A";
+                    const primaryExecutive = company.people?.[0];
+                    const primaryEmail =
+                      primaryExecutive?.email ||
+                      primaryExecutive?.emails?.[0] ||
+                      null;
+                    const companyLinkedIn = primaryExecutive?.linkedin || null;
 
                     return (
                       <Card
                         key={company._id}
                         onClick={() => handleCompanyClick(company._id)}
-                        className={`bg-gradient-to-b from-[#2d4041] to-[#283637] backdrop-blur-sm border ${
-                          isActive
-                            ? "border-primary/60 shadow-[0_0_0_1px_rgba(0,0,0,0.2)]"
-                            : "border-[#3A3A3A]"
-                        } p-4 hover:bg-[#3A3A3A]/50 transition-smooth cursor-pointer`}
+                        className={`relative flex flex-col gap-5 md:flex-row md:items-center bg-gradient-to-r from-[#1f2a2b] via-[#254345] to-[#1a2627] border ${
+                          isActive ? "border-primary/60" : "border-[#31494A]"
+                        } rounded-[26px] px-6 py-5 cursor-pointer transition-all duration-300`}
                       >
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <h3 className="text-base font-medium text-white">
-                                {company.name}
-                              </h3>
-                              {company.industry && (
-                                <span className="text-sm text-muted-foreground/">
-                                  | {company.industry}
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-xs text-white/70 mb-3 leading-relaxed">
-                              {company.description ||
-                                company.about ||
-                                "No description available"}
-                            </p>
-                            <div className="flex items-center gap-4">
-                              <Badge className="bg-[#BEC3C3] text-[#283637] border-0 text-xs font-normal">
-                                {employeeCount}
-                              </Badge>
-                              {company.website && (
-                                <div className="flex items-center gap-1 text-xs">
-                                  <div className="p-2 mr-2 rounded-full bg-foreground text-[#283637] flex items-center justify-center">
-                                    <Linkedin className="w-3 h-3" />
-                                  </div>
-                                  <span className="text-foreground">
-                                    {company.website}
-                                  </span>
-                                </div>
-                              )}
-                            </div>
+                        <span
+                          className={`absolute left-4 top-1/2 -translate-y-1/2 h-[50%] w-[4px] rounded-full ${
+                            isActive ? "bg-primary/80" : "bg-white/70"
+                          }`}
+                        />
+
+                        <div className="flex-1 md:pl-6">
+                          <div className="flex flex-wrap items-center gap-2 text-white">
+                            <h3 className="text-lg font-semibold">
+                              {company.name}
+                            </h3>
+                            {company.industry && (
+                              <span className="text-sm text-white/60">
+                                | {company.industry}
+                              </span>
+                            )}
                           </div>
-                          <div className="text-right text-white/70 text-xs space-y-1">
-                            {company.address && <p>{company.address}</p>}
+                          <p className="mt-2 text-sm text-white/70 leading-relaxed max-w-[460px]">
+                            {company.description ||
+                              company.about ||
+                              "No description available"}
+                          </p>
+                          <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-white/70">
+                            <Badge className="rounded-full bg-white/15 text-white border-white/10 px-4 py-1">
+                              {employeeCount}
+                            </Badge>
+                            {companyLinkedIn && (
+                              <div className="flex items-center gap-2 bg-white/10 border border-white/10 rounded-full px-3 py-1 max-w-[180px]">
+                                <Linkedin className="w-3.5 h-3.5 text-white/80" />
+                                <span className="font-medium text-white/80 truncate">
+                                  {companyLinkedIn
+                                    .replace(/^https?:\/\//, "")
+                                    .replace(/^www\./, "")}
+                                </span>
+                              </div>
+                            )}
+                            {company.website && (
+                              <span className="text-white/60 truncate max-w-[160px]">
+                                {company.website}
+                              </span>
+                            )}
                           </div>
                         </div>
-                        <div className="flex justify-end mt-3">
+                        <div className="w-full md:w-[240px] flex flex-col items-center md:items-end gap-4 text-white/80">
+                          <div className="text-center md:text-right space-y-1">
+                            {company.website && (
+                              <p className="text-sm font-medium text-white">
+                                {company.website}
+                              </p>
+                            )}
+                            {primaryEmail && (
+                              <p className="text-xs text-white/60">
+                                {primaryEmail}
+                              </p>
+                            )}
+                            {company.address && (
+                              <p className="text-xs text-white/50">
+                                {company.address}
+                              </p>
+                            )}
+                          </div>
                           <Button
                             size="sm"
-                            className="bg-black/10 hover:bg-black/20 text-white text-xs rounded-2xl backdrop-blur-sm border border-white/10 shadow"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCompanyClick(company._id);
+                            }}
+                            className="rounded-full bg-white/10 px-5 py-1.5 text-xs font-medium text-white hover:bg-white/20 border border-white/20"
                           >
-                            View Executives{" "}
-                            <ArrowRight className="w-3 h-3 ml-1" />
+                            {isActive ? "Close Executives" : "View Executives"}
+                            <ArrowRight className="ml-2 w-3 h-3" />
                           </Button>
                         </div>
                       </Card>
