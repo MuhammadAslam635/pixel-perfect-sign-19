@@ -1,16 +1,18 @@
 import { FC } from "react";
 import { Button } from "@/components/ui/button";
 import { Users, Linkedin, ArrowRight } from "lucide-react";
-import { Company } from "@/services/companies.service";
+import { Company, CompanyPerson } from "@/services/companies.service";
 
 type CompanyExecutivesPanelProps = {
   company?: Company;
   onViewAllLeads: () => void;
+  onExecutiveSelect?: (executive: CompanyPerson) => void;
 };
 
 const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
   company,
   onViewAllLeads,
+  onExecutiveSelect,
 }) => (
   <>
     <div className="flex items-center justify-between mb-4">
@@ -32,40 +34,62 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
     <div className="space-y-3">
       {company ? (
         company.people && company.people.length > 0 ? (
-          company.people.map((exec, index) => (
-            <div
-              key={exec._id || exec.id || index}
-              className="relative overflow-hidden rounded-2xl border border-white/15 bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] px-4 py-3 transition-all duration-300 hover:shadow-[0_12px_32px_rgba(0,0,0,0.3)] before:absolute before:content-[''] before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[55%] before:w-[4px] before:rounded-full before:bg-white/70"
-            >
-              <p className="text-sm font-semibold text-white mb-0.5">
-                {exec.name || "N/A"}
-              </p>
-              <p className="text-xs text-white/60 mb-2">
-                {exec.title || exec.position || "N/A"}
-                {exec.email && ` | ${exec.email}`}
-              </p>
-              <div className="flex justify-end">
-                {exec.linkedin && (
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 text-white/70"
+          company.people.map((exec, index) => {
+            const hasLinkedin = Boolean(exec.linkedin);
+
+            return (
+              <div
+                key={exec._id || exec.id || index}
+                role="button"
+                tabIndex={0}
+                onClick={() => onExecutiveSelect?.(exec)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    onExecutiveSelect?.(exec);
+                  }
+                }}
+                className="relative overflow-hidden rounded-2xl border border-white/15 bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] px-4 py-3 transition-all duration-300 hover:shadow-[0_12px_32px_rgba(0,0,0,0.3)] before:absolute before:content-[''] before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[55%] before:w-[4px] before:rounded-full before:bg-white/70 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/60"
+              >
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-semibold text-white mb-0.5">
+                      {exec.name || "N/A"}
+                    </p>
+                    <p className="text-xs text-white/60 mb-2">
+                      {exec.title || exec.position || "N/A"}
+                      {exec.email && ` | ${exec.email}`}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={!hasLinkedin}
+                    className={`flex h-10 w-10 items-center justify-center rounded-full border border-white/15 transition-colors ${
+                      hasLinkedin
+                        ? "bg-white/15 text-white hover:bg-white/25"
+                        : "bg-white/10 text-white/40 cursor-not-allowed"
+                    }`}
                     onClick={(e) => {
                       e.stopPropagation();
+                      if (!hasLinkedin) return;
                       window.open(
-                        exec.linkedin.startsWith("http")
+                        exec.linkedin!.startsWith("http")
                           ? exec.linkedin
                           : `https://${exec.linkedin}`,
                         "_blank"
                       );
                     }}
                   >
-                    <Linkedin className="w-3.5 h-3.5" />
-                  </Button>
-                )}
+                    <Linkedin
+                      className={`h-4 w-4 ${
+                        hasLinkedin ? "text-white" : "text-white/50"
+                      }`}
+                    />
+                  </button>
+                </div>
               </div>
-            </div>
-          ))
+            );
+          })
         ) : (
           <p className="text-sm text-muted-foreground/60">
             No executives found for this company.

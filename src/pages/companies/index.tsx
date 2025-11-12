@@ -4,7 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Building2, Filter, Users, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { companiesService, Company } from "@/services/companies.service";
+import {
+  companiesService,
+  Company,
+  CompanyPerson,
+} from "@/services/companies.service";
 import { leadsService, Lead } from "@/services/leads.service";
 import { EmailDraftModal } from "@/components/EmailDraftModal";
 import { toast } from "sonner";
@@ -19,7 +23,7 @@ const statsCards = [
   { title: "Total Response", value: "3256", icon: Users, link: "View All" },
 ];
 
-const CompanyDetail = () => {
+const index = () => {
   type TabKey = "companies" | "leads";
   const tabs: { id: TabKey; label: string }[] = [
     { id: "companies", label: "Companies" },
@@ -38,6 +42,12 @@ const CompanyDetail = () => {
   const [stats, setStats] = useState(statsCards);
   const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [selectedExecutiveFallback, setSelectedExecutiveFallback] =
+    useState<CompanyPerson | null>(null);
+  const [pendingLeadIdentifier, setPendingLeadIdentifier] = useState<{
+    email?: string;
+    name?: string;
+  } | null>(null);
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const tabRefs = useRef<Record<TabKey, HTMLButtonElement | null>>({
@@ -142,6 +152,31 @@ const CompanyDetail = () => {
   }, [activeTab]);
 
   useEffect(() => {
+    if (!pendingLeadIdentifier) return;
+
+    if (leads.length === 0) {
+      if (!leadsLoading) {
+        setPendingLeadIdentifier(null);
+      }
+      return;
+    }
+
+    const { email, name } = pendingLeadIdentifier;
+
+    const matchedLead =
+      (email && leads.find((lead) => lead.email?.toLowerCase() === email)) ||
+      (name && leads.find((lead) => lead.name?.toLowerCase() === name));
+
+    if (matchedLead) {
+      setSelectedLeadId(matchedLead._id);
+      setSelectedExecutiveFallback(null);
+      setPendingLeadIdentifier(null);
+    } else if (!leadsLoading) {
+      setPendingLeadIdentifier(null);
+    }
+  }, [pendingLeadIdentifier, leads, leadsLoading]);
+
+  useEffect(() => {
     const updateIndicator = () => {
       const activeEl = tabRefs.current[activeTab];
       const containerEl = containerRef.current;
@@ -171,6 +206,31 @@ const CompanyDetail = () => {
 
   const handleLeadClick = (leadId: string) => {
     setSelectedLeadId((prev) => (prev === leadId ? null : leadId));
+    setSelectedExecutiveFallback(null);
+  };
+
+  const handleExecutiveSelect = (executive: CompanyPerson) => {
+    const email =
+      (executive.email || executive.emails?.[0] || "")?.toLowerCase() ||
+      undefined;
+    const name = executive.name?.toLowerCase();
+
+    setSelectedLeadId(null);
+    setSelectedExecutiveFallback(executive);
+    setPendingLeadIdentifier({ email, name });
+    setActiveTab("leads");
+
+    if (leads.length > 0) {
+      const matchedLead =
+        (email && leads.find((lead) => lead.email?.toLowerCase() === email)) ||
+        (name && leads.find((lead) => lead.name?.toLowerCase() === name));
+
+      if (matchedLead) {
+        setSelectedLeadId(matchedLead._id);
+        setSelectedExecutiveFallback(null);
+        setPendingLeadIdentifier(null);
+      }
+    }
   };
 
   const handleEmailClick = (lead: Lead) => {
@@ -181,7 +241,7 @@ const CompanyDetail = () => {
   const isSidebarOpen =
     activeTab === "companies"
       ? selectedCompanyId !== null
-      : selectedLeadId !== null;
+      : selectedLeadId !== null || selectedExecutiveFallback !== null;
   const selectedCompany: Company | undefined = companies.find(
     (company) => company._id === selectedCompanyId
   );
@@ -296,6 +356,8 @@ const CompanyDetail = () => {
               selectedLead={selectedLeadDetails}
               onSwitchToLeads={() => setActiveTab("leads")}
               onEmailLead={handleEmailClick}
+              onExecutiveSelect={handleExecutiveSelect}
+              executiveFallback={selectedExecutiveFallback}
             />
           </div>
         </div>
@@ -312,4 +374,4 @@ const CompanyDetail = () => {
   );
 };
 
-export default CompanyDetail;
+export default index;

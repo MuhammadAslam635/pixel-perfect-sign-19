@@ -1,6 +1,6 @@
 import { FC } from "react";
 import { Card } from "@/components/ui/card";
-import { Company } from "@/services/companies.service";
+import { Company, CompanyPerson } from "@/services/companies.service";
 import { Lead } from "@/services/leads.service";
 import CompanyExecutivesPanel from "./CompanyExecutivesPanel";
 import LeadDetailsPanel from "./LeadDetailsPanel";
@@ -12,6 +12,8 @@ type DetailsSidebarProps = {
   selectedLead?: Lead;
   onSwitchToLeads: () => void;
   onEmailLead: (lead: Lead) => void;
+  onExecutiveSelect?: (executive: CompanyPerson) => void;
+  executiveFallback?: CompanyPerson | null;
 };
 
 const DetailsSidebar: FC<DetailsSidebarProps> = ({
@@ -21,6 +23,8 @@ const DetailsSidebar: FC<DetailsSidebarProps> = ({
   selectedLead,
   onSwitchToLeads,
   onEmailLead,
+  onExecutiveSelect,
+  executiveFallback,
 }) => (
   <div
     className={`flex-shrink-0 overflow-hidden transition-all duration-300 ease-in-out sticky top-6 ${
@@ -36,9 +40,14 @@ const DetailsSidebar: FC<DetailsSidebarProps> = ({
         <CompanyExecutivesPanel
           company={selectedCompany}
           onViewAllLeads={onSwitchToLeads}
+          onExecutiveSelect={onExecutiveSelect}
         />
       ) : (
-        <LeadDetailsPanel lead={selectedLead} onEmailClick={onEmailLead} />
+        <LeadDetailsPanel
+          lead={selectedLead}
+          onEmailClick={onEmailLead}
+          fallbackExecutive={executiveFallback}
+        />
       )}
     </Card>
   </div>
