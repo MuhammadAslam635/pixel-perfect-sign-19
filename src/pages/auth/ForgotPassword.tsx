@@ -61,7 +61,7 @@ const ForgotPassword = () => {
         <div className="space-y-1">
           <Label
             htmlFor="email"
-            className="text-foreground/80 text-sm font-normal"
+            className="text-white text-base font-light font-[poppins]"
           >
             Email
           </Label>
@@ -71,6 +71,7 @@ const ForgotPassword = () => {
             name="email"
             placeholder="Enter Your Email"
             value={email}
+            className="font-[poppins] font-normal text-[#FFFFFF4D] text-sm"
             onChange={handleChange}
           />
           {errors.email && (
@@ -84,11 +85,11 @@ const ForgotPassword = () => {
         >
           {loading ? "Sending..." : "Send Reset Link"}
         </Button>
-        <p className="text-center text-sm text-muted-foreground mt-6">
+        <p className="text-center text-lg text-[#FFFFFF66] mt-6">
           Didn’t receive it?{" "}
           <Link
             to="/resend-email"
-            className="text-primary hover:text-primary-glow"
+            className="hover:opacity-80 font-normal transition-opacity bg-gradient-to-r from-[#8B36E9] via-[#6586FF] to-[#2C5FEC] bg-clip-text text-transparent"
           >
             Resend email
           </Link>
