@@ -68,6 +68,14 @@ export default {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      transitionDuration: {
+        250: "250ms",
+        350: "350ms",
+        400: "400ms",
+      },
+      transitionTimingFunction: {
+        elastic: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+      },
       keyframes: {
         "accordion-down": {
           from: {
