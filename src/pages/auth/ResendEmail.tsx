@@ -45,7 +45,7 @@ const ResendEmail = () => {
         <div className="space-y-1">
           <Label
             htmlFor="email"
-            className="text-foreground/80 text-sm font-normal"
+            className="text-white text-base font-light font-[poppins]"
           >
             Email
           </Label>
@@ -54,6 +54,7 @@ const ResendEmail = () => {
             type="email"
             name="email"
             placeholder="Enter Your Email"
+            className="font-[poppins] font-normal text-[#FFFFFF4D] text-sm"
             value={email}
             onChange={handleChange}
           />

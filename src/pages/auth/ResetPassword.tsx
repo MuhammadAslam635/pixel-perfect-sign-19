@@ -59,14 +59,13 @@ const ResetPassword = () => {
       hasError = true;
     }
 
-    if (!token) {
-      toast.error("Invalid or missing reset token");
+    if (hasError) {
+      setErrors(newErrors);
       return;
     }
 
-    if (hasError) {
-      setErrors(newErrors);
-      toast.error("Please fill all fields correctly");
+    if (!token) {
+      toast.error("Invalid or missing reset token");
       return;
     }
 
@@ -115,7 +114,7 @@ const ResetPassword = () => {
         <div className="space-y-1">
           <Label
             htmlFor="password"
-            className="text-foreground/80 text-sm font-normal"
+            className="text-white text-base font-light font-[poppins]"
           >
             New Password
           </Label>
@@ -127,7 +126,7 @@ const ResetPassword = () => {
               placeholder="Enter New Password"
               value={password}
               onChange={(e) => handleChange(e, "password")}
-              className="text-foreground placeholder:text-muted-foreground/60 transition-all pr-10"
+              className="font-[poppins] font-normal text-[#FFFFFF4D] text-sm"
               disabled={loading}
             />
             <button
@@ -150,7 +149,7 @@ const ResetPassword = () => {
         <div className="space-y-1">
           <Label
             htmlFor="confirm"
-            className="text-foreground/80 text-sm font-normal"
+            className="text-white text-base font-light font-[poppins]"
           >
             Confirm Password
           </Label>
@@ -162,7 +161,7 @@ const ResetPassword = () => {
               placeholder="Confirm New Password"
               value={confirm}
               onChange={(e) => handleChange(e, "confirm")}
-              className="text-foreground placeholder:text-muted-foreground/60 transition-all pr-10"
+              className="font-[poppins] font-normal text-[#FFFFFF4D] text-sm"
               disabled={loading}
             />
             <button
