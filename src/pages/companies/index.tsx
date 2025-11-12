@@ -3,75 +3,13 @@ import { TopNav } from '@/components/TopNav';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { Building2, Filter, Users, ArrowRight, Linkedin } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Building2, Filter, Users, ArrowRight, Linkedin, Mail, Phone, Copy } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-
-const companiesData = [
-  {
-    id: 1,
-    name: 'Cyberify',
-    type: 'AI Agency',
-    description:
-      'AI consulting studio helping brands automate customer outreach and personalize inbound workflows with custom GPT copilots.',
-    teamSize: '11-50 Team Members',
-    linkedin: 'linkedin.com/company/cyberify',
-    website: 'cyberify.co',
-    email: 'hello@cyberify.co',
-    executives: [
-      { name: 'Naeem Bhatti', role: 'Founder & CTO', email: 'naeem@cyberify.co' },
-      { name: 'Sarah Chen', role: 'Head of Product', email: 'sarah@cyberify.co' },
-      { name: 'Felix Moore', role: 'VP Sales', email: 'felix@cyberify.co' },
-    ],
-  },
-  {
-    id: 2,
-    name: 'Northwind Labs',
-    type: 'B2B SaaS',
-    description:
-      'Provides revenue intelligence dashboards for mid-market finance teams, consolidating CRM, billing, and pipeline data streams.',
-    teamSize: '51-100 Team Members',
-    linkedin: 'linkedin.com/company/northwindlabs',
-    website: 'northwindlabs.io',
-    email: 'team@northwindlabs.io',
-    executives: [
-      { name: 'Saad Naeem', role: 'CEO', email: 'saad@northwindlabs.io' },
-      { name: 'Jacob Miles', role: 'CFO', email: 'jacob@northwindlabs.io' },
-      { name: 'Priya Patel', role: 'VP Customer Success', email: 'priya@northwindlabs.io' },
-    ],
-  },
-  {
-    id: 3,
-    name: 'LumenX Studios',
-    type: 'Creative Agency',
-    description:
-      'Specializes in interactive AR/VR product launches and immersive brand storytelling for consumer electronics companies.',
-    teamSize: '101-250 Team Members',
-    linkedin: 'linkedin.com/company/lumenx',
-    website: 'lumenx.studio',
-    email: 'contact@lumenx.studio',
-    executives: [
-      { name: 'Zubair Khan', role: 'Chief Creative Officer', email: 'zubair@lumenx.studio' },
-      { name: 'Isabella Ruiz', role: 'Executive Producer', email: 'isabella@lumenx.studio' },
-      { name: 'Mateo Li', role: 'Head of Engineering', email: 'mateo@lumenx.studio' },
-    ],
-  },
-  {
-    id: 4,
-    name: 'Atlas Logistics',
-    type: 'Supply Chain',
-    description:
-      'Freight orchestration platform that optimizes last-mile delivery routes using predictive analytics and IoT tracking.',
-    teamSize: '501-1000 Team Members',
-    linkedin: 'linkedin.com/company/atlaslogistics',
-    website: 'atlaslogistics.com',
-    email: 'ops@atlaslogistics.com',
-    executives: [
-      { name: 'Ashar Maqbool', role: 'COO', email: 'ashar@atlaslogistics.com' },
-      { name: 'Hamza Rafique', role: 'Head of Partnerships', email: 'hamza@atlaslogistics.com' },
-      { name: 'Linda Park', role: 'VP Operations', email: 'linda@atlaslogistics.com' },
-    ],
-  },
-];
+import { companiesService, Company, CompanyPerson } from '@/services/companies.service';
+import { leadsService, Lead } from '@/services/leads.service';
+import { EmailDraftModal } from '@/components/EmailDraftModal';
+import { toast } from 'sonner';
 
 const statsCards = [
   { title: 'Total Companies', value: '512', icon: Building2, link: 'View All' },
@@ -88,7 +26,15 @@ const CompanyDetail = () => {
   ];
 
   const [activeTab, setActiveTab] = useState<TabKey>('companies');
-  const [selectedCompanyId, setSelectedCompanyId] = useState<number | null>(null);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
+  const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [leadsLoading, setLeadsLoading] = useState<boolean>(false);
+  const [stats, setStats] = useState(statsCards);
+  const [emailModalOpen, setEmailModalOpen] = useState(false);
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const tabRefs = useRef<Record<TabKey, HTMLButtonElement | null>>({
@@ -96,6 +42,68 @@ const CompanyDetail = () => {
     leads: null,
   });
   const [indicatorStyles, setIndicatorStyles] = useState({ width: 0, left: 0 });
+
+  // Fetch companies data
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      try {
+        setLoading(true);
+        const response = await companiesService.getCompanies({
+          page: 1,
+          limit: 50,
+        });
+
+        if (response.success) {
+          setCompanies(response.data.docs);
+
+          // Update stats with real data
+          setStats([
+            { title: 'Total Companies', value: response.data.totalDocs.toString(), icon: Building2, link: 'View All' },
+            { title: 'Total leads', value: '8542', icon: Filter, link: 'View All' },
+            { title: 'Total Outreach', value: '5236', icon: Users, link: 'View All' },
+            { title: 'Total Response', value: '3256', icon: Users, link: 'View All' },
+          ]);
+        }
+      } catch (error: any) {
+        console.error('Error fetching companies:', error);
+        toast.error(error.response?.data?.message || 'Failed to fetch companies');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCompanies();
+  }, []);
+
+  // Fetch leads data when leads tab is active
+  useEffect(() => {
+    if (activeTab === 'leads') {
+      const fetchLeads = async () => {
+        try {
+          setLeadsLoading(true);
+          const response = await leadsService.getLeads();
+
+          if (response.success) {
+            setLeads(response.data);
+
+            // Update stats with real data
+            setStats((prev) => {
+              const newStats = [...prev];
+              newStats[1] = { title: 'Total leads', value: response.data.length.toString(), icon: Filter, link: 'View All' };
+              return newStats;
+            });
+          }
+        } catch (error: any) {
+          console.error('Error fetching leads:', error);
+          toast.error(error.response?.data?.message || 'Failed to fetch leads');
+        } finally {
+          setLeadsLoading(false);
+        }
+      };
+
+      fetchLeads();
+    }
+  }, [activeTab]);
 
   useEffect(() => {
     const updateIndicator = () => {
@@ -121,12 +129,26 @@ const CompanyDetail = () => {
     };
   }, [activeTab]);
 
-  const handleCompanyClick = (companyId: number) => {
+  const handleCompanyClick = (companyId: string) => {
     setSelectedCompanyId((prev) => (prev === companyId ? null : companyId));
   };
 
-  const isSidebarOpen = selectedCompanyId !== null;
-  const selectedCompany = companiesData.find((company) => company.id === selectedCompanyId);
+  const handleLeadClick = (leadId: string) => {
+    setSelectedLeadId((prev) => (prev === leadId ? null : leadId));
+  };
+
+  const handleEmailClick = (lead: Lead) => {
+    setSelectedLead(lead);
+    setEmailModalOpen(true);
+  };
+
+  const isSidebarOpen = activeTab === 'companies' ? selectedCompanyId !== null : selectedLeadId !== null;
+  const selectedCompany: Company | undefined = companies.find(
+    (company) => company._id === selectedCompanyId
+  );
+  const selectedLeadDetails: Lead | undefined = leads.find(
+    (lead) => lead._id === selectedLeadId
+  );
 
   return (
     <div className="min-h-screen w-full bg-[#1A1A1A] flex flex-col">
@@ -167,10 +189,9 @@ const CompanyDetail = () => {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-4 gap-4 mb-6">
-            {statsCards.map((stat) => (
-              <div className="px-2 py-3 bg-gradient-to-r from-[#1d1d1d50] via-cyan-500/5 to-[#2c2c2c31] border-[#1d1d1d50] rounded-2xl">
+            {stats.map((stat) => (
+              <div key={stat.title} className="px-2 py-3 bg-gradient-to-r from-[#1d1d1d50] via-cyan-500/5 to-[#2c2c2c31] border-[#1d1d1d50] rounded-2xl">
               <Card
-                key={stat.title}
                 className="border-none bg-transparent overflow-hidden transition-shadow duration-300 hover:shadow-lg"
               >
                 <div className="relative flex flex-col justify-between rounded-[20px] border border-white/10 bg-gradient-to-b from-[#ffffff20] via-[#ffffff00] to-[#ffffff10] p-4 backdrop-blur-xl min-h-[150px] shadow-inner shadow-white/10">
@@ -197,59 +218,167 @@ const CompanyDetail = () => {
 
           {/* Split View */}
           <div className="flex gap-6">
-            {/* Left: Companies List */}
+            {/* Left: Companies/Leads List */}
             <div className="flex-1">
-              <h2 className="text-lg font-medium text-foreground mb-4">Companies</h2>
+              <h2 className="text-lg font-medium text-foreground mb-4">
+                {activeTab === 'companies' ? 'Companies' : 'Leads'}
+              </h2>
               <div className="space-y-3 bg-[#222B2C] p-6 rounded-2xl">
-                {companiesData.map((company) => {
-                  const isActive = selectedCompanyId === company.id;
+                {activeTab === 'companies' ? (
+                  loading ? (
+                    <div className="text-center text-white/70 py-8">Loading companies...</div>
+                  ) : companies.length === 0 ? (
+                    <div className="text-center text-white/70 py-8">No companies found</div>
+                  ) : (
+                    companies.map((company) => {
+                      const isActive = selectedCompanyId === company._id;
+                      const employeeCount = company.employees ? `${company.employees} employees` : 'N/A';
 
-                  return (
-                    <Card
-                      key={company.id}
-                      onClick={() => handleCompanyClick(company.id)}
-                      className={`bg-gradient-to-b from-[#2d4041] to-[#283637] backdrop-blur-sm border ${isActive ? 'border-primary/60 shadow-[0_0_0_1px_rgba(0,0,0,0.2)]' : 'border-[#3A3A3A]'} p-4 hover:bg-[#3A3A3A]/50 transition-smooth cursor-pointer`}
-                    >
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="text-base font-medium text-white">{company.name}</h3>
-                            <span className="text-sm text-muted-foreground/">| {company.type}</span>
-                          </div>
-                          <p className="text-xs text-white/70 mb-3 leading-relaxed">
-                            {company.description}
-                          </p>
-                          <div className="flex items-center gap-4">
-                            <Badge className="bg-[#BEC3C3] text-[#283637] border-0 text-xs font-normal">
-                              {company.teamSize}
-                            </Badge>
-                            <div className="flex items-center gap-1 text-xs">
-                              <div className="p-2 mr-2 rounded-full bg-foreground text-[#283637] flex items-center justify-center">
-                              <Linkedin className="w-3 h-3" />
+                      return (
+                        <Card
+                          key={company._id}
+                          onClick={() => handleCompanyClick(company._id)}
+                          className={`bg-gradient-to-b from-[#2d4041] to-[#283637] backdrop-blur-sm border ${isActive ? 'border-primary/60 shadow-[0_0_0_1px_rgba(0,0,0,0.2)]' : 'border-[#3A3A3A]'} p-4 hover:bg-[#3A3A3A]/50 transition-smooth cursor-pointer`}
+                        >
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h3 className="text-base font-medium text-white">{company.name}</h3>
+                                {company.industry && (
+                                  <span className="text-sm text-muted-foreground/">| {company.industry}</span>
+                                )}
                               </div>
-                              <span className="text-foreground">{company.linkedin}</span>
+                              <p className="text-xs text-white/70 mb-3 leading-relaxed">
+                                {company.description || company.about || 'No description available'}
+                              </p>
+                              <div className="flex items-center gap-4">
+                                <Badge className="bg-[#BEC3C3] text-[#283637] border-0 text-xs font-normal">
+                                  {employeeCount}
+                                </Badge>
+                                {company.website && (
+                                  <div className="flex items-center gap-1 text-xs">
+                                    <div className="p-2 mr-2 rounded-full bg-foreground text-[#283637] flex items-center justify-center">
+                                      <Linkedin className="w-3 h-3" />
+                                    </div>
+                                    <span className="text-foreground">{company.website}</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            <div className="text-right text-white/70 text-xs space-y-1">
+                              {company.website && <p>{company.website}</p>}
+                              {company.address && <p>{company.address}</p>}
                             </div>
                           </div>
-                        </div>
-                        <div className="text-right text-white/70 text-xs space-y-1">
-                          <p>{company.website}</p>
-                          <p>{company.email}</p>
-                        </div>
-                      </div>
-                      <div className="flex justify-end mt-3">
-                        <Button
-                          size="sm"
-                          className="bg-black/10 hover:bg-black/20 text-white text-xs rounded-2xl backdrop-blur-sm border border-white/10 shadow">
-                          View Executives <ArrowRight className="w-3 h-3 ml-1" />
-                        </Button>
-                      </div>
-                    </Card>
-                  );
-                })}
+                          <div className="flex justify-end mt-3">
+                            <Button
+                              size="sm"
+                              className="bg-black/10 hover:bg-black/20 text-white text-xs rounded-2xl backdrop-blur-sm border border-white/10 shadow">
+                              View Executives <ArrowRight className="w-3 h-3 ml-1" />
+                            </Button>
+                          </div>
+                        </Card>
+                      );
+                    })
+                  )
+                ) : leadsLoading ? (
+                    <div className="text-center text-white/70 py-8">Loading leads...</div>
+                  ) : leads.length === 0 ? (
+                    <div className="text-center text-white/70 py-8">No leads found</div>
+                  ) : (
+                    leads.map((lead) => {
+                      const isActive = selectedLeadId === lead._id;
+                      const displayEmail = lead.email || 'N/A';
+                      const displayPhone = lead.phone || 'N/A';
+
+                      return (
+                        <Card
+                          key={lead._id}
+                          onClick={() => handleLeadClick(lead._id)}
+                          className={`bg-gradient-to-b from-[#2d4041] to-[#283637] backdrop-blur-sm border ${isActive ? 'border-primary/60 shadow-[0_0_0_1px_rgba(0,0,0,0.2)]' : 'border-[#3A3A3A]'} p-4 hover:bg-[#3A3A3A]/50 transition-smooth cursor-pointer`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <h3 className="text-base font-medium text-white">
+                                  {lead.name}
+                                </h3>
+                                {lead.companyName && (
+                                  <span className="text-sm text-muted-foreground/">| {lead.companyName}</span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-4 text-xs text-white/70">
+                                <div className="flex items-center gap-1">
+                                  <Mail className="w-3 h-3" />
+                                  <span>{displayEmail}</span>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <Linkedin className="w-3 h-3" />
+                                  <span>{lead.linkedinUrl || 'N/A'}</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 rounded-full hover:bg-white/10"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (displayEmail !== 'N/A') {
+                                    navigator.clipboard.writeText(displayEmail);
+                                    toast.success('Email copied!');
+                                  }
+                                }}
+                              >
+                                <Copy className="w-3.5 h-3.5 text-white/70" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 rounded-full hover:bg-white/10"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (displayPhone !== 'N/A') {
+                                    window.open(`tel:${displayPhone}`);
+                                  }
+                                }}
+                              >
+                                <Phone className="w-3.5 h-3.5 text-white/70" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 rounded-full hover:bg-white/10"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (lead.linkedinUrl) {
+                                    window.open(lead.linkedinUrl.startsWith('http') ? lead.linkedinUrl : `https://${lead.linkedinUrl}`, '_blank');
+                                  }
+                                }}
+                              >
+                                <Linkedin className="w-3.5 h-3.5 text-white/70" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEmailClick(lead);
+                                }}
+                                className="bg-primary/20 hover:bg-primary/30 text-white text-xs rounded-full px-4"
+                              >
+                                Send Email
+                              </Button>
+                            </div>
+                          </div>
+                        </Card>
+                      );
+                    })
+                  )}
               </div>
             </div>
 
-            {/* Right: Executives Panel */}
+            {/* Right: Executives/Details Panel */}
             <div
               className={`flex-shrink-0 overflow-hidden transition-all duration-300 ease-in-out ${isSidebarOpen ? 'w-[400px] opacity-100' : 'w-0 opacity-0 pointer-events-none'
                 }`}
@@ -258,43 +387,169 @@ const CompanyDetail = () => {
                 className={`bg-[#222B2C] border-[#3A3A3A] p-5 h-full transition-all duration-300 ease-in-out ${isSidebarOpen ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-6'
                   }`}
               >
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <div className="p-4 mr-2 rounded-full bg-black/10 hover:bg-black/20 text-white flex items-center justify-center">
-                    <Users className="w-5 h-5" />
-                    </div>
-                    <h3 className="text-base font-medium text-foreground">Executives</h3>
-                  </div>
-                  <Button variant="link" className="h-auto p-0 text-xs text-foreground/60 hover:text-foreground/80">
-                    View All <ArrowRight className="w-3 h-3 ml-1" />
-                  </Button>
-                </div>
-
-                <div className="space-y-3">
-                  {selectedCompany ? (
-                    selectedCompany.executives.map((exec, index) => (
-                      <div
-                        key={index}
-                        className="p-3 rounded-lg bg-gradient-to-b from-[#2d4041] to-[#283637]  hover:bg-[#4A4A4A]/40 transition-smooth border-l-4 border-primary/50"
-                      >
-                        <p className="text-sm font-medium text-foreground mb-0.5">{exec.name} </p>
-                        <p className="text-xs text-muted-foreground/60 mb-1">{exec.role} | {exec.email}</p>
-                        <div className="mt-2 flex justify-end">
-                          <Button size="icon" variant="ghost" className="w-6 h-6 rounded-full hover:bg-[#5A5A5A]/50">
-                            <Linkedin className="w-3.5 h-3.5 text-primary" />
-                          </Button>
+                {activeTab === 'companies' ? (
+                  // Executives Panel
+                  <>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <div className="p-4 mr-2 rounded-full bg-black/10 hover:bg-black/20 text-white flex items-center justify-center">
+                          <Users className="w-5 h-5" />
                         </div>
+                        <h3 className="text-base font-medium text-foreground">Executives</h3>
                       </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-muted-foreground/60">Select a company to view its executives.</p>
-                  )}
-                </div>
+                      <Button variant="link" className="h-auto p-0 text-xs text-foreground/60 hover:text-foreground/80">
+                        View All <ArrowRight className="w-3 h-3 ml-1" />
+                      </Button>
+                    </div>
+
+                    <div className="space-y-3">
+                      {selectedCompany ? (
+                        selectedCompany.people && selectedCompany.people.length > 0 ? (
+                          selectedCompany.people.map((exec, index) => (
+                            <div
+                              key={exec._id || exec.id || index}
+                              className="p-3 rounded-lg bg-gradient-to-b from-[#2d4041] to-[#283637]  hover:bg-[#4A4A4A]/40 transition-smooth border-l-4 border-primary/50"
+                            >
+                              <p className="text-sm font-medium text-foreground mb-0.5">{exec.name || 'N/A'} </p>
+                              <p className="text-xs text-muted-foreground/60 mb-1">
+                                {exec.title || exec.position || 'N/A'}
+                                {exec.email && ` | ${exec.email}`}
+                              </p>
+                              <div className="mt-2 flex justify-end">
+                                {exec.linkedin && (
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="w-6 h-6 rounded-full hover:bg-[#5A5A5A]/50"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      window.open(exec.linkedin.startsWith('http') ? exec.linkedin : `https://${exec.linkedin}`, '_blank');
+                                    }}
+                                  >
+                                    <Linkedin className="w-3.5 h-3.5 text-primary" />
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-sm text-muted-foreground/60">No executives found for this company.</p>
+                        )
+                      ) : (
+                        <p className="text-sm text-muted-foreground/60">Select a company to view its executives.</p>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  // Lead Details Panel
+                  <>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <div className="p-4 mr-2 rounded-full bg-black/10 hover:bg-black/20 text-white flex items-center justify-center">
+                          <Users className="w-5 h-5" />
+                        </div>
+                        <h3 className="text-base font-medium text-foreground">Details</h3>
+                      </div>
+                      <Button variant="link" className="h-auto p-0 text-xs text-foreground/60 hover:text-foreground/80">
+                        View All <ArrowRight className="w-3 h-3 ml-1" />
+                      </Button>
+                    </div>
+
+                    <div className="space-y-4">
+                      {selectedLeadDetails ? (
+                        <>
+                          {/* Lead Avatar and Name */}
+                          <div className="flex flex-col items-center text-center py-6">
+                            <Avatar className="h-24 w-24 mb-4 border-2 border-white/20">
+                              <AvatarImage src={selectedLeadDetails.pictureUrl} alt={selectedLeadDetails.name} />
+                              <AvatarFallback className="bg-[#2d4041] text-white text-2xl">
+                                {selectedLeadDetails.name.charAt(0).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <h4 className="text-lg font-semibold text-white mb-1">{selectedLeadDetails.name}</h4>
+                            <p className="text-sm text-white/60">
+                              {selectedLeadDetails.position || 'Position not specified'}
+                            </p>
+                            {selectedLeadDetails.companyName && (
+                              <p className="text-xs text-white/50 mt-1">{selectedLeadDetails.companyName}</p>
+                            )}
+                          </div>
+
+                          {/* Action Buttons */}
+                          <div className="grid grid-cols-4 gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-12 w-12 rounded-full bg-[#2d4041] hover:bg-[#364142]"
+                              onClick={() => {
+                                if (selectedLeadDetails.email) {
+                                  navigator.clipboard.writeText(selectedLeadDetails.email);
+                                  toast.success('Email copied!');
+                                }
+                              }}
+                            >
+                              <Copy className="w-4 h-4 text-white" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-12 w-12 rounded-full bg-[#2d4041] hover:bg-[#364142]"
+                              onClick={() => {
+                                if (selectedLeadDetails.phone) {
+                                  window.open(`tel:${selectedLeadDetails.phone}`);
+                                }
+                              }}
+                            >
+                              <Phone className="w-4 h-4 text-white" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-12 w-12 rounded-full bg-[#2d4041] hover:bg-[#364142]"
+                              onClick={() => {
+                                if (selectedLeadDetails.linkedinUrl) {
+                                  window.open(
+                                    selectedLeadDetails.linkedinUrl.startsWith('http')
+                                      ? selectedLeadDetails.linkedinUrl
+                                      : `https://${selectedLeadDetails.linkedinUrl}`,
+                                    '_blank'
+                                  );
+                                }
+                              }}
+                            >
+                              <Linkedin className="w-4 h-4 text-white" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-12 w-12 rounded-full bg-[#2d4041] hover:bg-[#364142]"
+                              onClick={() => handleEmailClick(selectedLeadDetails)}
+                            >
+                              <Mail className="w-4 h-4 text-white" />
+                            </Button>
+                          </div>
+                        </>
+                      ) : (
+                        <p className="text-sm text-muted-foreground/60 text-center py-8">
+                          Select a lead to view details.
+                        </p>
+                      )}
+                    </div>
+                  </>
+                )}
               </Card>
             </div>
           </div>
         </div>
       </main>
+
+      {/* Email Draft Modal */}
+      <EmailDraftModal
+        open={emailModalOpen}
+        onClose={() => setEmailModalOpen(false)}
+        leadName={selectedLead?.name}
+        leadEmail={selectedLead?.email}
+      />
     </div>
   );
 };
