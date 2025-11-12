@@ -93,13 +93,13 @@ const index = () => {
             },
             {
               title: "Total Outreach",
-              value: "5236",
+              value: "0",
               icon: Users,
               link: "View All",
             },
             {
               title: "Total Response",
-              value: "3256",
+              value: "0",
               icon: Users,
               link: "View All",
             },
