@@ -14,30 +14,59 @@ const ResetPassword = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({
+    password: "",
+    confirm: "",
+  });
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
 
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    field: string
+  ) => {
+    const value = e.target.value;
+    if (field === "password") {
+      setPassword(value);
+    } else {
+      setConfirm(value);
+    }
+    setErrors((prev) => ({ ...prev, [field]: "" }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrors({ password: "", confirm: "" });
 
-    if (!password || !confirm) {
-      toast.error("Fill both fields");
-      return;
+    // Validate fields
+    const newErrors = { password: "", confirm: "" };
+    let hasError = false;
+
+    if (!password) {
+      newErrors.password = "Password is required";
+      hasError = true;
+    } else if (password.length < 8) {
+      newErrors.password = "Password must be at least 8 characters";
+      hasError = true;
     }
 
-    if (password.length < 8) {
-      toast.error("Password must be at least 8 characters");
-      return;
-    }
-
-    if (password !== confirm) {
-      toast.error("Passwords do not match");
-      return;
+    if (!confirm) {
+      newErrors.confirm = "Confirm password is required";
+      hasError = true;
+    } else if (password !== confirm) {
+      newErrors.confirm = "Passwords do not match";
+      hasError = true;
     }
 
     if (!token) {
       toast.error("Invalid or missing reset token");
+      return;
+    }
+
+    if (hasError) {
+      setErrors(newErrors);
+      toast.error("Please fill all fields correctly");
       return;
     }
 
@@ -94,9 +123,10 @@ const ResetPassword = () => {
             <Input
               id="password"
               type={showPassword ? "text" : "password"}
+              name="password"
               placeholder="Enter New Password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => handleChange(e, "password")}
               className="text-foreground placeholder:text-muted-foreground/60 transition-all pr-10"
               disabled={loading}
             />
@@ -113,6 +143,9 @@ const ResetPassword = () => {
               )}
             </button>
           </div>
+          {errors.password && (
+            <p className="text-red-500 text-sm">{errors.password}</p>
+          )}
         </div>
         <div className="space-y-1">
           <Label
@@ -125,9 +158,10 @@ const ResetPassword = () => {
             <Input
               id="confirm"
               type={showConfirmPassword ? "text" : "password"}
+              name="confirm"
               placeholder="Confirm New Password"
               value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
+              onChange={(e) => handleChange(e, "confirm")}
               className="text-foreground placeholder:text-muted-foreground/60 transition-all pr-10"
               disabled={loading}
             />
@@ -144,6 +178,9 @@ const ResetPassword = () => {
               )}
             </button>
           </div>
+          {errors.confirm && (
+            <p className="text-red-500 text-sm">{errors.confirm}</p>
+          )}
         </div>
         <Button
           type="submit"

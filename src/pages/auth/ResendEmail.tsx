@@ -1,37 +1,72 @@
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { toast } from 'sonner';
-import { Link } from 'react-router-dom';
-import AuthLayout from '@/components/AuthLayout';
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import { Link } from "react-router-dom";
+import AuthLayout from "@/components/AuthLayout";
 
 const ResendEmail = () => {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({ email: "" });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
+    setErrors({ email: "" });
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) return toast.error('Please enter your email');
+    setErrors({ email: "" });
+
+    if (!email) {
+      setErrors({ email: "Email is required" });
+      return;
+    }
+
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
-      toast.success('Verification email resent');
+      toast.success("Verification email resent");
     }, 1000);
   };
 
   return (
     <AuthLayout
       title="Resend Verification Email"
-      subtitle={<Link to="/" className="hover:text-primary transition-colors">Back to login</Link>}
+      subtitle={
+        <Link to="/" className="hover:text-primary transition-colors">
+          Back to login
+        </Link>
+      }
     >
       <form onSubmit={handleSubmit} className="space-y-3">
         <div className="space-y-1">
-          <Label htmlFor="email" className="text-foreground/80 text-sm font-normal">Email</Label>
-          <Input id="email" type="email" placeholder="Enter Your Email" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <Label
+            htmlFor="email"
+            className="text-foreground/80 text-sm font-normal"
+          >
+            Email
+          </Label>
+          <Input
+            id="email"
+            type="email"
+            name="email"
+            placeholder="Enter Your Email"
+            value={email}
+            onChange={handleChange}
+          />
+          {errors.email && (
+            <p className="text-red-500 text-sm">{errors.email}</p>
+          )}
         </div>
-        <Button type="submit" className="w-full h-[46px] bg-gradient-to-r from-[#66B0B7] to-[#3E64B3] text-white rounded-xl mt-4" disabled={loading}>
-          {loading ? 'Resending...' : 'Resend Email'}
+        <Button
+          type="submit"
+          className="w-full h-[46px] bg-gradient-to-r from-[#66B0B7] to-[#3E64B3] text-white rounded-xl mt-4"
+          disabled={loading}
+        >
+          {loading ? "Resending..." : "Resend Email"}
         </Button>
       </form>
     </AuthLayout>

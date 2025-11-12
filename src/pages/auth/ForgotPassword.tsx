@@ -10,12 +10,19 @@ import { authService } from "@/services/auth.service";
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({ email: "" });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
+    setErrors({ email: "" });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrors({ email: "" });
 
     if (!email) {
-      toast.error("Please enter your email");
+      setErrors({ email: "Email is required" });
       return;
     }
 
@@ -61,10 +68,14 @@ const ForgotPassword = () => {
           <Input
             id="email"
             type="email"
+            name="email"
             placeholder="Enter Your Email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={handleChange}
           />
+          {errors.email && (
+            <p className="text-red-500 text-sm">{errors.email}</p>
+          )}
         </div>
         <Button
           type="submit"

@@ -19,15 +19,33 @@ const SignIn = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [errors, setErrors] = useState({
+    email: "",
+    password: "",
+  });
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { loading } = useSelector((state: RootState) => state.auth);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrors({ email: "", password: "" });
 
-    if (!email || !password) {
-      toast.error("Please fill in all fields");
+    // Validate fields
+    const newErrors = { email: "", password: "" };
+    let hasError = false;
+
+    if (!email) {
+      newErrors.email = "Email is required";
+      hasError = true;
+    }
+    if (!password) {
+      newErrors.password = "Password is required";
+      hasError = true;
+    }
+
+    if (hasError) {
+      setErrors(newErrors);
       return;
     }
 
@@ -63,6 +81,17 @@ const SignIn = () => {
     }
   };
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    if (name === "email") {
+      setEmail(value);
+      setErrors((prev) => ({ ...prev, email: "" }));
+    } else if (name === "password") {
+      setPassword(value);
+      setErrors((prev) => ({ ...prev, password: "" }));
+    }
+  };
+
   return (
     <AuthLayout
       title="Login"
@@ -84,12 +113,16 @@ const SignIn = () => {
           <Input
             id="email"
             type="email"
+            name="email"
             placeholder="Enter Your Email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={handleChange}
             className="font-[poppins] font-normal text-[#FFFFFF4D] text-sm"
             disabled={loading}
           />
+          {errors.email && (
+            <p className="text-red-500 text-sm">{errors.email}</p>
+          )}
         </div>
 
         {/* Password */}
@@ -104,9 +137,10 @@ const SignIn = () => {
             <Input
               id="password"
               type={showPassword ? "text" : "password"}
+              name="password"
               placeholder="Enter Your Password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={handleChange}
               className="font-[poppins] font-normal text-[#FFFFFF4D] text-sm"
               disabled={loading}
             />
@@ -123,6 +157,9 @@ const SignIn = () => {
               )}
             </button>
           </div>
+          {errors.password && (
+            <p className="text-red-500 text-sm">{errors.password}</p>
+          )}
           <div className="flex justify-end">
             <Link
               to="/forgot-password"

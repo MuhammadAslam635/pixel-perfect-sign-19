@@ -21,23 +21,86 @@ const SignUp = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({
+    companyName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
   const navigate = useNavigate();
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    field: string
+  ) => {
+    const value = e.target.value;
+
+    // Update field value
+    switch (field) {
+      case "companyName":
+        setCompanyName(value);
+        break;
+      case "industry":
+        setIndustry(value);
+        break;
+      case "email":
+        setEmail(value);
+        break;
+      case "password":
+        setPassword(value);
+        break;
+      case "confirmPassword":
+        setConfirmPassword(value);
+        break;
+    }
+
+    // Clear error for this field
+    setErrors((prev) => ({ ...prev, [field]: "" }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrors({
+      companyName: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    });
 
-    if (!companyName || !email || !password || !confirmPassword) {
-      toast.error("Please fill in all required fields");
-      return;
+    // Validate all fields
+    const newErrors = {
+      companyName: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    };
+    let hasError = false;
+
+    if (!companyName) {
+      newErrors.companyName = "Company name is required";
+      hasError = true;
+    }
+    if (!email) {
+      newErrors.email = "Email is required";
+      hasError = true;
+    }
+    if (!password) {
+      newErrors.password = "Password is required";
+      hasError = true;
+    } else if (password.length < 8) {
+      newErrors.password = "Password must be at least 8 characters";
+      hasError = true;
+    }
+    if (!confirmPassword) {
+      newErrors.confirmPassword = "Confirm password is required";
+      hasError = true;
+    } else if (password !== confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match";
+      hasError = true;
     }
 
-    if (password !== confirmPassword) {
-      toast.error("Passwords do not match");
-      return;
-    }
-
-    if (password.length < 8) {
-      toast.error("Password must be at least 8 characters");
+    if (hasError) {
+      setErrors(newErrors);
       return;
     }
 
@@ -165,12 +228,16 @@ const SignUp = () => {
                 <Input
                   id="companyName"
                   type="text"
+                  name="companyName"
                   placeholder="Enter Your Company Name"
                   value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
+                  onChange={(e) => handleChange(e, "companyName")}
                   className="text-foreground placeholder:text-muted-foreground/60 transition-all"
                   disabled={loading}
                 />
+                {errors.companyName && (
+                  <p className="text-red-500 text-sm">{errors.companyName}</p>
+                )}
               </div>
 
               {/* Industry */}
@@ -184,9 +251,10 @@ const SignUp = () => {
                 <Input
                   id="industry"
                   type="text"
+                  name="industry"
                   placeholder="Enter Your Industry Name"
                   value={industry}
-                  onChange={(e) => setIndustry(e.target.value)}
+                  onChange={(e) => handleChange(e, "industry")}
                   className="text-foreground placeholder:text-muted-foreground/60 transition-all"
                   disabled={loading}
                 />
@@ -203,12 +271,16 @@ const SignUp = () => {
                 <Input
                   id="email"
                   type="email"
+                  name="email"
                   placeholder="Enter Your Email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => handleChange(e, "email")}
                   className="text-foreground placeholder:text-muted-foreground/60 transition-all"
                   disabled={loading}
                 />
+                {errors.email && (
+                  <p className="text-red-500 text-sm">{errors.email}</p>
+                )}
               </div>
 
               {/* Password */}
@@ -223,9 +295,10 @@ const SignUp = () => {
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
+                    name="password"
                     placeholder="Enter Your Password"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => handleChange(e, "password")}
                     className="text-foreground placeholder:text-muted-foreground/60 transition-all pr-10"
                     disabled={loading}
                   />
@@ -242,6 +315,9 @@ const SignUp = () => {
                     )}
                   </button>
                 </div>
+                {errors.password && (
+                  <p className="text-red-500 text-sm">{errors.password}</p>
+                )}
               </div>
 
               {/* Confirm Password */}
@@ -256,9 +332,10 @@ const SignUp = () => {
                   <Input
                     id="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
+                    name="confirmPassword"
                     placeholder="Enter Your Password"
                     value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    onChange={(e) => handleChange(e, "confirmPassword")}
                     className="text-foreground placeholder:text-muted-foreground/60 transition-all pr-10"
                     disabled={loading}
                   />
@@ -275,6 +352,11 @@ const SignUp = () => {
                     )}
                   </button>
                 </div>
+                {errors.confirmPassword && (
+                  <p className="text-red-500 text-sm">
+                    {errors.confirmPassword}
+                  </p>
+                )}
               </div>
 
               {/* Submit Button */}
