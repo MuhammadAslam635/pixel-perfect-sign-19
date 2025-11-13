@@ -42,7 +42,7 @@ const agents = [
 const AgentsPage = () => {
   return (
     <DashboardLayout>
-      <main className="relative flex-1 px-6 pb-12 pt-28 sm:px-10 md:px-14 lg:px-20 2xl:px-[110px]">
+      <main className="relative flex-1 px-6 pb-12 pt-28 sm:px-10 md:px-14 lg:px-20">
         <div className="absolute inset-0 bg-gradient-to-b from-[#0F172A] via-transparent to-[#05060A] opacity-70"></div>
         <div className="relative z-10 mx-auto flex w-full max-w-[1400px] flex-col gap-12 bg-[#222B2C] p-6 rounded-2xl">
           <header className="flex flex-col gap-4">
@@ -52,7 +52,7 @@ const AgentsPage = () => {
             <h1 className="text-3xl font-semibold leading-tight text-white md:text-4xl lg:text-5xl">
               Meet the specialists powering your autonomous growth
             </h1>
-            <p className="max-w-6xl text-base text-white/70 md:text-lg">
+            <p className="text-base text-white/70 md:text-lg">
               Every agent is tuned for a high-impact part of your go-to-market.
               Blend them together to attract leads, personalize outreach, close
               more deals, and keep customers delighted.
