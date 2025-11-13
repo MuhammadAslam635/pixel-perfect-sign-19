@@ -485,33 +485,33 @@ const index = () => {
             ))}
           </div>
 
-          <div className="flex-1">
-            <h2 className="text-lg font-medium text-foreground mb-4">
-              {activeTab === "companies" ? "Companies" : "Leads"}
-            </h2>
-          </div>
           {/* Split View */}
           <div className="flex gap-6 items-start">
             {/* Left: Companies/Leads List */}
-            <div className="space-y-3 bg-[#222B2C] p-6 rounded-2xl min-h-[600px] flex-1">
-              {activeTab === "companies" ? (
-                <CompaniesList
-                  companies={companies}
-                  loading={loading}
-                  selectedCompanyId={selectedCompanyId}
-                  onSelectCompany={handleCompanyClick}
-                />
-              ) : (
-                <LeadsList
-                  leads={leads}
-                  loading={leadsLoading}
-                  selectedLeadId={selectedLeadId}
-                  onSelectLead={handleLeadClick}
-                  onEmailClick={handleEmailClick}
-                  onPhoneClick={handlePhoneClickFromList}
-                  onLinkedinClick={handleLinkedinClick}
-                />
-              )}
+            <div className="flex-1 flex flex-col gap-4">
+              <h2 className="text-lg font-medium text-foreground">
+                {activeTab === "companies" ? "Companies" : "Leads"}
+              </h2>
+              <div className="space-y-3 bg-[#222B2C] p-6 rounded-2xl min-h-[400px] lg:min-h-[600px] flex-1 overflow-y-auto lg:max-h-[calc(100vh-260px)]">
+                {activeTab === "companies" ? (
+                  <CompaniesList
+                    companies={companies}
+                    loading={loading}
+                    selectedCompanyId={selectedCompanyId}
+                    onSelectCompany={handleCompanyClick}
+                  />
+                ) : (
+                  <LeadsList
+                    leads={leads}
+                    loading={leadsLoading}
+                    selectedLeadId={selectedLeadId}
+                    onSelectLead={handleLeadClick}
+                    onEmailClick={handleEmailClick}
+                    onPhoneClick={handlePhoneClickFromList}
+                    onLinkedinClick={handleLinkedinClick}
+                  />
+                )}
+              </div>
             </div>
 
             {/* Right: Executives/Details Panel */}
