@@ -10,6 +10,7 @@ import ResendEmail from "@/pages/auth/ResendEmail";
 import Dashboard from "@/pages/Dashboard";
 import CompanyDetail from "@/pages/companies";
 import ChatPage from "@/pages/Chat";
+import AgentsPage from "@/pages/agents";
 import NotFound from "@/pages/NotFound";
 
 const AppRoutes = () => {
@@ -87,6 +88,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <ChatPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/agents"
+        element={
+          <ProtectedRoute>
+            <AgentsPage />
           </ProtectedRoute>
         }
       />
