@@ -37,6 +37,7 @@ import CompanyKnowledgeFileUpload from "@/components/knowledge/CompanyKnowledgeF
 import { useToast } from "@/components/ui/use-toast";
 import { companyKnowledgeService } from "@/services/companyKnowledge.service";
 import { useCompanyKnowledgeData } from "./hooks";
+import OnboardingPanel from "@/components/knowledge/OnboardingPanel";
 
 const formatFileSize = (bytes?: number) => {
   if (!bytes) return "Unknown size";
@@ -45,6 +46,13 @@ const formatFileSize = (bytes?: number) => {
   const units = ["Bytes", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return `${Math.round((bytes / Math.pow(k, i)) * 100) / 100} ${units[i]}`;
+};
+
+const formatDate = (value?: string) => {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleDateString();
 };
 
 const CompanyKnowledgePage = () => {
@@ -121,18 +129,18 @@ const CompanyKnowledgePage = () => {
 
     if (!files.length) {
       return (
-        <Card className="border-white/10 bg-white/5 text-center text-white/70 backdrop-blur-xl">
+        <Card className="border border-white/15 bg-gradient-to-br from-[#1f3032] via-[#243f42] to-[#1b2c2d] text-center text-white/75 shadow-[0_22px_55px_-28px_rgba(19,82,87,0.6)] backdrop-blur-xl">
           <CardContent className="flex flex-col items-center gap-4 py-16">
-            <FileText className="h-16 w-16 text-white/20" />
+            <FileText className="h-16 w-16 text-cyan-200/70" />
             <h3 className="text-2xl font-semibold text-white">
               No files uploaded yet
             </h3>
-            <p className="max-w-sm text-sm text-white/60">
+            <p className="max-w-sm text-sm text-white/70">
               Drop in your brand guidelines, playbooks, call scripts, and more.
               These become the context your AI agents rely on.
             </p>
             <Button
-              className="bg-gradient-to-r from-[#8B36E9] via-[#6586FF] to-[#2C5FEC]"
+              className="bg-gradient-to-r from-[#30cfd0] via-[#2a9cb3] to-[#1f6f86] text-white shadow-[0_15px_30px_-18px_rgba(42,156,179,0.7)]"
               onClick={() => setUploadOpen(true)}
             >
               <Plus className="mr-2 h-4 w-4" />
@@ -149,7 +157,7 @@ const CompanyKnowledgePage = () => {
           {files.map((file) => (
             <Card
               key={file._id}
-              className="border-white/10 bg-white/[0.06] text-white backdrop-blur-xl"
+              className="border border-white/15 bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] text-white shadow-[0_24px_55px_-30px_rgba(19,82,87,0.7)] backdrop-blur-xl"
             >
               <CardHeader className="flex flex-row items-start justify-between space-y-0">
                 <div className="space-y-1">
@@ -180,11 +188,11 @@ const CompanyKnowledgePage = () => {
                 </div>
                 <div className="flex justify-between">
                   <span>Uploaded</span>
-                  <span>{new Date(file.uploadedAt).toLocaleDateString()}</span>
+                  <span>{formatDate(file.uploadedAt ?? file.createdAt)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Last updated</span>
-                  <span>{new Date(file.updatedAt).toLocaleDateString()}</span>
+                  <span>{formatDate(file.updatedAt)}</span>
                 </div>
               </CardContent>
             </Card>
@@ -192,7 +200,7 @@ const CompanyKnowledgePage = () => {
         </div>
 
         {totalPages > 1 && (
-          <div className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-white/70 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col gap-4 rounded-2xl border border-white/15 bg-gradient-to-r from-[#1f3032]/90 via-[#243f42]/90 to-[#1b2c2d]/90 px-4 py-4 text-white/75 shadow-[0_18px_45px_-28px_rgba(19,82,87,0.55)] md:flex-row md:items-center md:justify-between">
             <p className="text-sm">{paginationSummary}</p>
             <div className="flex items-center gap-3">
               <Button
@@ -200,6 +208,7 @@ const CompanyKnowledgePage = () => {
                 size="sm"
                 onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
                 disabled={page === 1 || loading}
+                className="border-white/30 text-white/85 hover:bg-white/10"
               >
                 <ChevronLeft className="mr-1 h-4 w-4" />
                 Previous
@@ -214,6 +223,7 @@ const CompanyKnowledgePage = () => {
                   setPage((prev) => Math.min(prev + 1, totalPages))
                 }
                 disabled={page === totalPages || loading}
+                className="border-white/30 text-white/85 hover:bg-white/10"
               >
                 Next
                 <ChevronRight className="ml-1 h-4 w-4" />
@@ -233,7 +243,10 @@ const CompanyKnowledgePage = () => {
   }, [limit, page, totalDocs]);
 
   return (
-    <KnowledgeLayout activeTab="company-knowledge">
+    <KnowledgeLayout
+      initialTab="company-knowledge"
+      onboardingContent={<OnboardingPanel />}
+    >
       <div className="flex flex-col gap-6 text-white">
         <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
           <div>

@@ -6,8 +6,9 @@ export type CompanyKnowledgeFile = {
   fileSize?: number;
   fileType?: string;
   fileUrl?: string;
-  uploadedAt: string;
-  updatedAt: string;
+  uploadedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
   [key: string]: unknown;
 };
 

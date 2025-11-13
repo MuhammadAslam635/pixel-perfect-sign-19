@@ -111,7 +111,7 @@ const CompanyKnowledgeFileUpload = ({
 
   return (
     <div className="space-y-6">
-      <Card className="border-white/10 bg-white/5 backdrop-blur-xl">
+      <Card className="border border-white/15 bg-gradient-to-br from-[#1f3032] via-[#243f42] to-[#1b2c2d] text-white shadow-[0_18px_45px_-25px_rgba(19,82,87,0.55)]">
         <CardHeader className="space-y-1">
           <CardTitle className="text-lg font-semibold text-white">
             Upload Files
@@ -123,8 +123,8 @@ const CompanyKnowledgeFileUpload = ({
         </CardHeader>
         <CardContent className="space-y-4">
           <label htmlFor="knowledge-upload" className="block">
-            <div className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-white/15 bg-white/5 px-8 py-10 text-center transition hover:border-cyan-400/40 hover:bg-white/10">
-              <Upload className="h-10 w-10 text-cyan-300/80" />
+            <div className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-white/20 bg-white/5 px-8 py-10 text-center transition hover:border-cyan-300/60 hover:bg-white/10">
+              <Upload className="h-10 w-10 text-cyan-200/80" />
               <div className="space-y-1">
                 <p className="text-base font-medium text-white">
                   Drag and drop files or click to browse
@@ -153,10 +153,10 @@ const CompanyKnowledgeFileUpload = ({
                 {files.map((file, index) => (
                   <div
                     key={`${file.name}-${index}`}
-                    className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/70"
+                    className="flex items-center justify-between rounded-xl border border-white/15 bg-gradient-to-r from-white/10 via-transparent to-white/5 px-4 py-3 text-sm text-white/80"
                   >
                     <div className="flex items-center gap-3">
-                      <File className="h-4 w-4 text-cyan-300/70" />
+                      <File className="h-4 w-4 text-cyan-200/80" />
                       <div className="flex flex-col">
                         <span className="font-medium text-white">
                           {file.name}
@@ -182,19 +182,24 @@ const CompanyKnowledgeFileUpload = ({
         </CardContent>
       </Card>
 
-      <div className="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/5 px-5 py-4 text-sm text-white/60">
+      <div className="flex items-center justify-between gap-4 rounded-2xl border border-white/15 bg-gradient-to-r from-[#1f3032]/90 via-[#243f42]/90 to-[#1b2c2d]/90 px-5 py-4 text-sm text-white/70 shadow-[0_18px_40px_-25px_rgba(19,82,87,0.45)]">
         <span>
           Upload carefully curated files so your AI agents respond with the best
           context.
         </span>
         <div className="flex gap-3">
-          <Button variant="outline" onClick={onCancel} disabled={isUploading}>
+          <Button
+            variant="outline"
+            onClick={onCancel}
+            disabled={isUploading}
+            className="border-white/30 text-white/80 hover:bg-white/10"
+          >
             Cancel
           </Button>
           <Button
             onClick={handleUpload}
             disabled={isUploading || files.length === 0}
-            className="bg-gradient-to-r from-[#8B36E9] via-[#6586FF] to-[#2C5FEC]"
+            className="bg-gradient-to-r from-[#30cfd0] via-[#2a9cb3] to-[#1f6f86] text-white shadow-[0_15px_30px_-18px_rgba(42,156,179,0.7)]"
           >
             {isUploading ? (
               <>
