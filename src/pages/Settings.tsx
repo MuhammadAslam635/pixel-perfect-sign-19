@@ -66,7 +66,7 @@ const SettingsPage = () => {
   return (
     <DashboardLayout>
       <main className="relative mt-24 mb-8 flex-1 overflow-y-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] text-white">
-        <section className="mx-auto flex max-w-6xl flex-col gap-8">
+        <section className="mx-auto flex flex-col gap-8 space-y-3 bg-[#222B2C] p-6 rounded-2xl min-h-[600px] flex-1">
           <header className="flex flex-col gap-2">
             <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
               Settings
