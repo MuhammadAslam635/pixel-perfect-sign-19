@@ -13,6 +13,7 @@ import ChatPage from "@/pages/Chat";
 import AgentsPage from "@/pages/agents";
 import NotFound from "@/pages/NotFound";
 import SettingsPage from "@/pages/Settings";
+import CompanyKnowledge from "@/pages/companyKnowledgeBase";
 
 const AppRoutes = () => {
   return (
@@ -97,6 +98,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <SettingsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/company-knowledge"
+        element={
+          <ProtectedRoute>
+            <CompanyKnowledge />
           </ProtectedRoute>
         }
       />

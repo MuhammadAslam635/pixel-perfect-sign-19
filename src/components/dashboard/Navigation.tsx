@@ -40,6 +40,13 @@ const navLinks: NavLink[] = [
   // { id: "users", label: "Users", icon: Users, path: "/users" },
   { id: "chat", label: "Chat", icon: MessageSquare, path: "/chat" },
   { id: "agents", label: "Agents", icon: Bot, path: "/agents" },
+  {
+    id: "company-knowledge",
+    label: "Knowledge",
+    icon: BookOpen,
+    path: "/company-knowledge",
+    match: (pathname: string) => pathname.startsWith("/company-knowledge"),
+  },
   // { id: "Booking", label: "Booking", icon: CalendarDays, path: "/booking" },
   // { id: "Leads", label: "Leads", icon: TrendingUp, path: "/leads" },
   // {
