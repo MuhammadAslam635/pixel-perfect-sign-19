@@ -50,7 +50,13 @@ const navLinks: NavLink[] = [
   // },
   // { id: "Results", label: "Results", icon: Target, path: "/results" },
   // { id: "docs", label: "Docs", icon: BookOpen, path: "/knowledge-base" },
-  // { id: "settings", label: "Settings", icon: Settings, path: "/settings" },
+  {
+    id: "settings",
+    label: "Settings",
+    icon: Settings,
+    path: "/settings",
+    match: (pathname: string) => pathname.startsWith("/settings"),
+  },
 ];
 
 const notifications = [

@@ -12,6 +12,7 @@ import CompanyDetail from "@/pages/companies";
 import ChatPage from "@/pages/Chat";
 import AgentsPage from "@/pages/agents";
 import NotFound from "@/pages/NotFound";
+import SettingsPage from "@/pages/Settings";
 
 const AppRoutes = () => {
   return (
@@ -88,6 +89,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <ChatPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <SettingsPage />
           </ProtectedRoute>
         }
       />
