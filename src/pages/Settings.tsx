@@ -83,32 +83,38 @@ const SettingsPage = () => {
             orientation="vertical"
             className="flex flex-col gap-6 lg:flex-row"
           >
+            {/* Sidebar wrapper with card styling */}
             <div className="w-full shrink-0 rounded-3xl border border-white/10 bg-white/[0.02] p-3 backdrop-blur lg:w-60 lg:p-4">
-              <TabsList className="flex w-full flex-row gap-2 overflow-x-auto rounded-2xl bg-transparent p-1 lg:flex-col lg:overflow-visible">
-                {tabs.map((tab) => {
-                  const Icon = tab.icon;
-                  const isActive = activeTab === tab.value;
-                  return (
-                    <TabsTrigger
-                      key={tab.value}
-                      value={tab.value}
-                      className={`group flex w-full items-center gap-2 rounded-2xl px-4 py-3 text-sm font-medium transition-all ${
-                        isActive
-                          ? "bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white shadow-[0_12px_32px_rgba(72,155,255,0.35)]"
-                          : "text-white/70 hover:bg-white/10 hover:text-white"
-                      }`}
-                    >
-                      <Icon
-                        className={`h-4 w-4 transition-colors ${
-                          isActive ? "text-white" : "text-white/70"
+              {/* Tabs list wrapper - ensures tabs stay inside the card */}
+              <div className="w-full">
+                <TabsList className="flex h-auto w-full flex-col gap-2 bg-transparent p-0">
+                  {tabs.map((tab) => {
+                    const Icon = tab.icon;
+                    const isActive = activeTab === tab.value;
+                    return (
+                      <TabsTrigger
+                        key={tab.value}
+                        value={tab.value}
+                        className={`flex w-full items-center justify-start gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-all data-[state=active]:shadow-none ${
+                          isActive
+                            ? "bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white shadow-[0_12px_32px_rgba(72,155,255,0.35)]"
+                            : "text-white/70 hover:bg-white/10 hover:text-white"
                         }`}
-                      />
-                      <span>{tab.label}</span>
-                    </TabsTrigger>
-                  );
-                })}
-              </TabsList>
+                      >
+                        <Icon
+                          className={`h-4 w-4 shrink-0 transition-colors ${
+                            isActive ? "text-white" : "text-white/70"
+                          }`}
+                        />
+                        <span className="text-left">{tab.label}</span>
+                      </TabsTrigger>
+                    );
+                  })}
+                </TabsList>
+              </div>
             </div>
+
+            {/* Content area */}
             <div className="flex-1 rounded-3xl border border-white/10 bg-white/[0.02] p-4 backdrop-blur sm:p-6">
               <TabsContent value="profile" className="mt-0 space-y-6">
                 {isAdmin ? (
