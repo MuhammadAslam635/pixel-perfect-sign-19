@@ -2,6 +2,7 @@ import { ActionComponent } from "./ActionComponent";
 import { Navigation } from "./Navigation";
 import Logo from "../Logo";
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
 const DashboardHeader = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -28,7 +29,9 @@ const DashboardHeader = () => {
       }`}
     >
       <div className="px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] flex w-full max-w-full items-center justify-between gap-3 sm:gap-4 lg:gap-0">
-        <Logo />
+        <Link to="/" className="flex items-center flex-shrink-0">
+          <Logo />
+        </Link>
         <Navigation />
 
         <ActionComponent />
