@@ -1,8 +1,7 @@
-import { FC } from "react";
+import { FC, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Pagination,
   PaginationContent,
@@ -12,7 +11,7 @@ import {
   PaginationPrevious,
   PaginationEllipsis,
 } from "@/components/ui/pagination";
-import { ArrowRight, Linkedin, Search, X } from "lucide-react";
+import { ArrowRight, Linkedin, Search } from "lucide-react";
 import { Company } from "@/services/companies.service";
 
 type CompaniesListProps = {
@@ -35,11 +34,9 @@ const CompaniesList: FC<CompaniesListProps> = ({
   selectedCompanyId,
   onSelectCompany,
   search = "",
-  onSearchChange,
   page = 1,
   totalPages = 1,
   onPageChange,
-  totalCompanies,
   showFilters = true,
 }) => {
   // Helper function to format URL and create clickable link
@@ -58,10 +55,10 @@ const CompaniesList: FC<CompaniesListProps> = ({
     }
     return url;
   };
-  const renderPagination = () => {
+  // Calculate pagination page range
+  const paginationPages = useMemo<{ pages: number[]; startPage: number; endPage: number } | null>(() => {
     if (totalPages <= 1) return null;
 
-    const pages = [];
     const maxVisible = 5;
     let startPage = Math.max(1, page - Math.floor(maxVisible / 2));
     let endPage = Math.min(totalPages, startPage + maxVisible - 1);
@@ -70,107 +67,60 @@ const CompaniesList: FC<CompaniesListProps> = ({
       startPage = Math.max(1, endPage - maxVisible + 1);
     }
 
+    const pages: number[] = [];
     for (let i = startPage; i <= endPage; i++) {
       pages.push(i);
     }
 
-    return (
-      <Pagination className="mt-8">
-        <PaginationContent className="gap-1">
-          <PaginationItem>
-            <PaginationPrevious
-              onClick={(e) => {
-                e.preventDefault();
-                onPageChange?.(Math.max(1, page - 1));
-              }}
-              className={
-                page <= 1
-                  ? "pointer-events-none opacity-50"
-                  : "cursor-pointer hover:bg-white/10 transition-colors"
-              }
-            />
-          </PaginationItem>
-          {startPage > 1 && (
-            <>
-              <PaginationItem>
-              <PaginationLink
-                onClick={(e) => {
-                  e.preventDefault();
-                  onPageChange?.(1);
-                }}
-                className="cursor-pointer hover:bg-white/10 transition-colors"
-              >
-                1
-              </PaginationLink>
-              </PaginationItem>
-              {startPage > 2 && (
-                <PaginationItem>
-                  <PaginationEllipsis />
-                </PaginationItem>
-              )}
-            </>
-          )}
-          {pages.map((p) => (
-            <PaginationItem key={p}>
-              <PaginationLink
-                onClick={(e) => {
-                  e.preventDefault();
-                  onPageChange?.(p);
-                }}
-                isActive={p === page}
-                className="cursor-pointer hover:bg-white/10 transition-colors"
-              >
-                {p}
-              </PaginationLink>
-            </PaginationItem>
-          ))}
-          {endPage < totalPages && (
-            <>
-              {endPage < totalPages - 1 && (
-                <PaginationItem>
-                  <PaginationEllipsis />
-                </PaginationItem>
-              )}
-              <PaginationItem>
-              <PaginationLink
-                onClick={(e) => {
-                  e.preventDefault();
-                  onPageChange?.(totalPages);
-                }}
-                className="cursor-pointer hover:bg-white/10 transition-colors"
-              >
-                {totalPages}
-              </PaginationLink>
-              </PaginationItem>
-            </>
-          )}
-          <PaginationItem>
-            <PaginationNext
-              onClick={(e) => {
-                e.preventDefault();
-                onPageChange?.(Math.min(totalPages, page + 1));
-              }}
-              className={
-                page >= totalPages
-                  ? "pointer-events-none opacity-50"
-                  : "cursor-pointer hover:bg-white/10 transition-colors"
-              }
-            />
-          </PaginationItem>
-        </PaginationContent>
-      </Pagination>
-    );
+    return { pages, startPage, endPage };
+  }, [page, totalPages]);
+
+  const handlePageChange = (newPage: number) => {
+    onPageChange?.(newPage);
   };
 
-  return (
-    <>
+  const handlePrevious = () => {
+    if (page > 1) {
+      handlePageChange(page - 1);
+    }
+  };
 
-      {loading ? (
+  const handleNext = () => {
+    if (page < totalPages) {
+      handlePageChange(page + 1);
+    }
+  };
+
+  // Extract company data for rendering
+  const getCompanyData = (company: Company) => {
+    const isActive = selectedCompanyId === company._id;
+    const employeeCount = company.employees
+      ? `${company.employees} employees`
+      : "N/A";
+    const primaryExecutive = company.people?.[0];
+    const primaryEmail =
+      primaryExecutive?.email || primaryExecutive?.emails?.[0] || null;
+    const companyLinkedIn =
+      primaryExecutive?.linkedin || company.website || null;
+
+    return {
+      isActive,
+      employeeCount,
+      primaryEmail,
+      companyLinkedIn,
+    };
+  };
+
+  // Render loading state
+  const renderLoading = () => (
         <div className="flex flex-col items-center justify-center py-16">
-          <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin mb-3"></div>
+      <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin mb-3" />
           <p className="text-white/60 text-sm">Loading companies...</p>
         </div>
-      ) : companies.length === 0 ? (
+  );
+
+  // Render empty state
+  const renderEmpty = () => (
         <div className="flex flex-col items-center justify-center py-16 px-4">
           <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-4">
             <Search className="w-6 h-6 text-white/30" />
@@ -207,9 +157,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
           >
             <div className="flex-1">
               <div className="flex flex-wrap items-center gap-2 text-white/90">
-                <h3 className="text-xl font-semibold text-white">
-                  {company.name}
-                </h3>
+            <h3 className="text-xl font-semibold text-white">{company.name}</h3>
                 {company.industry && (
                   <span className="text-sm text-white/70 font-medium">
                     | {company.industry}
@@ -284,12 +232,124 @@ const CompaniesList: FC<CompaniesListProps> = ({
             </div>
           </Card>
         );
-          })}
-          {/* Pagination at Bottom */}
-          {totalPages > 1 && renderPagination()}
+  };
+
+  // Render pagination
+  const renderPagination = () => {
+    if (!paginationPages) return null;
+
+    const { pages, startPage, endPage } = paginationPages;
+
+    return (
+      <div className="sticky bottom-0 left-0 right-0 z-10 bg-[#222B2C] py-2 -mx-4 sm:-mx-6 px-4 sm:px-6 border-t border-white/10">
+        <Pagination>
+          <PaginationContent className="gap-1">
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={(e) => {
+                  e.preventDefault();
+                  handlePrevious();
+                }}
+                className={
+                  page <= 1
+                    ? "pointer-events-none opacity-50"
+                    : "cursor-pointer hover:bg-white/10 transition-colors"
+                }
+              />
+            </PaginationItem>
+
+            {startPage > 1 && (
+              <>
+                <PaginationItem>
+                  <PaginationLink
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handlePageChange(1);
+                    }}
+                    className="cursor-pointer hover:bg-white/10 transition-colors"
+                  >
+                    1
+                  </PaginationLink>
+                </PaginationItem>
+                {startPage > 2 && (
+                  <PaginationItem>
+                    <PaginationEllipsis />
+                  </PaginationItem>
+                )}
+              </>
+            )}
+
+            {pages.map((p) => (
+              <PaginationItem key={p}>
+                <PaginationLink
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handlePageChange(p);
+                  }}
+                  isActive={p === page}
+                  className="cursor-pointer hover:bg-white/10 transition-colors"
+                >
+                  {p}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+
+            {endPage < totalPages && (
+              <>
+                {endPage < totalPages - 1 && (
+                  <PaginationItem>
+                    <PaginationEllipsis />
+                  </PaginationItem>
+                )}
+                <PaginationItem>
+                  <PaginationLink
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handlePageChange(totalPages);
+                    }}
+                    className="cursor-pointer hover:bg-white/10 transition-colors"
+                  >
+                    {totalPages}
+                  </PaginationLink>
+                </PaginationItem>
         </>
       )}
-    </>
+
+            <PaginationItem>
+              <PaginationNext
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleNext();
+                }}
+                className={
+                  page >= totalPages
+                    ? "pointer-events-none opacity-50"
+                    : "cursor-pointer hover:bg-white/10 transition-colors"
+                }
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      </div>
+    );
+  };
+
+  return (
+    <div className="flex flex-col h-full">
+      {/* Scrollable content area */}
+      <div className="flex-1 overflow-y-auto space-y-4 pb-4 pr-3 custom-scrollbar-list">
+        {loading ? (
+          renderLoading()
+        ) : companies.length === 0 ? (
+          renderEmpty()
+        ) : (
+          companies.map(renderCompanyCard)
+        )}
+      </div>
+
+      {/* Fixed pagination at bottom */}
+      {!loading && companies.length > 0 && renderPagination()}
+    </div>
   );
 };
 

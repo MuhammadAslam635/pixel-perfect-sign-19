@@ -685,7 +685,10 @@ const index = () => {
             }`}
           >
             {/* Left: Companies/Leads List */}
-            <div className="bg-[#222B2C] p-4 sm:p-6 rounded-2xl h-[calc(100vh-380px)] sm:h-[calc(100vh-360px)] lg:h-[calc(100vh-340px)] min-h-[400px] sm:min-h-[500px] max-h-[800px] flex-1 overflow-y-auto">
+            <div className="bg-[#222B2C] pt-4 sm:px-6 rounded-2xl 
+            h-[calc(100vh-380px)] sm:h-[calc(100vh-360px)] lg:h-[calc(100vh-340px)] 
+            min-h-[400px] sm:min-h-[500px] max-h-[800px] 
+            flex-1 overflow-y-auto">
               {activeTab === "companies" ? (
                 <CompaniesList
                   companies={companies}
