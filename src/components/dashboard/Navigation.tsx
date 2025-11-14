@@ -41,6 +41,13 @@ const navLinks: NavLink[] = [
   { id: "chat", label: "Chat", icon: MessageSquare, path: "/chat" },
   { id: "agents", label: "Agents", icon: Bot, path: "/agents" },
   {
+    id: "campaigns",
+    label: "Campaigns",
+    icon: Target,
+    path: "/campaigns",
+    match: (pathname: string) => pathname.startsWith("/campaigns"),
+  },
+  {
     id: "company-knowledge",
     label: "Knowledge",
     icon: BookOpen,

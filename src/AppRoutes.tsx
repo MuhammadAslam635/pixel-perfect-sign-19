@@ -14,6 +14,7 @@ import AgentsPage from "@/pages/agents";
 import NotFound from "@/pages/NotFound";
 import SettingsPage from "@/pages/Settings";
 import CompanyKnowledge from "@/pages/companyKnowledgeBase";
+import CampaignsPage from "@/pages/campaigns";
 
 const AppRoutes = () => {
   return (
@@ -114,6 +115,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <AgentsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/campaigns"
+        element={
+          <ProtectedRoute>
+            <CampaignsPage />
           </ProtectedRoute>
         }
       />
