@@ -2,7 +2,17 @@ import { FC } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Linkedin } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from "@/components/ui/pagination";
+import { ArrowRight, Linkedin, Search, X } from "lucide-react";
 import { Company } from "@/services/companies.service";
 
 type CompaniesListProps = {
@@ -10,6 +20,13 @@ type CompaniesListProps = {
   loading: boolean;
   selectedCompanyId: string | null;
   onSelectCompany: (companyId: string) => void;
+  search?: string;
+  onSearchChange?: (search: string) => void;
+  page?: number;
+  totalPages?: number;
+  onPageChange?: (page: number) => void;
+  totalCompanies?: number;
+  showFilters?: boolean;
 };
 
 const CompaniesList: FC<CompaniesListProps> = ({
@@ -17,22 +34,143 @@ const CompaniesList: FC<CompaniesListProps> = ({
   loading,
   selectedCompanyId,
   onSelectCompany,
+  search = "",
+  onSearchChange,
+  page = 1,
+  totalPages = 1,
+  onPageChange,
+  totalCompanies,
+  showFilters = true,
 }) => {
-  if (loading) {
-    return (
-      <div className="text-center text-white/70 py-8">Loading companies...</div>
-    );
-  }
+  const renderPagination = () => {
+    if (totalPages <= 1) return null;
 
-  if (companies.length === 0) {
+    const pages = [];
+    const maxVisible = 5;
+    let startPage = Math.max(1, page - Math.floor(maxVisible / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+
+    if (endPage - startPage < maxVisible - 1) {
+      startPage = Math.max(1, endPage - maxVisible + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+
     return (
-      <div className="text-center text-white/70 py-8">No companies found</div>
+      <Pagination className="mt-8">
+        <PaginationContent className="gap-1">
+          <PaginationItem>
+            <PaginationPrevious
+              onClick={(e) => {
+                e.preventDefault();
+                onPageChange?.(Math.max(1, page - 1));
+              }}
+              className={
+                page <= 1
+                  ? "pointer-events-none opacity-50"
+                  : "cursor-pointer hover:bg-white/10 transition-colors"
+              }
+            />
+          </PaginationItem>
+          {startPage > 1 && (
+            <>
+              <PaginationItem>
+              <PaginationLink
+                onClick={(e) => {
+                  e.preventDefault();
+                  onPageChange?.(1);
+                }}
+                className="cursor-pointer hover:bg-white/10 transition-colors"
+              >
+                1
+              </PaginationLink>
+              </PaginationItem>
+              {startPage > 2 && (
+                <PaginationItem>
+                  <PaginationEllipsis />
+                </PaginationItem>
+              )}
+            </>
+          )}
+          {pages.map((p) => (
+            <PaginationItem key={p}>
+              <PaginationLink
+                onClick={(e) => {
+                  e.preventDefault();
+                  onPageChange?.(p);
+                }}
+                isActive={p === page}
+                className="cursor-pointer hover:bg-white/10 transition-colors"
+              >
+                {p}
+              </PaginationLink>
+            </PaginationItem>
+          ))}
+          {endPage < totalPages && (
+            <>
+              {endPage < totalPages - 1 && (
+                <PaginationItem>
+                  <PaginationEllipsis />
+                </PaginationItem>
+              )}
+              <PaginationItem>
+              <PaginationLink
+                onClick={(e) => {
+                  e.preventDefault();
+                  onPageChange?.(totalPages);
+                }}
+                className="cursor-pointer hover:bg-white/10 transition-colors"
+              >
+                {totalPages}
+              </PaginationLink>
+              </PaginationItem>
+            </>
+          )}
+          <PaginationItem>
+            <PaginationNext
+              onClick={(e) => {
+                e.preventDefault();
+                onPageChange?.(Math.min(totalPages, page + 1));
+              }}
+              className={
+                page >= totalPages
+                  ? "pointer-events-none opacity-50"
+                  : "cursor-pointer hover:bg-white/10 transition-colors"
+              }
+            />
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
     );
-  }
+  };
 
   return (
-    <>
-      {companies.map((company) => {
+    <div className="space-y-4">
+
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-16">
+          <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin mb-3"></div>
+          <p className="text-white/60 text-sm">Loading companies...</p>
+        </div>
+      ) : companies.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 px-4">
+          <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-4">
+            <Search className="w-6 h-6 text-white/30" />
+          </div>
+          <p className="text-white/70 text-base font-medium mb-1">
+            {search ? "No companies found" : "No companies available"}
+          </p>
+          <p className="text-white/50 text-sm text-center max-w-md">
+            {search
+              ? "Try adjusting your search terms or clear the filter to see all companies."
+              : "There are no companies in the database yet."}
+          </p>
+        </div>
+      ) : (
+        <>
+          {companies.map((company) => {
         const isActive = selectedCompanyId === company._id;
         const employeeCount = company.employees
           ? `${company.employees} employees`
@@ -123,8 +261,12 @@ const CompaniesList: FC<CompaniesListProps> = ({
             </div>
           </Card>
         );
-      })}
-    </>
+          })}
+          {/* Pagination at Bottom */}
+          {totalPages > 1 && renderPagination()}
+        </>
+      )}
+    </div>
   );
 };
 

@@ -7,18 +7,23 @@ import {
   CompaniesQueryParams,
   CompaniesResponse,
 } from "@/services/companies.service";
-import { Lead, leadsService, LeadsResponse } from "@/services/leads.service";
+import {
+  Lead,
+  leadsService,
+  LeadsResponse,
+  LeadsQueryParams,
+} from "@/services/leads.service";
 
 export const defaultStatsCards = [
   {
     title: "Total Companies",
-    value: "512",
+    value: "0",
     icon: Building2,
     link: "View All",
   },
-  { title: "Total leads", value: "8542", icon: Filter, link: "View All" },
-  { title: "Total Outreach", value: "5236", icon: Users, link: "View All" },
-  { title: "Total Response", value: "3256", icon: Users, link: "View All" },
+  { title: "Total leads", value: "0", icon: Filter, link: "View All" },
+  { title: "Total Outreach", value: "0", icon: Users, link: "View All" },
+  { title: "Total Response", value: "0", icon: Users, link: "View All" },
 ];
 
 const parseStatValue = (value: number | undefined, fallback: string) =>
@@ -62,10 +67,13 @@ export const useCompaniesData = (params: CompaniesQueryParams) => {
   };
 };
 
-export const useLeadsData = (options: { enabled: boolean }) => {
+export const useLeadsData = (
+  params: LeadsQueryParams = {},
+  options: { enabled: boolean } = { enabled: true }
+) => {
   const query = useQuery<LeadsResponse, Error>({
-    queryKey: ["leads"],
-    queryFn: () => leadsService.getLeads(),
+    queryKey: ["leads", params],
+    queryFn: () => leadsService.getLeads(params),
     enabled: options.enabled,
     staleTime: 1000 * 60 * 5,
   });
@@ -75,11 +83,13 @@ export const useLeadsData = (options: { enabled: boolean }) => {
     [query.data?.data]
   );
 
-  const totalLeads = query.data?.data.length ?? undefined;
+  const totalLeads = query.data?.pagination?.totalDocs ?? query.data?.data.length ?? undefined;
+  const pagination = query.data?.pagination;
 
   return {
     query,
     leads,
     totalLeads,
+    pagination,
   };
 };

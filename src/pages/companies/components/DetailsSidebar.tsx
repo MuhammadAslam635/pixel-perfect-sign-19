@@ -29,12 +29,12 @@ const DetailsSidebar: FC<DetailsSidebarProps> = ({
   onPhoneLead,
 }) => (
   <div
-    className={`flex-shrink-0 overflow-hidden transition-all duration-300 ease-in-out sticky top-6 lg:max-h-[calc(100vh-260px)] ${
+    className={`flex-shrink-0 overflow-hidden transition-all duration-300 ease-in-out sticky top-6 ${
       isOpen ? "w-[400px] opacity-100" : "w-0 opacity-0 pointer-events-none"
     }`}
   >
     <Card
-      className={`bg-[#222B2C] border-[#3A3A3A] p-5 min-h-[400px] lg:min-h-[600px] lg:max-h-[calc(100vh-260px)] overflow-y-auto transition-all duration-300 ease-in-out ${
+      className={`bg-[#222B2C] border-[#3A3A3A] p-5 min-h-[400px] lg:min-h-[600px] max-h-[calc(100vh-260px)] overflow-y-auto transition-all duration-300 ease-in-out ${
         isOpen ? "opacity-100 translate-x-0" : "opacity-0 translate-x-6"
       }`}
     >

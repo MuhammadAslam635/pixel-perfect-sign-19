@@ -2,7 +2,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowRight } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ArrowRight, Search, Filter, Layers } from "lucide-react";
 import { Company, CompanyPerson } from "@/services/companies.service";
 import { Lead } from "@/services/leads.service";
 import { EmailDraftModal } from "@/pages/companies/components/EmailDraftModal";
@@ -38,6 +46,19 @@ const index = () => {
     null
   );
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
+
+  // Companies filters and pagination
+  const [companiesPage, setCompaniesPage] = useState(1);
+  const [companiesSearch, setCompaniesSearch] = useState("");
+  const [companiesLimit] = useState(10); // Increased limit to show more items per page
+
+  // Leads filters and pagination
+  const [leadsPage, setLeadsPage] = useState(1);
+  const [leadsSearch, setLeadsSearch] = useState("");
+  const [leadsLimit] = useState(10); // Increased limit to show more items per page
+  const [leadsCompanyFilter, setLeadsCompanyFilter] = useState<string | null>(
+    null
+  );
   const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [selectedExecutiveFallback, setSelectedExecutiveFallback] =
@@ -278,10 +299,11 @@ const index = () => {
 
   const companiesParams = useMemo(
     () => ({
-      page: 1,
-      limit: 50,
+      page: companiesPage,
+      limit: companiesLimit,
+      search: companiesSearch || undefined,
     }),
-    []
+    [companiesPage, companiesLimit, companiesSearch]
   );
 
   const {
@@ -290,11 +312,28 @@ const index = () => {
     totalCompanies,
   } = useCompaniesData(companiesParams);
 
+  // Fetch all companies for the leads filter dropdown (limit to 500 for dropdown)
+  const { companies: allCompaniesForFilter } = useCompaniesData({
+    page: 1,
+    limit: 500,
+  });
+
+  const leadsParams = useMemo(
+    () => ({
+      page: leadsPage,
+      limit: leadsLimit,
+      search: leadsSearch || undefined,
+      companyId: leadsCompanyFilter || undefined,
+    }),
+    [leadsPage, leadsLimit, leadsSearch, leadsCompanyFilter]
+  );
+
   const {
     query: leadsQuery,
     leads,
     totalLeads,
-  } = useLeadsData({
+    pagination: leadsPagination,
+  } = useLeadsData(leadsParams, {
     enabled: activeTab === "leads" || pendingLeadIdentifier !== null,
   });
 
@@ -372,6 +411,26 @@ const index = () => {
   const handleCompanyClick = (companyId: string) => {
     setSelectedCompanyId((prev) => (prev === companyId ? null : companyId));
   };
+
+  // When switching to leads tab with a selected company, filter by that company
+  useEffect(() => {
+    if (activeTab === "leads" && selectedCompanyId) {
+      setLeadsCompanyFilter(selectedCompanyId);
+      setLeadsPage(1); // Reset to first page
+    } else if (activeTab === "companies") {
+      // Clear company filter when switching back to companies
+      setLeadsCompanyFilter(null);
+    }
+  }, [activeTab, selectedCompanyId]);
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setCompaniesPage(1);
+  }, [companiesSearch]);
+
+  useEffect(() => {
+    setLeadsPage(1);
+  }, [leadsSearch, leadsCompanyFilter]);
 
   const handleLeadClick = (leadId: string) => {
     setSelectedLeadId((prev) => (prev === leadId ? null : leadId));
@@ -484,22 +543,102 @@ const index = () => {
               </div>
             ))}
           </div>
-          <div className="flex-1 flex flex-col gap-4">
-            <h2 className="text-lg font-medium text-foreground">
+
+          {/* Title and Filters Bar - Same Row */}
+          <div className="flex items-center justify-between gap-4 mb-6">
+            <h2 className="text-lg font-medium text-foreground whitespace-nowrap">
               {activeTab === "companies" ? "Companies" : "Leads"}
             </h2>
+
+            <div className="flex flex-wrap items-center gap-3">
+              {activeTab === "companies" ? (
+                <>
+                  <div className="relative w-[180px]">
+                    <Input
+                      type="text"
+                      placeholder="Search"
+                      value={companiesSearch}
+                      onChange={(e) => setCompaniesSearch(e.target.value)}
+                      className="h-10 rounded-full bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] border border-white/15 backdrop-blur-md text-white placeholder:text-white/50 focus:border-white/25 focus:ring-2 focus:ring-white/10 pl-10 pr-4 text-sm"
+                    />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
+                  </div>
+                  {totalCompanies !== undefined && (
+                    <div className="px-3 py-2 rounded-full bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] border border-white/15 backdrop-blur-md text-white/70 text-sm font-medium whitespace-nowrap">
+                      {totalCompanies}{" "}
+                      {totalCompanies === 1 ? "company" : "companies"}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  {totalLeads !== undefined && (
+                    <div className="px-3 py-2 rounded-full bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] border border-white/15 backdrop-blur-md text-white/70 text-sm font-medium whitespace-nowrap">
+                      {totalLeads} {totalLeads === 1 ? "lead" : "leads"}
+                    </div>
+                  )}
+                  <Select
+                    value={leadsCompanyFilter || "all"}
+                    onValueChange={(value) =>
+                      setLeadsCompanyFilter(value === "all" ? null : value)
+                    }
+                  >
+                    <SelectTrigger className="h-10 rounded-full bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] border border-white/15 backdrop-blur-md text-white/70 hover:bg-white/10 focus:ring-2 focus:ring-white/10 w-[160px] px-3 text-sm">
+                      <div className="flex items-center gap-2 w-full">
+                        <Layers className="w-4 h-4 text-white/50 flex-shrink-0" />
+                        <SelectValue placeholder="All Companies" />
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#1a1a1a] border-white/10 backdrop-blur-md">
+                      <SelectItem
+                        value="all"
+                        className="text-white focus:bg-white/10 cursor-pointer"
+                      >
+                        All Companies
+                      </SelectItem>
+                      {allCompaniesForFilter.map((company) => (
+                        <SelectItem
+                          key={company._id}
+                          value={company._id}
+                          className="text-white focus:bg-white/10 cursor-pointer"
+                        >
+                          {company.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <div className="relative w-[180px]">
+                    <Input
+                      type="text"
+                      placeholder="Search"
+                      value={leadsSearch}
+                      onChange={(e) => setLeadsSearch(e.target.value)}
+                      className="h-10 rounded-full bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] border border-white/15 backdrop-blur-md text-white placeholder:text-white/50 focus:border-white/25 focus:ring-2 focus:ring-white/10 pl-10 pr-4 text-sm"
+                    />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
+                  </div>
+                </>
+              )}
+            </div>
           </div>
           {/* Split View */}
-          <div className="flex gap-6 items-start">
+          <div className={`flex items-start ${isSidebarOpen ? "gap-6" : ""}`}>
             {/* Left: Companies/Leads List */}
 
-            <div className="space-y-3 bg-[#222B2C] p-6 rounded-2xl min-h-[400px] lg:min-h-[600px] flex-1 overflow-y-auto lg:max-h-[calc(100vh-260px)]">
+            <div className="space-y-3 bg-[#222B2C] p-6 rounded-2xl min-h-[400px] lg:min-h-[600px] flex-1">
               {activeTab === "companies" ? (
                 <CompaniesList
                   companies={companies}
                   loading={loading}
                   selectedCompanyId={selectedCompanyId}
                   onSelectCompany={handleCompanyClick}
+                  search={companiesSearch}
+                  onSearchChange={setCompaniesSearch}
+                  page={companiesPage}
+                  totalPages={companiesQuery.data?.data.totalPages || 1}
+                  onPageChange={setCompaniesPage}
+                  totalCompanies={totalCompanies}
+                  showFilters={false}
                 />
               ) : (
                 <LeadsList
@@ -510,6 +649,16 @@ const index = () => {
                   onEmailClick={handleEmailClick}
                   onPhoneClick={handlePhoneClickFromList}
                   onLinkedinClick={handleLinkedinClick}
+                  search={leadsSearch}
+                  onSearchChange={setLeadsSearch}
+                  companyFilter={leadsCompanyFilter}
+                  onCompanyFilterChange={setLeadsCompanyFilter}
+                  companies={allCompaniesForFilter}
+                  page={leadsPage}
+                  totalPages={leadsPagination?.totalPages || 1}
+                  onPageChange={setLeadsPage}
+                  totalLeads={totalLeads}
+                  showFilters={false}
                 />
               )}
             </div>

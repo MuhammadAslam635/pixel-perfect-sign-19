@@ -1,5 +1,22 @@
 import { FC } from "react";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from "@/components/ui/pagination";
 import {
   ArrowRight,
   Linkedin,
@@ -7,8 +24,12 @@ import {
   MessageCircle,
   Phone,
   Send,
+  Search,
+  X,
+  Filter,
 } from "lucide-react";
 import { Lead } from "@/services/leads.service";
+import { Company } from "@/services/companies.service";
 
 type LeadsListProps = {
   leads: Lead[];
@@ -18,6 +39,16 @@ type LeadsListProps = {
   onEmailClick: (lead: Lead) => void;
   onPhoneClick: (lead: Lead) => void;
   onLinkedinClick: (lead: Lead) => void;
+  search?: string;
+  onSearchChange?: (search: string) => void;
+  companyFilter?: string | null;
+  onCompanyFilterChange?: (companyId: string | null) => void;
+  companies?: Company[];
+  page?: number;
+  totalPages?: number;
+  onPageChange?: (page: number) => void;
+  totalLeads?: number;
+  showFilters?: boolean;
 };
 
 const LeadsList: FC<LeadsListProps> = ({
@@ -28,20 +59,146 @@ const LeadsList: FC<LeadsListProps> = ({
   onEmailClick,
   onPhoneClick,
   onLinkedinClick,
+  search = "",
+  onSearchChange,
+  companyFilter = null,
+  onCompanyFilterChange,
+  companies = [],
+  page = 1,
+  totalPages = 1,
+  onPageChange,
+  totalLeads,
+  showFilters = true,
 }) => {
-  if (loading) {
-    return (
-      <div className="text-center text-white/70 py-8">Loading leads...</div>
-    );
-  }
+  const renderPagination = () => {
+    if (totalPages <= 1) return null;
 
-  if (leads.length === 0) {
-    return <div className="text-center text-white/70 py-8">No leads found</div>;
-  }
+    const pages = [];
+    const maxVisible = 5;
+    let startPage = Math.max(1, page - Math.floor(maxVisible / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+
+    if (endPage - startPage < maxVisible - 1) {
+      startPage = Math.max(1, endPage - maxVisible + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+
+    return (
+      <Pagination className="mt-8">
+        <PaginationContent className="gap-1">
+          <PaginationItem>
+            <PaginationPrevious
+              onClick={(e) => {
+                e.preventDefault();
+                onPageChange?.(Math.max(1, page - 1));
+              }}
+              className={
+                page <= 1
+                  ? "pointer-events-none opacity-50"
+                  : "cursor-pointer hover:bg-white/10 transition-colors"
+              }
+            />
+          </PaginationItem>
+          {startPage > 1 && (
+            <>
+              <PaginationItem>
+              <PaginationLink
+                onClick={(e) => {
+                  e.preventDefault();
+                  onPageChange?.(1);
+                }}
+                className="cursor-pointer hover:bg-white/10 transition-colors"
+              >
+                1
+              </PaginationLink>
+              </PaginationItem>
+              {startPage > 2 && (
+                <PaginationItem>
+                  <PaginationEllipsis />
+                </PaginationItem>
+              )}
+            </>
+          )}
+          {pages.map((p) => (
+            <PaginationItem key={p}>
+              <PaginationLink
+                onClick={(e) => {
+                  e.preventDefault();
+                  onPageChange?.(p);
+                }}
+                isActive={p === page}
+                className="cursor-pointer hover:bg-white/10 transition-colors"
+              >
+                {p}
+              </PaginationLink>
+            </PaginationItem>
+          ))}
+          {endPage < totalPages && (
+            <>
+              {endPage < totalPages - 1 && (
+                <PaginationItem>
+                  <PaginationEllipsis />
+                </PaginationItem>
+              )}
+              <PaginationItem>
+              <PaginationLink
+                onClick={(e) => {
+                  e.preventDefault();
+                  onPageChange?.(totalPages);
+                }}
+                className="cursor-pointer hover:bg-white/10 transition-colors"
+              >
+                {totalPages}
+              </PaginationLink>
+              </PaginationItem>
+            </>
+          )}
+          <PaginationItem>
+            <PaginationNext
+              onClick={(e) => {
+                e.preventDefault();
+                onPageChange?.(Math.min(totalPages, page + 1));
+              }}
+              className={
+                page >= totalPages
+                  ? "pointer-events-none opacity-50"
+                  : "cursor-pointer hover:bg-white/10 transition-colors"
+              }
+            />
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
+    );
+  };
 
   return (
-    <>
-      {leads.map((lead) => {
+    <div className="space-y-4">
+
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-16">
+          <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin mb-3"></div>
+          <p className="text-white/60 text-sm">Loading leads...</p>
+        </div>
+      ) : leads.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 px-4">
+          <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-4">
+            <Search className="w-6 h-6 text-white/30" />
+          </div>
+          <p className="text-white/70 text-base font-medium mb-1">
+            {search || companyFilter ? "No leads found" : "No leads available"}
+          </p>
+          <p className="text-white/50 text-sm text-center max-w-md">
+            {search || companyFilter
+              ? "Try adjusting your filters or clear them to see all leads."
+              : "There are no leads in the database yet."}
+          </p>
+        </div>
+      ) : (
+        <>
+          {leads.map((lead) => {
         const isActive = selectedLeadId === lead._id;
         const displayEmail = lead.email || "N/A";
         const displayPhone = lead.phone || "N/A";
@@ -156,8 +313,12 @@ const LeadsList: FC<LeadsListProps> = ({
             </div>
           </Card>
         );
-      })}
-    </>
+          })}
+          {/* Pagination at Bottom */}
+          {totalPages > 1 && renderPagination()}
+        </>
+      )}
+    </div>
   );
 };
 
