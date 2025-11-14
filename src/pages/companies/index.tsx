@@ -318,6 +318,12 @@ const index = () => {
     limit: 500,
   });
 
+  // Fetch all leads (without pagination) to count leads per company
+  const { leads: allLeadsForCount } = useLeadsData(
+    { page: 1, limit: 10000 },
+    { enabled: activeTab === "leads" }
+  );
+
   const leadsParams = useMemo(
     () => ({
       page: leadsPage,
@@ -545,12 +551,12 @@ const index = () => {
           </div>
 
           {/* Title and Filters Bar - Same Row */}
-          <div className="flex items-center justify-between gap-4 mb-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
             <h2 className="text-lg font-medium text-foreground whitespace-nowrap">
               {activeTab === "companies" ? "Companies" : "Leads"}
             </h2>
 
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
               {activeTab === "companies" ? (
                 <>
                   <div className="relative w-[180px]">
@@ -572,41 +578,6 @@ const index = () => {
                 </>
               ) : (
                 <>
-                  {totalLeads !== undefined && (
-                    <div className="px-3 py-2 rounded-full bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] border border-white/15 backdrop-blur-md text-white/70 text-sm font-medium whitespace-nowrap">
-                      {totalLeads} {totalLeads === 1 ? "lead" : "leads"}
-                    </div>
-                  )}
-                  <Select
-                    value={leadsCompanyFilter || "all"}
-                    onValueChange={(value) =>
-                      setLeadsCompanyFilter(value === "all" ? null : value)
-                    }
-                  >
-                    <SelectTrigger className="h-10 rounded-full bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] border border-white/15 backdrop-blur-md text-white/70 hover:bg-white/10 focus:ring-2 focus:ring-white/10 w-[160px] px-3 text-sm">
-                      <div className="flex items-center gap-2 w-full">
-                        <Layers className="w-4 h-4 text-white/50 flex-shrink-0" />
-                        <SelectValue placeholder="All Companies" />
-                      </div>
-                    </SelectTrigger>
-                    <SelectContent className="bg-[#1a1a1a] border-white/10 backdrop-blur-md">
-                      <SelectItem
-                        value="all"
-                        className="text-white focus:bg-white/10 cursor-pointer"
-                      >
-                        All Companies
-                      </SelectItem>
-                      {allCompaniesForFilter.map((company) => (
-                        <SelectItem
-                          key={company._id}
-                          value={company._id}
-                          className="text-white focus:bg-white/10 cursor-pointer"
-                        >
-                          {company.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                   <div className="relative w-[180px]">
                     <Input
                       type="text"
@@ -617,15 +588,81 @@ const index = () => {
                     />
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
                   </div>
+                  <Select
+                    value={leadsCompanyFilter || "all"}
+                    onValueChange={(value) =>
+                      setLeadsCompanyFilter(value === "all" ? null : value)
+                    }
+                  >
+                    <SelectTrigger className="h-10 rounded-full bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] border border-white/15 backdrop-blur-md text-white/70 hover:bg-white/10 focus:ring-2 focus:ring-white/10 w-[280px] sm:w-[320px] px-3 text-sm">
+                      <div className="flex items-center gap-2 w-full">
+                        <Layers className="w-4 h-4 text-white/50 flex-shrink-0" />
+                        <SelectValue placeholder="All Companies" />
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#1a1a1a] border-white/10 backdrop-blur-md max-h-[300px]">
+                      <SelectItem
+                        value="all"
+                        className="text-white focus:bg-white/10 cursor-pointer"
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <span>All Companies</span>
+                          {totalLeads !== undefined && (
+                            <span className="ml-2 text-xs text-white/50">
+                              ({totalLeads}{" "}
+                              {totalLeads === 1 ? "lead" : "leads"})
+                            </span>
+                          )}
+                        </div>
+                      </SelectItem>
+                      {allCompaniesForFilter.map((company) => {
+                        // Count leads for this company from all leads (not just current page)
+                        const companyLeadsCount = allLeadsForCount.filter(
+                          (lead) => lead.companyId === company._id
+                        ).length;
+
+                        return (
+                          <SelectItem
+                            key={company._id}
+                            value={company._id}
+                            disabled={companyLeadsCount === 0}
+                            className={`text-white focus:bg-white/10 ${
+                              companyLeadsCount === 0
+                                ? "opacity-50 cursor-not-allowed"
+                                : "cursor-pointer"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between w-full">
+                              <span className="truncate flex-1">
+                                {company.name}
+                              </span>
+                              <span className="ml-2 text-xs text-white/50 whitespace-nowrap">
+                                ({companyLeadsCount}{" "}
+                                {companyLeadsCount === 1 ? "lead" : "leads"})
+                              </span>
+                            </div>
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                  {totalLeads !== undefined && (
+                    <div className="px-3 py-2 rounded-full bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] border border-white/15 backdrop-blur-md text-white/70 text-sm font-medium whitespace-nowrap">
+                      {totalLeads} {totalLeads === 1 ? "lead" : "leads"}
+                    </div>
+                  )}
                 </>
               )}
             </div>
           </div>
           {/* Split View */}
-          <div className={`flex items-start ${isSidebarOpen ? "gap-6" : ""}`}>
+          <div
+            className={`flex flex-col lg:flex-row items-start ${
+              isSidebarOpen ? "gap-4 lg:gap-6" : ""
+            }`}
+          >
             {/* Left: Companies/Leads List */}
-
-            <div className="space-y-3 bg-[#222B2C] p-6 rounded-2xl min-h-[400px] lg:min-h-[600px] flex-1">
+            <div className="space-y-3 bg-[#222B2C] p-4 sm:p-6 rounded-2xl h-[calc(100vh-380px)] sm:h-[calc(100vh-360px)] lg:h-[calc(100vh-340px)] min-h-[400px] sm:min-h-[500px] max-h-[800px] flex-1 overflow-y-auto">
               {activeTab === "companies" ? (
                 <CompaniesList
                   companies={companies}
