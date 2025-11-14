@@ -564,107 +564,113 @@ const CampaignsPage = () => {
         {/* Recent Campaigns Section */}
         <div className="flex flex-col">
           {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 sm:gap-4 mb-5">
+            {/* Heading */}
             <h2 className="text-xl sm:text-2xl font-bold text-white">Recent Campaigns</h2>
-            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-              {/* Platform Select Dropdown */}
-              <div className="relative">
-                <Select value={platformFilter} onValueChange={setPlatformFilter}>
-                  <SelectTrigger
-                    className="h-9 pl-10 pr-4 rounded-full border-0 text-gray-300 text-xs min-w-[140px]"
-                    style={{
-                      background: '#FFFFFF1A',
-                      boxShadow: '0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset'
-                    }}
-                  >
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                      <svg className="w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none">
-                        <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="2"/>
-                        <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="2"/>
-                        <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="2"/>
-                        <rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="2"/>
-                      </svg>
-                    </div>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a] rounded-xl">
-                    <SelectItem value="all" className="text-gray-300 focus:text-white focus:bg-white/10">All Platforms</SelectItem>
-                    <SelectItem value="facebook" className="text-gray-300 focus:text-white focus:bg-white/10">Facebook</SelectItem>
-                    <SelectItem value="google" className="text-gray-300 focus:text-white focus:bg-white/10">Google</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            
+            {/* Controls Container - responsive layout */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+              {/* Filter Buttons Row - wraps on mobile, stays in row on larger screens */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 flex-1">
+                {/* Platform Select Dropdown */}
+                <div className="relative w-full sm:w-auto sm:min-w-[140px]">
+                  <Select value={platformFilter} onValueChange={setPlatformFilter}>
+                    <SelectTrigger
+                      className="h-9 pl-10 pr-4 rounded-full border-0 text-gray-300 text-xs w-full sm:w-auto"
+                      style={{
+                        background: '#FFFFFF1A',
+                        boxShadow: '0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset'
+                      }}
+                    >
+                      <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                        <svg className="w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none">
+                          <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="2"/>
+                          <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="2"/>
+                          <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="2"/>
+                          <rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="2"/>
+                        </svg>
+                      </div>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a] rounded-xl">
+                      <SelectItem value="all" className="text-gray-300 focus:text-white focus:bg-white/10">All Platforms</SelectItem>
+                      <SelectItem value="facebook" className="text-gray-300 focus:text-white focus:bg-white/10">Facebook</SelectItem>
+                      <SelectItem value="google" className="text-gray-300 focus:text-white focus:bg-white/10">Google</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              {/* Date Input */}
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="relative h-9 pl-10 pr-4 rounded-full border-0 text-gray-400 hover:opacity-80 text-xs min-w-[140px] justify-start"
+                {/* Date Input */}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="relative h-9 pl-10 pr-4 rounded-full border-0 text-gray-400 hover:opacity-80 text-xs w-full sm:w-auto sm:min-w-[140px] justify-start"
+                      style={{
+                        background: '#FFFFFF1A',
+                        boxShadow: '0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset'
+                      }}
+                    >
+                      <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <span className="truncate">{date ? format(date, 'PPP') : 'Select Date'}</span>
+                    </Button>
+                  </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 bg-[#1a1a1a] border-[#2a2a2a]" align="start">
+                    <CalendarComponent
+                      mode="single"
+                      selected={date}
+                      onSelect={setDate}
+                      initialFocus
+                      className="rounded-md border-0"
+                      classNames={{
+                        months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
+                        month: "space-y-4",
+                        caption: "flex justify-center pt-1 relative items-center text-white",
+                        caption_label: "text-sm font-medium",
+                        nav: "space-x-1 flex items-center",
+                        nav_button: "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 text-white",
+                        nav_button_previous: "absolute left-1",
+                        nav_button_next: "absolute right-1",
+                        table: "w-full border-collapse space-y-1",
+                        head_row: "flex",
+                        head_cell: "text-gray-500 rounded-md w-9 font-normal text-[0.8rem]",
+                        row: "flex w-full mt-2",
+                        cell: "h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+                        day: "h-9 w-9 p-0 font-normal text-gray-300 hover:bg-white/10 hover:text-white rounded-md aria-selected:opacity-100",
+                        day_range_end: "day-range-end",
+                        day_selected: "bg-white/20 text-white hover:bg-white/30 hover:text-white focus:bg-white/20 focus:text-white",
+                        day_today: "bg-accent text-accent-foreground",
+                        day_outside: "day-outside text-gray-600 opacity-50 aria-selected:bg-accent/50 aria-selected:text-muted-foreground aria-selected:opacity-30",
+                        day_disabled: "text-gray-600 opacity-50",
+                        day_range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
+                        day_hidden: "invisible",
+                      }}
+                    />
+                  </PopoverContent>
+                </Popover>
+
+                {/* Search Input */}
+                <div className="relative w-full sm:w-auto sm:min-w-[160px] sm:flex-1 lg:flex-none lg:min-w-[160px]">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none z-10" />
+                  <Input
+                    type="text"
+                    placeholder="Search campaigns..."
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    className="h-9 pl-10 pr-4 !rounded-full border-0 text-gray-300 placeholder:text-gray-500 text-xs w-full"
                     style={{
                       background: '#FFFFFF1A',
                       boxShadow: '0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset'
-                    }}
-                  >
-                    <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <span>{date ? format(date, 'PPP') : 'Select Date'}</span>
-                  </Button>
-                </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 bg-[#1a1a1a] border-[#2a2a2a]" align="start">
-                  <CalendarComponent
-                    mode="single"
-                    selected={date}
-                    onSelect={setDate}
-                    initialFocus
-                    className="rounded-md border-0"
-                    classNames={{
-                      months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
-                      month: "space-y-4",
-                      caption: "flex justify-center pt-1 relative items-center text-white",
-                      caption_label: "text-sm font-medium",
-                      nav: "space-x-1 flex items-center",
-                      nav_button: "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 text-white",
-                      nav_button_previous: "absolute left-1",
-                      nav_button_next: "absolute right-1",
-                      table: "w-full border-collapse space-y-1",
-                      head_row: "flex",
-                      head_cell: "text-gray-500 rounded-md w-9 font-normal text-[0.8rem]",
-                      row: "flex w-full mt-2",
-                      cell: "h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
-                      day: "h-9 w-9 p-0 font-normal text-gray-300 hover:bg-white/10 hover:text-white rounded-md aria-selected:opacity-100",
-                      day_range_end: "day-range-end",
-                      day_selected: "bg-white/20 text-white hover:bg-white/30 hover:text-white focus:bg-white/20 focus:text-white",
-                      day_today: "bg-accent text-accent-foreground",
-                      day_outside: "day-outside text-gray-600 opacity-50 aria-selected:bg-accent/50 aria-selected:text-muted-foreground aria-selected:opacity-30",
-                      day_disabled: "text-gray-600 opacity-50",
-                      day_range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
-                      day_hidden: "invisible",
                     }}
                   />
-                </PopoverContent>
-              </Popover>
-
-              {/* Search Input */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none z-10" />
-                <Input
-                  type="text"
-                  placeholder="Search campaigns..."
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  className="h-9 pl-10 pr-4 !rounded-full border-0 text-gray-300 placeholder:text-gray-500 text-xs min-w-[160px]"
-                  style={{
-                    background: '#FFFFFF1A',
-                    boxShadow: '0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset'
-                  }}
-                />
+                </div>
               </div>
 
-              {/* Create Campaign Button */}
+              {/* Create Campaign Button - full width on mobile, auto on larger screens */}
               <Button
                 size="sm"
                 onClick={() => setIsCreateModalOpen(true)}
-                className="relative h-9 px-4 rounded-full border border-white/40 text-white text-xs bg-white/5 backdrop-blur-sm shadow-[0_16px_28px_rgba(0,0,0,0.35)] hover:bg-[#2F2F2F]/60 transition-all"
+                className="relative h-9 px-4 rounded-full border border-white/40 text-white text-xs bg-white/5 backdrop-blur-sm shadow-[0_16px_28px_rgba(0,0,0,0.35)] hover:bg-[#2F2F2F]/60 transition-all w-full sm:w-auto lg:flex-shrink-0"
                 style={{
                   background:
                     "radial-gradient(circle at left, rgba(64, 102, 179, 0.4) 0%, rgba(103, 176, 183, 0.3) 50%, transparent 70%)",
