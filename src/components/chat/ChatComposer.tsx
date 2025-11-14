@@ -41,6 +41,13 @@ const ChatComposer = ({
 
   const isSendDisabled = disabled || !value.trim() || isSending || isAwaitingResponse;
 
+  const handleSend = () => {
+    // Validate that message is not empty before sending
+    if (!disabled && !isAwaitingResponse && !isSending && value.trim()) {
+      onSend();
+    }
+  };
+
   return (
     <div className="w-full rounded-full border border-white/10 bg-[#282828] p-2 shadow-[0_18px_48px_rgba(12,17,28,0.4)] backdrop-blur">
       <div className="flex items-center gap-3 px-2">
@@ -69,8 +76,12 @@ const ChatComposer = ({
 
         <Button
           size="icon"
-          className="size-12 shrink-0 rounded-full bg-gradient-to-r from-[#55a0ff] to-[#64d5ff] text-white shadow-[0_16px_36px_rgba(92,182,255,0.45)] transition hover:shadow-[0_18px_40px_rgba(92,182,255,0.6)] disabled:opacity-60 disabled:shadow-none"
-          onClick={onSend}
+          className="size-12 shrink-0 rounded-full text-white transition disabled:opacity-60"
+          style={{
+            background: 'linear-gradient(226.23deg, #3F68B4 0%, #66B0B7 100%)',
+            boxShadow: '0px 3.47px 3.47px 0px #FFFFFF40 inset, 0px -3.47px 3.47px 0px #FFFFFF40 inset'
+          }}
+          onClick={handleSend}
       disabled={isSendDisabled}
         >
           {isSending ? (
