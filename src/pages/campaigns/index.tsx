@@ -653,10 +653,10 @@ const CampaignsPage = () => {
               <Button
                 size="sm"
                 onClick={() => setIsCreateModalOpen(true)}
-                className="relative h-9 px-4 rounded-full border-0 text-white text-xs overflow-hidden"
+                className="relative h-9 px-4 rounded-full border border-white/40 text-white text-xs bg-white/5 backdrop-blur-sm shadow-[0_16px_28px_rgba(0,0,0,0.35)] hover:bg-[#2F2F2F]/60 transition-all"
                 style={{
-                  background: 'radial-gradient(circle at left, #66AFB7 0%, #5a9fa2 50%, #69B4B7 100%)',
-                  boxShadow: '0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset'
+                  background:
+                    "radial-gradient(circle at left, rgba(64, 102, 179, 0.4) 0%, rgba(103, 176, 183, 0.3) 50%, transparent 70%)",
                 }}
               >
                 <Plus className="w-4 h-4 mr-2" />
@@ -809,7 +809,11 @@ const CampaignsPage = () => {
                         size="sm" 
                         onClick={handleSave} 
                         disabled={isUpdating} 
-                        className="bg-blue-600/80 backdrop-blur-sm hover:bg-blue-700/90 border-blue-500/30 shadow-lg shadow-blue-500/20 transition-all"
+                        className="bg-white/5 backdrop-blur-sm border border-white/40 text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] hover:bg-[#2F2F2F]/60 transition-all"
+                        style={{
+                          background:
+                            "radial-gradient(circle at left, rgba(64, 102, 179, 0.4) 0%, rgba(103, 176, 183, 0.3) 50%, transparent 70%)",
+                        }}
                       >
                         <Save className="w-4 h-4 mr-2" />
                         {isUpdating ? "Saving..." : "Save"}
@@ -1112,8 +1116,16 @@ const CampaignsPage = () => {
                               }}
                               className={
                                 editedCampaign.platform?.includes("facebook")
-                                  ? "bg-blue-600/80 backdrop-blur-sm hover:bg-blue-700/90 border-blue-500/30"
-                                  : "bg-white/5 backdrop-blur-sm border-white/20 text-gray-300 hover:bg-white/10 hover:border-white/30 transition-all"
+                                  ? "bg-white/5 backdrop-blur-sm border border-white/40 text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] hover:bg-[#2F2F2F]/60 transition-all"
+                                  : "bg-white/5 backdrop-blur-sm border border-white/40 text-white/85 hover:bg-[#2F2F2F]/60 hover:text-white hover:shadow-[0_16px_28px_rgba(0,0,0,0.35)] transition-all"
+                              }
+                              style={
+                                editedCampaign.platform?.includes("facebook")
+                                  ? {
+                                      background:
+                                        "radial-gradient(circle at left, rgba(64, 102, 179, 0.4) 0%, rgba(103, 176, 183, 0.3) 50%, transparent 70%)",
+                                    }
+                                  : undefined
                               }
                             >
                               Facebook
@@ -1134,8 +1146,16 @@ const CampaignsPage = () => {
                               }}
                               className={
                                 editedCampaign.platform?.includes("google")
-                                  ? "bg-blue-600/80 backdrop-blur-sm hover:bg-blue-700/90 border-blue-500/30"
-                                  : "bg-white/5 backdrop-blur-sm border-white/20 text-gray-300 hover:bg-white/10 hover:border-white/30 transition-all"
+                                  ? "bg-white/5 backdrop-blur-sm border border-white/40 text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] hover:bg-[#2F2F2F]/60 transition-all"
+                                  : "bg-white/5 backdrop-blur-sm border border-white/40 text-white/85 hover:bg-[#2F2F2F]/60 hover:text-white hover:shadow-[0_16px_28px_rgba(0,0,0,0.35)] transition-all"
+                              }
+                              style={
+                                editedCampaign.platform?.includes("google")
+                                  ? {
+                                      background:
+                                        "radial-gradient(circle at left, rgba(64, 102, 179, 0.4) 0%, rgba(103, 176, 183, 0.3) 50%, transparent 70%)",
+                                    }
+                                  : undefined
                               }
                             >
                               Google
@@ -1263,7 +1283,11 @@ const CampaignsPage = () => {
                   <Button
                     onClick={handleRegenerate}
                     disabled={isRegenerating}
-                    className="bg-blue-600/80 backdrop-blur-sm hover:bg-blue-700/90 border-blue-500/30 shadow-lg shadow-blue-500/20 transition-all"
+                    className="bg-white/5 backdrop-blur-sm border border-white/40 text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] hover:bg-[#2F2F2F]/60 transition-all"
+                    style={{
+                      background:
+                        "radial-gradient(circle at left, rgba(64, 102, 179, 0.4) 0%, rgba(103, 176, 183, 0.3) 50%, transparent 70%)",
+                    }}
                   >
                     {isRegenerating ? "Starting..." : `Regenerate ${regenerateType}`}
                   </Button>

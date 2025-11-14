@@ -314,8 +314,16 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
                   disabled={isPending}
                   className={
                     formData.platform.includes("facebook")
-                      ? "bg-blue-600/80 backdrop-blur-sm hover:bg-blue-700/90 border-blue-500/30"
-                      : "bg-white/5 backdrop-blur-sm border-white/20 text-gray-300 hover:bg-white/10 hover:border-white/30 transition-all"
+                      ? "bg-white/5 backdrop-blur-sm border border-white/40 text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] hover:bg-[#2F2F2F]/60 transition-all"
+                      : "bg-white/5 backdrop-blur-sm border border-white/40 text-white/85 hover:bg-[#2F2F2F]/60 hover:text-white hover:shadow-[0_16px_28px_rgba(0,0,0,0.35)] transition-all"
+                  }
+                  style={
+                    formData.platform.includes("facebook")
+                      ? {
+                          background:
+                            "radial-gradient(circle at left, rgba(64, 102, 179, 0.4) 0%, rgba(103, 176, 183, 0.3) 50%, transparent 70%)",
+                        }
+                      : undefined
                   }
                 >
                   Facebook
@@ -328,8 +336,16 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
                   disabled={isPending}
                   className={
                     formData.platform.includes("google")
-                      ? "bg-blue-600/80 backdrop-blur-sm hover:bg-blue-700/90 border-blue-500/30"
-                      : "bg-white/5 backdrop-blur-sm border-white/20 text-gray-300 hover:bg-white/10 hover:border-white/30 transition-all"
+                      ? "bg-white/5 backdrop-blur-sm border border-white/40 text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] hover:bg-[#2F2F2F]/60 transition-all"
+                      : "bg-white/5 backdrop-blur-sm border border-white/40 text-white/85 hover:bg-[#2F2F2F]/60 hover:text-white hover:shadow-[0_16px_28px_rgba(0,0,0,0.35)] transition-all"
+                  }
+                  style={
+                    formData.platform.includes("google")
+                      ? {
+                          background:
+                            "radial-gradient(circle at left, rgba(64, 102, 179, 0.4) 0%, rgba(103, 176, 183, 0.3) 50%, transparent 70%)",
+                        }
+                      : undefined
                   }
                 >
                   Google
@@ -527,7 +543,11 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
             <Button 
               type="submit" 
               disabled={isPending} 
-              className="bg-blue-600/80 backdrop-blur-sm hover:bg-blue-700/90 border-blue-500/30 shadow-lg shadow-blue-500/20 transition-all"
+              className="bg-white/5 backdrop-blur-sm border border-white/40 text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] hover:bg-[#2F2F2F]/60 transition-all"
+              style={{
+                background:
+                  "radial-gradient(circle at left, rgba(64, 102, 179, 0.4) 0%, rgba(103, 176, 183, 0.3) 50%, transparent 70%)",
+              }}
             >
               {isPending ? "Creating..." : "Create Campaign"}
             </Button>
