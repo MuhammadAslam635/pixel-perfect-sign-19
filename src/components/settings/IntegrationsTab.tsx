@@ -422,7 +422,7 @@ export const IntegrationsTab = () => {
   }, [refetchFacebookStatus]);
 
   const handleGoogleConnect = async () => {
-    if (!user?._id) {
+    if (!user?._id || !user?.token) {
       toast({
         title: "Error",
         description: "User not authenticated. Please login again.",
@@ -430,9 +430,36 @@ export const IntegrationsTab = () => {
       });
       return;
     }
-    window.location.href =
-      `https://accounts.google.com/o/oauth2/v2/auth?redirect_uri=${APP_BACKEND_URL}/callbacks/google&prompt=consent&response_type=code&client_id=1090355922135-eakfqsuh0lmdfh7g5nmng64fa1qg554t.apps.googleusercontent.com&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdfp%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fadwords&access_type=offline&service=lso&o2v=2&flowName=GeneralOAuthFlow&state=` +
-      user._id;
+
+    setIsLoading(true);
+    try {
+      const response = await axios.get(
+        `${APP_BACKEND_URL}/callbacks/google/auth-url`,
+        {
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+
+      if (response.data?.success && response.data?.authUrl) {
+        console.log('Google OAuth Mode:', response.data.mode);
+        console.log('Google OAuth Scopes:', response.data.scopes);
+        window.location.href = response.data.authUrl;
+      } else {
+        throw new Error("No auth URL returned from server");
+      }
+    } catch (error: unknown) {
+      console.error("Error getting Google auth URL:", error);
+      toast({
+        title: "Error",
+        description: "Failed to initiate Google connection. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleGoogleDisconnect = async () => {
