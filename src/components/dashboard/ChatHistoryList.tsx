@@ -71,28 +71,30 @@ const ChatHistoryList: FC<ChatHistoryListProps> = ({
       </div>
 
       <div
-        className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden pr-2 custom-scrollbar"
+        className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden pr-2"
+        style={
+          {
+            scrollbarWidth: "thin",
+            scrollbarColor: "rgba(255, 255, 255, 0.3) transparent",
+          } as React.CSSProperties
+        }
         onWheel={(e) => {
           e.stopPropagation();
         }}
       >
-        <style jsx>{`
-          .custom-scrollbar::-webkit-scrollbar {
+        <style>{`
+          .flex-1.min-h-0.overflow-y-auto.overflow-x-hidden::-webkit-scrollbar {
             width: 6px;
           }
-          .custom-scrollbar::-webkit-scrollbar-track {
+          .flex-1.min-h-0.overflow-y-auto.overflow-x-hidden::-webkit-scrollbar-track {
             background: transparent;
           }
-          .custom-scrollbar::-webkit-scrollbar-thumb {
+          .flex-1.min-h-0.overflow-y-auto.overflow-x-hidden::-webkit-scrollbar-thumb {
             background-color: rgba(255, 255, 255, 0.3);
             border-radius: 3px;
           }
-          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          .flex-1.min-h-0.overflow-y-auto.overflow-x-hidden::-webkit-scrollbar-thumb:hover {
             background-color: rgba(255, 255, 255, 0.5);
-          }
-          .custom-scrollbar {
-            scrollbar-width: thin;
-            scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
           }
         `}</style>
 

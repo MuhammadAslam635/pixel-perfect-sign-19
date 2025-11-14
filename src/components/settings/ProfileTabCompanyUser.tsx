@@ -152,15 +152,15 @@ export const ProfileTabCompanyUser = () => {
         }
         if (
           error.response.status === 422 &&
-          Array.isArray(
-            (error.response.data as { errors?: unknown }).errors
-          )
+          Array.isArray((error.response.data as { errors?: unknown }).errors)
         ) {
           const validationErrors: ProfileErrors = { name: "", email: "" };
           (
-            (error.response.data as {
-              errors?: Array<{ path: keyof ProfileErrors; msg: string }>;
-            }).errors ?? []
+            (
+              error.response.data as {
+                errors?: Array<{ path: keyof ProfileErrors; msg: string }>;
+              }
+            ).errors ?? []
           ).forEach((err) => {
             if (err.path in validationErrors && !validationErrors[err.path]) {
               validationErrors[err.path] = err.msg;
@@ -260,7 +260,8 @@ export const ProfileTabCompanyUser = () => {
             type="submit"
             className="mt-4 bg-gradient-to-r from-cyan-500/70 via-sky-500 to-indigo-500 text-white hover:from-cyan-400 hover:to-indigo-400"
             style={{
-              boxShadow: "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset"
+              boxShadow:
+                "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
             }}
           >
             Save Changes
@@ -272,4 +273,3 @@ export const ProfileTabCompanyUser = () => {
 };
 
 export default ProfileTabCompanyUser;
-

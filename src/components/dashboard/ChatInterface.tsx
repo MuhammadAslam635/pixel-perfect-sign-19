@@ -2,11 +2,12 @@ import { Sparkles, Mic, Send, Loader2 } from "lucide-react";
 import { FC, useState, useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import {
   sendChatMessage,
   SendChatMessagePayload,
+  fetchChatById,
 } from "@/services/chat.service";
 import { ChatMessage } from "@/types/chat.types";
 import { cn } from "@/lib/utils";
@@ -49,10 +50,13 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
   const userName = user?.name || user?.email?.split("@")[0] || "User";
   const greeting = getTimeBasedGreeting();
 
-  // Sync local messages with parent
-  useEffect(() => {
-    setLocalMessages(initialMessages);
-  }, [initialMessages]);
+  // Fetch chat details when currentChatId changes
+  const { data: chatDetail } = useQuery({
+    queryKey: ["chatDetail", currentChatId],
+    queryFn: () => fetchChatById(currentChatId ?? ""),
+    enabled: Boolean(currentChatId),
+    staleTime: 10_000,
+  });
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -96,34 +100,86 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
         };
 
         setMessage("");
-        setLocalMessages((prev) => [...prev, tempMessage]);
-        onMessagesChange([...localMessages, tempMessage]);
+        // Use functional update to ensure we have the latest state
+        setLocalMessages((prev) => {
+          const updated = [...prev, tempMessage];
+          onMessagesChange(updated);
+          return updated;
+        });
 
         return { tempMessage };
       },
-      onSuccess: (response) => {
+      onSuccess: async (response) => {
         const newChatId = response.data.chatId;
         const newMessages = response.data.messages || [];
 
         if (newChatId) {
-          onChatIdChange(newChatId);
-          // Use all messages from server response (includes both user and assistant)
-          if (newMessages.length > 0) {
-            setLocalMessages(newMessages);
-            onMessagesChange(newMessages);
-          } else {
-            // If no messages in response, keep user message and wait for assistant response
-            setLocalMessages((prev) => {
-              onMessagesChange(prev);
-              return prev;
-            });
+          const isNewChat = newChatId !== currentChatId;
+
+          if (isNewChat) {
+            onChatIdChange(newChatId);
           }
 
-          // Invalidate queries to refresh chat list
+          // Invalidate queries to refresh chat list and chat detail
           queryClient.invalidateQueries({ queryKey: ["chatList"] });
           queryClient.invalidateQueries({
             queryKey: ["chatDetail", newChatId],
           });
+
+          // Refetch chat details to get complete message list (including assistant response)
+          try {
+            const chatDetail = await queryClient.fetchQuery({
+              queryKey: ["chatDetail", newChatId],
+              queryFn: () => fetchChatById(newChatId),
+            });
+
+            if (chatDetail?.messages && chatDetail.messages.length > 0) {
+              // Use functional update to merge with any pending optimistic messages
+              setLocalMessages((prev) => {
+                // Check if we have a temp message that's not in the server response
+                const tempMessages = prev.filter(
+                  (msg) => msg._id.startsWith("temp-") && msg.role === "user"
+                );
+
+                // If server messages include all our messages, use server data
+                // Otherwise, merge temp messages with server messages
+                if (tempMessages.length === 0) {
+                  const updated = chatDetail.messages;
+                  onMessagesChange(updated);
+                  return updated;
+                }
+
+                // Merge: server messages + any temp messages not yet in server response
+                const serverMessageIds = new Set(
+                  chatDetail.messages.map((m) => m._id)
+                );
+                const pendingTempMessages = tempMessages.filter(
+                  (tm) => !serverMessageIds.has(tm._id)
+                );
+
+                const updated = [
+                  ...chatDetail.messages,
+                  ...pendingTempMessages,
+                ];
+                onMessagesChange(updated);
+                return updated;
+              });
+            } else if (newMessages.length > 0) {
+              // Fallback to response messages if refetch doesn't return messages yet
+              setLocalMessages((prev) => {
+                onMessagesChange(newMessages);
+                return newMessages;
+              });
+            }
+          } catch (error) {
+            // If refetch fails, use messages from response
+            if (newMessages.length > 0) {
+              setLocalMessages((prev) => {
+                onMessagesChange(newMessages);
+                return newMessages;
+              });
+            }
+          }
         }
       },
       onError: (error, variables, context) => {
@@ -144,6 +200,35 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
         });
       },
     });
+
+  // Sync local messages with parent and chat detail
+  // Skip syncing when sending a message to preserve optimistic updates
+  useEffect(() => {
+    // Don't sync if we're currently sending a message (to preserve optimistic updates)
+    if (isSendingMessage) {
+      return;
+    }
+
+    // Only sync if we have a currentChatId and chatDetail messages
+    // This ensures we get the latest messages when selecting a chat from history
+    if (
+      currentChatId &&
+      chatDetail?.messages &&
+      chatDetail.messages.length > 0
+    ) {
+      setLocalMessages(chatDetail.messages);
+      onMessagesChange(chatDetail.messages);
+    } else if (!currentChatId && initialMessages.length > 0) {
+      // Only use initialMessages if we don't have a chatId (new chat scenario)
+      setLocalMessages(initialMessages);
+    }
+  }, [
+    currentChatId,
+    chatDetail?.messages,
+    initialMessages,
+    onMessagesChange,
+    isSendingMessage,
+  ]);
 
   const handleSendMessage = () => {
     if (message.trim() && !isSendingMessage) {
