@@ -643,7 +643,7 @@ body {
   gap: 5px;
   padding: 8px;
   border-radius: 32px;
-  background: rgba(40, 40, 40, 0.75);
+  background: #404040;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
@@ -653,8 +653,8 @@ body {
   border-radius: 51px;
   display: grid;
   place-items: center;
-  background: rgba(255, 255, 255, 0.08);
-  box-shadow: inset 0 -2px 4px rgba(0, 0, 0, 0.35);
+  /* background: rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 -2px 4px rgba(0, 0, 0, 0.35); */
 }
 
 /* Mobile micro-adjustments for assistant toolbar */
