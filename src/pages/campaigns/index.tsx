@@ -168,6 +168,16 @@ const CampaignsPage = () => {
   const handleSave = async () => {
     if (!editedCampaign || !selectedCampaign) return;
 
+    // Validation
+    if (!editedCampaign.platform || editedCampaign.platform.length === 0) {
+      toast({
+        title: "Validation error",
+        description: "At least one platform is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setIsUpdating(true);
       const updateData: UpdateCampaignData = {
@@ -178,6 +188,7 @@ const CampaignsPage = () => {
         media: editedCampaign.media,
         isContentFinalized: editedCampaign.isContentFinalized,
         isMediaFinalized: editedCampaign.isMediaFinalized,
+        platform: editedCampaign.platform,
       };
       
       const response = await campaignsService.updateCampaign(selectedCampaign._id, updateData);
@@ -1081,11 +1092,63 @@ const CampaignsPage = () => {
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div className="flex justify-between text-sm gap-2">
-                        <span className="text-gray-300/80 flex-shrink-0">Platform:</span>
-                        <span className="font-medium break-words text-right uppercase text-white">
-                          {selectedCampaign.platform?.join(", ") || "N/A"}
-                        </span>
+                      <div className="flex flex-col gap-2">
+                        <span className="text-gray-300/80 flex-shrink-0 text-sm">Platform:</span>
+                        {isEditing ? (
+                          <div className="flex gap-2">
+                            <Button
+                              type="button"
+                              variant={editedCampaign.platform?.includes("facebook") ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => {
+                                const currentPlatforms = editedCampaign.platform || [];
+                                const newPlatforms = currentPlatforms.includes("facebook")
+                                  ? currentPlatforms.filter((p) => p !== "facebook")
+                                  : [...currentPlatforms, "facebook"];
+                                setEditedCampaign({
+                                  ...editedCampaign,
+                                  platform: newPlatforms,
+                                });
+                              }}
+                              className={
+                                editedCampaign.platform?.includes("facebook")
+                                  ? "bg-blue-600/80 backdrop-blur-sm hover:bg-blue-700/90 border-blue-500/30"
+                                  : "bg-white/5 backdrop-blur-sm border-white/20 text-gray-300 hover:bg-white/10 hover:border-white/30 transition-all"
+                              }
+                            >
+                              Facebook
+                            </Button>
+                            <Button
+                              type="button"
+                              variant={editedCampaign.platform?.includes("google") ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => {
+                                const currentPlatforms = editedCampaign.platform || [];
+                                const newPlatforms = currentPlatforms.includes("google")
+                                  ? currentPlatforms.filter((p) => p !== "google")
+                                  : [...currentPlatforms, "google"];
+                                setEditedCampaign({
+                                  ...editedCampaign,
+                                  platform: newPlatforms,
+                                });
+                              }}
+                              className={
+                                editedCampaign.platform?.includes("google")
+                                  ? "bg-blue-600/80 backdrop-blur-sm hover:bg-blue-700/90 border-blue-500/30"
+                                  : "bg-white/5 backdrop-blur-sm border-white/20 text-gray-300 hover:bg-white/10 hover:border-white/30 transition-all"
+                              }
+                            >
+                              Google
+                            </Button>
+                          </div>
+                        ) : (
+                          <span className="font-medium break-words uppercase text-white">
+                            {selectedCampaign.platform?.join(", ") || "N/A"}
+                          </span>
+                        )}
+                        {isEditing && (!editedCampaign.platform || editedCampaign.platform.length === 0) && (
+                          <p className="text-sm text-red-400">At least one platform is required</p>
+                        )}
                       </div>
                       <div className="flex justify-between text-sm gap-2">
                         <span className="text-gray-300/80 flex-shrink-0">Location:</span>
