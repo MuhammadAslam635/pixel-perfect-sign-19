@@ -95,11 +95,19 @@ const SettingsPage = () => {
                       <TabsTrigger
                         key={tab.value}
                         value={tab.value}
-                        className={`flex w-full items-center justify-start gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-all data-[state=active]:shadow-none ${
+                        className={`flex w-full items-center justify-start gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-all ${
                           isActive
-                            ? "bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white shadow-[0_12px_32px_rgba(72,155,255,0.35)]"
+                            ? "bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white"
                             : "text-white/70 hover:bg-white/10 hover:text-white"
                         }`}
+                        style={
+                          isActive
+                            ? {
+                                boxShadow:
+                                  "0px 12px 32px rgba(72,155,255,0.35), 0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                              }
+                            : undefined
+                        }
                       >
                         <Icon
                           className={`h-4 w-4 shrink-0 transition-colors ${
