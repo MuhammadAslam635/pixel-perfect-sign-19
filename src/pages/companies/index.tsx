@@ -548,8 +548,8 @@ const index = () => {
                       </Button>
                     </div>
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-lg bg-white/10 flex items-center justify-center border border-white/15 shadow-sm">
-                        <stat.icon />
+                      <div className="w-16 h-16 flex items-center justify-center">
+                        <stat.icon className="w-full h-full" />
                       </div>
                       <p className="text-3xl font-bold text-white">
                         {stat.value}

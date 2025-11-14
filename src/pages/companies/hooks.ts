@@ -1,6 +1,9 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Building2, Filter, Users } from "lucide-react";
+import CompaniesIcon from "@/components/icons/CompaniesIcon";
+import LeadsIcon from "@/components/icons/LeadsIcon";
+import OutreachIcon from "@/components/icons/OutreachIcon";
+import ResponseIcon from "@/components/icons/ResponseIcon";
 import {
   companiesService,
   Company,
@@ -18,12 +21,12 @@ export const defaultStatsCards = [
   {
     title: "Total Companies",
     value: "0",
-    icon: Building2,
+    icon: CompaniesIcon,
     link: "View All",
   },
-  { title: "Total leads", value: "0", icon: Filter, link: "View All" },
-  { title: "Total Outreach", value: "0", icon: Users, link: "View All" },
-  { title: "Total Response", value: "0", icon: Users, link: "View All" },
+  { title: "Total leads", value: "0", icon: LeadsIcon, link: "View All" },
+  { title: "Total Outreach", value: "0", icon: OutreachIcon, link: "View All" },
+  { title: "Total Response", value: "0", icon: ResponseIcon, link: "View All" },
 ];
 
 const parseStatValue = (value: number | undefined, fallback: string) =>
