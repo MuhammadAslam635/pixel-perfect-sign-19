@@ -31,7 +31,7 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
       </Button>
     </div>
 
-    <div className="space-y-3">
+    <>
       {company ? (
         company.people && company.people.length > 0 ? (
           company.people.map((exec, index) => {
@@ -49,7 +49,7 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
                     onExecutiveSelect?.(exec);
                   }
                 }}
-                className="relative overflow-hidden rounded-2xl border border-white/15 bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] px-4 py-3 transition-all duration-300 hover:shadow-[0_12px_32px_rgba(0,0,0,0.3)] before:absolute before:content-[''] before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[55%] before:w-[4px] before:rounded-full before:bg-white/70 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/60"
+                className="relative overflow-hidden rounded-2xl border border-white/15 bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] px-4 py-3 mb-3 transition-all duration-300 hover:shadow-[0_12px_32px_rgba(0,0,0,0.3)] before:absolute before:content-[''] before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[55%] before:w-[4px] before:rounded-full before:bg-white/70 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/60"
               >
                 <div className="flex items-center justify-between gap-4">
                   <div>
@@ -100,7 +100,7 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
           Select a company to view its executives.
         </p>
       )}
-    </div>
+    </>
   </>
 );
 

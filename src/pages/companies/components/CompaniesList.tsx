@@ -147,7 +147,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
   };
 
   return (
-    <div className="space-y-4">
+    <>
 
       {loading ? (
         <div className="flex flex-col items-center justify-center py-16">
@@ -185,10 +185,10 @@ const CompaniesList: FC<CompaniesListProps> = ({
           <Card
             key={company._id}
             onClick={() => onSelectCompany(company._id)}
-            className={`relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between overflow-hidden bg-gradient-to-r from-[#13363b] via-[#1f4c55] to-[#16383f] border ${
+            className={`relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between overflow-hidden bg-gradient-to-r from-[#13363b] via-[#1f4c55] to-[#16383f] border mb-4 ${
               isActive ? "border-primary/60" : "border-[#274a4f]"
             } rounded-[30px] px-7 py-6 cursor-pointer transition-all duration-300 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] before:absolute before:content-[''] before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[55%] before:w-[5px] before:rounded-full ${
-              isActive ? "before:bg-primary" : "before:bg-white/75"
+              isActive ? "before:bg-primary" : "before:bg-white/75 bg-red-800"
             }`}
           >
             <div className="flex-1">
@@ -266,7 +266,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
           {totalPages > 1 && renderPagination()}
         </>
       )}
-    </div>
+    </>
   );
 };
 

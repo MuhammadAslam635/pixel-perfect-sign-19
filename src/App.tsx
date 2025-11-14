@@ -8,7 +8,17 @@ import { store } from "./store/store";
 import AppRoutes from "./AppRoutes";
 import "./App.css";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 0, // Data is immediately stale
+      gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes (formerly cacheTime)
+      refetchOnWindowFocus: true, // Refetch when window regains focus
+      refetchOnMount: true, // Refetch when component mounts
+      retry: 1,
+    },
+  },
+});
 
 const App = () => (
   <Provider store={store}>

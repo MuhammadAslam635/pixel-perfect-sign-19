@@ -50,7 +50,9 @@ export const useCompaniesData = (params: CompaniesQueryParams) => {
   const query = useQuery<CompaniesResponse, Error>({
     queryKey: ["companies", params],
     queryFn: () => companiesService.getCompanies(params),
-    staleTime: 1000 * 60 * 2,
+    staleTime: 0, // Always fetch fresh data
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
   const companies = useMemo<Company[]>(
@@ -75,7 +77,9 @@ export const useLeadsData = (
     queryKey: ["leads", params],
     queryFn: () => leadsService.getLeads(params),
     enabled: options.enabled,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 0, // Always fetch fresh data
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
   const leads = useMemo<Lead[]>(

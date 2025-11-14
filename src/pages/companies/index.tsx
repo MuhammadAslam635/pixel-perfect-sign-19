@@ -33,6 +33,7 @@ import {
   PhoneScriptMetadata,
   ConnectionMessageData,
 } from "@/services/connectionMessages.service";
+import { useQueryClient } from "@tanstack/react-query";
 
 const index = () => {
   type TabKey = "companies" | "leads";
@@ -41,6 +42,7 @@ const index = () => {
     { id: "leads", label: "Leads" },
   ];
 
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<TabKey>("companies");
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(
     null
@@ -218,8 +220,11 @@ const index = () => {
       setEmailMetadata(null);
       setEmailError(null);
       fetchEmailDraft(lead);
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ["leads"] });
+      queryClient.invalidateQueries({ queryKey: ["companies"] });
     },
-    [fetchEmailDraft]
+    [fetchEmailDraft, queryClient]
   );
 
   const handleEmailRegenerate = useCallback(() => {
@@ -236,8 +241,11 @@ const index = () => {
       setLinkedinError(null);
       setLinkedinMetadata(null);
       fetchLinkedinMessage(lead);
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ["leads"] });
+      queryClient.invalidateQueries({ queryKey: ["companies"] });
     },
-    [fetchLinkedinMessage]
+    [fetchLinkedinMessage, queryClient]
   );
 
   const handleLinkedinRegenerate = useCallback(() => {
@@ -263,8 +271,11 @@ const index = () => {
       }
 
       fetchPhoneScript(lead);
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ["leads"] });
+      queryClient.invalidateQueries({ queryKey: ["companies"] });
     },
-    [fetchPhoneScript]
+    [fetchPhoneScript, queryClient]
   );
 
   const handlePhoneClickFromList = useCallback(
@@ -662,7 +673,7 @@ const index = () => {
             }`}
           >
             {/* Left: Companies/Leads List */}
-            <div className="space-y-3 bg-[#222B2C] p-4 sm:p-6 rounded-2xl h-[calc(100vh-380px)] sm:h-[calc(100vh-360px)] lg:h-[calc(100vh-340px)] min-h-[400px] sm:min-h-[500px] max-h-[800px] flex-1 overflow-y-auto">
+            <div className="bg-[#222B2C] p-4 sm:p-6 rounded-2xl h-[calc(100vh-380px)] sm:h-[calc(100vh-360px)] lg:h-[calc(100vh-340px)] min-h-[400px] sm:min-h-[500px] max-h-[800px] flex-1 overflow-y-auto">
               {activeTab === "companies" ? (
                 <CompaniesList
                   companies={companies}
