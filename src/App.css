@@ -758,6 +758,7 @@ body {
 .assistant-composer__input {
   flex: 1;
   border: none;
+  outline: none;
   background: transparent;
   font-size: 16px;
   color: rgba(255, 255, 255, 0.9);
