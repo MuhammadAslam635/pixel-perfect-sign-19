@@ -6,7 +6,10 @@ import { logout, updateUser } from "@/store/slices/authSlice";
 import { toast } from "sonner";
 import { userService } from "@/services/user.service";
 import { RootState } from "@/store/store";
-import { useNotifications, useMarkNotificationAsRead } from "@/hooks/useNotifications";
+import {
+  useNotifications,
+  useMarkNotificationAsRead,
+} from "@/hooks/useNotifications";
 
 export const ActionComponent = () => {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -88,9 +91,13 @@ export const ActionComponent = () => {
   }, []);
 
   const profileMenu = [
-    { title: "Profile", meta: "View your profile" },
-    { title: "Settings", meta: "Manage preferences" },
-    { title: "Sign out", meta: "Log out of EmpaTech OS" },
+    {
+      title: "Knowledge Base",
+      meta: "View your company knowledge base",
+      route: "/company-knowledge",
+    },
+    { title: "Settings", meta: "Manage preferences", route: "/settings" },
+    { title: "Sign out", meta: "Log out of EmpaTech OS", route: null },
   ];
 
   return (
@@ -210,6 +217,8 @@ export const ActionComponent = () => {
                       onClick={() => {
                         if (item.title === "Sign out") {
                           handleLogout();
+                        } else if (item.route) {
+                          navigate(item.route);
                         }
                         setProfileOpen(false);
                       }}

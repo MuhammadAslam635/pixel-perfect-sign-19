@@ -47,13 +47,13 @@ const navLinks: NavLink[] = [
     path: "/campaigns",
     match: (pathname: string) => pathname.startsWith("/campaigns"),
   },
-  {
-    id: "company-knowledge",
-    label: "Knowledge",
-    icon: BookOpen,
-    path: "/company-knowledge",
-    match: (pathname: string) => pathname.startsWith("/company-knowledge"),
-  },
+  // {
+  //   id: "company-knowledge",
+  //   label: "Knowledge",
+  //   icon: BookOpen,
+  //   path: "/company-knowledge",
+  //   match: (pathname: string) => pathname.startsWith("/company-knowledge"),
+  // },
   // { id: "Booking", label: "Booking", icon: CalendarDays, path: "/booking" },
   // { id: "Leads", label: "Leads", icon: TrendingUp, path: "/leads" },
   // {
@@ -64,13 +64,13 @@ const navLinks: NavLink[] = [
   // },
   // { id: "Results", label: "Results", icon: Target, path: "/results" },
   // { id: "docs", label: "Docs", icon: BookOpen, path: "/knowledge-base" },
-  {
-    id: "settings",
-    label: "Settings",
-    icon: Settings,
-    path: "/settings",
-    match: (pathname: string) => pathname.startsWith("/settings"),
-  },
+  // {
+  //   id: "settings",
+  //   label: "Settings",
+  //   icon: Settings,
+  //   path: "/settings",
+  //   match: (pathname: string) => pathname.startsWith("/settings"),
+  // },
 ];
 
 const notifications = [

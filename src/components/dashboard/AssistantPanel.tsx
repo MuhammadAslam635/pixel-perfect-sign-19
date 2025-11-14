@@ -1,4 +1,4 @@
-import { List, Pencil } from "lucide-react";
+import { List, Pencil, Plus } from "lucide-react";
 import { FC, useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchChatList } from "@/services/chat.service";
@@ -98,7 +98,7 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
           onClick={() => setShowChatList(!showChatList)}
           style={{ background: showChatList ? "#5D5D5D" : "transparent" }}
         >
-          <List size={12} />
+          <List size={14} />
         </div>
         <div
           className="assistant-tool cursor-pointer"
@@ -108,7 +108,7 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
               !showChatList && !hasActiveChat ? "#5D5D5D" : "transparent",
           }}
         >
-          <Pencil size={12} />
+          <Plus size={14} />
         </div>
       </div>
 
