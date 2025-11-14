@@ -55,23 +55,23 @@ export const leadsService = {
       const {
         page = 1,
         limit = 100,
-        search = "",
+        search,
         companyId,
         sortBy,
         sortOrder,
       } = params;
+      
+      // Normalize search: trim whitespace and convert empty strings to undefined
+      const normalizedSearch = search?.trim() || undefined;
 
       // Build query params for companies API
       // Fetch all companies (or a large number) to ensure we get the filtered company
+      // Note: We don't apply search at company level because we need to search across all leads,
+      // not just leads from companies whose names match the search
       const companiesParams: any = {
         page: 1,
         limit: 1000, // Fetch enough companies to find the one we need
       };
-
-      if (search && !companyId) {
-        // Only apply search if not filtering by specific company
-        companiesParams.search = search;
-      }
 
       // Fetch companies which includes people data
       const response = await API.get("/companies/list", {
@@ -100,9 +100,9 @@ export const leadsService = {
           }
         });
 
-        // Apply search filter on leads if not already applied
-        if (search && !companiesParams.search) {
-          const searchLower = search.toLowerCase();
+        // Always apply search filter on leads when search is provided
+        if (normalizedSearch) {
+          const searchLower = normalizedSearch.toLowerCase();
           allPeople = allPeople.filter(
             (person) =>
               person.name?.toLowerCase().includes(searchLower) ||
