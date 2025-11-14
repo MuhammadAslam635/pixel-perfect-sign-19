@@ -621,7 +621,7 @@ body {
     max-height: 94svh;
   }
 }
-
+/* 
 .assistant-panel::after {
   content: '';
   position: absolute;
@@ -632,7 +632,7 @@ body {
   transform: translateX(-50%);
   background: #ffffff;
   filter: blur(68px);
-}
+} */
 
 .assistant-tools {
   position: absolute;
