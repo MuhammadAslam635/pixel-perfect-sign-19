@@ -42,6 +42,22 @@ const CompaniesList: FC<CompaniesListProps> = ({
   totalCompanies,
   showFilters = true,
 }) => {
+  // Helper function to format URL and create clickable link
+  const formatWebsiteUrl = (url: string | null | undefined): string => {
+    if (!url) return "";
+    // Remove protocol and www for display
+    return url.replace(/^https?:\/\//, "").replace(/^www\./, "");
+  };
+
+  // Helper function to get full URL with protocol
+  const getFullUrl = (url: string | null | undefined): string => {
+    if (!url) return "";
+    // Add protocol if missing
+    if (!url.startsWith("http://") && !url.startsWith("https://")) {
+      return `https://${url}`;
+    }
+    return url;
+  };
   const renderPagination = () => {
     if (totalPages <= 1) return null;
 
@@ -178,16 +194,14 @@ const CompaniesList: FC<CompaniesListProps> = ({
         const primaryExecutive = company.people?.[0];
         const primaryEmail =
           primaryExecutive?.email || primaryExecutive?.emails?.[0] || null;
-        const companyLinkedIn =
-          primaryExecutive?.linkedin || company.website || null;
+        const primaryLinkedIn = primaryExecutive?.linkedin || null;
 
         return (
           <Card
             key={company._id}
-            onClick={() => onSelectCompany(company._id)}
             className={`relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between overflow-hidden bg-gradient-to-r from-[#13363b] via-[#1f4c55] to-[#16383f] border mb-4 ${
               isActive ? "border-primary/60" : "border-[#274a4f]"
-            } rounded-[30px] px-7 py-6 cursor-pointer transition-all duration-300 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] before:absolute before:content-[''] before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[55%] before:w-[5px] before:rounded-full ${
+            } rounded-[30px] px-7 py-6 transition-all duration-300 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] before:absolute before:content-[''] before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[55%] before:w-[5px] before:rounded-full ${
               isActive ? "before:bg-primary" : "before:bg-white/75"
             }`}
           >
@@ -202,7 +216,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
                   </span>
                 )}
               </div>
-              <p className="mt-2 text-xs text-white/65 truncate max-w-[460px]">
+              <p className="mt-2 text-xs text-white/65">
                 {company.description ||
                   company.about ||
                   "No description available"}
@@ -211,14 +225,18 @@ const CompaniesList: FC<CompaniesListProps> = ({
                 <Badge className="rounded-full bg-white/15 text-white border-white/20 px-4 py-1">
                   {employeeCount}
                 </Badge>
-                {companyLinkedIn && (
+                {primaryLinkedIn && (
                   <div className="flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 max-w-[220px]">
                     <Linkedin className="w-3.5 h-3.5 text-white/85" />
-                    <span className="font-medium text-white/85 truncate">
-                      {companyLinkedIn
-                        .replace(/^https?:\/\//, "")
-                        .replace(/^www\./, "")}
-                    </span>
+                    <a
+                      href={getFullUrl(primaryLinkedIn)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="font-medium text-white/85 truncate hover:text-white hover:underline"
+                    >
+                      {formatWebsiteUrl(primaryLinkedIn)}
+                    </a>
                   </div>
                 )}
                 {primaryEmail && (
@@ -228,11 +246,19 @@ const CompaniesList: FC<CompaniesListProps> = ({
                 )}
               </div>
             </div>
-            <div className="w-full md:w-[260px] flex flex-col items-center md:items-end gap-3 text-white/80">
+            <div className="w-full md:w-[260px] flex flex-col items-center md:items-end gap-3 text-white/80 md:ml-8">
               {(company.website || primaryEmail) && (
                 <p className="text-sm font-semibold text-white/75 text-center md:text-right">
                   {company.website && (
-                    <span className="text-white/85">{company.website}</span>
+                    <a
+                      href={getFullUrl(company.website)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-white/85 hover:text-white hover:underline"
+                    >
+                      {formatWebsiteUrl(company.website)}
+                    </a>
                   )}
                   {company.website && primaryEmail && (
                     <span className="mx-2 text-white/40">|</span>
@@ -249,10 +275,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
               )}
               <Button
                 size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onSelectCompany(company._id);
-                }}
+                onClick={() => onSelectCompany(company._id)}
                 className="rounded-full bg-white/15 px-6 py-1.5 text-xs font-semibold text-white hover:bg-white/25 border border-white/20"
               >
                 {isActive ? "Close Executives" : "View Executives"}

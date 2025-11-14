@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -357,6 +357,58 @@ const CampaignsPage = () => {
     });
   };
 
+  // Helper function to convert URLs in text to anchor tags
+  const renderTextWithLinks = (text: string | undefined | null): React.ReactNode => {
+    if (!text || typeof text !== 'string') return text || '';
+    
+    // Regex to match URLs (http, https, www, and common domains)
+    const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|[a-zA-Z0-9-]+\.[a-zA-Z]{2,}[^\s]*)/g;
+    const parts: React.ReactNode[] = [];
+    let lastIndex = 0;
+    let match;
+    let hasUrls = false;
+
+    while ((match = urlRegex.exec(text)) !== null) {
+      hasUrls = true;
+      // Add text before the URL
+      if (match.index > lastIndex) {
+        parts.push(text.substring(lastIndex, match.index));
+      }
+
+      // Process the URL
+      let url = match[0];
+      let href = url;
+
+      // Add protocol if missing
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        href = url.startsWith('www.') ? `https://${url}` : `https://${url}`;
+      }
+
+      // Add anchor tag
+      parts.push(
+        <a
+          key={match.index}
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-400 hover:text-blue-300 underline break-all"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {url}
+        </a>
+      );
+
+      lastIndex = match.index + match[0].length;
+    }
+
+    // Add remaining text
+    if (lastIndex < text.length) {
+      parts.push(text.substring(lastIndex));
+    }
+
+    return hasUrls ? parts : text;
+  };
+
   const getPlatformIcon = (platforms: string[]) => {
     if (!platforms || platforms.length === 0) return null;
 
@@ -711,7 +763,7 @@ const CampaignsPage = () => {
                     </div>
                     <h3 className="text-base sm:text-lg font-semibold text-white mb-2 leading-tight">{campaign.name}</h3>
                     <p className="text-xs text-gray-500 mb-4 flex-grow line-clamp-2 leading-relaxed">
-                      {campaign.userRequirements || campaign.content || 'No description available'}
+                      {renderTextWithLinks(campaign.userRequirements || campaign.content || 'No description available')}
                     </p>
                     <div className="flex items-center justify-between mt-auto pt-2">
                       <div>
@@ -1011,7 +1063,7 @@ const CampaignsPage = () => {
                       />
                     ) : (
                       <p className="text-sm text-gray-300/90 whitespace-pre-wrap break-words">
-                        {selectedCampaign.userRequirements}
+                        {renderTextWithLinks(selectedCampaign.userRequirements)}
                       </p>
                     )}
                   </CardContent>
@@ -1101,7 +1153,7 @@ const CampaignsPage = () => {
                       />
                     ) : (
                       <p className="text-sm text-gray-300/90 whitespace-pre-wrap break-words">
-                        {selectedCampaign.content || "No content yet"}
+                        {renderTextWithLinks(selectedCampaign.content || "No content yet")}
                       </p>
                     )}
                   </CardContent>
