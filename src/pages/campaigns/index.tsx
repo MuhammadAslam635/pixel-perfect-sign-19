@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,7 +18,17 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { format } from 'date-fns';
-import { campaignsService, Campaign, UpdateCampaignData } from '@/services/campaigns.service';
+import { Campaign, UpdateCampaignData } from '@/services/campaigns.service';
+import {
+  useCampaigns,
+  useUpdateCampaign,
+  useDeleteCampaign,
+  useRegenerateCampaign,
+  useResetCampaignContent,
+  useResetCampaignMedia,
+  campaignKeys,
+} from '@/hooks/useCampaigns';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   Dialog,
   DialogContent,
@@ -39,27 +49,51 @@ import FacebookIcon from '@/components/icons/FacebookIcon';
 
 const CampaignsPage = () => {
   const [date, setDate] = useState<Date>();
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState<string>('');
   const [platformFilter, setPlatformFilter] = useState<string>('all');
   const [searchInput, setSearchInput] = useState<string>('');
+  const [debouncedSearch, setDebouncedSearch] = useState<string>('');
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [editedCampaign, setEditedCampaign] = useState<Campaign | null>(null);
-  const [isRegenerating, setIsRegenerating] = useState<boolean>(false);
-  const [isUpdating, setIsUpdating] = useState<boolean>(false);
-  const [isDeleting, setIsDeleting] = useState<boolean>(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
   const [regenerateType, setRegenerateType] = useState<'content' | 'media' | 'both' | null>(null);
   const [regenerateDialogOpen, setRegenerateDialogOpen] = useState<boolean>(false);
   const [regenerateGuidelines, setRegenerateGuidelines] = useState<string>('');
-  const [isResettingContent, setIsResettingContent] = useState<boolean>(false);
-  const [isResettingMedia, setIsResettingMedia] = useState<boolean>(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // React Query hooks
+  const queryParams = useMemo(() => ({
+    search: debouncedSearch || undefined,
+    limit: 100,
+  }), [debouncedSearch]);
+
+  const { data, isLoading, error, refetch } = useCampaigns(queryParams);
+  const { mutate: updateCampaign, isPending: isUpdating } = useUpdateCampaign();
+  const { mutate: deleteCampaign, isPending: isDeleting } = useDeleteCampaign();
+  const { mutate: regenerateCampaign, isPending: isRegenerating } = useRegenerateCampaign();
+  const { mutate: resetContent, isPending: isResettingContent } = useResetCampaignContent();
+  const { mutate: resetMedia, isPending: isResettingMedia } = useResetCampaignMedia();
+
+  // Filter campaigns by platform
+  const campaigns = useMemo(() => {
+    if (!data?.data?.docs) return [];
+
+    let filteredCampaigns = data.data.docs;
+
+    // Apply platform filter
+    if (platformFilter !== 'all') {
+      filteredCampaigns = filteredCampaigns.filter((campaign) =>
+        campaign.platform?.some((p) =>
+          p.toLowerCase() === platformFilter.toLowerCase()
+        )
+      );
+    }
+
+    return filteredCampaigns;
+  }, [data, platformFilter]);
 
   useEffect(() => {
     if (selectedCampaign) {
@@ -69,49 +103,11 @@ const CampaignsPage = () => {
 
   useEffect(() => {
     const debounceTimer = setTimeout(() => {
-      setSearchQuery(searchInput);
+      setDebouncedSearch(searchInput);
     }, 500);
 
     return () => clearTimeout(debounceTimer);
   }, [searchInput]);
-
-  useEffect(() => {
-    const fetchCampaigns = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const response = await campaignsService.getCampaigns({
-          search: searchQuery || undefined,
-          limit: 100, // Fetch more campaigns to allow filtering
-        });
-
-        if (response.success && response.data.docs) {
-          let filteredCampaigns = response.data.docs;
-
-          // Apply platform filter
-          if (platformFilter !== 'all') {
-            filteredCampaigns = filteredCampaigns.filter((campaign) =>
-              campaign.platform?.some((p) => 
-                p.toLowerCase() === platformFilter.toLowerCase()
-              )
-            );
-          }
-
-          setCampaigns(filteredCampaigns);
-        } else {
-          setCampaigns([]);
-        }
-      } catch (err: any) {
-        console.error('Error fetching campaigns:', err);
-        setError(err.response?.data?.message || 'Failed to fetch campaigns');
-        setCampaigns([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCampaigns();
-  }, [searchQuery, platformFilter]);
 
   const getMediaUrl = (mediaFilename: string): string => {
     const backendUrl = import.meta.env.VITE_APP_BACKEND_URL || 'http://localhost:3000';
@@ -166,7 +162,7 @@ const CampaignsPage = () => {
     setIsEditing(false);
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!editedCampaign || !selectedCampaign) return;
 
     // Validation
@@ -179,203 +175,178 @@ const CampaignsPage = () => {
       return;
     }
 
-    try {
-      setIsUpdating(true);
-      const updateData: UpdateCampaignData = {
-        name: editedCampaign.name,
-        userRequirements: editedCampaign.userRequirements,
-        content: editedCampaign.content,
-        status: editedCampaign.status as any,
-        media: editedCampaign.media,
-        isContentFinalized: editedCampaign.isContentFinalized,
-        isMediaFinalized: editedCampaign.isMediaFinalized,
-        platform: editedCampaign.platform,
-      };
-      
-      const response = await campaignsService.updateCampaign(selectedCampaign._id, updateData);
-      
-      // Update the campaign in the list
-      setCampaigns(campaigns.map(c => c._id === selectedCampaign._id ? response.data : c));
-      setSelectedCampaign(response.data);
-      setEditedCampaign(response.data);
-      setIsEditing(false);
-      
-      toast({
-        title: "Success",
-        description: response.message || "Campaign updated successfully",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to update campaign",
-        variant: "destructive",
-      });
-    } finally {
-      setIsUpdating(false);
-    }
+    const updateData: UpdateCampaignData = {
+      name: editedCampaign.name,
+      userRequirements: editedCampaign.userRequirements,
+      content: editedCampaign.content,
+      status: editedCampaign.status as any,
+      media: editedCampaign.media,
+      isContentFinalized: editedCampaign.isContentFinalized,
+      isMediaFinalized: editedCampaign.isMediaFinalized,
+      platform: (editedCampaign.platform || []) as ("facebook" | "google")[],
+    };
+
+    updateCampaign(
+      { id: selectedCampaign._id, data: updateData },
+      {
+        onSuccess: (response) => {
+          setSelectedCampaign(response.data);
+          setEditedCampaign(response.data);
+          setIsEditing(false);
+
+          toast({
+            title: "Success",
+            description: response.message || "Campaign updated successfully",
+          });
+        },
+        onError: (error: any) => {
+          toast({
+            title: "Error",
+            description: error.response?.data?.message || "Failed to update campaign",
+            variant: "destructive",
+          });
+        },
+      }
+    );
   };
 
-  const handleResetContent = async () => {
+  const handleResetContent = () => {
     if (!selectedCampaign) return;
 
-    try {
-      setIsResettingContent(true);
-      const response = await campaignsService.resetCampaignContent(selectedCampaign._id);
-      
-      setCampaigns(campaigns.map(c => c._id === selectedCampaign._id ? response.data : c));
-      setSelectedCampaign(response.data);
-      if (editedCampaign) {
-        setEditedCampaign(response.data);
-      }
-      
-      toast({
-        title: "Success",
-        description: "Campaign content has been reset successfully",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to reset content",
-        variant: "destructive",
-      });
-    } finally {
-      setIsResettingContent(false);
-    }
+    resetContent(selectedCampaign._id, {
+      onSuccess: (response) => {
+        setSelectedCampaign(response.data);
+        if (editedCampaign) {
+          setEditedCampaign(response.data);
+        }
+
+        toast({
+          title: "Success",
+          description: "Campaign content has been reset successfully",
+        });
+      },
+      onError: (error: any) => {
+        toast({
+          title: "Error",
+          description: error.response?.data?.message || "Failed to reset content",
+          variant: "destructive",
+        });
+      },
+    });
   };
 
-  const handleResetMedia = async () => {
+  const handleResetMedia = () => {
     if (!selectedCampaign) return;
 
-    try {
-      setIsResettingMedia(true);
-      const response = await campaignsService.resetCampaignMedia(selectedCampaign._id);
-      
-      setCampaigns(campaigns.map(c => c._id === selectedCampaign._id ? response.data : c));
-      setSelectedCampaign(response.data);
-      if (editedCampaign) {
-        setEditedCampaign(response.data);
-      }
-      
-      toast({
-        title: "Success",
-        description: "Campaign media has been reset successfully",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to reset media",
-        variant: "destructive",
-      });
-    } finally {
-      setIsResettingMedia(false);
-    }
+    resetMedia(selectedCampaign._id, {
+      onSuccess: (response) => {
+        setSelectedCampaign(response.data);
+        if (editedCampaign) {
+          setEditedCampaign(response.data);
+        }
+
+        toast({
+          title: "Success",
+          description: "Campaign media has been reset successfully",
+        });
+      },
+      onError: (error: any) => {
+        toast({
+          title: "Error",
+          description: error.response?.data?.message || "Failed to reset media",
+          variant: "destructive",
+        });
+      },
+    });
   };
 
-  const handleRegenerate = async () => {
+  const handleRegenerate = () => {
     if (!selectedCampaign || !regenerateType) return;
 
-    try {
-      setIsRegenerating(true);
-      const response = await campaignsService.regenerateCampaign(selectedCampaign._id, {
-        type: regenerateType,
-        userGuidelines: regenerateGuidelines || undefined,
-      });
-      
-      toast({
-        title: "Success",
-        description: response.message || `${regenerateType} regeneration has been started. You will receive a notification when it's ready.`,
-      });
-      
-      // Refresh campaign data after a delay
-      setTimeout(() => {
-        refreshCampaignData();
-      }, 2000);
-      
-      setRegenerateDialogOpen(false);
-      setRegenerateType(null);
-      setRegenerateGuidelines('');
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to regenerate campaign",
-        variant: "destructive",
-      });
-    } finally {
-      setIsRegenerating(false);
-    }
-  };
+    regenerateCampaign(
+      {
+        id: selectedCampaign._id,
+        data: {
+          type: regenerateType,
+          userGuidelines: regenerateGuidelines || undefined,
+        },
+      },
+      {
+        onSuccess: (response) => {
+          toast({
+            title: "Success",
+            description: response.message || `${regenerateType} regeneration has been started. You will receive a notification when it's ready.`,
+          });
 
-  const handleFinalize = async (type: 'content' | 'media') => {
-    if (!selectedCampaign) return;
-
-    try {
-      setIsUpdating(true);
-      const updateData: UpdateCampaignData = {};
-      if (type === 'content') {
-        updateData.isContentFinalized = true;
-      } else {
-        updateData.isMediaFinalized = true;
+          setRegenerateDialogOpen(false);
+          setRegenerateType(null);
+          setRegenerateGuidelines('');
+        },
+        onError: (error: any) => {
+          toast({
+            title: "Error",
+            description: error.response?.data?.message || "Failed to regenerate campaign",
+            variant: "destructive",
+          });
+        },
       }
-
-      const response = await campaignsService.updateCampaign(selectedCampaign._id, updateData);
-      
-      // Update the campaign in the list
-      setCampaigns(campaigns.map(c => c._id === selectedCampaign._id ? response.data : c));
-      setSelectedCampaign(response.data);
-      
-      toast({
-        title: "Success",
-        description: `${type === 'content' ? 'Content' : 'Media'} finalized successfully`,
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.response?.data?.message || `Failed to finalize ${type}`,
-        variant: "destructive",
-      });
-    } finally {
-      setIsUpdating(false);
-    }
+    );
   };
 
-  const handleDeleteCampaign = async () => {
+  const handleFinalize = (type: 'content' | 'media') => {
     if (!selectedCampaign) return;
 
-    try {
-      setIsDeleting(true);
-      await campaignsService.deleteCampaign(selectedCampaign._id);
-      
-      // Remove campaign from list
-      setCampaigns(campaigns.filter(c => c._id !== selectedCampaign._id));
-      setIsModalOpen(false);
-      setSelectedCampaign(null);
-      setDeleteDialogOpen(false);
-      
-      toast({
-        title: "Success",
-        description: "Campaign deleted successfully",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to delete campaign",
-        variant: "destructive",
-      });
-    } finally {
-      setIsDeleting(false);
+    const updateData: UpdateCampaignData = {};
+    if (type === 'content') {
+      updateData.isContentFinalized = true;
+    } else {
+      updateData.isMediaFinalized = true;
     }
+
+    updateCampaign(
+      { id: selectedCampaign._id, data: updateData },
+      {
+        onSuccess: (response) => {
+          setSelectedCampaign(response.data);
+
+          toast({
+            title: "Success",
+            description: `${type === 'content' ? 'Content' : 'Media'} finalized successfully`,
+          });
+        },
+        onError: (error: any) => {
+          toast({
+            title: "Error",
+            description: error.response?.data?.message || `Failed to finalize ${type}`,
+            variant: "destructive",
+          });
+        },
+      }
+    );
   };
 
-  const refreshCampaignData = async () => {
+  const handleDeleteCampaign = () => {
     if (!selectedCampaign) return;
 
-    try {
-      const response = await campaignsService.getCampaignById(selectedCampaign._id);
-      setSelectedCampaign(response.data);
-      setCampaigns(campaigns.map(c => c._id === selectedCampaign._id ? response.data : c));
-    } catch (error: any) {
-      console.error('Error refreshing campaign:', error);
-    }
+    deleteCampaign(selectedCampaign._id, {
+      onSuccess: () => {
+        setIsModalOpen(false);
+        setSelectedCampaign(null);
+        setDeleteDialogOpen(false);
+
+        toast({
+          title: "Success",
+          description: "Campaign deleted successfully",
+        });
+      },
+      onError: (error: any) => {
+        toast({
+          title: "Error",
+          description: error.response?.data?.message || "Failed to delete campaign",
+          variant: "destructive",
+        });
+      },
+    });
   };
 
   const getPlatformIcon = (platforms: string[]) => {
@@ -683,13 +654,13 @@ const CampaignsPage = () => {
           </div>
 
           {/* Campaigns Grid */}
-          {loading ? (
+          {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <div className="text-gray-400">Loading campaigns...</div>
             </div>
           ) : error ? (
             <div className="flex items-center justify-center py-12">
-              <div className="text-red-400">Error: {error}</div>
+              <div className="text-red-400">Error: {error instanceof Error ? error.message : 'Failed to load campaigns'}</div>
             </div>
           ) : campaigns.length === 0 ? (
             <div className="flex items-center justify-center py-12">
@@ -1331,41 +1302,18 @@ const CampaignsPage = () => {
         <CreateCampaignModal
           isOpen={isCreateModalOpen}
           onClose={() => setIsCreateModalOpen(false)}
-          onSuccess={() => {
-            // Refetch campaigns after successful creation
-            const fetchCampaigns = async () => {
-              try {
-                setLoading(true);
-                setError(null);
-                const response = await campaignsService.getCampaigns({
-                  search: searchQuery || undefined,
-                  limit: 100,
-                });
+          onSuccess={async () => {
+            // Clear search filter so the new campaign is visible
+            // The new campaign might not match the current search term
+            if (searchInput) {
+              setSearchInput('');
+              setDebouncedSearch('');
+            }
 
-                if (response.success && response.data.docs) {
-                  let filteredCampaigns = response.data.docs;
-
-                  if (platformFilter !== 'all') {
-                    filteredCampaigns = filteredCampaigns.filter((campaign) =>
-                      campaign.platform?.some((p) => 
-                        p.toLowerCase() === platformFilter.toLowerCase()
-                      )
-                    );
-                  }
-
-                  setCampaigns(filteredCampaigns);
-                } else {
-                  setCampaigns([]);
-                }
-              } catch (err: any) {
-                console.error('Error fetching campaigns:', err);
-                setError(err.response?.data?.message || 'Failed to fetch campaigns');
-                setCampaigns([]);
-              } finally {
-                setLoading(false);
-              }
-            };
-            fetchCampaigns();
+            // Refetch campaigns list after successful creation
+            // The mutation's onSuccess already invalidates queries,
+            // so we just need to explicitly refetch to ensure immediate update
+            await refetch();
           }}
         />
       </main>

@@ -19,8 +19,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Upload, ImageIcon } from "lucide-react";
-import { campaignsService, CreateCampaignData } from "@/services/campaigns.service";
+import { CreateCampaignData } from "@/services/campaigns.service";
 import { useToast } from "@/hooks/use-toast";
+import { useCreateCampaign } from "@/hooks/useCampaigns";
 import ImageCarousel from "./ImageCarousel";
 
 interface CreateCampaignModalProps {
@@ -35,7 +36,7 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
   onSuccess,
 }) => {
   const { toast } = useToast();
-  const [isPending, setIsPending] = useState<boolean>(false);
+  const { mutate: createCampaign, isPending } = useCreateCampaign();
   const [formData, setFormData] = useState<CreateCampaignData>({
     name: "",
     userRequirements: "",
@@ -88,7 +89,7 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     // Validation
@@ -155,42 +156,40 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
       return;
     }
 
-    setIsPending(true);
+    createCampaign(formData, {
+      onSuccess: () => {
+        toast({
+          title: "Campaign created",
+          description: `"${formData.name}" has been created successfully. Content and media will be generated automatically.`,
+        });
 
-    try {
-      await campaignsService.createCampaign(formData);
-      toast({
-        title: "Campaign created",
-        description: `"${formData.name}" has been created successfully. Content and media will be generated automatically.`,
-      });
-
-      // Reset form
-      setFormData({
-        name: "",
-        userRequirements: "",
-        campaignType: "awareness",
-        platform: [],
-        targetAudience: "all",
-        location: "",
-        estimatedBudget: 0,
-        numberOfDays: 1,
-        status: "draft",
-      });
-      setMedia([]);
-      onClose();
-      if (onSuccess) {
-        onSuccess();
-      }
-    } catch (error: any) {
-      toast({
-        title: "Creation failed",
-        description:
-          error?.response?.data?.message || error?.message || "Failed to create campaign",
-        variant: "destructive",
-      });
-    } finally {
-      setIsPending(false);
-    }
+        // Reset form
+        setFormData({
+          name: "",
+          userRequirements: "",
+          campaignType: "awareness",
+          platform: [],
+          targetAudience: "all",
+          location: "",
+          estimatedBudget: 0,
+          numberOfDays: 1,
+          status: "draft",
+        });
+        setMedia([]);
+        onClose();
+        if (onSuccess) {
+          onSuccess();
+        }
+      },
+      onError: (error: any) => {
+        toast({
+          title: "Creation failed",
+          description:
+            error?.response?.data?.message || error?.message || "Failed to create campaign",
+          variant: "destructive",
+        });
+      },
+    });
   };
 
   const handleClose = () => {
