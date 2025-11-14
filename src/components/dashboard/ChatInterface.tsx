@@ -39,7 +39,8 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
   initialMessages = [],
 }) => {
   const [message, setMessage] = useState("");
-  const [localMessages, setLocalMessages] = useState<ChatMessage[]>(initialMessages);
+  const [localMessages, setLocalMessages] =
+    useState<ChatMessage[]>(initialMessages);
   const scrollAreaRef = useRef<HTMLDivElement | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -316,4 +317,3 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
 };
 
 export default ChatInterface;
-

@@ -444,8 +444,8 @@ export const IntegrationsTab = () => {
       );
 
       if (response.data?.success && response.data?.authUrl) {
-        console.log('Google OAuth Mode:', response.data.mode);
-        console.log('Google OAuth Scopes:', response.data.scopes);
+        console.log("Google OAuth Mode:", response.data.mode);
+        console.log("Google OAuth Scopes:", response.data.scopes);
         window.location.href = response.data.authUrl;
       } else {
         throw new Error("No auth URL returned from server");
@@ -749,7 +749,11 @@ export const IntegrationsTab = () => {
                   size="sm"
                   onClick={handleGoogleConnect}
                   disabled={isLoading}
-                  className="bg-gradient-to-r from-cyan-500/70 via-sky-500 to-indigo-500 text-white shadow-[0_12px_32px_rgba(72,155,255,0.35)] hover:from-cyan-400 hover:to-indigo-400"
+                  className="mt-4 bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3]"
+                  style={{
+                    boxShadow:
+                      "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                  }}
                 >
                   {isLoading ? "Connecting..." : "Connect"}
                 </Button>
@@ -815,7 +819,9 @@ export const IntegrationsTab = () => {
                     <SelectTrigger className="bg-white/[0.06] border-white/10 text-white">
                       <SelectValue
                         placeholder={
-                          isLoadingCustomers ? "Loading..." : "Select a customer"
+                          isLoadingCustomers
+                            ? "Loading..."
+                            : "Select a customer"
                         }
                       />
                     </SelectTrigger>
@@ -875,7 +881,11 @@ export const IntegrationsTab = () => {
                   size="sm"
                   onClick={handleFacebookConnect}
                   disabled={isFacebookLoading}
-                  className="bg-gradient-to-r from-cyan-500/70 via-sky-500 to-indigo-500 text-white shadow-[0_12px_32px_rgba(72,155,255,0.35)] hover:from-cyan-400 hover:to-indigo-400"
+                  className="mt-4 bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3]"
+                  style={{
+                    boxShadow:
+                      "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                  }}
                 >
                   {isFacebookLoading ? "Connecting..." : "Connect"}
                 </Button>
@@ -961,7 +971,11 @@ export const IntegrationsTab = () => {
                 type="button"
                 size="sm"
                 onClick={handleToggleWhatsAppForm}
-                className="bg-gradient-to-r from-cyan-500/70 via-sky-500 to-indigo-500 text-white shadow-[0_12px_32px_rgba(72,155,255,0.35)] hover:from-cyan-400 hover:to-indigo-400 disabled:opacity-60 disabled:cursor-not-allowed"
+                className="mt-4 bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3]"
+                style={{
+                  boxShadow:
+                    "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                }}
                 disabled={!canManageWhatsApp}
               >
                 {!canManageWhatsApp
@@ -995,7 +1009,9 @@ export const IntegrationsTab = () => {
                       </p>
                       <p>Phone Number ID: {connection.phoneNumberId}</p>
                       <p>Business Account ID: {connection.businessAccountId}</p>
-                      {connection.webhookUrl && <p>Webhook: {connection.webhookUrl}</p>}
+                      {connection.webhookUrl && (
+                        <p>Webhook: {connection.webhookUrl}</p>
+                      )}
                       {connection.tokens?.accessToken && (
                         <p>Access Token: {connection.tokens.accessToken}</p>
                       )}
@@ -1105,17 +1121,16 @@ export const IntegrationsTab = () => {
                     type="password"
                     value={whatsappForm.appSecret}
                     onChange={(event) =>
-                      handleWhatsAppInputChange(
-                        "appSecret",
-                        event.target.value
-                      )
+                      handleWhatsAppInputChange("appSecret", event.target.value)
                     }
                     placeholder="Used for webhook signature validation"
                     className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40"
                   />
                 </div>
                 <div className="space-y-2 md:col-span-2">
-                  <Label className="text-white/80">Webhook URL (optional)</Label>
+                  <Label className="text-white/80">
+                    Webhook URL (optional)
+                  </Label>
                   <Input
                     value={whatsappForm.webhookUrl}
                     onChange={(event) =>
@@ -1145,7 +1160,11 @@ export const IntegrationsTab = () => {
                   type="button"
                   onClick={handleWhatsAppConnect}
                   disabled={isSavingWhatsApp}
-                  className="bg-emerald-500 text-white hover:bg-emerald-400"
+                  className="bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3]"
+                  style={{
+                    boxShadow:
+                      "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                  }}
                 >
                   {isSavingWhatsApp ? "Saving..." : "Save Connection"}
                 </Button>
@@ -1164,11 +1183,12 @@ export const IntegrationsTab = () => {
         confirmVariant="destructive"
         isPending={isDisconnectingWhatsApp}
         onConfirm={handleWhatsAppDisconnect}
-        onCancel={() => setDisconnectDialog({ open: false, phoneNumberId: null })}
+        onCancel={() =>
+          setDisconnectDialog({ open: false, phoneNumberId: null })
+        }
       />
     </Card>
   );
 };
 
 export default IntegrationsTab;
-

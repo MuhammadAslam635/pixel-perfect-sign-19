@@ -163,9 +163,7 @@ export const SecurityTab = () => {
 
         if (
           error.response.status === 422 &&
-          Array.isArray(
-            (error.response.data as { errors?: unknown }).errors
-          )
+          Array.isArray((error.response.data as { errors?: unknown }).errors)
         ) {
           const serverErrors: PasswordErrors = {
             old_password: "",
@@ -174,9 +172,11 @@ export const SecurityTab = () => {
           };
 
           (
-            (error.response.data as {
-              errors?: Array<{ path: keyof PasswordErrors; msg: string }>;
-            }).errors ?? []
+            (
+              error.response.data as {
+                errors?: Array<{ path: keyof PasswordErrors; msg: string }>;
+              }
+            ).errors ?? []
           ).forEach((err) => {
             if (err.path in serverErrors && !serverErrors[err.path]) {
               serverErrors[err.path] = err.msg;
@@ -233,7 +233,11 @@ export const SecurityTab = () => {
             className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60 hover:text-white transition-colors"
             aria-label={`Toggle ${label.toLowerCase()} visibility`}
           >
-            {show ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+            {show ? (
+              <EyeOff className="h-5 w-5" />
+            ) : (
+              <Eye className="h-5 w-5" />
+            )}
           </button>
         </div>
         {error ? <p className="text-sm text-rose-400">{error}</p> : null}
@@ -275,7 +279,11 @@ export const SecurityTab = () => {
         <CardFooter className="justify-end border-t border-white/10 bg-white/[0.02]">
           <Button
             type="submit"
-            className="mt-4 bg-gradient-to-r from-cyan-500/70 via-sky-500 to-indigo-500 text-white shadow-[0_12px_32px_rgba(72,155,255,0.35)] hover:from-cyan-400 hover:to-indigo-400"
+            className="mt-4 bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3]"
+            style={{
+              boxShadow:
+                "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+            }}
           >
             Update Password
           </Button>
@@ -286,4 +294,3 @@ export const SecurityTab = () => {
 };
 
 export default SecurityTab;
-

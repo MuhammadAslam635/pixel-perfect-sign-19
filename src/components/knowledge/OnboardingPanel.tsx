@@ -65,7 +65,13 @@ const OnboardingPanel = () => {
               Our onboarding team is ready to walk through requirements, help
               with configuration, or answer any workflow questions.
             </p>
-            <Button className="mt-4 bg-gradient-to-r from-[#30cfd0] via-[#2a9cb3] to-[#1f6f86] text-white">
+            <Button
+              className="mt-4 bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3]"
+              style={{
+                boxShadow:
+                  "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+              }}
+            >
               Talk to onboarding
             </Button>
           </div>

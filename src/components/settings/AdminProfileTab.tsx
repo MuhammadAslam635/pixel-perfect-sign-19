@@ -113,18 +113,18 @@ export const AdminProfileTab = () => {
         }
         if (
           error.response.status === 422 &&
-          Array.isArray(
-            (error.response.data as { errors?: unknown }).errors
-          )
+          Array.isArray((error.response.data as { errors?: unknown }).errors)
         ) {
           const validationErrors: AdminProfileErrors = {
             name: "",
             email: "",
           };
           (
-            (error.response.data as {
-              errors?: Array<{ path: keyof AdminProfileErrors; msg: string }>;
-            }).errors ?? []
+            (
+              error.response.data as {
+                errors?: Array<{ path: keyof AdminProfileErrors; msg: string }>;
+              }
+            ).errors ?? []
           ).forEach((err) => {
             if (err.path in validationErrors && !validationErrors[err.path]) {
               validationErrors[err.path] = err.msg;
@@ -194,7 +194,11 @@ export const AdminProfileTab = () => {
         <CardFooter className="justify-end border-t border-white/10 bg-white/[0.02]">
           <Button
             type="submit"
-            className="mt-4 bg-gradient-to-r from-cyan-500/70 via-sky-500 to-indigo-500 text-white shadow-[0_12px_32px_rgba(72,155,255,0.35)] hover:from-cyan-400 hover:to-indigo-400"
+            className="mt-4 bg-gradient-to-r from-[#30cfd0] via-[#2a9cb3] to-[#1f6f86] text-white hover:from-cyan-400 hover:to-indigo-400"
+            style={{
+              boxShadow:
+                "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+            }}
           >
             Save Changes
           </Button>
@@ -205,4 +209,3 @@ export const AdminProfileTab = () => {
 };
 
 export default AdminProfileTab;
-

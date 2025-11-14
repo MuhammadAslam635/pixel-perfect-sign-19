@@ -40,7 +40,9 @@ const ChatMessages = ({
     return (
       <div className="flex h-full flex-1 flex-col items-center justify-center px-6 text-center text-muted-foreground/70">
         <Sparkles className="mb-4 size-10 text-primary/70" />
-        <h3 className="text-lg font-semibold text-white">Start a Conversation</h3>
+        <h3 className="text-lg font-semibold text-white">
+          Start a Conversation
+        </h3>
         <p className="mt-2 max-w-sm text-sm">
           Choose an existing chat on the left or create a new one to begin
           collaborating with your AI assistant.
@@ -83,7 +85,10 @@ const ChatMessages = ({
               className="h-full w-full"
               style={{ transform: "translate(-10%, 10%)" }}
             >
-              <g filter="url(#filter0_d_269_544)" data-figma-bg-blur-radius="38.8358">
+              <g
+                filter="url(#filter0_d_269_544)"
+                data-figma-bg-blur-radius="38.8358"
+              >
                 <rect
                   x="19.418"
                   width="60.1955"
@@ -144,8 +149,16 @@ const ChatMessages = ({
                     result="shape"
                   />
                 </filter>
-                <clipPath id="bgblur_0_269_544_clip_path" transform="translate(19.4178 38.8358)">
-                  <rect x="19.418" width="60.1955" height="60.1955" rx="30.0978" />
+                <clipPath
+                  id="bgblur_0_269_544_clip_path"
+                  transform="translate(19.4178 38.8358)"
+                >
+                  <rect
+                    x="19.418"
+                    width="60.1955"
+                    height="60.1955"
+                    rx="30.0978"
+                  />
                 </clipPath>
                 <linearGradient
                   id="paint0_linear_269_544"
@@ -176,7 +189,9 @@ const ChatMessages = ({
             <h2 className="text-base font-semibold leading-tight text-white sm:text-lg">
               {chatTitle ?? "A Simple Hello"}
             </h2>
-            <p className="text-xs text-muted-foreground/70">The Sales Outreach Agent</p>
+            <p className="text-xs text-muted-foreground/70">
+              The Sales Outreach Agent
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -228,10 +243,7 @@ const ChatMessages = ({
                       <thead className="bg-white/10" {...props} />
                     ),
                     tbody: ({ node, ...props }) => (
-                      <tbody
-                        className="divide-y divide-white/10"
-                        {...props}
-                      />
+                      <tbody className="divide-y divide-white/10" {...props} />
                     ),
                     tr: ({ node, ...props }) => (
                       <tr

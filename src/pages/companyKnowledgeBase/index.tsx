@@ -140,7 +140,11 @@ const CompanyKnowledgePage = () => {
               These become the context your AI agents rely on.
             </p>
             <Button
-              className="bg-gradient-to-r from-[#30cfd0] via-[#2a9cb3] to-[#1f6f86] text-white shadow-[0_15px_30px_-18px_rgba(42,156,179,0.7)]"
+              className="mt-4 bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3]"
+              style={{
+                boxShadow:
+                  "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+              }}
               onClick={() => setUploadOpen(true)}
             >
               <Plus className="mr-2 h-4 w-4" />
@@ -259,7 +263,11 @@ const CompanyKnowledgePage = () => {
             </p>
           </div>
           <Button
-            className="bg-gradient-to-r from-[#8B36E9] via-[#6586FF] to-[#2C5FEC]"
+            className="mt-4 bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3]"
+            style={{
+              boxShadow:
+                "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+            }}
             onClick={() => setUploadOpen(true)}
           >
             <Plus className="mr-2 h-4 w-4" />
