@@ -320,8 +320,14 @@ const index = () => {
   const {
     query: companiesQuery,
     companies,
-    totalCompanies,
+    totalCompanies: filteredTotalCompanies,
   } = useCompaniesData(companiesParams);
+
+  // Fetch total companies count without search/filter for stats
+  const { totalCompanies: totalCompaniesForStats } = useCompaniesData({
+    page: 1,
+    limit: 1,
+  });
 
   // Fetch all companies for the leads filter dropdown (limit to 500 for dropdown)
   const { companies: allCompaniesForFilter } = useCompaniesData({
@@ -348,11 +354,17 @@ const index = () => {
   const {
     query: leadsQuery,
     leads,
-    totalLeads,
+    totalLeads: filteredTotalLeads,
     pagination: leadsPagination,
   } = useLeadsData(leadsParams, {
     enabled: activeTab === "leads" || pendingLeadIdentifier !== null,
   });
+
+  // Fetch total leads count without search/filter for stats
+  const { totalLeads: totalLeadsForStats } = useLeadsData(
+    { page: 1, limit: 1 },
+    { enabled: true }
+  );
 
   const loading = companiesQuery.isLoading;
   const leadsLoading = leadsQuery.isLoading || leadsQuery.isFetching;
@@ -360,11 +372,11 @@ const index = () => {
   const stats = useMemo(
     () =>
       buildStats(
-        totalCompanies,
-        leadsQuery.isSuccess ? totalLeads : undefined,
+        totalCompaniesForStats,
+        totalLeadsForStats,
         defaultStatsCards
       ),
-    [totalCompanies, totalLeads, leadsQuery.isSuccess]
+    [totalCompaniesForStats, totalLeadsForStats]
   );
 
   useEffect(() => {
@@ -580,10 +592,10 @@ const index = () => {
                     />
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
                   </div>
-                  {totalCompanies !== undefined && (
+                  {filteredTotalCompanies !== undefined && (
                     <div className="px-3 py-2 rounded-full bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] border border-white/15 backdrop-blur-md text-white/70 text-sm font-medium whitespace-nowrap">
-                      {totalCompanies}{" "}
-                      {totalCompanies === 1 ? "company" : "companies"}
+                      {filteredTotalCompanies}{" "}
+                      {filteredTotalCompanies === 1 ? "company" : "companies"}
                     </div>
                   )}
                 </>
@@ -618,10 +630,10 @@ const index = () => {
                       >
                         <div className="flex items-center justify-between w-full">
                           <span>All Companies</span>
-                          {totalLeads !== undefined && (
+                          {totalLeadsForStats !== undefined && (
                             <span className="ml-2 text-xs text-white/50">
-                              ({totalLeads}{" "}
-                              {totalLeads === 1 ? "lead" : "leads"})
+                              ({totalLeadsForStats}{" "}
+                              {totalLeadsForStats === 1 ? "lead" : "leads"})
                             </span>
                           )}
                         </div>
@@ -657,9 +669,9 @@ const index = () => {
                       })}
                     </SelectContent>
                   </Select>
-                  {totalLeads !== undefined && (
+                  {filteredTotalLeads !== undefined && (
                     <div className="px-3 py-2 rounded-full bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] border border-white/15 backdrop-blur-md text-white/70 text-sm font-medium whitespace-nowrap">
-                      {totalLeads} {totalLeads === 1 ? "lead" : "leads"}
+                      {filteredTotalLeads} {filteredTotalLeads === 1 ? "lead" : "leads"}
                     </div>
                   )}
                 </>
@@ -685,7 +697,7 @@ const index = () => {
                   page={companiesPage}
                   totalPages={companiesQuery.data?.data.totalPages || 1}
                   onPageChange={setCompaniesPage}
-                  totalCompanies={totalCompanies}
+                  totalCompanies={filteredTotalCompanies}
                   showFilters={false}
                 />
               ) : (
@@ -705,7 +717,7 @@ const index = () => {
                   page={leadsPage}
                   totalPages={leadsPagination?.totalPages || 1}
                   onPageChange={setLeadsPage}
-                  totalLeads={totalLeads}
+                  totalLeads={filteredTotalLeads}
                   showFilters={false}
                 />
               )}
