@@ -3,7 +3,7 @@ import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MapPin, Plus, Search, Calendar as CalendarIcon, Clock, Calendar, FileText, Image as ImageIcon, RotateCcw, Upload, Circle as CircleIcon, RefreshCw, CheckCircle2, Trash2, Edit2, Save, X } from 'lucide-react';
+import { MapPin, Plus, Search, Calendar as CalendarIcon, Clock, Calendar, FileText, Image as ImageIcon, RotateCcw, Upload, Circle as CircleIcon, RefreshCw, CheckCircle2, Trash2, Edit2, Save, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -18,6 +18,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { format } from 'date-fns';
+import { DateRange } from 'react-day-picker';
 import { Campaign, UpdateCampaignData } from '@/services/campaigns.service';
 import {
   useCampaigns,
@@ -43,15 +44,25 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import ConfirmDialog from '@/components/ui/confirm-dialog';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 import ImageCarousel from '@/components/campaigns/ImageCarousel';
 import CreateCampaignModal from '@/components/campaigns/CreateCampaignModal';
 import FacebookIcon from '@/components/icons/FacebookIcon';
 
 const CampaignsPage = () => {
-  const [date, setDate] = useState<Date>();
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [platformFilter, setPlatformFilter] = useState<string>('all');
   const [searchInput, setSearchInput] = useState<string>('');
   const [debouncedSearch, setDebouncedSearch] = useState<string>('');
+  const [currentPage, setCurrentPage] = useState<number>(1);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isEditing, setIsEditing] = useState<boolean>(false);
@@ -66,9 +77,18 @@ const CampaignsPage = () => {
 
   // React Query hooks
   const queryParams = useMemo(() => ({
+    page: currentPage,
+    limit: 8,
     search: debouncedSearch || undefined,
-    limit: 100,
-  }), [debouncedSearch]);
+    dateFrom: dateRange?.from ? dateRange.from.toISOString() : undefined,
+    dateTo: dateRange?.to ? dateRange.to.toISOString() : undefined,
+    platform: platformFilter !== 'all' ? platformFilter : undefined,
+  }), [debouncedSearch, dateRange, currentPage, platformFilter]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch, dateRange, platformFilter]);
 
   const { data, isLoading, error, refetch } = useCampaigns(queryParams);
   const { mutate: updateCampaign, isPending: isUpdating } = useUpdateCampaign();
@@ -77,23 +97,11 @@ const CampaignsPage = () => {
   const { mutate: resetContent, isPending: isResettingContent } = useResetCampaignContent();
   const { mutate: resetMedia, isPending: isResettingMedia } = useResetCampaignMedia();
 
-  // Filter campaigns by platform
+  // Use campaigns directly from API (platform filtering is now server-side)
   const campaigns = useMemo(() => {
     if (!data?.data?.docs) return [];
-
-    let filteredCampaigns = data.data.docs;
-
-    // Apply platform filter
-    if (platformFilter !== 'all') {
-      filteredCampaigns = filteredCampaigns.filter((campaign) =>
-        campaign.platform?.some((p) =>
-          p.toLowerCase() === platformFilter.toLowerCase()
-        )
-      );
-    }
-
-    return filteredCampaigns;
-  }, [data, platformFilter]);
+    return data.data.docs;
+  }, [data]);
 
   useEffect(() => {
     if (selectedCampaign) {
@@ -571,27 +579,42 @@ const CampaignsPage = () => {
                   </Select>
                 </div>
 
-                {/* Date Input */}
+                {/* Date Range Input */}
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
-                      className="relative h-9 pl-10 pr-4 rounded-full border-0 text-gray-400 hover:opacity-80 text-xs w-full sm:w-auto sm:min-w-[140px] justify-start"
+                      className="relative h-9 pl-10 pr-4 rounded-full border-0 text-gray-400 hover:opacity-80 text-xs w-full sm:w-auto sm:min-w-[200px] justify-start"
                       style={{
                         background: '#FFFFFF1A',
                         boxShadow: '0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset'
                       }}
                     >
                       <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                      <span className="truncate">{date ? format(date, 'PPP') : 'Select Date'}</span>
+                      <span className="truncate">
+                        {dateRange?.from ? (
+                          dateRange.to ? (
+                            <>
+                              {format(dateRange.from, 'LLL dd, y')} -{' '}
+                              {format(dateRange.to, 'LLL dd, y')}
+                            </>
+                          ) : (
+                            format(dateRange.from, 'LLL dd, y')
+                          )
+                        ) : (
+                          'Select date range'
+                        )}
+                      </span>
                     </Button>
                   </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 bg-[#1a1a1a] border-[#2a2a2a]" align="start">
+                  <PopoverContent className="w-auto p-0 bg-[#1a1a1a] border-[#2a2a2a]" align="start">
                     <CalendarComponent
-                      mode="single"
-                      selected={date}
-                      onSelect={setDate}
                       initialFocus
+                      mode="range"
+                      defaultMonth={dateRange?.from}
+                      selected={dateRange}
+                      onSelect={setDateRange}
+                      numberOfMonths={2}
                       className="rounded-md border-0"
                       classNames={{
                         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
@@ -709,6 +732,120 @@ const CampaignsPage = () => {
                   </CardContent>
                 </Card>
               ))}
+            </div>
+          )}
+
+          {/* Pagination */}
+          {data?.data && data.data.totalPages > 1 && (
+            <div className="mt-8 flex justify-center">
+              <Pagination>
+                <PaginationContent className="gap-1">
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setCurrentPage((prev) => Math.max(prev - 1, 1));
+                      }}
+                      className={
+                        currentPage <= 1
+                          ? "pointer-events-none opacity-50"
+                          : "cursor-pointer hover:bg-white/10 transition-colors text-white"
+                      }
+                    />
+                  </PaginationItem>
+                  
+                  {(() => {
+                    const totalPages = data.data.totalPages;
+                    const maxVisible = 5;
+                    let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+                    let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+                    
+                    if (endPage - startPage < maxVisible - 1) {
+                      startPage = Math.max(1, endPage - maxVisible + 1);
+                    }
+                    
+                    const pages = [];
+                    for (let i = startPage; i <= endPage; i++) {
+                      pages.push(i);
+                    }
+                    
+                    return (
+                      <>
+                        {startPage > 1 && (
+                          <>
+                            <PaginationItem>
+                              <PaginationLink
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  setCurrentPage(1);
+                                }}
+                                className="cursor-pointer hover:bg-white/10 transition-colors text-white"
+                              >
+                                1
+                              </PaginationLink>
+                            </PaginationItem>
+                            {startPage > 2 && (
+                              <PaginationItem>
+                                <PaginationEllipsis className="text-white/50" />
+                              </PaginationItem>
+                            )}
+                          </>
+                        )}
+                        
+                        {pages.map((pageNum) => (
+                          <PaginationItem key={pageNum}>
+                            <PaginationLink
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setCurrentPage(pageNum);
+                              }}
+                              isActive={pageNum === currentPage}
+                              className="cursor-pointer hover:bg-white/10 transition-colors text-white"
+                            >
+                              {pageNum}
+                            </PaginationLink>
+                          </PaginationItem>
+                        ))}
+                        
+                        {endPage < totalPages && (
+                          <>
+                            {endPage < totalPages - 1 && (
+                              <PaginationItem>
+                                <PaginationEllipsis className="text-white/50" />
+                              </PaginationItem>
+                            )}
+                            <PaginationItem>
+                              <PaginationLink
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  setCurrentPage(totalPages);
+                                }}
+                                className="cursor-pointer hover:bg-white/10 transition-colors text-white"
+                              >
+                                {totalPages}
+                              </PaginationLink>
+                            </PaginationItem>
+                          </>
+                        )}
+                      </>
+                    );
+                  })()}
+                  
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setCurrentPage((prev) => Math.min(prev + 1, data.data.totalPages));
+                      }}
+                      className={
+                        currentPage >= (data.data.totalPages || 1)
+                          ? "pointer-events-none opacity-50"
+                          : "cursor-pointer hover:bg-white/10 transition-colors text-white"
+                      }
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
             </div>
           )}
         </div>

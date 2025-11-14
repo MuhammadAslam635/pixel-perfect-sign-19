@@ -45,6 +45,9 @@ export interface CampaignsQueryParams {
   search?: string;
   sortBy?: string;
   sortOrder?: "asc" | "desc" | 1 | -1;
+  dateFrom?: string;
+  dateTo?: string;
+  platform?: string;
 }
 
 export interface UpdateCampaignData {
@@ -100,6 +103,9 @@ export const campaignsService = {
         search = "",
         sortBy,
         sortOrder,
+        dateFrom,
+        dateTo,
+        platform,
       } = params;
 
       const queryParams: any = {
@@ -114,6 +120,18 @@ export const campaignsService = {
       if (sortBy) {
         queryParams.sortBy = sortBy;
         queryParams.sortOrder = sortOrder === "desc" || sortOrder === -1 ? -1 : 1;
+      }
+
+      if (dateFrom) {
+        queryParams.dateFrom = dateFrom;
+      }
+
+      if (dateTo) {
+        queryParams.dateTo = dateTo;
+      }
+
+      if (platform && platform !== 'all') {
+        queryParams.platform = platform;
       }
 
       const response = await API.get("/campaigns/list", {
