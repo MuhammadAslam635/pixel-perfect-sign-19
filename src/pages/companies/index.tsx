@@ -559,6 +559,7 @@ const index = () => {
                         {stat.link} <ArrowRight className="w-3 h-3 ml-1" />
                       </Button>
                     </div>
+                    <hr className="border-white/10 mb-3" />
                     <div className="flex items-center gap-3">
                       <div className="w-16 h-16 flex items-center justify-center">
                         <stat.icon className="w-full h-full" />
