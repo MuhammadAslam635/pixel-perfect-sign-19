@@ -8,6 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { AlertCircle, Phone, RefreshCcw } from "lucide-react";
 import { PhoneScriptMetadata } from "@/services/connectionMessages.service";
+import ReactMarkdown from "react-markdown";
 
 type PhoneCallModalProps = {
   open: boolean;
@@ -45,13 +46,10 @@ export const PhoneCallModal: FC<PhoneCallModalProps> = ({
     window.open(`tel:${phoneNumber}`);
     onClose();
   };
+
   const handleRegenerate = () => {
     onRegenerate?.();
   };
-
-  const displayScript =
-    script?.trim() ??
-    "No phone script is available yet. Generate one to prepare for your call.";
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -113,8 +111,42 @@ export const PhoneCallModal: FC<PhoneCallModalProps> = ({
                 {loading ? "Refreshing…" : "Regenerate"}
               </Button>
             </div>
-            <div className="relative max-h-48 sm:max-h-64 overflow-y-auto rounded-md border border-white/5 bg-[#253032]/40 p-3 text-xs sm:text-sm text-white/80 whitespace-pre-wrap leading-relaxed">
-              {displayScript}
+            <div className="relative max-h-48 sm:max-h-64 overflow-y-auto rounded-md border border-white/5 bg-[#253032]/40 p-3 text-xs sm:text-sm text-white/80 leading-relaxed">
+              {script?.trim() ? (
+                <div className="prose prose-invert prose-sm max-w-none">
+                  <ReactMarkdown
+                    components={{
+                      h3: ({ node, ...props }) => (
+                        <h3 className="text-base font-semibold text-primary mt-4 mb-2 first:mt-0" {...props} />
+                      ),
+                      h4: ({ node, ...props }) => (
+                        <h4 className="text-sm font-semibold text-white/90 mt-3 mb-1.5" {...props} />
+                      ),
+                      p: ({ node, ...props }) => (
+                        <p className="text-white/80 mb-2 leading-relaxed" {...props} />
+                      ),
+                      strong: ({ node, ...props }) => (
+                        <strong className="text-white font-semibold" {...props} />
+                      ),
+                      ul: ({ node, ...props }) => (
+                        <ul className="list-disc list-inside ml-2 mb-2 space-y-1" {...props} />
+                      ),
+                      li: ({ node, ...props }) => (
+                        <li className="text-white/80" {...props} />
+                      ),
+                      hr: ({ node, ...props }) => (
+                        <hr className="border-white/20 my-3" {...props} />
+                      ),
+                    }}
+                  >
+                    {script}
+                  </ReactMarkdown>
+                </div>
+              ) : (
+                <p className="text-white/60">
+                  No phone script is available yet. Generate one to prepare for your call.
+                </p>
+              )}
               {loading && (
                 <div className="absolute inset-0 flex items-center justify-center bg-[#1b2627]/80 backdrop-blur-sm text-xs sm:text-sm text-white/70">
                   Generating call script…
