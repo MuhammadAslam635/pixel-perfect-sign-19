@@ -85,9 +85,7 @@ const UserCreate = () => {
           });
           setErrors(newErrors);
         } else {
-          toast.error(
-            error.response?.data?.message || "An error occurred"
-          );
+          toast.error(error.response?.data?.message || "An error occurred");
         }
       } else {
         toast.error("Network error. Please try again.");
@@ -99,8 +97,8 @@ const UserCreate = () => {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen w-full px-6 py-8 overflow-y-auto">
-        <div className="max-w-3xl mx-auto space-y-6">
+      <div className="min-h-screen mt-20 px-6 py-8 overflow-y-auto">
+        <div className="max-w-[1100px] mx-auto space-y-6">
           {/* Header */}
           <div>
             <h1 className="text-3xl font-semibold text-white mb-2">
@@ -117,7 +115,10 @@ const UserCreate = () => {
               <CardContent className="space-y-6 pt-6">
                 {/* Name Field */}
                 <div className="space-y-2">
-                  <Label htmlFor="name" className="text-white/90 text-sm font-medium">
+                  <Label
+                    htmlFor="name"
+                    className="text-white/90 text-sm font-medium"
+                  >
                     Name
                   </Label>
                   <Input
@@ -135,7 +136,10 @@ const UserCreate = () => {
 
                 {/* Email Field */}
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-white/90 text-sm font-medium">
+                  <Label
+                    htmlFor="email"
+                    className="text-white/90 text-sm font-medium"
+                  >
                     Email
                   </Label>
                   <Input
@@ -154,7 +158,10 @@ const UserCreate = () => {
 
                 {/* Password Field */}
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="text-white/90 text-sm font-medium">
+                  <Label
+                    htmlFor="password"
+                    className="text-white/90 text-sm font-medium"
+                  >
                     Password
                   </Label>
                   <Input
@@ -175,7 +182,10 @@ const UserCreate = () => {
 
                 {/* Role Field */}
                 <div className="space-y-2">
-                  <Label htmlFor="role" className="text-white/90 text-sm font-medium">
+                  <Label
+                    htmlFor="role"
+                    className="text-white/90 text-sm font-medium"
+                  >
                     Role
                   </Label>
                   <Select
@@ -185,7 +195,7 @@ const UserCreate = () => {
                       setErrors((prev) => ({ ...prev, role: "" }));
                     }}
                   >
-                    <SelectTrigger className="rounded-full bg-black/35 border border-white/10 text-white focus:ring-2 focus:ring-cyan-400/40">
+                    <SelectTrigger className="rounded-full !bg-black/35 border border-white/10 text-white focus:ring-2 focus:ring-cyan-400/40 h-[41px] [&>span]:text-white">
                       <SelectValue placeholder="Select Role" />
                     </SelectTrigger>
                     <SelectContent className="bg-[rgba(30,30,30,0.95)] border border-white/10 backdrop-blur">
@@ -212,7 +222,10 @@ const UserCreate = () => {
 
                 {/* Status Field */}
                 <div className="space-y-2">
-                  <Label htmlFor="status" className="text-white/90 text-sm font-medium">
+                  <Label
+                    htmlFor="status"
+                    className="text-white/90 text-sm font-medium"
+                  >
                     Status
                   </Label>
                   <Select
@@ -222,7 +235,7 @@ const UserCreate = () => {
                       setErrors((prev) => ({ ...prev, status: "" }));
                     }}
                   >
-                    <SelectTrigger className="rounded-full bg-black/35 border border-white/10 text-white focus:ring-2 focus:ring-cyan-400/40">
+                    <SelectTrigger className="rounded-full !bg-black/35 border border-white/10 text-white focus:ring-2 focus:ring-cyan-400/40 h-[41px] [&>span]:text-white">
                       <SelectValue placeholder="Select Status" />
                     </SelectTrigger>
                     <SelectContent className="bg-[rgba(30,30,30,0.95)] border border-white/10 backdrop-blur">
@@ -241,9 +254,7 @@ const UserCreate = () => {
                     </SelectContent>
                   </Select>
                   {errors.status && (
-                    <p className="text-red-400 text-sm mt-1">
-                      {errors.status}
-                    </p>
+                    <p className="text-red-400 text-sm mt-1">{errors.status}</p>
                   )}
                 </div>
               </CardContent>
@@ -252,7 +263,7 @@ const UserCreate = () => {
                 <Button
                   type="button"
                   variant="outline"
-                  className="rounded-full border border-white/10 bg-black/35 hover:bg-black/45 text-white"
+                  className="rounded-full border border-white/10   text-white"
                   onClick={() => navigate("/users")}
                   disabled={loading}
                 >
@@ -261,7 +272,11 @@ const UserCreate = () => {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="bg-gradient-to-r from-cyan-500/40 to-indigo-400/40 hover:from-cyan-500/50 hover:to-indigo-400/50 text-white border border-white/10 rounded-full px-6 shadow-[0_8px_20px_rgba(62,100,180,0.35)] backdrop-blur transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3]"
+                  style={{
+                    boxShadow:
+                      "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                  }}
                 >
                   {loading ? "Creating..." : "Create Employee"}
                 </Button>
@@ -275,4 +290,3 @@ const UserCreate = () => {
 };
 
 export default UserCreate;
-

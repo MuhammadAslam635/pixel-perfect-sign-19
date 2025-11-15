@@ -2,7 +2,12 @@ import type { Config } from "tailwindcss";
 
 export default {
   darkMode: ["class"],
-  content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
+  content: [
+    "./pages/**/*.{ts,tsx}",
+    "./components/**/*.{ts,tsx}",
+    "./app/**/*.{ts,tsx}",
+    "./src/**/*.{ts,tsx}",
+  ],
   prefix: "",
   theme: {
     container: {
@@ -54,14 +59,14 @@ export default {
         },
       },
       backgroundImage: {
-        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'gradient-primary': 'var(--gradient-primary)',
-        'gradient-chart': 'var(--gradient-chart)',
-        'gradient-orb': 'var(--gradient-orb)',
+        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
+        "gradient-primary": "var(--gradient-primary)",
+        "gradient-chart": "var(--gradient-chart)",
+        "gradient-orb": "var(--gradient-orb)",
       },
       boxShadow: {
-        'cyan-glow': 'var(--shadow-cyan-glow)',
-        'card': 'var(--shadow-card)',
+        "cyan-glow": "var(--shadow-cyan-glow)",
+        card: "var(--shadow-card)",
       },
       borderRadius: {
         lg: "var(--radius)",

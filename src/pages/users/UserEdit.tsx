@@ -73,9 +73,7 @@ const UserEdit = () => {
           toast.error("Session expired. Please log in again.");
           navigate("/");
         } else {
-          toast.error(
-            error.response?.data?.message || "Failed to fetch user"
-          );
+          toast.error(error.response?.data?.message || "Failed to fetch user");
           navigate("/users");
         }
       } finally {
@@ -144,9 +142,7 @@ const UserEdit = () => {
           });
           setErrors(newErrors);
         } else {
-          toast.error(
-            error.response?.data?.message || "An error occurred"
-          );
+          toast.error(error.response?.data?.message || "An error occurred");
         }
       } else {
         toast.error("Network error. Please try again.");
@@ -171,16 +167,14 @@ const UserEdit = () => {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen w-full px-6 py-8 overflow-y-auto">
-        <div className="max-w-3xl mx-auto space-y-6">
+      <div className="min-h-screen w-full mt-20 px-6 py-8 overflow-y-auto">
+        <div className="max-w-[1100px]  mx-auto space-y-6">
           {/* Header */}
           <div>
             <h1 className="text-3xl font-semibold text-white mb-2">
               Edit Employee
             </h1>
-            <p className="text-white/60 text-sm">
-              Update employee information
-            </p>
+            <p className="text-white/60 text-sm">Update employee information</p>
           </div>
 
           {/* Form Card */}
@@ -189,7 +183,10 @@ const UserEdit = () => {
               <CardContent className="space-y-6 pt-6">
                 {/* Name Field */}
                 <div className="space-y-2">
-                  <Label htmlFor="name" className="text-white/90 text-sm font-medium">
+                  <Label
+                    htmlFor="name"
+                    className="text-white/90 text-sm font-medium"
+                  >
                     Name
                   </Label>
                   <Input
@@ -207,7 +204,10 @@ const UserEdit = () => {
 
                 {/* Email Field */}
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-white/90 text-sm font-medium">
+                  <Label
+                    htmlFor="email"
+                    className="text-white/90 text-sm font-medium"
+                  >
                     Email
                   </Label>
                   <Input
@@ -226,8 +226,14 @@ const UserEdit = () => {
 
                 {/* Password Field */}
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="text-white/90 text-sm font-medium">
-                    Password <span className="text-white/50 text-xs">(leave blank to keep current)</span>
+                  <Label
+                    htmlFor="password"
+                    className="text-white/90 text-sm font-medium"
+                  >
+                    Password{" "}
+                    <span className="text-white/50 text-xs">
+                      (leave blank to keep current)
+                    </span>
                   </Label>
                   <Input
                     id="password"
@@ -247,7 +253,10 @@ const UserEdit = () => {
 
                 {/* Role Field */}
                 <div className="space-y-2">
-                  <Label htmlFor="role" className="text-white/90 text-sm font-medium">
+                  <Label
+                    htmlFor="role"
+                    className="text-white/90 text-sm font-medium"
+                  >
                     Role
                   </Label>
                   <Select
@@ -257,7 +266,7 @@ const UserEdit = () => {
                       setErrors((prev) => ({ ...prev, role: "" }));
                     }}
                   >
-                    <SelectTrigger className="rounded-full bg-black/35 border border-white/10 text-white focus:ring-2 focus:ring-cyan-400/40">
+                    <SelectTrigger className="rounded-full !bg-black/35 border border-white/10 text-white focus:ring-2 focus:ring-cyan-400/40 h-[41px] [&>span]:text-white">
                       <SelectValue placeholder="Select Role" />
                     </SelectTrigger>
                     <SelectContent className="bg-[rgba(30,30,30,0.95)] border border-white/10 backdrop-blur">
@@ -284,7 +293,10 @@ const UserEdit = () => {
 
                 {/* Status Field */}
                 <div className="space-y-2">
-                  <Label htmlFor="status" className="text-white/90 text-sm font-medium">
+                  <Label
+                    htmlFor="status"
+                    className="text-white/90 text-sm font-medium"
+                  >
                     Status
                   </Label>
                   <Select
@@ -294,7 +306,7 @@ const UserEdit = () => {
                       setErrors((prev) => ({ ...prev, status: "" }));
                     }}
                   >
-                    <SelectTrigger className="rounded-full bg-black/35 border border-white/10 text-white focus:ring-2 focus:ring-cyan-400/40">
+                    <SelectTrigger className="rounded-full !bg-black/35 border border-white/10 text-white focus:ring-2 focus:ring-cyan-400/40 h-[41px] [&>span]:text-white">
                       <SelectValue placeholder="Select Status" />
                     </SelectTrigger>
                     <SelectContent className="bg-[rgba(30,30,30,0.95)] border border-white/10 backdrop-blur">
@@ -313,9 +325,7 @@ const UserEdit = () => {
                     </SelectContent>
                   </Select>
                   {errors.status && (
-                    <p className="text-red-400 text-sm mt-1">
-                      {errors.status}
-                    </p>
+                    <p className="text-red-400 text-sm mt-1">{errors.status}</p>
                   )}
                 </div>
               </CardContent>
@@ -324,7 +334,7 @@ const UserEdit = () => {
                 <Button
                   type="button"
                   variant="outline"
-                  className="rounded-full border border-white/10 bg-black/35 hover:bg-black/45 text-white"
+                  className="rounded-full border border-white/10 bg-black/35 hover:bg-black/75 text-white"
                   onClick={() => navigate("/users")}
                   disabled={loading}
                 >
@@ -333,7 +343,11 @@ const UserEdit = () => {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="bg-gradient-to-r from-cyan-500/40 to-indigo-400/40 hover:from-cyan-500/50 hover:to-indigo-400/50 text-white border border-white/10 rounded-full px-6 shadow-[0_8px_20px_rgba(62,100,180,0.35)] backdrop-blur transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className=" bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3]"
+                  style={{
+                    boxShadow:
+                      "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                  }}
                 >
                   {loading ? "Updating..." : "Update Employee"}
                 </Button>
@@ -347,4 +361,3 @@ const UserEdit = () => {
 };
 
 export default UserEdit;
-
