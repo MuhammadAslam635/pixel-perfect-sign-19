@@ -15,6 +15,9 @@ import NotFound from "@/pages/NotFound";
 import SettingsPage from "@/pages/Settings";
 import CompanyKnowledge from "@/pages/companyKnowledgeBase";
 import CampaignsPage from "@/pages/campaigns";
+import UserList from "@/pages/users/UserList";
+import UserCreate from "@/pages/users/UserCreate";
+import UserEdit from "@/pages/users/UserEdit";
 
 const AppRoutes = () => {
   return (
@@ -123,6 +126,30 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <CampaignsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/users"
+        element={
+          <ProtectedRoute>
+            <UserList />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/users/create"
+        element={
+          <ProtectedRoute>
+            <UserCreate />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/users/:id/edit"
+        element={
+          <ProtectedRoute>
+            <UserEdit />
           </ProtectedRoute>
         }
       />

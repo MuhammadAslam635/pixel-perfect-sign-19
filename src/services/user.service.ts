@@ -3,10 +3,12 @@ import API from "@/utils/api";
 export interface User {
   _id: string;
   email: string;
-  firstName: string;
-  lastName: string;
+  name?: string;
+  firstName?: string;
+  lastName?: string;
   phone?: string;
   role?: string;
+  status?: string;
   profileImage?: string;
   companyId?: string;
   createdAt?: string;
@@ -16,6 +18,45 @@ export interface User {
 export interface UserResponse {
   success: boolean;
   user: User;
+}
+
+export interface UserListResponse {
+  success: boolean;
+  data: {
+    users: User[];
+    page: number;
+    totalPages: number;
+    totalUsers?: number;
+  };
+}
+
+export interface UserListParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  trashed?: boolean;
+}
+
+export interface CreateUserData {
+  name: string;
+  email: string;
+  password: string;
+  role: string;
+  status: string;
+}
+
+export interface UpdateUserData {
+  name?: string;
+  email?: string;
+  password?: string;
+  role?: string;
+  status?: string;
+}
+
+export interface UserDetailResponse {
+  success: boolean;
+  data: User;
+  message?: string;
 }
 
 export const userService = {
@@ -52,6 +93,87 @@ export const userService = {
   }): Promise<any> => {
     try {
       const response = await API.put("/password/update", data);
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  /**
+   * Get list of users with pagination and search
+   */
+  getUsers: async (params: UserListParams = {}): Promise<UserListResponse> => {
+    try {
+      const { page = 1, limit = 10, search = "", trashed = false } = params;
+      const queryParams = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+        search: search,
+      });
+      if (trashed) {
+        queryParams.append("trashed", "true");
+      }
+      const response = await API.get(`/users?${queryParams.toString()}`);
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  /**
+   * Delete a user
+   */
+  deleteUser: async (userId: string): Promise<any> => {
+    try {
+      const response = await API.delete(`/users/${userId}`);
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  /**
+   * Restore a deleted user
+   */
+  restoreUser: async (userId: string): Promise<any> => {
+    try {
+      const response = await API.patch(`/users/${userId}/restore`, {});
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  /**
+   * Create a new user
+   */
+  createUser: async (data: CreateUserData): Promise<UserResponse> => {
+    try {
+      const response = await API.post("/users", data);
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  /**
+   * Get user by ID
+   */
+  getUserById: async (userId: string): Promise<UserDetailResponse> => {
+    try {
+      const response = await API.get(`/users/${userId}`);
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  /**
+   * Update a user
+   */
+  updateUser: async (userId: string, data: UpdateUserData): Promise<UserResponse> => {
+    try {
+      const response = await API.post(`/users/${userId}`, data);
       return response.data;
     } catch (error: any) {
       throw error;

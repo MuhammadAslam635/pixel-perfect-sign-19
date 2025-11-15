@@ -92,6 +92,11 @@ export const ActionComponent = () => {
 
   const profileMenu = [
     {
+      title: "User Lists",
+      meta: "View and manage users",
+      route: "/users",
+    },
+    {
       title: "Knowledge Base",
       meta: "View your company knowledge base",
       route: "/company-knowledge",
