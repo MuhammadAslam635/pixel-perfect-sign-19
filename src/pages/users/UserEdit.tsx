@@ -155,10 +155,12 @@ const UserEdit = () => {
   if (fetching) {
     return (
       <DashboardLayout>
-        <div className="min-h-screen w-full px-6 py-8 overflow-y-auto flex items-center justify-center">
+        <div className="min-h-screen w-full px-4 sm:px-6 py-4 sm:py-8 overflow-y-auto flex items-center justify-center">
           <div className="flex flex-col items-center gap-4">
             <div className="w-8 h-8 border-4 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin" />
-            <p className="text-white/60 text-sm">Loading user data...</p>
+            <p className="text-white/60 text-xs sm:text-sm">
+              Loading user data...
+            </p>
           </div>
         </div>
       </DashboardLayout>
@@ -167,20 +169,22 @@ const UserEdit = () => {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen w-full mt-20 px-6 py-8 overflow-y-auto">
-        <div className="max-w-[1100px]  mx-auto space-y-6">
+      <div className="min-h-screen w-full mt-20 px-4 sm:px-6 py-4 sm:py-8 overflow-y-auto">
+        <div className="max-w-[1100px] mx-auto space-y-4 sm:space-y-6">
           {/* Header */}
           <div>
-            <h1 className="text-3xl font-semibold text-white mb-2">
+            <h1 className="text-2xl sm:text-3xl font-semibold text-white mb-2">
               Edit Employee
             </h1>
-            <p className="text-white/60 text-sm">Update employee information</p>
+            <p className="text-white/60 text-xs sm:text-sm">
+              Update employee information
+            </p>
           </div>
 
           {/* Form Card */}
           <form onSubmit={handleSaveProfile}>
             <Card className="rounded-2xl border border-white/10 bg-[linear-gradient(135deg,rgba(58,62,75,0.82),rgba(28,30,40,0.94))] shadow-[0_20px_34px_rgba(0,0,0,0.38)] backdrop-blur">
-              <CardContent className="space-y-6 pt-6">
+              <CardContent className="space-y-4 sm:space-y-6 pt-4 sm:pt-6 px-4 sm:px-6">
                 {/* Name Field */}
                 <div className="space-y-2">
                   <Label
@@ -330,11 +334,11 @@ const UserEdit = () => {
                 </div>
               </CardContent>
 
-              <CardFooter className="justify-end border-t border-white/10 pt-6 gap-3">
+              <CardFooter className="flex flex-col sm:flex-row justify-end border-t border-white/10 pt-4 sm:pt-6 gap-3 px-4 sm:px-6 pb-4 sm:pb-6">
                 <Button
                   type="button"
                   variant="outline"
-                  className="rounded-full border border-white/10 bg-black/35 hover:bg-black/75 text-white"
+                  className="w-full sm:w-auto rounded-full border border-white/10 bg-black/35 hover:bg-black/75 text-white"
                   onClick={() => navigate("/users")}
                   disabled={loading}
                 >
@@ -343,7 +347,7 @@ const UserEdit = () => {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className=" bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3]"
+                  className="w-full sm:w-auto bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3]"
                   style={{
                     boxShadow:
                       "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
