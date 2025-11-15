@@ -162,17 +162,17 @@ const LeadsList: FC<LeadsListProps> = ({
       <Card
         key={lead._id}
         onClick={() => onSelectLead(lead._id)}
-        className={`relative flex items-center justify-between gap-6 bg-gradient-to-r from-[#13363b] via-[#1f4c55] to-[#16383f] border ${
+        className={`relative flex flex-col md:flex-row items-start md:items-center justify-between gap-4 sm:gap-6 bg-gradient-to-r from-[#13363b] via-[#1f4c55] to-[#16383f] border ${
           isActive ? "border-primary/60" : "border-[#274a4f]"
-        } rounded-[26px] px-8 py-4 pl-6 transition-all duration-300 hover:shadow-[0_18px_40px_rgba(0,0,0,0.3)] before:absolute before:content-[''] before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[60%] before:w-[5px] before:rounded-full ${
+        } rounded-[20px] sm:rounded-[26px] px-4 sm:px-6 md:px-8 py-3 sm:py-4 pl-4 sm:pl-6 transition-all duration-300 hover:shadow-[0_18px_40px_rgba(0,0,0,0.3)] before:absolute before:content-[''] before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[60%] before:w-[3px] sm:before:w-[5px] before:rounded-full ${
           isActive ? "before:bg-primary" : "before:bg-white/75"
         } cursor-pointer`}
       >
-        <div className="flex-1">
+        <div className="flex-1 w-full md:w-auto">
           <div className="flex flex-wrap items-center gap-2 text-white">
-            <h3 className="text-lg font-semibold">{lead.name}</h3>
+            <h3 className="text-base sm:text-lg font-semibold">{lead.name}</h3>
             {lead.companyName && (
-              <span className="text-sm text-white/70">
+              <span className="text-xs sm:text-sm text-white/70">
                 | {lead.companyName}
               </span>
             )}
@@ -180,25 +180,25 @@ const LeadsList: FC<LeadsListProps> = ({
           <p className="text-xs text-white/60 mt-1">
             {lead.position || "Chief Executive Officer"}
           </p>
-          <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-gray-300">
+          <div className="mt-2 sm:mt-3 flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-gray-300">
             <div className="flex items-center gap-1.5">
-              <Linkedin className="w-6 h-6 rounded-full text-gray-800 bg-white border p-1 border-white/20" />
-              <span className="font-medium truncate max-w-[200px]">
+              <Linkedin className="w-5 h-5 sm:w-6 sm:h-6 rounded-full text-gray-800 bg-white border p-1 border-white/20 flex-shrink-0" />
+              <span className="font-medium truncate max-w-[120px] sm:max-w-[200px]">
                 {lead.linkedinUrl || "linkedin.com"}
               </span>
             </div>
             <div className="flex items-center gap-1.5">
-              <Mail className="w-6 h-6 rounded-full text-gray-800 bg-white border p-1 border-white/20" />
-              <span className="font-medium truncate max-w-[200px]">
+              <Mail className="w-5 h-5 sm:w-6 sm:h-6 rounded-full text-gray-800 bg-white border p-1 border-white/20 flex-shrink-0" />
+              <span className="font-medium truncate max-w-[120px] sm:max-w-[200px]">
                 {displayEmail}
               </span>
             </div>
           </div>
         </div>
-        <div className="flex flex-col items-center gap-4">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col items-center gap-3 sm:gap-4 w-full md:w-auto">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap justify-center">
             <button
-              className="h-8 w-8 rounded-full bg-white hover:bg-white/20 flex items-center justify-center transition-colors"
+              className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-white hover:bg-white/20 flex items-center justify-center transition-colors"
               onClick={(e) => {
                 e.stopPropagation();
                 if (lead.phone) {
@@ -206,37 +206,37 @@ const LeadsList: FC<LeadsListProps> = ({
                 }
               }}
             >
-              <Phone className="w-3.5 h-3.5 text-gray-800" />
+              <Phone className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-800" />
             </button>
             <button
-              className="h-8 w-8 rounded-full bg-white hover:bg-white/20 flex items-center justify-center transition-colors"
+              className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-white hover:bg-white/20 flex items-center justify-center transition-colors"
               onClick={(e) => {
                 e.stopPropagation();
                 onEmailClick(lead);
               }}
             >
-              <Mail className="w-3.5 h-3.5 text-gray-800" />
+              <Mail className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-800" />
             </button>
             <button
-              className="h-8 w-8 rounded-full bg-white hover:bg-white/20 flex items-center justify-center transition-colors"
+              className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-white hover:bg-white/20 flex items-center justify-center transition-colors"
               onClick={handleLinkedinOpen}
             >
-              <Linkedin className="w-3.5 h-3.5 text-gray-800" />
+              <Linkedin className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-800" />
             </button>
             <button
-              className="h-8 w-8 rounded-full bg-white hover:bg-white/20 flex items-center justify-center transition-colors"
+              className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-white hover:bg-white/20 flex items-center justify-center transition-colors"
               onClick={handleWhatsAppOpen}
             >
-              <MessageCircle className="w-3.5 h-3.5 text-gray-800" />
+              <MessageCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-800" />
             </button>
             <button
-              className="h-8 w-8 rounded-full bg-white hover:bg-white/20 flex items-center justify-center transition-colors"
+              className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-white hover:bg-white/20 flex items-center justify-center transition-colors"
               onClick={(e) => {
                 e.stopPropagation();
                 onLinkedinClick(lead);
               }}
             >
-              <Send className="w-3.5 h-3.5 text-gray-800" />
+              <Send className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-800" />
             </button>
           </div>
           <button
@@ -244,9 +244,10 @@ const LeadsList: FC<LeadsListProps> = ({
               e.stopPropagation();
               onSelectLead(lead._id);
             }}
-            className="bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded-full px-12 py-1.5 flex items-center gap-3 transition-colors"
+            className="bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded-full px-6 sm:px-12 py-1.5 flex items-center gap-2 sm:gap-3 transition-colors w-full md:w-auto justify-center"
           >
-            View Details
+            <span className="hidden sm:inline">View Details</span>
+            <span className="sm:hidden">Details</span>
             <ArrowRight className="w-3 h-3" />
           </button>
         </div>

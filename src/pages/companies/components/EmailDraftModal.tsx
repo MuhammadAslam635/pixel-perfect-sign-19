@@ -71,14 +71,14 @@ export const EmailDraftModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] bg-[#1e2829] border-[#3A3A3A] text-white">
+      <DialogContent className="w-[95vw] max-w-[600px] max-h-[90vh] overflow-y-auto bg-[#1e2829] border-[#3A3A3A] text-white">
         <DialogHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <DialogTitle className="text-xl font-semibold text-white">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="flex-1">
+              <DialogTitle className="text-lg sm:text-xl font-semibold text-white">
                 Email Draft
               </DialogTitle>
-              <p className="text-sm text-white/60 mt-1">
+              <p className="text-xs sm:text-sm text-white/60 mt-1">
                 Generated outreach copy tailored for {leadName ?? "this lead"}.
                 Review and tweak before sending.
               </p>
@@ -86,7 +86,7 @@ export const EmailDraftModal = ({
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 rounded-full hover:bg-white/10"
+              className="h-8 w-8 rounded-full hover:bg-white/10 flex-shrink-0"
             >
               <Edit className="h-4 w-4 text-white" />
             </Button>
@@ -105,7 +105,7 @@ export const EmailDraftModal = ({
             />
           </div>
 
-          <div className="flex items-center justify-between gap-2 p-2 bg-[#2A3435]/50 rounded-lg border border-white/5">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 p-2 bg-[#2A3435]/50 rounded-lg border border-white/5">
             <div className="flex items-center gap-1">
               <Button
                 variant="ghost"
@@ -135,10 +135,11 @@ export const EmailDraftModal = ({
               size="sm"
               onClick={handleDraftRegenerate}
               disabled={loading}
-              className="text-xs text-white/80 hover:bg-white/10 bg-primary/20 rounded-full px-4 h-7 flex items-center gap-1.5 disabled:opacity-50"
+              className="text-xs text-white/80 hover:bg-white/10 bg-primary/20 rounded-full px-4 h-7 flex items-center justify-center gap-1.5 disabled:opacity-50 w-full sm:w-auto"
             >
               <Sparkles className="w-3 h-3" />
-              {loading ? "Generating…" : "Regenerate with AI"}
+              <span className="hidden sm:inline">{loading ? "Generating…" : "Regenerate with AI"}</span>
+              <span className="sm:hidden">{loading ? "Generating…" : "Regenerate"}</span>
             </Button>
           </div>
 
@@ -177,18 +178,18 @@ export const EmailDraftModal = ({
             </div>
           )}
 
-          <div className="flex justify-end gap-3 pt-2">
+          <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 pt-2">
             <Button
               variant="ghost"
               onClick={onClose}
-              className="bg-[#2A3435] hover:bg-[#364142] text-white border-0 rounded-full px-8 py-2"
+              className="bg-[#2A3435] hover:bg-[#364142] text-white border-0 rounded-full px-8 py-2 w-full sm:w-auto"
             >
               Back
             </Button>
             <Button
               onClick={handleSend}
               disabled={loading}
-              className="bg-primary hover:bg-primary/90 disabled:bg-primary/40 disabled:text-white/60 text-white rounded-full px-8 py-2"
+              className="bg-primary hover:bg-primary/90 disabled:bg-primary/40 disabled:text-white/60 text-white rounded-full px-8 py-2 w-full sm:w-auto"
             >
               Send
             </Button>

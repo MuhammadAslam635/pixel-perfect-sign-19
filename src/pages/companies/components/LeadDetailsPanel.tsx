@@ -46,16 +46,16 @@ const LeadDetailsPanel: FC<LeadDetailsPanelProps> = ({
 
   return (
     <>
-      <div className="flex items-center justify-between mb-6 px-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 px-3 sm:px-4 gap-3">
         <div className="flex items-center gap-2">
           <div className="p-2 rounded-full bg-white/10 text-white flex items-center justify-center">
             <Users className="w-4 h-4" />
           </div>
           <h3 className="text-sm font-medium text-foreground">Details</h3>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 sm:gap-1.5">
           <button
-            className="h-8 w-8 rounded-full bg-white hover:bg-white/20 flex items-center justify-center transition-colors disabled:opacity-40"
+            className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-white hover:bg-white/20 flex items-center justify-center transition-colors disabled:opacity-40"
             onClick={() => {
               if (phone) {
                 onPhoneClick?.(lead, fallbackExecutive ?? null);
@@ -63,10 +63,10 @@ const LeadDetailsPanel: FC<LeadDetailsPanelProps> = ({
             }}
             disabled={!phone}
           >
-            <Phone className="w-3.5 h-3.5 text-gray-800" />
+            <Phone className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-800" />
           </button>
           <button
-            className="h-8 w-8 rounded-full bg-white hover:bg-white/20 flex items-center justify-center transition-colors disabled:opacity-40"
+            className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-white hover:bg-white/20 flex items-center justify-center transition-colors disabled:opacity-40"
             onClick={() => {
               if (lead) {
                 onEmailClick(lead);
@@ -76,10 +76,10 @@ const LeadDetailsPanel: FC<LeadDetailsPanelProps> = ({
             }}
             disabled={!lead && !email}
           >
-            <Mail className="w-3.5 h-3.5 text-gray-800" />
+            <Mail className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-800" />
           </button>
           <button
-            className="h-8 w-8 rounded-full bg-white hover:bg-white/20 flex items-center justify-center transition-colors disabled:opacity-40"
+            className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-white hover:bg-white/20 flex items-center justify-center transition-colors disabled:opacity-40"
             onClick={() => {
               if (linkedin) {
                 window.open(
@@ -92,10 +92,10 @@ const LeadDetailsPanel: FC<LeadDetailsPanelProps> = ({
             }}
             disabled={!linkedin}
           >
-            <Linkedin className="w-3.5 h-3.5 text-gray-800" />
+            <Linkedin className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-800" />
           </button>
           <button
-            className="h-8 w-8 rounded-full bg-white hover:bg-white/20 flex items-center justify-center transition-colors disabled:opacity-40"
+            className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-white hover:bg-white/20 flex items-center justify-center transition-colors disabled:opacity-40"
             onClick={() => {
               if (phone) {
                 const whatsappPhone = phone.replace(/\D/g, "");
@@ -104,30 +104,30 @@ const LeadDetailsPanel: FC<LeadDetailsPanelProps> = ({
             }}
             disabled={!phone}
           >
-            <MessageCircle className="w-3.5 h-3.5 text-gray-800" />
+            <MessageCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-800" />
           </button>
         </div>
       </div>
 
-      <div className="space-y-4 px-4">
+      <div className="space-y-4 px-3 sm:px-4">
         {displayName ? (
-          <div className="flex flex-col items-center text-center py-8">
-            <Avatar className="h-32 w-32 mb-4 border-4 border-white/10">
+          <div className="flex flex-col items-center text-center py-4 sm:py-8">
+            <Avatar className="h-24 w-24 sm:h-32 sm:w-32 mb-3 sm:mb-4 border-2 sm:border-4 border-white/10">
               <AvatarImage src={avatarSrc} alt={displayName} />
-              <AvatarFallback className="bg-[#3d4f51] text-white text-3xl">
+              <AvatarFallback className="bg-[#3d4f51] text-white text-2xl sm:text-3xl">
                 {avatarLetter}
               </AvatarFallback>
             </Avatar>
-            <h4 className="text-xl font-semibold text-white mb-2">
+            <h4 className="text-lg sm:text-xl font-semibold text-white mb-2">
               {displayName}
             </h4>
-            <p className="text-sm text-white/50 mb-1">{displayCompany}</p>
+            <p className="text-xs sm:text-sm text-white/50 mb-1 break-words max-w-full">{displayCompany}</p>
             <p className="text-xs text-white/40">
               {displayPosition || "Chief Executive Officer"}
             </p>
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground/60 text-center py-8">
+          <p className="text-xs sm:text-sm text-muted-foreground/60 text-center py-6 sm:py-8">
             Select a lead to view details.
           </p>
         )}

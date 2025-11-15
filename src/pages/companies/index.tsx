@@ -540,31 +540,32 @@ const index = () => {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
             {stats.map((stat) => (
               <div
                 key={stat.title}
-                className="px-2 py-3 bg-gradient-to-r from-[#1d1d1d50] via-cyan-500/5 to-[#2c2c2c31] border-[#1d1d1d50] rounded-2xl"
+                className="px-2 py-2 sm:py-3 bg-gradient-to-r from-[#1d1d1d50] via-cyan-500/5 to-[#2c2c2c31] border-[#1d1d1d50] rounded-xl sm:rounded-2xl"
               >
                 <Card className="border-none bg-transparent overflow-hidden transition-shadow duration-300 hover:shadow-lg">
-                  <div className="relative flex flex-col justify-between rounded-[20px] border border-white/10 bg-gradient-to-b from-[#ffffff20] via-[#ffffff00] to-[#ffffff10] p-4 backdrop-blur-xl min-h-[150px] shadow-inner shadow-white/10">
-                    <div className="flex items-center justify-between mb-3">
-                      <p className="text-sm text-white/70 font-medium">
+                  <div className="relative flex flex-col justify-between rounded-[16px] sm:rounded-[20px] border border-white/10 bg-gradient-to-b from-[#ffffff20] via-[#ffffff00] to-[#ffffff10] p-3 sm:p-4 backdrop-blur-xl min-h-[120px] sm:min-h-[150px] shadow-inner shadow-white/10">
+                    <div className="flex items-center justify-between mb-2 sm:mb-3">
+                      <p className="text-xs sm:text-sm text-white/70 font-medium">
                         {stat.title}
                       </p>
                       <Button
                         variant="link"
                         className="h-auto p-0 text-xs text-white/60 hover:text-white/90 transition-colors"
                       >
-                        {stat.link} <ArrowRight className="w-3 h-3 ml-1" />
+                        <span className="hidden sm:inline">{stat.link}</span>
+                        <ArrowRight className="w-3 h-3 sm:ml-1" />
                       </Button>
                     </div>
-                    <hr className="border-white/10 mb-3" />
-                    <div className="flex items-center gap-3">
-                      <div className="w-16 h-16 flex items-center justify-center">
+                    <hr className="border-white/10 mb-2 sm:mb-3" />
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center flex-shrink-0">
                         <stat.icon className="w-full h-full" />
                       </div>
-                      <p className="text-3xl font-bold text-white">
+                      <p className="text-2xl sm:text-3xl font-bold text-white">
                         {stat.value}
                       </p>
                     </div>
@@ -575,26 +576,26 @@ const index = () => {
           </div>
 
           {/* Title and Filters Bar - Same Row */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
-            <h2 className="text-lg font-medium text-foreground whitespace-nowrap">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 sm:mb-6">
+            <h2 className="text-base sm:text-lg font-medium text-foreground">
               {activeTab === "companies" ? "Companies" : "Leads"}
             </h2>
 
-            <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
               {activeTab === "companies" ? (
                 <>
-                  <div className="relative w-[180px]">
+                  <div className="relative w-full sm:w-[180px]">
                     <Input
                       type="text"
                       placeholder="Search"
                       value={companiesSearch}
                       onChange={(e) => setCompaniesSearch(e.target.value)}
-                      className="h-10 rounded-full bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] border border-white/15 backdrop-blur-md text-white placeholder:text-white/50 focus:border-white/25 focus:ring-2 focus:ring-white/10 pl-10 pr-4 text-sm"
+                      className="h-9 sm:h-10 rounded-full bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] border border-white/15 backdrop-blur-md text-white placeholder:text-white/50 focus:border-white/25 focus:ring-2 focus:ring-white/10 pl-9 sm:pl-10 pr-4 text-sm"
                     />
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-white/50" />
                   </div>
                   {filteredTotalCompanies !== undefined && (
-                    <div className="px-3 py-2 rounded-full bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] border border-white/15 backdrop-blur-md text-white/70 text-sm font-medium whitespace-nowrap">
+                    <div className="px-3 py-1.5 sm:py-2 rounded-full bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] border border-white/15 backdrop-blur-md text-white/70 text-xs sm:text-sm font-medium whitespace-nowrap">
                       {filteredTotalCompanies}{" "}
                       {filteredTotalCompanies === 1 ? "company" : "companies"}
                     </div>
@@ -602,15 +603,15 @@ const index = () => {
                 </>
               ) : (
                 <>
-                  <div className="relative w-[180px]">
+                  <div className="relative w-full sm:w-[180px]">
                     <Input
                       type="text"
                       placeholder="Search"
                       value={leadsSearch}
                       onChange={(e) => setLeadsSearch(e.target.value)}
-                      className="h-10 rounded-full bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] border border-white/15 backdrop-blur-md text-white placeholder:text-white/50 focus:border-white/25 focus:ring-2 focus:ring-white/10 pl-10 pr-4 text-sm"
+                      className="h-9 sm:h-10 rounded-full bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] border border-white/15 backdrop-blur-md text-white placeholder:text-white/50 focus:border-white/25 focus:ring-2 focus:ring-white/10 pl-9 sm:pl-10 pr-4 text-sm"
                     />
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-white/50" />
                   </div>
                   <Select
                     value={leadsCompanyFilter || "all"}
@@ -618,9 +619,9 @@ const index = () => {
                       setLeadsCompanyFilter(value === "all" ? null : value)
                     }
                   >
-                    <SelectTrigger className="h-10 rounded-full bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] border border-white/15 backdrop-blur-md text-white/70 hover:bg-white/10 focus:ring-2 focus:ring-white/10 w-[280px] sm:w-[320px] px-3 text-sm">
+                    <SelectTrigger className="h-9 sm:h-10 rounded-full bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] border border-white/15 backdrop-blur-md text-white/70 hover:bg-white/10 focus:ring-2 focus:ring-white/10 w-full sm:w-[280px] md:w-[320px] px-3 text-sm">
                       <div className="flex items-center gap-2 w-full">
-                        <Layers className="w-4 h-4 text-white/50 flex-shrink-0" />
+                        <Layers className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white/50 flex-shrink-0" />
                         <SelectValue placeholder="All Companies" />
                       </div>
                     </SelectTrigger>
@@ -671,7 +672,7 @@ const index = () => {
                     </SelectContent>
                   </Select>
                   {filteredTotalLeads !== undefined && (
-                    <div className="px-3 py-2 rounded-full bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] border border-white/15 backdrop-blur-md text-white/70 text-sm font-medium whitespace-nowrap">
+                    <div className="px-3 py-1.5 sm:py-2 rounded-full bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] border border-white/15 backdrop-blur-md text-white/70 text-xs sm:text-sm font-medium whitespace-nowrap">
                       {filteredTotalLeads} {filteredTotalLeads === 1 ? "lead" : "leads"}
                     </div>
                   )}
@@ -682,14 +683,14 @@ const index = () => {
           {/* Split View */}
           <div
             className={`flex flex-col lg:flex-row items-start ${
-              isSidebarOpen ? "gap-4 lg:gap-6" : ""
+              isSidebarOpen ? "gap-3 sm:gap-4 lg:gap-6" : ""
             }`}
           >
             {/* Left: Companies/Leads List */}
-            <div className="bg-[#222B2C] pt-4 sm:px-6 rounded-2xl 
-            h-[calc(100vh-380px)] sm:h-[calc(100vh-360px)] lg:h-[calc(100vh-340px)] 
-            min-h-[400px] sm:min-h-[500px] max-h-[800px] 
-            flex-1 overflow-y-auto">
+            <div className="bg-[#222B2C] pt-3 sm:pt-4 px-3 sm:px-6 rounded-xl sm:rounded-2xl
+            h-[calc(100vh-420px)] sm:h-[calc(100vh-380px)] md:h-[calc(100vh-360px)] lg:h-[calc(100vh-340px)]
+            min-h-[350px] sm:min-h-[400px] md:min-h-[500px] max-h-[800px]
+            flex-1 overflow-y-auto w-full">
               {activeTab === "companies" ? (
                 <CompaniesList
                   companies={companies}

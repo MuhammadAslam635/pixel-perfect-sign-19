@@ -73,42 +73,45 @@ export const LinkedinMessageModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] bg-[#1e2829] border-[#3A3A3A] text-white">
+      <DialogContent className="w-[95vw] max-w-[600px] max-h-[90vh] overflow-y-auto bg-[#1e2829] border-[#3A3A3A] text-white">
         <DialogHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <DialogTitle className="text-xl font-semibold text-white">
-                LinkedIn Connection
-              </DialogTitle>
-              <p className="text-sm text-white/60 mt-1">
-                Craft a quick message to connect with{" "}
-                <span className="text-white">{leadName ?? "this lead"}</span>
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              {leadLinkedin && (
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+              <div className="flex-1">
+                <DialogTitle className="text-lg sm:text-xl font-semibold text-white">
+                  LinkedIn Connection
+                </DialogTitle>
+                <p className="text-xs sm:text-sm text-white/60 mt-1">
+                  Craft a quick message to connect with{" "}
+                  <span className="text-white">{leadName ?? "this lead"}</span>
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                {leadLinkedin && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleOpenProfile}
+                    className="text-xs text-white/80 hover:bg-white/10 rounded-full px-3 h-7"
+                  >
+                    <span className="hidden sm:inline">View Profile</span>
+                    <span className="sm:hidden">Profile</span>
+                  </Button>
+                )}
                 <Button
                   variant="ghost"
-                  size="sm"
-                  onClick={handleOpenProfile}
-                  className="text-xs text-white/80 hover:bg-white/10 rounded-full px-3 h-7"
+                  size="icon"
+                  className="h-7 w-7 sm:h-8 sm:w-8 rounded-full hover:bg-white/10 flex-shrink-0"
                 >
-                  View Profile
+                  <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-white" />
                 </Button>
-              )}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 rounded-full hover:bg-white/10"
-              >
-                <Edit className="h-4 w-4 text-white" />
-              </Button>
+              </div>
             </div>
           </div>
         </DialogHeader>
 
         <div className="space-y-4 mt-4">
-          <div className="flex items-center justify-between gap-2 p-2 bg-[#2A3435]/50 rounded-lg border border-white/5">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 p-2 bg-[#2A3435]/50 rounded-lg border border-white/5">
             <div className="flex items-center gap-1">
               <Button
                 variant="ghost"
@@ -138,7 +141,7 @@ export const LinkedinMessageModal = ({
               size="sm"
               onClick={handleRegenerate}
               disabled={loading}
-              className="text-xs text-white/80 hover:bg-white/10 bg-primary/20 rounded-full px-4 h-7 flex items-center gap-1.5 disabled:opacity-50"
+              className="text-xs text-white/80 hover:bg-white/10 bg-primary/20 rounded-full px-4 h-7 flex items-center justify-center gap-1.5 disabled:opacity-50 w-full sm:w-auto"
             >
               <Sparkles className="w-3 h-3" />
               {loading ? "Generating…" : "Regenerate"}
@@ -165,7 +168,7 @@ export const LinkedinMessageModal = ({
             </div>
           )}
 
-          <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-white/60">
+          <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-between gap-2 text-xs text-white/60">
             <span>
               Characters:&nbsp;
               <span
@@ -178,26 +181,27 @@ export const LinkedinMessageModal = ({
               /{characterLimit}
             </span>
             {metadata?.company?.name && metadata?.person?.position && (
-              <span className="text-white/50">
+              <span className="text-white/50 break-words">
                 Target: {metadata.person.position} @ {metadata.company.name}
               </span>
             )}
           </div>
 
-          <div className="flex justify-end gap-3 pt-2">
+          <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 pt-2">
             <Button
               variant="ghost"
               onClick={onClose}
-              className="bg-[#2A3435] hover:bg-[#364142] text-white border-0 rounded-full px-8 py-2"
+              className="bg-[#2A3435] hover:bg-[#364142] text-white border-0 rounded-full px-8 py-2 w-full sm:w-auto"
             >
               Cancel
             </Button>
             <Button
               onClick={handleSend}
               disabled={loading}
-              className="bg-primary hover:bg-primary/90 disabled:bg-primary/40 disabled:text-white/60 text-white rounded-full px-8 py-2 flex items-center gap-2"
+              className="bg-primary hover:bg-primary/90 disabled:bg-primary/40 disabled:text-white/60 text-white rounded-full px-8 py-2 flex items-center justify-center gap-2 w-full sm:w-auto"
             >
-              Send Connection
+              <span className="hidden sm:inline">Send Connection</span>
+              <span className="sm:hidden">Send</span>
               <Send className="h-4 w-4" />
             </Button>
           </div>

@@ -15,19 +15,21 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
   onExecutiveSelect,
 }) => (
   <>
-    <div className="flex items-center justify-between mb-4">
+    <div className="flex items-center justify-between mb-3 sm:mb-4">
       <div className="flex items-center gap-2">
-        <div className="p-4 mr-2 rounded-full bg-black/10 hover:bg-black/20 text-white flex items-center justify-center">
-          <Users className="w-5 h-5" />
+        <div className="p-2 sm:p-3 md:p-4 mr-1 sm:mr-2 rounded-full bg-black/10 hover:bg-black/20 text-white flex items-center justify-center">
+          <Users className="w-4 h-4 sm:w-5 sm:h-5" />
         </div>
-        <h3 className="text-base font-medium text-foreground">Executives</h3>
+        <h3 className="text-sm sm:text-base font-medium text-foreground">Executives</h3>
       </div>
       <Button
         variant="link"
         className="h-auto p-0 text-xs text-foreground/60 hover:text-foreground/80"
         onClick={onViewAllLeads}
       >
-        View All <ArrowRight className="w-3 h-3 ml-1" />
+        <span className="hidden sm:inline">View All</span>
+        <span className="sm:hidden">All</span>
+        <ArrowRight className="w-3 h-3 ml-1" />
       </Button>
     </div>
 
@@ -49,22 +51,27 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
                     onExecutiveSelect?.(exec);
                   }
                 }}
-                className="relative overflow-hidden rounded-2xl border border-white/15 bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] px-4 py-3 mb-3 transition-all duration-300 hover:shadow-[0_12px_32px_rgba(0,0,0,0.3)] before:absolute before:content-[''] before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[55%] before:w-[4px] before:rounded-full before:bg-white/70 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/60"
+                className="relative overflow-hidden rounded-xl sm:rounded-2xl border border-white/15 bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] px-3 sm:px-4 py-2.5 sm:py-3 mb-2 sm:mb-3 transition-all duration-300 hover:shadow-[0_12px_32px_rgba(0,0,0,0.3)] before:absolute before:content-[''] before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[55%] before:w-[3px] sm:before:w-[4px] before:rounded-full before:bg-white/70 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/60"
               >
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-sm font-semibold text-white mb-0.5">
+                <div className="flex items-center justify-between gap-2 sm:gap-4">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs sm:text-sm font-semibold text-white mb-0.5 truncate">
                       {exec.name || "N/A"}
                     </p>
-                    <p className="text-xs text-white/60 mb-2">
+                    <p className="text-xs text-white/60 mb-1 sm:mb-2 line-clamp-2">
                       {exec.title || exec.position || "N/A"}
-                      {exec.email && ` | ${exec.email}`}
+                      {exec.email && (
+                        <>
+                          <span className="hidden sm:inline"> | </span>
+                          <span className="block sm:inline truncate">{exec.email}</span>
+                        </>
+                      )}
                     </p>
                   </div>
                   <button
                     type="button"
                     disabled={!hasLinkedin}
-                    className={`flex h-10 w-10 items-center justify-center rounded-full border border-white/15 transition-colors ${
+                    className={`flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full border border-white/15 transition-colors flex-shrink-0 ${
                       hasLinkedin
                         ? "bg-white/15 text-white hover:bg-white/25"
                         : "bg-white/10 text-white/40 cursor-not-allowed"
@@ -81,7 +88,7 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
                     }}
                   >
                     <Linkedin
-                      className={`h-4 w-4 ${
+                      className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${
                         hasLinkedin ? "text-white" : "text-white/50"
                       }`}
                     />

@@ -55,29 +55,29 @@ export const PhoneCallModal: FC<PhoneCallModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[560px] bg-[#1e2829] border-[#3A3A3A] text-white">
+      <DialogContent className="w-[95vw] max-w-[560px] max-h-[90vh] overflow-y-auto bg-[#1e2829] border-[#3A3A3A] text-white">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold text-white">
+          <DialogTitle className="text-lg sm:text-xl font-semibold text-white">
             Call {leadName || "Lead"}
           </DialogTitle>
-          <p className="text-sm text-white/60 mt-1">
+          <p className="text-xs sm:text-sm text-white/60 mt-1">
             Review the recommended talking points before placing your call.
           </p>
         </DialogHeader>
 
         <div className="space-y-4 mt-4">
-          <div className="rounded-lg border border-white/10 bg-[#2A3435]/60 p-4">
-            <div className="flex items-center justify-between gap-2">
-              <div>
+          <div className="rounded-lg border border-white/10 bg-[#2A3435]/60 p-3 sm:p-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+              <div className="flex-1">
                 <p className="text-xs uppercase tracking-wide text-white/40">
                   Phone Number
                 </p>
-                <p className="text-sm font-medium text-white">
+                <p className="text-sm font-medium text-white break-all">
                   {phoneNumber || "Not available"}
                 </p>
               </div>
               {sanitizedPhoneNumber && (
-                <span className="rounded-full bg-primary/20 px-3 py-1 text-xs font-semibold text-primary">
+                <span className="rounded-full bg-primary/20 px-3 py-1 text-xs font-semibold text-primary flex-shrink-0">
                   Ready
                 </span>
               )}
@@ -91,14 +91,14 @@ export const PhoneCallModal: FC<PhoneCallModalProps> = ({
               </p>
             )}
             {metadata?.estimatedDuration && (
-              <p className="text-xs text-white/40">
+              <p className="text-xs text-white/40 mt-1">
                 Estimated duration: {metadata.estimatedDuration}
               </p>
             )}
           </div>
 
-          <div className="rounded-lg border border-white/10 bg-[#2A3435]/40 p-4">
-            <div className="flex items-center justify-between mb-2">
+          <div className="rounded-lg border border-white/10 bg-[#2A3435]/40 p-3 sm:p-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-2">
               <p className="text-xs uppercase tracking-wide text-white/40">
                 Call Script
               </p>
@@ -107,16 +107,16 @@ export const PhoneCallModal: FC<PhoneCallModalProps> = ({
                 size="sm"
                 onClick={handleRegenerate}
                 disabled={loading}
-                className="text-xs text-white/80 hover:bg-white/10 rounded-full px-3 h-7 flex items-center gap-1.5 disabled:opacity-50"
+                className="text-xs text-white/80 hover:bg-white/10 rounded-full px-3 h-7 flex items-center gap-1.5 disabled:opacity-50 w-full sm:w-auto"
               >
                 <RefreshCcw className="h-3.5 w-3.5" />
                 {loading ? "Refreshing…" : "Regenerate"}
               </Button>
             </div>
-            <div className="relative max-h-64 overflow-y-auto rounded-md border border-white/5 bg-[#253032]/40 p-3 text-sm text-white/80 whitespace-pre-wrap leading-relaxed">
+            <div className="relative max-h-48 sm:max-h-64 overflow-y-auto rounded-md border border-white/5 bg-[#253032]/40 p-3 text-xs sm:text-sm text-white/80 whitespace-pre-wrap leading-relaxed">
               {displayScript}
               {loading && (
-                <div className="absolute inset-0 flex items-center justify-center bg-[#1b2627]/80 backdrop-blur-sm text-sm text-white/70">
+                <div className="absolute inset-0 flex items-center justify-center bg-[#1b2627]/80 backdrop-blur-sm text-xs sm:text-sm text-white/70">
                   Generating call script…
                 </div>
               )}
@@ -130,18 +130,18 @@ export const PhoneCallModal: FC<PhoneCallModalProps> = ({
             </div>
           )}
 
-          <div className="flex justify-end gap-3 pt-2">
+          <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 pt-2">
             <Button
               variant="ghost"
               onClick={onClose}
-              className="bg-[#2A3435] hover:bg-[#364142] text-white border-0 rounded-full px-6 py-2"
+              className="bg-[#2A3435] hover:bg-[#364142] text-white border-0 rounded-full px-6 py-2 w-full sm:w-auto"
             >
               Close
             </Button>
             <Button
               onClick={handleCall}
               disabled={!phoneNumber || loading}
-              className="bg-primary hover:bg-primary/90 disabled:bg-primary/40 disabled:text-white/60 text-white rounded-full px-6 py-2 flex items-center gap-2"
+              className="bg-primary hover:bg-primary/90 disabled:bg-primary/40 disabled:text-white/60 text-white rounded-full px-6 py-2 flex items-center justify-center gap-2 w-full sm:w-auto"
             >
               <Phone className="h-4 w-4" />
               Call Now
