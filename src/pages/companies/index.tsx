@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -373,11 +373,7 @@ const index = () => {
 
   const stats = useMemo(
     () =>
-      buildStats(
-        totalCompaniesForStats,
-        totalLeadsForStats,
-        defaultStatsCards
-      ),
+      buildStats(totalCompaniesForStats, totalLeadsForStats, defaultStatsCards),
     [totalCompaniesForStats, totalLeadsForStats]
   );
 
@@ -504,11 +500,9 @@ const index = () => {
   );
 
   return (
-    <div className="min-h-screen w-full bg-[#1A1A1A] flex flex-col">
-      <DashboardHeader />
-
-      <main className="relative flex-1 w-full bg-[#1A1A1A] px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] mt-24 lg:mt-28 pb-10 text-white">
-        <div className="max-w-[1600px] mx-auto">
+    <DashboardLayout>
+      <main className="relative px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] pt-24 sm:pt-28 lg:pt-32 pb-8 flex flex-col gap-6 text-white flex-1 overflow-y-auto">
+        <div className="max-w-[1600px] mx-auto w-full">
           {/* Tabs */}
           <div
             ref={containerRef}
@@ -532,8 +526,8 @@ const index = () => {
                 variant="ghost"
                 className={`relative z-10 rounded-full px-6 py-2 text-sm font-medium transition-colors duration-200 ${
                   activeTab === tab.id
-                    ? "text-foreground"
-                    : "text-muted-foreground hover:text-foreground/80"
+                    ? "text-white"
+                    : "text-gray-400 hover:text-white/80"
                 }`}
               >
                 {tab.label}
@@ -544,142 +538,192 @@ const index = () => {
           {/* Stats Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
             {stats.map((stat) => (
-              <div
-                key={stat.title}
-                className="px-2 py-2 sm:py-3 bg-gradient-to-r from-[#1d1d1d50] via-cyan-500/5 to-[#2c2c2c31] border-[#1d1d1d50] rounded-xl sm:rounded-2xl"
-              >
-                <Card className="border-none bg-transparent overflow-hidden transition-shadow duration-300 hover:shadow-lg">
-                  <div className="relative flex flex-col justify-between rounded-[16px] sm:rounded-[20px] border border-white/10 bg-gradient-to-b from-[#ffffff20] via-[#ffffff00] to-[#ffffff10] p-3 sm:p-4 backdrop-blur-xl min-h-[120px] sm:min-h-[150px] shadow-inner shadow-white/10">
-                    <div className="flex items-center justify-between mb-2 sm:mb-3">
-                      <p className="text-xs sm:text-sm text-white/70 font-medium">
+              <div key={stat.title} className="relative flex-1 w-full">
+                {/* Gradient glow behind card */}
+                <div className="absolute -inset-4 lg:-inset-8 bg-gradient-to-r from-cyan-500/20 via-blue-500/15 to-transparent blur-3xl opacity-60" />
+                <Card
+                  className="relative border-[#FFFFFF4D] shadow-2xl w-full"
+                  style={{
+                    borderRadius: "30px",
+                    opacity: 1,
+                    borderWidth: "1px",
+                    background:
+                      "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
+                  }}
+                >
+                  <CardContent className="p-4 sm:p-5 lg:p-6 h-full flex flex-col justify-between min-h-[150px]">
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-xs sm:text-sm text-gray-300 font-medium">
                         {stat.title}
                       </p>
                       <Button
                         variant="link"
-                        className="h-auto p-0 text-xs text-white/60 hover:text-white/90 transition-colors"
+                        className="h-auto p-0 text-xs text-gray-400 hover:text-white transition-colors"
                       >
                         <span className="hidden sm:inline">{stat.link}</span>
                         <ArrowRight className="w-3 h-3 sm:ml-1" />
                       </Button>
                     </div>
-                    <hr className="border-white/10 mb-2 sm:mb-3" />
-                    <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="flex items-center gap-3">
                       <div className="w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center flex-shrink-0">
-                        <stat.icon className="w-full h-full" />
+                        <stat.icon className="w-full h-full text-white" />
                       </div>
                       <p className="text-2xl sm:text-3xl font-bold text-white">
                         {stat.value}
                       </p>
                     </div>
-                  </div>
+                  </CardContent>
                 </Card>
               </div>
             ))}
           </div>
 
           {/* Title and Filters Bar - Same Row */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 sm:mb-6">
-            <h2 className="text-base sm:text-lg font-medium text-foreground">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 sm:gap-4 mb-5">
+            {/* Heading */}
+            <h2 className="text-xl sm:text-2xl font-bold text-white">
               {activeTab === "companies" ? "Companies" : "Leads"}
             </h2>
 
-            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-              {activeTab === "companies" ? (
-                <>
-                  <div className="relative w-full sm:w-[180px]">
-                    <Input
-                      type="text"
-                      placeholder="Search"
-                      value={companiesSearch}
-                      onChange={(e) => setCompaniesSearch(e.target.value)}
-                      className="h-9 sm:h-10 rounded-full bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] border border-white/15 backdrop-blur-md text-white placeholder:text-white/50 focus:border-white/25 focus:ring-2 focus:ring-white/10 pl-9 sm:pl-10 pr-4 text-sm"
-                    />
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-white/50" />
-                  </div>
-                  {filteredTotalCompanies !== undefined && (
-                    <div className="px-3 py-1.5 sm:py-2 rounded-full bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] border border-white/15 backdrop-blur-md text-white/70 text-xs sm:text-sm font-medium whitespace-nowrap">
-                      {filteredTotalCompanies}{" "}
-                      {filteredTotalCompanies === 1 ? "company" : "companies"}
+            {/* Controls Container - responsive layout */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+              {/* Filter Buttons Row - wraps on mobile, stays in row on larger screens */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 flex-1">
+                {activeTab === "companies" ? (
+                  <>
+                    {/* Search Input */}
+                    <div className="relative w-full sm:w-auto sm:min-w-[160px] sm:flex-1 lg:flex-none lg:min-w-[160px]">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none z-10" />
+                      <Input
+                        type="text"
+                        placeholder="Search companies..."
+                        value={companiesSearch}
+                        onChange={(e) => setCompaniesSearch(e.target.value)}
+                        className="h-9 pl-10 pr-4 !rounded-full border-0 text-gray-300 placeholder:text-gray-500 text-xs w-full"
+                        style={{
+                          background: "#FFFFFF1A",
+                          boxShadow:
+                            "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                        }}
+                      />
                     </div>
-                  )}
-                </>
-              ) : (
-                <>
-                  <div className="relative w-full sm:w-[180px]">
-                    <Input
-                      type="text"
-                      placeholder="Search"
-                      value={leadsSearch}
-                      onChange={(e) => setLeadsSearch(e.target.value)}
-                      className="h-9 sm:h-10 rounded-full bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] border border-white/15 backdrop-blur-md text-white placeholder:text-white/50 focus:border-white/25 focus:ring-2 focus:ring-white/10 pl-9 sm:pl-10 pr-4 text-sm"
-                    />
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-white/50" />
-                  </div>
-                  <Select
-                    value={leadsCompanyFilter || "all"}
-                    onValueChange={(value) =>
-                      setLeadsCompanyFilter(value === "all" ? null : value)
-                    }
-                  >
-                    <SelectTrigger className="h-9 sm:h-10 rounded-full bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] border border-white/15 backdrop-blur-md text-white/70 hover:bg-white/10 focus:ring-2 focus:ring-white/10 w-full sm:w-[280px] md:w-[320px] px-3 text-sm">
-                      <div className="flex items-center gap-2 w-full">
-                        <Layers className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white/50 flex-shrink-0" />
-                        <SelectValue placeholder="All Companies" />
-                      </div>
-                    </SelectTrigger>
-                    <SelectContent className="bg-[#1a1a1a] border-white/10 backdrop-blur-md max-h-[300px]">
-                      <SelectItem
-                        value="all"
-                        className="text-white focus:bg-white/10 cursor-pointer"
+                    {filteredTotalCompanies !== undefined && (
+                      <div
+                        className="px-3 py-1.5 sm:py-2 rounded-full text-gray-300 text-xs sm:text-sm font-medium whitespace-nowrap flex items-center justify-center"
+                        style={{
+                          background: "#FFFFFF1A",
+                          boxShadow:
+                            "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                        }}
                       >
-                        <div className="flex items-center justify-between w-full">
-                          <span>All Companies</span>
-                          {totalLeadsForStats !== undefined && (
-                            <span className="ml-2 text-xs text-white/50">
-                              ({totalLeadsForStats}{" "}
-                              {totalLeadsForStats === 1 ? "lead" : "leads"})
-                            </span>
-                          )}
-                        </div>
-                      </SelectItem>
-                      {allCompaniesForFilter.map((company) => {
-                        // Count leads for this company from all leads (not just current page)
-                        const companyLeadsCount = allLeadsForCount.filter(
-                          (lead) => lead.companyId === company._id
-                        ).length;
-
-                        return (
+                        {filteredTotalCompanies}{" "}
+                        {filteredTotalCompanies === 1 ? "company" : "companies"}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {/* Search Input */}
+                    <div className="relative w-full sm:w-auto sm:min-w-[160px] sm:flex-1 lg:flex-none lg:min-w-[160px]">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none z-10" />
+                      <Input
+                        type="text"
+                        placeholder="Search leads..."
+                        value={leadsSearch}
+                        onChange={(e) => setLeadsSearch(e.target.value)}
+                        className="h-9 pl-10 pr-4 !rounded-full border-0 text-gray-300 placeholder:text-gray-500 text-xs w-full"
+                        style={{
+                          background: "#FFFFFF1A",
+                          boxShadow:
+                            "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                        }}
+                      />
+                    </div>
+                    {/* Company Filter Dropdown */}
+                    <div className="relative w-full sm:w-auto sm:min-w-[140px]">
+                      <Select
+                        value={leadsCompanyFilter || "all"}
+                        onValueChange={(value) =>
+                          setLeadsCompanyFilter(value === "all" ? null : value)
+                        }
+                      >
+                        <SelectTrigger
+                          className="h-9 pl-10 pr-4 rounded-full border-0 text-gray-300 text-xs w-full sm:w-auto"
+                          style={{
+                            background: "#FFFFFF1A",
+                            boxShadow:
+                              "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                          }}
+                        >
+                          <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                            <Layers className="w-4 h-4 text-gray-400" />
+                          </div>
+                          <SelectValue placeholder="All Companies" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a] rounded-xl">
                           <SelectItem
-                            key={company._id}
-                            value={company._id}
-                            disabled={companyLeadsCount === 0}
-                            className={`text-white focus:bg-white/10 ${
-                              companyLeadsCount === 0
-                                ? "opacity-50 cursor-not-allowed"
-                                : "cursor-pointer"
-                            }`}
+                            value="all"
+                            className="text-gray-300 focus:text-white focus:bg-white/10"
                           >
                             <div className="flex items-center justify-between w-full">
-                              <span className="truncate flex-1">
-                                {company.name}
-                              </span>
-                              <span className="ml-2 text-xs text-white/50 whitespace-nowrap">
-                                ({companyLeadsCount}{" "}
-                                {companyLeadsCount === 1 ? "lead" : "leads"})
-                              </span>
+                              <span>All Companies</span>
+                              {totalLeadsForStats !== undefined && (
+                                <span className="ml-2 text-xs text-gray-500">
+                                  ({totalLeadsForStats}{" "}
+                                  {totalLeadsForStats === 1 ? "lead" : "leads"})
+                                </span>
+                              )}
                             </div>
                           </SelectItem>
-                        );
-                      })}
-                    </SelectContent>
-                  </Select>
-                  {filteredTotalLeads !== undefined && (
-                    <div className="px-3 py-1.5 sm:py-2 rounded-full bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] border border-white/15 backdrop-blur-md text-white/70 text-xs sm:text-sm font-medium whitespace-nowrap">
-                      {filteredTotalLeads} {filteredTotalLeads === 1 ? "lead" : "leads"}
+                          {allCompaniesForFilter.map((company) => {
+                            // Count leads for this company from all leads (not just current page)
+                            const companyLeadsCount = allLeadsForCount.filter(
+                              (lead) => lead.companyId === company._id
+                            ).length;
+
+                            return (
+                              <SelectItem
+                                key={company._id}
+                                value={company._id}
+                                disabled={companyLeadsCount === 0}
+                                className={`text-gray-300 focus:text-white focus:bg-white/10 ${
+                                  companyLeadsCount === 0
+                                    ? "opacity-50 cursor-not-allowed"
+                                    : "cursor-pointer"
+                                }`}
+                              >
+                                <div className="flex items-center justify-between w-full">
+                                  <span className="truncate flex-1">
+                                    {company.name}
+                                  </span>
+                                  <span className="ml-2 text-xs text-gray-500 whitespace-nowrap">
+                                    ({companyLeadsCount}{" "}
+                                    {companyLeadsCount === 1 ? "lead" : "leads"}
+                                    )
+                                  </span>
+                                </div>
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
                     </div>
-                  )}
-                </>
-              )}
+                    {filteredTotalLeads !== undefined && (
+                      <div
+                        className="px-3 py-1.5 sm:py-2 rounded-full text-gray-300 text-xs sm:text-sm font-medium whitespace-nowrap flex items-center justify-center"
+                        style={{
+                          background: "#FFFFFF1A",
+                          boxShadow:
+                            "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                        }}
+                      >
+                        {filteredTotalLeads}{" "}
+                        {filteredTotalLeads === 1 ? "lead" : "leads"}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
           </div>
           {/* Split View */}
@@ -689,10 +733,19 @@ const index = () => {
             }`}
           >
             {/* Left: Companies/Leads List */}
-            <div className="bg-[#222B2C] pt-3 sm:pt-4 px-3 sm:px-6 rounded-xl sm:rounded-2xl
+            <div
+              className="relative pt-3 sm:pt-4 px-3 sm:px-6 rounded-xl sm:rounded-2xl
             h-[calc(100vh-420px)] sm:h-[calc(100vh-380px)] md:h-[calc(100vh-360px)] lg:h-[calc(100vh-340px)]
             min-h-[350px] sm:min-h-[400px] md:min-h-[500px] max-h-[800px]
-            flex-1 overflow-y-auto w-full">
+            flex-1 overflow-y-auto w-full"
+              style={{
+                borderRadius: "30px",
+                borderWidth: "1px",
+                borderColor: "rgba(255, 255, 255, 0.08)",
+                background:
+                  "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
+              }}
+            >
               {activeTab === "companies" ? (
                 <CompaniesList
                   companies={companies}
@@ -788,7 +841,7 @@ const index = () => {
         error={phoneError}
         onRegenerate={handlePhoneRegenerate}
       />
-    </div>
+    </DashboardLayout>
   );
 };
 
