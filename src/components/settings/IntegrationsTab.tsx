@@ -687,35 +687,40 @@ export const IntegrationsTab = () => {
 
   return (
     <Card className="border-white/10 bg-white/[0.04] backdrop-blur-xl text-white">
-      <CardHeader className="border-b border-white/10 bg-white/[0.02]">
-        <CardTitle className="text-white text-lg font-semibold">
+      <CardHeader className="border-b border-white/10 bg-white/[0.02] px-4 sm:px-6">
+        <CardTitle className="text-white text-base sm:text-lg font-semibold">
           Integrations
         </CardTitle>
-        <CardDescription className="text-white/60">
+        <CardDescription className="text-white/60 text-sm">
           Connect with your favourite tools and platforms.
         </CardDescription>
       </CardHeader>
 
-      <CardContent className="space-y-6 pt-6">
+      <CardContent className="space-y-4 sm:space-y-6 pt-4 sm:pt-6 px-4 sm:px-6">
         <div>
-          <h3 className="font-medium text-white">Connected services</h3>
-          <p className="text-sm text-white/60">
+          <h3 className="font-medium text-white text-sm sm:text-base">
+            Connected services
+          </h3>
+          <p className="text-xs sm:text-sm text-white/60">
             Manage services connected to your account.
           </p>
         </div>
 
-        <div className="space-y-6 rounded-3xl border border-white/10 bg-white/[0.02] p-5">
+        <div className="space-y-4 sm:space-y-6 rounded-2xl sm:rounded-3xl border border-white/10 bg-white/[0.02] p-4 sm:p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
               <img
                 src="/assets/google-logo.svg"
                 width={30}
                 height={30}
                 alt="Google logo"
+                className="flex-shrink-0"
               />
-              <div>
-                <p className="font-medium text-white">Google</p>
-                <p className="text-sm text-white/60">
+              <div className="min-w-0 flex-1">
+                <p className="font-medium text-white text-sm sm:text-base">
+                  Google
+                </p>
+                <p className="text-xs sm:text-sm text-white/60 break-words">
                   {isIntegrationLoading
                     ? "Checking connection..."
                     : googleConnected
@@ -725,11 +730,11 @@ export const IntegrationsTab = () => {
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-shrink-0">
               {googleConnected && (
-                <span className="flex items-center gap-1 text-sm text-emerald-400">
+                <span className="flex items-center gap-1 text-xs sm:text-sm text-emerald-400">
                   <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                  Connected
+                  <span className="hidden sm:inline">Connected</span>
                 </span>
               )}
               {googleConnected ? (
@@ -739,7 +744,7 @@ export const IntegrationsTab = () => {
                   size="sm"
                   onClick={handleGoogleDisconnect}
                   disabled={isLoading}
-                  className="border-rose-400/50 text-rose-300 hover:bg-rose-500/10"
+                  className="w-full sm:w-auto border-rose-400/50 text-rose-300 hover:bg-rose-500/10 text-xs sm:text-sm"
                 >
                   {isLoading ? "Disconnecting..." : "Disconnect"}
                 </Button>
@@ -749,7 +754,7 @@ export const IntegrationsTab = () => {
                   size="sm"
                   onClick={handleGoogleConnect}
                   disabled={isLoading}
-                  className="mt-4 bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3]"
+                  className="w-full sm:w-auto bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3] text-xs sm:text-sm"
                   style={{
                     boxShadow:
                       "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
@@ -762,9 +767,12 @@ export const IntegrationsTab = () => {
           </div>
 
           {googleConnected && (
-            <div className="space-y-4 rounded-3xl border border-white/5 bg-white/[0.03] p-4">
+            <div className="space-y-4 rounded-2xl sm:rounded-3xl border border-white/5 bg-white/[0.03] p-4">
               <div className="space-y-2">
-                <Label htmlFor="googleAdsToken" className="text-white/80">
+                <Label
+                  htmlFor="googleAdsToken"
+                  className="text-white/80 text-sm"
+                >
                   Google Ads Developer Token
                 </Label>
                 <Input
@@ -773,22 +781,22 @@ export const IntegrationsTab = () => {
                   value={googleAdsToken}
                   onChange={(event) => setGoogleAdsToken(event.target.value)}
                   placeholder="Enter your Google Ads Developer Token"
-                  className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40"
+                  className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 text-sm sm:text-base"
                 />
               </div>
               <Button
                 type="button"
                 onClick={handleSaveGoogleAdsToken}
                 disabled={isSavingToken || !googleAdsToken}
-                className="bg-emerald-500 text-white hover:bg-emerald-400"
+                className="w-full sm:w-auto bg-emerald-500 text-white hover:bg-emerald-400 text-sm"
               >
                 {isSavingToken ? "Saving..." : "Save Token"}
               </Button>
 
               {googleAdsToken && (
                 <div className="space-y-2 pt-2">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-white/80">
+                  <div className="flex items-center justify-between gap-2">
+                    <Label className="text-white/80 text-sm">
                       Select Google Customer
                     </Label>
                     <Button
@@ -797,7 +805,7 @@ export const IntegrationsTab = () => {
                       size="sm"
                       onClick={fetchGoogleCustomers}
                       disabled={isLoadingCustomers}
-                      className="text-white/70 hover:text-white"
+                      className="text-white/70 hover:text-white flex-shrink-0"
                     >
                       <RefreshCw
                         className={`h-4 w-4 ${
@@ -816,7 +824,7 @@ export const IntegrationsTab = () => {
                       isLoadingCustomers || googleCustomers.length === 0
                     }
                   >
-                    <SelectTrigger className="bg-white/[0.06] border-white/10 text-white">
+                    <SelectTrigger className="bg-white/[0.06] border-white/10 text-white text-sm sm:text-base">
                       <SelectValue
                         placeholder={
                           isLoadingCustomers
@@ -839,15 +847,17 @@ export const IntegrationsTab = () => {
           )}
         </div>
 
-        <div className="space-y-6 rounded-3xl border border-white/10 bg-white/[0.02] p-5">
+        <div className="space-y-4 sm:space-y-6 rounded-2xl sm:rounded-3xl border border-white/10 bg-white/[0.02] p-4 sm:p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-4">
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-sky-600 text-sm font-semibold text-white">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-sky-600 text-sm font-semibold text-white flex-shrink-0">
                 f
               </div>
-              <div>
-                <p className="font-medium text-white">Facebook</p>
-                <p className="text-sm text-white/60">
+              <div className="min-w-0 flex-1">
+                <p className="font-medium text-white text-sm sm:text-base">
+                  Facebook
+                </p>
+                <p className="text-xs sm:text-sm text-white/60 break-words">
                   {isFacebookStatusLoading
                     ? "Checking connection..."
                     : facebookConnected
@@ -857,11 +867,11 @@ export const IntegrationsTab = () => {
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-shrink-0">
               {facebookConnected && (
-                <span className="flex items-center gap-1 text-sm text-emerald-400">
+                <span className="flex items-center gap-1 text-xs sm:text-sm text-emerald-400">
                   <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                  Connected
+                  <span className="hidden sm:inline">Connected</span>
                 </span>
               )}
               {facebookConnected ? (
@@ -871,7 +881,7 @@ export const IntegrationsTab = () => {
                   size="sm"
                   onClick={handleFacebookDisconnect}
                   disabled={isDisconnectingFacebook}
-                  className="border-rose-400/50 text-rose-300 hover:bg-rose-500/10"
+                  className="w-full sm:w-auto border-rose-400/50 text-rose-300 hover:bg-rose-500/10 text-xs sm:text-sm"
                 >
                   {isDisconnectingFacebook ? "Disconnecting..." : "Disconnect"}
                 </Button>
@@ -881,7 +891,7 @@ export const IntegrationsTab = () => {
                   size="sm"
                   onClick={handleFacebookConnect}
                   disabled={isFacebookLoading}
-                  className="mt-4 bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3]"
+                  className="w-full sm:w-auto bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3] text-xs sm:text-sm"
                   style={{
                     boxShadow:
                       "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
@@ -896,16 +906,18 @@ export const IntegrationsTab = () => {
           {facebookConnected &&
             facebookIntegration?.pages &&
             facebookIntegration.pages.length > 0 && (
-              <div className="space-y-3 rounded-3xl border border-white/5 bg-white/[0.03] p-4">
-                <div className="flex items-center justify-between">
-                  <Label className="text-white/80">Select Facebook Page</Label>
+              <div className="space-y-3 rounded-2xl sm:rounded-3xl border border-white/5 bg-white/[0.03] p-4">
+                <div className="flex items-center justify-between gap-2">
+                  <Label className="text-white/80 text-sm">
+                    Select Facebook Page
+                  </Label>
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
                     onClick={handleRefreshPages}
                     disabled={isRefreshingPages}
-                    className="text-white/70 hover:text-white"
+                    className="text-white/70 hover:text-white flex-shrink-0"
                   >
                     <RefreshCw
                       className={`h-4 w-4 ${
@@ -919,7 +931,7 @@ export const IntegrationsTab = () => {
                   onValueChange={handlePageSelect}
                   disabled={isSelectingPage}
                 >
-                  <SelectTrigger className="bg-white/[0.06] border-white/10 text-white">
+                  <SelectTrigger className="bg-white/[0.06] border-white/10 text-white text-sm sm:text-base">
                     <SelectValue placeholder="Select a Facebook page" />
                   </SelectTrigger>
                   <SelectContent>
@@ -932,7 +944,7 @@ export const IntegrationsTab = () => {
                   </SelectContent>
                 </Select>
                 {selectedPageId && (
-                  <p className="text-sm text-emerald-400">
+                  <p className="text-xs sm:text-sm text-emerald-400">
                     Selected page will be used for posting content.
                   </p>
                 )}
@@ -940,15 +952,17 @@ export const IntegrationsTab = () => {
             )}
         </div>
 
-        <div className="space-y-6 rounded-3xl border border-white/10 bg-white/[0.02] p-5">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div className="flex items-center gap-4">
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 text-xs font-semibold text-white">
+        <div className="space-y-4 sm:space-y-6 rounded-2xl sm:rounded-3xl border border-white/10 bg-white/[0.02] p-4 sm:p-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 text-xs font-semibold text-white flex-shrink-0">
                 WA
               </div>
-              <div>
-                <p className="font-medium text-white">WhatsApp Business</p>
-                <p className="text-sm text-white/60">
+              <div className="min-w-0 flex-1">
+                <p className="font-medium text-white text-sm sm:text-base">
+                  WhatsApp Business
+                </p>
+                <p className="text-xs sm:text-sm text-white/60 break-words">
                   {isLoadingWhatsApp
                     ? "Checking connection..."
                     : whatsappConnections.length > 0
@@ -960,18 +974,18 @@ export const IntegrationsTab = () => {
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-shrink-0">
               {whatsappConnections.length > 0 && (
-                <span className="flex items-center gap-1 text-sm text-emerald-400">
+                <span className="flex items-center gap-1 text-xs sm:text-sm text-emerald-400">
                   <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                  Connected
+                  <span className="hidden sm:inline">Connected</span>
                 </span>
               )}
               <Button
                 type="button"
                 size="sm"
                 onClick={handleToggleWhatsAppForm}
-                className="mt-4 bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3]"
+                className="w-full sm:w-auto bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3] text-xs sm:text-sm"
                 style={{
                   boxShadow:
                     "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
@@ -990,7 +1004,7 @@ export const IntegrationsTab = () => {
           </div>
 
           {!canManageWhatsApp && (
-            <p className="text-xs text-amber-300">
+            <p className="text-xs text-amber-300 break-words">
               Contact your company admin to update WhatsApp configuration.
             </p>
           )}
@@ -1000,26 +1014,38 @@ export const IntegrationsTab = () => {
               {whatsappConnections.map((connection) => (
                 <div
                   key={connection.phoneNumberId}
-                  className="rounded-3xl border border-white/10 bg-white/[0.03] p-4"
+                  className="rounded-2xl sm:rounded-3xl border border-white/10 bg-white/[0.03] p-4"
                 >
-                  <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                    <div className="space-y-1 text-sm text-white/80">
-                      <p className="text-base font-semibold text-white">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="space-y-1 text-xs sm:text-sm text-white/80 min-w-0 flex-1">
+                      <p className="text-sm sm:text-base font-semibold text-white break-words">
                         {connection.phoneNumber}
                       </p>
-                      <p>Phone Number ID: {connection.phoneNumberId}</p>
-                      <p>Business Account ID: {connection.businessAccountId}</p>
+                      <p className="break-all">
+                        Phone Number ID: {connection.phoneNumberId}
+                      </p>
+                      <p className="break-all">
+                        Business Account ID: {connection.businessAccountId}
+                      </p>
                       {connection.webhookUrl && (
-                        <p>Webhook: {connection.webhookUrl}</p>
+                        <p className="break-all">
+                          Webhook: {connection.webhookUrl}
+                        </p>
                       )}
                       {connection.tokens?.accessToken && (
-                        <p>Access Token: {connection.tokens.accessToken}</p>
+                        <p className="break-all">
+                          Access Token: {connection.tokens.accessToken}
+                        </p>
                       )}
                       {connection.tokens?.verifyToken && (
-                        <p>Verify Token: {connection.tokens.verifyToken}</p>
+                        <p className="break-all">
+                          Verify Token: {connection.tokens.verifyToken}
+                        </p>
                       )}
                       {connection.tokens?.appSecret && (
-                        <p>App Secret: {connection.tokens.appSecret}</p>
+                        <p className="break-all">
+                          App Secret: {connection.tokens.appSecret}
+                        </p>
                       )}
                     </div>
 
@@ -1027,7 +1053,7 @@ export const IntegrationsTab = () => {
                       type="button"
                       variant="outline"
                       size="sm"
-                      className="border-rose-400/50 text-rose-300 hover:bg-rose-500/10 disabled:opacity-60 disabled:cursor-not-allowed"
+                      className="w-full sm:w-auto border-rose-400/50 text-rose-300 hover:bg-rose-500/10 disabled:opacity-60 disabled:cursor-not-allowed text-xs sm:text-sm flex-shrink-0"
                       onClick={() =>
                         requestWhatsAppDisconnect(connection.phoneNumberId)
                       }
@@ -1042,10 +1068,12 @@ export const IntegrationsTab = () => {
           )}
 
           {showWhatsAppForm && (
-            <div className="space-y-4 rounded-3xl border border-white/10 bg-white/[0.03] p-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label className="text-white/80">Business Account ID</Label>
+            <div className="space-y-4 rounded-2xl sm:rounded-3xl border border-white/10 bg-white/[0.03] p-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2 sm:col-span-1">
+                  <Label className="text-white/80 text-sm">
+                    Business Account ID
+                  </Label>
                   <Input
                     value={whatsappForm.businessAccountId}
                     onChange={(event) =>
@@ -1055,11 +1083,13 @@ export const IntegrationsTab = () => {
                       )
                     }
                     placeholder="Enter business account ID"
-                    className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40"
+                    className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 text-sm sm:text-base"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-white/80">Phone Number ID</Label>
+                <div className="space-y-2 sm:col-span-1">
+                  <Label className="text-white/80 text-sm">
+                    Phone Number ID
+                  </Label>
                   <Input
                     value={whatsappForm.phoneNumberId}
                     onChange={(event) =>
@@ -1069,11 +1099,13 @@ export const IntegrationsTab = () => {
                       )
                     }
                     placeholder="Enter phone number ID"
-                    className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40"
+                    className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 text-sm sm:text-base"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-white/80">WhatsApp Number</Label>
+                <div className="space-y-2 sm:col-span-1">
+                  <Label className="text-white/80 text-sm">
+                    WhatsApp Number
+                  </Label>
                   <Input
                     value={whatsappForm.phoneNumber}
                     onChange={(event) =>
@@ -1083,11 +1115,11 @@ export const IntegrationsTab = () => {
                       )
                     }
                     placeholder="Enter WhatsApp number in E.164 format"
-                    className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40"
+                    className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 text-sm sm:text-base"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-white/80">Access Token</Label>
+                <div className="space-y-2 sm:col-span-1">
+                  <Label className="text-white/80 text-sm">Access Token</Label>
                   <Input
                     type="password"
                     value={whatsappForm.accessToken}
@@ -1098,11 +1130,11 @@ export const IntegrationsTab = () => {
                       )
                     }
                     placeholder="Enter permanent access token"
-                    className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40"
+                    className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 text-sm sm:text-base"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-white/80">Verify Token</Label>
+                <div className="space-y-2 sm:col-span-1">
+                  <Label className="text-white/80 text-sm">Verify Token</Label>
                   <Input
                     value={whatsappForm.verifyToken}
                     onChange={(event) =>
@@ -1112,11 +1144,13 @@ export const IntegrationsTab = () => {
                       )
                     }
                     placeholder="Token used in webhook verification"
-                    className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40"
+                    className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 text-sm sm:text-base"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-white/80">App Secret (optional)</Label>
+                <div className="space-y-2 sm:col-span-1">
+                  <Label className="text-white/80 text-sm">
+                    App Secret (optional)
+                  </Label>
                   <Input
                     type="password"
                     value={whatsappForm.appSecret}
@@ -1124,11 +1158,11 @@ export const IntegrationsTab = () => {
                       handleWhatsAppInputChange("appSecret", event.target.value)
                     }
                     placeholder="Used for webhook signature validation"
-                    className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40"
+                    className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 text-sm sm:text-base"
                   />
                 </div>
-                <div className="space-y-2 md:col-span-2">
-                  <Label className="text-white/80">
+                <div className="space-y-2 sm:col-span-2">
+                  <Label className="text-white/80 text-sm">
                     Webhook URL (optional)
                   </Label>
                   <Input
@@ -1140,11 +1174,11 @@ export const IntegrationsTab = () => {
                       )
                     }
                     placeholder="https://example.com/api/whatsapp/webhook"
-                    className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40"
+                    className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 text-sm sm:text-base"
                   />
                 </div>
               </div>
-              <div className="flex items-center justify-end gap-2">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2">
                 <Button
                   type="button"
                   variant="outline"
@@ -1152,7 +1186,7 @@ export const IntegrationsTab = () => {
                     resetWhatsAppForm();
                     setShowWhatsAppForm(false);
                   }}
-                  className="border-white/20 text-white/70 hover:bg-white/10"
+                  className="w-full sm:w-auto border-white/20 text-white/70 hover:bg-white/10 text-sm"
                 >
                   Cancel
                 </Button>
@@ -1160,7 +1194,7 @@ export const IntegrationsTab = () => {
                   type="button"
                   onClick={handleWhatsAppConnect}
                   disabled={isSavingWhatsApp}
-                  className="bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3]"
+                  className="w-full sm:w-auto bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3] text-sm"
                   style={{
                     boxShadow:
                       "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
