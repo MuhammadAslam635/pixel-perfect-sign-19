@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { Lead } from "@/services/leads.service";
 import { Company } from "@/services/companies.service";
+import LeadDetailsPanel from "./LeadDetailsPanel";
 
 type LeadsListProps = {
   leads: Lead[];
@@ -39,6 +40,9 @@ type LeadsListProps = {
   onPageChange?: (page: number) => void;
   totalLeads?: number;
   showFilters?: boolean;
+  selectedLead?: Lead;
+  executiveFallback?: any;
+  onPhoneClickFromSidebar?: (lead?: Lead, fallback?: any) => void;
 };
 
 const LeadsList: FC<LeadsListProps> = ({
@@ -55,6 +59,9 @@ const LeadsList: FC<LeadsListProps> = ({
   totalPages = 1,
   onPageChange,
   showFilters = true,
+  selectedLead,
+  executiveFallback,
+  onPhoneClickFromSidebar,
 }) => {
   // Calculate pagination page range
   const paginationPages = useMemo<{
@@ -161,12 +168,11 @@ const LeadsList: FC<LeadsListProps> = ({
     return (
       <Card
         key={lead._id}
-        onClick={() => onSelectLead(lead._id)}
         className={`relative flex flex-col md:flex-row items-start md:items-center justify-between gap-4 sm:gap-6 bg-gradient-to-r from-[#13363b] via-[#1f4c55] to-[#16383f] border ${
           isActive ? "border-primary/60" : "border-[#274a4f]"
         } rounded-[20px] sm:rounded-[26px] px-4 sm:px-6 md:px-8 py-3 sm:py-4 pl-4 sm:pl-6 transition-all duration-300 hover:shadow-[0_18px_40px_rgba(0,0,0,0.3)] before:absolute before:content-[''] before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[60%] before:w-[3px] sm:before:w-[5px] before:rounded-full ${
           isActive ? "before:bg-primary" : "before:bg-white/75"
-        } cursor-pointer`}
+        }`}
       >
         <div className="flex-1 w-full md:w-auto">
           <div className="flex flex-wrap items-center gap-2 text-white">
@@ -240,10 +246,7 @@ const LeadsList: FC<LeadsListProps> = ({
             </button>
           </div>
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onSelectLead(lead._id);
-            }}
+            onClick={() => onSelectLead(lead._id)}
             className="bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded-full px-6 sm:px-12 py-1.5 flex items-center gap-2 sm:gap-3 transition-colors w-full md:w-auto justify-center"
           >
             <span className="hidden sm:inline">View Details</span>
@@ -364,7 +367,24 @@ const LeadsList: FC<LeadsListProps> = ({
         ) : leads.length === 0 ? (
           renderEmpty()
         ) : (
-          leads.map(renderLeadCard)
+          leads.map((lead) => (
+            <div key={lead._id}>
+              {renderLeadCard(lead)}
+              {/* Show lead details panel inline on mobile/tablet after the clicked lead */}
+              {selectedLeadId === lead._id && (
+                <div className="lg:hidden mt-4 mb-4">
+                  <Card className="bg-[#1f3032] border-[#3A3A3A] p-3 sm:p-4">
+                    <LeadDetailsPanel
+                      lead={selectedLead}
+                      onEmailClick={onEmailClick}
+                      fallbackExecutive={executiveFallback}
+                      onPhoneClick={onPhoneClickFromSidebar}
+                    />
+                  </Card>
+                </div>
+              )}
+            </div>
+          ))
         )}
       </div>
 

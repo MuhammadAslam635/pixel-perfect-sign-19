@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/pagination";
 import { ArrowRight, Linkedin, Search } from "lucide-react";
 import { Company } from "@/services/companies.service";
+import CompanyExecutivesPanel from "./CompanyExecutivesPanel";
 
 type CompaniesListProps = {
   companies: Company[];
@@ -26,6 +27,9 @@ type CompaniesListProps = {
   onPageChange?: (page: number) => void;
   totalCompanies?: number;
   showFilters?: boolean;
+  selectedCompany?: Company;
+  onViewAllLeads?: () => void;
+  onExecutiveSelect?: (executive: any) => void;
 };
 
 const CompaniesList: FC<CompaniesListProps> = ({
@@ -38,6 +42,9 @@ const CompaniesList: FC<CompaniesListProps> = ({
   totalPages = 1,
   onPageChange,
   showFilters = true,
+  selectedCompany,
+  onViewAllLeads,
+  onExecutiveSelect,
 }) => {
   // Helper function to format URL and create clickable link
   const formatWebsiteUrl = (url: string | null | undefined): string => {
@@ -345,7 +352,23 @@ const CompaniesList: FC<CompaniesListProps> = ({
         ) : companies.length === 0 ? (
           renderEmpty()
         ) : (
-          companies.map(renderCompanyCard)
+          companies.map((company) => (
+            <div key={company._id}>
+              {renderCompanyCard(company)}
+              {/* Show executives panel inline on mobile/tablet after the clicked company */}
+              {selectedCompanyId === company._id && (
+                <div className="lg:hidden mt-4 mb-4">
+                  <Card className="bg-[#1f3032] border-[#3A3A3A] p-3 sm:p-4">
+                    <CompanyExecutivesPanel
+                      company={selectedCompany}
+                      onViewAllLeads={onViewAllLeads || (() => {})}
+                      onExecutiveSelect={onExecutiveSelect}
+                    />
+                  </Card>
+                </div>
+              )}
+            </div>
+          ))
         )}
       </div>
 

@@ -20,6 +20,8 @@ import { toast } from "sonner";
 import CompaniesList from "./components/CompaniesList";
 import LeadsList from "./components/LeadsList";
 import DetailsSidebar from "./components/DetailsSidebar";
+import CompanyExecutivesPanel from "./components/CompanyExecutivesPanel";
+import LeadDetailsPanel from "./components/LeadDetailsPanel";
 import {
   defaultStatsCards,
   useCompaniesData,
@@ -704,6 +706,9 @@ const index = () => {
                   onPageChange={setCompaniesPage}
                   totalCompanies={filteredTotalCompanies}
                   showFilters={false}
+                  selectedCompany={selectedCompany}
+                  onViewAllLeads={() => setActiveTab("leads")}
+                  onExecutiveSelect={handleExecutiveSelect}
                 />
               ) : (
                 <LeadsList
@@ -724,22 +729,27 @@ const index = () => {
                   onPageChange={setLeadsPage}
                   totalLeads={filteredTotalLeads}
                   showFilters={false}
+                  selectedLead={selectedLeadDetails}
+                  executiveFallback={selectedExecutiveFallback}
+                  onPhoneClickFromSidebar={handlePhoneClickFromSidebar}
                 />
               )}
             </div>
 
-            {/* Right: Executives/Details Panel */}
-            <DetailsSidebar
-              activeTab={activeTab}
-              isOpen={isSidebarOpen}
-              selectedCompany={selectedCompany}
-              selectedLead={selectedLeadDetails}
-              onSwitchToLeads={() => setActiveTab("leads")}
-              onEmailLead={handleEmailClick}
-              onExecutiveSelect={handleExecutiveSelect}
-              executiveFallback={selectedExecutiveFallback}
-              onPhoneLead={handlePhoneClickFromSidebar}
-            />
+            {/* Right: Executives/Details Panel (Desktop only) */}
+            <div className="hidden lg:block">
+              <DetailsSidebar
+                activeTab={activeTab}
+                isOpen={isSidebarOpen}
+                selectedCompany={selectedCompany}
+                selectedLead={selectedLeadDetails}
+                onSwitchToLeads={() => setActiveTab("leads")}
+                onEmailLead={handleEmailClick}
+                onExecutiveSelect={handleExecutiveSelect}
+                executiveFallback={selectedExecutiveFallback}
+                onPhoneLead={handlePhoneClickFromSidebar}
+              />
+            </div>
           </div>
         </div>
       </main>
