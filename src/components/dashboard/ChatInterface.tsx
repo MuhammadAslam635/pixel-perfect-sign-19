@@ -374,7 +374,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
           <input
             className="assistant-composer__input font-poppins"
             type="text"
-            placeholder="Ask CSOA Assistant"
+            placeholder="Ask Skylar"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyPress={handleKeyPress}
