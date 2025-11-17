@@ -1,5 +1,12 @@
 import { FC } from "react";
-import { Users, Phone, Mail, Linkedin, MessageCircle } from "lucide-react";
+import {
+  Users,
+  Phone,
+  Mail,
+  Linkedin,
+  MessageCircle,
+  Send,
+} from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Lead } from "@/services/leads.service";
 import { CompanyPerson } from "@/services/companies.service";
@@ -12,16 +19,25 @@ type LeadDetailsPanelProps = {
     lead?: Lead,
     fallbackExecutive?: CompanyPerson | null
   ) => void;
+  onLinkedinClick?: (lead: Lead) => void;
 };
 
 const toStringOrUndefined = (value: unknown): string | undefined =>
   typeof value === "string" && value.trim().length > 0 ? value : undefined;
+
+const getIconButtonClasses = (isDisabled: boolean) =>
+  `h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center border transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary/40 ${
+    isDisabled
+      ? "bg-white/5 border-white/10 text-white/30 cursor-not-allowed"
+      : "bg-white border-white text-gray-900 hover:bg-white/80 hover:text-gray-950"
+  }`;
 
 const LeadDetailsPanel: FC<LeadDetailsPanelProps> = ({
   lead,
   onEmailClick,
   fallbackExecutive,
   onPhoneClick,
+  onLinkedinClick,
 }) => {
   const fallbackEmail = toStringOrUndefined(fallbackExecutive?.email);
   const fallbackPhone = toStringOrUndefined(fallbackExecutive?.phone);
@@ -40,9 +56,18 @@ const LeadDetailsPanel: FC<LeadDetailsPanelProps> = ({
   const avatarLetter = displayName?.charAt(0).toUpperCase() || "?";
   const avatarSrc = lead?.pictureUrl || undefined;
 
-  const phone = lead?.phone || fallbackPhone || undefined;
-  const email = lead?.email || fallbackEmail || undefined;
-  const linkedin = lead?.linkedinUrl || fallbackLinkedin || undefined;
+  const phone =
+    lead?.phone || (!lead && fallbackPhone ? fallbackPhone : undefined);
+  const email =
+    lead?.email || (!lead && fallbackEmail ? fallbackEmail : undefined);
+  const linkedin =
+    lead?.linkedinUrl ||
+    (!lead && fallbackLinkedin ? fallbackLinkedin : undefined);
+
+  const canSendLinkedin = Boolean(linkedin);
+  const isPhoneDisabled = !phone;
+  const isEmailDisabled = !email;
+  const isLinkedinDisabled = !linkedin;
 
   return (
     <>
@@ -55,18 +80,20 @@ const LeadDetailsPanel: FC<LeadDetailsPanelProps> = ({
         </div>
         <div className="flex items-center gap-1 sm:gap-1.5">
           <button
-            className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-white hover:bg-white/20 flex items-center justify-center transition-colors disabled:opacity-40"
+            className={getIconButtonClasses(isPhoneDisabled)}
             onClick={() => {
               if (phone) {
                 onPhoneClick?.(lead, fallbackExecutive ?? null);
               }
             }}
-            disabled={!phone}
+            disabled={isPhoneDisabled}
+            aria-disabled={isPhoneDisabled}
+            title={isPhoneDisabled ? "No phone available" : "Call lead"}
           >
-            <Phone className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-800" />
+            <Phone className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
           </button>
           <button
-            className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-white hover:bg-white/20 flex items-center justify-center transition-colors disabled:opacity-40"
+            className={getIconButtonClasses(isEmailDisabled)}
             onClick={() => {
               if (lead) {
                 onEmailClick(lead);
@@ -74,12 +101,14 @@ const LeadDetailsPanel: FC<LeadDetailsPanelProps> = ({
                 window.open(`mailto:${email}`);
               }
             }}
-            disabled={!lead && !email}
+            disabled={isEmailDisabled}
+            aria-disabled={isEmailDisabled}
+            title={isEmailDisabled ? "No email available" : "Email lead"}
           >
-            <Mail className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-800" />
+            <Mail className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
           </button>
           <button
-            className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-white hover:bg-white/20 flex items-center justify-center transition-colors disabled:opacity-40"
+            className={getIconButtonClasses(isLinkedinDisabled)}
             onClick={() => {
               if (linkedin) {
                 window.open(
@@ -90,21 +119,52 @@ const LeadDetailsPanel: FC<LeadDetailsPanelProps> = ({
                 );
               }
             }}
-            disabled={!linkedin}
+            disabled={isLinkedinDisabled}
+            aria-disabled={isLinkedinDisabled}
+            title={
+              isLinkedinDisabled ? "No LinkedIn available" : "Open LinkedIn"
+            }
           >
-            <Linkedin className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-800" />
+            <Linkedin className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
           </button>
           <button
-            className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-white hover:bg-white/20 flex items-center justify-center transition-colors disabled:opacity-40"
+            className={getIconButtonClasses(isPhoneDisabled)}
             onClick={() => {
               if (phone) {
                 const whatsappPhone = phone.replace(/\D/g, "");
                 window.open(`https://wa.me/${whatsappPhone}`, "_blank");
               }
             }}
-            disabled={!phone}
+            disabled={isPhoneDisabled}
+            aria-disabled={isPhoneDisabled}
+            title={isPhoneDisabled ? "No phone available" : "Open WhatsApp"}
           >
-            <MessageCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-800" />
+            <MessageCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+          </button>
+          <button
+            className={getIconButtonClasses(!canSendLinkedin)}
+            onClick={() => {
+              if (!linkedin) return;
+              if (lead && onLinkedinClick) {
+                onLinkedinClick(lead);
+              } else {
+                window.open(
+                  linkedin.startsWith("http")
+                    ? linkedin
+                    : `https://${linkedin}`,
+                  "_blank"
+                );
+              }
+            }}
+            disabled={!canSendLinkedin}
+            aria-disabled={!canSendLinkedin}
+            title={
+              !canSendLinkedin
+                ? "No LinkedIn available"
+                : "Send LinkedIn message"
+            }
+          >
+            <Send className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
           </button>
         </div>
       </div>
@@ -121,7 +181,9 @@ const LeadDetailsPanel: FC<LeadDetailsPanelProps> = ({
             <h4 className="text-lg sm:text-xl font-semibold text-white mb-2">
               {displayName}
             </h4>
-            <p className="text-xs sm:text-sm text-white/50 mb-1 break-words max-w-full">{displayCompany}</p>
+            <p className="text-xs sm:text-sm text-white/50 mb-1 break-words max-w-full">
+              {displayCompany}
+            </p>
             <p className="text-xs text-white/40">
               {displayPosition || "Chief Executive Officer"}
             </p>

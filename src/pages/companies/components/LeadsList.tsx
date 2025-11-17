@@ -1,4 +1,4 @@
-import { FC, useMemo } from "react";
+import { FC, MouseEvent, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import {
   Pagination,
@@ -28,7 +28,7 @@ type LeadsListProps = {
   selectedLeadId: string | null;
   onSelectLead: (leadId: string) => void;
   onEmailClick: (lead: Lead) => void;
-  onPhoneClick: (lead: Lead) => void;
+  onPhoneClick: (lead: Lead, executiveFallback: any) => void;
   onLinkedinClick: (lead: Lead) => void;
   search?: string;
   onSearchChange?: (search: string) => void;
@@ -44,6 +44,13 @@ type LeadsListProps = {
   executiveFallback?: any;
   onPhoneClickFromSidebar?: (lead?: Lead, fallback?: any) => void;
 };
+
+const getIconButtonClasses = (isDisabled: boolean) =>
+  `h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center border transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary/40 ${
+    isDisabled
+      ? "bg-white/5 border-white/10 text-white/30 cursor-not-allowed"
+      : "bg-white border-white text-gray-900 hover:bg-white/80 hover:text-gray-950"
+  }`;
 
 const LeadsList: FC<LeadsListProps> = ({
   leads,
@@ -144,10 +151,13 @@ const LeadsList: FC<LeadsListProps> = ({
   // Render lead card
   const renderLeadCard = (lead: Lead) => {
     const { isActive, displayEmail, displayPhone } = getLeadData(lead);
+    const hasPhone = displayPhone !== "N/A";
+    const hasEmail = displayEmail !== "N/A";
+    const hasLinkedin = Boolean(lead.linkedinUrl && lead.linkedinUrl.trim());
 
-    const handleLinkedinOpen = (e: React.MouseEvent) => {
+    const handleLinkedinOpen = (e: MouseEvent<HTMLButtonElement>) => {
       e.stopPropagation();
-      if (lead.linkedinUrl) {
+      if (hasLinkedin && lead.linkedinUrl) {
         window.open(
           lead.linkedinUrl.startsWith("http")
             ? lead.linkedinUrl
@@ -157,9 +167,9 @@ const LeadsList: FC<LeadsListProps> = ({
       }
     };
 
-    const handleWhatsAppOpen = (e: React.MouseEvent) => {
+    const handleWhatsAppOpen = (e: MouseEvent<HTMLButtonElement>) => {
       e.stopPropagation();
-      if (displayPhone !== "N/A") {
+      if (hasPhone && displayPhone !== "N/A") {
         const whatsappPhone = displayPhone.replace(/\D/g, "");
         window.open(`https://wa.me/${whatsappPhone}`, "_blank");
       }
@@ -204,45 +214,64 @@ const LeadsList: FC<LeadsListProps> = ({
         <div className="flex flex-col items-center gap-3 sm:gap-4 w-full md:w-auto">
           <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap justify-center">
             <button
-              className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-white hover:bg-white/20 flex items-center justify-center transition-colors"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (lead.phone) {
-                  onPhoneClick(lead);
+              className={getIconButtonClasses(!hasPhone)}
+              onClick={() => {
+                if (hasPhone) {
+                  onPhoneClick?.(lead, executiveFallback);
                 }
               }}
+              disabled={!hasPhone}
+              aria-disabled={!hasPhone}
+              title={!hasPhone ? "No phone available" : "Call lead"}
             >
-              <Phone className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-800" />
+              <Phone className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
             </button>
             <button
-              className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-white hover:bg-white/20 flex items-center justify-center transition-colors"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEmailClick(lead);
+              className={getIconButtonClasses(!hasEmail)}
+              onClick={() => {
+                if (hasEmail) {
+                  onEmailClick?.(lead);
+                }
               }}
+              disabled={!hasEmail}
+              aria-disabled={!hasEmail}
+              title={!hasEmail ? "No email available" : "Email lead"}
             >
-              <Mail className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-800" />
+              <Mail className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
             </button>
             <button
-              className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-white hover:bg-white/20 flex items-center justify-center transition-colors"
+              className={getIconButtonClasses(!hasLinkedin)}
               onClick={handleLinkedinOpen}
+              disabled={!hasLinkedin}
+              aria-disabled={!hasLinkedin}
+              title={!hasLinkedin ? "No LinkedIn available" : "Open LinkedIn"}
             >
-              <Linkedin className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-800" />
+              <Linkedin className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
             </button>
             <button
-              className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-white hover:bg-white/20 flex items-center justify-center transition-colors"
+              className={getIconButtonClasses(!hasPhone)}
               onClick={handleWhatsAppOpen}
+              disabled={!hasPhone}
+              aria-disabled={!hasPhone}
+              title={!hasPhone ? "No phone available" : "Open WhatsApp"}
             >
-              <MessageCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-800" />
+              <MessageCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
             </button>
             <button
-              className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-white hover:bg-white/20 flex items-center justify-center transition-colors"
+              className={getIconButtonClasses(!hasLinkedin)}
               onClick={(e) => {
                 e.stopPropagation();
-                onLinkedinClick(lead);
+                if (hasLinkedin) {
+                  onLinkedinClick(lead);
+                }
               }}
+              disabled={!hasLinkedin}
+              aria-disabled={!hasLinkedin}
+              title={
+                !hasLinkedin ? "No LinkedIn available" : "Send LinkedIn DM"
+              }
             >
-              <Send className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-800" />
+              <Send className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
             </button>
           </div>
           <button
@@ -362,30 +391,29 @@ const LeadsList: FC<LeadsListProps> = ({
     <div className="flex flex-col h-full">
       {/* Scrollable content area */}
       <div className="flex-1 overflow-y-auto space-y-4 pb-4 pr-3 custom-scrollbar-list">
-        {loading ? (
-          renderLoading()
-        ) : leads.length === 0 ? (
-          renderEmpty()
-        ) : (
-          leads.map((lead) => (
-            <div key={lead._id}>
-              {renderLeadCard(lead)}
-              {/* Show lead details panel inline on mobile/tablet after the clicked lead */}
-              {selectedLeadId === lead._id && (
-                <div className="lg:hidden mt-4 mb-4">
-                  <Card className="bg-[#1f3032] border-[#3A3A3A] p-3 sm:p-4">
-                    <LeadDetailsPanel
-                      lead={selectedLead}
-                      onEmailClick={onEmailClick}
-                      fallbackExecutive={executiveFallback}
-                      onPhoneClick={onPhoneClickFromSidebar}
-                    />
-                  </Card>
-                </div>
-              )}
-            </div>
-          ))
-        )}
+        {loading
+          ? renderLoading()
+          : leads.length === 0
+          ? renderEmpty()
+          : leads.map((lead) => (
+              <div key={lead._id}>
+                {renderLeadCard(lead)}
+                {/* Show lead details panel inline on mobile/tablet after the clicked lead */}
+                {selectedLeadId === lead._id && (
+                  <div className="lg:hidden mt-4 mb-4">
+                    <Card className="bg-[#1f3032] border-[#3A3A3A] p-3 sm:p-4">
+                      <LeadDetailsPanel
+                        lead={selectedLead}
+                        onEmailClick={onEmailClick}
+                        fallbackExecutive={executiveFallback}
+                        onPhoneClick={onPhoneClickFromSidebar}
+                        onLinkedinClick={onLinkedinClick}
+                      />
+                    </Card>
+                  </div>
+                )}
+              </div>
+            ))}
       </div>
 
       {/* Fixed pagination at bottom */}
