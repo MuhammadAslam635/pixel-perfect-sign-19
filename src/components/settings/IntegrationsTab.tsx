@@ -30,6 +30,9 @@ import {
   useFacebookStatus,
 } from "@/components/settings/services/facebook.api";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import facebookLogo from "@/assets/facebook-icon.svg";
+import whatsappLogo from "@/assets/whatsappIcon.png";
+import mailgunLogo from "@/assets/mailgun-icon.png";
 
 interface IntegrationResponse {
   success: boolean;
@@ -703,29 +706,39 @@ export const IntegrationsTab = () => {
 
     setIsLoadingMailgun(true);
     try {
-      const response = await axios.get(`${APP_BACKEND_URL}/company-config`, {
-        headers: {
-          Authorization: `Bearer ${user.token}`,
-          "ngrok-skip-browser-warning": "true",
-        },
-      });
+      const response = await axios.get(
+        `${APP_BACKEND_URL}/integration/mailgun`,
+        {
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
 
-      if (response.data?.success && response.data?.data?.mailgunConfig) {
-        const config = response.data.data.mailgunConfig;
+      if (
+        response.data?.success &&
+        response.data?.integration?.connectionData?.metadata
+      ) {
+        const config = response.data.integration.connectionData.metadata;
         setMailgunConfig({
           apiKey: config.apiKey || "",
           domain: config.domain || "",
           apiUrl: config.apiUrl || "",
           webhookSigningKey: config.webhookSigningKey || "",
         });
+        setMailgunValidated(response.data.integration.isConnected || false);
       }
-    } catch (error: unknown) {
-      console.error("Error loading Mailgun config:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load Mailgun configuration.",
-        variant: "destructive",
-      });
+    } catch (error: any) {
+      // If 404, integration doesn't exist yet - that's okay
+      if (error?.response?.status !== 404) {
+        console.error("Error loading Mailgun config:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load Mailgun configuration.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoadingMailgun(false);
     }
@@ -959,13 +972,13 @@ export const IntegrationsTab = () => {
         <div className="space-y-4 sm:space-y-6 rounded-2xl sm:rounded-3xl border border-white/10 bg-white/[0.02] p-4 sm:p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3 sm:gap-4">
-              <img
-                src="/assets/google-logo.svg"
-                width={30}
-                height={30}
-                alt="Google logo"
-                className="flex-shrink-0"
-              />
+              <div className="flex-shrink-0 w-[30px] h-[30px] flex items-center justify-center overflow-hidden">
+                <img
+                  src="/assets/google-logo.svg"
+                  alt="Google logo"
+                  className="w-[30px] h-[30px] object-cover"
+                />
+              </div>
               <div className="min-w-0 flex-1">
                 <p className="font-medium text-white text-sm sm:text-base">
                   Google
@@ -1100,8 +1113,12 @@ export const IntegrationsTab = () => {
         <div className="space-y-4 sm:space-y-6 rounded-2xl sm:rounded-3xl border border-white/10 bg-white/[0.02] p-4 sm:p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3 sm:gap-4">
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-sky-600 text-sm font-semibold text-white flex-shrink-0">
-                f
+              <div className="flex-shrink-0 w-[30px] h-[30px] flex items-center justify-center overflow-hidden">
+                <img
+                  src={facebookLogo}
+                  alt="Facebook logo"
+                  className="w-[30px] h-[30px] object-cover"
+                />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="font-medium text-white text-sm sm:text-base">
@@ -1205,8 +1222,12 @@ export const IntegrationsTab = () => {
         <div className="space-y-4 sm:space-y-6 rounded-2xl sm:rounded-3xl border border-white/10 bg-white/[0.02] p-4 sm:p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3 sm:gap-4">
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 text-xs font-semibold text-white flex-shrink-0">
-                WA
+              <div className="flex-shrink-0 w-[30px] h-[30px] flex items-center justify-center overflow-hidden">
+                <img
+                  src={whatsappLogo}
+                  alt="WhatsApp logo"
+                  className="w-[30px] h-[30px] object-cover scale-150"
+                />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="font-medium text-white text-sm sm:text-base">
@@ -1460,8 +1481,12 @@ export const IntegrationsTab = () => {
         <div className="space-y-4 sm:space-y-6 rounded-2xl sm:rounded-3xl border border-white/10 bg-white/[0.02] p-4 sm:p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3 sm:gap-4">
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-purple-600 text-xs font-semibold text-white flex-shrink-0">
-                MG
+              <div className="flex-shrink-0 w-[30px] h-[30px] flex items-center justify-center overflow-hidden">
+                <img
+                  src={mailgunLogo}
+                  alt="Mailgun logo"
+                  className="w-[30px] h-[30px] object-cover"
+                />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="font-medium text-white text-sm sm:text-base">
