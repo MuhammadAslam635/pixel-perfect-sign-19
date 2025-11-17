@@ -46,11 +46,17 @@ export default function AuthLayout({
 
       <div className="min-h-screen flex items-center justify-center py-6 relative z-10">
         <div className={`w-full ${maxWidthClass} relative`}>
-          <div className="absolute -top-20 -right-20 w-[260px] h-[260px] -z-10">
-            <div className="w-full h-full rounded-full bg-gradient-to-br from-[#66B0B7] to-[#3E64B3]" />
+          <div className="absolute -top-24 -right-24 w-[320px] h-[320px] -z-10">
+            <div
+              className="absolute inset-0 rounded-full bg-gradient-to-br from-[#66B0B7] via-[#4D7FDB] to-[#243B63] opacity-90"
+              style={{
+                filter: "",
+                transform: "scale(1.05)",
+              }}
+            />
           </div>
 
-          <div
+          {/* <div
             className="absolute -bottom-10 left-1/2 -translate-x-1/2 w-[85%] h-36 pointer-events-none -z-10"
             style={{
               background:
@@ -59,22 +65,25 @@ export default function AuthLayout({
               opacity: 0.6,
               mixBlendMode: "screen",
             }}
-          />
+          /> */}
 
-          <div className="relative rounded-3xl p-7 border-[2.5px] border-white/15 bg-white/10 backdrop-blur-3xl shadow-card ring-1 ring-white/10">
-            <div className="pointer-events-none absolute inset-0 rounded-3xl bg-gradient-to-br from-white/20 via-white/10 to-transparent" />
-            <div className="flex justify-center mb-4">
-              <img src={cardIcon} alt="Logo" className="w-12 h-12" />
-            </div>
-            <h2 className="text-2xl font-semibold text-center text-foreground mb-1">
-              {title}
-            </h2>
-            {subtitle && (
-              <div className="text-center text-muted-foreground/60 text-xs mb-4">
-                {subtitle}
+          <div className="relative rounded-[34px] p-7 border-[1px] border-cyan/50 bg-gradient-to-r from-white/30 to-transparent backdrop-blur-[40px] shadow-card ring-1 ring-white/15 overflow-hidden">
+            {/* <div className="pointer-events-none absolute inset-0 rounded-[34px] bg-gradient-to-br from-white/45 via-white/10 to-transparent opacity-90 mix-blend-screen" /> */}
+            {/* <div className="pointer-events-none absolute inset-x-2 top-2 rounded-[30px] h-1/2 bg-white/40 opacity-80 blur-2xl" /> */}
+            <div className="relative z-10">
+              <div className="flex justify-center mb-4">
+                <img src={cardIcon} alt="Logo" className="w-12 h-12" />
               </div>
-            )}
-            {children}
+              <h2 className="text-2xl font-semibold text-center text-foreground mb-1">
+                {title}
+              </h2>
+              {subtitle && (
+                <div className="text-center text-muted-foreground/60 text-xs mb-4">
+                  {subtitle}
+                </div>
+              )}
+              {children}
+            </div>
           </div>
         </div>
       </div>
