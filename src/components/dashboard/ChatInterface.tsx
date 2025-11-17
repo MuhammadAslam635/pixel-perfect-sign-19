@@ -282,74 +282,112 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
                       : "rounded-br-md bg-[linear-gradient(226.23deg,_#3E65B4_0%,_#68B3B7_100%)] text-white"
                   )}
                 >
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    rehypePlugins={[rehypeRaw, rehypeSanitize]}
-                    components={{
-                      table: ({ node, ...props }) => (
-                        <div className="my-4 max-w-[600px] overflow-x-auto rounded-lg border border-white/20">
-                          <table
-                            className="w-full table-auto border-collapse"
-                            {...props}
-                          />
-                        </div>
-                      ),
-                      thead: ({ node, ...props }) => (
-                        <thead className="bg-white/10" {...props} />
-                      ),
-                      tbody: ({ node, ...props }) => (
-                        <tbody
-                          className="divide-y divide-white/10"
-                          {...props}
-                        />
-                      ),
-                      tr: ({ node, ...props }) => (
-                        <tr
-                          className="transition-colors hover:bg-white/5"
-                          {...props}
-                        />
-                      ),
-                      th: ({ node, ...props }) => (
-                        <th
-                          className="max-w-[200px] break-words border border-white/20 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-white"
-                          {...props}
-                        />
-                      ),
-                      td: ({ node, ...props }) => (
-                        <td
-                          className="max-w-[200px] break-words border border-white/20 px-4 py-3 text-sm text-white/90"
-                          {...props}
-                        />
-                      ),
-                      a: ({ node, ...props }) => (
-                        <a
-                          className="max-w-full break-all text-blue-400 underline hover:text-blue-300"
-                          {...props}
-                        />
-                      ),
-                      code: ({ node, inline, ...props }: any) =>
-                        inline ? (
-                          <code
-                            className="max-w-full break-all rounded bg-white/10 px-1 py-0.5 text-xs"
-                            {...props}
-                          />
-                        ) : (
-                          <code
-                            className="my-2 block max-w-[600px] overflow-x-auto rounded bg-white/10 p-2 text-xs"
+                  <div className="text-left">
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      rehypePlugins={[rehypeRaw, rehypeSanitize]}
+                      components={{
+                        table: ({ node, ...props }) => (
+                          <div className="my-4 max-w-[600px] overflow-x-auto rounded-lg border border-white/20 text-left">
+                            <table
+                              className="w-full table-auto border-collapse text-left"
+                              {...props}
+                            />
+                          </div>
+                        ),
+                        thead: ({ node, ...props }) => (
+                          <thead className="bg-white/10 text-left" {...props} />
+                        ),
+                        tbody: ({ node, ...props }) => (
+                          <tbody
+                            className="divide-y divide-white/10 text-left"
                             {...props}
                           />
                         ),
-                      p: ({ node, ...props }) => (
-                        <p
-                          className="mb-2 max-w-[600px] break-words text-left"
-                          style={{ overflowWrap: "anywhere" }}
-                          {...props}
-                        />
-                      ),
-                    }}
-                  >
-                    {msg.content}
-                  </ReactMarkdown>
+                        tr: ({ node, ...props }) => (
+                          <tr
+                            className="transition-colors hover:bg-white/5 text-left"
+                            {...props}
+                          />
+                        ),
+                        th: ({ node, ...props }) => (
+                          <th
+                            className="max-w-[200px] break-words border border-white/20 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-white"
+                            {...props}
+                          />
+                        ),
+                        td: ({ node, ...props }) => (
+                          <td
+                            className="max-w-[200px] break-words border border-white/20 px-4 py-3 text-left text-sm text-white/90"
+                            {...props}
+                          />
+                        ),
+                        a: ({ node, ...props }) => (
+                          <a
+                            className="max-w-full break-all text-left text-blue-400 underline hover:text-blue-300"
+                            {...props}
+                          />
+                        ),
+                        code: ({ node, inline, ...props }: any) =>
+                          inline ? (
+                            <code
+                              className="max-w-full break-all rounded bg-white/10 px-1 py-0.5 text-left text-xs"
+                              {...props}
+                            />
+                          ) : (
+                            <code
+                              className="my-2 block max-w-[600px] overflow-x-auto rounded bg-white/10 p-2 text-left text-xs"
+                              {...props}
+                            />
+                          ),
+                        p: ({ node, ...props }) => (
+                          <p
+                            className="mb-2 max-w-[600px] break-words text-left"
+                            style={{ overflowWrap: "anywhere" }}
+                            {...props}
+                          />
+                        ),
+                        div: ({ node, ...props }: any) => (
+                          <div className="text-left" {...props} />
+                        ),
+                        ul: ({ node, ...props }) => (
+                          <ul
+                            className="list-inside list-disc text-left"
+                            {...props}
+                          />
+                        ),
+                        ol: ({ node, ...props }) => (
+                          <ol
+                            className="list-inside list-decimal text-left"
+                            {...props}
+                          />
+                        ),
+                        li: ({ node, ...props }) => (
+                          <li className="text-left" {...props} />
+                        ),
+                        h1: ({ node, ...props }) => (
+                          <h1 className="text-left" {...props} />
+                        ),
+                        h2: ({ node, ...props }) => (
+                          <h2 className="text-left" {...props} />
+                        ),
+                        h3: ({ node, ...props }) => (
+                          <h3 className="text-left" {...props} />
+                        ),
+                        h4: ({ node, ...props }) => (
+                          <h4 className="text-left" {...props} />
+                        ),
+                        h5: ({ node, ...props }) => (
+                          <h5 className="text-left" {...props} />
+                        ),
+                        h6: ({ node, ...props }) => (
+                          <h6 className="text-left" {...props} />
+                        ),
+                      }}
+                    >
+                      {msg.content}
+                    </ReactMarkdown>
+                  </div>
                 </div>
               </div>
             );
