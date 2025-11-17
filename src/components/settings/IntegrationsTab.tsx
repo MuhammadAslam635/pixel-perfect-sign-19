@@ -81,6 +81,17 @@ export const IntegrationsTab = () => {
     phoneNumberId: string | null;
   }>({ open: false, phoneNumberId: null });
   const [isDisconnectingWhatsApp, setIsDisconnectingWhatsApp] = useState(false);
+  const [mailgunConfig, setMailgunConfig] = useState({
+    apiKey: "",
+    domain: "",
+    apiUrl: "",
+    webhookSigningKey: "",
+  });
+  const [isLoadingMailgun, setIsLoadingMailgun] = useState(false);
+  const [isSavingMailgun, setIsSavingMailgun] = useState(false);
+  const [isValidatingMailgun, setIsValidatingMailgun] = useState(false);
+  const [showMailgunForm, setShowMailgunForm] = useState(false);
+  const [mailgunValidated, setMailgunValidated] = useState(false);
 
   const {
     mutateAsync: fetchFacebookRedirectUrl,
@@ -107,6 +118,7 @@ export const IntegrationsTab = () => {
   const user = getUserData();
   const canManageWhatsApp =
     user?.role === "Company" || user?.role === "CompanyAdmin";
+  const canManageMailgun = user?.role === "Company";
 
   const facebookConnected = facebookStatus?.connected ?? false;
   const facebookIntegration = facebookStatus?.integration;
@@ -685,6 +697,244 @@ export const IntegrationsTab = () => {
     }
   };
 
+  // Mailgun configuration functions
+  const fetchMailgunConfig = async () => {
+    if (!user?.token || !canManageMailgun) return;
+
+    setIsLoadingMailgun(true);
+    try {
+      const response = await axios.get(`${APP_BACKEND_URL}/company-config`, {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+
+      if (response.data?.success && response.data?.data?.mailgunConfig) {
+        const config = response.data.data.mailgunConfig;
+        setMailgunConfig({
+          apiKey: config.apiKey || "",
+          domain: config.domain || "",
+          apiUrl: config.apiUrl || "",
+          webhookSigningKey: config.webhookSigningKey || "",
+        });
+      }
+    } catch (error: unknown) {
+      console.error("Error loading Mailgun config:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load Mailgun configuration.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingMailgun(false);
+    }
+  };
+
+  useEffect(() => {
+    if (canManageMailgun) {
+      fetchMailgunConfig();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.token, canManageMailgun]);
+
+  const handleMailgunInputChange = (
+    field: keyof typeof mailgunConfig,
+    value: string
+  ) => {
+    setMailgunConfig((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleValidateMailgunConfig = async () => {
+    if (!canManageMailgun) {
+      toast({
+        title: "Access restricted",
+        description: "Only company owners can manage Mailgun settings.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const requiredFields: Array<keyof typeof mailgunConfig> = [
+      "apiKey",
+      "domain",
+      "apiUrl",
+      "webhookSigningKey",
+    ];
+
+    for (const field of requiredFields) {
+      if (!mailgunConfig[field]) {
+        toast({
+          title: "Missing information",
+          description: "Please fill in all required Mailgun fields.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    if (!user?.token) {
+      toast({
+        title: "Error",
+        description: "User not authenticated. Please login again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsValidatingMailgun(true);
+    try {
+      const response = await axios.post(
+        `${APP_BACKEND_URL}/integration/mailgun/validate`,
+        {
+          apiKey: mailgunConfig.apiKey.trim(),
+          domain: mailgunConfig.domain.trim(),
+          apiUrl: mailgunConfig.apiUrl.trim(),
+          webhookSigningKey: mailgunConfig.webhookSigningKey.trim(),
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+
+      if (response.data?.success) {
+        setMailgunValidated(true);
+        toast({
+          title: "Configuration Validated",
+          description:
+            response.data.message ||
+            "Mailgun configuration validated successfully!",
+        });
+      }
+    } catch (error: any) {
+      console.error("Error validating Mailgun config:", error);
+      setMailgunValidated(false);
+      toast({
+        title: "Validation Failed",
+        description:
+          error?.response?.data?.message ||
+          "Failed to validate Mailgun configuration. Please check your credentials.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsValidatingMailgun(false);
+    }
+  };
+
+  const handleSaveMailgunConfig = async () => {
+    if (!canManageMailgun) {
+      toast({
+        title: "Access restricted",
+        description: "Only company owners can manage Mailgun settings.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!mailgunValidated) {
+      toast({
+        title: "Validation Required",
+        description: "Please validate your configuration before saving.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const requiredFields: Array<keyof typeof mailgunConfig> = [
+      "apiKey",
+      "domain",
+      "apiUrl",
+      "webhookSigningKey",
+    ];
+
+    for (const field of requiredFields) {
+      if (!mailgunConfig[field]) {
+        toast({
+          title: "Missing information",
+          description: "Please fill in all required Mailgun fields.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    if (!user?.token) {
+      toast({
+        title: "Error",
+        description: "User not authenticated. Please login again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSavingMailgun(true);
+    try {
+      const response = await axios.post(
+        `${APP_BACKEND_URL}/integration/mailgun/save`,
+        {
+          apiKey: mailgunConfig.apiKey.trim(),
+          domain: mailgunConfig.domain.trim(),
+          apiUrl: mailgunConfig.apiUrl.trim(),
+          webhookSigningKey: mailgunConfig.webhookSigningKey.trim(),
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+
+      if (response.data?.success) {
+        toast({
+          title: "Mailgun configured",
+          description:
+            response.data.message ||
+            "Mailgun configuration saved successfully.",
+        });
+        setShowMailgunForm(false);
+        setMailgunValidated(false);
+        fetchMailgunConfig();
+      }
+    } catch (error: any) {
+      console.error("Error saving Mailgun config:", error);
+      toast({
+        title: "Error",
+        description:
+          error?.response?.data?.message ||
+          "Failed to save Mailgun configuration. Please verify your details.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingMailgun(false);
+    }
+  };
+
+  const handleToggleMailgunForm = () => {
+    if (!canManageMailgun) {
+      toast({
+        title: "Access restricted",
+        description: "Only company owners can manage Mailgun settings.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setShowMailgunForm((prev) => !prev);
+    if (showMailgunForm) {
+      // Reset validation when closing form
+      setMailgunValidated(false);
+    }
+  };
+
+  const mailgunConfigured =
+    mailgunConfig.apiKey &&
+    mailgunConfig.domain &&
+    mailgunConfig.apiUrl &&
+    mailgunConfig.webhookSigningKey;
+
   return (
     <Card className="border-white/10 bg-white/[0.04] backdrop-blur-xl text-white">
       <CardHeader className="border-b border-white/10 bg-white/[0.02] px-4 sm:px-6">
@@ -1202,6 +1452,174 @@ export const IntegrationsTab = () => {
                 >
                   {isSavingWhatsApp ? "Saving..." : "Save Connection"}
                 </Button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-4 sm:space-y-6 rounded-2xl sm:rounded-3xl border border-white/10 bg-white/[0.02] p-4 sm:p-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-purple-600 text-xs font-semibold text-white flex-shrink-0">
+                MG
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-medium text-white text-sm sm:text-base">
+                  Mailgun
+                </p>
+                <p className="text-xs sm:text-sm text-white/60 break-words">
+                  {isLoadingMailgun
+                    ? "Checking configuration..."
+                    : mailgunConfigured
+                    ? "Configured"
+                    : "Configure Mailgun API settings for email functionality."}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 flex-shrink-0">
+              {mailgunConfigured && (
+                <span className="flex items-center gap-1 text-xs sm:text-sm text-emerald-400">
+                  <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                  <span className="hidden sm:inline">Configured</span>
+                </span>
+              )}
+              <Button
+                type="button"
+                size="sm"
+                onClick={handleToggleMailgunForm}
+                className="w-full sm:w-auto bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3] text-xs sm:text-sm"
+                style={{
+                  boxShadow:
+                    "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                }}
+                disabled={!canManageMailgun}
+              >
+                {!canManageMailgun
+                  ? "Restricted"
+                  : showMailgunForm
+                  ? "Close"
+                  : mailgunConfigured
+                  ? "Edit Configuration"
+                  : "Configure"}
+              </Button>
+            </div>
+          </div>
+
+          {!canManageMailgun && (
+            <p className="text-xs text-amber-300 break-words">
+              Only company owners can configure Mailgun settings.
+            </p>
+          )}
+
+          {showMailgunForm && (
+            <div className="space-y-4 rounded-2xl sm:rounded-3xl border border-white/10 bg-white/[0.03] p-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2 sm:col-span-1">
+                  <Label className="text-white/80 text-sm">
+                    MAILGUN_API_KEY <span className="text-red-400">*</span>
+                  </Label>
+                  <Input
+                    type="password"
+                    value={mailgunConfig.apiKey}
+                    onChange={(event) =>
+                      handleMailgunInputChange("apiKey", event.target.value)
+                    }
+                    placeholder="Enter your Mailgun API key"
+                    className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 text-sm sm:text-base"
+                  />
+                </div>
+                <div className="space-y-2 sm:col-span-1">
+                  <Label className="text-white/80 text-sm">
+                    MAILGUN_DOMAIN <span className="text-red-400">*</span>
+                  </Label>
+                  <Input
+                    value={mailgunConfig.domain}
+                    onChange={(event) =>
+                      handleMailgunInputChange("domain", event.target.value)
+                    }
+                    placeholder="e.g., mg.yourdomain.com"
+                    className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 text-sm sm:text-base"
+                  />
+                </div>
+                <div className="space-y-2 sm:col-span-1">
+                  <Label className="text-white/80 text-sm">
+                    MAILGUN_API_URL <span className="text-red-400">*</span>
+                  </Label>
+                  <Input
+                    value={mailgunConfig.apiUrl}
+                    onChange={(event) =>
+                      handleMailgunInputChange("apiUrl", event.target.value)
+                    }
+                    placeholder="e.g., https://api.mailgun.net"
+                    className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 text-sm sm:text-base"
+                  />
+                </div>
+                <div className="space-y-2 sm:col-span-1">
+                  <Label className="text-white/80 text-sm">
+                    MAILGUN_WEBHOOK_SIGNING_KEY{" "}
+                    <span className="text-red-400">*</span>
+                  </Label>
+                  <Input
+                    type="password"
+                    value={mailgunConfig.webhookSigningKey}
+                    onChange={(event) =>
+                      handleMailgunInputChange(
+                        "webhookSigningKey",
+                        event.target.value
+                      )
+                    }
+                    placeholder="Enter webhook signing key"
+                    className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 text-sm sm:text-base"
+                  />
+                </div>
+              </div>
+              {mailgunValidated && (
+                <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/30 p-3">
+                  <p className="text-emerald-400 text-sm font-medium flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                    Configuration validated successfully
+                  </p>
+                </div>
+              )}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setShowMailgunForm(false);
+                    setMailgunValidated(false);
+                    fetchMailgunConfig();
+                  }}
+                  className="w-full sm:w-auto border-white/20 text-white/70 hover:bg-white/10 text-sm"
+                >
+                  Cancel
+                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    onClick={handleValidateMailgunConfig}
+                    disabled={isValidatingMailgun || isSavingMailgun}
+                    variant="outline"
+                    className="w-full sm:w-auto border-cyan-400/50 text-cyan-300 hover:bg-cyan-500/10 text-sm"
+                  >
+                    {isValidatingMailgun
+                      ? "Validating..."
+                      : "Check Configuration"}
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={handleSaveMailgunConfig}
+                    disabled={isSavingMailgun || !mailgunValidated}
+                    className="w-full sm:w-auto bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3] text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{
+                      boxShadow:
+                        "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                    }}
+                  >
+                    {isSavingMailgun ? "Saving..." : "Save Configuration"}
+                  </Button>
+                </div>
               </div>
             </div>
           )}
