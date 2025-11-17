@@ -119,16 +119,15 @@ export const Navigation = () => {
             className={`group relative overflow-visible flex-none aspect-square flex h-10 w-10 items-center justify-center rounded-full border border-white/40 px-0 text-xs font-medium tracking-wide transition-[width,background-color,box-shadow,padding,gap] duration-400 ease-elastic sm:text-sm ${
               isActive
                 ? "text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] justify-start w-auto h-10 px-2.5 gap-2 before:from-white/25 z-10"
-                : "bg-white/5 text-white/85 hover:bg-[#2F2F2F]/60 hover:text-white hover:shadow-[0_16px_28px_rgba(0,0,0,0.35)] hover:justify-start hover:w-auto hover:h-10 hover:px-2.5 hover:gap-2 hover:z-10"
+                : "text-white/85 hover:text-white hover:shadow-[0_16px_28px_rgba(0,0,0,0.35)] hover:justify-start hover:w-auto hover:h-10 hover:px-2.5 hover:gap-2 hover:z-10"
             } snap-start lg:snap-center before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/15 before:to-transparent before:transition-all before:duration-300 before:ease-in-out hover:before:from-white/25 hover:before:duration-200`}
-            style={
-              isActive
-                ? {
-                    background:
-                      "radial-gradient(circle at left, rgba(64, 102, 179, 0.4) 0%, rgba(103, 176, 183, 0.3) 50%, transparent 70%)",
-                  }
-                : undefined
-            }
+            style={{
+              background: isActive
+                ? "radial-gradient(circle at left, rgba(64, 102, 179, 0.4) 0%, rgba(103, 176, 183, 0.3) 50%, transparent 70%)"
+                : "rgba(255, 255, 255, 0.1)",
+              boxShadow:
+                "rgba(255, 255, 255, 0.16) 0px 3.43px 3.43px 0px inset, rgba(255, 255, 255, 0.16) 0px -3.43px 3.43px 0px inset",
+            }}
             onClick={() => handleNavigate(link)}
             aria-label={link.label}
             type="button"
