@@ -1,5 +1,6 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 import {
   Home,
   BarChart3,
@@ -13,14 +14,20 @@ import {
   Settings,
   Bell,
   Bot,
+  PhoneCall,
 } from "lucide-react";
+import { RootState } from "@/store/store";
+import { getUserData } from "@/utils/authHelpers";
 type NavLink = {
   id: string;
   label: string;
   icon: typeof Home;
   path: string;
   match?: (pathname: string) => boolean;
+  roles?: string[];
 };
+
+const contactRoles = ["CompanyUser"];
 
 const navLinks: NavLink[] = [
   {
@@ -46,6 +53,14 @@ const navLinks: NavLink[] = [
     icon: Target,
     path: "/campaigns",
     match: (pathname: string) => pathname.startsWith("/campaigns"),
+  },
+  {
+    id: "contact-now",
+    label: "Contact",
+    icon: PhoneCall,
+    path: "/contact-now",
+    match: (pathname: string) => pathname.startsWith("/contact-now"),
+    roles: contactRoles,
   },
   // {
   //   id: "company-knowledge",
@@ -85,8 +100,8 @@ const profileMenu = [
   { title: "Sign out", meta: "Log out of EmpaTech OS" },
 ];
 
-const resolveActiveNav = (pathname: string) => {
-  const match = navLinks.find((link) =>
+const resolveActiveNav = (pathname: string, links: NavLink[]) => {
+  const match = links.find((link) =>
     link.match ? link.match(pathname) : link.path === pathname
   );
   return match?.id ?? "home";
@@ -94,15 +109,29 @@ const resolveActiveNav = (pathname: string) => {
 export const Navigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useSelector((state: RootState) => state.auth);
+  const sessionUser = user || getUserData();
+  const userRole = sessionUser?.role;
+  const filteredNavLinks = useMemo(() => {
+    return navLinks.filter((link) => {
+      if (!link.roles || link.roles.length === 0) {
+        return true;
+      }
+      if (!userRole) {
+        return false;
+      }
+      return link.roles.includes(userRole);
+    });
+  }, [userRole]);
   const [activeNav, setActiveNav] = useState(
-    resolveActiveNav(location.pathname)
+    resolveActiveNav(location.pathname, filteredNavLinks)
   );
 
   const actionsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setActiveNav(resolveActiveNav(location.pathname));
-  }, [location.pathname]);
+    setActiveNav(resolveActiveNav(location.pathname, filteredNavLinks));
+  }, [location.pathname, filteredNavLinks]);
 
   const handleNavigate = (link: NavLink) => {
     setActiveNav(link.id);
@@ -110,7 +139,7 @@ export const Navigation = () => {
   };
   return (
     <nav className="scrollbar-hide flex-1 min-w-0 w-full lg:w-[780px] flex items-center justify-start lg:justify-center gap-2 overflow-x-auto flex-nowrap snap-x snap-mandatory pl-2 sm:pl-3 md:pl-4 pr-2 sm:pr-4">
-      {navLinks.map((link) => {
+      {filteredNavLinks.map((link) => {
         const Icon = link.icon;
         const isActive = activeNav === link.id;
         return (

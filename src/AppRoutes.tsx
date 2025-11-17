@@ -20,6 +20,8 @@ import UserCreate from "@/pages/users/UserCreate";
 import UserEdit from "@/pages/users/UserEdit";
 import ContactNow from "@/pages/twilio-calling/ContactNow";
 
+const contactNowRoles = ["CompanyUser"];
+
 const AppRoutes = () => {
   return (
     <Routes>
@@ -157,7 +159,7 @@ const AppRoutes = () => {
       <Route
         path="/contact-now"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={contactNowRoles}>
             <ContactNow />
           </ProtectedRoute>
         }

@@ -43,6 +43,10 @@ export interface CreateUserData {
   password: string;
   role: string;
   status: string;
+  twilio?: {
+    areaCode?: string;
+    capabilities?: Array<"voice" | "sms">;
+  };
 }
 
 export interface UpdateUserData {
