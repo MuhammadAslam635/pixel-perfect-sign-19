@@ -1,4 +1,4 @@
-import { FC, useMemo } from "react";
+import { FC, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -63,7 +63,11 @@ const CompaniesList: FC<CompaniesListProps> = ({
     return url;
   };
   // Calculate pagination page range
-  const paginationPages = useMemo<{ pages: number[]; startPage: number; endPage: number } | null>(() => {
+  const paginationPages = useMemo<{
+    pages: number[];
+    startPage: number;
+    endPage: number;
+  } | null>(() => {
     if (totalPages <= 1) return null;
 
     const maxVisible = 5;
@@ -120,10 +124,10 @@ const CompaniesList: FC<CompaniesListProps> = ({
 
   // Render loading state
   const renderLoading = () => (
-        <div className="flex flex-col items-center justify-center py-16">
+    <div className="flex flex-col items-center justify-center py-16">
       <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin mb-3" />
-          <p className="text-white/60 text-sm">Loading companies...</p>
-        </div>
+      <p className="text-white/60 text-sm">Loading companies...</p>
+    </div>
   );
 
   // Render empty state
@@ -165,7 +169,9 @@ const CompaniesList: FC<CompaniesListProps> = ({
       >
         <div className="flex-1">
           <div className="flex flex-wrap items-center gap-2 text-white/90">
-            <h3 className="text-base sm:text-lg md:text-xl font-semibold text-white">{company.name}</h3>
+            <h3 className="text-base sm:text-lg md:text-xl font-semibold text-white">
+              {company.name}
+            </h3>
             {company.industry && (
               <span className="text-xs sm:text-sm text-white/70 font-medium">
                 | {company.industry}
@@ -173,9 +179,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
             )}
           </div>
           <p className="mt-2 text-xs sm:text-sm text-white/65 line-clamp-2">
-            {company.description ||
-              company.about ||
-              "No description available"}
+            {company.description || company.about || "No description available"}
           </p>
           <div className="mt-3 sm:mt-5 flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-white/75">
             <Badge className="rounded-full bg-white/15 text-white border-white/20 px-3 sm:px-4 py-1 text-xs">
@@ -229,15 +233,19 @@ const CompaniesList: FC<CompaniesListProps> = ({
               {company.address}
             </p>
           )}
-          <Button
-            size="sm"
-            onClick={() => onSelectCompany(company._id)}
-            className="rounded-full bg-white/15 px-4 sm:px-6 py-1.5 text-xs font-semibold text-white hover:bg-white/25 border border-white/20 w-full md:w-auto"
-          >
-            <span className="hidden sm:inline">{isActive ? "Close Executives" : "View Executives"}</span>
-            <span className="sm:hidden">{isActive ? "Close" : "View"}</span>
-            <ArrowRight className="ml-2 w-3 h-3" />
-          </Button>
+          <div className="flex flex-col sm:flex-row items-center gap-2 w-full md:w-auto">
+            <Button
+              size="sm"
+              onClick={() => onSelectCompany(company._id)}
+              className="rounded-full bg-white/15 px-4 sm:px-6 py-1.5 text-xs font-semibold text-white hover:bg-white/25 border border-white/20 w-full md:w-auto"
+            >
+              <span className="hidden sm:inline">
+                {isActive ? "Close Executives" : "View Executives"}
+              </span>
+              <span className="sm:hidden">{isActive ? "Close" : "View"}</span>
+              <ArrowRight className="ml-2 w-3 h-3" />
+            </Button>
+          </div>
         </div>
       </Card>
     );
@@ -321,8 +329,8 @@ const CompaniesList: FC<CompaniesListProps> = ({
                     {totalPages}
                   </PaginationLink>
                 </PaginationItem>
-        </>
-      )}
+              </>
+            )}
 
             <PaginationItem>
               <PaginationNext
@@ -347,29 +355,27 @@ const CompaniesList: FC<CompaniesListProps> = ({
     <div className="flex flex-col h-full">
       {/* Scrollable content area */}
       <div className="flex-1 overflow-y-auto space-y-4 pb-4 pr-3 custom-scrollbar-list">
-        {loading ? (
-          renderLoading()
-        ) : companies.length === 0 ? (
-          renderEmpty()
-        ) : (
-          companies.map((company) => (
-            <div key={company._id}>
-              {renderCompanyCard(company)}
-              {/* Show executives panel inline on mobile/tablet after the clicked company */}
-              {selectedCompanyId === company._id && (
-                <div className="lg:hidden mt-4 mb-4">
-                  <Card className="bg-[#1f3032] border-[#3A3A3A] p-3 sm:p-4">
-                    <CompanyExecutivesPanel
-                      company={selectedCompany}
-                      onViewAllLeads={onViewAllLeads || (() => {})}
-                      onExecutiveSelect={onExecutiveSelect}
-                    />
-                  </Card>
-                </div>
-              )}
-            </div>
-          ))
-        )}
+        {loading
+          ? renderLoading()
+          : companies.length === 0
+          ? renderEmpty()
+          : companies.map((company) => (
+              <div key={company._id}>
+                {renderCompanyCard(company)}
+                {/* Show executives panel inline on mobile/tablet after the clicked company */}
+                {selectedCompanyId === company._id && (
+                  <div className="lg:hidden mt-4 mb-4">
+                    <Card className="bg-[#1f3032] border-[#3A3A3A] p-3 sm:p-4">
+                      <CompanyExecutivesPanel
+                        company={selectedCompany}
+                        onViewAllLeads={onViewAllLeads || (() => {})}
+                        onExecutiveSelect={onExecutiveSelect}
+                      />
+                    </Card>
+                  </div>
+                )}
+              </div>
+            ))}
       </div>
 
       {/* Fixed pagination at bottom */}

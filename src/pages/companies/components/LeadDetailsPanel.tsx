@@ -1,4 +1,4 @@
-import { FC } from "react";
+import { FC, useState } from "react";
 import {
   Users,
   Phone,
@@ -6,10 +6,14 @@ import {
   Linkedin,
   MessageCircle,
   Send,
+  Upload,
+  Loader2,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Lead } from "@/services/leads.service";
 import { CompanyPerson } from "@/services/companies.service";
+import { highlevelService } from "@/services/highlevel.service";
+import { toast } from "sonner";
 
 type LeadDetailsPanelProps = {
   lead?: Lead;
@@ -39,6 +43,8 @@ const LeadDetailsPanel: FC<LeadDetailsPanelProps> = ({
   onPhoneClick,
   onLinkedinClick,
 }) => {
+  const [syncingToGHL, setSyncingToGHL] = useState(false);
+
   const fallbackEmail = toStringOrUndefined(fallbackExecutive?.email);
   const fallbackPhone = toStringOrUndefined(fallbackExecutive?.phone);
   const fallbackLinkedin = toStringOrUndefined(fallbackExecutive?.linkedin);
@@ -68,6 +74,33 @@ const LeadDetailsPanel: FC<LeadDetailsPanelProps> = ({
   const isPhoneDisabled = !phone;
   const isEmailDisabled = !email;
   const isLinkedinDisabled = !linkedin;
+
+  const handleSyncToGHL = async () => {
+    if (!lead?._id || !lead?.companyId) {
+      toast.error("Cannot sync: Missing lead or company information");
+      return;
+    }
+
+    setSyncingToGHL(true);
+    try {
+      await highlevelService.createContactFromCompanyPerson({
+        companyPersonId: lead._id,
+        companyId: lead.companyId,
+        type: "lead",
+        source: "api v1",
+        tags: [],
+      });
+      toast.success("Lead synced to GoHighLevel successfully!");
+    } catch (error: any) {
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to sync lead to GoHighLevel";
+      toast.error(errorMessage);
+    } finally {
+      setSyncingToGHL(false);
+    }
+  };
 
   return (
     <>
@@ -166,6 +199,25 @@ const LeadDetailsPanel: FC<LeadDetailsPanelProps> = ({
           >
             <Send className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
           </button>
+          {lead && (
+            <button
+              className={`h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center border transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary/40 ${
+                syncingToGHL
+                  ? "bg-primary/50 border-primary/50 text-white cursor-wait"
+                  : "bg-primary border-primary text-white hover:bg-primary/80 hover:border-primary/80"
+              }`}
+              onClick={handleSyncToGHL}
+              disabled={syncingToGHL}
+              aria-disabled={syncingToGHL}
+              title="Sync to GoHighLevel"
+            >
+              {syncingToGHL ? (
+                <Loader2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 animate-spin" />
+              ) : (
+                <Upload className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+              )}
+            </button>
+          )}
         </div>
       </div>
 
@@ -187,6 +239,25 @@ const LeadDetailsPanel: FC<LeadDetailsPanelProps> = ({
             <p className="text-xs text-white/40">
               {displayPosition || "Chief Executive Officer"}
             </p>
+            {lead && (
+              <button
+                onClick={handleSyncToGHL}
+                disabled={syncingToGHL}
+                className="mt-4 px-4 py-2 bg-primary hover:bg-primary/80 disabled:bg-primary/50 disabled:cursor-wait text-white text-xs font-medium rounded-full flex items-center gap-2 transition-colors"
+              >
+                {syncingToGHL ? (
+                  <>
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    <span>Syncing...</span>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-3 h-3" />
+                    <span>Sync to GoHighLevel</span>
+                  </>
+                )}
+              </button>
+            )}
           </div>
         ) : (
           <p className="text-xs sm:text-sm text-muted-foreground/60 text-center py-6 sm:py-8">

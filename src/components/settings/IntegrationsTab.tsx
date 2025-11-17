@@ -95,6 +95,17 @@ export const IntegrationsTab = () => {
   const [isValidatingMailgun, setIsValidatingMailgun] = useState(false);
   const [showMailgunForm, setShowMailgunForm] = useState(false);
   const [mailgunValidated, setMailgunValidated] = useState(false);
+  const [ghlConfig, setGhlConfig] = useState({
+    apiKey: "",
+    locationId: "",
+    subAccountId: "",
+  });
+  const [isLoadingGHL, setIsLoadingGHL] = useState(false);
+  const [isSavingGHL, setIsSavingGHL] = useState(false);
+  const [isDisconnectingGHL, setIsDisconnectingGHL] = useState(false);
+  const [showGHLForm, setShowGHLForm] = useState(false);
+  const [ghlConnected, setGhlConnected] = useState(false);
+  const [ghlDisconnectDialog, setGhlDisconnectDialog] = useState(false);
 
   const {
     mutateAsync: fetchFacebookRedirectUrl,
@@ -122,6 +133,8 @@ export const IntegrationsTab = () => {
   const canManageWhatsApp =
     user?.role === "Company" || user?.role === "CompanyAdmin";
   const canManageMailgun = user?.role === "Company";
+  const canManageGHL =
+    user?.role === "Company" || user?.role === "CompanyAdmin";
 
   const facebookConnected = facebookStatus?.connected ?? false;
   const facebookIntegration = facebookStatus?.integration;
@@ -948,6 +961,192 @@ export const IntegrationsTab = () => {
     mailgunConfig.apiUrl &&
     mailgunConfig.webhookSigningKey;
 
+  // GoHighLevel integration functions
+  const fetchGHLConnection = async () => {
+    if (!user?.token || !canManageGHL) return;
+
+    setIsLoadingGHL(true);
+    try {
+      const response = await axios.get(
+        `${APP_BACKEND_URL}/highlevel-connection-check`,
+        {
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+
+      if (response.data?.success && response.data?.data) {
+        setGhlConnected(true);
+        // Note: API returns masked values, so we don't populate the form
+        // Users need to re-enter credentials to update
+      } else {
+        setGhlConnected(false);
+      }
+    } catch (error: any) {
+      // If 404, connection doesn't exist yet - that's okay
+      if (error?.response?.status !== 404) {
+        console.error("Error loading GHL connection:", error);
+      }
+      setGhlConnected(false);
+    } finally {
+      setIsLoadingGHL(false);
+    }
+  };
+
+  useEffect(() => {
+    if (canManageGHL) {
+      fetchGHLConnection();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.token, canManageGHL]);
+
+  const handleGHLInputChange = (
+    field: keyof typeof ghlConfig,
+    value: string
+  ) => {
+    setGhlConfig((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleGHLConnect = async () => {
+    if (!canManageGHL) {
+      toast({
+        title: "Access restricted",
+        description:
+          "Only company owners or company admins can manage GoHighLevel settings.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!ghlConfig.apiKey) {
+      toast({
+        title: "Missing information",
+        description: "Please provide your GoHighLevel API Key (JWT token).",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!user?.token) {
+      toast({
+        title: "Error",
+        description: "User not authenticated. Please login again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSavingGHL(true);
+    try {
+      const payload: {
+        apiKey: string;
+        locationId?: string;
+        subAccountId?: string;
+      } = {
+        apiKey: ghlConfig.apiKey.trim(),
+      };
+
+      // Add optional fields if provided
+      if (ghlConfig.locationId.trim()) {
+        payload.locationId = ghlConfig.locationId.trim();
+      }
+      if (ghlConfig.subAccountId.trim()) {
+        payload.subAccountId = ghlConfig.subAccountId.trim();
+      }
+
+      const response = await axios.post(
+        `${APP_BACKEND_URL}/highlevel-connection`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+
+      if (response.data?.success) {
+        toast({
+          title: "GoHighLevel connected",
+          description:
+            response.data.message || "GoHighLevel connection successful.",
+        });
+        setShowGHLForm(false);
+        setGhlConfig({ apiKey: "", locationId: "", subAccountId: "" });
+        fetchGHLConnection();
+      }
+    } catch (error: any) {
+      console.error("Error connecting GoHighLevel:", error);
+      toast({
+        title: "Error",
+        description:
+          error?.response?.data?.message ||
+          "Failed to connect GoHighLevel. Please verify your API key.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingGHL(false);
+    }
+  };
+
+  const handleGHLDisconnect = async () => {
+    if (!user?.token) {
+      toast({
+        title: "Error",
+        description: "User not authenticated. Please login again.",
+        variant: "destructive",
+      });
+      setGhlDisconnectDialog(false);
+      return;
+    }
+
+    try {
+      setIsDisconnectingGHL(true);
+      await axios.delete(`${APP_BACKEND_URL}/highlevel-connection-delete`, {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+
+      toast({
+        title: "Disconnected",
+        description: "GoHighLevel account disconnected successfully.",
+      });
+      setGhlConnected(false);
+      setGhlConfig({ apiKey: "", locationId: "", subAccountId: "" });
+      fetchGHLConnection();
+    } catch (error: unknown) {
+      console.error("Error disconnecting GoHighLevel:", error);
+      toast({
+        title: "Error",
+        description: "Failed to disconnect GoHighLevel account.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDisconnectingGHL(false);
+      setGhlDisconnectDialog(false);
+    }
+  };
+
+  const handleToggleGHLForm = () => {
+    if (!canManageGHL) {
+      toast({
+        title: "Access restricted",
+        description:
+          "Only company owners or company admins can manage GoHighLevel settings.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setShowGHLForm((prev) => !prev);
+    if (showGHLForm) {
+      setGhlConfig({ apiKey: "", locationId: "", subAccountId: "" });
+    }
+  };
+
   return (
     <Card className="border-white/10 bg-white/[0.04] backdrop-blur-xl text-white">
       <CardHeader className="border-b border-white/10 bg-white/[0.02] px-4 sm:px-6">
@@ -1649,7 +1848,168 @@ export const IntegrationsTab = () => {
             </div>
           )}
         </div>
+
+        <div className="space-y-4 sm:space-y-6 rounded-2xl sm:rounded-3xl border border-white/10 bg-white/[0.02] p-4 sm:p-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="flex-shrink-0 w-[30px] h-[30px] flex items-center justify-center overflow-hidden">
+                <div className="w-[30px] h-[30px] rounded-full bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center text-white font-bold text-xs">
+                  GHL
+                </div>
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-medium text-white text-sm sm:text-base">
+                  GoHighLevel
+                </p>
+                <p className="text-xs sm:text-sm text-white/60 break-words">
+                  {isLoadingGHL
+                    ? "Checking connection..."
+                    : ghlConnected
+                    ? "Connected"
+                    : "Connect your GoHighLevel account to sync contacts."}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 flex-shrink-0">
+              {ghlConnected && (
+                <span className="flex items-center gap-1 text-xs sm:text-sm text-emerald-400">
+                  <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                  <span className="hidden sm:inline">Connected</span>
+                </span>
+              )}
+              {ghlConnected ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setGhlDisconnectDialog(true)}
+                  disabled={isDisconnectingGHL}
+                  className="w-full sm:w-auto border-rose-400/50 text-rose-300 hover:bg-rose-500/10 text-xs sm:text-sm"
+                >
+                  {isDisconnectingGHL ? "Disconnecting..." : "Disconnect"}
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleToggleGHLForm}
+                  className="w-full sm:w-auto bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3] text-xs sm:text-sm"
+                  style={{
+                    boxShadow:
+                      "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                  }}
+                  disabled={!canManageGHL}
+                >
+                  {!canManageGHL
+                    ? "Restricted"
+                    : showGHLForm
+                    ? "Close"
+                    : "Connect"}
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {!canManageGHL && (
+            <p className="text-xs text-amber-300 break-words">
+              Contact your company admin to update GoHighLevel configuration.
+            </p>
+          )}
+
+          {showGHLForm && (
+            <div className="space-y-4 rounded-2xl sm:rounded-3xl border border-white/10 bg-white/[0.03] p-4">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-white/80 text-sm">
+                    API Key (JWT Token) <span className="text-red-400">*</span>
+                  </Label>
+                  <Input
+                    type="password"
+                    value={ghlConfig.apiKey}
+                    onChange={(event) =>
+                      handleGHLInputChange("apiKey", event.target.value)
+                    }
+                    placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 text-sm sm:text-base"
+                  />
+                  <p className="text-xs text-white/50">
+                    Your GoHighLevel API key (JWT token). Location ID will be
+                    extracted automatically if not provided.
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-white/80 text-sm">
+                    Location ID (Optional)
+                  </Label>
+                  <Input
+                    value={ghlConfig.locationId}
+                    onChange={(event) =>
+                      handleGHLInputChange("locationId", event.target.value)
+                    }
+                    placeholder="Will be extracted from JWT if not provided"
+                    className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 text-sm sm:text-base"
+                  />
+                  <p className="text-xs text-white/50">
+                    Optional. Will be extracted from your JWT token if not
+                    provided.
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-white/80 text-sm">
+                    Sub-Account ID (Optional)
+                  </Label>
+                  <Input
+                    value={ghlConfig.subAccountId}
+                    onChange={(event) =>
+                      handleGHLInputChange("subAccountId", event.target.value)
+                    }
+                    placeholder="Defaults to Location ID if not provided"
+                    className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 text-sm sm:text-base"
+                  />
+                  <p className="text-xs text-white/50">
+                    Optional. Will default to Location ID if not provided.
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleToggleGHLForm}
+                  className="w-full sm:w-auto border-white/20 text-white/70 hover:bg-white/10 text-sm"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleGHLConnect}
+                  disabled={isSavingGHL || !ghlConfig.apiKey}
+                  className="w-full sm:w-auto bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3] text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{
+                    boxShadow:
+                      "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                  }}
+                >
+                  {isSavingGHL ? "Connecting..." : "Connect"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
       </CardContent>
+
+      <ConfirmDialog
+        open={ghlDisconnectDialog}
+        title="Disconnect GoHighLevel?"
+        description="Contacts will no longer be synced to GoHighLevel after disconnecting."
+        confirmText="Disconnect"
+        cancelText="Cancel"
+        confirmVariant="destructive"
+        isPending={isDisconnectingGHL}
+        onConfirm={handleGHLDisconnect}
+        onCancel={() => setGhlDisconnectDialog(false)}
+      />
 
       <ConfirmDialog
         open={disconnectDialog.open}
