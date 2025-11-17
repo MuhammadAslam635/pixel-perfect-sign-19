@@ -54,15 +54,20 @@ export function TopNav() {
             key={item.url}
             to={item.url}
             end
-            className="group relative overflow-visible flex-none flex items-center justify-center w-10 h-10 rounded-full ring-1 ring-white/40 bg-white/5 transition-all text-white/85 shadow-[0_6px_16px_rgba(0,0,0,0.35)] hover:bg-[#2F2F2F]/60 hover:text-white hover:shadow-[0_16px_28px_rgba(0,0,0,0.35)] hover:z-10 px-0 gap-0 snap-start lg:snap-center before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/15 before:to-transparent hover:before:from-white/25 hover:justify-start hover:w-auto hover:h-10 hover:px-2.5 hover:gap-2"
-            activeClassName="relative z-10 flex-none rounded-full bg-[#2F2F2F]/60 text-white ring-1 ring-white/40 w-auto h-10 justify-start px-2.5 gap-2 is-active whitespace-nowrap overflow-visible shadow-[0_16px_28px_rgba(0,0,0,0.35)] before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/25 before:to-transparent"
+            className="group relative overflow-visible flex-none flex items-center justify-center w-10 h-10 rounded-full ring-1 ring-white/40 transition-all text-white/85 hover:text-white hover:shadow-[0_16px_28px_rgba(0,0,0,0.35)] hover:z-10 px-0 gap-0 snap-start lg:snap-center before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/15 before:to-transparent hover:before:from-white/25 hover:justify-start hover:w-auto hover:h-10 hover:px-2.5 hover:gap-2"
+            style={{
+              background: "rgba(255, 255, 255, 0.1)",
+              boxShadow:
+                "rgba(255, 255, 255, 0.16) 0px 3.43px 3.43px 0px inset, rgba(255, 255, 255, 0.16) 0px -3.43px 3.43px 0px inset",
+            }}
+            activeClassName="relative z-10 flex-none rounded-full text-white ring-1 ring-white/40 w-auto h-10 justify-start px-2.5 gap-2 is-active whitespace-nowrap overflow-visible shadow-[0_16px_28px_rgba(0,0,0,0.35)] before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/25 before:to-transparent"
           >
             {({ isActive }) => (
               <>
-                <item.icon className="w-[20px] h-[20px] flex-shrink-0" />
+                <item.icon className="w-[20px] h-[20px] flex-shrink-0 relative z-10" />
                 <span
                   className={cn(
-                    "text-xs sm:text-sm font-medium transition-all duration-200",
+                    "text-xs sm:text-sm font-medium transition-all duration-200 relative z-10",
                     isActive
                       ? "inline opacity-100 visible ml-2 w-auto"
                       : "hidden group-hover:inline ml-2"
