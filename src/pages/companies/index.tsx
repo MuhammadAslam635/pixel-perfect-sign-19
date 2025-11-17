@@ -10,7 +10,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowRight, Search, Filter, Layers } from "lucide-react";
+import {
+  ArrowRight,
+  Search,
+  Filter,
+  Layers,
+  Upload,
+  Loader2,
+} from "lucide-react";
 import { Company, CompanyPerson } from "@/services/companies.service";
 import { Lead } from "@/services/leads.service";
 import { EmailDraftModal } from "@/pages/companies/components/EmailDraftModal";
@@ -19,6 +26,7 @@ import { PhoneCallModal } from "@/pages/companies/components/PhoneCallModal";
 import { toast } from "sonner";
 import CompaniesList from "./components/CompaniesList";
 import LeadsList from "./components/LeadsList";
+import { highlevelService } from "@/services/highlevel.service";
 import DetailsSidebar from "./components/DetailsSidebar";
 import CompanyExecutivesPanel from "./components/CompanyExecutivesPanel";
 import LeadDetailsPanel from "./components/LeadDetailsPanel";
@@ -72,9 +80,8 @@ const index = () => {
     name?: string;
   } | null>(null);
   const [emailDraft, setEmailDraft] = useState<EmailMessage | null>(null);
-  const [emailMetadata, setEmailMetadata] = useState<EmailMessageMetadata | null>(
-    null
-  );
+  const [emailMetadata, setEmailMetadata] =
+    useState<EmailMessageMetadata | null>(null);
   const [emailLoading, setEmailLoading] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [linkedinModalOpen, setLinkedinModalOpen] = useState(false);
@@ -93,6 +100,8 @@ const index = () => {
     useState<PhoneScriptMetadata | null>(null);
   const [phoneLoading, setPhoneLoading] = useState(false);
   const [phoneError, setPhoneError] = useState<string | null>(null);
+  const [bulkSyncingLeads, setBulkSyncingLeads] = useState(false);
+  const [syncedLeadIds, setSyncedLeadIds] = useState<Set<string>>(new Set());
   const resolveErrorMessage = useCallback(
     (error: unknown, fallback: string) => {
       const err = error as any;
@@ -504,35 +513,104 @@ const index = () => {
       <main className="relative px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] pt-24 sm:pt-28 lg:pt-32 pb-8 flex flex-col gap-6 text-white flex-1 overflow-y-auto">
         <div className="max-w-[1600px] mx-auto w-full">
           {/* Tabs */}
-          <div
-            ref={containerRef}
-            className="relative mb-6 inline-flex w-fit gap-[10px] items-center rounded-full bg-[#2A2A2A] p-1"
-          >
+          <div className="flex items-center justify-between mb-6 gap-4">
             <div
-              className="absolute top-1 bottom-1 left-0 rounded-full bg-[#4A4A4A] transition-all duration-300 ease-out"
-              style={{
-                width: indicatorStyles.width,
-                left: indicatorStyles.left,
-                opacity: indicatorStyles.width ? 1 : 0,
-              }}
-            />
-            {tabs.map((tab) => (
-              <Button
-                key={tab.id}
-                ref={(el) => {
-                  tabRefs.current[tab.id] = el;
+              ref={containerRef}
+              className="relative inline-flex w-fit gap-[10px] items-center rounded-full bg-[#2A2A2A] p-1"
+            >
+              <div
+                className="absolute top-1 bottom-1 left-0 rounded-full bg-[#4A4A4A] transition-all duration-300 ease-out"
+                style={{
+                  width: indicatorStyles.width,
+                  left: indicatorStyles.left,
+                  opacity: indicatorStyles.width ? 1 : 0,
                 }}
-                onClick={() => setActiveTab(tab.id)}
-                variant="ghost"
-                className={`relative z-10 rounded-full px-6 py-2 text-sm font-medium transition-colors duration-200 ${
-                  activeTab === tab.id
-                    ? "text-white"
-                    : "text-gray-400 hover:text-white/80"
-                }`}
+              />
+              {tabs.map((tab) => (
+                <Button
+                  key={tab.id}
+                  ref={(el) => {
+                    tabRefs.current[tab.id] = el;
+                  }}
+                  onClick={() => setActiveTab(tab.id)}
+                  variant="ghost"
+                  className={`relative z-10 rounded-full px-6 py-2 text-sm font-medium transition-colors duration-200 ${
+                    activeTab === tab.id
+                      ? "text-white"
+                      : "text-gray-400 hover:text-white/80"
+                  }`}
+                >
+                  {tab.label}
+                </Button>
+              ))}
+            </div>
+
+            {/* Sync All Button - Show when leads tab is active */}
+            {activeTab === "leads" && leads.length > 0 && (
+              <Button
+                onClick={async () => {
+                  if (leads.length === 0) {
+                    toast.error("No leads to sync");
+                    return;
+                  }
+
+                  setBulkSyncingLeads(true);
+                  try {
+                    const companyPersonIds = leads
+                      .filter((lead) => lead._id && lead.companyId)
+                      .map((lead) => lead._id) as string[];
+
+                    if (companyPersonIds.length === 0) {
+                      toast.error("No valid leads to sync");
+                      return;
+                    }
+
+                    const result = await highlevelService.bulkSyncContacts({
+                      companyPersonIds,
+                      type: "lead",
+                      source: "api v1",
+                      tags: [],
+                    });
+
+                    if (result.success) {
+                      // Mark all synced leads
+                      setSyncedLeadIds(new Set(companyPersonIds));
+                      toast.success(
+                        `Bulk sync completed! ${result.data.success} succeeded, ${result.data.failed} failed.`
+                      );
+                    } else {
+                      toast.error(result.message || "Bulk sync failed");
+                    }
+                  } catch (error: any) {
+                    const errorMessage =
+                      error?.response?.data?.message ||
+                      error?.message ||
+                      "Failed to bulk sync leads to GoHighLevel";
+                    toast.error(errorMessage);
+                  } finally {
+                    setBulkSyncingLeads(false);
+                  }
+                }}
+                disabled={bulkSyncingLeads}
+                className="rounded-full bg-primary hover:bg-primary/80 disabled:bg-primary/50 disabled:cursor-wait px-4 sm:px-6 py-2 text-xs sm:text-sm font-semibold text-white flex items-center gap-2"
               >
-                {tab.label}
+                {bulkSyncingLeads ? (
+                  <>
+                    <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
+                    <span className="hidden sm:inline">Syncing All...</span>
+                    <span className="sm:hidden">Syncing...</span>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">
+                      Sync All ({leads.length})
+                    </span>
+                    <span className="sm:hidden">Sync All</span>
+                  </>
+                )}
               </Button>
-            ))}
+            )}
           </div>
 
           {/* Stats Cards */}
@@ -785,6 +863,10 @@ const index = () => {
                   selectedLead={selectedLeadDetails}
                   executiveFallback={selectedExecutiveFallback}
                   onPhoneClickFromSidebar={handlePhoneClickFromSidebar}
+                  syncedLeadIds={syncedLeadIds}
+                  onLeadSynced={(leadId) => {
+                    setSyncedLeadIds((prev) => new Set(prev).add(leadId));
+                  }}
                 />
               )}
             </div>

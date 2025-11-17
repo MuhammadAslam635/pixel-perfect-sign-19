@@ -24,6 +24,8 @@ type LeadDetailsPanelProps = {
     fallbackExecutive?: CompanyPerson | null
   ) => void;
   onLinkedinClick?: (lead: Lead) => void;
+  syncedLeadIds?: Set<string>;
+  onLeadSynced?: (leadId: string) => void;
 };
 
 const toStringOrUndefined = (value: unknown): string | undefined =>
@@ -42,8 +44,11 @@ const LeadDetailsPanel: FC<LeadDetailsPanelProps> = ({
   fallbackExecutive,
   onPhoneClick,
   onLinkedinClick,
+  syncedLeadIds = new Set(),
+  onLeadSynced,
 }) => {
   const [syncingToGHL, setSyncingToGHL] = useState(false);
+  const isSynced = lead?._id ? syncedLeadIds.has(lead._id) : false;
 
   const fallbackEmail = toStringOrUndefined(fallbackExecutive?.email);
   const fallbackPhone = toStringOrUndefined(fallbackExecutive?.phone);
@@ -90,6 +95,8 @@ const LeadDetailsPanel: FC<LeadDetailsPanelProps> = ({
         source: "api v1",
         tags: [],
       });
+      // Mark as synced
+      onLeadSynced?.(lead._id);
       toast.success("Lead synced to GoHighLevel successfully!");
     } catch (error: any) {
       const errorMessage =
@@ -204,17 +211,22 @@ const LeadDetailsPanel: FC<LeadDetailsPanelProps> = ({
               className={`h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center border transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary/40 ${
                 syncingToGHL
                   ? "bg-primary/50 border-primary/50 text-white cursor-wait"
-                  : "bg-primary border-primary text-white hover:bg-primary/80 hover:border-primary/80"
+                  : isSynced
+                  ? "bg-white border-white text-gray-900 hover:bg-white/80 hover:text-gray-950"
+                  : "bg-white/5 border-white/10 text-white/30 hover:bg-white/10 hover:text-white/40"
               }`}
               onClick={handleSyncToGHL}
               disabled={syncingToGHL}
               aria-disabled={syncingToGHL}
-              title="Sync to GoHighLevel"
+              title={isSynced ? "Synced to GoHighLevel" : "Sync to GoHighLevel"}
             >
               {syncingToGHL ? (
                 <Loader2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 animate-spin" />
               ) : (
-                <Upload className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                <Upload
+                  className="w-3 h-3 sm:w-3.5 sm:h-3.5"
+                  strokeWidth={isSynced ? 2.5 : 1.5}
+                />
               )}
             </button>
           )}
@@ -243,7 +255,13 @@ const LeadDetailsPanel: FC<LeadDetailsPanelProps> = ({
               <button
                 onClick={handleSyncToGHL}
                 disabled={syncingToGHL}
-                className="mt-4 px-4 py-2 bg-primary hover:bg-primary/80 disabled:bg-primary/50 disabled:cursor-wait text-white text-xs font-medium rounded-full flex items-center gap-2 transition-colors"
+                className={`mt-4 px-4 py-2 disabled:cursor-wait text-xs font-medium rounded-full flex items-center gap-2 transition-colors ${
+                  syncingToGHL
+                    ? "bg-primary/50 text-white"
+                    : isSynced
+                    ? "bg-white text-gray-900 hover:bg-white/80"
+                    : "bg-primary hover:bg-primary/80 text-white"
+                }`}
               >
                 {syncingToGHL ? (
                   <>
@@ -252,8 +270,15 @@ const LeadDetailsPanel: FC<LeadDetailsPanelProps> = ({
                   </>
                 ) : (
                   <>
-                    <Upload className="w-3 h-3" />
-                    <span>Sync to GoHighLevel</span>
+                    <Upload
+                      className="w-3 h-3"
+                      strokeWidth={isSynced ? 2.5 : 1.5}
+                    />
+                    <span>
+                      {isSynced
+                        ? "Synced to GoHighLevel"
+                        : "Sync to GoHighLevel"}
+                    </span>
                   </>
                 )}
               </button>

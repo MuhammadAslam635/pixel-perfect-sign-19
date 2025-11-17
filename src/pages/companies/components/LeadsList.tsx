@@ -48,6 +48,8 @@ type LeadsListProps = {
   selectedLead?: Lead;
   executiveFallback?: any;
   onPhoneClickFromSidebar?: (lead?: Lead, fallback?: any) => void;
+  syncedLeadIds?: Set<string>;
+  onLeadSynced?: (leadId: string) => void;
 };
 
 const getIconButtonClasses = (isDisabled: boolean) =>
@@ -74,9 +76,10 @@ const LeadsList: FC<LeadsListProps> = ({
   selectedLead,
   executiveFallback,
   onPhoneClickFromSidebar,
+  syncedLeadIds = new Set(),
+  onLeadSynced,
 }) => {
   const [syncingLeads, setSyncingLeads] = useState<Record<string, boolean>>({});
-  const [bulkSyncing, setBulkSyncing] = useState(false);
 
   const handleSyncLeadToGHL = async (lead: Lead) => {
     if (!lead._id || !lead.companyId) {
@@ -94,6 +97,8 @@ const LeadsList: FC<LeadsListProps> = ({
         source: "api v1",
         tags: [],
       });
+      // Mark as synced
+      onLeadSynced?.(lead._id);
       toast.success(
         `${lead.name || "Lead"} synced to GoHighLevel successfully!`
       );
@@ -105,48 +110,6 @@ const LeadsList: FC<LeadsListProps> = ({
       toast.error(errorMessage);
     } finally {
       setSyncingLeads((prev) => ({ ...prev, [lead._id]: false }));
-    }
-  };
-
-  const handleBulkSyncAllLeads = async () => {
-    if (leads.length === 0) {
-      toast.error("No leads to sync");
-      return;
-    }
-
-    setBulkSyncing(true);
-    try {
-      const companyPersonIds = leads
-        .filter((lead) => lead._id && lead.companyId)
-        .map((lead) => lead._id) as string[];
-
-      if (companyPersonIds.length === 0) {
-        toast.error("No valid leads to sync");
-        return;
-      }
-
-      const result = await highlevelService.bulkSyncContacts({
-        companyPersonIds,
-        type: "lead",
-        source: "api v1",
-        tags: [],
-      });
-
-      if (result.success) {
-        toast.success(
-          `Bulk sync completed! ${result.data.success} succeeded, ${result.data.failed} failed.`
-        );
-      } else {
-        toast.error(result.message || "Bulk sync failed");
-      }
-    } catch (error: any) {
-      const errorMessage =
-        error?.response?.data?.message ||
-        error?.message ||
-        "Failed to bulk sync leads to GoHighLevel";
-      toast.error(errorMessage);
-    } finally {
-      setBulkSyncing(false);
     }
   };
   // Calculate pagination page range
@@ -227,32 +190,7 @@ const LeadsList: FC<LeadsListProps> = ({
     </div>
   );
 
-  // Render bulk sync button
-  const renderBulkSyncButton = () => {
-    if (leads.length === 0 || loading) return null;
-
-    return (
-      <div className="mb-4 flex justify-end">
-        <Button
-          onClick={handleBulkSyncAllLeads}
-          disabled={bulkSyncing}
-          className="rounded-full bg-primary hover:bg-primary/80 disabled:bg-primary/50 disabled:cursor-wait px-4 sm:px-6 py-1.5 text-xs font-semibold text-white flex items-center gap-2"
-        >
-          {bulkSyncing ? (
-            <>
-              <Loader2 className="w-3 h-3 animate-spin" />
-              <span>Syncing All...</span>
-            </>
-          ) : (
-            <>
-              <Upload className="w-3 h-3" />
-              <span>Sync All to GHL ({leads.length})</span>
-            </>
-          )}
-        </Button>
-      </div>
-    );
-  };
+  // Bulk sync button removed - now handled in parent component (index.tsx)
 
   // Render lead card
   const renderLeadCard = (lead: Lead) => {
@@ -260,6 +198,8 @@ const LeadsList: FC<LeadsListProps> = ({
     const hasPhone = displayPhone !== "N/A";
     const hasEmail = displayEmail !== "N/A";
     const hasLinkedin = Boolean(lead.linkedinUrl && lead.linkedinUrl.trim());
+    const isSynced = syncedLeadIds.has(lead._id);
+    const isSyncing = syncingLeads[lead._id];
 
     const handleLinkedinOpen = (e: MouseEvent<HTMLButtonElement>) => {
       e.stopPropagation();
@@ -384,22 +324,27 @@ const LeadsList: FC<LeadsListProps> = ({
             </button>
             <button
               className={`h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center border transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary/40 ${
-                syncingLeads[lead._id]
+                isSyncing
                   ? "bg-primary/50 border-primary/50 text-white cursor-wait"
-                  : "bg-primary border-primary text-white hover:bg-primary/80 hover:border-primary/80"
+                  : isSynced
+                  ? "bg-white border-white text-gray-900 hover:bg-white/80 hover:text-gray-950"
+                  : "bg-white/5 border-white/10 text-white/30 hover:bg-white/10 hover:text-white/40"
               }`}
               onClick={(e) => {
                 e.stopPropagation();
                 handleSyncLeadToGHL(lead);
               }}
-              disabled={syncingLeads[lead._id]}
-              aria-disabled={syncingLeads[lead._id]}
-              title="Sync to GoHighLevel"
+              disabled={isSyncing}
+              aria-disabled={isSyncing}
+              title={isSynced ? "Synced to GoHighLevel" : "Sync to GoHighLevel"}
             >
-              {syncingLeads[lead._id] ? (
+              {isSyncing ? (
                 <Loader2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 animate-spin" />
               ) : (
-                <Upload className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                <Upload
+                  className="w-3 h-3 sm:w-3.5 sm:h-3.5"
+                  strokeWidth={isSynced ? 2.5 : 1.5}
+                />
               )}
             </button>
           </div>
@@ -524,9 +469,6 @@ const LeadsList: FC<LeadsListProps> = ({
 
   return (
     <div className="flex flex-col h-full">
-      {/* Bulk Sync Button */}
-      {renderBulkSyncButton()}
-
       {/* Scrollable content area */}
       <div className="flex-1 overflow-y-auto space-y-4 pb-4 pr-3 custom-scrollbar-list">
         {loading
@@ -546,6 +488,8 @@ const LeadsList: FC<LeadsListProps> = ({
                         fallbackExecutive={executiveFallback}
                         onPhoneClick={onPhoneClickFromSidebar}
                         onLinkedinClick={onLinkedinClick}
+                        syncedLeadIds={syncedLeadIds}
+                        onLeadSynced={onLeadSynced}
                       />
                     </Card>
                   </div>
