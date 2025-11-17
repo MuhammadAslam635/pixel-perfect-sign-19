@@ -341,7 +341,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
                         ),
                       p: ({ node, ...props }) => (
                         <p
-                          className="mb-2 max-w-[600px] break-words"
+                          className="mb-2 max-w-[600px] break-words text-left"
                           style={{ overflowWrap: "anywhere" }}
                           {...props}
                         />
