@@ -175,6 +175,9 @@ const LeadsList: FC<LeadsListProps> = ({
       }
     };
 
+    const viewButtonLabelDesktop = isActive ? "Close Details" : "View Details";
+    const viewButtonLabelMobile = isActive ? "Close" : "Details";
+
     return (
       <Card
         key={lead._id}
@@ -277,10 +280,16 @@ const LeadsList: FC<LeadsListProps> = ({
           <button
             onClick={() => onSelectLead(lead._id)}
             className="bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded-full px-6 sm:px-12 py-1.5 flex items-center gap-2 sm:gap-3 transition-colors w-full md:w-auto justify-center"
+            aria-pressed={isActive}
+            aria-expanded={isActive}
           >
-            <span className="hidden sm:inline">View Details</span>
-            <span className="sm:hidden">Details</span>
-            <ArrowRight className="w-3 h-3" />
+            <span className="hidden sm:inline">{viewButtonLabelDesktop}</span>
+            <span className="sm:hidden">{viewButtonLabelMobile}</span>
+            <ArrowRight
+              className={`w-3 h-3 transition-transform ${
+                isActive ? "rotate-90" : ""
+              }`}
+            />
           </button>
         </div>
       </Card>
