@@ -30,8 +30,8 @@ import {
 } from "./hooks";
 import {
   connectionMessagesService,
-  EmailCopy,
-  EmailCopyMetadata,
+  EmailMessage,
+  EmailMessageMetadata,
   PhoneScriptMetadata,
   ConnectionMessageData,
 } from "@/services/connectionMessages.service";
@@ -71,8 +71,8 @@ const index = () => {
     email?: string;
     name?: string;
   } | null>(null);
-  const [emailDraft, setEmailDraft] = useState<EmailCopy | null>(null);
-  const [emailMetadata, setEmailMetadata] = useState<EmailCopyMetadata | null>(
+  const [emailDraft, setEmailDraft] = useState<EmailMessage | null>(null);
+  const [emailMetadata, setEmailMetadata] = useState<EmailMessageMetadata | null>(
     null
   );
   const [emailLoading, setEmailLoading] = useState(false);
@@ -120,17 +120,17 @@ const index = () => {
       setEmailError(null);
 
       try {
-        const response = await connectionMessagesService.generateEmailCopy({
+        const response = await connectionMessagesService.generateEmailMessage({
           companyId: lead.companyId,
           personId: lead._id,
         });
 
         setEmailDraft(response.data.email);
-        setEmailMetadata(response.data.metadata ?? null);
+        setEmailMetadata(response.data.messageMetadata ?? null);
       } catch (error) {
         const message = resolveErrorMessage(
           error,
-          "Failed to generate email copy."
+          "Failed to generate email message."
         );
         setEmailError(message);
         toast.error(message);

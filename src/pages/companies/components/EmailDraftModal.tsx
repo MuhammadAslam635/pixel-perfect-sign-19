@@ -10,8 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Bold, Italic, List, Edit, Sparkles } from "lucide-react";
 import {
-  EmailCopy,
-  EmailCopyMetadata,
+  EmailMessage,
+  EmailMessageMetadata,
 } from "@/services/connectionMessages.service";
 
 const DEFAULT_EMAIL_BODY =
@@ -22,8 +22,8 @@ interface EmailDraftModalProps {
   onClose: () => void;
   leadName?: string;
   leadEmail?: string;
-  content?: EmailCopy | null;
-  metadata?: EmailCopyMetadata | null;
+  content?: EmailMessage | null;
+  metadata?: EmailMessageMetadata | null;
   loading?: boolean;
   error?: string | null;
   onRegenerate?: () => void;

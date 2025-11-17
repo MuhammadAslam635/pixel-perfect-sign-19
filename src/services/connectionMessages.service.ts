@@ -17,7 +17,7 @@ export type EmailType =
 
 export type EmailLength = "short" | "medium" | "long" | string;
 
-export interface GenerateEmailCopyInput {
+export interface GenerateEmailMessageInput {
   companyId: string;
   personId: string;
   emailType?: EmailType;
@@ -26,7 +26,7 @@ export interface GenerateEmailCopyInput {
   customInstructions?: string;
 }
 
-export interface EmailCopy {
+export interface EmailMessage {
   subject: string;
   preheader?: string;
   body: string;
@@ -35,7 +35,7 @@ export interface EmailCopy {
   ps?: string;
 }
 
-export interface EmailCopyMetadata {
+export interface EmailMessageMetadata {
   recipientName?: string;
   recipientPosition?: string;
   companyName?: string;
@@ -46,12 +46,12 @@ export interface EmailCopyMetadata {
   wordCount?: number;
 }
 
-export interface GenerateEmailCopyResponse {
+export interface GenerateEmailMessageResponse {
   success: boolean;
   message?: string;
   data: {
-    email: EmailCopy;
-    metadata?: EmailCopyMetadata;
+    email: EmailMessage;
+    messageMetadata?: EmailMessageMetadata;
   };
 }
 
@@ -115,10 +115,10 @@ export interface GenerateConnectionMessageResponse {
 }
 
 export const connectionMessagesService = {
-  generateEmailCopy: async (
-    payload: GenerateEmailCopyInput
-  ): Promise<GenerateEmailCopyResponse> => {
-    const response = await API.post("/connection-messages/email-copy", payload);
+  generateEmailMessage: async (
+    payload: GenerateEmailMessageInput
+  ): Promise<GenerateEmailMessageResponse> => {
+    const response = await API.post("/connection-messages/email", payload);
     return response.data;
   },
 
