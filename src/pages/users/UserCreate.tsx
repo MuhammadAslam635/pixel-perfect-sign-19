@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { userService, CreateUserData } from "@/services/user.service";
 import { toast } from "sonner";
 import { useSelector } from "react-redux";
@@ -41,6 +42,14 @@ const UserCreate = () => {
     status: "",
     mailgunEmail: "",
   });
+
+  const [twilioAreaCode, setTwilioAreaCode] = useState("");
+  const [twilioCapabilities, setTwilioCapabilities] = useState<
+    Array<"voice" | "sms">
+  >([
+    "voice",
+    "sms",
+  ]);
 
   const [loading, setLoading] = useState(false);
   const [mailgunDomain, setMailgunDomain] = useState<string>("");
@@ -200,7 +209,16 @@ const UserCreate = () => {
     }
 
     try {
-      const response = await userService.createUser(user);
+      const payload: CreateUserData = { ...user };
+
+      if (twilioAreaCode || twilioCapabilities.length > 0) {
+        payload.twilio = {
+          areaCode: twilioAreaCode || undefined,
+          capabilities: twilioCapabilities,
+        };
+      }
+
+      const response = await userService.createUser(payload);
 
       if (response.success) {
         toast.success("User created successfully");
@@ -403,6 +421,89 @@ const UserCreate = () => {
                   {errors.status && (
                     <p className="text-red-400 text-sm mt-1">{errors.status}</p>
                   )}
+                </div>
+
+                {/* Twilio Provisioning */}
+                <div className="space-y-3 border border-white/10 rounded-2xl p-4">
+                  <div>
+                    <h3 className="text-white text-base font-semibold">
+                      Twilio provisioning
+                    </h3>
+                    <p className="text-white/60 text-sm">
+                      Each employee gets a dedicated TwiML app and phone number.
+                      You can customize the preferred area code and capabilities.
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="twilioAreaCode"
+                      className="text-white/90 text-sm font-medium"
+                    >
+                      Preferred area code
+                    </Label>
+                    <Input
+                      id="twilioAreaCode"
+                      name="twilioAreaCode"
+                      placeholder="e.g. 415"
+                      value={twilioAreaCode}
+                      maxLength={3}
+                      onChange={(event) => {
+                        const digitsOnly = event.target.value
+                          .replace(/\D/g, "")
+                          .slice(0, 3);
+                        setTwilioAreaCode(digitsOnly);
+                      }}
+                      className="rounded-full bg-black/35 border border-white/10 text-white placeholder:text-white/50 focus:ring-2 focus:ring-cyan-400/40"
+                    />
+                    <p className="text-white/50 text-xs">
+                      Leave blank to use the global default area code.
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-white/90 text-sm font-medium">
+                      Capabilities
+                    </p>
+                    <div className="flex flex-wrap gap-6">
+                      {["voice", "sms"].map((capability) => {
+                        const checked = twilioCapabilities.includes(capability);
+                        return (
+                          <label
+                            key={capability}
+                            className="flex items-center gap-2 text-white/80 text-sm cursor-pointer select-none"
+                          >
+                            <Checkbox
+                              checked={checked}
+                              onCheckedChange={(value) => {
+                                setTwilioCapabilities((prev) => {
+                                  const currentlySelected = prev.includes(
+                                    capability
+                                  );
+                                  if (value && !currentlySelected) {
+                                    return [...prev, capability];
+                                  }
+                                  if (!value && currentlySelected) {
+                                    if (prev.length === 1) {
+                                      return prev;
+                                    }
+                                    return prev.filter(
+                                      (item) => item !== capability
+                                    );
+                                  }
+                                  return prev;
+                                });
+                              }}
+                            />
+                            {capability.toUpperCase()}
+                          </label>
+                        );
+                      })}
+                    </div>
+                    <p className="text-white/50 text-xs">
+                      At least one capability must remain selected.
+                    </p>
+                  </div>
                 </div>
 
                 {/* Mailgun Email Field */}
