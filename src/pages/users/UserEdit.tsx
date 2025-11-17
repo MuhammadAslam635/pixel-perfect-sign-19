@@ -16,6 +16,8 @@ import { userService, UpdateUserData } from "@/services/user.service";
 import { toast } from "sonner";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
+import API from "@/utils/api";
+import { getUserData } from "@/utils/authHelpers";
 
 const UserEdit = () => {
   const navigate = useNavigate();
@@ -29,6 +31,7 @@ const UserEdit = () => {
     password: "",
     role: "",
     status: "",
+    mailgunEmail: "",
   });
 
   const [user, setUser] = useState<UpdateUserData & { password: string }>({
@@ -37,10 +40,40 @@ const UserEdit = () => {
     password: "",
     role: "",
     status: "",
+    mailgunEmail: "",
   });
 
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
+  const [mailgunDomain, setMailgunDomain] = useState<string>("");
+  const [suggestedEmail, setSuggestedEmail] = useState<string>("");
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
+  const [emailUnique, setEmailUnique] = useState<boolean | null>(null);
+
+  // Fetch Mailgun domain from integration
+  useEffect(() => {
+    const fetchMailgunDomain = async () => {
+      const user = getUserData();
+      if (!user?.token) return;
+
+      try {
+        const response = await API.get("/integration/mailgun");
+        if (
+          response.data?.success &&
+          response.data?.integration?.connectionData?.metadata?.domain
+        ) {
+          const domain =
+            response.data.integration.connectionData.metadata.domain;
+          setMailgunDomain(domain);
+        }
+      } catch (error: any) {
+        // If Mailgun is not configured, that's okay - field will be optional
+        console.log("Mailgun not configured or not accessible");
+      }
+    };
+
+    fetchMailgunDomain();
+  }, []);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -62,6 +95,7 @@ const UserEdit = () => {
             password: "",
             role: userData.role || "",
             status: userData.status || "",
+            mailgunEmail: userData.mailgunEmail || "",
           });
         } else {
           toast.error(response.message || "Failed to fetch user");
@@ -84,6 +118,40 @@ const UserEdit = () => {
     fetchUser();
   }, [id, navigate]);
 
+  // Generate suggested email when name or email changes
+  useEffect(() => {
+    if (!mailgunDomain) return;
+
+    const generateSuggestedEmail = () => {
+      if (!user.name && !user.email) {
+        setSuggestedEmail("");
+        return;
+      }
+
+      // Create a username from name or email
+      let username = "";
+      if (user.name) {
+        // Convert name to lowercase, replace spaces with dots, remove special chars
+        username = user.name
+          .toLowerCase()
+          .trim()
+          .replace(/\s+/g, ".")
+          .replace(/[^a-z0-9.]/g, "");
+      } else if (user.email) {
+        // Extract username from email (part before @)
+        username = user.email.split("@")[0].toLowerCase();
+      }
+
+      if (username) {
+        const suggested = `${username}@${mailgunDomain}`;
+        setSuggestedEmail(suggested);
+      }
+    };
+
+    generateSuggestedEmail();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user.name, user.email, mailgunDomain]);
+
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -92,10 +160,47 @@ const UserEdit = () => {
     setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
+  const handleUseSuggestedEmail = () => {
+    if (suggestedEmail) {
+      setUser((prev) => ({ ...prev, mailgunEmail: suggestedEmail }));
+      setEmailUnique(true);
+    }
+  };
+
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setErrors({ email: "", name: "", password: "", role: "", status: "" });
+    setErrors({
+      email: "",
+      name: "",
+      password: "",
+      role: "",
+      status: "",
+      mailgunEmail: "",
+    });
+
+    // Validate mailgunEmail format if provided
+    if (user.mailgunEmail && mailgunDomain) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(user.mailgunEmail)) {
+        setErrors((prev) => ({
+          ...prev,
+          mailgunEmail: "Please enter a valid email address",
+        }));
+        setLoading(false);
+        return;
+      }
+
+      // Ensure email uses the correct domain
+      if (!user.mailgunEmail.endsWith(`@${mailgunDomain}`)) {
+        setErrors((prev) => ({
+          ...prev,
+          mailgunEmail: `Email must use the domain @${mailgunDomain}`,
+        }));
+        setLoading(false);
+        return;
+      }
+    }
 
     try {
       // Prepare update data - exclude password if empty
@@ -104,6 +209,7 @@ const UserEdit = () => {
         email: user.email,
         role: user.role,
         status: user.status,
+        mailgunEmail: user.mailgunEmail,
       };
 
       // Only include password if it's provided
@@ -134,6 +240,7 @@ const UserEdit = () => {
             password: "",
             role: "",
             status: "",
+            mailgunEmail: "",
           };
           error.response.data.errors.forEach((err: any) => {
             if (newErrors[err.path as keyof typeof newErrors] === "") {
@@ -332,6 +439,80 @@ const UserEdit = () => {
                     <p className="text-red-400 text-sm mt-1">{errors.status}</p>
                   )}
                 </div>
+
+                {/* Mailgun Email Field */}
+                {mailgunDomain && (
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="mailgunEmail"
+                      className="text-white/90 text-sm font-medium"
+                    >
+                      Mailgun Email
+                    </Label>
+                    <div className="space-y-2">
+                      <div className="flex gap-2">
+                        <Input
+                          id="mailgunEmail"
+                          type="email"
+                          name="mailgunEmail"
+                          value={user.mailgunEmail || ""}
+                          onChange={(e) => {
+                            setUser((prev) => ({
+                              ...prev,
+                              mailgunEmail: e.target.value,
+                            }));
+                            setErrors((prev) => ({
+                              ...prev,
+                              mailgunEmail: "",
+                            }));
+                            setEmailUnique(null);
+                          }}
+                          className="rounded-full bg-black/35 border border-white/10 text-white placeholder:text-white/50 focus:ring-2 focus:ring-cyan-400/40"
+                          placeholder={`Enter email (e.g., ${
+                            suggestedEmail || `user@${mailgunDomain}`
+                          })`}
+                        />
+                        {suggestedEmail &&
+                          suggestedEmail !== user.mailgunEmail && (
+                            <Button
+                              type="button"
+                              onClick={handleUseSuggestedEmail}
+                              className="rounded-full bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-xs px-3 whitespace-nowrap"
+                            >
+                              Use Suggested
+                            </Button>
+                          )}
+                      </div>
+                      {suggestedEmail && (
+                        <p className="text-xs text-white/60">
+                          Suggested:{" "}
+                          <button
+                            type="button"
+                            onClick={handleUseSuggestedEmail}
+                            className="text-cyan-400 hover:text-cyan-300 underline"
+                          >
+                            {suggestedEmail}
+                          </button>
+                        </p>
+                      )}
+                      {isCheckingEmail && (
+                        <p className="text-xs text-white/60">
+                          Checking availability...
+                        </p>
+                      )}
+                      {user.mailgunEmail && emailUnique === false && (
+                        <p className="text-xs text-red-400">
+                          This email is already in use
+                        </p>
+                      )}
+                    </div>
+                    {errors.mailgunEmail && (
+                      <p className="text-red-400 text-sm mt-1">
+                        {errors.mailgunEmail}
+                      </p>
+                    )}
+                  </div>
+                )}
               </CardContent>
 
               <CardFooter className="flex flex-col sm:flex-row justify-end border-t border-white/10 pt-4 sm:pt-6 gap-3 px-4 sm:px-6 pb-4 sm:pb-6">

@@ -11,6 +11,7 @@ export interface User {
   status?: string;
   profileImage?: string;
   companyId?: string;
+  mailgunEmail?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -43,6 +44,7 @@ export interface CreateUserData {
   password: string;
   role: string;
   status: string;
+  mailgunEmail?: string;
 }
 
 export interface UpdateUserData {
@@ -51,6 +53,7 @@ export interface UpdateUserData {
   password?: string;
   role?: string;
   status?: string;
+  mailgunEmail?: string;
 }
 
 export interface UserDetailResponse {
