@@ -20,9 +20,6 @@ import { Sheet, SheetContent } from "@/components/ui/sheet";
 
 const NEW_CHAT_KEY = "__new_chat__";
 
-const getMessageSignature = (message: ChatMessage) =>
-  `${message.role}-${message.content}`;
-
 const ChatPage = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -113,8 +110,8 @@ const ChatPage = () => {
       return;
     }
 
-    const serverSignatures = new Set(
-      selectedChat.messages.map((message) => getMessageSignature(message))
+    const serverMessageIds = new Set(
+      selectedChat.messages.map((message) => message._id)
     );
 
     setOptimisticMessagesByChat((prev) => {
@@ -123,9 +120,36 @@ const ChatPage = () => {
         return prev;
       }
 
-      const filtered = currentPending.filter(
-        (message) => !serverSignatures.has(getMessageSignature(message))
-      );
+      const filtered = currentPending.filter((message) => {
+        // If message ID exists in server messages, filter it out
+        if (serverMessageIds.has(message._id)) {
+          return false;
+        }
+
+        // If this is a temp message, check if there's a recent server message with same content+role
+        if (message._id.startsWith("temp-")) {
+          // Extract timestamp from temp ID (format: temp-1234567890)
+          const tempTimestamp = parseInt(message._id.replace("temp-", ""));
+          const signature = `${message.role}-${message.content}`;
+          
+          // Only match with server messages created within 30 seconds after the temp message
+          const matchingServerMessage = selectedChat.messages.find((serverMsg) => {
+            if (`${serverMsg.role}-${serverMsg.content}` !== signature) {
+              return false;
+            }
+            const serverTimestamp = new Date(serverMsg.createdAt).getTime();
+            const timeDiff = serverTimestamp - tempTimestamp;
+            // Server message should be created after temp message, within 30 seconds
+            return timeDiff >= 0 && timeDiff <= 30000;
+          });
+
+          // If we found a matching recent server message, filter out the temp message
+          return !matchingServerMessage;
+        }
+
+        // For non-temp messages, keep them if ID doesn't match
+        return true;
+      });
 
       if (filtered.length === currentPending.length) {
         return prev;
@@ -309,13 +333,40 @@ const ChatPage = () => {
       return apiMessages;
     }
 
-    const apiSignatures = new Set(
-      apiMessages.map((message) => getMessageSignature(message))
+    const apiMessageIds = new Set(
+      apiMessages.map((message) => message._id)
     );
 
-    const filteredOptimistic = optimisticMessages.filter(
-      (message) => !apiSignatures.has(getMessageSignature(message))
-    );
+    const filteredOptimistic = optimisticMessages.filter((message) => {
+      // If message ID exists in server messages, filter it out
+      if (apiMessageIds.has(message._id)) {
+        return false;
+      }
+
+      // If this is a temp message, check if there's a recent server message with same content+role
+      if (message._id.startsWith("temp-")) {
+        // Extract timestamp from temp ID (format: temp-1234567890)
+        const tempTimestamp = parseInt(message._id.replace("temp-", ""));
+        const signature = `${message.role}-${message.content}`;
+        
+        // Only match with server messages created within 30 seconds after the temp message
+        const matchingServerMessage = apiMessages.find((serverMsg) => {
+          if (`${serverMsg.role}-${serverMsg.content}` !== signature) {
+            return false;
+          }
+          const serverTimestamp = new Date(serverMsg.createdAt).getTime();
+          const timeDiff = serverTimestamp - tempTimestamp;
+          // Server message should be created after temp message, within 30 seconds
+          return timeDiff >= 0 && timeDiff <= 30000;
+        });
+
+        // If we found a matching recent server message, filter out the temp message
+        return !matchingServerMessage;
+      }
+
+      // For non-temp messages, keep them if ID doesn't match
+      return true;
+    });
 
     return [...apiMessages, ...filteredOptimistic];
   }, [optimisticMessages, selectedChat?.messages]);
