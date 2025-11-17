@@ -39,7 +39,8 @@ const ChatComposer = ({
     }
   };
 
-  const isSendDisabled = disabled || !value.trim() || isSending || isAwaitingResponse;
+  const isSendDisabled =
+    disabled || !value.trim() || isSending || isAwaitingResponse;
 
   const handleSend = () => {
     // Validate that message is not empty before sending
@@ -49,7 +50,14 @@ const ChatComposer = ({
   };
 
   return (
-    <div className="w-full rounded-full border border-white/10 bg-[#282828] p-2 shadow-[0_18px_48px_rgba(12,17,28,0.4)] backdrop-blur">
+    <div
+      className="w-full rounded-full border border-white/10 p-2 shadow-[0_18px_48px_rgba(12,17,28,0.4)] backdrop-blur"
+      style={{
+        background: "rgba(255, 255, 255, 0.1)",
+        boxShadow:
+          "rgba(255, 255, 255, 0.16) 0px 3.43px 3.43px 0px inset, rgba(255, 255, 255, 0.16) 0px -3.43px 3.43px 0px inset",
+      }}
+    >
       <div className="flex items-center gap-3 px-2">
         <label
           className="flex size-11 cursor-pointer items-center justify-center rounded-full text-white/70 transition hover:border-white/20 hover:bg-white/10 focus-within:border-white/30 focus-within:bg-white/15 focus-within:text-white"
@@ -60,7 +68,7 @@ const ChatComposer = ({
             type="file"
             className="hidden"
             onChange={handleFileChange}
-        disabled={disabled || isAwaitingResponse}
+            disabled={disabled || isAwaitingResponse}
           />
         </label>
 
@@ -78,11 +86,12 @@ const ChatComposer = ({
           size="icon"
           className="size-12 shrink-0 rounded-full text-white transition disabled:opacity-60"
           style={{
-            background: 'linear-gradient(226.23deg, #3F68B4 0%, #66B0B7 100%)',
-            boxShadow: '0px 3.47px 3.47px 0px #FFFFFF40 inset, 0px -3.47px 3.47px 0px #FFFFFF40 inset'
+            background: "linear-gradient(226.23deg, #3F68B4 0%, #66B0B7 100%)",
+            boxShadow:
+              "0px 3.47px 3.47px 0px #FFFFFF40 inset, 0px -3.47px 3.47px 0px #FFFFFF40 inset",
           }}
           onClick={handleSend}
-      disabled={isSendDisabled}
+          disabled={isSendDisabled}
         >
           {isSending ? (
             <Loader2 className="size-5 animate-spin" />
