@@ -1,5 +1,7 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +34,8 @@ import { toast } from "sonner";
 
 const UserList = () => {
   const navigate = useNavigate();
+  const authState = useSelector((state: RootState) => state.auth);
+  const userRole = authState.user?.role;
   const [users, setUsers] = useState<User[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -42,6 +46,10 @@ const UserList = () => {
 
   const fetchUsers = useCallback(
     async (resetPage = false) => {
+      // Don't fetch if user is CompanyUser
+      if (userRole === "CompanyUser") {
+        return;
+      }
       setLoading(true);
       try {
         const currentPage = resetPage ? 1 : page;
@@ -67,12 +75,46 @@ const UserList = () => {
         setLoading(false);
       }
     },
-    [page, searchTerm, trashed, limit]
+    [page, searchTerm, trashed, limit, userRole]
   );
 
+  // Redirect CompanyUser away from this page
   useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
+    if (userRole === "CompanyUser") {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [userRole, navigate]);
+
+  useEffect(() => {
+    // Only fetch users if user is not CompanyUser
+    if (userRole !== "CompanyUser") {
+      fetchUsers();
+    }
+  }, [fetchUsers, userRole]);
+
+  const paginationPages = useMemo(() => {
+    if (totalPages <= 1) return null;
+
+    const maxVisible = 5;
+    let startPage = Math.max(1, page - Math.floor(maxVisible / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+
+    if (endPage - startPage < maxVisible - 1) {
+      startPage = Math.max(1, endPage - maxVisible + 1);
+    }
+
+    const pages: number[] = [];
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+
+    return { pages, startPage, endPage };
+  }, [page, totalPages]);
+
+  // Don't render the page if user is CompanyUser
+  if (userRole === "CompanyUser") {
+    return null;
+  }
 
   const handleDelete = async (userId: string, userName: string) => {
     if (
@@ -122,25 +164,6 @@ const UserList = () => {
     }
   };
 
-  const paginationPages = useMemo(() => {
-    if (totalPages <= 1) return null;
-
-    const maxVisible = 5;
-    let startPage = Math.max(1, page - Math.floor(maxVisible / 2));
-    let endPage = Math.min(totalPages, startPage + maxVisible - 1);
-
-    if (endPage - startPage < maxVisible - 1) {
-      startPage = Math.max(1, endPage - maxVisible + 1);
-    }
-
-    const pages: number[] = [];
-    for (let i = startPage; i <= endPage; i++) {
-      pages.push(i);
-    }
-
-    return { pages, startPage, endPage };
-  }, [page, totalPages]);
-
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
   };
@@ -167,7 +190,9 @@ const UserList = () => {
               <h1 className="text-2xl sm:text-3xl font-semibold text-white mb-2">
                 Employees
               </h1>
-              <p className="text-white/60 text-xs sm:text-sm">Manage your employees</p>
+              <p className="text-white/60 text-xs sm:text-sm">
+                Manage your employees
+              </p>
             </div>
             <Button
               className="w-full sm:w-auto bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3]"
@@ -211,8 +236,12 @@ const UserList = () => {
                 }}
               >
                 <Trash2 className="mr-2 h-4 w-4" />
-                <span className="hidden sm:inline">{trashed ? "Show Active" : "Show Trash"}</span>
-                <span className="sm:hidden">{trashed ? "Active" : "Trash"}</span>
+                <span className="hidden sm:inline">
+                  {trashed ? "Show Active" : "Show Trash"}
+                </span>
+                <span className="sm:hidden">
+                  {trashed ? "Active" : "Trash"}
+                </span>
               </Button>
             </div>
           </div>
@@ -270,7 +299,9 @@ const UserList = () => {
                             }`.trim() ||
                             user.email.split("@")[0]}
                         </div>
-                        <div className="text-white/70 truncate">{user.email}</div>
+                        <div className="text-white/70 truncate">
+                          {user.email}
+                        </div>
                         <div>
                           {user.role === "CompanyAdmin" && (
                             <Badge className="bg-purple-600/20 text-purple-400 border border-purple-600/30 rounded-full px-3 py-1 text-xs">
@@ -378,7 +409,9 @@ const UserList = () => {
                                 }`.trim() ||
                                 user.email.split("@")[0]}
                             </h3>
-                            <p className="text-white/70 text-sm truncate">{user.email}</p>
+                            <p className="text-white/70 text-sm truncate">
+                              {user.email}
+                            </p>
                           </div>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -460,7 +493,8 @@ const UserList = () => {
                           )}
                         </div>
                         <div className="text-white/60 text-xs pt-2 border-t border-white/10">
-                          Created: {user.createdAt
+                          Created:{" "}
+                          {user.createdAt
                             ? new Date(user.createdAt).toLocaleDateString()
                             : "N/A"}
                         </div>
@@ -501,10 +535,7 @@ const UserList = () => {
                 </div>
                 <div className="sm:hidden">
                   <PaginationItem>
-                    <PaginationLink
-                      isActive={true}
-                      className="cursor-pointer"
-                    >
+                    <PaginationLink isActive={true} className="cursor-pointer">
                       {page} / {totalPages}
                     </PaginationLink>
                   </PaginationItem>

@@ -103,7 +103,13 @@ export const ActionComponent = () => {
     },
     { title: "Settings", meta: "Manage preferences", route: "/settings" },
     { title: "Sign out", meta: "Log out of EmpaTech OS", route: null },
-  ];
+  ].filter((item) => {
+    // Hide "User Lists" for CompanyUser
+    if (item.title === "User Lists" && currentUser?.role === "CompanyUser") {
+      return false;
+    }
+    return true;
+  });
 
   return (
     <div className="flex min-w-[100px] justify-end relative" ref={actionsRef}>
