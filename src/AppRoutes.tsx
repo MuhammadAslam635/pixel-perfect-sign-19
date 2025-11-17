@@ -18,6 +18,7 @@ import CampaignsPage from "@/pages/campaigns";
 import UserList from "@/pages/users/UserList";
 import UserCreate from "@/pages/users/UserCreate";
 import UserEdit from "@/pages/users/UserEdit";
+import ContactNow from "@/pages/twilio-calling/ContactNow";
 
 const AppRoutes = () => {
   return (
@@ -150,6 +151,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <UserEdit />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/contact-now"
+        element={
+          <ProtectedRoute>
+            <ContactNow />
           </ProtectedRoute>
         }
       />
