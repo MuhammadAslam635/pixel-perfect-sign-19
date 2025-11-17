@@ -187,10 +187,8 @@ const CampaignsPage = () => {
       name: editedCampaign.name,
       userRequirements: editedCampaign.userRequirements,
       content: editedCampaign.content,
-      status: editedCampaign.status as any,
       media: editedCampaign.media,
-      isContentFinalized: editedCampaign.isContentFinalized,
-      isMediaFinalized: editedCampaign.isMediaFinalized,
+      status: editedCampaign.status as any,
       platform: (editedCampaign.platform || []) as ("facebook" | "google")[],
     };
 
@@ -301,37 +299,6 @@ const CampaignsPage = () => {
     );
   };
 
-  const handleFinalize = (type: 'content' | 'media') => {
-    if (!selectedCampaign) return;
-
-    const updateData: UpdateCampaignData = {};
-    if (type === 'content') {
-      updateData.isContentFinalized = true;
-    } else {
-      updateData.isMediaFinalized = true;
-    }
-
-    updateCampaign(
-      { id: selectedCampaign._id, data: updateData },
-      {
-        onSuccess: (response) => {
-          setSelectedCampaign(response.data);
-
-          toast({
-            title: "Success",
-            description: `${type === 'content' ? 'Content' : 'Media'} finalized successfully`,
-          });
-        },
-        onError: (error: any) => {
-          toast({
-            title: "Error",
-            description: error.response?.data?.message || `Failed to finalize ${type}`,
-            variant: "destructive",
-          });
-        },
-      }
-    );
-  };
 
   const handleDeleteCampaign = () => {
     if (!selectedCampaign) return;
@@ -1105,35 +1072,6 @@ const CampaignsPage = () => {
                             </Button>
                           </>
                         )}
-                          {isEditing ? (
-                            <div className="flex items-center gap-2">
-                              <input
-                                type="checkbox"
-                                id="contentFinalized"
-                                checked={editedCampaign.isContentFinalized}
-                                onChange={(e) =>
-                                  setEditedCampaign({
-                                    ...editedCampaign,
-                                    isContentFinalized: e.target.checked,
-                                  })
-                                }
-                                className="w-4 h-4"
-                              />
-                              <Label htmlFor="contentFinalized" className="text-sm text-gray-400">
-                                Finalized
-                              </Label>
-                            </div>
-                          ) : selectedCampaign.isContentFinalized ? (
-                            <Badge className="bg-green-100 text-green-800">
-                              <CheckCircle2 className="w-3 h-3 mr-1" />
-                              Finalized
-                            </Badge>
-                          ) : (
-                            <Badge className="bg-gray-100 text-gray-800">
-                              <CircleIcon className="w-3 h-3 mr-1" />
-                              Draft
-                            </Badge>
-                          )}
                         </div>
                       </div>
                     </CardHeader>
@@ -1195,73 +1133,42 @@ const CampaignsPage = () => {
                             </Button>
                           </>
                         )}
-                          {isEditing ? (
-                            <>
-                              <div className="flex items-center gap-2">
-                                <input
-                                  type="checkbox"
-                                  id="mediaFinalized"
-                                  checked={editedCampaign.isMediaFinalized}
-                                  onChange={(e) =>
-                                    setEditedCampaign({
-                                      ...editedCampaign,
-                                      isMediaFinalized: e.target.checked,
-                                    })
-                                  }
-                                  className="w-4 h-4"
-                                />
-                                <Label htmlFor="mediaFinalized" className="text-sm text-gray-400">
-                                  Finalized
-                                </Label>
-                              </div>
-                            </>
-                          ) : selectedCampaign.isMediaFinalized ? (
-                            <Badge className="bg-green-100 text-green-800">
-                              <CheckCircle2 className="w-3 h-3 mr-1" />
-                              Finalized
-                            </Badge>
-                          ) : (
-                            <Badge className="bg-gray-100 text-gray-800">
-                              <CircleIcon className="w-3 h-3 mr-1" />
-                              Draft
-                            </Badge>
-                          )}
-                        </div>
                       </div>
-                    </CardHeader>
-                    <CardContent>
-                      {isEditing ? (
-                        editedCampaign.media.length > 0 ? (
-                          <ImageCarousel
-                            images={editedCampaign.media}
-                            onRemove={(index) => {
-                              const newMedia = editedCampaign.media.filter((_, i) => i !== index);
-                              setEditedCampaign({
-                                ...editedCampaign,
-                                media: newMedia,
-                              });
-                            }}
-                            editable={true}
-                          />
-                        ) : (
-                          <div className="text-center py-12 text-gray-400">
-                            <ImageIcon className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                            <p>No media uploaded yet</p>
-                            <p className="text-sm mt-2">
-                              Media will be generated automatically
-                            </p>
-                          </div>
-                        )
-                      ) : selectedCampaign.media.length > 0 ? (
-                        <ImageCarousel images={selectedCampaign.media} editable={false} />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {isEditing ? (
+                      editedCampaign.media.length > 0 ? (
+                        <ImageCarousel
+                          images={editedCampaign.media}
+                          onRemove={(index) => {
+                            const newMedia = editedCampaign.media.filter((_, i) => i !== index);
+                            setEditedCampaign({
+                              ...editedCampaign,
+                              media: newMedia,
+                            });
+                          }}
+                          editable={true}
+                        />
                       ) : (
                         <div className="text-center py-12 text-gray-400">
                           <ImageIcon className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                          <p>No media available</p>
+                          <p>No media uploaded yet</p>
+                          <p className="text-sm mt-2">
+                            Media will be generated automatically
+                          </p>
                         </div>
-                      )}
-                    </CardContent>
-                  </Card>
+                      )
+                    ) : selectedCampaign.media.length > 0 ? (
+                      <ImageCarousel images={selectedCampaign.media} editable={false} />
+                    ) : (
+                      <div className="text-center py-12 text-gray-400">
+                        <ImageIcon className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                        <p>No media available</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
 
                 {/* Campaign Details */}
                 <Card className="bg-white/5 backdrop-blur-sm border-white/10 shadow-lg">

@@ -6,8 +6,6 @@ export interface Campaign {
   name: string;
   userRequirements: string;
   media: string[];
-  isContentFinalized: boolean;
-  isMediaFinalized: boolean;
   status: string;
   campaignType: string;
   platform: string[];
@@ -62,8 +60,6 @@ export interface UpdateCampaignData {
   location?: string;
   estimatedBudget?: number;
   numberOfDays?: number;
-  isContentFinalized?: boolean;
-  isMediaFinalized?: boolean;
 }
 
 export interface CreateCampaignData {
