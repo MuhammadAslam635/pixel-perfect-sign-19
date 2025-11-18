@@ -117,7 +117,7 @@ const defaultFormValues: FollowupTemplateFormValues = {
 const limitOptions = ["5", "10", "20"];
 
 const inputFieldClasses =
-  "bg-white/5 border-white/20 text-white placeholder:text-gray-400 focus:bg-white/10 focus:border-white/30 transition-all";
+  "bg-white/5 border border-white/15 text-white placeholder:text-gray-400 shadow-[inset_0_8px_24px_rgba(10,10,25,0.45)] focus:bg-white/10 focus:border-white/30 transition-all";
 
 const getErrorMessage = (error: unknown, fallback: string) => {
   if (isAxiosError<{ message?: string }>(error)) {
