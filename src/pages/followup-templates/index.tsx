@@ -117,7 +117,18 @@ const defaultFormValues: FollowupTemplateFormValues = {
 const limitOptions = ["5", "10", "20"];
 
 const inputFieldClasses =
-  "bg-white/5 border border-white/15 text-white placeholder:text-gray-400 shadow-[inset_0_8px_24px_rgba(10,10,25,0.45)] focus:bg-white/10 focus:border-white/30 transition-all";
+  "h-11 rounded-xl bg-transparent px-4 text-sm text-white placeholder:text-white/50 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08),0_25px_65px_rgba(3,7,18,0.65)] focus-visible:ring-2 focus-visible:ring-cyan-300/40 transition-all backdrop-blur border-0";
+
+const inputWrapperClasses =
+  "relative rounded-xl p-[1px] bg-gradient-to-r from-[#69B4B7] to-[#3E64B4]";
+
+const inputStyle = {
+  background: "transparent !important",
+  backgroundImage: "none !important",
+};
+
+const formLabelClasses =
+  "text-[11px] font-medium uppercase tracking-[0.08em] text-white/50";
 
 const getErrorMessage = (error: unknown, fallback: string) => {
   if (isAxiosError<{ message?: string }>(error)) {
@@ -681,181 +692,211 @@ const FollowupTemplatesPage = () => {
         </section>
 
         <Dialog open={isFormOpen} onOpenChange={(open) => !open && closeForm()}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden border border-white/10 bg-white/5/30 p-0 text-white shadow-2xl shadow-black/60">
-            <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-white/15 via-white/5 to-transparent backdrop-blur-3xl pointer-events-none" />
-            <div className="absolute inset-0 rounded-lg bg-[#05070e]/70 backdrop-blur-xl pointer-events-none" />
-            <div className="absolute inset-[1px] rounded-lg bg-gradient-to-br from-white/10 via-white/5 to-transparent border border-white/10 pointer-events-none" />
+          <DialogContent
+            className="group max-h-[92vh] max-w-[980px] border-none bg-transparent p-0 text-white shadow-none sm:rounded-[38px] [&>button]:right-8 [&>button]:top-8 [&>button]:text-white/60 [&>button:hover]:text-white"
+          >
+            <div className="relative isolate overflow-hidden rounded-[38px] border border-white/10 bg-[#05070f]/85 shadow-[0_35px_95px_rgba(0,0,0,0.85)]">
+              <div className="pointer-events-none absolute inset-0 opacity-70">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(91,157,255,0.35),_transparent_65%)]" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,_rgba(34,255,214,0.18),_transparent_60%)]" />
+              </div>
+              <div className="pointer-events-none absolute inset-[1px] rounded-[36px] border border-white/10" />
 
-            <div className="relative z-10 max-h-[90vh] overflow-y-auto p-8">
-              <DialogHeader className="mb-6 space-y-2 border-b border-white/10 pb-4">
-                <DialogTitle className="text-2xl font-semibold">
-                  {formMode === "edit" ? "Edit template" : "Create template"}
-                </DialogTitle>
-                <DialogDescription className="text-sm text-gray-300/80">
-                  Define how many touchpoints Empatech should execute and when.
-                </DialogDescription>
-              </DialogHeader>
+              <div className="relative z-10 max-h-[88vh] overflow-y-auto px-6 py-6 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:px-10 sm:py-10">
+                <DialogHeader className="mb-8 space-y-2 border-b border-white/10 pb-5 text-left">
+                  <DialogTitle className="text-2xl font-semibold text-white">
+                    {formMode === "edit" ? "Edit template" : "Create template"}
+                  </DialogTitle>
+                  <DialogDescription className="text-sm text-white/60">
+                    Add a new employee to your organization
+                  </DialogDescription>
+                </DialogHeader>
 
-              <Form {...form}>
-                <form
-                  onSubmit={form.handleSubmit(handleSubmitForm)}
-                  className="space-y-8"
-                >
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <FormField
-                      control={form.control}
-                      name="title"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Template name</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              placeholder="Outbound nurture sequence"
-                              className={inputFieldClasses}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="timeOfDayToRun"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Preferred time</FormLabel>
-                          <FormControl>
-                            <div
-                              className="relative cursor-pointer"
-                              onClick={openTimePicker}
-                            >
-                              <Clock className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white" />
-                              <Input
-                                {...field}
-                                type="time"
-                                step="60"
-                                ref={(node) => {
-                                  field.ref(node);
-                                  timeInputRef.current = node;
-                                }}
-                                className={`${inputFieldClasses} pl-12 before:hidden`}
-                              />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                <Form {...form}>
+                  <form
+                    onSubmit={form.handleSubmit(handleSubmitForm)}
+                    className="space-y-8"
+                  >
+                    <div className="grid gap-5 md:grid-cols-2">
+                      <FormField
+                        control={form.control}
+                        name="title"
+                        render={({ field }) => (
+                          <FormItem className="space-y-2">
+                            <FormLabel className={formLabelClasses}>
+                              Name
+                            </FormLabel>
+                            <FormControl>
+                              <div className={inputWrapperClasses}>
+                                <Input
+                                  {...field}
+                                  placeholder="Outbound nurture sequence"
+                                  className={inputFieldClasses}
+                                  style={inputStyle}
+                                />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="timeOfDayToRun"
+                        render={({ field }) => (
+                          <FormItem className="space-y-2">
+                            <FormLabel className={formLabelClasses}>
+                              Time
+                            </FormLabel>
+                            <FormControl>
+                              <div className={inputWrapperClasses}>
+                                <div
+                                  className="relative cursor-pointer"
+                                  onClick={openTimePicker}
+                                >
+                                  <Clock className="pointer-events-none absolute left-4 top-1/2 z-20 h-4 w-4 -translate-y-1/2 text-[#7ecbff]" />
+                                  <Input
+                                    {...field}
+                                    type="time"
+                                    step="60"
+                                    ref={(node) => {
+                                      field.ref(node);
+                                      timeInputRef.current = node;
+                                    }}
+                                    className={`${inputFieldClasses} pl-10 before:hidden`}
+                                    style={inputStyle}
+                                  />
+                                </div>
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                    <FormField
-                      control={form.control}
-                      name="numberOfDaysToRun"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Number of days</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              type="number"
-                              min={1}
-                              className={inputFieldClasses}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                      <FormField
+                        control={form.control}
+                        name="numberOfDaysToRun"
+                        render={({ field }) => (
+                          <FormItem className="space-y-2">
+                            <FormLabel className={formLabelClasses}>
+                              Days
+                            </FormLabel>
+                            <FormControl>
+                              <div className={inputWrapperClasses}>
+                                <Input
+                                  {...field}
+                                  type="number"
+                                  min={1}
+                                  className={inputFieldClasses}
+                                  style={inputStyle}
+                                />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                    <FormField
-                      control={form.control}
-                      name="numberOfEmails"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Email touches</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              type="number"
-                              min={0}
-                              className={inputFieldClasses}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                      <FormField
+                        control={form.control}
+                        name="numberOfEmails"
+                        render={({ field }) => (
+                          <FormItem className="space-y-2">
+                            <FormLabel className={formLabelClasses}>
+                              Emails
+                            </FormLabel>
+                            <FormControl>
+                              <div className={inputWrapperClasses}>
+                                <Input
+                                  {...field}
+                                  type="number"
+                                  min={0}
+                                  className={inputFieldClasses}
+                                  style={inputStyle}
+                                />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                    <FormField
-                      control={form.control}
-                      name="numberOfCalls"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Call attempts</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              type="number"
-                              min={0}
-                              className={inputFieldClasses}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                      <FormField
+                        control={form.control}
+                        name="numberOfCalls"
+                        render={({ field }) => (
+                          <FormItem className="space-y-2">
+                            <FormLabel className={formLabelClasses}>
+                              Calls
+                            </FormLabel>
+                            <FormControl>
+                              <div className={inputWrapperClasses}>
+                                <Input
+                                  {...field}
+                                  type="number"
+                                  min={0}
+                                  className={inputFieldClasses}
+                                  style={inputStyle}
+                                />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                    <FormField
-                      control={form.control}
-                      name="numberOfWhatsappMessages"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>WhatsApp nudges</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              type="number"
-                              min={0}
-                              className={inputFieldClasses}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                      <FormField
+                        control={form.control}
+                        name="numberOfWhatsappMessages"
+                        render={({ field }) => (
+                          <FormItem className="space-y-2">
+                            <FormLabel className={formLabelClasses}>
+                              WhatsApp
+                            </FormLabel>
+                            <FormControl>
+                              <div className={inputWrapperClasses}>
+                                <Input
+                                  {...field}
+                                  type="number"
+                                  min={0}
+                                  className={inputFieldClasses}
+                                  style={inputStyle}
+                                />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
 
-                  <DialogFooter className="flex flex-col gap-3 border-t border-white/10 pt-4 sm:flex-row sm:justify-end">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      className="border border-white/20 text-gray-300 hover:text-white hover:bg-white/10 sm:w-auto"
-                      onClick={closeForm}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="submit"
-                      className="sm:w-auto border border-white/40 text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] hover:bg-[#2F2F2F]/60 transition-all"
-                      style={{
-                        background:
-                          "radial-gradient(circle at left, rgba(64,102,179,0.4) 0%, rgba(103,176,183,0.3) 50%, transparent 70%)",
-                        boxShadow:
-                          "rgba(255,255,255,0.16) 0px 3.43px 3.43px 0px inset, rgba(255,255,255,0.16) 0px -3.43px 3.43px 0px inset",
-                      }}
-                      disabled={isCreating || isUpdating}
-                    >
-                      {formMode === "edit"
-                        ? isUpdating
-                          ? "Saving..."
-                          : "Save changes"
-                        : isCreating
-                        ? "Creating..."
-                        : "Create template"}
-                    </Button>
-                  </DialogFooter>
-                </form>
-              </Form>
+                    <DialogFooter className="flex flex-col gap-3 border-t border-white/10 pt-5 sm:flex-row sm:items-center sm:justify-end sm:gap-4">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        className="h-11 rounded-full border border-white/20 bg-white/5 px-7 text-sm text-white/70 hover:bg-white/10 hover:text-white"
+                        onClick={closeForm}
+                      >
+                        Back
+                      </Button>
+                      <Button
+                        type="submit"
+                        className="h-11 rounded-full border-0 bg-gradient-to-r from-[#6de0ff] via-[#6c8cff] to-[#8b5dff] px-8 text-sm font-semibold text-white shadow-[0_20px_45px_rgba(87,154,255,0.45)] transition hover:opacity-90 disabled:opacity-60"
+                        disabled={isCreating || isUpdating}
+                      >
+                        {formMode === "edit"
+                          ? isUpdating
+                            ? "Saving..."
+                            : "Save changes"
+                          : isCreating
+                          ? "Creating..."
+                          : "Create template"}
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </Form>
+              </div>
             </div>
           </DialogContent>
         </Dialog>
