@@ -673,9 +673,11 @@ const FollowupTemplatesPage = () => {
               <TableBody>{renderTableBody()}</TableBody>
             </Table>
           </div>
-          <div className="flex justify-center border-t border-white/5 py-6">
-            {renderPagination()}
-          </div>
+          {pagination && pagination.totalPages > 1 && (
+            <div className="flex justify-center border-t border-white/5 py-6">
+              {renderPagination()}
+            </div>
+          )}
         </section>
 
         <Dialog open={isFormOpen} onOpenChange={(open) => !open && closeForm()}>
