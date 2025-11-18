@@ -19,6 +19,7 @@ import UserList from "@/pages/users/UserList";
 import UserCreate from "@/pages/users/UserCreate";
 import UserEdit from "@/pages/users/UserEdit";
 import ContactNow from "@/pages/twilio-calling/ContactNow";
+import FollowupTemplatesPage from "@/pages/followup-templates";
 
 const contactNowRoles = ["CompanyUser"];
 
@@ -129,6 +130,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <CampaignsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/followup-templates"
+        element={
+          <ProtectedRoute>
+            <FollowupTemplatesPage />
           </ProtectedRoute>
         }
       />

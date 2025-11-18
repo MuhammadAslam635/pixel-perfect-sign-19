@@ -55,6 +55,13 @@ const navLinks: NavLink[] = [
     match: (pathname: string) => pathname.startsWith("/campaigns"),
   },
   {
+    id: "followup-templates",
+    label: "Followups",
+    icon: CalendarDays,
+    path: "/followup-templates",
+    match: (pathname: string) => pathname.startsWith("/followup-templates"),
+  },
+  {
     id: "contact-now",
     label: "Contact",
     icon: PhoneCall,
