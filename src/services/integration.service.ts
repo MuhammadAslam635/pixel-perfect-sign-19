@@ -37,7 +37,8 @@ export const integrationService = {
    * Suggest a unique Mailgun email address
    */
   suggestMailgunEmail: async (
-    domain: string
+    domain: string,
+    prefix?: string
   ): Promise<{
     success: boolean;
     message: string;
@@ -49,6 +50,7 @@ export const integrationService = {
     try {
       const response = await API.post("/integration/mailgun/suggest-email", {
         domain,
+        prefix,
       });
       return response.data;
     } catch (error: any) {
@@ -75,6 +77,7 @@ export const integrationService = {
         };
       };
     };
+    existingEmail?: string;
   }> => {
     try {
       const response = await API.get("/integration/mailgun");

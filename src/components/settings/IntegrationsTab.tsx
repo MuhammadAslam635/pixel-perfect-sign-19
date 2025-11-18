@@ -98,6 +98,8 @@ export const IntegrationsTab = () => {
   const [mailgunValidated, setMailgunValidated] = useState(false);
   const [suggestedEmail, setSuggestedEmail] = useState<string>("");
   const [isSuggestingEmail, setIsSuggestingEmail] = useState(false);
+  const [existingEmail, setExistingEmail] = useState<string>("");
+  const [emailPrefix, setEmailPrefix] = useState<string>("");
   const [ghlConfig, setGhlConfig] = useState({
     apiKey: "",
     locationId: "",
@@ -744,6 +746,16 @@ export const IntegrationsTab = () => {
           webhookSigningKey: config.webhookSigningKey || "",
         });
         setMailgunValidated(response.data.integration.isConnected || false);
+        
+        // Set existing email if available
+        if (response.data?.existingEmail) {
+          setExistingEmail(response.data.existingEmail);
+          // Extract prefix from existing email if domain matches
+          if (config.domain && response.data.existingEmail.includes(`@${config.domain}`)) {
+            const prefix = response.data.existingEmail.split(`@${config.domain}`)[0];
+            setEmailPrefix(prefix);
+          }
+        }
       }
     } catch (error: any) {
       // If 404, integration doesn't exist yet - that's okay
@@ -842,7 +854,8 @@ export const IntegrationsTab = () => {
         setIsSuggestingEmail(true);
         try {
           const suggestResponse = await integrationService.suggestMailgunEmail(
-            mailgunConfig.domain.trim()
+            mailgunConfig.domain.trim(),
+            emailPrefix.trim() || undefined
           );
           if (suggestResponse?.success && suggestResponse?.data?.suggestedEmail) {
             setSuggestedEmail(suggestResponse.data.suggestedEmail);
@@ -983,6 +996,30 @@ export const IntegrationsTab = () => {
       // Reset validation when closing form
       setMailgunValidated(false);
       setSuggestedEmail("");
+      setEmailPrefix("");
+    }
+  };
+
+  // Handle prefix change and auto-suggest email
+  const handleEmailPrefixChange = async (prefix: string) => {
+    setEmailPrefix(prefix);
+    
+    // If domain is set and prefix is provided, suggest email
+    if (mailgunConfig.domain && prefix.trim() && mailgunValidated) {
+      setIsSuggestingEmail(true);
+      try {
+        const suggestResponse = await integrationService.suggestMailgunEmail(
+          mailgunConfig.domain.trim(),
+          prefix.trim()
+        );
+        if (suggestResponse?.success && suggestResponse?.data?.suggestedEmail) {
+          setSuggestedEmail(suggestResponse.data.suggestedEmail);
+        }
+      } catch (suggestError: any) {
+        console.error("Error suggesting email:", suggestError);
+      } finally {
+        setIsSuggestingEmail(false);
+      }
     }
   };
 
@@ -1829,12 +1866,56 @@ export const IntegrationsTab = () => {
                   />
                 </div>
               </div>
+              {existingEmail && !mailgunValidated && (
+                <div className="space-y-2">
+                  <Label className="text-white/80 text-sm">
+                    Current Mailgun Email
+                  </Label>
+                  <div className="rounded-lg bg-blue-500/10 border border-blue-500/30 p-3">
+                    <p className="text-blue-400 text-sm font-medium">
+                      {existingEmail}
+                    </p>
+                    <p className="text-xs text-blue-300/70 mt-1">
+                      Enter a new prefix below to generate a new email address
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {mailgunValidated && (
                 <div className="space-y-3">
                   <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/30 p-3">
                     <p className="text-emerald-400 text-sm font-medium flex items-center gap-2">
                       <span className="h-2 w-2 rounded-full bg-emerald-400" />
                       Configuration validated successfully
+                    </p>
+                  </div>
+                  
+                  {existingEmail && (
+                    <div className="space-y-2">
+                      <Label className="text-white/80 text-sm">
+                        Current Mailgun Email
+                      </Label>
+                      <div className="rounded-lg bg-blue-500/10 border border-blue-500/30 p-3">
+                        <p className="text-blue-400 text-sm font-medium">
+                          {existingEmail}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <Label className="text-white/80 text-sm">
+                      Email Prefix <span className="text-white/50 text-xs">(optional)</span>
+                    </Label>
+                    <Input
+                      value={emailPrefix}
+                      onChange={(event) => handleEmailPrefixChange(event.target.value)}
+                      placeholder="e.g., support, sales, info"
+                      className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 text-sm sm:text-base"
+                    />
+                    <p className="text-xs text-white/50">
+                      Enter a prefix (word) to generate a new unique email address. Leave empty to use your company email as base.
                     </p>
                   </div>
                   
