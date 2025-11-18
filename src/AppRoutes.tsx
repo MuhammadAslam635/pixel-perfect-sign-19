@@ -20,6 +20,14 @@ import UserCreate from "@/pages/users/UserCreate";
 import UserEdit from "@/pages/users/UserEdit";
 import ContactNow from "@/pages/twilio-calling/ContactNow";
 import FollowupTemplatesPage from "@/pages/followup-templates";
+import {
+  InboxPage,
+  ThreadsPage,
+  ComposePage,
+  EmailDetailPage,
+  ThreadDetailPage,
+  StatsPage,
+} from "@/pages/emails";
 
 const contactNowRoles = ["CompanyUser"];
 
@@ -170,6 +178,54 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute allowedRoles={contactNowRoles}>
             <ContactNow />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/emails/inbox"
+        element={
+          <ProtectedRoute>
+            <InboxPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/emails/threads"
+        element={
+          <ProtectedRoute>
+            <ThreadsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/emails/compose"
+        element={
+          <ProtectedRoute>
+            <ComposePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/emails/stats"
+        element={
+          <ProtectedRoute>
+            <StatsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/emails/:emailId"
+        element={
+          <ProtectedRoute>
+            <EmailDetailPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/emails/threads/:threadId"
+        element={
+          <ProtectedRoute>
+            <ThreadDetailPage />
           </ProtectedRoute>
         }
       />

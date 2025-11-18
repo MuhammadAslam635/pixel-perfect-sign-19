@@ -15,6 +15,7 @@ import {
   Bell,
   Bot,
   PhoneCall,
+  Mail,
 } from "lucide-react";
 import { RootState } from "@/store/store";
 import { getUserData } from "@/utils/authHelpers";
@@ -46,6 +47,13 @@ const navLinks: NavLink[] = [
   },
   // { id: "users", label: "Users", icon: Users, path: "/users" },
   { id: "chat", label: "Chat", icon: MessageSquare, path: "/chat" },
+  {
+    id: "emails",
+    label: "Emails",
+    icon: Mail,
+    path: "/emails/inbox",
+    match: (pathname: string) => pathname.startsWith("/emails"),
+  },
   { id: "agents", label: "Agents", icon: Bot, path: "/agents" },
   {
     id: "campaigns",

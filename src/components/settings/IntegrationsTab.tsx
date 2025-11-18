@@ -22,6 +22,7 @@ import { RefreshCw } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { getUserData } from "@/utils/authHelpers";
 import { WhatsAppCredential } from "@/api/whatsapp";
+import { integrationService } from "@/services/integration.service";
 import {
   useFacebookConnect,
   useFacebookDisconnect,
@@ -95,6 +96,8 @@ export const IntegrationsTab = () => {
   const [isValidatingMailgun, setIsValidatingMailgun] = useState(false);
   const [showMailgunForm, setShowMailgunForm] = useState(false);
   const [mailgunValidated, setMailgunValidated] = useState(false);
+  const [suggestedEmail, setSuggestedEmail] = useState<string>("");
+  const [isSuggestingEmail, setIsSuggestingEmail] = useState(false);
   const [ghlConfig, setGhlConfig] = useState({
     apiKey: "",
     locationId: "",
@@ -834,6 +837,22 @@ export const IntegrationsTab = () => {
             response.data.message ||
             "Mailgun configuration validated successfully!",
         });
+        
+        // Suggest unique email address after validation
+        setIsSuggestingEmail(true);
+        try {
+          const suggestResponse = await integrationService.suggestMailgunEmail(
+            mailgunConfig.domain.trim()
+          );
+          if (suggestResponse?.success && suggestResponse?.data?.suggestedEmail) {
+            setSuggestedEmail(suggestResponse.data.suggestedEmail);
+          }
+        } catch (suggestError: any) {
+          console.error("Error suggesting email:", suggestError);
+          // Don't show error toast, just log it
+        } finally {
+          setIsSuggestingEmail(false);
+        }
       }
     } catch (error: any) {
       console.error("Error validating Mailgun config:", error);
@@ -896,6 +915,15 @@ export const IntegrationsTab = () => {
       return;
     }
 
+    if (!suggestedEmail) {
+      toast({
+        title: "Email Required",
+        description: "Please wait for email suggestion or enter a Mailgun email address.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSavingMailgun(true);
     try {
       const response = await axios.post(
@@ -905,6 +933,7 @@ export const IntegrationsTab = () => {
           domain: mailgunConfig.domain.trim(),
           apiUrl: mailgunConfig.apiUrl.trim(),
           webhookSigningKey: mailgunConfig.webhookSigningKey.trim(),
+          mailgunEmail: suggestedEmail.trim(),
         },
         {
           headers: {
@@ -923,6 +952,7 @@ export const IntegrationsTab = () => {
         });
         setShowMailgunForm(false);
         setMailgunValidated(false);
+        setSuggestedEmail("");
         fetchMailgunConfig();
       }
     } catch (error: any) {
@@ -952,6 +982,7 @@ export const IntegrationsTab = () => {
     if (showMailgunForm) {
       // Reset validation when closing form
       setMailgunValidated(false);
+      setSuggestedEmail("");
     }
   };
 
@@ -1799,11 +1830,37 @@ export const IntegrationsTab = () => {
                 </div>
               </div>
               {mailgunValidated && (
-                <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/30 p-3">
-                  <p className="text-emerald-400 text-sm font-medium flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                    Configuration validated successfully
-                  </p>
+                <div className="space-y-3">
+                  <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/30 p-3">
+                    <p className="text-emerald-400 text-sm font-medium flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                      Configuration validated successfully
+                    </p>
+                  </div>
+                  
+                  {isSuggestingEmail ? (
+                    <div className="rounded-lg bg-blue-500/10 border border-blue-500/30 p-3">
+                      <p className="text-blue-400 text-sm flex items-center gap-2">
+                        <RefreshCw className="h-4 w-4 animate-spin" />
+                        Generating unique email address...
+                      </p>
+                    </div>
+                  ) : suggestedEmail ? (
+                    <div className="space-y-2">
+                      <Label className="text-white/80 text-sm">
+                        Mailgun Email Address <span className="text-red-400">*</span>
+                      </Label>
+                      <Input
+                        value={suggestedEmail}
+                        onChange={(event) => setSuggestedEmail(event.target.value)}
+                        placeholder="e.g., company@mg.yourdomain.com"
+                        className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 text-sm sm:text-base"
+                      />
+                      <p className="text-xs text-emerald-400">
+                        ✓ Unique email address suggested. You can modify it if needed.
+                      </p>
+                    </div>
+                  ) : null}
                 </div>
               )}
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
@@ -1834,7 +1891,7 @@ export const IntegrationsTab = () => {
                   <Button
                     type="button"
                     onClick={handleSaveMailgunConfig}
-                    disabled={isSavingMailgun || !mailgunValidated}
+                    disabled={isSavingMailgun || !mailgunValidated || !suggestedEmail}
                     className="w-full sm:w-auto bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3] text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{
                       boxShadow:
