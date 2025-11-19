@@ -683,14 +683,24 @@ const CampaignsPage = () => {
               <Button
                 size="sm"
                 onClick={() => setIsCreateModalOpen(true)}
-                className="relative h-9 px-4 rounded-full border border-white/40 text-white text-xs bg-white/5 backdrop-blur-sm shadow-[0_16px_28px_rgba(0,0,0,0.35)] hover:bg-[#2F2F2F]/60 transition-all w-full sm:w-auto lg:flex-shrink-0"
+                className="relative h-9 px-4 rounded-full border-0 text-white text-xs hover:bg-[#2F2F2F]/60 transition-all w-full sm:w-auto lg:flex-shrink-0 overflow-hidden"
                 style={{
-                  background:
-                    "radial-gradient(circle at left, rgba(64, 102, 179, 0.4) 0%, rgba(103, 176, 183, 0.3) 50%, transparent 70%)",
+                  background: '#FFFFFF1A',
+                  boxShadow: '0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset'
                 }}
               >
-                <Plus className="w-4 h-4 mr-2" />
-                Create Campaign
+                {/* radial element 150px 150px */}
+                <div 
+                  className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[150px] h-[150px] rounded-full pointer-events-none"
+                  style={{
+                    background: 'radial-gradient(circle, #66AFB7 0%, transparent 70%)',
+                    backdropFilter: 'blur(50px)',
+                    WebkitBackdropFilter: 'blur(50px)',
+                    zIndex: -1
+                  }}
+                ></div>
+                <Plus className="w-4 h-4 mr-0 relative z-10" />
+                <span className="relative z-10">Create Campaign</span>
               </Button>
             </div>
           </div>
