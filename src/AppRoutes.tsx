@@ -30,6 +30,7 @@ import {
   ThreadDetailPage,
   StatsPage,
 } from "@/pages/emails";
+import LeadChat from "./pages/leaddetailview/components/LeadChat";
 
 const contactNowRoles = ["CompanyUser"];
 
@@ -132,6 +133,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <AgentsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/leadchattest"
+        element={
+          <ProtectedRoute>
+            <LeadChat />
           </ProtectedRoute>
         }
       />

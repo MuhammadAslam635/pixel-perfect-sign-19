@@ -85,7 +85,7 @@ const LeadChat = () => {
         >
             {/* Header Tabs */}
             <div className="w-full">
-                <div className="flex w-full justify-center">
+                <div className="flex w-full justify-center lg:justify-start">
                     <div className="flex w-full flex-wrap items-center gap-2 sm:gap-4 lg:w-[55%]">
                         {tabs.map((tab) => {
                             const isActive = activeTab === tab.label;
@@ -114,7 +114,7 @@ const LeadChat = () => {
                     </div>
                 </div>
                 <div className="relative mt-2 h-[1px] bg-white/30">
-                    <div className="absolute inset-0 flex justify-center">
+                    <div className="absolute inset-0 flex justify-center lg:justify-start">
                         <div className="relative h-full w-full lg:w-[55%]">
                             <div
                                 className="absolute top-[-1px] h-[3px] bg-white transition-all duration-300 ease-out"
@@ -168,7 +168,7 @@ const LeadChat = () => {
             <div className="flex flex-col w-full">
                 {activeTab === "WhatsApp" ? (
                     <>
-                        <div className="flex flex-1 flex-col overflow-y-auto lg:max-h-[calc(100vh-440px)] max-h-[calc(100vh-350px)] scrollbar-hide">
+                        <div className="flex flex-1 flex-col overflow-y-auto lg:max-h-[calc(100vh-420px)] max-h-[calc(100vh-350px)] scrollbar-hide">
                             <div className="flex flex-col">
                                 {mockMessages.map((message) => (
                                     <div
