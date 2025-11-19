@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { RootState } from "@/store/store";
 import { getUserData } from "@/utils/authHelpers";
+import { HomeIcon } from "@/components/icons/HomeIcon";
 type NavLink = {
   id: string;
   label: string;
@@ -34,7 +35,7 @@ const navLinks: NavLink[] = [
   {
     id: "home",
     label: "Home",
-    icon: Home,
+    icon: HomeIcon as typeof Home,
     path: "/dashboard",
     match: (pathname: string) => pathname === "/dashboard",
   },
@@ -160,10 +161,10 @@ export const Navigation = () => {
         return (
           <button
             key={link.id}
-            className={`group relative overflow-hidden flex-none flex h-10 w-10 items-center justify-center rounded-full border border-white/40 px-0 text-xs font-medium tracking-wide transition-[width,background-color,box-shadow,padding,gap] duration-400 ease-elastic sm:text-sm ${
+            className={`group relative overflow-hidden flex-none flex h-10 items-center justify-center rounded-full border border-white/40 px-0 text-xs font-medium tracking-wide transition-[width,background-color,box-shadow,padding,gap] duration-400 ease-elastic sm:text-sm ${
               isActive
-                ? "text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] justify-start w-auto h-10 px-2.5 gap-2 before:from-white/25 z-10"
-                : "aspect-square text-white/85 hover:text-white hover:shadow-[0_16px_28px_rgba(0,0,0,0.35)] hover:justify-start hover:w-auto hover:h-10 hover:px-2.5 hover:gap-2 hover:z-10"
+                ? "text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] justify-start w-auto h-10 pl-3.5 pr-3.5 gap-2 before:from-white/25 z-10"
+                : "w-10 aspect-square text-white/85 hover:text-white hover:shadow-[0_16px_28px_rgba(0,0,0,0.35)] hover:justify-start hover:w-auto hover:aspect-auto hover:h-10 hover:pl-3 hover:pr-2.5 hover:gap-2 hover:z-10"
             } snap-start lg:snap-center before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/15 before:to-transparent before:transition-all before:duration-300 before:ease-in-out hover:before:from-white/25 hover:before:duration-200`}
             style={{
               background: '#FFFFFF1A',
@@ -184,17 +185,17 @@ export const Navigation = () => {
               ></div>
             )}
             <Icon
-              className={`h-[20px] w-[20px] flex-shrink-0 transition-[color,filter] duration-250 ease-in-out ${
+              className={`h-[16px] w-[16px] flex-shrink-0 transition-[color,filter] duration-250 ease-in-out ${
                 isActive
                   ? "text-white drop-shadow-[0_8px_18px_rgba(62,100,180,0.45)]"
                   : "text-white/85 group-hover:text-white group-hover:drop-shadow-[0_4px_12px_rgba(255,255,255,0.3)]"
               }`}
             />
             <span
-              className={`whitespace-nowrap transition-[opacity,transform] duration-350 ease-elastic ${
+              className={`whitespace-nowrap transition-[opacity,transform,width,margin] duration-350 ease-elastic overflow-hidden ${
                 isActive
-                  ? "inline ml-2 opacity-100 scale-100 translate-x-0"
-                  : "hidden group-hover:inline ml-2 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 -translate-x-1 group-hover:translate-x-0"
+                  ? "inline ml-1.5 opacity-100 scale-100 translate-x-0 max-w-[200px]"
+                  : "inline ml-0 opacity-0 scale-95 -translate-x-1 max-w-0 group-hover:ml-1.5 group-hover:opacity-100 group-hover:scale-100 group-hover:translate-x-0 group-hover:max-w-[200px]"
               }`}
             >
               {link.label}
