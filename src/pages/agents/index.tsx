@@ -44,22 +44,23 @@ const AgentsPage = () => {
     <DashboardLayout>
       <main className="relative flex-1 px-6 pb-12 pt-28 sm:px-10 md:px-14 lg:px-20">
         <div className="absolute inset-0 bg-gradient-to-b from-[#0F172A] via-transparent to-[#05060A] opacity-70"></div>
-        <div className="relative z-10 mx-auto flex w-full max-w-[1400px] flex-col gap-12 bg-[#222B2C] p-6 rounded-2xl">
-          <header className="flex flex-col gap-4">
-            <span className="inline-flex w-fit items-center rounded-full border border-white/15 bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300/80">
-              AI Agents
-            </span>
-            <h1 className="text-3xl font-semibold leading-tight text-white md:text-4xl lg:text-5xl">
-              Meet the specialists powering your autonomous growth
-            </h1>
-            <p className="text-base text-white/70 md:text-lg">
-              Every agent is tuned for a high-impact part of your go-to-market.
-              Blend them together to attract leads, personalize outreach, close
-              more deals, and keep customers delighted.
-            </p>
-          </header>
-
-          <section className="grid gap-6 sm:grid-cols-3 xl:grid-cols-4">
+        <header className="flex flex-col gap-4 mb-12">
+          <span className="font-poppins font-medium text-4xl text-white">
+            AI Agents
+          </span>
+          <h1 className="font-poppins font-light text-xl text-white">
+            Meet the specialists powering your autonomous growth{" "}
+          </h1>
+        </header>
+        <div
+          className="rounded-2xl p-6"
+          style={{
+            background:
+              "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 2e-05) 38.08%, rgba(255, 255, 255, 2e-05) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
+            border: "1px solid #FFFFFF4D",
+          }}
+        >
+          <section className="grid gap-6 sm:grid-cols-3 xl:grid-cols-3">
             {agents.map((agent) => (
               <AgentCard key={agent.name} {...agent} />
             ))}
@@ -71,5 +72,3 @@ const AgentsPage = () => {
 };
 
 export default AgentsPage;
-
-
