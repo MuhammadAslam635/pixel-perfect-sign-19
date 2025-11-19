@@ -388,3 +388,4 @@ const ClientsTable: React.FC<ClientsTableProps> = ({ viewType = "sessions" }) =>
 
 export default ClientsTable;
 
+

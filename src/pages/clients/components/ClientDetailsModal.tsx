@@ -327,3 +327,4 @@ const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
 
 export default ClientDetailsModal;
 
+

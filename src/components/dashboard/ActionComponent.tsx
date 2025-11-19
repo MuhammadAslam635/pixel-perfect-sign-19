@@ -114,16 +114,11 @@ export const ActionComponent = () => {
   return (
     <div className="flex min-w-[100px] justify-end relative" ref={actionsRef}>
       <div
-        className="flex items-center gap-1 rounded-full border border-white/15 py-1.5 px-3 shadow-[0_20px_34px_rgba(0,0,0,0.38)] backdrop-blur"
-        style={{
-          background: "rgba(255, 255, 255, 0.1)",
-          boxShadow:
-            "rgba(255, 255, 255, 0.16) 0px 3.43px 3.43px 0px inset, rgba(255, 255, 255, 0.16) 0px -3.43px 3.43px 0px inset",
-        }}
+        className="flex items-center gap-1"
       >
         <button
           aria-label="Toggle notifications"
-          className={`relative flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-black/35 text-white transition hover:bg-black/45 ${
+          className={`relative flex h-8 w-8 items-center justify-center rounded-full border border-white/10 text-white transition ${
             notificationsOpen ? "ring-2 ring-cyan-400/40" : ""
           }`}
           type="button"
@@ -141,8 +136,6 @@ export const ActionComponent = () => {
             </span>
           )}
         </button>
-
-        <span className="h-6 w-px rounded-full bg-white/15" />
 
         <button
           aria-label="Toggle profile menu"

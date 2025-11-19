@@ -145,7 +145,7 @@ export const Navigation = () => {
   };
   
   return (
-    <nav className="scrollbar-hide flex-1 min-w-0 w-full lg:w-[780px] flex items-center justify-start lg:justify-center gap-2 overflow-x-auto flex-nowrap snap-x snap-mandatory pl-2 sm:pl-3 md:pl-4 pr-2 sm:pr-4">
+    <nav className="hidden lg:flex scrollbar-hide flex-1 min-w-0 w-full lg:w-[780px] items-center justify-start lg:justify-center gap-2 overflow-x-auto flex-nowrap snap-x snap-mandatory pl-2 sm:pl-3 md:pl-4 pr-2 sm:pr-4">
       {filteredNavLinks.map((link) => {
         const Icon = link.icon;
         const isActive = activeNav === link.id;

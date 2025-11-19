@@ -390,3 +390,4 @@ const CustomerSupportQueriesTable: React.FC = () => {
 
 export default CustomerSupportQueriesTable;
 
+
