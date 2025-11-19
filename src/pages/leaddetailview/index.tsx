@@ -2,6 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import LeadDetailCard from "./components/LeadDetailCard";
+import Activity from "./components/Activity";
 import { leadsService } from "@/services/leads.service";
 import { Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -68,10 +69,21 @@ const LeadDetailView = () => {
 
         {/* Grid Layout for Lead Detail Components */}
         {lead && !isLoading && (
-          <div className="relative z-10 grid grid-cols-12 gap-1">
+          <div className="relative z-10 grid grid-cols-12 gap-6">
             {/* Left: Lead Detail Card */}
             <div className="col-span-2">
               <LeadDetailCard lead={lead} />
+            </div>
+            {/* Right: Activity Component */}
+            <div
+              className="col-span-4 col-start-9"
+              style={{
+                // border: "1px solid #FFFFFF4D",
+                background:
+                  "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 2e-05) 38.08%, rgba(255, 255, 255, 2e-05) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
+              }}
+            >
+              <Activity />
             </div>
           </div>
         )}
