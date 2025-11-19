@@ -208,7 +208,7 @@ export const MobileNavigation = () => {
           {/* Navigation Panel */}
           <div
             ref={panelRef}
-            className="absolute left-0 top-0 h-screen w-80 bg-gradient-to-b from-[#1a2332] to-[#0f1419] z-50 lg:hidden shadow-2xl overflow-y-auto backdrop-blur-xl bg-opacity-80 border-r border-white/10"
+            className="absolute left-0 top-0 h-screen w-80 bg-white/25 z-50 lg:hidden shadow-2xl overflow-y-auto backdrop-blur-[20px] border-r border-white/40"
             role="dialog"
             aria-modal="true"
           >
