@@ -12,7 +12,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, Plus, MoreVertical, Pencil, Trash2, Shield } from "lucide-react";
+import {
+  Search,
+  Plus,
+  MoreVertical,
+  Pencil,
+  Trash2,
+  Shield,
+} from "lucide-react";
 import { rbacService } from "@/services/rbac.service";
 import { Role } from "@/types/rbac.types";
 import { toast } from "sonner";
@@ -20,13 +27,13 @@ import { usePermissions } from "@/hooks/usePermissions";
 
 const RoleList = () => {
   const navigate = useNavigate();
-  const { isCompAdmin, isSysAdmin } = usePermissions();
+  const { checkPermission } = usePermissions();
   const [roles, setRoles] = useState<Role[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
 
   // Check if user has permission
-  const hasAccess = isCompAdmin() || isSysAdmin();
+  const hasAccess = checkPermission("roles", ["view"]);
 
   useEffect(() => {
     if (!hasAccess) {
@@ -130,7 +137,9 @@ const RoleList = () => {
               <div className="text-sm font-medium text-white/70">Role Name</div>
               <div className="text-sm font-medium text-white/70">Type</div>
               <div className="text-sm font-medium text-white/70">Status</div>
-              <div className="text-sm font-medium text-white/70">Permissions</div>
+              <div className="text-sm font-medium text-white/70">
+                Permissions
+              </div>
               <div className="text-sm font-medium text-white/70 text-center">
                 Actions
               </div>
@@ -170,7 +179,9 @@ const RoleList = () => {
                           <div className="font-medium text-white">
                             {role.displayName}
                           </div>
-                          <div className="text-white/50 text-sm">{role.name}</div>
+                          <div className="text-white/50 text-sm">
+                            {role.name}
+                          </div>
                         </div>
                         <div>
                           {role.type === "system" && (
@@ -216,7 +227,9 @@ const RoleList = () => {
                               className="bg-[rgba(30,30,30,0.95)] border border-white/10 text-white shadow-lg rounded-lg w-40 backdrop-blur"
                             >
                               <DropdownMenuItem
-                                onClick={() => navigate(`/roles/${role._id}/edit`)}
+                                onClick={() =>
+                                  navigate(`/roles/${role._id}/edit`)
+                                }
                                 className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-white/10"
                               >
                                 <Pencil size={16} /> Edit
@@ -263,7 +276,9 @@ const RoleList = () => {
                               className="bg-[rgba(30,30,30,0.95)] border border-white/10 text-white shadow-lg rounded-lg w-40 backdrop-blur"
                             >
                               <DropdownMenuItem
-                                onClick={() => navigate(`/roles/${role._id}/edit`)}
+                                onClick={() =>
+                                  navigate(`/roles/${role._id}/edit`)
+                                }
                                 className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-white/10"
                               >
                                 <Pencil size={16} /> Edit

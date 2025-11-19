@@ -92,13 +92,6 @@ export const usePermissions = () => {
   };
 
   /**
-   * Check if user can manage (assign roles, etc.)
-   */
-  const canManage = (moduleName: string): boolean => {
-    return checkAction(moduleName, "manage");
-  };
-
-  /**
    * Check if user is System Admin
    */
   const isSysAdmin = (): boolean => {
@@ -124,7 +117,7 @@ export const usePermissions = () => {
     if (!user) return [];
 
     if (legacyRole === "Admin" || isSystemAdmin(userRole)) {
-      return ["view", "create", "edit", "delete", "export", "import", "manage"];
+      return ["view", "create", "edit", "delete"];
     }
 
     if (userRole) {
@@ -142,8 +135,6 @@ export const usePermissions = () => {
     canCreate,
     canEdit,
     canDelete,
-    canManage,
-
     // Role checks
     isSysAdmin,
     isCompAdmin,

@@ -37,7 +37,7 @@ import { Role } from "@/types/rbac.types";
 const UserList = () => {
   const navigate = useNavigate();
   const authState = useSelector((state: RootState) => state.auth);
-  const userRole = authState.user?.role;
+  const userRole = authState.user?.roleId;
   const [users, setUsers] = useState<User[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -120,6 +120,23 @@ const UserList = () => {
   }, [availableRoles]);
 
   const renderRoleBadge = (userData: User) => {
+    // Prefer RBAC roleId when available
+    const roleObject =
+      typeof userData.roleId === "object"
+        ? (userData.roleId as Role)
+        : userData.roleId
+        ? roleMap[userData.roleId as string]
+        : null;
+
+    if (roleObject) {
+      return (
+        <Badge className="bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 rounded-full px-3 py-1 text-xs">
+          {roleObject.displayName}
+        </Badge>
+      );
+    }
+
+    // Fallback to legacy roles
     if (userData.role === "CompanyAdmin") {
       return (
         <Badge className="bg-purple-600/20 text-purple-400 border border-purple-600/30 rounded-full px-3 py-1 text-xs">
@@ -140,15 +157,6 @@ const UserList = () => {
       return (
         <Badge className="bg-white/15 text-white border border-white/20 rounded-full px-3 py-1 text-xs">
           {userData.role}
-        </Badge>
-      );
-    }
-
-    if (userData.roleId && roleMap[userData.roleId]) {
-      const mappedRole = roleMap[userData.roleId];
-      return (
-        <Badge className="bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 rounded-full px-3 py-1 text-xs">
-          {mappedRole.displayName}
         </Badge>
       );
     }

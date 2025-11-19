@@ -12,13 +12,13 @@ import { usePermissions } from "@/hooks/usePermissions";
 
 const ModuleList = () => {
   const navigate = useNavigate();
-  const { isSysAdmin } = usePermissions();
+  const { checkPermission } = usePermissions();
   const [modules, setModules] = useState<Module[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
 
   // Only system admins can view modules
-  const hasAccess = isSysAdmin();
+  const hasAccess = checkPermission("modules", ["view"]);
 
   useEffect(() => {
     if (!hasAccess) {
@@ -89,11 +89,15 @@ const ModuleList = () => {
           <div className="rounded-2xl border border-white/10 bg-[linear-gradient(135deg,rgba(58,62,75,0.82),rgba(28,30,40,0.94))] shadow-[0_20px_34px_rgba(0,0,0,0.38)] backdrop-blur overflow-hidden">
             {/* Table Header - Hidden on mobile */}
             <div className="hidden lg:grid grid-cols-[1.5fr_1.5fr_1fr_1fr_1.5fr] items-center gap-4 px-4 sm:px-6 py-4 bg-black/20 border-b border-white/10">
-              <div className="text-sm font-medium text-white/70">Module Name</div>
+              <div className="text-sm font-medium text-white/70">
+                Module Name
+              </div>
               <div className="text-sm font-medium text-white/70">Route</div>
               <div className="text-sm font-medium text-white/70">Status</div>
               <div className="text-sm font-medium text-white/70">Order</div>
-              <div className="text-sm font-medium text-white/70">Available Actions</div>
+              <div className="text-sm font-medium text-white/70">
+                Available Actions
+              </div>
             </div>
 
             {/* Table Body */}
@@ -130,7 +134,9 @@ const ModuleList = () => {
                           <div className="font-medium text-white">
                             {module.displayName}
                           </div>
-                          <div className="text-white/50 text-sm">{module.name}</div>
+                          <div className="text-white/50 text-sm">
+                            {module.name}
+                          </div>
                         </div>
                         <div className="text-white/70 text-sm font-mono">
                           {module.route}
@@ -177,7 +183,9 @@ const ModuleList = () => {
                             <h3 className="font-medium text-white mb-1">
                               {module.displayName}
                             </h3>
-                            <p className="text-white/50 text-sm">{module.name}</p>
+                            <p className="text-white/50 text-sm">
+                              {module.name}
+                            </p>
                             <p className="text-white/60 text-xs font-mono mt-1">
                               {module.route}
                             </p>
@@ -202,7 +210,9 @@ const ModuleList = () => {
                         )}
 
                         <div className="pt-2 border-t border-white/10">
-                          <p className="text-white/50 text-xs mb-2">Available Actions:</p>
+                          <p className="text-white/50 text-xs mb-2">
+                            Available Actions:
+                          </p>
                           <div className="flex flex-wrap gap-1">
                             {module.permissions.map((perm) => (
                               <Badge

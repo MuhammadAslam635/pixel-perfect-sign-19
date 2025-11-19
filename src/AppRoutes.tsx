@@ -35,8 +35,6 @@ import {
 } from "@/pages/emails";
 import LeadChat from "./pages/leaddetailview/components/LeadChat";
 
-const contactNowRoles = ["CompanyUser"];
-
 const AppRoutes = () => {
   return (
     <Routes>
@@ -94,7 +92,7 @@ const AppRoutes = () => {
       <Route
         path="/dashboard"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute moduleName="dashboard">
             <Dashboard />
           </ProtectedRoute>
         }
@@ -102,7 +100,7 @@ const AppRoutes = () => {
       <Route
         path="/companies"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute moduleName="companies">
             <CompanyDetail />
           </ProtectedRoute>
         }
@@ -110,7 +108,7 @@ const AppRoutes = () => {
       <Route
         path="/chat"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute moduleName="chat">
             <ChatPage />
           </ProtectedRoute>
         }
@@ -118,7 +116,7 @@ const AppRoutes = () => {
       <Route
         path="/settings"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute moduleName="settings">
             <SettingsPage />
           </ProtectedRoute>
         }
@@ -126,7 +124,7 @@ const AppRoutes = () => {
       <Route
         path="/company-knowledge"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute moduleName="company-knowledge">
             <CompanyKnowledge />
           </ProtectedRoute>
         }
@@ -134,7 +132,7 @@ const AppRoutes = () => {
       <Route
         path="/agents"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute moduleName="agents">
             <AgentsPage />
           </ProtectedRoute>
         }
@@ -150,7 +148,7 @@ const AppRoutes = () => {
       <Route
         path="/campaigns"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute moduleName="campaigns">
             <CampaignsPage />
           </ProtectedRoute>
         }
@@ -166,7 +164,7 @@ const AppRoutes = () => {
       <Route
         path="/followup-templates"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute moduleName="followup-templates">
             <FollowupTemplatesPage />
           </ProtectedRoute>
         }
@@ -174,7 +172,7 @@ const AppRoutes = () => {
       <Route
         path="/users"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute moduleName="users">
             <UserList />
           </ProtectedRoute>
         }
@@ -182,7 +180,7 @@ const AppRoutes = () => {
       <Route
         path="/users/create"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute moduleName="users" requiredActions={["create"]}>
             <UserCreate />
           </ProtectedRoute>
         }
@@ -190,7 +188,7 @@ const AppRoutes = () => {
       <Route
         path="/users/:id/edit"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute moduleName="users" requiredActions={["edit"]}>
             <UserEdit />
           </ProtectedRoute>
         }
@@ -198,7 +196,7 @@ const AppRoutes = () => {
       <Route
         path="/contact-now"
         element={
-          <ProtectedRoute allowedRoles={contactNowRoles}>
+          <ProtectedRoute moduleName="contact-now">
             <ContactNow />
           </ProtectedRoute>
         }
@@ -206,7 +204,7 @@ const AppRoutes = () => {
       <Route
         path="/emails/inbox"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute moduleName="emails">
             <InboxPage />
           </ProtectedRoute>
         }
@@ -214,7 +212,7 @@ const AppRoutes = () => {
       <Route
         path="/emails/threads"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute moduleName="emails">
             <ThreadsPage />
           </ProtectedRoute>
         }
@@ -222,7 +220,7 @@ const AppRoutes = () => {
       <Route
         path="/emails/compose"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute moduleName="emails" requiredActions={["create"]}>
             <ComposePage />
           </ProtectedRoute>
         }
@@ -230,7 +228,7 @@ const AppRoutes = () => {
       <Route
         path="/emails/stats"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute moduleName="emails">
             <StatsPage />
           </ProtectedRoute>
         }
@@ -238,7 +236,7 @@ const AppRoutes = () => {
       <Route
         path="/emails/:emailId"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute moduleName="emails">
             <EmailDetailPage />
           </ProtectedRoute>
         }
@@ -246,7 +244,7 @@ const AppRoutes = () => {
       <Route
         path="/emails/threads/:threadId"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute moduleName="emails">
             <ThreadDetailPage />
           </ProtectedRoute>
         }
@@ -264,7 +262,7 @@ const AppRoutes = () => {
       <Route
         path="/roles"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute moduleName="roles">
             <RoleList />
           </ProtectedRoute>
         }
@@ -272,7 +270,7 @@ const AppRoutes = () => {
       <Route
         path="/roles/create"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute moduleName="roles" requiredActions={["create"]}>
             <RoleForm />
           </ProtectedRoute>
         }
@@ -280,7 +278,7 @@ const AppRoutes = () => {
       <Route
         path="/roles/:id/edit"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute moduleName="roles" requiredActions={["edit"]}>
             <RoleForm />
           </ProtectedRoute>
         }
@@ -288,7 +286,7 @@ const AppRoutes = () => {
       <Route
         path="/modules"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute moduleName="modules">
             <ModuleList />
           </ProtectedRoute>
         }

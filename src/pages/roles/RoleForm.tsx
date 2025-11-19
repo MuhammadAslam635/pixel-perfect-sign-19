@@ -8,7 +8,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { rbacService } from "@/services/rbac.service";
-import { Module, Role, PermissionAction } from "@/types/rbac.types";
+import {
+  Module,
+  Role,
+  PermissionAction,
+  RolePermission,
+} from "@/types/rbac.types";
 import { toast } from "sonner";
 import { usePermissions } from "@/hooks/usePermissions";
 import { ArrowLeft, Save, Shield, Search } from "lucide-react";
@@ -29,7 +34,7 @@ const RoleForm = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const isEditMode = !!id;
-  const { isCompAdmin, isSysAdmin } = usePermissions();
+  const { checkPermission } = usePermissions();
 
   const [loading, setLoading] = useState(false);
   const [modules, setModules] = useState<Module[]>([]);
@@ -40,8 +45,11 @@ const RoleForm = () => {
     ModulePermissionState[]
   >([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [rolePermissionData, setRolePermissionData] = useState<
+    RolePermission[]
+  >([]);
 
-  const hasAccess = isCompAdmin() || isSysAdmin();
+  const hasAccess = checkPermission("roles", ["view"]);
 
   // Filter modules based on search query
   const filteredModulePermissions = modulePermissions.filter((mp) => {
@@ -62,10 +70,15 @@ const RoleForm = () => {
       navigate("/dashboard", { replace: true });
       return;
     }
-    fetchModules();
-    if (isEditMode && id) {
-      fetchRole(id);
-    }
+
+    const initialize = async () => {
+      await fetchModules();
+      if (isEditMode && id) {
+        await fetchRole(id);
+      }
+    };
+
+    initialize();
   }, [hasAccess, navigate, isEditMode, id]);
 
   const fetchModules = async () => {
@@ -73,13 +86,6 @@ const RoleForm = () => {
       const response = await rbacService.getAllModules(false);
       if (response.success && response.data) {
         setModules(response.data);
-        // Initialize module permissions state
-        setModulePermissions(
-          response.data.map((module) => ({
-            module,
-            selectedActions: [],
-          }))
-        );
       }
     } catch (error: any) {
       toast.error("Failed to fetch modules");
@@ -95,25 +101,30 @@ const RoleForm = () => {
         setName(role.name);
         setDisplayName(role.displayName);
         setDescription(role.description || "");
-
-        // Map role permissions to module permission state
-        const updatedPermissions = modules.map((module) => {
-          const rolePermission = role.permissions.find(
-            (p) =>
-              (typeof p.module === "string" ? p.module : p.module._id) ===
-              module._id
-          );
-          return {
-            module,
-            selectedActions: rolePermission?.actions || [],
-          };
-        });
-        setModulePermissions(updatedPermissions);
+        setRolePermissionData(role.permissions || []);
       }
     } catch (error: any) {
       toast.error("Failed to fetch role details");
       navigate("/roles");
     } finally {
+      useEffect(() => {
+        if (modules.length === 0) return;
+
+        setModulePermissions(
+          modules.map((module) => {
+            const rolePermission = rolePermissionData.find(
+              (p) =>
+                (typeof p.module === "string" ? p.module : p.module._id) ===
+                module._id
+            );
+            return {
+              module,
+              selectedActions: rolePermission?.actions || [],
+            };
+          })
+        );
+      }, [modules, rolePermissionData]);
+
       setLoading(false);
     }
   };
