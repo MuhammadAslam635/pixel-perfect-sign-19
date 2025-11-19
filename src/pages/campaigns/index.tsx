@@ -754,7 +754,7 @@ const CampaignsPage = () => {
                     </p>
                     <div className="flex items-center justify-between mt-auto pt-2">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-bold text-white">Budget</span>
+                        <span className="text-xs font-bold text-white">Budget:</span>
                         <span className="text-xs text-white">
                           ${campaign.estimatedBudget?.toLocaleString() || '0'}
                         </span>
