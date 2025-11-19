@@ -20,6 +20,7 @@ import UserCreate from "@/pages/users/UserCreate";
 import UserEdit from "@/pages/users/UserEdit";
 import ContactNow from "@/pages/twilio-calling/ContactNow";
 import FollowupTemplatesPage from "@/pages/followup-templates";
+import LeadDetailView from "@/pages/leaddetailview";
 import {
   InboxPage,
   ThreadsPage,
@@ -226,6 +227,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <ThreadDetailPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/leads/:leadId"
+        element={
+          <ProtectedRoute>
+            <LeadDetailView />
           </ProtectedRoute>
         }
       />

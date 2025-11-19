@@ -1,4 +1,5 @@
 import { FC, MouseEvent, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import {
   Pagination,
@@ -79,6 +80,7 @@ const LeadsList: FC<LeadsListProps> = ({
   syncedLeadIds = new Set(),
   onLeadSynced,
 }) => {
+  const navigate = useNavigate();
   const [syncingLeads, setSyncingLeads] = useState<Record<string, boolean>>({});
 
   const handleSyncLeadToGHL = async (lead: Lead) => {
@@ -349,18 +351,15 @@ const LeadsList: FC<LeadsListProps> = ({
             </button>
           </div>
           <button
-            onClick={() => onSelectLead(lead._id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/leads/${lead._id}`);
+            }}
             className="bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded-full px-6 sm:px-12 py-1.5 flex items-center gap-2 sm:gap-3 transition-colors w-full md:w-auto justify-center"
-            aria-pressed={isActive}
-            aria-expanded={isActive}
           >
-            <span className="hidden sm:inline">{viewButtonLabelDesktop}</span>
-            <span className="sm:hidden">{viewButtonLabelMobile}</span>
-            <ArrowRight
-              className={`w-3 h-3 transition-transform ${
-                isActive ? "rotate-90" : ""
-              }`}
-            />
+            <span className="hidden sm:inline">View Details</span>
+            <span className="sm:hidden">Details</span>
+            <ArrowRight className="w-3 h-3" />
           </button>
         </div>
       </Card>

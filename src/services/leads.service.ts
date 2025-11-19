@@ -173,11 +173,38 @@ export const leadsService = {
 
   /**
    * Get a single lead by ID
+   * Since leads are stored within companies, we fetch companies and find the person
    */
   getLeadById: async (id: string): Promise<Lead> => {
     try {
-      const response = await API.get(`/company-person/${id}`);
-      return response.data;
+      // Fetch companies with a large limit to ensure we find the lead
+      const response = await API.get("/companies/list", {
+        params: {
+          page: 1,
+          limit: 1000, // Fetch enough companies to find the lead
+        },
+      });
+
+      if (response.data.success && response.data.data.docs) {
+        // Search through all companies and their people to find the matching lead
+        for (const company of response.data.data.docs) {
+          if (company.people && Array.isArray(company.people)) {
+            const person = company.people.find((p: any) => p._id === id);
+            if (person) {
+              // Return the lead with company information attached
+              return {
+                ...person,
+                companyId: company._id,
+                companyName: company.name,
+                companyLocation: company.address,
+              };
+            }
+          }
+        }
+      }
+
+      // If lead not found, throw an error
+      throw new Error(`Lead with ID ${id} not found`);
     } catch (error: any) {
       throw error;
     }
