@@ -20,6 +20,7 @@ import {
 import { RootState } from "@/store/store";
 import { getUserData } from "@/utils/authHelpers";
 import { HomeIcon } from "@/components/icons/HomeIcon";
+import ChatIcon from "@/components/icons/ChatIcon";
 type NavLink = {
   id: string;
   label: string;
@@ -47,7 +48,7 @@ const navLinks: NavLink[] = [
     match: (pathname: string) => pathname.startsWith("/companies"),
   },
   // { id: "users", label: "Users", icon: Users, path: "/users" },
-  { id: "chat", label: "Chat", icon: MessageSquare, path: "/chat" },
+  { id: "chat", label: "Chat", icon: ChatIcon as typeof Home, path: "/chat" },
   {
     id: "emails",
     label: "Emails",
