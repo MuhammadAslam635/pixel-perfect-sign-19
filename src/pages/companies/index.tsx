@@ -659,7 +659,7 @@ const index = () => {
           {/* Title and Filters Bar - Same Row */}
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 sm:gap-4 mb-5">
             {/* Heading */}
-            <h2 className="text-xl sm:text-2xl font-bold text-white">
+            <h2 className="text-xl sm:text-2xl font-normal text-white">
               {activeTab === "companies" ? "Companies" : "Leads"}
             </h2>
 
