@@ -31,62 +31,65 @@ const LeadDetailView = () => {
 
   return (
     <DashboardLayout>
-      <main className="relative flex-1 px-6 pb-12 pt-28 sm:px-10 md:px-14 lg:px-20">
+      <main className="relative mt-24 flex w-full flex-1 min-h-0 max-h-[calc(100vh-6rem)] px-6 pb-6 sm:px-10 md:px-14 lg:px-6 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-[#0F172A] via-transparent to-[#05060A] opacity-70 pointer-events-none"></div>
 
-        {/* Back Button */}
-        <div className="mb-6 relative z-10">
-          <Button
-            onClick={() => navigate("/companies")}
-            variant="ghost"
-            className="text-white/70 hover:text-white hover:bg-white/10"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Companies
-          </Button>
-        </div>
-
-        {/* Loading State */}
-        {isLoading && (
-          <div className="flex flex-col items-center justify-center py-16 relative z-10">
-            <Loader2 className="w-8 h-8 animate-spin text-white mb-3" />
-            <p className="text-white/60 text-sm">Loading lead details...</p>
-          </div>
-        )}
-
-        {/* Error State */}
-        {error && !isLoading && (
-          <div className="flex flex-col items-center justify-center py-16 relative z-10">
-            <p className="text-red-400 text-lg mb-2">
-              Failed to load lead details
-            </p>
-            <p className="text-white/60 text-sm">Please try again later</p>
-            <Button onClick={() => navigate("/companies")} className="mt-4">
-              Go Back
+        <div className="relative z-10 flex w-full flex-1 min-h-0 flex-col gap-6">
+          {/* Back Button */}
+          <div>
+            <Button
+              onClick={() => navigate("/companies")}
+              variant="ghost"
+              className="text-white/70 hover:text-white hover:bg-white/10"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Companies
             </Button>
           </div>
-        )}
 
-        {/* Grid Layout for Lead Detail Components */}
-        {lead && !isLoading && (
-          <div className="relative z-10 grid grid-cols-12 gap-6">
-            {/* Left: Lead Detail Card */}
-            <div className="col-span-2">
-              <LeadDetailCard lead={lead} />
+          {/* Loading State */}
+          {isLoading && (
+            <div className="flex flex-col items-center justify-center flex-1 min-h-0">
+              <Loader2 className="w-8 h-8 animate-spin text-white mb-3" />
+              <p className="text-white/60 text-sm">Loading lead details...</p>
             </div>
-            {/* Right: Activity Component */}
-            <div
-              className="col-span-4 col-start-9"
-              style={{
-                // border: "1px solid #FFFFFF4D",
-                background:
-                  "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 2e-05) 38.08%, rgba(255, 255, 255, 2e-05) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
-              }}
-            >
-              <Activity />
+          )}
+
+          {/* Error State */}
+          {error && !isLoading && (
+            <div className="flex flex-col items-center justify-center flex-1 min-h-0">
+              <p className="text-red-400 text-lg mb-2">
+                Failed to load lead details
+              </p>
+              <p className="text-white/60 text-sm">Please try again later</p>
+              <Button onClick={() => navigate("/companies")} className="mt-4">
+                Go Back
+              </Button>
             </div>
-          </div>
-        )}
+          )}
+
+          {/* Grid Layout for Lead Detail Components */}
+          {lead && !isLoading && (
+            <div className="grid grid-cols-12 gap-4 flex-1 min-h-0 items-stretch">
+              {/* Left: Lead Detail Card */}
+              <div className="col-span-2 flex flex-col min-h-0">
+                <LeadDetailCard lead={lead} />
+              </div>
+              {/* Right: Activity Component */}
+              <div
+                className="col-span-4 col-start-9 flex flex-col min-h-0"
+                style={{
+                  border: "1px solid #FFFFFF4D",
+                  borderRadius: "20px",
+                  background:
+                    "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 2e-05) 38.08%, rgba(255, 255, 255, 2e-05) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
+                }}
+              >
+                <Activity />
+              </div>
+            </div>
+          )}
+        </div>
       </main>
     </DashboardLayout>
   );

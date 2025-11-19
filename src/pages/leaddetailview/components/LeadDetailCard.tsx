@@ -67,7 +67,7 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
 
   return (
     <Card
-      className="w-full h-full"
+      className="w-full flex-1 min-h-0 flex flex-col"
       style={{
         background:
           "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 2e-05) 38.08%, rgba(255, 255, 255, 2e-05) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
@@ -77,7 +77,7 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
         border: "1px solid #FFFFFF1A",
       }}
     >
-      <CardContent className="p-4">
+      <CardContent className="p-4 flex-1 min-h-0 overflow-y-auto scrollbar-hide">
         {/* Profile Section */}
         <div className="flex flex-col items-center mb-6">
           <Avatar className="h-20 w-20 mb-3 border-2 border-white/20">

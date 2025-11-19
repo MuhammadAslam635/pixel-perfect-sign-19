@@ -7,7 +7,7 @@ const Activity: FC = () => {
 
   return (
     <Card
-      className="w-full h-full"
+      className="w-full flex-1 min-h-0 flex flex-col"
       style={{
         background:
           "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 2e-05) 38.08%, rgba(255, 255, 255, 2e-05) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
@@ -17,7 +17,7 @@ const Activity: FC = () => {
         border: "1px solid #FFFFFF1A",
       }}
     >
-      <CardContent className="p-6">
+      <CardContent className="p-6 flex-1 min-h-0 overflow-y-auto scrollbar-hide">
         {/* Title */}
         <h2 className="text-xl font-bold text-white mb-6">Activity</h2>
 
@@ -106,7 +106,7 @@ const Activity: FC = () => {
                 }}
               >
                 <h3 className="text-white font-bold mb-3">AI Summary</h3>
-                <div className="text-white/70 text-sm space-y-2 leading-relaxed max-h-40 overflow-y-auto scrollbar-hide">
+                <div className="text-white/70 text-sm space-y-2 leading-relaxed">
                   <p>
                     Lorem Ipsum is simply dummy text of the printing and
                     typesetting industry. Lorem Ipsum has been the industry's
