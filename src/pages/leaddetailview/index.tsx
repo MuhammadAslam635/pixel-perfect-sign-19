@@ -2,6 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import LeadDetailCard from "./components/LeadDetailCard";
+import LeadChat from "./components/LeadChat";
 import Activity from "./components/Activity";
 import { leadsService } from "@/services/leads.service";
 import { Loader2, ArrowLeft } from "lucide-react";
@@ -74,6 +75,10 @@ const LeadDetailView = () => {
               {/* Left: Lead Detail Card */}
               <div className="col-span-2 flex flex-col min-h-0">
                 <LeadDetailCard lead={lead} />
+              </div>
+              {/* Middle: Lead Chat */}
+              <div className="col-span-6 col-start-3 flex flex-col min-h-0">
+                <LeadChat />
               </div>
               {/* Right: Activity Component */}
               <div
