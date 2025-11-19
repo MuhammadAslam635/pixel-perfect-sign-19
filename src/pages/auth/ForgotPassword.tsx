@@ -89,7 +89,7 @@ const ForgotPassword = () => {
           Didn’t receive it?{" "}
           <Link
             to="/resend-email"
-            className="hover:opacity-80 font-normal transition-opacity bg-gradient-to-r from-[#8B36E9] via-[#6586FF] to-[#2C5FEC] bg-clip-text text-transparent"
+            className="hover:opacity-80 font-normal transition-opacity bg-[linear-gradient(180deg,#8B36E9_0%,#6586FF_50%,#2C5FEC_100%)] bg-clip-text text-transparent"
           >
             Resend email
           </Link>
