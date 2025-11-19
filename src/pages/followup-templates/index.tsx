@@ -173,8 +173,8 @@ const FollowupTemplatesPage = () => {
 
   const { data, isLoading, isError, error } = useFollowupTemplates(queryParams);
 
-  const templates = useMemo(() => data?.data?.docs ?? [], [data]);
-  const pagination = data?.data;
+  const templates = useMemo(() => (data as any)?.data?.docs ?? [], [data]);
+  const pagination = (data as any)?.data;
 
   const { mutate: createTemplate, isPending: isCreating } =
     useCreateFollowupTemplate();
@@ -344,7 +344,7 @@ const FollowupTemplatesPage = () => {
       {
         id: "total",
         label: "Total Templates",
-        value: data?.data?.totalDocs ?? 0,
+        value: (data as any)?.data?.totalDocs ?? 0,
         helper: "Across your workspace",
       },
       {
