@@ -1,4 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { ArrowRightIcon } from "lucide-react";
 
 type AgentCardProps = {
   image: string;
@@ -13,9 +14,10 @@ const AgentCard = ({ image, name, description }: AgentCardProps) => {
   const title = nameParts[1] || "";
 
   return (
-    <Card className="group relative flex h-[280px] w-[320px] flex-col overflow-hidden border border-white/15 bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] backdrop-blur-xl transition hover:border-white/20 hover:shadow-[0_10px_35px_-15px_rgba(124,58,237,0.65)]">
+    <Card className="group relative flex flex-col overflow-hidden border border-white/15 bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] backdrop-blur-xl">
+      <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 top-[120px] w-[248px] h-[248px] rounded-full opacity-90 blur-[24px] bg-[radial-gradient(50%_50%_at_50%_50%,rgba(255,255,255,0.35)_0%,rgba(34,43,44,0)_70%)]" />
       <div
-        className="flex flex-col h-full"
+        className="flex flex-col h-full pt-6 pb-3"
         style={{
           background: "#222B2C",
           boxShadow:
@@ -23,11 +25,11 @@ const AgentCard = ({ image, name, description }: AgentCardProps) => {
         }}
       >
         {/* Profile Image Section */}
-        <div className="relative flex justify-center items-center h-28 overflow-hidden pt-4">
+        <div className="relative flex justify-center items-center h-28 overflow-hidden">
           <img
             src={image}
             alt={agentName}
-            className="h-full w-[25%] object-cover rounded-full transition duration-500 group-hover:scale-105"
+            className="h-full object-cover rounded-full"
           />
         </div>
 
@@ -50,7 +52,7 @@ const AgentCard = ({ image, name, description }: AgentCardProps) => {
 
           {/* View Details Button */}
           <button
-            className="mt-auto w-1/2 rounded-lg py-2.5 px-4 transition-all duration-200 flex justify-end gap-2 font-Inter hover:bg-[#FFFFFF26]"
+            className="mt-auto rounded-full  py-2.5 px-4 transition-all duration-200 flex justify-end gap-2 font-Inter hover:bg-[#FFFFFF26]"
             style={{
               background: "#FFFFFF1A",
               border: "0.76px solid #FFFFFF1F",
@@ -60,10 +62,10 @@ const AgentCard = ({ image, name, description }: AgentCardProps) => {
               color: "#FFFFFF",
             }}
           >
-            <span className="text-white text-[14px] font-normal font-Inter">
+            <span className="text-white text-sm font-normal font-Inter">
               View Details
             </span>
-            <span>→</span>
+            <ArrowRightIcon className="size-4 text-white" />
           </button>
         </CardContent>
       </div>
