@@ -66,10 +66,13 @@ const LeadDetailView = () => {
           </div>
         )}
 
-        {/* Lead Detail Card */}
+        {/* Grid Layout for Lead Detail Components */}
         {lead && !isLoading && (
-          <div className="relative z-10">
-            <LeadDetailCard lead={lead} />
+          <div className="relative z-10 grid grid-cols-12 gap-1">
+            {/* Left: Lead Detail Card */}
+            <div className="col-span-2">
+              <LeadDetailCard lead={lead} />
+            </div>
           </div>
         )}
       </main>

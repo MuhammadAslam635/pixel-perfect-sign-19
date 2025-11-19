@@ -67,7 +67,7 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
 
   return (
     <Card
-      className="w-full max-w-2xl mx-auto"
+      className="w-full"
       style={{
         background:
           "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 2e-05) 38.08%, rgba(255, 255, 255, 2e-05) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
@@ -77,118 +77,118 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
         border: "1px solid #FFFFFF1A",
       }}
     >
-      <CardContent className="p-6">
+      <CardContent className="p-4">
         {/* Profile Section */}
-        <div className="flex flex-col items-center mb-8">
-          <Avatar className="h-32 w-32 mb-4 border-4 border-white/20">
+        <div className="flex flex-col items-center mb-6">
+          <Avatar className="h-20 w-20 mb-3 border-2 border-white/20">
             <AvatarImage src={avatarSrc} alt={lead.name} />
-            <AvatarFallback className="bg-[#3d4f51] text-white text-4xl">
+            <AvatarFallback className="bg-[#3d4f51] text-white text-2xl">
               {avatarLetter}
             </AvatarFallback>
           </Avatar>
-          <h2 className="text-2xl font-semibold text-white mb-2">
+          <h2 className="text-base font-semibold text-white mb-1 text-center break-words">
             {lead.name}
           </h2>
-          <p className="text-sm text-white/80">
+          <p className="text-[10px] text-white/80 text-center break-words leading-tight">
             {lead.companyName || "Company"} |{" "}
             {lead.position || "Chief Executive Officer"}
           </p>
         </div>
 
         {/* Contact Section */}
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold text-white mb-4">Contact</h3>
-          <div className="space-y-3">
+        <div className="mb-4">
+          <h3 className="text-sm font-semibold text-white mb-2">Contact</h3>
+          <div className="space-y-1.5">
             {/* Phone */}
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-white/60">Phone</label>
+            <div className="flex flex-col gap-0.5">
+              <label className="text-[10px] text-white/60">Phone</label>
               <div
-                className="flex items-center gap-3 px-4 py-3 rounded-lg"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
                 style={{
                   background: "#1a1a1a",
                   border: "1px solid rgba(255, 255, 255, 0.1)",
                 }}
               >
-                <Phone className="w-4 h-4 text-white/60 flex-shrink-0" />
-                <span className="text-sm text-white flex-1">
+                <Phone className="w-3 h-3 text-white/60 flex-shrink-0" />
+                <span className="text-[10px] text-white flex-1 truncate">
                   {lead.phone || "N/A"}
                 </span>
                 {lead.phone && (
                   <button
                     onClick={handlePhoneClick}
-                    className="text-white/60 hover:text-white transition-colors"
+                    className="text-white/60 hover:text-white transition-colors flex-shrink-0"
                     title="Call"
                   >
-                    <Phone className="w-4 h-4" />
+                    <Phone className="w-3 h-3" />
                   </button>
                 )}
               </div>
             </div>
 
             {/* WhatsApp */}
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-white/60">WhatsApp</label>
+            <div className="flex flex-col gap-0.5">
+              <label className="text-[10px] text-white/60">WhatsApp</label>
               <div
-                className="flex items-center gap-3 px-4 py-3 rounded-lg"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
                 style={{
                   background: "#1a1a1a",
                   border: "1px solid rgba(255, 255, 255, 0.1)",
                 }}
               >
-                <MessageCircle className="w-4 h-4 text-white/60 flex-shrink-0" />
-                <span className="text-sm text-white flex-1">
+                <MessageCircle className="w-3 h-3 text-white/60 flex-shrink-0" />
+                <span className="text-[10px] text-white flex-1 truncate">
                   {lead.phone || "N/A"}
                 </span>
                 {lead.phone && (
                   <button
                     onClick={handleWhatsAppClick}
-                    className="text-white/60 hover:text-white transition-colors"
+                    className="text-white/60 hover:text-white transition-colors flex-shrink-0"
                     title="Open WhatsApp"
                   >
-                    <MessageCircle className="w-4 h-4" />
+                    <MessageCircle className="w-3 h-3" />
                   </button>
                 )}
               </div>
             </div>
 
             {/* Email */}
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-white/60">Email</label>
+            <div className="flex flex-col gap-0.5">
+              <label className="text-[10px] text-white/60">Email</label>
               <div
-                className="flex items-center gap-3 px-4 py-3 rounded-lg"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
                 style={{
                   background: "#1a1a1a",
                   border: "1px solid rgba(255, 255, 255, 0.1)",
                 }}
               >
-                <Mail className="w-4 h-4 text-white/60 flex-shrink-0" />
-                <span className="text-sm text-white flex-1">
+                <Mail className="w-3 h-3 text-white/60 flex-shrink-0" />
+                <span className="text-[10px] text-white flex-1 truncate">
                   {lead.email || "N/A"}
                 </span>
                 {lead.email && (
                   <button
                     onClick={handleEmailClick}
-                    className="text-white/60 hover:text-white transition-colors"
+                    className="text-white/60 hover:text-white transition-colors flex-shrink-0"
                     title="Send Email"
                   >
-                    <Mail className="w-4 h-4" />
+                    <Mail className="w-3 h-3" />
                   </button>
                 )}
               </div>
             </div>
 
             {/* LinkedIn */}
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-white/60">LinkedIn</label>
+            <div className="flex flex-col gap-0.5">
+              <label className="text-[10px] text-white/60">LinkedIn</label>
               <div
-                className="flex items-center gap-3 px-4 py-3 rounded-lg"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
                 style={{
                   background: "#1a1a1a",
                   border: "1px solid rgba(255, 255, 255, 0.1)",
                 }}
               >
-                <Linkedin className="w-4 h-4 text-white/60 flex-shrink-0" />
-                <span className="text-sm text-white flex-1">
+                <Linkedin className="w-3 h-3 text-white/60 flex-shrink-0" />
+                <span className="text-[10px] text-white flex-1 truncate">
                   {lead.linkedinUrl
                     ? `@${lead.linkedinUrl
                         .replace(/^https?:\/\/(www\.)?linkedin\.com\//, "")
@@ -198,10 +198,10 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
                 {lead.linkedinUrl && (
                   <button
                     onClick={handleLinkedinClick}
-                    className="text-white/60 hover:text-white transition-colors"
+                    className="text-white/60 hover:text-white transition-colors flex-shrink-0"
                     title="Open LinkedIn"
                   >
-                    <Linkedin className="w-4 h-4" />
+                    <Linkedin className="w-3 h-3" />
                   </button>
                 )}
               </div>
@@ -211,93 +211,93 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
 
         {/* Personal Section */}
         <div>
-          <h3 className="text-lg font-semibold text-white mb-4">Personal</h3>
-          <div className="space-y-3">
+          <h3 className="text-sm font-semibold text-white mb-2">Personal</h3>
+          <div className="space-y-1.5">
             {/* Date of Birth - Not available in Lead type, showing placeholder */}
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-white/60">Date of Birth</label>
+            <div className="flex flex-col gap-0.5">
+              <label className="text-[10px] text-white/60">Date of Birth</label>
               <div
-                className="flex items-center gap-3 px-4 py-3 rounded-lg"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
                 style={{
                   background: "#1a1a1a",
                   border: "1px solid rgba(255, 255, 255, 0.1)",
                 }}
               >
-                <Calendar className="w-4 h-4 text-white/60 flex-shrink-0" />
-                <span className="text-sm text-white">N/A</span>
+                <Calendar className="w-3 h-3 text-white/60 flex-shrink-0" />
+                <span className="text-[10px] text-white">N/A</span>
               </div>
             </div>
 
             {/* Language - Not available in Lead type, showing placeholder */}
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-white/60">Language</label>
+            <div className="flex flex-col gap-0.5">
+              <label className="text-[10px] text-white/60">Language</label>
               <div
-                className="flex items-center gap-3 px-4 py-3 rounded-lg"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
                 style={{
                   background: "#1a1a1a",
                   border: "1px solid rgba(255, 255, 255, 0.1)",
                 }}
               >
-                <Languages className="w-4 h-4 text-white/60 flex-shrink-0" />
-                <span className="text-sm text-white">N/A</span>
+                <Languages className="w-3 h-3 text-white/60 flex-shrink-0" />
+                <span className="text-[10px] text-white">N/A</span>
               </div>
             </div>
 
             {/* Region */}
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-white/60">Region</label>
+            <div className="flex flex-col gap-0.5">
+              <label className="text-[10px] text-white/60">Region</label>
               <div
-                className="flex items-center gap-3 px-4 py-3 rounded-lg"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
                 style={{
                   background: "#1a1a1a",
                   border: "1px solid rgba(255, 255, 255, 0.1)",
                 }}
               >
-                <MapPin className="w-4 h-4 text-white/60 flex-shrink-0" />
-                <span className="text-sm text-white">
+                <MapPin className="w-3 h-3 text-white/60 flex-shrink-0" />
+                <span className="text-[10px] text-white truncate">
                   {lead.location || lead.companyLocation || "N/A"}
                 </span>
               </div>
             </div>
 
             {/* Status */}
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-white/60">Status</label>
+            <div className="flex flex-col gap-0.5">
+              <label className="text-[10px] text-white/60">Status</label>
               <div
-                className="flex items-center gap-3 px-4 py-3 rounded-lg"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
                 style={{
                   background: "#1a1a1a",
                   border: "1px solid rgba(255, 255, 255, 0.1)",
                 }}
               >
-                <Eye className="w-4 h-4 text-white/60 flex-shrink-0" />
-                <span className="text-sm text-white">Active</span>
+                <Eye className="w-3 h-3 text-white/60 flex-shrink-0" />
+                <span className="text-[10px] text-white">Active</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Resource Section */}
-        <div className="mt-8 pt-6 border-t border-white/10">
+        <div className="mt-5 pt-3 border-t border-white/10">
           <h3
-            className="text-white mb-3"
+            className="text-white mb-1.5"
             style={{
               fontFamily: "Poppins, sans-serif",
               fontWeight: 600,
-              fontSize: "16px",
+              fontSize: "12px",
               color: "#FFFFFF",
             }}
           >
             Resource
           </h3>
           <div
-            className="flex items-center gap-3 px-4 py-3 rounded-lg"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
             style={{
               background: "#1a1a1a",
               border: "1px solid rgba(255, 255, 255, 0.1)",
             }}
           >
-            <span className="text-sm text-white">{apiSource}</span>
+            <span className="text-[10px] text-white truncate">{apiSource}</span>
           </div>
         </div>
       </CardContent>
