@@ -18,6 +18,8 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
+
+
 type NavLink = {
   id: string;
   label: string;
@@ -102,17 +104,6 @@ const navLinks: NavLink[] = [
   }
 ];
 
-const notifications = [
-  { title: "Meeting starts in 30 minutes", meta: "Calendar" },
-  { title: "New lead: Sarah Malik", meta: "CRM" },
-  { title: "Proposal sent to ABC Corp", meta: "Sales" },
-];
-
-const profileMenu = [
-  { title: "Profile", meta: "View your profile" },
-  { title: "Settings", meta: "Manage preferences" },
-  { title: "Sign out", meta: "Log out of EmpaTech OS" },
-];
 
 const resolveActiveNav = (pathname: string, links: NavLink[]) => {
   const match = links.find((link) =>
@@ -120,6 +111,7 @@ const resolveActiveNav = (pathname: string, links: NavLink[]) => {
   );
   return match?.id ?? "home";
 };
+
 export const Navigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -151,6 +143,7 @@ export const Navigation = () => {
     setActiveNav(link.id);
     navigate(link.path);
   };
+  
   return (
     <nav className="scrollbar-hide flex-1 min-w-0 w-full lg:w-[780px] flex items-center justify-start lg:justify-center gap-2 overflow-x-auto flex-nowrap snap-x snap-mandatory pl-2 sm:pl-3 md:pl-4 pr-2 sm:pr-4">
       {filteredNavLinks.map((link) => {
