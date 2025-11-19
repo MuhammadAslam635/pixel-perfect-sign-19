@@ -3,7 +3,7 @@ import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MapPin, Plus, Search, Calendar as CalendarIcon, Clock, Calendar, FileText, Image as ImageIcon, RotateCcw, Upload, Circle as CircleIcon, RefreshCw, CheckCircle2, Trash2, Edit2, Save, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { MapPin, Plus, Search, Calendar as CalendarIcon, Clock, Calendar, FileText, Image as ImageIcon, RotateCcw, Upload, Circle as CircleIcon, RefreshCw, CheckCircle2, Trash2, Edit2, Save, X, ChevronLeft, ChevronRight, MoveRight } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -56,6 +56,7 @@ import {
 import ImageCarousel from '@/components/campaigns/ImageCarousel';
 import CreateCampaignModal from '@/components/campaigns/CreateCampaignModal';
 import FacebookIcon from '@/components/icons/FacebookIcon';
+import ArrowRightIcon from '@/components/icons/ArrowRightIcon';
 
 const CampaignsPage = () => {
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
@@ -732,9 +733,18 @@ const CampaignsPage = () => {
                     <div className="flex items-start justify-between mb-3 sm:mb-4">
                       {getPlatformIcon(campaign.platform || [])}
                       {campaign.location && (
-                        <div className="flex items-center gap-1.5 bg-[#252525] rounded-md px-2 py-1 flex-shrink-0">
-                          <MapPin className="w-3 h-3 text-gray-500" />
-                          <span className="text-xs text-gray-400">{campaign.location}</span>
+                        <div 
+                          className="flex items-center justify-center gap-1.5 flex-shrink-0"
+                          style={{
+                            width: '95px',
+                            height: '28px',
+                            borderRadius: '6px',
+                            opacity: 1,
+                            background: '#66AFB74D'
+                          }}
+                        >
+                          <MapPin className="w-3 h-3" style={{ color: '#66AFB7' }} />
+                          <span className="text-xs" style={{ color: '#66AFB7' }}>{campaign.location}</span>
                         </div>
                       )}
                     </div>
@@ -743,19 +753,23 @@ const CampaignsPage = () => {
                       {renderTextWithLinks(campaign.userRequirements || campaign.content || 'No description available')}
                     </p>
                     <div className="flex items-center justify-between mt-auto pt-2">
-                      <div>
-                        <div className="text-xs text-gray-500 mb-1">Budget</div>
-                        <div className="text-sm font-bold text-white">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-bold text-white">Budget</span>
+                        <span className="text-xs text-white">
                           ${campaign.estimatedBudget?.toLocaleString() || '0'}
-                        </div>
+                        </span>
                       </div>
                       <Button 
                         size="sm" 
                         variant="outline" 
-                        className="bg-[#252525] border-[#333333] text-gray-300 hover:bg-[#2a2a2a] hover:text-white h-7 text-xs px-3 rounded-md"
+                        className="bg-[#252525] text-gray-300 hover:bg-[#2a2a2a] hover:text-white h-6 text-[10px] px-2.5 rounded-full"
+                        style={{
+                          border: '0.76px solid #FFFFFF1F'
+                        }}
                         onClick={() => handleViewDetails(campaign)}
                       >
                         View Details
+                        <ArrowRightIcon />
                       </Button>
                     </div>
                   </CardContent>
