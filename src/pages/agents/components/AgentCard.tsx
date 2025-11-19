@@ -50,17 +50,19 @@ const AgentCard = ({ image, name, description }: AgentCardProps) => {
 
           {/* View Details Button */}
           <button
-            className="mt-auto w-1/2 rounded-lg py-2.5 px-4 transition-all duration-200 flex justify-end gap-2 font-poppins hover:bg-[#FFFFFF26]"
+            className="mt-auto w-1/2 rounded-lg py-2.5 px-4 transition-all duration-200 flex justify-end gap-2 font-Inter hover:bg-[#FFFFFF26]"
             style={{
               background: "#FFFFFF1A",
               border: "0.76px solid #FFFFFF1F",
-              fontFamily: "Poppins, sans-serif",
+              fontFamily: "Inter, sans-serif",
               fontWeight: 400,
               fontSize: "10px",
               color: "#FFFFFF",
             }}
           >
-            <span>View Details</span>
+            <span className="text-white text-[14px] font-normal font-Inter">
+              View Details
+            </span>
             <span>→</span>
           </button>
         </CardContent>
