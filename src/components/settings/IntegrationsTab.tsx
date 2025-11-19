@@ -84,6 +84,14 @@ export const IntegrationsTab = () => {
     phoneNumberId: string | null;
   }>({ open: false, phoneNumberId: null });
   const [isDisconnectingWhatsApp, setIsDisconnectingWhatsApp] = useState(false);
+  const [isTwilioStatusLoading, setIsTwilioStatusLoading] = useState(false);
+  const [isTwilioActionLoading, setIsTwilioActionLoading] = useState(false);
+  const [twilioConnected, setTwilioConnected] = useState(false);
+  const [twilioDetails, setTwilioDetails] = useState<{
+    accountSid?: string;
+    apiKeySid?: string;
+    lastConnectedAt?: string;
+  } | null>(null);
   const [mailgunConfig, setMailgunConfig] = useState({
     apiKey: "",
     domain: "",
@@ -183,10 +191,49 @@ export const IntegrationsTab = () => {
     }
   };
 
+const fetchTwilioStatus = async () => {
+  if (!user?.token) {
+    setTwilioConnected(false);
+    setTwilioDetails(null);
+    return;
+  }
+
+  setIsTwilioStatusLoading(true);
+  try {
+    const response = await axios.get(
+      `${APP_BACKEND_URL}/twilio/connection-check`,
+      {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+      }
+    );
+
+    if (response.data?.success) {
+      setTwilioConnected(Boolean(response.data.connected));
+      setTwilioDetails(response.data.data || null);
+    } else {
+      setTwilioConnected(false);
+      setTwilioDetails(null);
+    }
+  } catch (error) {
+    setTwilioConnected(false);
+    setTwilioDetails(null);
+  } finally {
+    setIsTwilioStatusLoading(false);
+  }
+};
+
   useEffect(() => {
     fetchWhatsAppConnections();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.token]);
+
+useEffect(() => {
+  fetchTwilioStatus();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [user?.token]);
 
   const primaryWhatsAppConnection = whatsappConnections[0] || null;
 
@@ -429,14 +476,17 @@ export const IntegrationsTab = () => {
     const params = new URLSearchParams(window.location.search);
     const success = params.get("success");
     const error = params.get("error");
+    const twilioParam = params.get("twilio");
+    const twilioReason = params.get("reason");
+    let shouldClear = false;
 
     if (success) {
       toast({
         title: "Success",
         description: success,
       });
-      window.history.replaceState({}, "", window.location.pathname);
       refetchFacebookStatus();
+      shouldClear = true;
     }
 
     if (error) {
@@ -445,9 +495,108 @@ export const IntegrationsTab = () => {
         description: error,
         variant: "destructive",
       });
+      shouldClear = true;
+    }
+
+    if (twilioParam === "connected") {
+      toast({
+        title: "Twilio connected",
+        description: "Your Twilio account is now linked.",
+      });
+      fetchTwilioStatus();
+      shouldClear = true;
+    }
+
+    if (twilioParam === "error") {
+      toast({
+        title: "Twilio connection failed",
+        description:
+          twilioReason ||
+          "We could not connect to Twilio. Please try again.",
+        variant: "destructive",
+      });
+      shouldClear = true;
+    }
+
+    if (shouldClear) {
       window.history.replaceState({}, "", window.location.pathname);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refetchFacebookStatus]);
+
+  const handleTwilioConnect = async () => {
+    if (!user?.token) {
+      toast({
+        title: "Error",
+        description: "User not authenticated. Please login again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsTwilioActionLoading(true);
+    try {
+      const response = await axios.get(
+        `${APP_BACKEND_URL}/callbacks/twilio/auth-url`,
+        {
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+
+      if (response.data?.success && response.data?.authUrl) {
+        window.location.href = response.data.authUrl;
+      } else {
+        throw new Error("No Twilio auth URL returned from server");
+      }
+    } catch (error: unknown) {
+      console.error("Error getting Twilio auth URL:", error);
+      toast({
+        title: "Error",
+        description: "Failed to initiate Twilio connection. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsTwilioActionLoading(false);
+    }
+  };
+
+  const handleTwilioDisconnect = async () => {
+    if (!user?.token) {
+      toast({
+        title: "Error",
+        description: "User not authenticated. Please login again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsTwilioActionLoading(true);
+    try {
+      await axios.delete(`${APP_BACKEND_URL}/twilio/disconnect`, {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+      toast({
+        title: "Twilio disconnected",
+        description: "Your Twilio account has been disconnected.",
+      });
+      fetchTwilioStatus();
+    } catch (error: unknown) {
+      console.error("Error disconnecting Twilio:", error);
+      toast({
+        title: "Error",
+        description: "Failed to disconnect Twilio. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsTwilioActionLoading(false);
+    }
+  };
 
   const handleGoogleConnect = async () => {
     if (!user?._id || !user?.token) {
@@ -1307,6 +1456,91 @@ export const IntegrationsTab = () => {
               )}
             </div>
           )}
+        </div>
+
+        <div className="space-y-4 sm:space-y-6 rounded-2xl sm:rounded-3xl border border-white/10 bg-white/[0.02] p-4 sm:p-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="flex-shrink-0 w-[30px] h-[30px] flex items-center justify-center overflow-hidden">
+                <div className="w-[30px] h-[30px] rounded-full bg-rose-500/30 border border-rose-400/40 text-rose-200 text-xs font-semibold flex items-center justify-center">
+                  TW
+                </div>
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-medium text-white text-sm sm:text-base">
+                  Twilio
+                </p>
+                <p className="text-xs sm:text-sm text-white/60 break-words">
+                  {isTwilioStatusLoading
+                    ? "Checking connection..."
+                    : twilioConnected
+                    ? "Connected"
+                    : "Connect Twilio to provision phone numbers for employees"}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {twilioConnected && (
+                <span className="flex items-center gap-1 text-xs sm:text-sm text-emerald-400">
+                  <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                  <span className="hidden sm:inline">Connected</span>
+                </span>
+              )}
+              {twilioConnected ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleTwilioDisconnect}
+                  disabled={isTwilioActionLoading}
+                  className="w-full sm:w-auto border-rose-400/50 text-rose-300 hover:bg-rose-500/10 text-xs sm:text-sm"
+                >
+                  {isTwilioActionLoading ? "Disconnecting..." : "Disconnect"}
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleTwilioConnect}
+                  disabled={isTwilioActionLoading || isTwilioStatusLoading}
+                  className="w-full sm:w-auto bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3] text-xs sm:text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                  style={{
+                    boxShadow:
+                      "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                  }}
+                >
+                  {isTwilioActionLoading ? "Opening..." : "Connect"}
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {twilioConnected && (
+            <div className="space-y-3 rounded-2xl sm:rounded-3xl border border-white/5 bg-white/[0.03] p-4 text-xs sm:text-sm text-white/80">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <p className="font-semibold text-white">Account SID</p>
+                <p>{twilioDetails?.accountSid || "Hidden"}</p>
+              </div>
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <p className="font-semibold text-white">API Key SID</p>
+                <p>{twilioDetails?.apiKeySid || "Hidden"}</p>
+              </div>
+              {twilioDetails?.lastConnectedAt && (
+                <p className="text-white/60">
+                  Last connected:{" "}
+                  {new Date(twilioDetails.lastConnectedAt).toLocaleString()}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* {!twilioConnected && !isTwilioStatusLoading && (
+            <p className="text-xs sm:text-sm text-amber-300">
+              Connect Twilio to automatically create TwiML apps and numbers for
+              your employees.
+            </p>
+          )} */}
         </div>
 
         <div className="space-y-4 sm:space-y-6 rounded-2xl sm:rounded-3xl border border-white/10 bg-white/[0.02] p-4 sm:p-5">

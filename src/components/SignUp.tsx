@@ -148,8 +148,7 @@ const SignUp = () => {
   return (
     <div className="min-h-[850px] w-full relative overflow-hidden bg-[#1A1A1A]">
       {/* Grid Pattern Background with teal glow overlay (keep PNG) */}
-      <div className="absolute inset-0">
-        {/* Base grid image */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div
           className="absolute bottom-0 left-0 right-0 h-[400px] opacity-100"
           style={{
@@ -159,7 +158,6 @@ const SignUp = () => {
             backgroundRepeat: "no-repeat",
           }}
         />
-        {/* Teal glow overlay */}
         <div
           className="absolute bottom-0 left-0 right-0 h-[400px] pointer-events-none"
           style={{
@@ -181,29 +179,23 @@ const SignUp = () => {
         {/* Register Card */}
         <div className="w-full max-w-[500px] relative">
           {/* Gradient Circle at top-right corner behind card */}
-          <div className="absolute -top-20 -right-20 w-[260px] h-[260px] -z-10">
-            <div className="mt-16 w-full h-full rounded-full bg-gradient-to-br from-[#66B0B7] to-[#3E64B3]" />
+          <div className="absolute -top-24 -right-24 w-[320px] h-[320px] -z-10">
+            <div
+              className="absolute inset-0 rounded-full bg-gradient-to-br from-[#66B0B7] via-[#4D7FDB] to-[#243B63] opacity-90"
+              style={{
+                filter: "",
+                transform: "scale(1.05)",
+              }}
+            />
           </div>
 
-          {/* Under-card teal glow (appears behind form, on grid) */}
-          <div
-            className="absolute -bottom-10 left-1/2 -translate-x-1/2 w-[85%] h-36 pointer-events-none -z-10"
-            style={{
-              background:
-                "radial-gradient(60% 90% at 50% 0%, rgba(105,179,183,0.35), rgba(105,179,183,0.15) 35%, transparent 70%)",
-              filter: "blur(18px)",
-              opacity: 0.6,
-              mixBlendMode: "screen",
-            }}
-          />
-
           {/* Glassmorphism Card with tighter spacing */}
-          <div className="mt-24 relative rounded-3xl p-7 border border-white/15 bg-white/1 backdrop-blur-[200px] shadow-card ring-1 ring-white/10 back">
-            <div className="pointer-events-none absolute inset-0 rounded-3xl bg-gradient-to-br from-white/20 via-white/10 to-transparent" />
-            {/* Icon */}
-            <div className="flex justify-center mb-4">
-              <img src={cardIcon} alt="Logo" className="w-6 h-6" />
-            </div>
+          <div className="relative rounded-[34px] p-7 border-[1px] bg-gradient-to-r from-white/30 to-transparent backdrop-blur-[40px] shadow-card ring-1 ring-white/15 overflow-hidden">
+            <div className="relative z-10">
+              {/* Icon */}
+              <div className="flex justify-center mb-4">
+                <img src={cardIcon} alt="Logo" className="w-12 h-12" />
+              </div>
 
             {/* Title */}
             <h2 className="text-2xl font-semibold text-center text-foreground mb-1">
@@ -379,6 +371,7 @@ const SignUp = () => {
                 </Link>
               </p>
             </form>
+            </div>
           </div>
         </div>
       </div>
