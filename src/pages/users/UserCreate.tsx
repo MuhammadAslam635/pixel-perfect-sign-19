@@ -14,33 +14,31 @@ import {
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { userService, CreateUserData } from "@/services/user.service";
+import { rbacService } from "@/services/rbac.service";
+import { Role } from "@/types/rbac.types";
 import { toast } from "sonner";
-import { useSelector } from "react-redux";
-import { RootState } from "@/store/store";
 import API from "@/utils/api";
 import { getUserData } from "@/utils/authHelpers";
 
 const UserCreate = () => {
   const navigate = useNavigate();
-  const authState = useSelector((state: RootState) => state.auth);
-  const userRole = authState.user?.role;
 
   const [errors, setErrors] = useState({
     email: "",
     name: "",
     password: "",
-    role: "",
+    roleId: "",
     status: "",
     mailgunEmail: "",
   });
 
-  const [user, setUser] = useState<CreateUserData & { mailgunEmail?: string }>({
+  const [user, setUser] = useState<CreateUserData & { mailgunEmail?: string; roleId?: string }>({
     name: "",
     email: "",
     password: "",
-    role: "",
     status: "",
     mailgunEmail: "",
+    roleId: "",
   });
 
   const [twilioAreaCode, setTwilioAreaCode] = useState("");
@@ -56,6 +54,27 @@ const UserCreate = () => {
   const [suggestedEmail, setSuggestedEmail] = useState<string>("");
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [emailUnique, setEmailUnique] = useState<boolean | null>(null);
+  const [availableRoles, setAvailableRoles] = useState<Role[]>([]);
+  const [loadingRoles, setLoadingRoles] = useState(false);
+
+  // Fetch available roles
+  useEffect(() => {
+    const fetchRoles = async () => {
+      setLoadingRoles(true);
+      try {
+        const response = await rbacService.getAllRoles();
+        if (response.success && response.data) {
+          setAvailableRoles(response.data);
+        }
+      } catch (error: any) {
+        console.error("Error fetching roles:", error);
+      } finally {
+        setLoadingRoles(false);
+      }
+    };
+
+    fetchRoles();
+  }, []);
 
   // Fetch Mailgun domain from integration
   useEffect(() => {
@@ -180,10 +199,20 @@ const UserCreate = () => {
       email: "",
       name: "",
       password: "",
-      role: "",
+      roleId: "",
       status: "",
       mailgunEmail: "",
     });
+
+    // Validate RBAC role is selected
+    if (!user.roleId || user.roleId === "none") {
+      setErrors((prev) => ({
+        ...prev,
+        roleId: "Please select an RBAC role",
+      }));
+      setLoading(false);
+      return;
+    }
 
     // Validate mailgunEmail format if provided
     if (user.mailgunEmail && mailgunDomain) {
@@ -239,7 +268,7 @@ const UserCreate = () => {
             name: "",
             email: "",
             password: "",
-            role: "",
+            roleId: "",
             status: "",
             mailgunEmail: "",
           };
@@ -345,44 +374,46 @@ const UserCreate = () => {
                   )}
                 </div>
 
-                {/* Role Field */}
+                {/* RBAC Role Selection */}
                 <div className="space-y-2">
                   <Label
-                    htmlFor="role"
+                    htmlFor="roleId"
                     className="text-white/90 text-sm font-medium"
                   >
-                    Role
+                    Role <span className="text-red-400">*</span>
                   </Label>
                   <Select
-                    value={user.role}
+                    value={user.roleId || ""}
                     onValueChange={(value) => {
-                      setUser((prev) => ({ ...prev, role: value }));
-                      setErrors((prev) => ({ ...prev, role: "" }));
+                      setUser((prev) => ({ ...prev, roleId: value }));
+                      setErrors((prev) => ({ ...prev, roleId: "" }));
                     }}
+                    disabled={loadingRoles}
                   >
                     <SelectTrigger className="rounded-full !bg-black/35 border border-white/10 text-white focus:ring-2 focus:ring-cyan-400/40 h-[41px] [&>span]:text-white">
-                      <SelectValue placeholder="Select Role" />
+                      <SelectValue placeholder={loadingRoles ? "Loading roles..." : "Select Role"} />
                     </SelectTrigger>
-                    <SelectContent className="bg-[rgba(30,30,30,0.95)] border border-white/10 backdrop-blur">
-                      {userRole === "Company" && (
+                    <SelectContent className="bg-[rgba(30,30,30,0.95)] border border-white/10 backdrop-blur max-h-[300px]">
+                      {availableRoles.map((role) => (
                         <SelectItem
-                          value="CompanyAdmin"
+                          key={role._id}
+                          value={role._id}
                           className="text-white hover:bg-white/10 focus:bg-white/10"
                         >
-                          Company Admin
+                          <div className="flex items-center gap-2">
+                            <span>{role.displayName}</span>
+                            <span className="text-xs text-white/50">({role.type})</span>
+                          </div>
                         </SelectItem>
-                      )}
-                      <SelectItem
-                        value="CompanyUser"
-                        className="text-white hover:bg-white/10 focus:bg-white/10"
-                      >
-                        Company User
-                      </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
-                  {errors.role && (
-                    <p className="text-red-400 text-sm mt-1">{errors.role}</p>
+                  {errors.roleId && (
+                    <p className="text-red-400 text-sm mt-1">{errors.roleId}</p>
                   )}
+                  <p className="text-white/50 text-xs">
+                    Select a role with specific permissions for this user
+                  </p>
                 </div>
 
                 {/* Status Field */}

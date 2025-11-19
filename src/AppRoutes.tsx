@@ -22,6 +22,9 @@ import UserEdit from "@/pages/users/UserEdit";
 import ContactNow from "@/pages/twilio-calling/ContactNow";
 import FollowupTemplatesPage from "@/pages/followup-templates";
 import LeadDetailView from "@/pages/leaddetailview";
+import RoleList from "@/pages/roles/RoleList";
+import RoleForm from "@/pages/roles/RoleForm";
+import ModuleList from "@/pages/modules/ModuleList";
 import {
   InboxPage,
   ThreadsPage,
@@ -253,6 +256,40 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <LeadDetailView />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* RBAC Routes */}
+      <Route
+        path="/roles"
+        element={
+          <ProtectedRoute>
+            <RoleList />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/roles/create"
+        element={
+          <ProtectedRoute>
+            <RoleForm />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/roles/:id/edit"
+        element={
+          <ProtectedRoute>
+            <RoleForm />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/modules"
+        element={
+          <ProtectedRoute>
+            <ModuleList />
           </ProtectedRoute>
         }
       />

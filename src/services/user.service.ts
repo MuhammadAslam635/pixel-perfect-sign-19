@@ -8,6 +8,7 @@ export interface User {
   lastName?: string;
   phone?: string;
   role?: string;
+  roleId?: string;
   status?: string;
   profileImage?: string;
   companyId?: string;
@@ -49,6 +50,7 @@ export interface CreateUserData {
     capabilities?: Array<"voice" | "sms">;
   };
   mailgunEmail?: string;
+  roleId?: string; // RBAC role assignment
 }
 
 export interface UpdateUserData {
@@ -58,6 +60,7 @@ export interface UpdateUserData {
   role?: string;
   status?: string;
   mailgunEmail?: string;
+  roleId?: string; // RBAC role assignment
 }
 
 export interface UserDetailResponse {

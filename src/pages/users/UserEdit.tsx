@@ -13,23 +13,21 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { userService, UpdateUserData } from "@/services/user.service";
+import { rbacService } from "@/services/rbac.service";
+import { Role } from "@/types/rbac.types";
 import { toast } from "sonner";
-import { useSelector } from "react-redux";
-import { RootState } from "@/store/store";
 import API from "@/utils/api";
 import { getUserData } from "@/utils/authHelpers";
 
 const UserEdit = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const authState = useSelector((state: RootState) => state.auth);
-  const userRole = authState.user?.role;
 
   const [errors, setErrors] = useState({
     email: "",
     name: "",
     password: "",
-    role: "",
+    roleId: "",
     status: "",
     mailgunEmail: "",
   });
@@ -38,9 +36,9 @@ const UserEdit = () => {
     name: "",
     email: "",
     password: "",
-    role: "",
     status: "",
     mailgunEmail: "",
+    roleId: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -49,31 +47,54 @@ const UserEdit = () => {
   const [suggestedEmail, setSuggestedEmail] = useState<string>("");
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [emailUnique, setEmailUnique] = useState<boolean | null>(null);
+  const [availableRoles, setAvailableRoles] = useState<Role[]>([]);
+  const [loadingRoles, setLoadingRoles] = useState(false);
 
-  // Fetch Mailgun domain from integration
+  // Fetch available RBAC roles
   useEffect(() => {
-    const fetchMailgunDomain = async () => {
-      const user = getUserData();
-      if (!user?.token) return;
-
+    const fetchRoles = async () => {
+      setLoadingRoles(true);
       try {
-        const response = await API.get("/integration/mailgun");
-        if (
-          response.data?.success &&
-          response.data?.integration?.connectionData?.metadata?.domain
-        ) {
-          const domain =
-            response.data.integration.connectionData.metadata.domain;
-          setMailgunDomain(domain);
+        const response = await rbacService.getAllRoles();
+        if (response.success && response.data) {
+          setAvailableRoles(response.data);
         }
       } catch (error: any) {
-        // If Mailgun is not configured, that's okay - field will be optional
-        console.log("Mailgun not configured or not accessible");
+        console.error("Error fetching roles:", error);
+        toast.error("Failed to load available roles");
+      } finally {
+        setLoadingRoles(false);
       }
     };
 
-    fetchMailgunDomain();
+    fetchRoles();
   }, []);
+
+  // Fetch Mailgun domain from integration
+  // COMMENTED OUT - Mailgun email config disabled
+  // useEffect(() => {
+  //   const fetchMailgunDomain = async () => {
+  //     const user = getUserData();
+  //     if (!user?.token) return;
+
+  //     try {
+  //       const response = await API.get("/integration/mailgun");
+  //       if (
+  //         response.data?.success &&
+  //         response.data?.integration?.connectionData?.metadata?.domain
+  //       ) {
+  //         const domain =
+  //           response.data.integration.connectionData.metadata.domain;
+  //         setMailgunDomain(domain);
+  //       }
+  //     } catch (error: any) {
+  //       // If Mailgun is not configured, that's okay - field will be optional
+  //       console.log("Mailgun not configured or not accessible");
+  //     }
+  //   };
+
+  //   fetchMailgunDomain();
+  // }, []);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -93,9 +114,9 @@ const UserEdit = () => {
             name: userData.name || "",
             email: userData.email || "",
             password: "",
-            role: userData.role || "",
             status: userData.status || "",
             mailgunEmail: userData.mailgunEmail || "",
+            roleId: userData.roleId || "",
           });
         } else {
           toast.error(response.message || "Failed to fetch user");
@@ -119,38 +140,39 @@ const UserEdit = () => {
   }, [id, navigate]);
 
   // Generate suggested email when name or email changes
-  useEffect(() => {
-    if (!mailgunDomain) return;
+  // COMMENTED OUT - Mailgun email config disabled
+  // useEffect(() => {
+  //   if (!mailgunDomain) return;
 
-    const generateSuggestedEmail = () => {
-      if (!user.name && !user.email) {
-        setSuggestedEmail("");
-        return;
-      }
+  //   const generateSuggestedEmail = () => {
+  //     if (!user.name && !user.email) {
+  //       setSuggestedEmail("");
+  //       return;
+  //     }
 
-      // Create a username from name or email
-      let username = "";
-      if (user.name) {
-        // Convert name to lowercase, replace spaces with dots, remove special chars
-        username = user.name
-          .toLowerCase()
-          .trim()
-          .replace(/\s+/g, ".")
-          .replace(/[^a-z0-9.]/g, "");
-      } else if (user.email) {
-        // Extract username from email (part before @)
-        username = user.email.split("@")[0].toLowerCase();
-      }
+  //     // Create a username from name or email
+  //     let username = "";
+  //     if (user.name) {
+  //       // Convert name to lowercase, replace spaces with dots, remove special chars
+  //       username = user.name
+  //         .toLowerCase()
+  //         .trim()
+  //         .replace(/\s+/g, ".")
+  //         .replace(/[^a-z0-9.]/g, "");
+  //     } else if (user.email) {
+  //       // Extract username from email (part before @)
+  //       username = user.email.split("@")[0].toLowerCase();
+  //     }
 
-      if (username) {
-        const suggested = `${username}@${mailgunDomain}`;
-        setSuggestedEmail(suggested);
-      }
-    };
+  //     if (username) {
+  //       const suggested = `${username}@${mailgunDomain}`;
+  //       setSuggestedEmail(suggested);
+  //     }
+  //   };
 
-    generateSuggestedEmail();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user.name, user.email, mailgunDomain]);
+  //   generateSuggestedEmail();
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [user.name, user.email, mailgunDomain]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -174,42 +196,53 @@ const UserEdit = () => {
       email: "",
       name: "",
       password: "",
-      role: "",
+      roleId: "",
       status: "",
       mailgunEmail: "",
     });
 
     // Validate mailgunEmail format if provided
-    if (user.mailgunEmail && mailgunDomain) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(user.mailgunEmail)) {
-        setErrors((prev) => ({
-          ...prev,
-          mailgunEmail: "Please enter a valid email address",
-        }));
-        setLoading(false);
-        return;
-      }
+    // COMMENTED OUT - Mailgun email config disabled
+    // if (user.mailgunEmail && mailgunDomain) {
+    //   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    //   if (!emailRegex.test(user.mailgunEmail)) {
+    //     setErrors((prev) => ({
+    //       ...prev,
+    //       mailgunEmail: "Please enter a valid email address",
+    //     }));
+    //     setLoading(false);
+    //     return;
+    //   }
 
-      // Ensure email uses the correct domain
-      if (!user.mailgunEmail.endsWith(`@${mailgunDomain}`)) {
-        setErrors((prev) => ({
-          ...prev,
-          mailgunEmail: `Email must use the domain @${mailgunDomain}`,
-        }));
-        setLoading(false);
-        return;
-      }
-    }
+    //   // Ensure email uses the correct domain
+    //   if (!user.mailgunEmail.endsWith(`@${mailgunDomain}`)) {
+    //     setErrors((prev) => ({
+    //       ...prev,
+    //       mailgunEmail: `Email must use the domain @${mailgunDomain}`,
+    //     }));
+    //     setLoading(false);
+    //     return;
+    //   }
+    // }
 
     try {
+      // Validate RBAC role is selected
+      if (!user.roleId || user.roleId === "none") {
+        setErrors((prev) => ({
+          ...prev,
+          roleId: "Please select an RBAC role",
+        }));
+        setLoading(false);
+        return;
+      }
+
       // Prepare update data - exclude password if empty
       const updateData: UpdateUserData = {
         name: user.name,
         email: user.email,
-        role: user.role,
         status: user.status,
-        mailgunEmail: user.mailgunEmail,
+        // mailgunEmail: user.mailgunEmail, // COMMENTED OUT - Mailgun email config disabled
+        roleId: user.roleId,
       };
 
       // Only include password if it's provided
@@ -238,7 +271,7 @@ const UserEdit = () => {
             name: "",
             email: "",
             password: "",
-            role: "",
+            roleId: "",
             status: "",
             mailgunEmail: "",
           };
@@ -362,44 +395,50 @@ const UserEdit = () => {
                   )}
                 </div>
 
-                {/* Role Field */}
+                {/* RBAC Role Field */}
                 <div className="space-y-2">
                   <Label
-                    htmlFor="role"
+                    htmlFor="rbacRole"
                     className="text-white/90 text-sm font-medium"
                   >
-                    Role
+                    Role <span className="text-red-400">*</span>
                   </Label>
                   <Select
-                    value={user.role}
+                    value={user.roleId || ""}
                     onValueChange={(value) => {
-                      setUser((prev) => ({ ...prev, role: value }));
-                      setErrors((prev) => ({ ...prev, role: "" }));
+                      setUser((prev) => ({ ...prev, roleId: value }));
+                      setErrors((prev) => ({ ...prev, roleId: "" }));
                     }}
+                    disabled={loadingRoles}
                   >
                     <SelectTrigger className="rounded-full !bg-black/35 border border-white/10 text-white focus:ring-2 focus:ring-cyan-400/40 h-[41px] [&>span]:text-white">
-                      <SelectValue placeholder="Select Role" />
+                      <SelectValue
+                        placeholder={
+                          loadingRoles ? "Loading roles..." : "Select Role"
+                        }
+                      />
                     </SelectTrigger>
                     <SelectContent className="bg-[rgba(30,30,30,0.95)] border border-white/10 backdrop-blur">
-                      {userRole === "Company" && (
+                      {availableRoles.map((role) => (
                         <SelectItem
-                          value="CompanyAdmin"
+                          key={role._id}
+                          value={role._id}
                           className="text-white hover:bg-white/10 focus:bg-white/10"
                         >
-                          Company Admin
+                          {role.displayName}{" "}
+                          <span className="text-white/50 text-xs">
+                            ({role.type})
+                          </span>
                         </SelectItem>
-                      )}
-                      <SelectItem
-                        value="CompanyUser"
-                        className="text-white hover:bg-white/10 focus:bg-white/10"
-                      >
-                        Company User
-                      </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
-                  {errors.role && (
-                    <p className="text-red-400 text-sm mt-1">{errors.role}</p>
+                  {errors.roleId && (
+                    <p className="text-red-400 text-sm mt-1">{errors.roleId}</p>
                   )}
+                  <p className="text-xs text-white/50">
+                    Select a role with specific permissions for this user
+                  </p>
                 </div>
 
                 {/* Status Field */}
@@ -441,7 +480,8 @@ const UserEdit = () => {
                 </div>
 
                 {/* Mailgun Email Field */}
-                {mailgunDomain && (
+                {/* COMMENTED OUT - Mailgun email config disabled */}
+                {/* {mailgunDomain && (
                   <div className="space-y-2">
                     <Label
                       htmlFor="mailgunEmail"
@@ -512,7 +552,7 @@ const UserEdit = () => {
                       </p>
                     )}
                   </div>
-                )}
+                )} */}
               </CardContent>
 
               <CardFooter className="flex flex-col sm:flex-row justify-end border-t border-white/10 pt-4 sm:pt-6 gap-3 px-4 sm:px-6 pb-4 sm:pb-6">

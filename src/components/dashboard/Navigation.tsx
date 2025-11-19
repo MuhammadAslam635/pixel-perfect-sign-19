@@ -7,8 +7,11 @@ import {
   BarChart3,
   Bot,
   CalendarDays,
+  UsersIcon,
   Home,
   Mail,
+  Shield,
+  MessageSquare,
   PhoneCall,
   Target
 } from "lucide-react";
@@ -25,6 +28,7 @@ type NavLink = {
 };
 
 const contactRoles = ["CompanyUser"];
+const adminRoles = ["Admin", "CompanyAdmin", "Company"];
 
 const navLinks: NavLink[] = [
   {
@@ -49,6 +53,23 @@ const navLinks: NavLink[] = [
     match: (pathname: string) => pathname.startsWith("/clients"),
   },
   { id: "chat", label: "Chat", icon: ChatIcon as typeof Home, path: "/chat" },
+  {
+    id: "users",
+    label: "Users",
+    icon: UsersIcon,
+    path: "/users",
+    match: (pathname: string) => pathname.startsWith("/users"),
+    roles: adminRoles,
+  },
+  {
+    id: "roles",
+    label: "Roles",
+    icon: Shield,
+    path: "/roles",
+    match: (pathname: string) => pathname.startsWith("/roles"),
+    roles: adminRoles,
+  },
+  { id: "chat", label: "Chat", icon: MessageSquare, path: "/chat" },
   {
     id: "emails",
     label: "Emails",
