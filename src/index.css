@@ -260,3 +260,43 @@ All colors MUST be HSL.
   mask-composite: exclude;
   pointer-events: none;
 }
+
+/* Input gradient border effect - teal to blue gradient */
+.input-gradient-border {
+  position: relative;
+  border-radius: 12px;
+  width: 100%;
+  display: block;
+}
+
+.input-gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  padding: 1px; /* Border thickness */
+  
+  /* Two-color linear gradient: teal (#69B4B7) to blue (#3E64B4) */
+  background: linear-gradient(90deg, #69B4B7 0%, #3E64B4 100%);
+  
+  /* Create the border effect by masking out the center */
+  -webkit-mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.input-gradient-border input {
+  display: block;
+  width: 100%;
+  background: #D9D9D91A;
+  border: none;
+  border-radius: 11px; /* Slightly smaller to show the border */
+  position: relative;
+}

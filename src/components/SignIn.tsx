@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { AuthInput } from "@/components/ui/auth-input";
 import { Label } from "@/components/ui/label";
 import {
   loginStart,
@@ -110,7 +110,7 @@ const   SignIn = () => {
           >
             Email
           </Label>
-          <Input
+          <AuthInput
             id="email"
             type="email"
             name="email"
@@ -134,7 +134,7 @@ const   SignIn = () => {
             Password
           </Label>
           <div className="relative">
-            <Input
+            <AuthInput
               id="password"
               type={showPassword ? "text" : "password"}
               name="password"

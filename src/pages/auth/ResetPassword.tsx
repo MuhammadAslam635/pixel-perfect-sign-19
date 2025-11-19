@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { AuthAuthInput } from "@/components/ui/auth-input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
@@ -23,7 +23,7 @@ const ResetPassword = () => {
   const token = searchParams.get("token");
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
+    e: React.ChangeEvent<HTMLAuthInputElement>,
     field: string
   ) => {
     const value = e.target.value;
@@ -119,7 +119,7 @@ const ResetPassword = () => {
             New Password
           </Label>
           <div className="relative">
-            <Input
+            <AuthInput
               id="password"
               type={showPassword ? "text" : "password"}
               name="password"
@@ -154,7 +154,7 @@ const ResetPassword = () => {
             Confirm Password
           </Label>
           <div className="relative">
-            <Input
+            <AuthInput
               id="confirm"
               type={showConfirmPassword ? "text" : "password"}
               name="confirm"

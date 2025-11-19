@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { AuthAuthInput } from "@/components/ui/auth-input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
@@ -26,7 +26,7 @@ const SignUp = () => {
   const navigate = useNavigate();
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
+    e: React.ChangeEvent<HTMLAuthInputElement>,
     field: string
   ) => {
     const value = e.target.value;
@@ -159,7 +159,7 @@ const SignUp = () => {
           >
             Company Name
           </Label>
-          <Input
+          <AuthInput
             id="companyName"
             type="text"
             name="companyName"
@@ -182,7 +182,7 @@ const SignUp = () => {
           >
             Industry
           </Label>
-          <Input
+          <AuthInput
             id="industry"
             type="text"
             name="industry"
@@ -202,7 +202,7 @@ const SignUp = () => {
           >
             Email
           </Label>
-          <Input
+          <AuthInput
             id="email"
             type="email"
             name="email"
@@ -226,7 +226,7 @@ const SignUp = () => {
             Password
           </Label>
           <div className="relative">
-            <Input
+            <AuthInput
               id="password"
               type={showPassword ? "text" : "password"}
               name="password"
@@ -263,7 +263,7 @@ const SignUp = () => {
             Confirm Password
           </Label>
           <div className="relative">
-            <Input
+            <AuthInput
               id="confirmPassword"
               type={showConfirmPassword ? "text" : "password"}
               name="confirmPassword"

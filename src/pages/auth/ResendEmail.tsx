@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { AuthAuthInput } from "@/components/ui/auth-input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
@@ -11,7 +11,7 @@ const ResendEmail = () => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({ email: "" });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLAuthInputElement>) => {
     setEmail(e.target.value);
     setErrors({ email: "" });
   };
@@ -49,7 +49,7 @@ const ResendEmail = () => {
           >
             Email
           </Label>
-          <Input
+          <AuthInput
             id="email"
             type="email"
             name="email"
