@@ -160,22 +160,29 @@ export const Navigation = () => {
         return (
           <button
             key={link.id}
-            className={`group relative overflow-visible flex-none aspect-square flex h-10 w-10 items-center justify-center rounded-full border border-white/40 px-0 text-xs font-medium tracking-wide transition-[width,background-color,box-shadow,padding,gap] duration-400 ease-elastic sm:text-sm ${
+            className={`group relative overflow-hidden flex-none flex h-10 w-10 items-center justify-center rounded-full border border-white/40 px-0 text-xs font-medium tracking-wide transition-[width,background-color,box-shadow,padding,gap] duration-400 ease-elastic sm:text-sm ${
               isActive
                 ? "text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] justify-start w-auto h-10 px-2.5 gap-2 before:from-white/25 z-10"
-                : "text-white/85 hover:text-white hover:shadow-[0_16px_28px_rgba(0,0,0,0.35)] hover:justify-start hover:w-auto hover:h-10 hover:px-2.5 hover:gap-2 hover:z-10"
+                : "aspect-square text-white/85 hover:text-white hover:shadow-[0_16px_28px_rgba(0,0,0,0.35)] hover:justify-start hover:w-auto hover:h-10 hover:px-2.5 hover:gap-2 hover:z-10"
             } snap-start lg:snap-center before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/15 before:to-transparent before:transition-all before:duration-300 before:ease-in-out hover:before:from-white/25 hover:before:duration-200`}
             style={{
-              background: isActive
-                ? "radial-gradient(circle at left, rgba(64, 102, 179, 0.4) 0%, rgba(103, 176, 183, 0.3) 50%, transparent 70%)"
-                : "rgba(255, 255, 255, 0.1)",
-              boxShadow:
-                "rgba(255, 255, 255, 0.16) 0px 3.43px 3.43px 0px inset, rgba(255, 255, 255, 0.16) 0px -3.43px 3.43px 0px inset",
+              background: '#FFFFFF1A',
+              boxShadow: '0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset',
             }}
             onClick={() => handleNavigate(link)}
             aria-label={link.label}
             type="button"
           >
+            {isActive && (
+              <div 
+                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[100px] h-[100px] rounded-full pointer-events-none"
+                style={{
+                  background: 'linear-gradient(180deg, #67B0B7 0%, #4066B3 100%)',
+                  filter: 'blur(20px)',
+                  WebkitFilter: 'blur(20px)',
+                }}
+              ></div>
+            )}
             <Icon
               className={`h-[20px] w-[20px] flex-shrink-0 transition-[color,filter] duration-250 ease-in-out ${
                 isActive
