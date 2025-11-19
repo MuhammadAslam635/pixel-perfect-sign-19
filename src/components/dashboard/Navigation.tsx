@@ -1,27 +1,20 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
-import {
-  Home,
-  BarChart3,
-  Users,
-  MessageSquare,
-  CalendarDays,
-  TrendingUp,
-  ArrowUpRight,
-  Target,
-  BookOpen,
-  Settings,
-  Bell,
-  Bot,
-  PhoneCall,
-  Mail,
-} from "lucide-react";
-import { RootState } from "@/store/store";
-import { getUserData } from "@/utils/authHelpers";
-import { HomeIcon } from "@/components/icons/HomeIcon";
 import ChatIcon from "@/components/icons/ChatIcon";
 import { ClientsIcon } from "@/components/icons/ClientsIcon";
+import { HomeIcon } from "@/components/icons/HomeIcon";
+import { RootState } from "@/store/store";
+import { getUserData } from "@/utils/authHelpers";
+import {
+  BarChart3,
+  Bot,
+  CalendarDays,
+  Home,
+  Mail,
+  PhoneCall,
+  Target
+} from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useSelector } from "react-redux";
+import { useLocation, useNavigate } from "react-router-dom";
 type NavLink = {
   id: string;
   label: string;
@@ -55,7 +48,6 @@ const navLinks: NavLink[] = [
     path: "/clients",
     match: (pathname: string) => pathname.startsWith("/clients"),
   },
-  // { id: "users", label: "Users", icon: Users, path: "/users" },
   { id: "chat", label: "Chat", icon: ChatIcon as typeof Home, path: "/chat" },
   {
     id: "emails",
@@ -86,31 +78,7 @@ const navLinks: NavLink[] = [
     path: "/contact-now",
     match: (pathname: string) => pathname.startsWith("/contact-now"),
     roles: contactRoles,
-  },
-  // {
-  //   id: "company-knowledge",
-  //   label: "Knowledge",
-  //   icon: BookOpen,
-  //   path: "/company-knowledge",
-  //   match: (pathname: string) => pathname.startsWith("/company-knowledge"),
-  // },
-  // { id: "Booking", label: "Booking", icon: CalendarDays, path: "/booking" },
-  // { id: "Leads", label: "Leads", icon: TrendingUp, path: "/leads" },
-  // {
-  //   id: "Prospects",
-  //   label: "Prospects",
-  //   icon: ArrowUpRight,
-  //   path: "/prospects",
-  // },
-  // { id: "Results", label: "Results", icon: Target, path: "/results" },
-  // { id: "docs", label: "Docs", icon: BookOpen, path: "/knowledge-base" },
-  // {
-  //   id: "settings",
-  //   label: "Settings",
-  //   icon: Settings,
-  //   path: "/settings",
-  //   match: (pathname: string) => pathname.startsWith("/settings"),
-  // },
+  }
 ];
 
 const notifications = [
