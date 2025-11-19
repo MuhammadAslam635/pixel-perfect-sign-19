@@ -565,7 +565,7 @@ const CampaignsPage = () => {
           {/* Header */}
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 sm:gap-4 mb-5">
             {/* Heading */}
-            <h2 className="text-xl sm:text-2xl font-bold text-white">Recent Campaigns</h2>
+            <h2 className="text-xl sm:text-2xl font-normal text-white">Recent Campaigns</h2>
             
             {/* Controls Container - responsive layout */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
