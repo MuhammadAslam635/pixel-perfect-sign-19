@@ -67,7 +67,7 @@ export default function AuthLayout({
             }}
           /> */}
 
-          <div className="relative rounded-[34px] p-7 border-[1px] border-cyan/50 bg-gradient-to-r from-white/30 to-transparent backdrop-blur-[40px] shadow-card ring-1 ring-white/15 overflow-hidden">
+          <div className="auth-form-box relative rounded-[34px] p-7 bg-gradient-to-r from-white/30 to-transparent backdrop-blur-[40px] shadow-card overflow-hidden">
             {/* <div className="pointer-events-none absolute inset-0 rounded-[34px] bg-gradient-to-br from-white/45 via-white/10 to-transparent opacity-90 mix-blend-screen" /> */}
             {/* <div className="pointer-events-none absolute inset-x-2 top-2 rounded-[30px] h-1/2 bg-white/40 opacity-80 blur-2xl" /> */}
             <div className="relative z-10">
