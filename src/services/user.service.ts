@@ -43,7 +43,6 @@ export interface CreateUserData {
   name: string;
   email: string;
   password: string;
-  role: string;
   status: string;
   twilio?: {
     areaCode?: string;

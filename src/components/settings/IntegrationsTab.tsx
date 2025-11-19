@@ -21,8 +21,11 @@ import {
 import { RefreshCw } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { getUserData } from "@/utils/authHelpers";
-import { WhatsAppCredential } from "@/api/whatsapp";
-import { integrationService } from "@/services/integration.service";
+import {
+  WhatsAppCredential,
+  whatsappService,
+} from "@/services/whatsapp.service";
+import { mailgunService } from "@/services/mailgun.service";
 import {
   useFacebookConnect,
   useFacebookDisconnect,
@@ -161,20 +164,9 @@ export const IntegrationsTab = () => {
 
     setIsLoadingWhatsApp(true);
     try {
-      const response = await axios.get(
-        `${APP_BACKEND_URL}/whatsapp/connection`,
-        {
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-            "ngrok-skip-browser-warning": "true",
-          },
-        }
-      );
-
-      if (response.data?.success) {
-        const credentials: WhatsAppCredential[] =
-          response.data.credentials || [];
-        setWhatsAppConnections(credentials);
+      const response = await whatsappService.getConnections();
+      if (response?.success) {
+        setWhatsAppConnections(response.credentials || []);
       }
     } catch (error: unknown) {
       console.error("Error loading WhatsApp connections:", error);
@@ -253,21 +245,12 @@ export const IntegrationsTab = () => {
         webhookUrl: whatsappForm.webhookUrl.trim() || undefined,
       };
 
-      const response = await axios.post(
-        `${APP_BACKEND_URL}/whatsapp/connection`,
-        payload,
-        {
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-            "ngrok-skip-browser-warning": "true",
-          },
-        }
-      );
+      const response = await whatsappService.connect(payload);
 
-      if (response.data?.success) {
+      if (response.success) {
         toast({
           title: "WhatsApp connected",
-          description: response.data.message,
+          description: response.message,
         });
         resetWhatsAppForm();
         setShowWhatsAppForm(false);
@@ -355,15 +338,7 @@ export const IntegrationsTab = () => {
 
     try {
       setIsDisconnectingWhatsApp(true);
-      await axios.delete(
-        `${APP_BACKEND_URL}/whatsapp/connection/${disconnectDialog.phoneNumberId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-            "ngrok-skip-browser-warning": "true",
-          },
-        }
-      );
+      await whatsappService.disconnect(disconnectDialog.phoneNumberId);
 
       toast({
         title: "Disconnected",
@@ -746,13 +721,18 @@ export const IntegrationsTab = () => {
           webhookSigningKey: config.webhookSigningKey || "",
         });
         setMailgunValidated(response.data.integration.isConnected || false);
-        
+
         // Set existing email if available
         if (response.data?.existingEmail) {
           setExistingEmail(response.data.existingEmail);
           // Extract prefix from existing email if domain matches
-          if (config.domain && response.data.existingEmail.includes(`@${config.domain}`)) {
-            const prefix = response.data.existingEmail.split(`@${config.domain}`)[0];
+          if (
+            config.domain &&
+            response.data.existingEmail.includes(`@${config.domain}`)
+          ) {
+            const prefix = response.data.existingEmail.split(
+              `@${config.domain}`
+            )[0];
             setEmailPrefix(prefix);
           }
         }
@@ -849,15 +829,18 @@ export const IntegrationsTab = () => {
             response.data.message ||
             "Mailgun configuration validated successfully!",
         });
-        
+
         // Suggest unique email address after validation
         setIsSuggestingEmail(true);
         try {
-          const suggestResponse = await integrationService.suggestMailgunEmail(
+          const suggestResponse = await mailgunService.suggestEmail(
             mailgunConfig.domain.trim(),
             emailPrefix.trim() || undefined
           );
-          if (suggestResponse?.success && suggestResponse?.data?.suggestedEmail) {
+          if (
+            suggestResponse?.success &&
+            suggestResponse?.data?.suggestedEmail
+          ) {
             setSuggestedEmail(suggestResponse.data.suggestedEmail);
           }
         } catch (suggestError: any) {
@@ -931,7 +914,8 @@ export const IntegrationsTab = () => {
     if (!suggestedEmail) {
       toast({
         title: "Email Required",
-        description: "Please wait for email suggestion or enter a Mailgun email address.",
+        description:
+          "Please wait for email suggestion or enter a Mailgun email address.",
         variant: "destructive",
       });
       return;
@@ -1003,12 +987,12 @@ export const IntegrationsTab = () => {
   // Handle prefix change and auto-suggest email
   const handleEmailPrefixChange = async (prefix: string) => {
     setEmailPrefix(prefix);
-    
+
     // If domain is set and prefix is provided, suggest email
     if (mailgunConfig.domain && prefix.trim() && mailgunValidated) {
       setIsSuggestingEmail(true);
       try {
-        const suggestResponse = await integrationService.suggestMailgunEmail(
+        const suggestResponse = await mailgunService.suggestEmail(
           mailgunConfig.domain.trim(),
           prefix.trim()
         );
@@ -1890,7 +1874,7 @@ export const IntegrationsTab = () => {
                       Configuration validated successfully
                     </p>
                   </div>
-                  
+
                   {existingEmail && (
                     <div className="space-y-2">
                       <Label className="text-white/80 text-sm">
@@ -1906,19 +1890,23 @@ export const IntegrationsTab = () => {
 
                   <div className="space-y-2">
                     <Label className="text-white/80 text-sm">
-                      Email Prefix <span className="text-white/50 text-xs">(optional)</span>
+                      Email Prefix{" "}
+                      <span className="text-white/50 text-xs">(optional)</span>
                     </Label>
                     <Input
                       value={emailPrefix}
-                      onChange={(event) => handleEmailPrefixChange(event.target.value)}
+                      onChange={(event) =>
+                        handleEmailPrefixChange(event.target.value)
+                      }
                       placeholder="e.g., support, sales, info"
                       className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 text-sm sm:text-base"
                     />
                     <p className="text-xs text-white/50">
-                      Enter a prefix (word) to generate a new unique email address. Leave empty to use your company email as base.
+                      Enter a prefix (word) to generate a new unique email
+                      address. Leave empty to use your company email as base.
                     </p>
                   </div>
-                  
+
                   {isSuggestingEmail ? (
                     <div className="rounded-lg bg-blue-500/10 border border-blue-500/30 p-3">
                       <p className="text-blue-400 text-sm flex items-center gap-2">
@@ -1929,16 +1917,20 @@ export const IntegrationsTab = () => {
                   ) : suggestedEmail ? (
                     <div className="space-y-2">
                       <Label className="text-white/80 text-sm">
-                        Mailgun Email Address <span className="text-red-400">*</span>
+                        Mailgun Email Address{" "}
+                        <span className="text-red-400">*</span>
                       </Label>
                       <Input
                         value={suggestedEmail}
-                        onChange={(event) => setSuggestedEmail(event.target.value)}
+                        onChange={(event) =>
+                          setSuggestedEmail(event.target.value)
+                        }
                         placeholder="e.g., company@mg.yourdomain.com"
                         className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 text-sm sm:text-base"
                       />
                       <p className="text-xs text-emerald-400">
-                        ✓ Unique email address suggested. You can modify it if needed.
+                        ✓ Unique email address suggested. You can modify it if
+                        needed.
                       </p>
                     </div>
                   ) : null}
@@ -1972,7 +1964,9 @@ export const IntegrationsTab = () => {
                   <Button
                     type="button"
                     onClick={handleSaveMailgunConfig}
-                    disabled={isSavingMailgun || !mailgunValidated || !suggestedEmail}
+                    disabled={
+                      isSavingMailgun || !mailgunValidated || !suggestedEmail
+                    }
                     className="w-full sm:w-auto bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3] text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{
                       boxShadow:

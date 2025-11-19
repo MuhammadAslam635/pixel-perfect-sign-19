@@ -17,8 +17,11 @@ import { userService, CreateUserData } from "@/services/user.service";
 import { rbacService } from "@/services/rbac.service";
 import { Role } from "@/types/rbac.types";
 import { toast } from "sonner";
-import API from "@/utils/api";
 import { getUserData } from "@/utils/authHelpers";
+import { mailgunService } from "@/services/mailgun.service";
+
+const TWILIO_CAPABILITIES = ["voice", "sms"] as const;
+type TwilioCapability = (typeof TWILIO_CAPABILITIES)[number];
 
 const UserCreate = () => {
   const navigate = useNavigate();
@@ -32,7 +35,9 @@ const UserCreate = () => {
     mailgunEmail: "",
   });
 
-  const [user, setUser] = useState<CreateUserData & { mailgunEmail?: string; roleId?: string }>({
+  const [user, setUser] = useState<
+    CreateUserData & { mailgunEmail?: string; roleId?: string }
+  >({
     name: "",
     email: "",
     password: "",
@@ -43,11 +48,8 @@ const UserCreate = () => {
 
   const [twilioAreaCode, setTwilioAreaCode] = useState("");
   const [twilioCapabilities, setTwilioCapabilities] = useState<
-    Array<"voice" | "sms">
-  >([
-    "voice",
-    "sms",
-  ]);
+    TwilioCapability[]
+  >([...TWILIO_CAPABILITIES]);
 
   const [loading, setLoading] = useState(false);
   const [mailgunDomain, setMailgunDomain] = useState<string>("");
@@ -83,17 +85,13 @@ const UserCreate = () => {
       if (!user?.token) return;
 
       try {
-        const response = await API.get("/integration/mailgun");
-        if (
-          response.data?.success &&
-          response.data?.integration?.connectionData?.metadata?.domain
-        ) {
-          const domain =
-            response.data.integration.connectionData.metadata.domain;
+        const response = await mailgunService.getIntegrationStatus();
+        const domain =
+          response.integration?.connectionData?.metadata?.domain || "";
+        if (domain) {
           setMailgunDomain(domain);
         }
       } catch (error: any) {
-        // If Mailgun is not configured, that's okay - field will be optional
         console.log("Mailgun not configured or not accessible");
       }
     };
@@ -391,7 +389,11 @@ const UserCreate = () => {
                     disabled={loadingRoles}
                   >
                     <SelectTrigger className="rounded-full !bg-black/35 border border-white/10 text-white focus:ring-2 focus:ring-cyan-400/40 h-[41px] [&>span]:text-white">
-                      <SelectValue placeholder={loadingRoles ? "Loading roles..." : "Select Role"} />
+                      <SelectValue
+                        placeholder={
+                          loadingRoles ? "Loading roles..." : "Select Role"
+                        }
+                      />
                     </SelectTrigger>
                     <SelectContent className="bg-[rgba(30,30,30,0.95)] border border-white/10 backdrop-blur max-h-[300px]">
                       {availableRoles.map((role) => (
@@ -402,7 +404,9 @@ const UserCreate = () => {
                         >
                           <div className="flex items-center gap-2">
                             <span>{role.displayName}</span>
-                            <span className="text-xs text-white/50">({role.type})</span>
+                            <span className="text-xs text-white/50">
+                              ({role.type})
+                            </span>
                           </div>
                         </SelectItem>
                       ))}
@@ -462,7 +466,8 @@ const UserCreate = () => {
                     </h3>
                     <p className="text-white/60 text-sm">
                       Each employee gets a dedicated TwiML app and phone number.
-                      You can customize the preferred area code and capabilities.
+                      You can customize the preferred area code and
+                      capabilities.
                     </p>
                   </div>
 
@@ -497,7 +502,7 @@ const UserCreate = () => {
                       Capabilities
                     </p>
                     <div className="flex flex-wrap gap-6">
-                      {["voice", "sms"].map((capability) => {
+                      {TWILIO_CAPABILITIES.map((capability) => {
                         const checked = twilioCapabilities.includes(capability);
                         return (
                           <label
@@ -509,7 +514,7 @@ const UserCreate = () => {
                               onCheckedChange={(value) => {
                                 setTwilioCapabilities((prev) => {
                                   const currentlySelected = prev.includes(
-                                    capability
+                                    capability as "voice" | "sms"
                                   );
                                   if (value && !currentlySelected) {
                                     return [...prev, capability];

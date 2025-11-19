@@ -16,8 +16,8 @@ import { userService, UpdateUserData } from "@/services/user.service";
 import { rbacService } from "@/services/rbac.service";
 import { Role } from "@/types/rbac.types";
 import { toast } from "sonner";
-import API from "@/utils/api";
 import { getUserData } from "@/utils/authHelpers";
+import { mailgunService } from "@/services/mailgun.service";
 
 const UserEdit = () => {
   const navigate = useNavigate();
@@ -71,30 +71,25 @@ const UserEdit = () => {
   }, []);
 
   // Fetch Mailgun domain from integration
-  // COMMENTED OUT - Mailgun email config disabled
-  // useEffect(() => {
-  //   const fetchMailgunDomain = async () => {
-  //     const user = getUserData();
-  //     if (!user?.token) return;
+  useEffect(() => {
+    const fetchMailgunDomain = async () => {
+      const user = getUserData();
+      if (!user?.token) return;
 
-  //     try {
-  //       const response = await API.get("/integration/mailgun");
-  //       if (
-  //         response.data?.success &&
-  //         response.data?.integration?.connectionData?.metadata?.domain
-  //       ) {
-  //         const domain =
-  //           response.data.integration.connectionData.metadata.domain;
-  //         setMailgunDomain(domain);
-  //       }
-  //     } catch (error: any) {
-  //       // If Mailgun is not configured, that's okay - field will be optional
-  //       console.log("Mailgun not configured or not accessible");
-  //     }
-  //   };
+      try {
+        const response = await mailgunService.getIntegrationStatus();
+        const domain =
+          response.integration?.connectionData?.metadata?.domain || "";
+        if (domain) {
+          setMailgunDomain(domain);
+        }
+      } catch (error: any) {
+        console.log("Mailgun not configured or not accessible");
+      }
+    };
 
-  //   fetchMailgunDomain();
-  // }, []);
+    fetchMailgunDomain();
+  }, []);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -140,39 +135,38 @@ const UserEdit = () => {
   }, [id, navigate]);
 
   // Generate suggested email when name or email changes
-  // COMMENTED OUT - Mailgun email config disabled
-  // useEffect(() => {
-  //   if (!mailgunDomain) return;
+  useEffect(() => {
+    if (!mailgunDomain) return;
 
-  //   const generateSuggestedEmail = () => {
-  //     if (!user.name && !user.email) {
-  //       setSuggestedEmail("");
-  //       return;
-  //     }
+    const generateSuggestedEmail = () => {
+      if (!user.name && !user.email) {
+        setSuggestedEmail("");
+        return;
+      }
 
-  //     // Create a username from name or email
-  //     let username = "";
-  //     if (user.name) {
-  //       // Convert name to lowercase, replace spaces with dots, remove special chars
-  //       username = user.name
-  //         .toLowerCase()
-  //         .trim()
-  //         .replace(/\s+/g, ".")
-  //         .replace(/[^a-z0-9.]/g, "");
-  //     } else if (user.email) {
-  //       // Extract username from email (part before @)
-  //       username = user.email.split("@")[0].toLowerCase();
-  //     }
+      // Create a username from name or email
+      let username = "";
+      if (user.name) {
+        // Convert name to lowercase, replace spaces with dots, remove special chars
+        username = user.name
+          .toLowerCase()
+          .trim()
+          .replace(/\s+/g, ".")
+          .replace(/[^a-z0-9.]/g, "");
+      } else if (user.email) {
+        // Extract username from email (part before @)
+        username = user.email.split("@")[0].toLowerCase();
+      }
 
-  //     if (username) {
-  //       const suggested = `${username}@${mailgunDomain}`;
-  //       setSuggestedEmail(suggested);
-  //     }
-  //   };
+      if (username) {
+        const suggested = `${username}@${mailgunDomain}`;
+        setSuggestedEmail(suggested);
+      }
+    };
 
-  //   generateSuggestedEmail();
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [user.name, user.email, mailgunDomain]);
+    generateSuggestedEmail();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user.name, user.email, mailgunDomain]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -202,28 +196,27 @@ const UserEdit = () => {
     });
 
     // Validate mailgunEmail format if provided
-    // COMMENTED OUT - Mailgun email config disabled
-    // if (user.mailgunEmail && mailgunDomain) {
-    //   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    //   if (!emailRegex.test(user.mailgunEmail)) {
-    //     setErrors((prev) => ({
-    //       ...prev,
-    //       mailgunEmail: "Please enter a valid email address",
-    //     }));
-    //     setLoading(false);
-    //     return;
-    //   }
+    if (user.mailgunEmail && mailgunDomain) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(user.mailgunEmail)) {
+        setErrors((prev) => ({
+          ...prev,
+          mailgunEmail: "Please enter a valid email address",
+        }));
+        setLoading(false);
+        return;
+      }
 
-    //   // Ensure email uses the correct domain
-    //   if (!user.mailgunEmail.endsWith(`@${mailgunDomain}`)) {
-    //     setErrors((prev) => ({
-    //       ...prev,
-    //       mailgunEmail: `Email must use the domain @${mailgunDomain}`,
-    //     }));
-    //     setLoading(false);
-    //     return;
-    //   }
-    // }
+      // Ensure email uses the correct domain
+      if (!user.mailgunEmail.endsWith(`@${mailgunDomain}`)) {
+        setErrors((prev) => ({
+          ...prev,
+          mailgunEmail: `Email must use the domain @${mailgunDomain}`,
+        }));
+        setLoading(false);
+        return;
+      }
+    }
 
     try {
       // Validate RBAC role is selected
@@ -241,7 +234,7 @@ const UserEdit = () => {
         name: user.name,
         email: user.email,
         status: user.status,
-        // mailgunEmail: user.mailgunEmail, // COMMENTED OUT - Mailgun email config disabled
+        mailgunEmail: user.mailgunEmail,
         roleId: user.roleId,
       };
 
@@ -480,8 +473,7 @@ const UserEdit = () => {
                 </div>
 
                 {/* Mailgun Email Field */}
-                {/* COMMENTED OUT - Mailgun email config disabled */}
-                {/* {mailgunDomain && (
+                {mailgunDomain && (
                   <div className="space-y-2">
                     <Label
                       htmlFor="mailgunEmail"
@@ -552,7 +544,7 @@ const UserEdit = () => {
                       </p>
                     )}
                   </div>
-                )} */}
+                )}
               </CardContent>
 
               <CardFooter className="flex flex-col sm:flex-row justify-end border-t border-white/10 pt-4 sm:pt-6 gap-3 px-4 sm:px-6 pb-4 sm:pb-6">

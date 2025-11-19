@@ -31,6 +31,8 @@ import {
 } from "lucide-react";
 import { userService, User } from "@/services/user.service";
 import { toast } from "sonner";
+import { rbacService } from "@/services/rbac.service";
+import { Role } from "@/types/rbac.types";
 
 const UserList = () => {
   const navigate = useNavigate();
@@ -42,6 +44,7 @@ const UserList = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [trashed, setTrashed] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [availableRoles, setAvailableRoles] = useState<Role[]>([]);
   const limit = 10;
 
   const fetchUsers = useCallback(
@@ -91,6 +94,71 @@ const UserList = () => {
       fetchUsers();
     }
   }, [fetchUsers, userRole]);
+
+  useEffect(() => {
+    const fetchRoles = async () => {
+      try {
+        const response = await rbacService.getAllRoles();
+        if (response.success && response.data) {
+          setAvailableRoles(response.data);
+        }
+      } catch (error: any) {
+        console.error("Error fetching roles:", error);
+        toast.error("Failed to load roles");
+      }
+    };
+
+    fetchRoles();
+  }, []);
+
+  const roleMap = useMemo(() => {
+    const map: Record<string, Role> = {};
+    availableRoles.forEach((role) => {
+      map[role._id] = role;
+    });
+    return map;
+  }, [availableRoles]);
+
+  const renderRoleBadge = (userData: User) => {
+    if (userData.role === "CompanyAdmin") {
+      return (
+        <Badge className="bg-purple-600/20 text-purple-400 border border-purple-600/30 rounded-full px-3 py-1 text-xs">
+          Company Admin
+        </Badge>
+      );
+    }
+
+    if (userData.role === "CompanyUser") {
+      return (
+        <Badge className="bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded-full px-3 py-1 text-xs">
+          Company User
+        </Badge>
+      );
+    }
+
+    if (userData.role) {
+      return (
+        <Badge className="bg-white/15 text-white border border-white/20 rounded-full px-3 py-1 text-xs">
+          {userData.role}
+        </Badge>
+      );
+    }
+
+    if (userData.roleId && roleMap[userData.roleId]) {
+      const mappedRole = roleMap[userData.roleId];
+      return (
+        <Badge className="bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 rounded-full px-3 py-1 text-xs">
+          {mappedRole.displayName}
+        </Badge>
+      );
+    }
+
+    return (
+      <Badge className="bg-white/10 text-white/70 border border-white/20 rounded-full px-3 py-1 text-xs">
+        N/A
+      </Badge>
+    );
+  };
 
   const paginationPages = useMemo(() => {
     if (totalPages <= 1) return null;
@@ -302,23 +370,7 @@ const UserList = () => {
                         <div className="text-white/70 truncate">
                           {user.email}
                         </div>
-                        <div>
-                          {user.role === "CompanyAdmin" && (
-                            <Badge className="bg-purple-600/20 text-purple-400 border border-purple-600/30 rounded-full px-3 py-1 text-xs">
-                              Company Admin
-                            </Badge>
-                          )}
-                          {user.role === "CompanyUser" && (
-                            <Badge className="bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded-full px-3 py-1 text-xs">
-                              Company User
-                            </Badge>
-                          )}
-                          {!user.role && (
-                            <Badge className="bg-white/10 text-white/70 border border-white/20 rounded-full px-3 py-1 text-xs">
-                              N/A
-                            </Badge>
-                          )}
-                        </div>
+                        <div>{renderRoleBadge(user)}</div>
                         <div>
                           {user.status === "active" && (
                             <Badge className="bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded-full px-3 py-1 text-xs">
@@ -461,21 +513,7 @@ const UserList = () => {
                           </DropdownMenu>
                         </div>
                         <div className="flex flex-wrap gap-2">
-                          {user.role === "CompanyAdmin" && (
-                            <Badge className="bg-purple-600/20 text-purple-400 border border-purple-600/30 rounded-full px-3 py-1 text-xs">
-                              Company Admin
-                            </Badge>
-                          )}
-                          {user.role === "CompanyUser" && (
-                            <Badge className="bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded-full px-3 py-1 text-xs">
-                              Company User
-                            </Badge>
-                          )}
-                          {!user.role && (
-                            <Badge className="bg-white/10 text-white/70 border border-white/20 rounded-full px-3 py-1 text-xs">
-                              N/A
-                            </Badge>
-                          )}
+                          {renderRoleBadge(user)}
                           {user.status === "active" && (
                             <Badge className="bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded-full px-3 py-1 text-xs">
                               Active
