@@ -110,10 +110,13 @@ const LeadChat = ({ lead }: LeadChatProps) => {
         if (isCancelled) return;
 
         const threads = threadsResponse.data?.threads || [];
-        const matchingThread = threads.find((thread) =>
-          thread.participants.some(
-            (participant) => participant.email?.toLowerCase() === leadEmailLower
-          )
+        const matchingThread = threads.find(
+          (thread) =>
+            Array.isArray(thread.participants) &&
+            thread.participants.some(
+              (participant) =>
+                participant.email?.toLowerCase() === leadEmailLower
+            )
         );
 
         if (!matchingThread) {
