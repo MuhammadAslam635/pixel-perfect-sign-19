@@ -15,7 +15,7 @@ const AgentCard = ({ image, name, description }: AgentCardProps) => {
 
   return (
     <Card className="group relative flex flex-col overflow-hidden border border-white/15 bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] backdrop-blur-xl">
-      <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 top-[120px] w-[248px] h-[248px] rounded-full opacity-90 blur-[24px] bg-[radial-gradient(50%_50%_at_50%_50%,rgba(255,255,255,0.35)_0%,rgba(34,43,44,0)_70%)]" />
+      <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 bottom-[-120px] w-[248px] h-[248px] rounded-full opacity-90 blur-[24px] bg-[radial-gradient(50%_50%_at_50%_50%,rgba(255,255,255,0.35)_0%,rgba(34,43,44,0)_70%)]" />
       <div
         className="flex flex-col h-full pt-6 pb-3"
         style={{
@@ -25,7 +25,7 @@ const AgentCard = ({ image, name, description }: AgentCardProps) => {
         }}
       >
         {/* Profile Image Section */}
-        <div className="relative flex justify-center items-center h-28 overflow-hidden">
+        <div className="relative flex justify-center items-center h-28 overflow-hidden mb-4">
           <img
             src={image}
             alt={agentName}

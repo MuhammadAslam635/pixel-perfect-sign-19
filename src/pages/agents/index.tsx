@@ -43,7 +43,7 @@ const AgentsPage = () => {
   return (
     <DashboardLayout>
       <main className="relative flex-1 px-6 pb-12 pt-28 sm:px-10 md:px-14 lg:px-20">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0F172A] via-transparent to-[#05060A] opacity-70"></div>
+        <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-[#0F172A] via-transparent to-[#05060A] opacity-70"></div>
         <header className="flex flex-col gap-4 mb-12">
           <span className="font-poppins font-medium text-4xl text-white">
             AI Agents
