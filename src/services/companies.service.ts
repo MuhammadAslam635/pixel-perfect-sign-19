@@ -96,4 +96,14 @@ export const companiesService = {
       throw error;
     }
   },
+
+  fillPersonData: async (payload: { companyId: string; personId: string }) => {
+    try {
+      const response = await API.post("/companies/fill-person-data", payload);
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
 };

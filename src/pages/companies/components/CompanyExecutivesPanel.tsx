@@ -97,6 +97,7 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
     }
   };
 
+
   return (
     <>
       <div className="flex items-center justify-between mb-3 sm:mb-4">

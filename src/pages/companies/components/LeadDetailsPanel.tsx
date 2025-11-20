@@ -8,10 +8,11 @@ import {
   Send,
   Upload,
   Loader2,
+  Sparkles,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Lead } from "@/services/leads.service";
-import { CompanyPerson } from "@/services/companies.service";
+import { CompanyPerson, companiesService } from "@/services/companies.service";
 import { highlevelService } from "@/services/highlevel.service";
 import { toast } from "sonner";
 
@@ -48,6 +49,7 @@ const LeadDetailsPanel: FC<LeadDetailsPanelProps> = ({
   onLeadSynced,
 }) => {
   const [syncingToGHL, setSyncingToGHL] = useState(false);
+  const [fillingData, setFillingData] = useState(false);
   const isSynced = lead?._id ? syncedLeadIds.has(lead._id) : false;
 
   const fallbackEmail = toStringOrUndefined(fallbackExecutive?.email);
@@ -106,6 +108,37 @@ const LeadDetailsPanel: FC<LeadDetailsPanelProps> = ({
       toast.error(errorMessage);
     } finally {
       setSyncingToGHL(false);
+    }
+  };
+
+  const handleFillLeadData = async () => {
+    if (!lead?._id || !lead?.companyId) {
+      toast.error("Cannot enrich: Missing lead or company information");
+      return;
+    }
+
+    setFillingData(true);
+    try {
+      const response = await companiesService.fillPersonData({
+        companyId: lead.companyId,
+        personId: lead._id,
+      });
+
+      if (response?.success) {
+        toast.success(
+          response.message || "Enrichment request submitted successfully"
+        );
+      } else {
+        toast.error(response?.message || "Failed to enrich lead");
+      }
+    } catch (error: any) {
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Unable to fill missing information";
+      toast.error(errorMessage);
+    } finally {
+      setFillingData(false);
     }
   };
 
@@ -227,6 +260,25 @@ const LeadDetailsPanel: FC<LeadDetailsPanelProps> = ({
                   className="w-3 h-3 sm:w-3.5 sm:h-3.5"
                   strokeWidth={isSynced ? 2.5 : 1.5}
                 />
+              )}
+            </button>
+          )}
+          {lead && lead.companyId && (
+            <button
+              className={`h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center border transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary/40 ${
+                fillingData
+                  ? "bg-white/15 border-white/20 text-white cursor-wait"
+                  : "bg-white/5 border-white/10 text-white/60 hover:bg-white/15 hover:text-white"
+              }`}
+              onClick={handleFillLeadData}
+              disabled={fillingData}
+              aria-disabled={fillingData}
+              title="Fill missing information"
+            >
+              {fillingData ? (
+                <Loader2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 animate-spin" />
+              ) : (
+                <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
               )}
             </button>
           )}

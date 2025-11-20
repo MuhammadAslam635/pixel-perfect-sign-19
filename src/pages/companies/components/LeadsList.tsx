@@ -20,9 +20,10 @@ import {
   Search,
   Upload,
   Loader2,
+  Sparkles,
 } from "lucide-react";
 import { Lead } from "@/services/leads.service";
-import { Company } from "@/services/companies.service";
+import { Company, companiesService } from "@/services/companies.service";
 import LeadDetailsPanel from "./LeadDetailsPanel";
 import { highlevelService } from "@/services/highlevel.service";
 import { toast } from "sonner";
@@ -82,6 +83,7 @@ const LeadsList: FC<LeadsListProps> = ({
 }) => {
   const navigate = useNavigate();
   const [syncingLeads, setSyncingLeads] = useState<Record<string, boolean>>({});
+  const [fillingLeads, setFillingLeads] = useState<Record<string, boolean>>({});
 
   const handleSyncLeadToGHL = async (lead: Lead) => {
     if (!lead._id || !lead.companyId) {
@@ -112,6 +114,38 @@ const LeadsList: FC<LeadsListProps> = ({
       toast.error(errorMessage);
     } finally {
       setSyncingLeads((prev) => ({ ...prev, [lead._id]: false }));
+    }
+  };
+
+  const handleFillLeadData = async (lead: Lead) => {
+    if (!lead._id || !lead.companyId) {
+      toast.error("Cannot enrich: Missing lead or company information");
+      return;
+    }
+
+    setFillingLeads((prev) => ({ ...prev, [lead._id]: true }));
+
+    try {
+      const response = await companiesService.fillPersonData({
+        companyId: lead.companyId,
+        personId: lead._id,
+      });
+
+      if (response?.success) {
+        toast.success(
+          response.message || "Enrichment request submitted successfully"
+        );
+      } else {
+        toast.error(response?.message || "Failed to enrich lead");
+      }
+    } catch (error: any) {
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Unable to fill missing information";
+      toast.error(errorMessage);
+    } finally {
+      setFillingLeads((prev) => ({ ...prev, [lead._id]: false }));
     }
   };
   // Calculate pagination page range
@@ -202,6 +236,8 @@ const LeadsList: FC<LeadsListProps> = ({
     const hasLinkedin = Boolean(lead.linkedinUrl && lead.linkedinUrl.trim());
     const isSynced = syncedLeadIds.has(lead._id);
     const isSyncing = syncingLeads[lead._id];
+    const isFilling = fillingLeads[lead._id];
+    const canEnrich = Boolean(lead._id && lead.companyId);
 
     const handleLinkedinOpen = (e: MouseEvent<HTMLButtonElement>) => {
       e.stopPropagation();
@@ -347,6 +383,32 @@ const LeadsList: FC<LeadsListProps> = ({
                   className="w-3 h-3 sm:w-3.5 sm:h-3.5"
                   strokeWidth={isSynced ? 2.5 : 1.5}
                 />
+              )}
+            </button>
+            <button
+              className={`h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center border transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary/40 ${
+                !canEnrich
+                  ? "bg-white/5 border-white/10 text-white/30 cursor-not-allowed"
+                  : isFilling
+                  ? "bg-white/15 border-white/20 text-white cursor-wait"
+                  : "bg-white/5 border-white/10 text-white/60 hover:bg-white/15 hover:text-white"
+              }`}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (canEnrich) {
+                  handleFillLeadData(lead);
+                }
+              }}
+              disabled={!canEnrich || isFilling}
+              aria-disabled={!canEnrich || isFilling}
+              title={
+                canEnrich ? "Fill missing information" : "Missing IDs to enrich"
+              }
+            >
+              {isFilling ? (
+                <Loader2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 animate-spin" />
+              ) : (
+                <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
               )}
             </button>
           </div>

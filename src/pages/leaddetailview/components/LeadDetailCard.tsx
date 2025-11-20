@@ -1,4 +1,4 @@
-import { FC } from "react";
+import { FC, useState } from "react";
 import { Lead } from "@/services/leads.service";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,13 +11,18 @@ import {
   Languages,
   MapPin,
   Eye,
+  Sparkles,
+  Loader2,
 } from "lucide-react";
+import { companiesService } from "@/services/companies.service";
+import { toast } from "sonner";
 
 type LeadDetailCardProps = {
   lead: Lead;
 };
 
 const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
+  const [fillingData, setFillingData] = useState(false);
   const avatarLetter = lead.name?.charAt(0).toUpperCase() || "?";
   const avatarSrc = lead.pictureUrl;
 
@@ -65,6 +70,36 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
     }
   };
 
+  const handleFillPersonData = async () => {
+    if (!lead._id || !lead.companyId) {
+      toast.error("Cannot enrich: missing lead or company information");
+      return;
+    }
+
+    setFillingData(true);
+    try {
+      const response = await companiesService.fillPersonData({
+        companyId: lead.companyId,
+        personId: lead._id,
+      });
+      if (response?.success) {
+        toast.success(
+          response.message || "Enrichment request submitted successfully"
+        );
+      } else {
+        toast.error(response?.message || "Failed to enrich lead");
+      }
+    } catch (error: any) {
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Unable to fill missing information";
+      toast.error(errorMessage);
+    } finally {
+      setFillingData(false);
+    }
+  };
+
   return (
     <Card
       className="w-full flex-1 min-h-0 flex flex-col"
@@ -93,6 +128,27 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
             {lead.companyName || "Company"} |{" "}
             {lead.position || "Chief Executive Officer"}
           </p>
+          <button
+            onClick={handleFillPersonData}
+            disabled={fillingData || !lead._id || !lead.companyId}
+            className={`mt-3 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[10px] font-semibold transition-colors ${
+              fillingData
+                ? "bg-white/15 border-white/20 text-white cursor-wait"
+                : "bg-white/5 border-white/15 text-white hover:bg-white/15"
+            }`}
+          >
+            {fillingData ? (
+              <>
+                <Loader2 className="w-3 h-3 animate-spin" />
+                Filling...
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-3 h-3" />
+                Fill Missing Info
+              </>
+            )}
+          </button>
         </div>
 
         {/* Contact Section */}
