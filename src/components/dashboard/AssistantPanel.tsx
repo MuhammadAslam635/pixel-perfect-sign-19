@@ -1,10 +1,11 @@
 import { List, Pencil, Plus } from "lucide-react";
 import { FC, useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { fetchChatList } from "@/services/chat.service";
+import { fetchChatList, deleteChatById } from "@/services/chat.service";
 import { ChatMessage, ChatSummary } from "@/types/chat.types";
 import ChatInterface from "./ChatInterface";
 import ChatHistoryList from "./ChatHistoryList";
+import { toast } from "sonner";
 
 const STORAGE_KEY = "assistant_panel_chat_history";
 const CURRENT_CHAT_KEY = "assistant_panel_current_chat";
@@ -19,6 +20,7 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [localMessages, setLocalMessages] = useState<ChatMessage[]>([]);
   const [chatHistory, setChatHistory] = useState<ChatSummary[]>([]);
+  const [deletingChatId, setDeletingChatId] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   // Load chat history from localStorage on mount
@@ -85,6 +87,37 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
     localStorage.removeItem(CURRENT_CHAT_KEY);
   };
 
+  const handleDeleteChat = async (chatId: string) => {
+    if (!chatId) return;
+    setDeletingChatId(chatId);
+    try {
+      await deleteChatById(chatId);
+      setChatHistory((prev) => {
+        const updated = prev.filter((chat) => chat._id !== chatId);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+        return updated;
+      });
+
+      if (currentChatId === chatId) {
+        setCurrentChatId(null);
+        setLocalMessages([]);
+        localStorage.removeItem(CURRENT_CHAT_KEY);
+      }
+
+      toast.success("Chat deleted");
+      await queryClient.invalidateQueries({ queryKey: ["chatList"] });
+      await queryClient.invalidateQueries({ queryKey: ["chatDetail", chatId] });
+    } catch (error: any) {
+      console.error("Failed to delete chat", error);
+      toast.error(
+        error?.response?.data?.message ||
+          "Failed to delete the chat. Please try again."
+      );
+    } finally {
+      setDeletingChatId(null);
+    }
+  };
+
   const hasActiveChat = currentChatId || localMessages.length > 0;
 
   return (
@@ -122,6 +155,8 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
           searchTerm={searchTerm}
           onSearchTermChange={setSearchTerm}
           isLoading={isChatListLoading}
+          onDeleteChat={handleDeleteChat}
+          deletingChatId={deletingChatId}
         />
       ) : (
         <ChatInterface

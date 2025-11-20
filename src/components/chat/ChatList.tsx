@@ -1,10 +1,23 @@
 import { useMemo } from "react";
-import { Search, MessageCircle, Loader2, PenSquare, EllipsisVertical } from "lucide-react";
+import {
+  Search,
+  MessageCircle,
+  Loader2,
+  PenSquare,
+  EllipsisVertical,
+  Trash2,
+} from "lucide-react";
 import { ChatSummary } from "@/types/chat.types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type ChatListProps = {
   chats: ChatSummary[];
@@ -16,6 +29,8 @@ type ChatListProps = {
   onSearchTermChange: (value: string) => void;
   isLoading?: boolean;
   className?: string;
+  onDeleteChat?: (chatId: string) => void;
+  deletingChatId?: string | null;
 };
 
 const ChatList = ({
@@ -28,6 +43,8 @@ const ChatList = ({
   onSearchTermChange,
   isLoading = false,
   className,
+  onDeleteChat,
+  deletingChatId = null,
 }: ChatListProps) => {
   const truncateText = (text: string, limit: number) =>
     text.length > limit ? `${text.slice(0, limit - 1)}…` : text;
@@ -108,6 +125,7 @@ const ChatList = ({
               </div>
             ) : (
               filteredChats.map((chat) => {
+                const isDeletingThisChat = deletingChatId === chat._id;
                 const lastMessage = chat.messages?.at(-1);
                 const fullTitle = chat.title || "Untitled Conversation";
                 const truncatedTitle = truncateText(fullTitle, 18);
@@ -148,14 +166,46 @@ const ChatList = ({
                         </p>
                       )}
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => handleChatOptions(chat._id)}
-                      className="ml-3 flex size-6 items-center justify-center rounded-full border border-transparent transition"
-                      aria-label="Chat options"
-                    >
-                      <EllipsisVertical className="size-4 text-white " />
-                    </button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            handleChatOptions(chat._id);
+                          }}
+                          className={cn(
+                            "ml-3 flex size-7 items-center justify-center rounded-full border border-transparent transition",
+                            selectedChatId === chat._id
+                              ? "bg-white/20"
+                              : "hover:bg-white/10"
+                          )}
+                          aria-label="Chat options"
+                          disabled={isDeletingThisChat}
+                        >
+                          {isDeletingThisChat ? (
+                            <Loader2 className="size-4 animate-spin text-white" />
+                          ) : (
+                            <EllipsisVertical className="size-4 text-white " />
+                          )}
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-44">
+                        <DropdownMenuItem
+                          className="text-red-400 focus:text-red-300"
+                          onSelect={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            if (!isDeletingThisChat) {
+                              onDeleteChat?.(chat._id);
+                            }
+                          }}
+                        >
+                          <Trash2 className="mr-2 size-4" />
+                          Delete chat
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 );
               })

@@ -11,6 +11,7 @@ import {
   fetchChatList,
   sendChatMessage,
   SendChatMessagePayload,
+  deleteChatById,
 } from "@/services/chat.service";
 import { ChatDetail, ChatSummary, ChatMessage } from "@/types/chat.types";
 import { useToast } from "@/components/ui/use-toast";
@@ -31,6 +32,7 @@ const ChatPage = () => {
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [isCreatingNewChat, setIsCreatingNewChat] = useState(false);
   const [isMobileListOpen, setIsMobileListOpen] = useState(false);
+  const [deletingChatId, setDeletingChatId] = useState<string | null>(null);
   const [optimisticMessagesByChat, setOptimisticMessagesByChat] = useState<
     Record<string, ChatMessage[]>
   >({});
@@ -131,17 +133,19 @@ const ChatPage = () => {
           // Extract timestamp from temp ID (format: temp-1234567890)
           const tempTimestamp = parseInt(message._id.replace("temp-", ""));
           const signature = `${message.role}-${message.content}`;
-          
+
           // Only match with server messages created within 30 seconds after the temp message
-          const matchingServerMessage = selectedChat.messages.find((serverMsg) => {
-            if (`${serverMsg.role}-${serverMsg.content}` !== signature) {
-              return false;
+          const matchingServerMessage = selectedChat.messages.find(
+            (serverMsg) => {
+              if (`${serverMsg.role}-${serverMsg.content}` !== signature) {
+                return false;
+              }
+              const serverTimestamp = new Date(serverMsg.createdAt).getTime();
+              const timeDiff = serverTimestamp - tempTimestamp;
+              // Server message should be created after temp message, within 30 seconds
+              return timeDiff >= 0 && timeDiff <= 30000;
             }
-            const serverTimestamp = new Date(serverMsg.createdAt).getTime();
-            const timeDiff = serverTimestamp - tempTimestamp;
-            // Server message should be created after temp message, within 30 seconds
-            return timeDiff >= 0 && timeDiff <= 30000;
-          });
+          );
 
           // If we found a matching recent server message, filter out the temp message
           return !matchingServerMessage;
@@ -310,6 +314,61 @@ const ChatPage = () => {
     setIsMobileListOpen(false);
   };
 
+  const handleDeleteChat = async (chatId: string) => {
+    if (!chatId) {
+      return;
+    }
+    setDeletingChatId(chatId);
+    try {
+      await deleteChatById(chatId);
+
+      queryClient.setQueryData<ChatSummary[] | undefined>(
+        ["chatList"],
+        (previous = []) =>
+          previous ? previous.filter((chat) => chat._id !== chatId) : previous
+      );
+
+      queryClient.removeQueries({
+        queryKey: ["chatDetail", chatId],
+        exact: true,
+      });
+
+      if (selectedChatId === chatId) {
+        setSelectedChatId(null);
+        setComposerValue("");
+        setPendingFile(null);
+        setIsCreatingNewChat(false);
+      }
+
+      setOptimisticMessagesByChat((prev) => {
+        if (!prev[chatId]) {
+          return prev;
+        }
+        const updated = { ...prev };
+        delete updated[chatId];
+        return updated;
+      });
+
+      toast({
+        title: "Chat deleted",
+        description: "The conversation has been removed.",
+      });
+
+      await queryClient.invalidateQueries({ queryKey: ["chatList"] });
+    } catch (error: any) {
+      console.error("Failed to delete chat", error);
+      toast({
+        title: "Unable to delete chat",
+        description:
+          error?.response?.data?.message ||
+          "Something went wrong while deleting the chat.",
+        variant: "destructive",
+      });
+    } finally {
+      setDeletingChatId(null);
+    }
+  };
+
   const resolvedChatTitle = useMemo(() => {
     if (selectedChat?.title) {
       return selectedChat.title;
@@ -333,9 +392,7 @@ const ChatPage = () => {
       return apiMessages;
     }
 
-    const apiMessageIds = new Set(
-      apiMessages.map((message) => message._id)
-    );
+    const apiMessageIds = new Set(apiMessages.map((message) => message._id));
 
     const filteredOptimistic = optimisticMessages.filter((message) => {
       // If message ID exists in server messages, filter it out
@@ -348,7 +405,7 @@ const ChatPage = () => {
         // Extract timestamp from temp ID (format: temp-1234567890)
         const tempTimestamp = parseInt(message._id.replace("temp-", ""));
         const signature = `${message.role}-${message.content}`;
-        
+
         // Only match with server messages created within 30 seconds after the temp message
         const matchingServerMessage = apiMessages.find((serverMsg) => {
           if (`${serverMsg.role}-${serverMsg.content}` !== signature) {
@@ -382,7 +439,7 @@ const ChatPage = () => {
   return (
     <DashboardLayout>
       <Sheet open={isMobileListOpen} onOpenChange={setIsMobileListOpen}>
-        <main className="relative mt-24 flex w-full flex-1 min-h-0 max-h-[calc(100vh-6rem)] justify-center overflow-hidden px-4 pb-6 sm:px-6 md:px-10 lg:px-12 xl:px-16">
+        <main className="relative mt-28 flex w-full flex-1 min-h-0 max-h-[calc(100vh-6rem)] justify-center overflow-hidden px-4 pb-6 sm:px-6 md:px-10 lg:px-12 xl:px-16">
           <div className="flex w-full flex-1 min-h-0 flex-col gap-6 overflow-hidden">
             <section className="flex flex-1 min-h-0 flex-col gap-6 overflow-hidden lg:flex-row lg:items-stretch">
               <div className="hidden lg:flex lg:h-full lg:shrink-0">
@@ -395,6 +452,8 @@ const ChatPage = () => {
                   onSearchTermChange={setSearchTerm}
                   selectedChatId={selectedChatId}
                   className="h-full"
+                  onDeleteChat={handleDeleteChat}
+                  deletingChatId={deletingChatId}
                 />
               </div>
 
@@ -454,6 +513,8 @@ const ChatPage = () => {
               onSearchTermChange={setSearchTerm}
               selectedChatId={selectedChatId}
               className="h-full max-w-none rounded-none border-none"
+              onDeleteChat={handleDeleteChat}
+              deletingChatId={deletingChatId}
             />
           </div>
         </SheetContent>

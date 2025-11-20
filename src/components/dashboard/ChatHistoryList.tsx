@@ -4,12 +4,19 @@ import {
   Loader2,
   PenSquare,
   EllipsisVertical,
+  Trash2,
 } from "lucide-react";
 import { FC, useMemo } from "react";
 import { ChatSummary } from "@/types/chat.types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type ChatHistoryListProps = {
   chats: ChatSummary[];
@@ -19,6 +26,8 @@ type ChatHistoryListProps = {
   searchTerm: string;
   onSearchTermChange: (value: string) => void;
   isLoading?: boolean;
+  onDeleteChat?: (chatId: string) => void;
+  deletingChatId?: string | null;
 };
 
 const ChatHistoryList: FC<ChatHistoryListProps> = ({
@@ -29,6 +38,8 @@ const ChatHistoryList: FC<ChatHistoryListProps> = ({
   searchTerm,
   onSearchTermChange,
   isLoading = false,
+  onDeleteChat,
+  deletingChatId = null,
 }) => {
   const truncateText = (text: string, limit: number) =>
     text.length > limit ? `${text.slice(0, limit - 1)}…` : text;
@@ -122,6 +133,8 @@ const ChatHistoryList: FC<ChatHistoryListProps> = ({
               const fullTitle = chat.title || "Untitled Conversation";
               const truncatedTitle = truncateText(fullTitle, 18);
 
+              const isDeletingThisChat = deletingChatId === chat._id;
+
               return (
                 <div
                   key={chat._id}
@@ -158,13 +171,43 @@ const ChatHistoryList: FC<ChatHistoryListProps> = ({
                       </p>
                     )}
                   </button>
-                  <button
-                    type="button"
-                    className="ml-3 flex size-6 items-center justify-center rounded-full border border-transparent transition"
-                    aria-label="Chat options"
-                  >
-                    <EllipsisVertical className="size-4 text-white" />
-                  </button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        type="button"
+                        className={cn(
+                          "ml-3 flex size-7 items-center justify-center rounded-full border border-transparent transition",
+                          selectedChatId === chat._id
+                            ? "bg-white/20"
+                            : "hover:bg-white/10"
+                        )}
+                        aria-label="Chat options"
+                        onClick={(event) => event.stopPropagation()}
+                        disabled={isDeletingThisChat}
+                      >
+                        {isDeletingThisChat ? (
+                          <Loader2 className="size-4 animate-spin text-white" />
+                        ) : (
+                          <EllipsisVertical className="size-4 text-white" />
+                        )}
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-44">
+                      <DropdownMenuItem
+                        className="text-red-400 focus:text-red-300"
+                        onSelect={(event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          if (!isDeletingThisChat) {
+                            onDeleteChat?.(chat._id);
+                          }
+                        }}
+                      >
+                        <Trash2 className="mr-2 size-4" />
+                        Delete chat
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               );
             })
