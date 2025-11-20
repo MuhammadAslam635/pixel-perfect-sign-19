@@ -48,6 +48,14 @@ const AppRoutes = () => {
         }
       />
       <Route
+        path="/login"
+        element={
+          <PublicRoute>
+            <Index />
+          </PublicRoute>
+        }
+      />
+      <Route
         path="/signup"
         element={
           <PublicRoute>
