@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AuthInput } from "@/components/ui/auth-input";
 import { Label } from "@/components/ui/label";
@@ -98,18 +98,15 @@ const SignIn = () => {
     <AuthLayout
       title="Login"
       subtitle={
-        <div className="font-[poppins] font-normal text-lg text-[#FFFFFF4D] underline">
-          Sign in to continue
-        </div>
+        <p className="font-[Poppins] text-lg font-light text-white/65 underline underline-offset-[6px]">
+          Sign In to continue
+        </p>
       }
     >
-      <form onSubmit={handleSubmit} className="space-y-3">
+      <form onSubmit={handleSubmit} className="space-y-5 font-[Poppins]">
         {/* Email */}
-        <div className="space-y-1">
-          <Label
-            htmlFor="email"
-            className="text-white text-base font-light font-[poppins]"
-          >
+        <div className="space-y-2">
+          <Label htmlFor="email" className="text-base font-light text-white">
             Email
           </Label>
           <AuthInput
@@ -119,20 +116,17 @@ const SignIn = () => {
             placeholder="Enter Your Email"
             value={email}
             onChange={handleChange}
-            className="font-[poppins] font-normal text-[#FFFFFF4D] text-sm"
+            className="text-base font-normal text-white/70"
             disabled={loading}
           />
           {errors.email && (
-            <p className="text-red-500 text-sm">{errors.email}</p>
+            <p className="text-sm text-red-400">{errors.email}</p>
           )}
         </div>
 
         {/* Password */}
-        <div className="space-y-1">
-          <Label
-            htmlFor="password"
-            className="text-white text-base font-light font-poppins"
-          >
+        <div className="space-y-2">
+          <Label htmlFor="password" className="text-base font-light text-white">
             Password
           </Label>
           <div className="relative">
@@ -143,13 +137,13 @@ const SignIn = () => {
               placeholder="Enter Your Password"
               value={password}
               onChange={handleChange}
-              className="font-[poppins] font-normal text-[#FFFFFF4D] text-sm"
+              className="text-base font-normal text-white/70"
               disabled={loading}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors z-20 cursor-pointer"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 transition-colors hover:text-white z-20 cursor-pointer"
               aria-label="Toggle password visibility"
             >
               {showPassword ? (
@@ -160,12 +154,12 @@ const SignIn = () => {
             </button>
           </div>
           {errors.password && (
-            <p className="text-red-500 text-sm">{errors.password}</p>
+            <p className="text-sm text-red-400">{errors.password}</p>
           )}
           <div className="flex justify-end">
             <Link
               to="/forgot-password"
-              className="font-[Poppins] font-medium text-base  text-white hover:text-primary transition-colors"
+              className="text-sm font-medium text-white hover:text-white/80 transition-colors"
             >
               Forgot password?
             </Link>
@@ -175,18 +169,18 @@ const SignIn = () => {
         {/* Submit Button */}
         <Button
           type="submit"
-          className="w-full h-[46px] bg-gradient-to-r from-[#66B0B7] to-[#3E64B3] hover:from-[#76C0C7] hover:to-[#4E74C3] text-white font-normal text-lg rounded-xl shadow-lg transition-all duration-300 mt-4"
+          className="mt-2 h-[56px] w-full rounded-[18px] bg-gradient-to-r from-[#69B4B7] via-[#5486D0] to-[#3E64B3] text-lg font-semibold text-white transition-all hover:brightness-110"
           disabled={loading}
         >
-          {loading ? "Logging in..." : "Login"}
+          {loading ? "Logging in..." : "Log In"}
         </Button>
 
         {/* Sign Up Link */}
-        <p className="text-center text-lg text-[#FFFFFF66] mt-6">
+        <p className="mt-4 text-center text-base text-white/55">
           Don't have an account?{" "}
           <Link
             to="/signup"
-            className="hover:opacity-80 font-normal transition-opacity bg-[linear-gradient(180deg,#8B36E9_0%,#6586FF_50%,#2C5FEC_100%)] bg-clip-text text-transparent"
+            className="font-semibold text-transparent transition-opacity hover:opacity-80 bg-[linear-gradient(120deg,#8B36E9_0%,#5B79FF_60%,#3F64FF_100%)] bg-clip-text"
           >
             Sign Up here
           </Link>

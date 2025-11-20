@@ -9,8 +9,8 @@ const AuthInput = React.forwardRef<HTMLInputElement, React.ComponentProps<"input
           type={type}
           ref={ref}
           className={cn(
-            "w-full h-[41px] rounded-[11px] px-4 text-[14px] text-white placeholder:text-gray-400",
-            "bg-[#D9D9D91A]",
+            "w-full h-[56px] rounded-[16px] px-5 text-base text-white placeholder:text-white/40",
+            "bg-white/5",
             "focus:outline-none focus:ring-0",
             "border-none",
             className
