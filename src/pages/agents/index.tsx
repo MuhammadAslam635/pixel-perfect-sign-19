@@ -53,14 +53,14 @@ const AgentsPage = () => {
           </h1>
         </header>
         <div
-          className="rounded-2xl p-6"
+          className="rounded-3xl p-6"
           style={{
             background:
               "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 2e-05) 38.08%, rgba(255, 255, 255, 2e-05) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
             border: "1px solid #FFFFFF4D",
           }}
         >
-          <section className="grid gap-6 sm:grid-cols-3 xl:grid-cols-3">
+          <section className="grid gap-6 p-6 sm:grid-cols-3 xl:grid-cols-3">
             {agents.map((agent) => (
               <AgentCard key={agent.name} {...agent} />
             ))}
