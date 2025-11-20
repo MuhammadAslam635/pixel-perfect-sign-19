@@ -78,7 +78,7 @@ const LeadDetailView = () => {
               </div>
               {/* Middle: Lead Chat */}
               <div className="col-span-6 col-start-3 flex flex-col min-h-0">
-                <LeadChat />
+                <LeadChat lead={lead} />
               </div>
               {/* Right: Activity Component */}
               <div

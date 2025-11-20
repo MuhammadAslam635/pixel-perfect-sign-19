@@ -1,5 +1,8 @@
-import { useState } from "react";
-import { CheckCheck, Plus, Send } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Loader2, Plus, Send } from "lucide-react";
+import { Lead } from "@/services/leads.service";
+import { emailService } from "@/services/email.service";
+import { Email } from "@/types/email.types";
 
 type Message = {
   id: number;
@@ -8,13 +11,6 @@ type Message = {
   timestamp: string;
   delivered?: boolean;
 };
-
-const tabs = [
-  { label: "WhatsApp", status: "" },
-  { label: "Email", status: "" },
-  { label: "SMS", status: "" },
-  { label: "Call", status: "" },
-];
 
 const mockMessages: Message[] = [
   {
@@ -32,8 +28,157 @@ const mockMessages: Message[] = [
   },
 ];
 
-const LeadChat = () => {
-  const [activeTab, setActiveTab] = useState<string>("WhatsApp");
+type LeadChatProps = {
+  lead?: Lead;
+};
+
+const fallbackLeadInfo = {
+  name: "Saad Naeem",
+  position: "Chief Executive Officer",
+};
+
+const LeadChat = ({ lead }: LeadChatProps) => {
+  const displayName = lead?.name || fallbackLeadInfo.name;
+  const position = lead?.position || fallbackLeadInfo.position;
+  const phoneNumber = lead?.phone;
+  const emailAddress = lead?.email;
+  const avatarSrc = lead?.pictureUrl;
+  const avatarLetter = displayName?.charAt(0).toUpperCase() || "?";
+  const leadEmailLower = emailAddress?.toLowerCase() || null;
+
+  const [emailMessages, setEmailMessages] = useState<Email[]>([]);
+  const [isEmailLoading, setIsEmailLoading] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [fetchedEmailFor, setFetchedEmailFor] = useState<string | null>(null);
+
+  const channelTabs = useMemo(() => {
+    const hasPhone = Boolean(lead?.phone);
+    const hasEmail = Boolean(lead?.email);
+    const statusText = (available: boolean) =>
+      available ? "Connected" : "Unavailable";
+
+    return [
+      {
+        label: "WhatsApp",
+        status: statusText(hasPhone),
+        isAvailable: hasPhone,
+      },
+      { label: "Email", status: statusText(hasEmail), isAvailable: hasEmail },
+      { label: "SMS", status: statusText(hasPhone), isAvailable: hasPhone },
+      { label: "Call", status: statusText(hasPhone), isAvailable: hasPhone },
+    ];
+  }, [lead?.phone, lead?.email]);
+
+  const firstAvailableTab =
+    channelTabs.find((tab) => tab.isAvailable)?.label ||
+    channelTabs[0]?.label ||
+    "WhatsApp";
+
+  const [activeTab, setActiveTab] = useState<string>(firstAvailableTab);
+
+  useEffect(() => {
+    setActiveTab((prev) =>
+      prev === firstAvailableTab ? prev : firstAvailableTab
+    );
+  }, [firstAvailableTab]);
+
+  useEffect(() => {
+    setEmailMessages([]);
+    setFetchedEmailFor(null);
+  }, [lead?._id]);
+
+  useEffect(() => {
+    const shouldFetchEmailConversation =
+      activeTab === "Email" &&
+      !!leadEmailLower &&
+      fetchedEmailFor !== leadEmailLower;
+
+    if (!shouldFetchEmailConversation) {
+      return;
+    }
+
+    let isCancelled = false;
+
+    const fetchEmailConversation = async () => {
+      setIsEmailLoading(true);
+      setEmailError(null);
+
+      try {
+        const threadsResponse = await emailService.getEmailThreads({
+          limit: 100,
+        });
+        if (isCancelled) return;
+
+        const threads = threadsResponse.data?.threads || [];
+        const matchingThread = threads.find((thread) =>
+          thread.participants.some(
+            (participant) => participant.email?.toLowerCase() === leadEmailLower
+          )
+        );
+
+        if (!matchingThread) {
+          setEmailMessages([]);
+          setFetchedEmailFor(leadEmailLower);
+          return;
+        }
+
+        const threadResponse = await emailService.getThread(matchingThread._id);
+        if (isCancelled) return;
+
+        const emails = threadResponse.data?.emails || [];
+        const sortedEmails = [...emails].sort(
+          (a, b) =>
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+        setEmailMessages(sortedEmails);
+        setFetchedEmailFor(leadEmailLower);
+      } catch (error) {
+        if (!isCancelled) {
+          console.error("Failed to load email conversation", error);
+          setEmailError(
+            "Failed to load email conversation. Please try again later."
+          );
+        }
+      } finally {
+        if (!isCancelled) {
+          setIsEmailLoading(false);
+        }
+      }
+    };
+
+    fetchEmailConversation();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [activeTab, leadEmailLower, fetchedEmailFor]);
+
+  const getEmailBodyText = (email: Email) => {
+    if (email.body?.text?.trim()) {
+      return email.body.text.trim();
+    }
+    if (email.body?.html) {
+      const stripped = email.body.html.replace(/<[^>]+>/g, " ");
+      return stripped.replace(/\s+/g, " ").trim();
+    }
+    return "";
+  };
+
+  const formatEmailTimestamp = (dateString: string) => {
+    try {
+      return new Date(dateString).toLocaleString(undefined, {
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "numeric",
+      });
+    } catch {
+      return dateString;
+    }
+  };
+
+  const headerContactValue =
+    activeTab === "Email" ? emailAddress || "" : phoneNumber || "";
 
   return (
     <section
@@ -47,7 +192,7 @@ const LeadChat = () => {
       {/* Header Tabs */}
       <div className="w-full mb-6">
         <div className="flex w-full items-center gap-6 sm:gap-8">
-          {tabs.map((tab) => {
+          {channelTabs.map((tab) => {
             const isActive = activeTab === tab.label;
 
             return (
@@ -64,6 +209,9 @@ const LeadChat = () => {
                 >
                   {tab.label}
                 </span>
+                <span className="block text-[10px] text-white/40">
+                  {tab.status}
+                </span>
                 {isActive && (
                   <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white" />
                 )}
@@ -76,22 +224,28 @@ const LeadChat = () => {
       {/* Lead Info */}
       <div className="flex w-full flex-col gap-6 py-6 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
-          <img
-            src="https://i.pravatar.cc/150?img=58"
-            alt="Lead avatar"
-            className="h-12 w-12 rounded-full object-cover sm:h-14 sm:w-14"
-          />
+          <div className="h-12 w-12 sm:h-14 sm:w-14">
+            {avatarSrc ? (
+              <img
+                src={avatarSrc}
+                alt={`${displayName} avatar`}
+                className="h-full w-full rounded-full object-cover"
+              />
+            ) : (
+              <span className="flex h-full w-full items-center justify-center rounded-full bg-[#3d4f51] text-white text-2xl">
+                {avatarLetter}
+              </span>
+            )}
+          </div>
           <div className="flex flex-col">
             <p className="text-lg font-bold sm:text-xl text-white">
-              Saad Naeem
+              {displayName}
             </p>
-            <p className="text-sm font-normal text-white/60">
-              Chief Executive Officer
-            </p>
+            <p className="text-sm font-normal text-white/60">{position}</p>
           </div>
         </div>
         <div className="flex items-center gap-2 text-sm font-normal text-white/70 sm:ml-auto">
-          <span>+92 256 369 325 36</span>
+          <span>{headerContactValue || "\u00A0"}</span>
           <svg
             width="12"
             height="8"
@@ -125,11 +279,19 @@ const LeadChat = () => {
                     }`}
                   >
                     {message.from === "lead" && (
-                      <img
-                        src="https://i.pravatar.cc/40?img=58"
-                        alt="Lead avatar"
-                        className="h-10 w-10 rounded-full object-cover flex-shrink-0"
-                      />
+                      <div className="h-10 w-10 flex-shrink-0">
+                        {avatarSrc ? (
+                          <img
+                            src={avatarSrc}
+                            alt={`${displayName} avatar`}
+                            className="h-full w-full rounded-full object-cover"
+                          />
+                        ) : (
+                          <span className="flex h-full w-full items-center justify-center rounded-full bg-[#3d4f51] text-white text-2xl">
+                            {avatarLetter}
+                          </span>
+                        )}
+                      </div>
                     )}
                     <div
                       className={`flex max-w-[75%] sm:max-w-[65%] ${
@@ -185,6 +347,101 @@ const LeadChat = () => {
               </button>
             </div>
           </>
+        ) : activeTab === "Email" ? (
+          <div className="flex flex-1 flex-col">
+            {!emailAddress ? (
+              <div className="flex w-full flex-1 items-center justify-center py-20 text-center text-white/70">
+                Add an email address for this lead to view their conversation
+                history.
+              </div>
+            ) : isEmailLoading ? (
+              <div className="flex flex-1 flex-col items-center justify-center gap-3 py-20 text-white/70">
+                <Loader2 className="h-6 w-6 animate-spin text-white" />
+                <p>Loading email conversation...</p>
+              </div>
+            ) : emailError ? (
+              <div className="flex w-full flex-1 items-center justify-center py-20 text-center text-red-300">
+                {emailError}
+              </div>
+            ) : emailMessages.length === 0 ? (
+              <div className="flex w-full flex-1 items-center justify-center py-20 text-center text-white/70">
+                No email conversation with this lead yet.
+              </div>
+            ) : (
+              <div className="flex flex-1 flex-col overflow-y-auto lg:max-h-[calc(100vh-510px)] max-h-[calc(100vh-350px)] scrollbar-hide mb-6 gap-4">
+                {emailMessages.map((email) => {
+                  const isOutbound = email.direction === "outbound";
+                  const authorName = isOutbound
+                    ? "You"
+                    : email.from?.name || email.from?.email || displayName;
+                  const emailBody = getEmailBodyText(email);
+
+                  return (
+                    <div
+                      key={email._id}
+                      className={`flex w-full gap-3 ${
+                        isOutbound ? "justify-end" : "justify-start"
+                      }`}
+                    >
+                      {!isOutbound && (
+                        <div className="h-10 w-10 flex-shrink-0">
+                          {avatarSrc ? (
+                            <img
+                              src={avatarSrc}
+                              alt={`${displayName} avatar`}
+                              className="h-full w-full rounded-full object-cover"
+                            />
+                          ) : (
+                            <span className="flex h-full w-full items-center justify-center rounded-full bg-[#3d4f51] text-white text-2xl">
+                              {avatarLetter}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                      <div
+                        className={`flex max-w-[80%] sm:max-w-[65%] flex-col gap-2 ${
+                          isOutbound ? "items-end" : "items-start"
+                        }`}
+                      >
+                        <div
+                          className={`w-full rounded-2xl px-4 py-3 ${
+                            isOutbound
+                              ? "bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] text-white"
+                              : "bg-white/10 text-white/90"
+                          }`}
+                          style={
+                            isOutbound
+                              ? {
+                                  background:
+                                    "linear-gradient(135deg, #3E65B4 0%, #68B3B7 100%)",
+                                }
+                              : {}
+                          }
+                        >
+                          <div className="flex items-center justify-between gap-4 text-xs text-white/70">
+                            <span className="font-semibold text-white">
+                              {authorName}
+                            </span>
+                            <span className="text-white/60">
+                              {formatEmailTimestamp(email.createdAt)}
+                            </span>
+                          </div>
+                          <p className="text-sm font-semibold mt-2">
+                            {email.subject || "No subject"}
+                          </p>
+                          {emailBody && (
+                            <p className="text-sm mt-2 whitespace-pre-wrap leading-relaxed">
+                              {emailBody}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         ) : (
           <div className="flex w-full flex-1 items-center justify-center py-20 text-lg font-medium text-white/70">
             In work
