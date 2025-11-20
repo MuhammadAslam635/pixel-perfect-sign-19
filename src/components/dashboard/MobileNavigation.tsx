@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useLocation, useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { getUserData } from "@/utils/authHelpers";
@@ -85,19 +85,11 @@ const navLinks: NavLink[] = [
   },
 ];
 
-const resolveActiveNav = (pathname: string, links: NavLink[]) => {
-  const match = links.find((link) =>
-    link.match ? link.match(pathname) : link.path === pathname
-  );
-  return match?.id ?? "home";
-};
-
 export const MobileNavigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  const location = useLocation();
   const { user } = useSelector((state: RootState) => state.auth);
   const sessionUser = user || getUserData();
   const userRole = sessionUser?.role;
@@ -111,8 +103,6 @@ export const MobileNavigation = () => {
     }
     return link.roles.includes(userRole);
   });
-
-  const activeNav = resolveActiveNav(location.pathname, filteredNavLinks);
 
   const handleNavigate = (link: NavLink) => {
     navigate(link.path);
@@ -208,7 +198,7 @@ export const MobileNavigation = () => {
           {/* Navigation Panel */}
           <div
             ref={panelRef}
-            className="absolute left-0 top-0 h-screen w-80 bg-white/25 z-50 lg:hidden shadow-2xl overflow-y-auto backdrop-blur-[20px] border-r border-white/40"
+            className="absolute left-0 top-0 h-screen w-80 bg-black/10 z-50 lg:hidden shadow-2xl overflow-y-auto backdrop-blur-2xl border-r border-white/40"
             role="dialog"
             aria-modal="true"
           >
@@ -234,21 +224,17 @@ export const MobileNavigation = () => {
             <nav className="p-4 space-y-2">
               {filteredNavLinks.map((link) => {
                 const Icon = link.icon;
-                const isActive = activeNav === link.id;
-
                 return (
                   <button
                     key={link.id}
                     onClick={() => handleNavigate(link)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                      isActive
-                        ? "bg-gradient-to-r from-[#67B0B7] to-[#4066B3] text-white shadow-lg"
-                        : "text-white/70 hover:text-white hover:bg-white/10"
-                    }`}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 text-white hover:bg-white/10"
                     type="button"
                   >
-                    <Icon className="w-5 h-5 flex-shrink-0" />
-                    <span className="font-medium text-sm">{link.label}</span>
+                    <Icon className="w-5 h-5 flex-shrink-0 text-white" />
+                    <span className="font-medium text-sm text-white">
+                      {link.label}
+                    </span>
                   </button>
                 );
               })}
