@@ -34,7 +34,7 @@ const AgentCard = ({ image, name, description }: AgentCardProps) => {
         </div>
 
         {/* Content Section */}
-        <CardContent className="flex flex-1 flex-col justify-between items-end gap-2 p-4 pb-4">
+        <CardContent className="flex flex-1 flex-col justify-between items-end gap-2 px-8 pb-4">
           <div className="flex flex-col gap-1 text-center">
             {/* Name */}
             <h3 className="text-lg font-semibold text-white">{agentName}</h3>
@@ -45,14 +45,14 @@ const AgentCard = ({ image, name, description }: AgentCardProps) => {
             )}
 
             {/* Description */}
-            <p className="text-xs leading-relaxed text-white/70 mt-1">
+            <p className="text-xs text-left leading-relaxed text-white/70 mt-2">
               {description}
             </p>
           </div>
 
           {/* View Details Button */}
           <button
-            className="mt-auto rounded-full  py-2.5 px-4 transition-all duration-200 flex justify-end gap-2 font-Inter hover:bg-[#FFFFFF26]"
+            className="mt-auto rounded-full  py-1 px-3 transition-all duration-200 flex justify-end gap-2 font-Inter hover:bg-[#FFFFFF26]"
             style={{
               background: "#FFFFFF1A",
               border: "0.76px solid #FFFFFF1F",
@@ -62,10 +62,10 @@ const AgentCard = ({ image, name, description }: AgentCardProps) => {
               color: "#FFFFFF",
             }}
           >
-            <span className="text-white text-sm font-normal font-Inter">
+            <span className="text-white font-normal font-Inter">
               View Details
             </span>
-            <ArrowRightIcon className="size-4 text-white" />
+            <ArrowRightIcon className="size-3 text-white" />
           </button>
         </CardContent>
       </div>
