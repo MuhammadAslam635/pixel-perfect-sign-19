@@ -4,6 +4,65 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 const Activity: FC = () => {
   const [activeTab, setActiveTab] = useState("summary");
+  const [currentDate, setCurrentDate] = useState(new Date(2025, 10, 1)); // November 2025
+
+  // Dates with meetings - Nov 1 (already done), Nov 25-27 (available)
+  const meetingDoneDates = [1];
+  const availableMeetingDates = [25, 26, 27];
+
+  const monthNames = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+
+  const getDaysInMonth = (date: Date) => {
+    return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+  };
+
+  const getFirstDayOfMonth = (date: Date) => {
+    const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+    return firstDay.getDay();
+  };
+
+  const handlePrevMonth = () => {
+    setCurrentDate(
+      new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1)
+    );
+  };
+
+  const handleNextMonth = () => {
+    setCurrentDate(
+      new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1)
+    );
+  };
+
+  const getCalendarDays = () => {
+    const daysInMonth = getDaysInMonth(currentDate);
+    const firstDay = getFirstDayOfMonth(currentDate);
+    const days: (number | null)[] = [];
+
+    // Add empty cells for days before the first day of the month
+    for (let i = 0; i < firstDay; i++) {
+      days.push(null);
+    }
+
+    // Add all days of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      days.push(day);
+    }
+
+    return days;
+  };
 
   return (
     <Card
@@ -131,8 +190,184 @@ const Activity: FC = () => {
 
           {/* Calendar Tab Content */}
           <TabsContent value="calendar" className="mt-6">
-            <div className="text-white/70 text-center py-8">
-              Calendar content coming soon...
+            <div className="space-y-6">
+              {/* Calendar Widget */}
+              <div
+                className="rounded-lg p-6"
+                style={{
+                  background: "rgba(255, 255, 255, 0.03)",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                }}
+              >
+                {/* Month Navigation */}
+                <div className="flex items-center justify-between mb-6">
+                  <button
+                    onClick={handlePrevMonth}
+                    className="text-white/70 hover:text-white transition-colors p-1"
+                  >
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 20 20"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M12.5 15L7.5 10L12.5 5"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                  <h3 className="text-white font-semibold text-lg">
+                    {monthNames[currentDate.getMonth()]}{" "}
+                    {currentDate.getFullYear()}
+                  </h3>
+                  <button
+                    onClick={handleNextMonth}
+                    className="text-white/70 hover:text-white transition-colors p-1"
+                  >
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 20 20"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M7.5 15L12.5 10L7.5 5"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Days of Week */}
+                <div className="grid grid-cols-7 gap-2 mb-2">
+                  {["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map(
+                    (day) => (
+                      <div
+                        key={day}
+                        className="text-center text-white/50 text-xs font-medium py-2"
+                      >
+                        {day}
+                      </div>
+                    )
+                  )}
+                </div>
+
+                {/* Calendar Grid */}
+                <div className="grid grid-cols-7 gap-2">
+                  {getCalendarDays().map((day, index) => {
+                    if (day === null) {
+                      return <div key={index} className="aspect-square" />;
+                    }
+
+                    const isMeetingDone =
+                      currentDate.getMonth() === 10 &&
+                      meetingDoneDates.includes(day);
+                    const isAvailableMeeting =
+                      currentDate.getMonth() === 10 &&
+                      availableMeetingDates.includes(day);
+
+                    return (
+                      <div
+                        key={index}
+                        className={`aspect-square flex items-center justify-center relative ${
+                          isMeetingDone || isAvailableMeeting
+                            ? ""
+                            : "text-white/70"
+                        }`}
+                      >
+                        {isMeetingDone && (
+                          <div
+                            className="absolute inset-0 rounded-full"
+                            style={{
+                              background: "rgba(6, 182, 212, 0.3)",
+                              border: "2px solid #06b6d4",
+                            }}
+                          />
+                        )}
+                        {isAvailableMeeting && (
+                          <div
+                            className="absolute inset-0 rounded-full"
+                            style={{
+                              background: "rgba(59, 130, 246, 0.3)",
+                              border: "2px solid #3b82f6",
+                            }}
+                          />
+                        )}
+                        <span
+                          className={`relative z-10 ${
+                            isMeetingDone || isAvailableMeeting
+                              ? "text-white font-medium"
+                              : ""
+                          }`}
+                        >
+                          {day}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Calendar Legend */}
+              <div className="flex items-center gap-6">
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-4 h-4 rounded-full"
+                    style={{
+                      background: "rgba(6, 182, 212, 0.3)",
+                      border: "2px solid #06b6d4",
+                    }}
+                  />
+                  <span className="text-white/70 text-sm">
+                    Already meeting done
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-4 h-4 rounded-full"
+                    style={{
+                      background: "rgba(59, 130, 246, 0.3)",
+                      border: "2px solid #3b82f6",
+                    }}
+                  />
+                  <span className="text-white/70 text-sm">
+                    Available for meeting
+                  </span>
+                </div>
+              </div>
+
+              {/* Meeting Notes Section */}
+              <div>
+                <h3 className="text-white font-bold mb-4">Meeting Notes</h3>
+                <div className="space-y-3">
+                  {[1, 2, 3].map((index) => (
+                    <div
+                      key={index}
+                      className="rounded-lg p-4"
+                      style={{
+                        background: "rgba(255, 255, 255, 0.03)",
+                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                      }}
+                    >
+                      <h4 className="text-white font-semibold mb-2">
+                        Proposal for projects
+                      </h4>
+                      <p className="text-white/70 text-sm">
+                        Lorem Ipsum is simply dummy text of the printing.
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </TabsContent>
 
