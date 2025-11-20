@@ -1,15 +1,11 @@
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
-import Logo from "./Logo";
-import orbImage from "@/assets/orb-cyan.jpg";
-import iconCyan from "@/assets/icon-cyan.png";
-import gridPattern from "@/assets/grid-pattern.png";
-import cardIcon from "@/assets/card-icon.png";
+import AuthLayout from "@/components/AuthLayout";
+import { AuthInput } from "@/components/ui/auth-input";
 import { authService } from "@/services/auth.service";
 
 const SignUp = () => {
@@ -146,236 +142,153 @@ const SignUp = () => {
   };
 
   return (
-    <div className="min-h-[850px] w-full relative overflow-hidden bg-[#1A1A1A]">
-      {/* Grid Pattern Background with teal glow overlay (keep PNG) */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div
-          className="absolute bottom-0 left-0 right-0 h-[400px] opacity-100"
-          style={{
-            backgroundImage: `url(${gridPattern})`,
-            backgroundSize: "cover",
-            backgroundPosition: "bottom center",
-            backgroundRepeat: "no-repeat",
-          }}
-        />
-        <div
-          className="absolute bottom-0 left-0 right-0 h-[400px] pointer-events-none"
-          style={{
-            background:
-              "radial-gradient(800px 180px at 50% 90%, rgba(105,179,183,0.20), transparent 80%),\n" +
-              "radial-gradient(600px 160px at 40% 90%, rgba(105,179,183,0.12), transparent 80%)",
-            mixBlendMode: "screen",
-          }}
-        />
-      </div>
-
-      {/* Logo */}
-      <div className="absolute top-8 left-8 z-20">
-        <Logo />
-      </div>
-
-      {/* Content */}
-      <div className="min-h-screen flex items-center justify-center py-6 relative z-10">
-        {/* Register Card */}
-        <div className="w-full max-w-[500px] relative">
-          {/* Gradient Circle at top-right corner behind card */}
-          <div className="absolute -top-24 -right-24 w-[320px] h-[320px] -z-10">
-            <div
-              className="absolute inset-0 rounded-full bg-gradient-to-br from-[#66B0B7] via-[#4D7FDB] to-[#243B63] opacity-90"
-              style={{
-                filter: "",
-                transform: "scale(1.05)",
-              }}
-            />
-          </div>
-
-          {/* Glassmorphism Card with tighter spacing */}
-          <div className="relative rounded-[34px] p-7 border-[1px] bg-gradient-to-r from-white/30 to-transparent backdrop-blur-[40px] shadow-card ring-1 ring-white/15 overflow-hidden">
-            <div className="relative z-10">
-              {/* Icon */}
-              <div className="flex justify-center mb-4">
-                <img src={cardIcon} alt="Logo" className="w-12 h-12" />
-              </div>
-
-            {/* Title */}
-            <h2 className="text-2xl font-semibold text-center text-foreground mb-1">
-              Register
-            </h2>
-            <p className="text-center text-muted-foreground/60 text-xs mb-4">
-              <div className="font-[poppins] font-normal text-lg text-[#FFFFFF4D] underline">
-                Sign up to continue
-              </div>
-            </p>
-
-            {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-3">
-              {/* Company Name */}
-              <div className="space-y-1">
-                <Label
-                  htmlFor="companyName"
-                  className="text-white text-base font-light font-[poppins]"
-                >
-                  Company Name
-                </Label>
-                <Input
-                  id="companyName"
-                  type="text"
-                  name="companyName"
-                  placeholder="Enter Your Company Name"
-                  value={companyName}
-                  onChange={(e) => handleChange(e, "companyName")}
-                  className="font-[poppins] font-normal text-[#FFFFFF4D] text-sm"
-                  disabled={loading}
-                />
-                {errors.companyName && (
-                  <p className="text-red-500 text-sm">{errors.companyName}</p>
-                )}
-              </div>
-
-              {/* Industry */}
-              <div className="space-y-1">
-                <Label
-                  htmlFor="industry"
-                  className="text-white text-base font-light font-[poppins]"
-                >
-                  Industry
-                </Label>
-                <Input
-                  id="industry"
-                  type="text"
-                  name="industry"
-                  placeholder="Enter Your Industry Name"
-                  value={industry}
-                  onChange={(e) => handleChange(e, "industry")}
-                  className="font-[poppins] font-normal text-[#FFFFFF4D] text-sm"
-                  disabled={loading}
-                />
-              </div>
-
-              {/* Email */}
-              <div className="space-y-1">
-                <Label
-                  htmlFor="email"
-                  className="text-white text-base font-light font-[poppins]"
-                >
-                  Email
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  name="email"
-                  placeholder="Enter Your Email"
-                  value={email}
-                  onChange={(e) => handleChange(e, "email")}
-                  className="font-[poppins] font-normal text-[#FFFFFF4D] text-sm"
-                  disabled={loading}
-                />
-                {errors.email && (
-                  <p className="text-red-500 text-sm">{errors.email}</p>
-                )}
-              </div>
-
-              {/* Password */}
-              <div className="space-y-1">
-                <Label
-                  htmlFor="password"
-                  className="text-white text-base font-light font-[poppins]"
-                >
-                  Password
-                </Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    name="password"
-                    placeholder="Enter Your Password"
-                    value={password}
-                    onChange={(e) => handleChange(e, "password")}
-                    className="font-[poppins] font-normal text-[#FFFFFF4D] text-sm"
-                    disabled={loading}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors z-20 cursor-pointer"
-                    aria-label="Toggle password visibility"
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-5 w-5" />
-                    ) : (
-                      <Eye className="h-5 w-5" />
-                    )}
-                  </button>
-                </div>
-                {errors.password && (
-                  <p className="text-red-500 text-sm">{errors.password}</p>
-                )}
-              </div>
-
-              {/* Confirm Password */}
-              <div className="space-y-1">
-                <Label
-                  htmlFor="confirmPassword"
-                  className="text-white text-base font-light font-[poppins]"
-                >
-                  Confirm Password
-                </Label>
-                <div className="relative">
-                  <Input
-                    id="confirmPassword"
-                    type={showConfirmPassword ? "text" : "password"}
-                    name="confirmPassword"
-                    placeholder="Enter Your Password"
-                    value={confirmPassword}
-                    onChange={(e) => handleChange(e, "confirmPassword")}
-                    className="font-[poppins] font-normal text-[#FFFFFF4D] text-sm"
-                    disabled={loading}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors z-20 cursor-pointer"
-                    aria-label="Toggle confirm password visibility"
-                  >
-                    {showConfirmPassword ? (
-                      <EyeOff className="h-5 w-5" />
-                    ) : (
-                      <Eye className="h-5 w-5" />
-                    )}
-                  </button>
-                </div>
-                {errors.confirmPassword && (
-                  <p className="text-red-500 text-sm">
-                    {errors.confirmPassword}
-                  </p>
-                )}
-              </div>
-
-              {/* Submit Button */}
-              <Button
-                type="submit"
-                className="w-full h-[46px] bg-gradient-to-r from-[#66B0B7] to-[#3E64B3] hover:from-[#76C0C7] hover:to-[#4E74C3] text-white font-medium text-base rounded-xl shadow-lg transition-all duration-300 mt-4"
-                disabled={loading}
-              >
-                {loading ? "Registering..." : "Register"}
-              </Button>
-
-              {/* Sign In Link */}
-              <p className="text-center text-lg text-[#FFFFFF66] mt-6">
-                Already have an account?{" "}
-                <Link
-                  to="/"
-                  className="hover:opacity-80 font-normal transition-opacity bg-gradient-to-r from-[#8B36E9] via-[#6586FF] to-[#2C5FEC] bg-clip-text text-transparent"
-                >
-                  Login here
-                </Link>
-              </p>
-            </form>
-            </div>
-          </div>
+    <AuthLayout
+      title="Register"
+      subtitle={
+        <p className="font-[Poppins] text-lg font-light text-white/65 underline underline-offset-[6px]">
+          Sign up to continue
+        </p>
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-4 font-[Poppins]">
+        <div className="space-y-2">
+          <Label htmlFor="companyName" className="text-base font-light text-white">
+            Company Name
+          </Label>
+          <AuthInput
+            id="companyName"
+            type="text"
+            name="companyName"
+            placeholder="Enter Your Company Name"
+            value={companyName}
+            onChange={(e) => handleChange(e, "companyName")}
+            className="text-base font-normal text-white/70"
+            disabled={loading}
+          />
+          {errors.companyName && (
+            <p className="text-sm text-red-400">{errors.companyName}</p>
+          )}
         </div>
-      </div>
-    </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="industry" className="text-base font-light text-white">
+            Industry (Optional)
+          </Label>
+          <AuthInput
+            id="industry"
+            type="text"
+            name="industry"
+            placeholder="Enter Your Industry Name"
+            value={industry}
+            onChange={(e) => handleChange(e, "industry")}
+            className="text-base font-normal text-white/70"
+            disabled={loading}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="email" className="text-base font-light text-white">
+            Email
+          </Label>
+          <AuthInput
+            id="email"
+            type="email"
+            name="email"
+            placeholder="Enter Your Email"
+            value={email}
+            onChange={(e) => handleChange(e, "email")}
+            className="text-base font-normal text-white/70"
+            disabled={loading}
+          />
+          {errors.email && <p className="text-sm text-red-400">{errors.email}</p>}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="password" className="text-base font-light text-white">
+            Password
+          </Label>
+          <div className="relative">
+            <AuthInput
+              id="password"
+              type={showPassword ? "text" : "password"}
+              name="password"
+              placeholder="Enter Your Password"
+              value={password}
+              onChange={(e) => handleChange(e, "password")}
+              className="text-base font-normal text-white/70"
+              disabled={loading}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 transition-colors hover:text-white z-20 cursor-pointer"
+              aria-label="Toggle password visibility"
+            >
+              {showPassword ? (
+                <EyeOff className="h-5 w-5" />
+              ) : (
+                <Eye className="h-5 w-5" />
+              )}
+            </button>
+          </div>
+          {errors.password && <p className="text-sm text-red-400">{errors.password}</p>}
+        </div>
+
+        <div className="space-y-2">
+          <Label
+            htmlFor="confirmPassword"
+            className="text-base font-light text-white"
+          >
+            Confirm Password
+          </Label>
+          <div className="relative">
+            <AuthInput
+              id="confirmPassword"
+              type={showConfirmPassword ? "text" : "password"}
+              name="confirmPassword"
+              placeholder="Enter Your Password"
+              value={confirmPassword}
+              onChange={(e) => handleChange(e, "confirmPassword")}
+              className="text-base font-normal text-white/70"
+              disabled={loading}
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 transition-colors hover:text-white z-20 cursor-pointer"
+              aria-label="Toggle confirm password visibility"
+            >
+              {showConfirmPassword ? (
+                <EyeOff className="h-5 w-5" />
+              ) : (
+                <Eye className="h-5 w-5" />
+              )}
+            </button>
+          </div>
+          {errors.confirmPassword && (
+            <p className="text-sm text-red-400">{errors.confirmPassword}</p>
+          )}
+        </div>
+
+        <Button
+          type="submit"
+          className="mt-2 h-[56px] w-full rounded-[18px] bg-gradient-to-r from-[#69B4B7] via-[#5486D0] to-[#3E64B3] text-lg font-semibold text-white transition-all hover:brightness-110"
+          disabled={loading}
+        >
+          {loading ? "Registering..." : "Register"}
+        </Button>
+
+        <p className="text-center text-base text-white/70">
+          Already have an account?{" "}
+          <Link
+            to="/"
+            className="font-semibold text-transparent transition-opacity hover:opacity-80 bg-[linear-gradient(120deg,#8B36E9_0%,#5B79FF_60%,#3F64FF_100%)] bg-clip-text"
+          >
+            Login here
+          </Link>
+        </p>
+      </form>
+    </AuthLayout>
   );
 };
 

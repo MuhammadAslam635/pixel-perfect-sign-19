@@ -7,27 +7,27 @@ const VerifyEmail = () => {
     <AuthLayout
       title="Verify Your Email"
       subtitle={
-        <span className="text-xs">
+        <span className="font-[Poppins] text-base font-light text-white/65">
           We sent a verification link to your email.
         </span>
       }
     >
-      <div className="space-y-4">
-        <p className="text-sm text-muted-foreground text-center">
+      <div className="space-y-5 font-[Poppins]">
+        <p className="text-center text-base text-white/70">
           Click the link in your inbox to verify your account.
         </p>
-        <Button className="w-full h-[46px] bg-gradient-to-r from-[#66B0B7] to-[#3E64B3] text-white rounded-xl">
+        <Button className="h-[56px] w-full rounded-[18px] bg-gradient-to-r from-[#69B4B7] via-[#5486D0] to-[#3E64B3] text-lg font-semibold text-white transition-all hover:brightness-110">
           Open Email App
         </Button>
-        <p className="text-center text-sm text-muted-foreground">
+        <div className="text-center text-base text-white/60">
           Didn’t get it?{" "}
           <Link
             to="/resend-email"
-            className="text-primary hover:text-primary-glow"
+            className="font-semibold text-transparent transition-opacity hover:opacity-80 bg-[linear-gradient(120deg,#8B36E9_0%,#5B79FF_60%,#3F64FF_100%)] bg-clip-text"
           >
             Resend email
           </Link>
-        </p>
+        </div>
       </div>
     </AuthLayout>
   );

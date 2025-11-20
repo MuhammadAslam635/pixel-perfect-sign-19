@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { AuthAuthInput } from "@/components/ui/auth-input";
+import { AuthInput } from "@/components/ui/auth-input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
@@ -11,7 +11,7 @@ const ResendEmail = () => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({ email: "" });
 
-  const handleChange = (e: React.ChangeEvent<HTMLAuthInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
     setErrors({ email: "" });
   };
@@ -36,17 +36,17 @@ const ResendEmail = () => {
     <AuthLayout
       title="Resend Verification Email"
       subtitle={
-        <Link to="/" className="hover:text-primary transition-colors">
+        <Link
+          to="/"
+          className="text-sm font-medium text-white hover:text-white/80 transition-colors"
+        >
           Back to login
         </Link>
       }
     >
-      <form onSubmit={handleSubmit} className="space-y-3">
-        <div className="space-y-1">
-          <Label
-            htmlFor="email"
-            className="text-white text-base font-light font-[poppins]"
-          >
+      <form onSubmit={handleSubmit} className="space-y-5 font-[Poppins]">
+        <div className="space-y-2">
+          <Label htmlFor="email" className="text-base font-light text-white">
             Email
           </Label>
           <AuthInput
@@ -54,17 +54,18 @@ const ResendEmail = () => {
             type="email"
             name="email"
             placeholder="Enter Your Email"
-            className="font-[poppins] font-normal text-[#FFFFFF4D] text-sm"
+            className="text-base font-normal text-white/70"
             value={email}
             onChange={handleChange}
+            disabled={loading}
           />
           {errors.email && (
-            <p className="text-red-500 text-sm">{errors.email}</p>
+            <p className="text-sm text-red-400">{errors.email}</p>
           )}
         </div>
         <Button
           type="submit"
-          className="w-full h-[46px] bg-gradient-to-r from-[#66B0B7] to-[#3E64B3] text-white rounded-xl mt-4"
+          className="mt-2 h-[56px] w-full rounded-[18px] bg-gradient-to-r from-[#69B4B7] via-[#5486D0] to-[#3E64B3] text-lg font-semibold text-white transition-all hover:brightness-110"
           disabled={loading}
         >
           {loading ? "Resending..." : "Resend Email"}

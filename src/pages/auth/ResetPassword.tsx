@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { AuthAuthInput } from "@/components/ui/auth-input";
+import { AuthInput } from "@/components/ui/auth-input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
@@ -23,7 +23,7 @@ const ResetPassword = () => {
   const token = searchParams.get("token");
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLAuthInputElement>,
+    e: React.ChangeEvent<HTMLInputElement>,
     field: string
   ) => {
     const value = e.target.value;
@@ -105,17 +105,17 @@ const ResetPassword = () => {
     <AuthLayout
       title="Reset Password"
       subtitle={
-        <Link to="/" className="hover:text-primary transition-colors">
+        <Link
+          to="/"
+          className="text-sm font-medium text-white hover:text-white/80 transition-colors"
+        >
           Back to login
         </Link>
       }
     >
-      <form onSubmit={handleSubmit} className="space-y-3">
-        <div className="space-y-1">
-          <Label
-            htmlFor="password"
-            className="text-white text-base font-light font-[poppins]"
-          >
+      <form onSubmit={handleSubmit} className="space-y-5 font-[Poppins]">
+        <div className="space-y-2">
+          <Label htmlFor="password" className="text-base font-light text-white">
             New Password
           </Label>
           <div className="relative">
@@ -126,13 +126,13 @@ const ResetPassword = () => {
               placeholder="Enter New Password"
               value={password}
               onChange={(e) => handleChange(e, "password")}
-              className="font-[poppins] font-normal text-[#FFFFFF4D] text-sm"
+              className="text-base font-normal text-white/70"
               disabled={loading}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors z-20 cursor-pointer"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 transition-colors hover:text-white z-20 cursor-pointer"
               aria-label="Toggle password visibility"
             >
               {showPassword ? (
@@ -143,14 +143,11 @@ const ResetPassword = () => {
             </button>
           </div>
           {errors.password && (
-            <p className="text-red-500 text-sm">{errors.password}</p>
+            <p className="text-sm text-red-400">{errors.password}</p>
           )}
         </div>
-        <div className="space-y-1">
-          <Label
-            htmlFor="confirm"
-            className="text-white text-base font-light font-[poppins]"
-          >
+        <div className="space-y-2">
+          <Label htmlFor="confirm" className="text-base font-light text-white">
             Confirm Password
           </Label>
           <div className="relative">
@@ -161,13 +158,13 @@ const ResetPassword = () => {
               placeholder="Confirm New Password"
               value={confirm}
               onChange={(e) => handleChange(e, "confirm")}
-              className="font-[poppins] font-normal text-[#FFFFFF4D] text-sm"
+              className="text-base font-normal text-white/70"
               disabled={loading}
             />
             <button
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors z-20 cursor-pointer"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 transition-colors hover:text-white z-20 cursor-pointer"
               aria-label="Toggle confirm password visibility"
             >
               {showConfirmPassword ? (
@@ -178,12 +175,12 @@ const ResetPassword = () => {
             </button>
           </div>
           {errors.confirm && (
-            <p className="text-red-500 text-sm">{errors.confirm}</p>
+            <p className="text-sm text-red-400">{errors.confirm}</p>
           )}
         </div>
         <Button
           type="submit"
-          className="w-full h-[46px] bg-gradient-to-r from-[#66B0B7] to-[#3E64B3] text-white rounded-xl mt-4"
+          className="mt-2 h-[56px] w-full rounded-[18px] bg-gradient-to-r from-[#69B4B7] via-[#5486D0] to-[#3E64B3] text-lg font-semibold text-white transition-all hover:brightness-110"
           disabled={loading}
         >
           {loading ? "Resetting..." : "Reset Password"}

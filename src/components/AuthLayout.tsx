@@ -16,8 +16,9 @@ export default function AuthLayout({
   children,
   maxWidthClass = "max-w-[360px] md:max-w-none md:w-[620px]",
 }: AuthLayoutProps) {
+
   return (
-    <div className="min-h-screen w-full bg-[#050F1D]">
+    <div className="min-h-screen w-full bg-[#050F1D] relative">
       {/* Mobile layout */}
       <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden px-6 py-12 md:hidden">
         <div className="pointer-events-none absolute inset-0">
@@ -48,11 +49,12 @@ export default function AuthLayout({
         </div>
       </div>
 
-      {/* Desktop layout (original) */}
-      <div className="hidden min-h-screen w-full items-center justify-center overflow-hidden bg-[#1A1A1A] md:flex">
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {/* Desktop layout */}
+      <div className="hidden min-h-screen w-full items-center justify-center bg-[#1A1A1A] md:flex relative">
+        {/* Grid background - positioned at bottom of content */}
+        <div className="absolute inset-x-0 bottom-0 h-[280px] overflow-hidden pointer-events-none">
           <div
-            className="absolute bottom-0 left-0 right-0 h-[400px] opacity-100"
+            className="absolute bottom-0 left-0 right-0 h-[280px] opacity-100"
             style={{
               backgroundImage: `url(${gridPattern})`,
               backgroundSize: "cover",
@@ -61,7 +63,7 @@ export default function AuthLayout({
             }}
           />
           <div
-            className="absolute bottom-0 left-0 right-0 h-[400px] pointer-events-none"
+            className="absolute bottom-0 left-0 right-0 h-[280px] pointer-events-none"
             style={{
               background:
                 "radial-gradient(800px 180px at 50% 90%, rgba(105,179,183,0.20), transparent 80%),\n" +
@@ -75,7 +77,7 @@ export default function AuthLayout({
           <Logo />
         </div>
 
-        <div className="min-h-screen flex items-center justify-center py-6 relative z-10">
+        <div className="min-h-screen flex items-center justify-center py-6 relative z-10 w-full">
           <div className={`w-full ${maxWidthClass} relative`}>
             <div className="absolute -top-24 -right-24 w-[320px] h-[320px] -z-10">
               <div
