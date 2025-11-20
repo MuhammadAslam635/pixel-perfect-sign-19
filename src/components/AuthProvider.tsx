@@ -2,6 +2,8 @@ import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { getUserData } from "@/utils/authHelpers";
 import { loginSuccess } from "@/store/slices/authSlice";
+import { fetchUserPermissions } from "@/store/slices/permissionsSlice";
+import { AppDispatch } from "@/store/store";
 
 /**
  * AuthProvider component to restore authentication state on app load
@@ -9,7 +11,7 @@ import { loginSuccess } from "@/store/slices/authSlice";
  * restores it to Redux state if valid
  */
 const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
 
   useEffect(() => {
     // Restore auth state from localStorage on app mount
@@ -29,6 +31,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               ...userData,
             })
           );
+          dispatch(fetchUserPermissions());
         }
       } catch (error) {
         console.error("Failed to restore auth state:", error);

@@ -12,21 +12,27 @@ import { usePermissions } from "@/hooks/usePermissions";
 
 const ModuleList = () => {
   const navigate = useNavigate();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, permissionsReady } = usePermissions();
   const [modules, setModules] = useState<Module[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
 
   // Only system admins can view modules
-  const hasAccess = checkPermission("modules", ["view"]);
+  const hasAccess = permissionsReady
+    ? checkPermission("modules", ["view"])
+    : null;
 
   useEffect(() => {
-    if (!hasAccess) {
+    if (!permissionsReady) {
+      return;
+    }
+
+    if (hasAccess === false) {
       navigate("/dashboard", { replace: true });
       return;
     }
     fetchModules();
-  }, [hasAccess, navigate]);
+  }, [hasAccess, navigate, permissionsReady]);
 
   const fetchModules = async () => {
     setLoading(true);
@@ -52,7 +58,17 @@ const ModuleList = () => {
       module.displayName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (!hasAccess) {
+  if (!permissionsReady) {
+    return (
+      <DashboardLayout>
+        <div className="flex min-h-[60vh] items-center justify-center text-white/70">
+          Checking permissions...
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (hasAccess === false) {
     return null;
   }
 

@@ -1,67 +1,66 @@
-import { useSelector } from "react-redux";
-import { RootState } from "@/store/store";
-import {
-  hasPermission,
-  hasAction,
-  getAccessibleModules,
-  getModuleActions,
-  isSystemAdmin,
-  isCompanyAdmin,
-  canAccessModule,
-} from "@/utils/rbacHelpers";
+import { useCallback, useEffect, useMemo } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState, AppDispatch } from "@/store/store";
+import { isSystemAdmin, isCompanyAdmin } from "@/utils/rbacHelpers";
 import { PermissionAction, Role } from "@/types/rbac.types";
+import { fetchUserPermissions } from "@/store/slices/permissionsSlice";
 
 /**
  * Custom hook for checking user permissions
  */
 export const usePermissions = () => {
+  const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.auth);
+  const permissionsState = useSelector((state: RootState) => state.permissions);
 
   // Get user's role (new RBAC or legacy)
-  const userRole: Role | null = user?.roleId && typeof user.roleId === "object" ? user.roleId : null;
-  const legacyRole: string | null = user?.role && typeof user.role === "string" ? user.role : null;
+  const userRole: Role | null =
+    user?.roleId && typeof user.roleId === "object" ? user.roleId : null;
+  const legacyRole: string | null =
+    user?.role && typeof user.role === "string" ? user.role : null;
 
-  /**
-   * Check if user has permission to access a module with specific actions
-   */
-  const checkPermission = (
-    moduleName: string,
-    requiredActions: PermissionAction[] = ["view"],
-    requireAll: boolean = false
-  ): boolean => {
-    if (!user) return false;
-
-    // System Admin has all permissions
-    if (legacyRole === "Admin" || isSystemAdmin(userRole)) {
-      return true;
+  useEffect(() => {
+    if (user && !permissionsState.initialized && !permissionsState.loading) {
+      dispatch(fetchUserPermissions());
     }
+  }, [dispatch, user, permissionsState.initialized, permissionsState.loading]);
 
-    // New RBAC
-    if (userRole) {
-      return hasPermission(userRole, moduleName, requiredActions, requireAll);
-    }
+  const checkPermission = useCallback(
+    (
+      moduleName: string,
+      requiredActions: PermissionAction[] = ["view"],
+      requireAll: boolean = false
+    ): boolean => {
+      if (!user) return false;
 
-    // Legacy fallback
-    return canAccessModule(user, moduleName, requiredActions);
-  };
+      // System Admin has all permissions
+      if (legacyRole === "Admin" || isSystemAdmin(userRole)) {
+        return true;
+      }
+
+      const moduleAccess = permissionsState.modulesByName[moduleName];
+      if (!moduleAccess) {
+        return false;
+      }
+
+      const actions = moduleAccess.actions || [];
+
+      return requireAll
+        ? requiredActions.every((action) => actions.includes(action))
+        : requiredActions.some((action) => actions.includes(action));
+    },
+    [user, legacyRole, userRole, permissionsState.modulesByName]
+  );
 
   /**
    * Check if user has a specific action on a module
    */
-  const checkAction = (moduleName: string, action: PermissionAction): boolean => {
-    if (!user) return false;
-
-    // System Admin has all permissions
-    if (legacyRole === "Admin" || isSystemAdmin(userRole)) {
-      return true;
-    }
-
-    if (userRole) {
-      return hasAction(userRole, moduleName, action);
-    }
-
-    return canAccessModule(user, moduleName, [action]);
-  };
+  const checkAction = useCallback(
+    (moduleName: string, action: PermissionAction): boolean => {
+      return checkPermission(moduleName, [action]);
+    },
+    [checkPermission]
+  );
 
   /**
    * Check if user can view a module
@@ -108,7 +107,10 @@ export const usePermissions = () => {
   /**
    * Get all accessible modules
    */
-  const accessibleModules = userRole ? getAccessibleModules(userRole) : [];
+  const accessibleModules = useMemo(
+    () => Object.values(permissionsState.modulesByName),
+    [permissionsState.modulesByName]
+  );
 
   /**
    * Get all actions for a specific module
@@ -120,12 +122,12 @@ export const usePermissions = () => {
       return ["view", "create", "edit", "delete"];
     }
 
-    if (userRole) {
-      return getModuleActions(userRole, moduleName);
-    }
-
-    return [];
+    return permissionsState.modulesByName[moduleName]?.actions || [];
   };
+
+  const refreshPermissions = useCallback(() => {
+    dispatch(fetchUserPermissions());
+  }, [dispatch]);
 
   return {
     // Check functions
@@ -147,6 +149,12 @@ export const usePermissions = () => {
     userRole,
     legacyRole,
     user,
+
+    // Permission meta
+    permissionsLoading: permissionsState.loading,
+    permissionsReady: permissionsState.initialized,
+    permissionsError: permissionsState.error,
+    refreshPermissions,
   };
 };
 

@@ -2,6 +2,7 @@ import API from "@/utils/api";
 import {
   Role,
   Module,
+  ModuleAccess,
   CreateRolePayload,
   UpdateRolePayload,
   AssignRolePayload,
@@ -28,6 +29,13 @@ export interface ModuleResponse {
 export interface ModuleListResponse {
   success: boolean;
   data: Module[];
+  message?: string;
+  legacy?: boolean;
+}
+
+export interface UserModuleListResponse {
+  success: boolean;
+  data: ModuleAccess[];
   message?: string;
   legacy?: boolean;
 }
@@ -104,7 +112,9 @@ export const rbacService = {
   /**
    * Delete role
    */
-  deleteRole: async (id: string): Promise<{ success: boolean; message: string }> => {
+  deleteRole: async (
+    id: string
+  ): Promise<{ success: boolean; message: string }> => {
     try {
       const response = await API.delete(`/roles/${id}`);
       return response.data;
@@ -116,7 +126,9 @@ export const rbacService = {
   /**
    * Assign role to user
    */
-  assignRole: async (payload: AssignRolePayload): Promise<AssignRoleResponse> => {
+  assignRole: async (
+    payload: AssignRolePayload
+  ): Promise<AssignRoleResponse> => {
     try {
       const response = await API.post("/roles/assign", payload);
       return response.data;
@@ -132,7 +144,9 @@ export const rbacService = {
   /**
    * Get all modules
    */
-  getAllModules: async (includeInactive: boolean = false): Promise<ModuleListResponse> => {
+  getAllModules: async (
+    includeInactive: boolean = false
+  ): Promise<ModuleListResponse> => {
     try {
       const response = await API.get("/modules", {
         params: { includeInactive },
@@ -146,7 +160,7 @@ export const rbacService = {
   /**
    * Get user's accessible modules
    */
-  getUserModules: async (): Promise<ModuleListResponse> => {
+  getUserModules: async (): Promise<UserModuleListResponse> => {
     try {
       const response = await API.get("/modules/user");
       return response.data;
@@ -197,7 +211,9 @@ export const rbacService = {
   /**
    * Delete module (Admin only)
    */
-  deleteModule: async (id: string): Promise<{ success: boolean; message: string }> => {
+  deleteModule: async (
+    id: string
+  ): Promise<{ success: boolean; message: string }> => {
     try {
       const response = await API.delete(`/modules/${id}`);
       return response.data;

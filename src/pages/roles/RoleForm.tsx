@@ -34,7 +34,7 @@ const RoleForm = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const isEditMode = !!id;
-  const { checkPermission } = usePermissions();
+  const { checkPermission, permissionsReady } = usePermissions();
 
   const [loading, setLoading] = useState(false);
   const [modules, setModules] = useState<Module[]>([]);
@@ -49,7 +49,9 @@ const RoleForm = () => {
     RolePermission[]
   >([]);
 
-  const hasAccess = checkPermission("roles", ["view"]);
+  const hasAccess = permissionsReady
+    ? checkPermission("roles", ["view"])
+    : null;
 
   // Filter modules based on search query
   const filteredModulePermissions = modulePermissions.filter((mp) => {
@@ -66,7 +68,11 @@ const RoleForm = () => {
   });
 
   useEffect(() => {
-    if (!hasAccess) {
+    if (!permissionsReady) {
+      return;
+    }
+
+    if (hasAccess === false) {
       navigate("/dashboard", { replace: true });
       return;
     }
@@ -79,7 +85,7 @@ const RoleForm = () => {
     };
 
     initialize();
-  }, [hasAccess, navigate, isEditMode, id]);
+  }, [hasAccess, navigate, isEditMode, id, permissionsReady]);
 
   const fetchModules = async () => {
     try {
@@ -93,7 +99,6 @@ const RoleForm = () => {
   };
 
   const fetchRole = async (roleId: string) => {
-    setLoading(true);
     try {
       const response = await rbacService.getRoleById(roleId);
       if (response.success && response.data) {
@@ -106,28 +111,26 @@ const RoleForm = () => {
     } catch (error: any) {
       toast.error("Failed to fetch role details");
       navigate("/roles");
-    } finally {
-      useEffect(() => {
-        if (modules.length === 0) return;
-
-        setModulePermissions(
-          modules.map((module) => {
-            const rolePermission = rolePermissionData.find(
-              (p) =>
-                (typeof p.module === "string" ? p.module : p.module._id) ===
-                module._id
-            );
-            return {
-              module,
-              selectedActions: rolePermission?.actions || [],
-            };
-          })
-        );
-      }, [modules, rolePermissionData]);
-
-      setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (modules.length === 0) return;
+
+    setModulePermissions(
+      modules.map((module) => {
+        const rolePermission = rolePermissionData.find(
+          (p) =>
+            (typeof p.module === "string" ? p.module : p.module._id) ===
+            module._id
+        );
+        return {
+          module,
+          selectedActions: rolePermission?.actions || [],
+        };
+      })
+    );
+  }, [modules, rolePermissionData]);
 
   const toggleAction = (moduleId: string, action: PermissionAction) => {
     setModulePermissions((prev) =>
@@ -219,7 +222,17 @@ const RoleForm = () => {
     }
   };
 
-  if (!hasAccess) {
+  if (!permissionsReady) {
+    return (
+      <DashboardLayout>
+        <div className="flex min-h-[60vh] items-center justify-center text-white/70">
+          Checking permissions...
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (hasAccess === false) {
     return null;
   }
 

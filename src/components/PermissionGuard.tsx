@@ -25,9 +25,17 @@ const PermissionGuard: React.FC<PermissionGuardProps> = ({
   requireAll = false,
   fallback = null,
 }) => {
-  const { checkPermission } = usePermissions();
+  const { checkPermission, permissionsReady, isSysAdmin } = usePermissions();
 
-  const hasPermission = checkPermission(moduleName, requiredActions, requireAll);
+  if (!permissionsReady && !isSysAdmin()) {
+    return null;
+  }
+
+  const hasPermission = checkPermission(
+    moduleName,
+    requiredActions,
+    requireAll
+  );
 
   if (!hasPermission) {
     return <>{fallback}</>;

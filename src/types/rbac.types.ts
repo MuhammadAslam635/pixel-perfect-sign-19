@@ -21,6 +21,10 @@ export interface Module {
   updatedAt: Date;
 }
 
+export type ModuleAccess = Module & {
+  actions: PermissionAction[];
+};
+
 export interface RolePermission {
   module: string | Module;
   actions: PermissionAction[];

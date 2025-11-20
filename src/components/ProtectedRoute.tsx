@@ -2,8 +2,8 @@ import { Navigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { isAuthenticated, getUserData } from "@/utils/authHelpers";
-import { canAccessModule } from "@/utils/rbacHelpers";
 import { PermissionAction } from "@/types/rbac.types";
+import { usePermissions } from "@/hooks/usePermissions";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -23,6 +23,7 @@ const ProtectedRoute = ({
   const { isAuthenticated: isAuthenticatedRedux, user } = useSelector(
     (state: RootState) => state.auth
   );
+  const { checkPermission, permissionsReady, isSysAdmin } = usePermissions();
 
   // Check both Redux state and localStorage
   const isAuth = isAuthenticatedRedux || isAuthenticated();
@@ -35,7 +36,19 @@ const ProtectedRoute = ({
 
   // New RBAC check - takes precedence
   if (moduleName) {
-    const hasAccess = canAccessModule(sessionUser, moduleName, requiredActions);
+    if (!permissionsReady && !isSysAdmin()) {
+      return (
+        <div className="flex min-h-screen items-center justify-center text-white/60">
+          Checking permissions...
+        </div>
+      );
+    }
+
+    const hasAccess = checkPermission(
+      moduleName,
+      requiredActions,
+      requireAllActions
+    );
 
     if (!hasAccess) {
       // User doesn't have permission to access this module

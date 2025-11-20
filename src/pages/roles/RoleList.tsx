@@ -27,21 +27,27 @@ import { usePermissions } from "@/hooks/usePermissions";
 
 const RoleList = () => {
   const navigate = useNavigate();
-  const { checkPermission } = usePermissions();
+  const { checkPermission, permissionsReady } = usePermissions();
   const [roles, setRoles] = useState<Role[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
 
   // Check if user has permission
-  const hasAccess = checkPermission("roles", ["view"]);
+  const hasAccess = permissionsReady
+    ? checkPermission("roles", ["view"])
+    : null;
 
   useEffect(() => {
-    if (!hasAccess) {
+    if (!permissionsReady) {
+      return;
+    }
+
+    if (hasAccess === false) {
       navigate("/dashboard", { replace: true });
       return;
     }
     fetchRoles();
-  }, [hasAccess, navigate]);
+  }, [hasAccess, navigate, permissionsReady]);
 
   const fetchRoles = async () => {
     setLoading(true);
@@ -85,7 +91,17 @@ const RoleList = () => {
       role.displayName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (!hasAccess) {
+  if (!permissionsReady) {
+    return (
+      <DashboardLayout>
+        <div className="flex min-h-[60vh] items-center justify-center text-white/70">
+          Checking permissions...
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (hasAccess === false) {
     return null;
   }
 
