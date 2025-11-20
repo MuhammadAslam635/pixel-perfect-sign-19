@@ -7,25 +7,55 @@ import { Link } from "react-router-dom";
 
 const DashboardHeader = () => {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isPageScrollable, setIsPageScrollable] = useState(true);
 
   useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 20) {
+    const checkScrollability = () => {
+      // Check if page is scrollable (content height > viewport height)
+      const isScrollable =
+        document.documentElement.scrollHeight > window.innerHeight;
+      setIsPageScrollable(isScrollable);
+
+      // If page is not scrollable, always show background
+      if (!isScrollable) {
         setIsScrolled(true);
       } else {
-        setIsScrolled(false);
+        // If page becomes scrollable, check current scroll position
+        if (window.scrollY > 20) {
+          setIsScrolled(true);
+        } else {
+          setIsScrolled(false);
+        }
       }
     };
 
+    const handleScroll = () => {
+      // Only handle scroll if page is scrollable
+      if (document.documentElement.scrollHeight > window.innerHeight) {
+        if (window.scrollY > 20) {
+          setIsScrolled(true);
+        } else {
+          setIsScrolled(false);
+        }
+      }
+    };
+
+    // Check scrollability on mount and resize
+    checkScrollability();
+    window.addEventListener("resize", checkScrollability);
     window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", checkScrollability);
+    };
   }, []);
 
   return (
     <header
       className={`fixed left-0 right-0 z-50 flex h-20 items-center gap-4 p-2 mx-w-full overflow-visible transition-all duration-300 ${
-        isScrolled
-          ? "bg-[rgba(15,15,20,0.85)] backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.4)] border-b border-white/10"
+        isScrolled || !isPageScrollable
+          ? "bg-[rgba(15,15,20,0.85)] backdrop-blur-xl border-b border-white/10"
           : "bg-transparent"
       }`}
     >

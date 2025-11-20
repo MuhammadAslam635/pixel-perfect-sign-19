@@ -19,6 +19,7 @@ import { Role } from "@/types/rbac.types";
 import { toast } from "sonner";
 import { getUserData } from "@/utils/authHelpers";
 import { mailgunService } from "@/services/mailgun.service";
+import API from "@/utils/api";
 
 const TWILIO_CAPABILITIES = ["voice", "sms"] as const;
 type TwilioCapability = (typeof TWILIO_CAPABILITIES)[number];
@@ -50,11 +51,6 @@ const UserCreate = () => {
   const [twilioCapabilities, setTwilioCapabilities] = useState<
     TwilioCapability[]
   >([...TWILIO_CAPABILITIES]);
-    Array<"voice" | "sms">
-  >([
-    "voice",
-    "sms",
-  ]);
   const [twilioConnected, setTwilioConnected] = useState(false);
   const [twilioStatusLoading, setTwilioStatusLoading] = useState(true);
 
@@ -84,9 +80,10 @@ const UserCreate = () => {
 
     fetchRoles();
   }, []);
-  const isTwilioRequired = ["CompanyAdmin", "CompanyUser"].includes(
-    user.role || ""
-  );
+  const selectedRole = availableRoles.find((role) => role._id === user.roleId);
+  const isTwilioRequired = selectedRole
+    ? ["CompanyAdmin", "CompanyUser"].includes(selectedRole.type)
+    : false;
   const isTwilioBlocked =
     isTwilioRequired && !twilioConnected && !twilioStatusLoading;
 
@@ -111,25 +108,25 @@ const UserCreate = () => {
     fetchMailgunDomain();
   }, []);
 
-useEffect(() => {
-  const fetchTwilioStatus = async () => {
-    try {
-      setTwilioStatusLoading(true);
-      const response = await API.get("/twilio/connection-check");
-      if (response.data?.success) {
-        setTwilioConnected(Boolean(response.data.connected));
-      } else {
+  useEffect(() => {
+    const fetchTwilioStatus = async () => {
+      try {
+        setTwilioStatusLoading(true);
+        const response = await API.get("/twilio/connection-check");
+        if (response.data?.success) {
+          setTwilioConnected(Boolean(response.data.connected));
+        } else {
+          setTwilioConnected(false);
+        }
+      } catch (error) {
         setTwilioConnected(false);
+      } finally {
+        setTwilioStatusLoading(false);
       }
-    } catch (error) {
-      setTwilioConnected(false);
-    } finally {
-      setTwilioStatusLoading(false);
-    }
-  };
+    };
 
-  fetchTwilioStatus();
-}, []);
+    fetchTwilioStatus();
+  }, []);
 
   // Generate suggested email when name or email changes
   useEffect(() => {
@@ -500,15 +497,6 @@ useEffect(() => {
 
                 {/* Twilio Provisioning */}
                 <div className="space-y-3 border border-white/10 rounded-2xl p-4">
-                  <div>
-                    <h3 className="text-white text-base font-semibold">
-                      Twilio provisioning
-                    </h3>
-                    <p className="text-white/60 text-sm">
-                      Each employee gets a dedicated TwiML app and phone number.
-                      You can customize the preferred area code and
-                      capabilities.
-                    </p>
                   <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
                     <div>
                       <h3 className="text-white text-base font-semibold">
@@ -577,7 +565,6 @@ useEffect(() => {
                     </p>
                     <div className="flex flex-wrap gap-6">
                       {TWILIO_CAPABILITIES.map((capability) => {
-                      {(["voice", "sms"] as Array<"voice" | "sms">).map((capability) => {
                         const checked = twilioCapabilities.includes(capability);
                         return (
                           <label
