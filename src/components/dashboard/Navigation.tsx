@@ -1,8 +1,8 @@
-import ChatIcon from "@/components/icons/ChatIcon";
 import { ClientsIcon } from "@/components/icons/ClientsIcon";
 import { HomeIcon } from "@/components/icons/HomeIcon";
 import { RootState } from "@/store/store";
 import { getUserData } from "@/utils/authHelpers";
+import ChatIcon from "@/components/icons/ChatIcon";
 import {
   BarChart3,
   Bot,
@@ -11,7 +11,6 @@ import {
   Home,
   Mail,
   Shield,
-  MessageSquare,
   PhoneCall,
   Target
 } from "lucide-react";
@@ -71,7 +70,6 @@ const navLinks: NavLink[] = [
     match: (pathname: string) => pathname.startsWith("/roles"),
     roles: adminRoles,
   },
-  { id: "chat", label: "Chat", icon: MessageSquare, path: "/chat" },
   {
     id: "emails",
     label: "Emails",

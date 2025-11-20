@@ -4,7 +4,6 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { getUserData } from "@/utils/authHelpers";
 import { HamburgerIcon } from "@/components/icons/HamburgerIcon";
-import ChatIcon from "@/components/icons/ChatIcon";
 import { ClientsIcon } from "@/components/icons/ClientsIcon";
 import { HomeIcon } from "@/components/icons/HomeIcon";
 import Logo from "@/components/Logo";
@@ -14,6 +13,7 @@ import {
   CalendarDays,
   Home,
   Mail,
+  MessageSquare,
   PhoneCall,
   Target,
   X,
@@ -52,7 +52,7 @@ const navLinks: NavLink[] = [
     path: "/clients",
     match: (pathname: string) => pathname.startsWith("/clients"),
   },
-  { id: "chat", label: "Chat", icon: ChatIcon as typeof Home, path: "/chat" },
+  { id: "chat", label: "Chat", icon: MessageSquare, path: "/chat" },
   {
     id: "emails",
     label: "Emails",
