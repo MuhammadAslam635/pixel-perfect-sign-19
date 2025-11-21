@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { RefObject, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Plus, Send } from "lucide-react";
 import { Lead } from "@/services/leads.service";
@@ -108,6 +108,15 @@ const LeadChat = ({ lead }: LeadChatProps) => {
     missingFields: [],
   });
   const queryClient = useQueryClient();
+  const whatsappScrollRef = useRef<HTMLDivElement | null>(null);
+  const emailScrollRef = useRef<HTMLDivElement | null>(null);
+  const smsScrollRef = useRef<HTMLDivElement | null>(null);
+
+  const scrollToBottom = (ref: RefObject<HTMLDivElement>) => {
+    const container = ref.current;
+    if (!container) return;
+    container.scrollTop = container.scrollHeight;
+  };
 
   const channelTabs = useMemo(() => {
     const hasPhone = Boolean(lead?.phone);
@@ -309,6 +318,24 @@ const LeadChat = ({ lead }: LeadChatProps) => {
     );
   }, [smsMessages]);
 
+  useEffect(() => {
+    if (activeTab === "WhatsApp") {
+      scrollToBottom(whatsappScrollRef);
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab === "Email") {
+      scrollToBottom(emailScrollRef);
+    }
+  }, [emailMessages, activeTab]);
+
+  useEffect(() => {
+    if (activeTab === "SMS") {
+      scrollToBottom(smsScrollRef);
+    }
+  }, [orderedSmsMessages, activeTab]);
+
   const smsQueryErrorMessage = isSmsError
     ? (smsQueryError as any)?.response?.data?.message ||
       (smsQueryError as Error)?.message ||
@@ -465,7 +492,10 @@ const LeadChat = ({ lead }: LeadChatProps) => {
       <div className="flex flex-col w-full">
         {activeTab === "WhatsApp" ? (
           <>
-            <div className="flex flex-1 flex-col overflow-y-auto lg:max-h-[calc(100vh-510px)] max-h-[calc(100vh-350px)] scrollbar-hide mb-6">
+            <div
+              ref={whatsappScrollRef}
+              className="flex flex-col overflow-y-auto scrollbar-hide mb-6 h-[calc(100vh-350px)] lg:h-[calc(100vh-550px)]"
+            >
               <div className="flex flex-col gap-4">
                 {mockMessages.map((message, index) => (
                   <div
@@ -564,7 +594,10 @@ const LeadChat = ({ lead }: LeadChatProps) => {
                 No email conversation with this lead yet.
               </div>
             ) : (
-              <div className="flex flex-1 flex-col overflow-y-auto lg:max-h-[calc(100vh-510px)] max-h-[calc(100vh-350px)] scrollbar-hide mb-6 gap-4">
+              <div
+                ref={emailScrollRef}
+                className="flex flex-col overflow-y-auto scrollbar-hide mb-6 gap-4 h-[calc(100vh-350px)] lg:h-[calc(100vh-510px)]"
+              >
                 {emailMessages.map((email) => {
                   const isOutbound = email.direction === "outbound";
                   const authorName = isOutbound
@@ -662,7 +695,10 @@ const LeadChat = ({ lead }: LeadChatProps) => {
                 No SMS conversation with this lead yet.
               </div>
             ) : (
-              <div className="flex flex-1 flex-col overflow-y-auto lg:max-h-[calc(100vh-510px)] max-h-[calc(100vh-350px)] scrollbar-hide mb-6 gap-4">
+              <div
+                ref={smsScrollRef}
+                className="flex flex-col overflow-y-auto scrollbar-hide mb-6 gap-4 h-[calc(100vh-350px)] lg:h-[calc(100vh-510px)]"
+              >
                 {orderedSmsMessages.map((message) => {
                   const isOutbound = message.direction === "outbound";
                   const statusDisplay = isOutbound
