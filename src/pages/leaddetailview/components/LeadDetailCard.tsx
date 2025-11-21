@@ -1,4 +1,4 @@
-import { FC, useState } from "react";
+import { FC, useMemo, useState } from "react";
 import { Lead } from "@/services/leads.service";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,9 +13,36 @@ import {
   Eye,
   Sparkles,
   Loader2,
+  CalendarPlus,
 } from "lucide-react";
 import { companiesService } from "@/services/companies.service";
+import { calendarService } from "@/services/calendar.service";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+
+type ScheduleMeetingForm = {
+  subject: string;
+  body: string;
+  location: string;
+  findAvailableSlot: boolean;
+  startDateTime: string;
+  endDateTime: string;
+  startDate: string;
+  endDate: string;
+  durationMinutes: number;
+};
 
 type LeadDetailCardProps = {
   lead: Lead;
@@ -23,8 +50,48 @@ type LeadDetailCardProps = {
 
 const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
   const [fillingData, setFillingData] = useState(false);
+  const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
+  const [schedulingMeeting, setSchedulingMeeting] = useState(false);
   const avatarLetter = lead.name?.charAt(0).toUpperCase() || "?";
   const avatarSrc = lead.pictureUrl;
+
+  const formatDateTimeLocal = (date: Date) => {
+    const pad = (num: number) => String(num).padStart(2, "0");
+    const year = date.getFullYear();
+    const month = pad(date.getMonth() + 1);
+    const day = pad(date.getDate());
+    const hours = pad(date.getHours());
+    const minutes = pad(date.getMinutes());
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
+  const createInitialScheduleForm = useMemo<() => ScheduleMeetingForm>(() => {
+    return () => {
+      const now = new Date();
+      const endOfDay = new Date(now);
+      endOfDay.setHours(23, 59, 0, 0);
+
+      return {
+        subject: lead?.name ? `Meeting with ${lead.name}` : "Meeting",
+        body: "",
+        location: "",
+        findAvailableSlot: true,
+        startDateTime: "",
+        endDateTime: "",
+        startDate: formatDateTimeLocal(now),
+        endDate: formatDateTimeLocal(endOfDay),
+        durationMinutes: 30,
+      };
+    };
+  }, [lead?.name]);
+
+  const [scheduleForm, setScheduleForm] = useState<ScheduleMeetingForm>(
+    createInitialScheduleForm
+  );
+
+  const resetScheduleForm = () => {
+    setScheduleForm(createInitialScheduleForm());
+  };
 
   // Determine API source based on lead fields
   const getApiSource = (): string => {
@@ -100,7 +167,84 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
     }
   };
 
+  const handleScheduleMeeting = async () => {
+    if (!lead._id) {
+      toast.error("Missing lead identifier");
+      return;
+    }
+
+    if (!scheduleForm.findAvailableSlot) {
+      if (!scheduleForm.startDateTime || !scheduleForm.endDateTime) {
+        toast.error("Start and end date/time are required");
+        return;
+      }
+    } else {
+      if (!scheduleForm.startDate) {
+        toast.error("Start search date is required");
+        return;
+      }
+    }
+
+    const autoModeStart = scheduleForm.startDate
+      ? new Date(scheduleForm.startDate)
+      : new Date();
+
+    let autoModeEnd: Date | undefined;
+    if (scheduleForm.findAvailableSlot) {
+      if (scheduleForm.endDate) {
+        autoModeEnd = new Date(scheduleForm.endDate);
+      } else {
+        autoModeEnd = new Date(autoModeStart);
+        autoModeEnd.setHours(23, 59, 59, 999);
+      }
+    }
+
+    const payload = {
+      personId: lead._id,
+      subject: scheduleForm.subject?.trim() || undefined,
+      body: scheduleForm.body?.trim() || undefined,
+      location: scheduleForm.location?.trim() || undefined,
+      findAvailableSlot: scheduleForm.findAvailableSlot,
+      durationMinutes: scheduleForm.findAvailableSlot
+        ? scheduleForm.durationMinutes
+        : undefined,
+      startDateTime: !scheduleForm.findAvailableSlot
+        ? new Date(scheduleForm.startDateTime).toISOString()
+        : undefined,
+      endDateTime: !scheduleForm.findAvailableSlot
+        ? new Date(scheduleForm.endDateTime).toISOString()
+        : undefined,
+      startDate:
+        scheduleForm.findAvailableSlot && autoModeStart
+          ? autoModeStart.toISOString()
+          : undefined,
+      endDate:
+        scheduleForm.findAvailableSlot && autoModeEnd
+          ? autoModeEnd.toISOString()
+          : undefined,
+    };
+
+    setSchedulingMeeting(true);
+    try {
+      const response = await calendarService.scheduleMeeting(payload);
+      toast.success(
+        response?.message || "Meeting scheduled successfully in Microsoft Calendar"
+      );
+      setScheduleDialogOpen(false);
+      resetScheduleForm();
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to schedule meeting";
+      toast.error(message);
+    } finally {
+      setSchedulingMeeting(false);
+    }
+  };
+
   return (
+    <>
     <Card
       className="w-full flex-1 min-h-0 flex flex-col"
       style={{
@@ -128,27 +272,40 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
             {lead.companyName || "Company"} |{" "}
             {lead.position || "Chief Executive Officer"}
           </p>
-          <button
-            onClick={handleFillPersonData}
-            disabled={fillingData || !lead._id || !lead.companyId}
-            className={`mt-3 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[10px] font-semibold transition-colors ${
-              fillingData
-                ? "bg-white/15 border-white/20 text-white cursor-wait"
-                : "bg-white/5 border-white/15 text-white hover:bg-white/15"
-            }`}
-          >
-            {fillingData ? (
-              <>
-                <Loader2 className="w-3 h-3 animate-spin" />
-                Filling...
-              </>
-            ) : (
-              <>
-                <Sparkles className="w-3 h-3" />
-                Fill Missing Info
-              </>
-            )}
-          </button>
+          <div className="flex flex-col gap-2 w-full">
+            <button
+              onClick={handleFillPersonData}
+              disabled={fillingData || !lead._id || !lead.companyId}
+              className={`mt-3 inline-flex items-center justify-center gap-2 rounded-full border px-3 py-1 text-[10px] font-semibold transition-colors ${
+                fillingData
+                  ? "bg-white/15 border-white/20 text-white cursor-wait"
+                  : "bg-white/5 border-white/15 text-white hover:bg-white/15"
+              }`}
+            >
+              {fillingData ? (
+                <>
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  Filling...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-3 h-3" />
+                  Fill Missing Info
+                </>
+              )}
+            </button>
+            <Button
+              disabled={!lead._id}
+              onClick={() => {
+                resetScheduleForm();
+                setScheduleDialogOpen(true);
+              }}
+              className="w-full justify-center text-[10px] h-8 bg-white/15 hover:bg-white/25 text-white border border-white/20"
+            >
+              <CalendarPlus className="w-3 h-3 mr-1" />
+              Schedule Meeting
+            </Button>
+          </div>
         </div>
 
         {/* Contact Section */}
@@ -358,6 +515,210 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
         </div>
       </CardContent>
     </Card>
+
+      <Dialog
+        open={scheduleDialogOpen}
+        onOpenChange={(open) => {
+          setScheduleDialogOpen(open);
+          if (!open) {
+            resetScheduleForm();
+          }
+        }}
+      >
+        <DialogContent className="max-w-lg bg-[#0b0f20] text-white border border-white/10">
+          <DialogHeader>
+            <DialogTitle>Schedule Meeting</DialogTitle>
+            <DialogDescription className="text-white/70">
+              Create a Microsoft Calendar event with {lead.name || "this lead"}.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
+            <div className="space-y-2">
+              <Label className="text-xs text-white/70">Subject</Label>
+              <Input
+                value={scheduleForm.subject}
+                onChange={(e) =>
+                  setScheduleForm((prev) => ({
+                    ...prev,
+                    subject: e.target.value,
+                  }))
+                }
+                className="bg-white/5 border-white/10 text-white text-sm"
+                placeholder="Meeting subject"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs text-white/70">Description</Label>
+              <Textarea
+                value={scheduleForm.body}
+                onChange={(e) =>
+                  setScheduleForm((prev) => ({
+                    ...prev,
+                    body: e.target.value,
+                  }))
+                }
+                className="bg-white/5 border-white/10 text-white text-sm min-h-[80px]"
+                placeholder="Add context or agenda"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs text-white/70">Location</Label>
+              <Input
+                value={scheduleForm.location}
+                onChange={(e) =>
+                  setScheduleForm((prev) => ({
+                    ...prev,
+                    location: e.target.value,
+                  }))
+                }
+                className="bg-white/5 border-white/10 text-white text-sm"
+                placeholder="Optional location or meeting link"
+              />
+            </div>
+
+            <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-3 py-2">
+              <div>
+                <p className="text-sm font-medium text-white">Auto find slot</p>
+                <p className="text-xs text-white/60">
+                  Let Microsoft calendar choose the first available time
+                </p>
+              </div>
+              <Switch
+                checked={scheduleForm.findAvailableSlot}
+                onCheckedChange={(checked) =>
+                  setScheduleForm((prev) => ({
+                    ...prev,
+                    findAvailableSlot: checked,
+                  }))
+                }
+              />
+            </div>
+
+            {!scheduleForm.findAvailableSlot && (
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label className="text-xs text-white/70">
+                    Start date & time
+                  </Label>
+                  <Input
+                    type="datetime-local"
+                    value={scheduleForm.startDateTime}
+                    onChange={(e) =>
+                      setScheduleForm((prev) => ({
+                        ...prev,
+                        startDateTime: e.target.value,
+                      }))
+                    }
+                    className="bg-white/5 border-white/10 text-white text-sm"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-white/70">
+                    End date & time
+                  </Label>
+                  <Input
+                    type="datetime-local"
+                    value={scheduleForm.endDateTime}
+                    onChange={(e) =>
+                      setScheduleForm((prev) => ({
+                        ...prev,
+                        endDateTime: e.target.value,
+                      }))
+                    }
+                    className="bg-white/5 border-white/10 text-white text-sm"
+                  />
+                </div>
+              </div>
+            )}
+
+            {scheduleForm.findAvailableSlot && (
+              <>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label className="text-xs text-white/70">
+                      Start of search window
+                    </Label>
+                    <Input
+                      type="datetime-local"
+                      value={scheduleForm.startDate}
+                      disabled
+                      className="bg-white/10 border-white/10 text-white text-sm cursor-not-allowed opacity-70"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs text-white/70">
+                      End of search window
+                    </Label>
+                    <Input
+                      type="datetime-local"
+                      value={scheduleForm.endDate}
+                      onChange={(e) =>
+                        setScheduleForm((prev) => ({
+                          ...prev,
+                          endDate: e.target.value,
+                        }))
+                      }
+                      className="bg-white/5 border-white/10 text-white text-sm"
+                      placeholder="Defaults to end of day"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-white/70">
+                    Meeting duration (minutes)
+                  </Label>
+                  <Input
+                    type="number"
+                    min={15}
+                    step={15}
+                    value={scheduleForm.durationMinutes}
+                    onChange={(e) =>
+                      setScheduleForm((prev) => ({
+                        ...prev,
+                        durationMinutes: Number(e.target.value) || 30,
+                      }))
+                    }
+                    className="bg-white/5 border-white/10 text-white text-sm"
+                  />
+                </div>
+              </>
+            )}
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              className="text-white/70 hover:text-white"
+              onClick={() => {
+                setScheduleDialogOpen(false);
+                resetScheduleForm();
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              className="bg-white text-[#0b0f20] hover:bg-white/90"
+              disabled={schedulingMeeting}
+              onClick={handleScheduleMeeting}
+            >
+              {schedulingMeeting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Scheduling...
+                </>
+              ) : (
+                "Schedule"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 
