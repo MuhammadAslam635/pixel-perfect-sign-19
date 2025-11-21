@@ -39,6 +39,42 @@ type LeadChatProps = {
   lead?: Lead;
 };
 
+type SmsStatusDisplay = {
+  label: string;
+  className: string;
+};
+
+const getSmsStatusDisplay = (status?: string): SmsStatusDisplay | null => {
+  if (!status) {
+    return null;
+  }
+
+  const normalized = status.toLowerCase();
+
+  const statusMap: Record<string, SmsStatusDisplay> = {
+    queued: { label: "Sent", className: "text-white/70" },
+    accepted: { label: "Sent", className: "text-white/70" },
+    sending: { label: "Sent", className: "text-white/70" },
+    sent: { label: "Sent", className: "text-white/70" },
+    delivered: { label: "Delivered", className: "text-emerald-300" },
+    received: { label: "Delivered", className: "text-emerald-300" },
+    read: { label: "Read", className: "text-emerald-300" },
+    failed: { label: "Failed", className: "text-red-300" },
+    undelivered: { label: "Failed", className: "text-red-300" },
+    canceled: { label: "Canceled", className: "text-red-300" },
+    "no-answer": { label: "No answer", className: "text-white/60" },
+  };
+
+  if (statusMap[normalized]) {
+    return statusMap[normalized];
+  }
+
+  return {
+    label: normalized.charAt(0).toUpperCase() + normalized.slice(1),
+    className: "text-white/60",
+  };
+};
+
 const fallbackLeadInfo = {
   name: "Saad Naeem",
   position: "Chief Executive Officer",
@@ -629,6 +665,9 @@ const LeadChat = ({ lead }: LeadChatProps) => {
               <div className="flex flex-1 flex-col overflow-y-auto lg:max-h-[calc(100vh-510px)] max-h-[calc(100vh-350px)] scrollbar-hide mb-6 gap-4">
                 {orderedSmsMessages.map((message) => {
                   const isOutbound = message.direction === "outbound";
+                  const statusDisplay = isOutbound
+                    ? getSmsStatusDisplay(message.status)
+                    : null;
                   return (
                     <div
                       key={message._id}
@@ -682,9 +721,13 @@ const LeadChat = ({ lead }: LeadChatProps) => {
                           <p className="text-sm mt-2 whitespace-pre-wrap leading-relaxed">
                             {message.body}
                           </p>
-                          <span className="mt-2 text-[10px] uppercase tracking-wide text-white/50">
-                            {message.status || (isOutbound ? "sent" : "received")}
-                          </span>
+                          {statusDisplay && (
+                            <span
+                              className={`mt-2 text-[11px] font-medium tracking-wide ${statusDisplay.className}`}
+                            >
+                              {statusDisplay.label}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
