@@ -45,6 +45,7 @@ export interface CreateUserData {
   password: string;
   status: string;
   twilio?: {
+    shouldProvision?: boolean;
     areaCode?: string;
     capabilities?: Array<"voice" | "sms">;
   };

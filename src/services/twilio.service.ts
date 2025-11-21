@@ -17,6 +17,39 @@ export interface TwilioMessageResponse {
   date_created?: string;
 }
 
+export type LeadSmsDirection = "inbound" | "outbound";
+
+export interface LeadSmsMessage {
+  _id: string;
+  leadId?: string | null;
+  companyId: string;
+  userId?: string | null;
+  direction: LeadSmsDirection;
+  from: string;
+  to: string;
+  body: string;
+  status: string;
+  twilioSid?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  metadata?: Record<string, any>;
+}
+
+export interface LeadSmsMessagesResponse {
+  success: boolean;
+  data: LeadSmsMessage[];
+  pagination: {
+    totalDocs: number;
+    limit: number;
+    page: number;
+    totalPages: number;
+    hasPrevPage: boolean;
+    hasNextPage: boolean;
+    prevPage: number | null;
+    nextPage: number | null;
+  };
+}
+
 export const twilioService = {
   /**
    * Get Twilio access token for voice calls
@@ -41,6 +74,38 @@ export const twilioService = {
         "/twilio/message",
         data
       );
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  /**
+   * Fetch SMS messages associated with a lead
+   */
+  getLeadMessages: async (
+    leadId: string,
+    params: { page?: number; limit?: number } = {}
+  ): Promise<LeadSmsMessagesResponse> => {
+    try {
+      const response = await API.get(`/twilio/messages/${leadId}`, {
+        params,
+      });
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  /**
+   * Send an SMS message to a lead
+   */
+  sendLeadMessage: async (
+    leadId: string,
+    payload: { body: string }
+  ): Promise<TwilioMessageResponse> => {
+    try {
+      const response = await API.post(`/twilio/messages/${leadId}`, payload);
       return response.data;
     } catch (error: any) {
       throw error;

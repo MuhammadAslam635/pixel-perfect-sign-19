@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { userService, CreateUserData } from "@/services/user.service";
 import { rbacService } from "@/services/rbac.service";
 import { Role } from "@/types/rbac.types";
@@ -51,8 +52,12 @@ const UserCreate = () => {
   const [twilioCapabilities, setTwilioCapabilities] = useState<
     TwilioCapability[]
   >([...TWILIO_CAPABILITIES]);
-  const [twilioConnected, setTwilioConnected] = useState(false);
   const [twilioStatusLoading, setTwilioStatusLoading] = useState(true);
+  const [shouldProvisionTwilio, setShouldProvisionTwilio] = useState(true);
+  const [twilioCredentialStatus, setTwilioCredentialStatus] = useState<{
+    hasAllCredentials: boolean;
+    missingFields: string[];
+  }>({ hasAllCredentials: false, missingFields: [] });
 
   const [loading, setLoading] = useState(false);
   const [mailgunDomain, setMailgunDomain] = useState<string>("");
@@ -84,8 +89,17 @@ const UserCreate = () => {
   const isTwilioRequired = selectedRole
     ? ["CompanyAdmin", "CompanyUser"].includes(selectedRole.type)
     : false;
+  useEffect(() => {
+    if (!selectedRole) return;
+    const requiresTwilio = ["CompanyAdmin", "CompanyUser"].includes(
+      selectedRole.type
+    );
+    setShouldProvisionTwilio(requiresTwilio);
+  }, [selectedRole]);
   const isTwilioBlocked =
-    isTwilioRequired && !twilioConnected && !twilioStatusLoading;
+    shouldProvisionTwilio &&
+    !twilioStatusLoading &&
+    !twilioCredentialStatus.hasAllCredentials;
 
   // Fetch Mailgun domain from integration
   useEffect(() => {
@@ -114,12 +128,24 @@ const UserCreate = () => {
         setTwilioStatusLoading(true);
         const response = await API.get("/twilio/connection-check");
         if (response.data?.success) {
-          setTwilioConnected(Boolean(response.data.connected));
+          const hasAllCredentials = Boolean(
+            response.data.data?.hasAllCredentials
+          );
+          setTwilioCredentialStatus({
+            hasAllCredentials,
+            missingFields: response.data.data?.missingFields || [],
+          });
         } else {
-          setTwilioConnected(false);
+          setTwilioCredentialStatus({
+            hasAllCredentials: false,
+            missingFields: [],
+          });
         }
       } catch (error) {
-        setTwilioConnected(false);
+        setTwilioCredentialStatus({
+          hasAllCredentials: false,
+          missingFields: [],
+        });
       } finally {
         setTwilioStatusLoading(false);
       }
@@ -275,11 +301,14 @@ const UserCreate = () => {
     try {
       const payload: CreateUserData = { ...user };
 
-      if (twilioAreaCode || twilioCapabilities.length > 0) {
+      if (shouldProvisionTwilio) {
         payload.twilio = {
+          shouldProvision: true,
           areaCode: twilioAreaCode || undefined,
           capabilities: twilioCapabilities,
         };
+      } else {
+        payload.twilio = { shouldProvision: false };
       }
 
       const response = await userService.createUser(payload);
@@ -497,40 +526,60 @@ const UserCreate = () => {
 
                 {/* Twilio Provisioning */}
                 <div className="space-y-3 border border-white/10 rounded-2xl p-4">
-                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
-                    <div>
-                      <h3 className="text-white text-base font-semibold">
-                        Twilio provisioning
-                      </h3>
-                      <p className="text-white/60 text-sm">
-                        Each employee gets a dedicated TwiML app and phone
-                        number. You can customize the preferred area code and
-                        capabilities.
-                      </p>
-                    </div>
-                    <span
-                      className={`text-xs font-medium ${
-                        twilioStatusLoading
-                          ? "text-white/60"
-                          : twilioConnected
-                          ? "text-emerald-400"
-                          : "text-amber-300"
-                      }`}
-                    >
-                      {twilioStatusLoading
-                        ? "Checking Twilio..."
-                        : twilioConnected
-                        ? "Twilio connected"
-                        : "Twilio not connected"}
-                    </span>
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                  <div>
+                    <h3 className="text-white text-base font-semibold">
+                      Twilio provisioning
+                    </h3>
+                    <p className="text-white/60 text-sm">
+                      Each employee gets a dedicated TwiML app and phone
+                      number. You can customize the preferred area code and
+                      capabilities.
+                    </p>
                   </div>
+                  <span
+                    className={`text-xs font-medium ${
+                      twilioStatusLoading
+                        ? "text-white/60"
+                        : twilioCredentialStatus.hasAllCredentials
+                        ? "text-emerald-400"
+                        : "text-amber-300"
+                    }`}
+                  >
+                    {twilioStatusLoading
+                      ? "Checking credentials..."
+                      : twilioCredentialStatus.hasAllCredentials
+                      ? "Twilio credentials ready"
+                      : "Twilio credentials missing"}
+                  </span>
+                </div>
 
-                  {isTwilioBlocked && (
-                    <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-amber-100 text-xs sm:text-sm">
-                      Connect your Twilio account in Settings → Integrations to
-                      provision phone numbers for new employees.
-                    </div>
-                  )}
+                <div className="flex items-center gap-3 pt-1">
+                  <Switch
+                    id="twilioProvisionToggle"
+                    checked={shouldProvisionTwilio}
+                    onCheckedChange={(value) =>
+                      setShouldProvisionTwilio(Boolean(value))
+                    }
+                    disabled={twilioStatusLoading}
+                  />
+                  <Label
+                    htmlFor="twilioProvisionToggle"
+                    className="text-white/80 text-sm font-medium"
+                  >
+                    Provision Twilio assets for this employee
+                  </Label>
+                </div>
+
+                {isTwilioBlocked && (
+                  <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-amber-100 text-xs sm:text-sm">
+                    {twilioCredentialStatus.missingFields.length > 0
+                      ? `Missing credentials: ${twilioCredentialStatus.missingFields.join(
+                          ", "
+                        )}`
+                      : "Add your Twilio credentials in Settings → Integrations to provision phone numbers for new employees."}
+                  </div>
+                )}
 
                   <div className="space-y-2">
                     <Label
@@ -551,7 +600,7 @@ const UserCreate = () => {
                           .slice(0, 3);
                         setTwilioAreaCode(digitsOnly);
                       }}
-                      disabled={isTwilioBlocked}
+                      disabled={!shouldProvisionTwilio || isTwilioBlocked}
                       className="rounded-full bg-black/35 border border-white/10 text-white placeholder:text-white/50 focus:ring-2 focus:ring-cyan-400/40 disabled:opacity-60 disabled:cursor-not-allowed"
                     />
                     <p className="text-white/50 text-xs">
@@ -592,7 +641,9 @@ const UserCreate = () => {
                                   return prev;
                                 });
                               }}
-                              disabled={isTwilioBlocked}
+                              disabled={
+                                !shouldProvisionTwilio || isTwilioBlocked
+                              }
                             />
                             {capability.toUpperCase()}
                           </label>
@@ -703,7 +754,8 @@ const UserCreate = () => {
                 </Button>
                 {isTwilioBlocked && (
                   <p className="text-xs text-amber-300 text-center sm:text-right w-full">
-                    Connect Twilio before creating employees.
+                    Add the required Twilio credentials in Settings → Integrations
+                    or disable Twilio provisioning for this employee.
                   </p>
                 )}
               </CardFooter>
