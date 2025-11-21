@@ -1,8 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Plus, Send } from "lucide-react";
 import { Lead } from "@/services/leads.service";
 import { emailService } from "@/services/email.service";
 import { Email } from "@/types/email.types";
+import {
+  twilioService,
+  LeadSmsMessage,
+} from "@/services/twilio.service";
+import API from "@/utils/api";
+import { CallView } from "./CallView";
 
 type Message = {
   id: number;
@@ -45,11 +52,26 @@ const LeadChat = ({ lead }: LeadChatProps) => {
   const avatarSrc = lead?.pictureUrl;
   const avatarLetter = displayName?.charAt(0).toUpperCase() || "?";
   const leadEmailLower = emailAddress?.toLowerCase() || null;
+  const leadId = lead?._id;
 
   const [emailMessages, setEmailMessages] = useState<Email[]>([]);
   const [isEmailLoading, setIsEmailLoading] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [fetchedEmailFor, setFetchedEmailFor] = useState<string | null>(null);
+  const [smsInput, setSmsInput] = useState("");
+  const [smsSendError, setSmsSendError] = useState<string | null>(null);
+  const [twilioConnection, setTwilioConnection] = useState<{
+    loading: boolean;
+    ready: boolean;
+    message: string;
+    missingFields: string[];
+  }>({
+    loading: true,
+    ready: false,
+    message: "",
+    missingFields: [],
+  });
+  const queryClient = useQueryClient();
 
   const channelTabs = useMemo(() => {
     const hasPhone = Boolean(lead?.phone);
@@ -86,6 +108,56 @@ const LeadChat = ({ lead }: LeadChatProps) => {
     setEmailMessages([]);
     setFetchedEmailFor(null);
   }, [lead?._id]);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchTwilioStatus = async () => {
+      setTwilioConnection((prev) => ({ ...prev, loading: true }));
+      try {
+        const response = await API.get("/twilio/connection-check");
+        const statusData = response.data?.data;
+        const ready = Boolean(
+          response.data?.success &&
+            response.data?.connected &&
+            statusData?.hasAllCredentials
+        );
+        const missingFields = statusData?.missingFields || [];
+        const message = ready
+          ? "Twilio calling and SMS are ready."
+          : missingFields.length
+          ? `Twilio credentials aren't configured yet.`
+          : "Twilio credentials aren't configured yet.";
+        if (isMounted) {
+          setTwilioConnection({
+            loading: false,
+            ready,
+            message,
+            missingFields,
+          });
+        }
+      } catch (error: any) {
+        const status = error?.response?.status;
+        const message =
+          status === 404
+            ? "Company Twilio credentials aren't added yet."
+            : error?.response?.data?.message ||
+              "Unable to verify Twilio credentials.";
+        if (isMounted) {
+          setTwilioConnection({
+            loading: false,
+            ready: false,
+            message,
+            missingFields: [],
+          });
+        }
+      }
+    };
+
+    fetchTwilioStatus();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     const shouldFetchEmailConversation =
@@ -152,6 +224,91 @@ const LeadChat = ({ lead }: LeadChatProps) => {
       isCancelled = true;
     };
   }, [activeTab, leadEmailLower, fetchedEmailFor]);
+
+  const twilioReady = twilioConnection.ready;
+  const twilioStatusLoading = twilioConnection.loading;
+
+  const {
+    data: leadSmsResponse,
+    isLoading: isSmsInitialLoading,
+    isFetching: isSmsFetching,
+    isError: isSmsError,
+    error: smsQueryError,
+  } = useQuery({
+    queryKey: ["lead-sms", leadId],
+    queryFn: () =>
+      twilioService.getLeadMessages(leadId as string, { limit: 100 }),
+    enabled:
+      activeTab === "SMS" && Boolean(leadId && phoneNumber) && twilioReady,
+    refetchOnWindowFocus: false,
+    staleTime: 30_000,
+  });
+
+  const isSmsLoading =
+    twilioStatusLoading ||
+    isSmsInitialLoading ||
+    (isSmsFetching && !leadSmsResponse);
+
+  const smsMessages: LeadSmsMessage[] = leadSmsResponse?.data || [];
+  const smsUnavailableMessage =
+    !twilioReady && !twilioStatusLoading
+      ? twilioConnection.message ||
+        "Company Twilio credentials aren't added yet."
+      : null;
+  const smsInputsDisabled = Boolean(smsUnavailableMessage) || !phoneNumber;
+
+  useEffect(() => {
+    if (!smsUnavailableMessage && smsSendError) {
+      setSmsSendError(null);
+    }
+  }, [smsUnavailableMessage, smsSendError]);
+
+  const orderedSmsMessages = useMemo(() => {
+    return [...smsMessages].sort(
+      (a, b) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    );
+  }, [smsMessages]);
+
+  const smsQueryErrorMessage = isSmsError
+    ? (smsQueryError as any)?.response?.data?.message ||
+      (smsQueryError as Error)?.message ||
+      "Failed to load SMS history"
+    : null;
+
+  const smsMutation = useMutation({
+    mutationFn: (payload: { body: string }) =>
+      twilioService.sendLeadMessage(leadId as string, payload),
+    onSuccess: () => {
+      setSmsInput("");
+      setSmsSendError(null);
+      if (leadId) {
+        queryClient.invalidateQueries({ queryKey: ["lead-sms", leadId] });
+      }
+    },
+    onError: (mutationError: any) => {
+      const fallbackMessage =
+        mutationError?.response?.data?.error ||
+        mutationError?.message ||
+        "Failed to send SMS";
+      setSmsSendError(fallbackMessage);
+    },
+  });
+
+  const handleSendSms = () => {
+    if (
+      !leadId ||
+      !smsInput.trim() ||
+      smsMutation.isPending ||
+      smsInputsDisabled
+    ) {
+      if (smsInputsDisabled && smsUnavailableMessage) {
+        setSmsSendError(smsUnavailableMessage);
+      }
+      return;
+    }
+    smsMutation.mutate({ body: smsInput.trim() });
+  };
 
   const getEmailBodyText = (email: Email) => {
     if (email.body?.text?.trim()) {
@@ -442,6 +599,156 @@ const LeadChat = ({ lead }: LeadChatProps) => {
               </div>
             )}
           </div>
+        ) : activeTab === "SMS" ? (
+          <div className="flex flex-1 flex-col">
+            {!phoneNumber ? (
+              <div className="flex w-full flex-1 items-center justify-center py-20 text-center text-white/70">
+                Add a phone number for this lead to start SMS conversations.
+              </div>
+            ) : smsUnavailableMessage ? (
+              <div className="flex w-full flex-1 items-center justify-center py-20 text-center text-amber-200">
+                {smsUnavailableMessage}
+              </div>
+            ) : isSmsLoading ? (
+              <div className="flex flex-1 flex-col items-center justify-center gap-3 py-20 text-white/70">
+                <Loader2 className="h-6 w-6 animate-spin text-white" />
+                <p>Loading SMS conversation...</p>
+              </div>
+            ) : smsQueryErrorMessage ? (
+              <div className="flex w-full flex-1 items-center justify-center py-20 text-center text-red-300">
+                {smsQueryErrorMessage}
+              </div>
+            ) : orderedSmsMessages.length === 0 ? (
+              <div className="flex w-full flex-1 items-center justify-center py-20 text-center text-white/70">
+                No SMS conversation with this lead yet.
+              </div>
+            ) : (
+              <div className="flex flex-1 flex-col overflow-y-auto lg:max-h-[calc(100vh-510px)] max-h-[calc(100vh-350px)] scrollbar-hide mb-6 gap-4">
+                {orderedSmsMessages.map((message) => {
+                  const isOutbound = message.direction === "outbound";
+                  return (
+                    <div
+                      key={message._id}
+                      className={`flex w-full gap-3 ${
+                        isOutbound ? "justify-end" : "justify-start"
+                      }`}
+                    >
+                      {!isOutbound && (
+                        <div className="h-10 w-10 flex-shrink-0">
+                          {avatarSrc ? (
+                            <img
+                              src={avatarSrc}
+                              alt={`${displayName} avatar`}
+                              className="h-full w-full rounded-full object-cover"
+                            />
+                          ) : (
+                            <span className="flex h-full w-full items-center justify-center rounded-full bg-[#3d4f51] text-white text-2xl">
+                              {avatarLetter}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                      <div
+                        className={`flex max-w-[80%] sm:max-w-[65%] flex-col gap-2 ${
+                          isOutbound ? "items-end" : "items-start"
+                        }`}
+                      >
+                        <div
+                          className={`w-full rounded-2xl px-4 py-3 ${
+                            isOutbound
+                              ? "bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] text-white"
+                              : "bg-white/10 text-white/90"
+                          }`}
+                          style={
+                            isOutbound
+                              ? {
+                                  background:
+                                    "linear-gradient(135deg, #3E65B4 0%, #68B3B7 100%)",
+                                }
+                              : {}
+                          }
+                        >
+                          <div className="flex items-center justify-between gap-4 text-xs text-white/70">
+                            <span className="font-semibold text-white">
+                              {isOutbound ? "You" : displayName}
+                            </span>
+                            <span className="text-white/60">
+                              {formatEmailTimestamp(message.createdAt)}
+                            </span>
+                          </div>
+                          <p className="text-sm mt-2 whitespace-pre-wrap leading-relaxed">
+                            {message.body}
+                          </p>
+                          <span className="mt-2 text-[10px] uppercase tracking-wide text-white/50">
+                            {message.status || (isOutbound ? "sent" : "received")}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            <div className="flex items-center gap-3 rounded-full bg-white/10 px-4 py-3">
+              <button
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                disabled={smsInputsDisabled}
+              >
+                <Plus size={14} className="text-white" />
+              </button>
+              <input
+                type="text"
+                value={smsInput}
+                onChange={(event) => setSmsInput(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" && !event.shiftKey) {
+                    event.preventDefault();
+                    handleSendSms();
+                  }
+                }}
+                disabled={smsInputsDisabled}
+                className="flex-1 bg-transparent outline-none border-none text-sm text-white placeholder:text-white/50 disabled:opacity-50"
+                placeholder={
+                  smsUnavailableMessage
+                    ? smsUnavailableMessage
+                    : phoneNumber
+                    ? "Type SMS message"
+                    : "Add a phone number to send SMS"
+                }
+              />
+              <button
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+                onClick={handleSendSms}
+                disabled={
+                  smsInputsDisabled ||
+                  !smsInput.trim() ||
+                  smsMutation.isPending
+                }
+              >
+                {smsMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-white" />
+                ) : (
+                  <Send size={14} className="text-white" />
+                )}
+              </button>
+            </div>
+            {smsSendError && (
+              <p className="mt-2 text-xs text-red-300">{smsSendError}</p>
+            )}
+          </div>
+        ) : activeTab === "Call" ? (
+          <CallView
+            lead={lead}
+            twilioReady={twilioReady}
+            twilioStatusMessage={
+              twilioStatusLoading
+                ? "Checking calling availability..."
+                : twilioConnection.message ||
+                  "Company Twilio credentials aren't added yet."
+            }
+            twilioStatusLoading={twilioStatusLoading}
+          />
         ) : (
           <div className="flex w-full flex-1 items-center justify-center py-20 text-lg font-medium text-white/70">
             In work
