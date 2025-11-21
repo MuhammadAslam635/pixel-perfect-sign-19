@@ -3,7 +3,12 @@ import axios from "axios";
 import { Lead } from "@/services/leads.service";
 import { Button } from "@/components/ui/button";
 import { Device } from "@twilio/voice-sdk";
-import { twilioService } from "@/services/twilio.service";
+import {
+  twilioService,
+  LeadCallLog,
+  LeadCallStatus,
+  CreateLeadCallLogPayload,
+} from "@/services/twilio.service";
 
 type CallViewProps = {
   lead?: Lead;
@@ -31,6 +36,9 @@ export const CallView = ({
   const [callPhase, setCallPhase] = useState<"idle" | "ringing" | "connected">(
     "idle"
   );
+  const [callLogs, setCallLogs] = useState<LeadCallLog[]>([]);
+  const [callLogsLoading, setCallLogsLoading] = useState(false);
+  const [callLogsError, setCallLogsError] = useState<string | null>(null);
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
@@ -41,6 +49,9 @@ export const CallView = ({
   const activeCallRef = useRef<
     Awaited<ReturnType<Device["connect"]>> | null
   >(null);
+  const callStartTimeRef = useRef<number | null>(null);
+  const dialedNumberRef = useRef<string | null>(null);
+  const callSidRef = useRef<string | null>(null);
 
   type TwilioConnection = Awaited<ReturnType<Device["connect"]>>;
   type DeviceError = { message: string };
@@ -54,6 +65,104 @@ export const CallView = ({
         : twilioStatusMessage || "Twilio calling is unavailable."
     );
   }, [twilioReady, twilioStatusLoading, twilioStatusMessage]);
+
+  const leadId = lead?._id || null;
+  const leadName = lead?.name || null;
+  const leadPhone = lead?.phone || null;
+
+  const fetchCallLogs = useCallback(async () => {
+    if (!leadId) {
+      setCallLogs([]);
+      setCallLogsError(null);
+      setCallLogsLoading(false);
+      return;
+    }
+    try {
+      setCallLogsError(null);
+      setCallLogsLoading(true);
+      const response = await twilioService.getLeadCallLogs(leadId, {
+        limit: 10,
+      });
+      setCallLogs(response.data || []);
+    } catch (loadError: any) {
+      console.error("Failed to load call logs", loadError);
+      setCallLogsError(
+        loadError?.response?.data?.message ||
+          loadError?.message ||
+          "Unable to load call logs."
+      );
+    } finally {
+      setCallLogsLoading(false);
+    }
+  }, [leadId]);
+
+  useEffect(() => {
+    fetchCallLogs();
+  }, [fetchCallLogs]);
+
+  const logCallCompletion = useCallback(
+    async (status: LeadCallStatus = "completed") => {
+      if (!leadId) {
+        callStartTimeRef.current = null;
+        dialedNumberRef.current = null;
+        callSidRef.current = null;
+        return;
+      }
+
+      const startedAtMs = callStartTimeRef.current;
+      if (!startedAtMs) {
+        dialedNumberRef.current = null;
+        callSidRef.current = null;
+        return;
+      }
+
+      const endedAtMs = Date.now();
+      const durationSeconds = Math.max(
+        0,
+        Math.round((endedAtMs - startedAtMs) / 1000)
+      );
+
+      const payload: CreateLeadCallLogPayload = {
+        leadId,
+        direction: "outbound",
+        status,
+        channel: "Phone",
+        startedAt: new Date(startedAtMs).toISOString(),
+        endedAt: new Date(endedAtMs).toISOString(),
+        durationSeconds,
+        to: dialedNumberRef.current,
+        leadName,
+        leadPhone,
+      };
+
+      if (callSidRef.current) {
+        payload.metadata = { callSid: callSidRef.current };
+      }
+
+      try {
+        await twilioService.logLeadCall(payload);
+        await fetchCallLogs();
+      } catch (logError: any) {
+        console.error("Unable to store call log", logError);
+        setError((prev) => prev || "Call ended but log could not be saved.");
+      } finally {
+        callStartTimeRef.current = null;
+        dialedNumberRef.current = null;
+        callSidRef.current = null;
+      }
+    },
+    [fetchCallLogs, leadId, leadName, leadPhone]
+  );
+
+  const getConnectionCallSid = (connection: TwilioConnection): string | null => {
+    const parameters = (connection as any)?.parameters;
+    const sid =
+      parameters?.CallSid ||
+      parameters?.callSid ||
+      parameters?.call_sid ||
+      null;
+    return typeof sid === "string" ? sid : null;
+  };
 
   const stopListening = useCallback(() => {
     if (animationFrameRef.current) {
@@ -163,6 +272,9 @@ export const CallView = ({
       } finally {
         activeCallRef.current = null;
         deviceRef.current = null;
+        callStartTimeRef.current = null;
+        dialedNumberRef.current = null;
+        callSidRef.current = null;
       }
     };
   }, [stopListening]);
@@ -243,6 +355,8 @@ export const CallView = ({
   const attachConnectionListeners = useCallback(
     (connection: TwilioConnection) => {
       connection.on("accept", () => {
+        callStartTimeRef.current = Date.now();
+        callSidRef.current = getConnectionCallSid(connection);
         setCallPhase("connected");
         setCallStatus("Call connected");
         startListening();
@@ -253,6 +367,7 @@ export const CallView = ({
         setCallPhase("idle");
         stopListening();
         activeCallRef.current = null;
+        void logCallCompletion("completed");
       });
 
       connection.on("cancel", () => {
@@ -260,6 +375,7 @@ export const CallView = ({
         setCallPhase("idle");
         stopListening();
         activeCallRef.current = null;
+        void logCallCompletion("cancelled");
       });
 
       connection.on("error", (event) => {
@@ -267,9 +383,10 @@ export const CallView = ({
         setCallPhase("idle");
         stopListening();
         activeCallRef.current = null;
+        void logCallCompletion("failed");
       });
     },
-    [startListening, stopListening]
+    [logCallCompletion, startListening, stopListening]
   );
 
   const handleCall = useCallback(async () => {
@@ -293,6 +410,7 @@ export const CallView = ({
     try {
       setCallPhase("ringing");
       setCallStatus("Ringing...");
+      dialedNumberRef.current = normalizedNumber;
 
       const device = await ensureDevice();
       const connection = await device.connect({
@@ -308,6 +426,7 @@ export const CallView = ({
           : "Unable to place call"
       );
       setCallPhase("idle");
+      dialedNumberRef.current = null;
       stopListening();
     }
   }, [
@@ -328,6 +447,54 @@ export const CallView = ({
     stopListening();
   }, [stopListening]);
 
+  const formatCallDate = (value?: string | null) => {
+    if (!value) {
+      return "—";
+    }
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return "—";
+    }
+    return new Intl.DateTimeFormat(undefined, {
+      weekday: "short",
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(date);
+  };
+
+  const formatDuration = (seconds?: number | null) => {
+    if (seconds === null || seconds === undefined) {
+      return "—";
+    }
+    const safeSeconds = Math.max(0, Math.floor(seconds));
+    const minutes = Math.floor(safeSeconds / 60);
+    const remainder = safeSeconds % 60;
+    return `${minutes}:${remainder.toString().padStart(2, "0")}`;
+  };
+
+  const formatStatus = (status?: string | null) => {
+    if (!status) {
+      return "—";
+    }
+    return status
+      .split(/[\s_-]+/)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ");
+  };
+
+  const getStatusColor = (status?: LeadCallStatus) => {
+    if (!status) {
+      return "text-white/60";
+    }
+    if (status === "failed" || status === "cancelled") {
+      return "text-red-300";
+    }
+    if (status === "missed") {
+      return "text-yellow-300";
+    }
+    return "text-emerald-300";
+  };
+
   const scale = 1 + volumeLevel * 0.6;
   const glowOpacity = 0.35 + volumeLevel * 0.4;
 
@@ -335,75 +502,81 @@ export const CallView = ({
     !twilioReady || callPhase === "ringing" || twilioStatusLoading;
 
   return (
-    <div className="flex flex-1 w-full flex-col items-center justify-center text-white/80 text-center gap-6 py-14">
-      <div className="relative flex items-center justify-center w-[220px] h-[220px] sm:w-[260px] sm:h-[260px]">
-        <div
-          className="absolute inset-0 rounded-full blur-3xl transition-opacity duration-200"
+    <div className="flex flex-1 w-full flex-col items-center justify-start text-white/80 text-center gap-6 pt-6 pb-10 max-h-[calc(100vh-440px)] overflow-y-auto scrollbar-hide">
+      <div className="flex flex-col items-center gap-4">
+        {/* <div
+          className="flex items-center justify-center rounded-full blur-3xl transition-opacity duration-200"
           style={{
             opacity: glowOpacity,
+            width: "260px",
+            height: "260px",
             background:
               "radial-gradient(circle, rgba(66,247,255,0.55) 0%, rgba(9,11,27,0) 70%)",
           }}
-        />
-        <div
-          role="button"
-          tabIndex={0}
-          onClick={() => {
-            if (!twilioReady || primaryActionDisabled) {
-              return;
-            }
-            if (callPhase === "idle") {
-              handleCall();
-            } else if (callPhase === "connected") {
-              handleHangUp();
-            }
-          }}
-          onKeyDown={(event) => {
-            if (event.key !== "Enter" && event.key !== " ") {
-              return;
-            }
-            event.preventDefault();
-            if (callPhase === "idle") {
-              handleCall();
-            } else if (callPhase === "connected") {
-              handleHangUp();
-            }
-          }}
-          className={`relative flex items-center justify-center rounded-full border border-white/20 transition-colors ${
-            !twilioReady
-              ? "cursor-not-allowed opacity-60"
-              : callPhase === "idle"
-              ? "cursor-pointer hover:border-cyan-300/60"
-              : callPhase === "connected"
-              ? "cursor-pointer border-cyan-300/80"
-              : "cursor-not-allowed"
-          }`}
-          style={{
-            width: "100%",
-            height: "100%",
-            background:
-              "radial-gradient(60% 60% at 50% 50%, rgba(11, 19, 38, 0.9) 0%, rgba(9, 11, 27, 0.6) 100%)",
-            boxShadow: `0 0 ${35 + volumeLevel * 80}px rgba(66, 247, 255, 0.35)`,
-            transform: `scale(${scale})`,
-            transition: "transform 120ms ease-out, box-shadow 120ms ease-out",
-          }}
-        >
-          <span className="text-white/80 text-sm tracking-wide uppercase">
-            {callPhase === "connected"
-              ? "On call"
-              : callPhase === "ringing"
-              ? "Ringing..."
-              : "Make a call"}
-          </span>
+        ></div> */}
+        <div className="flex items-center justify-center">
+          <div
+            className="flex items-center justify-center rounded-full border border-cyan-400/30 transition-all"
+            style={{
+              width: "300px",
+              height: "300px",
+              opacity: 0.2 + volumeLevel * 0.4,
+              transform: `scale(${1 + volumeLevel * 0.2})`,
+            }}
+          >
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => {
+                if (!twilioReady || primaryActionDisabled) {
+                  return;
+                }
+                if (callPhase === "idle") {
+                  handleCall();
+                } else if (callPhase === "connected") {
+                  handleHangUp();
+                }
+              }}
+              onKeyDown={(event) => {
+                if (event.key !== "Enter" && event.key !== " ") {
+                  return;
+                }
+                event.preventDefault();
+                if (callPhase === "idle") {
+                  handleCall();
+                } else if (callPhase === "connected") {
+                  handleHangUp();
+                }
+              }}
+              className={`flex items-center justify-center rounded-full border border-white/20 transition-colors ${
+                !twilioReady
+                  ? "cursor-not-allowed opacity-60"
+                  : callPhase === "idle"
+                  ? "cursor-pointer hover:border-cyan-300/60"
+                  : callPhase === "connected"
+                  ? "cursor-pointer border-cyan-300/80"
+                  : "cursor-not-allowed"
+              }`}
+              style={{
+                width: "220px",
+                height: "220px",
+                background:
+                  "radial-gradient(60% 60% at 50% 50%, rgba(11, 19, 38, 0.9) 0%, rgba(9, 11, 27, 0.6) 100%)",
+                boxShadow: `0 0 ${35 + volumeLevel * 80}px rgba(66, 247, 255, 0.35)`,
+                transform: `scale(${scale})`,
+                transition: "transform 120ms ease-out, box-shadow 120ms ease-out",
+              }}
+            >
+              <span className="text-white/80 text-sm tracking-wide uppercase">
+                {callPhase === "connected"
+                  ? "On call"
+                  : callPhase === "ringing"
+                  ? "Ringing..."
+                  : "Make a call"}
+              </span>
+            </div>
+          </div>
         </div>
-        <div
-          className="absolute w-[130%] h-[130%] rounded-full border border-cyan-400/30"
-          style={{
-            opacity: 0.2 + volumeLevel * 0.4,
-            transform: `scale(${1 + volumeLevel * 0.3})`,
-            transition: "transform 160ms ease-out, opacity 160ms ease-out",
-          }}
-        />
       </div>
 
       <div className="flex flex-col items-center gap-3">
@@ -437,6 +610,73 @@ export const CallView = ({
         <p className="text-xs text-white/40">
           Calls are routed via Twilio Voice with mic data processed locally.
         </p>
+      </div>
+
+      <div className="w-full max-w-5xl mt-16 text-left space-y-4">
+        <div>
+          <h2 className="text-3xl font-semibold text-white leading-tight">
+            Call Logs
+          </h2>
+          <p className="text-sm text-white/60">
+            You can find all call logs and statics
+          </p>
+        </div>
+
+        <div className="rounded-[32px] border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden shadow-[0_35px_120px_rgba(7,6,19,0.55)]">
+          <div className="grid grid-cols-5 px-8 py-5 text-[0.7rem] font-semibold uppercase tracking-[0.25em] text-white/50">
+            <span>Caller Information</span>
+            <span>Date</span>
+            <span>Duration</span>
+            <span>Channel</span>
+            <span>Status</span>
+          </div>
+
+          <div className="divide-y divide-white/5">
+            {callLogsLoading ? (
+              <div className="px-8 py-10 text-center text-sm text-white/70">
+                Loading call logs...
+              </div>
+            ) : callLogs.length === 0 ? (
+              <div className="px-8 py-10 text-center text-sm text-white/60">
+                {leadId
+                  ? "No calls have been logged yet."
+                  : "Select a lead to view call logs."}
+              </div>
+            ) : (
+              callLogs.map((log) => (
+                <div
+                  key={log._id}
+                  className="grid grid-cols-5 px-8 py-6 text-sm text-white/80 bg-white/[0.01] hover:bg-white/[0.04] transition-colors"
+                >
+                  <div className="flex flex-col gap-0.5">
+                    <span className="font-semibold text-white">
+                      {log.leadName || "Unknown caller"}
+                    </span>
+                    {log.leadPhone && (
+                      <span className="text-xs text-white/50">
+                        {log.leadPhone}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-white/70">
+                    {formatCallDate(log.startedAt)}
+                  </div>
+                  <div className="text-white/70">
+                    {formatDuration(log.durationSeconds)}
+                  </div>
+                  <div className="text-white/70">{log.channel || "Phone"}</div>
+                  <div className={`font-semibold ${getStatusColor(log.status)}`}>
+                    {formatStatus(log.status)}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {callLogsError && (
+          <p className="text-sm text-red-300">{callLogsError}</p>
+        )}
       </div>
     </div>
   );

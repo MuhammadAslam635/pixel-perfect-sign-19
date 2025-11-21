@@ -50,6 +50,63 @@ export interface LeadSmsMessagesResponse {
   };
 }
 
+export type LeadCallStatus =
+  | "completed"
+  | "failed"
+  | "cancelled"
+  | "missed"
+  | "in-progress";
+
+export interface LeadCallLog {
+  _id: string;
+  companyId: string;
+  leadId?: string | null;
+  userId?: string | null;
+  direction: "inbound" | "outbound";
+  status: LeadCallStatus;
+  channel: string;
+  from?: string | null;
+  to?: string | null;
+  leadName?: string | null;
+  leadPhone?: string | null;
+  durationSeconds: number;
+  startedAt: string;
+  endedAt?: string | null;
+  metadata?: Record<string, any>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface LeadCallLogsResponse {
+  success: boolean;
+  data: LeadCallLog[];
+  pagination: {
+    totalDocs: number;
+    limit: number;
+    page: number;
+    totalPages: number;
+    hasPrevPage: boolean;
+    hasNextPage: boolean;
+    prevPage: number | null;
+    nextPage: number | null;
+  };
+}
+
+export interface CreateLeadCallLogPayload {
+  leadId: string;
+  startedAt: string;
+  durationSeconds: number;
+  endedAt?: string;
+  status?: LeadCallStatus;
+  direction?: "inbound" | "outbound";
+  channel?: string;
+  to?: string | null;
+  from?: string | null;
+  leadName?: string | null;
+  leadPhone?: string | null;
+  metadata?: Record<string, any>;
+}
+
 export const twilioService = {
   /**
    * Get Twilio access token for voice calls
@@ -106,6 +163,37 @@ export const twilioService = {
   ): Promise<TwilioMessageResponse> => {
     try {
       const response = await API.post(`/twilio/messages/${leadId}`, payload);
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  /**
+   * Fetch call logs associated with a lead
+   */
+  getLeadCallLogs: async (
+    leadId: string,
+    params: { page?: number; limit?: number } = {}
+  ): Promise<LeadCallLogsResponse> => {
+    try {
+      const response = await API.get(`/twilio/calls/${leadId}`, {
+        params,
+      });
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  /**
+   * Record a completed lead call
+   */
+  logLeadCall: async (
+    payload: CreateLeadCallLogPayload
+  ): Promise<{ success: boolean; data: LeadCallLog }> => {
+    try {
+      const response = await API.post("/twilio/calls", payload);
       return response.data;
     } catch (error: any) {
       throw error;
