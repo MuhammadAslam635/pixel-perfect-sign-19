@@ -149,6 +149,14 @@ export const IntegrationsTab = () => {
   const [showGHLForm, setShowGHLForm] = useState(false);
   const [ghlConnected, setGhlConnected] = useState(false);
   const [ghlDisconnectDialog, setGhlDisconnectDialog] = useState(false);
+  const [isMicrosoftStatusLoading, setIsMicrosoftStatusLoading] =
+    useState(false);
+  const [isMicrosoftActionLoading, setIsMicrosoftActionLoading] =
+    useState(false);
+  const [microsoftConnected, setMicrosoftConnected] = useState(false);
+  const [microsoftIntegration, setMicrosoftIntegration] = useState<
+    IntegrationResponse["integration"] | null
+  >(null);
 
   const {
     mutateAsync: fetchFacebookRedirectUrl,
@@ -177,6 +185,8 @@ export const IntegrationsTab = () => {
     user?.role === "Company" || user?.role === "CompanyAdmin";
   const canManageMailgun = user?.role === "Company";
   const canManageGHL =
+    user?.role === "Company" || user?.role === "CompanyAdmin";
+  const canManageMicrosoft =
     user?.role === "Company" || user?.role === "CompanyAdmin";
 
   const facebookConnected = facebookStatus?.connected ?? false;
@@ -280,6 +290,45 @@ useEffect(() => {
   fetchTwilioStatus();
   // eslint-disable-next-line react-hooks/exhaustive-deps
 }, [user?.token]);
+
+  const fetchMicrosoftStatus = async () => {
+    if (!user?.token) {
+      setMicrosoftConnected(false);
+      setMicrosoftIntegration(null);
+      return;
+    }
+
+    setIsMicrosoftStatusLoading(true);
+    try {
+      const response = await axios.get(
+        `${APP_BACKEND_URL}/microsoft/connection-check`,
+        {
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+
+      if (response.data?.success) {
+        setMicrosoftConnected(Boolean(response.data.connected));
+        setMicrosoftIntegration(response.data.integration || null);
+      } else {
+        setMicrosoftConnected(false);
+        setMicrosoftIntegration(null);
+      }
+    } catch (error) {
+      setMicrosoftConnected(false);
+      setMicrosoftIntegration(null);
+    } finally {
+      setIsMicrosoftStatusLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMicrosoftStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.token]);
 
   const primaryWhatsAppConnection = whatsappConnections[0] || null;
 
@@ -505,6 +554,8 @@ useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const success = params.get("success");
     const error = params.get("error");
+    const twilioParam = params.get("twilio");
+    const twilioReason = params.get("reason");
     let shouldClear = false;
 
     if (success) {
@@ -520,6 +571,49 @@ useEffect(() => {
       toast({
         title: "Error",
         description: error,
+        variant: "destructive",
+      });
+      shouldClear = true;
+    }
+
+    if (twilioParam === "connected") {
+      toast({
+        title: "Twilio connected",
+        description: "Your Twilio account is now linked.",
+      });
+      fetchTwilioStatus();
+      shouldClear = true;
+    }
+
+    if (twilioParam === "error") {
+      toast({
+        title: "Twilio connection failed",
+        description:
+          twilioReason ||
+          "We could not connect to Twilio. Please try again.",
+        variant: "destructive",
+      });
+      shouldClear = true;
+    }
+
+    const microsoftParam = params.get("microsoft");
+    const microsoftReason = params.get("reason");
+
+    if (microsoftParam === "connected") {
+      toast({
+        title: "Microsoft connected",
+        description: "Your Microsoft account is now linked.",
+      });
+      fetchMicrosoftStatus();
+      shouldClear = true;
+    }
+
+    if (microsoftParam === "error") {
+      toast({
+        title: "Microsoft connection failed",
+        description:
+          microsoftReason ||
+          "We could not connect to Microsoft. Please try again.",
         variant: "destructive",
       });
       shouldClear = true;
@@ -568,6 +662,98 @@ useEffect(() => {
       });
     } finally {
       setIsTwilioActionLoading(false);
+    }
+  };
+
+  const handleMicrosoftConnect = async () => {
+    if (!user?.token) {
+      toast({
+        title: "Error",
+        description: "User not authenticated. Please login again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!canManageMicrosoft) {
+      toast({
+        title: "Access restricted",
+        description:
+          "Only company owners or admins can manage Microsoft settings.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsMicrosoftActionLoading(true);
+    try {
+      const response = await axios.get(`${APP_BACKEND_URL}/microsoft/auth`, {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+
+      if (response.data?.success && response.data?.authUrl) {
+        window.location.href = response.data.authUrl;
+      } else {
+        throw new Error("No Microsoft auth URL returned from server");
+      }
+    } catch (error: unknown) {
+      console.error("Error getting Microsoft auth URL:", error);
+      toast({
+        title: "Error",
+        description:
+          "Failed to initiate Microsoft connection. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsMicrosoftActionLoading(false);
+    }
+  };
+
+  const handleMicrosoftDisconnect = async () => {
+    if (!user?.token) {
+      toast({
+        title: "Error",
+        description: "User not authenticated. Please login again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!canManageMicrosoft) {
+      toast({
+        title: "Access restricted",
+        description:
+          "Only company owners or admins can manage Microsoft settings.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsMicrosoftActionLoading(true);
+    try {
+      await axios.delete(`${APP_BACKEND_URL}/microsoft/disconnect`, {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+      toast({
+        title: "Microsoft disconnected",
+        description: "Your Microsoft account has been disconnected.",
+      });
+      fetchMicrosoftStatus();
+    } catch (error: unknown) {
+      console.error("Error disconnecting Microsoft:", error);
+      toast({
+        title: "Error",
+        description: "Failed to disconnect Microsoft. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsMicrosoftActionLoading(false);
     }
   };
 
@@ -1435,6 +1621,105 @@ useEffect(() => {
           <p className="text-xs sm:text-sm text-white/60">
             Manage services connected to your account.
           </p>
+        </div>
+
+        <div className="space-y-4 sm:space-y-6 rounded-2xl sm:rounded-3xl border border-white/10 bg-white/[0.02] p-4 sm:p-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="flex-shrink-0 w-[30px] h-[30px] flex items-center justify-center overflow-hidden">
+                <div className="w-[30px] h-[30px] rounded-lg bg-blue-500/30 border border-blue-400/40 text-blue-200 text-xs font-semibold flex items-center justify-center">
+                  MS
+                </div>
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-medium text-white text-sm sm:text-base">
+                  Microsoft
+                </p>
+                <p className="text-xs sm:text-sm text-white/60 break-words">
+                  {isMicrosoftStatusLoading
+                    ? "Checking connection..."
+                    : microsoftConnected
+                    ? "Connected"
+                    : "Connect Microsoft to sync contacts and calendars."}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {microsoftConnected && (
+                <span className="flex items-center gap-1 text-xs sm:text-sm text-emerald-400">
+                  <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                  <span className="hidden sm:inline">Connected</span>
+                </span>
+              )}
+              {microsoftConnected ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleMicrosoftDisconnect}
+                  disabled={isMicrosoftActionLoading}
+                  className="w-full sm:w-auto border-rose-400/50 text-rose-300 hover:bg-rose-500/10 text-xs sm:text-sm"
+                >
+                  {isMicrosoftActionLoading ? "Disconnecting..." : "Disconnect"}
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleMicrosoftConnect}
+                  disabled={
+                    isMicrosoftActionLoading ||
+                    isMicrosoftStatusLoading ||
+                    !canManageMicrosoft
+                  }
+                  className="w-full sm:w-auto bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3] text-xs sm:text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                  style={{
+                    boxShadow:
+                      "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                  }}
+                >
+                  {!canManageMicrosoft
+                    ? "Restricted"
+                    : isMicrosoftActionLoading
+                    ? "Opening..."
+                    : "Connect"}
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {microsoftConnected && microsoftIntegration?.connectionData && (
+            <div className="space-y-3 rounded-2xl sm:rounded-3xl border border-white/5 bg-white/[0.03] p-4 text-xs sm:text-sm text-white/80">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <p className="font-semibold text-white">Account</p>
+                <p>
+                  {microsoftIntegration.connectionData.providerUserEmail ||
+                    "Hidden"}
+                </p>
+              </div>
+              {microsoftIntegration.connectionData.providerUserName && (
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <p className="font-semibold text-white">Display Name</p>
+                  <p>{microsoftIntegration.connectionData.providerUserName}</p>
+                </div>
+              )}
+              {microsoftIntegration.connectionData.metadata?.tenantId && (
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <p className="font-semibold text-white">Tenant ID</p>
+                  <p>{microsoftIntegration.connectionData.metadata.tenantId}</p>
+                </div>
+              )}
+              {microsoftIntegration.connectionData.expiryDate && (
+                <p className="text-white/60">
+                  Token expires:{" "}
+                  {new Date(
+                    microsoftIntegration.connectionData.expiryDate
+                  ).toLocaleString()}
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="space-y-4 sm:space-y-6 rounded-2xl sm:rounded-3xl border border-white/10 bg-white/[0.02] p-4 sm:p-5">
