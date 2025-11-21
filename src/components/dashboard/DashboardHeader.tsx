@@ -62,12 +62,11 @@ const DashboardHeader = () => {
       <div className="px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] flex w-full max-w-full items-center justify-between gap-3 sm:gap-4 lg:gap-0">
         <div className="flex items-center gap-3 flex-shrink-0">
           <MobileNavigation />
-          <Link to="/" className="hidden lg:flex items-center">
+          <Link to="/dashboard" className="hidden lg:flex items-center">
             <Logo />
           </Link>
         </div>
         <Navigation />
-
         <ActionComponent />
       </div>
     </header>
