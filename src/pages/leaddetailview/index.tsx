@@ -32,7 +32,7 @@ const LeadDetailView = () => {
 
   return (
     <DashboardLayout>
-      <main className="relative mt-24 flex w-full flex-1 min-h-0 max-h-[calc(100vh-6rem)] px-6 pb-6 sm:px-10 md:px-14 lg:px-6 overflow-hidden">
+      <main className="relative mt-24 pt-5 flex w-full flex-1 min-h-0 max-h-[calc(100vh-6rem)] px-6 pb-6 sm:px-10 md:px-14 lg:px-6 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-[#0F172A] via-transparent to-[#05060A] opacity-70 pointer-events-none"></div>
 
         <div className="relative z-10 flex w-full flex-1 min-h-0 flex-col gap-6">
@@ -83,12 +83,11 @@ const LeadDetailView = () => {
               {/* Right: Activity Component */}
               <div
                 className="col-span-4 col-start-9 flex flex-col min-h-0"
-                style={{
-                  border: "1px solid #FFFFFF4D",
-                  borderRadius: "20px",
-                  background:
-                    "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 2e-05) 38.08%, rgba(255, 255, 255, 2e-05) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
-                }}
+                // style={{
+                //   borderRadius: "20px",
+                //   background:
+                //     "linear-gradient(173.83deg, rgba(255, 255, 255, 0.03) 4.82%, rgba(255, 255, 255, 2e-05) 38.08%, rgba(255, 255, 255, 2e-05) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
+                // }}
               >
                 <Activity />
               </div>
