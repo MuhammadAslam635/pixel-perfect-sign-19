@@ -502,7 +502,7 @@ export const CallView = ({
     !twilioReady || callPhase === "ringing" || twilioStatusLoading;
 
   return (
-    <div className="flex flex-1 w-full flex-col items-center justify-start text-white/80 text-center gap-6 pt-6 pb-10 max-h-[calc(100vh-440px)] overflow-y-auto scrollbar-hide">
+    <div className="flex flex-1 w-full flex-col items-center justify-start text-white/80 text-center gap-6 pt-6 pb-10 max-h-[calc(100vh-480px)] overflow-y-auto scrollbar-hide">
       <div className="flex flex-col items-center gap-4">
         {/* <div
           className="flex items-center justify-center rounded-full blur-3xl transition-opacity duration-200"
