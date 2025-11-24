@@ -14,14 +14,15 @@ import {
 } from "@/components/ui/command";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, MoveRight, ChevronRight, Check, Info, RefreshCcw } from "lucide-react";
+import { Loader2, MoveRight, ChevronRight, Check, Info, RefreshCcw, Trash2 } from "lucide-react";
 import { useFollowupTemplates } from "@/hooks/useFollowupTemplates";
-import { useCreateFollowupPlan, useFollowupPlans } from "@/hooks/useFollowupPlans";
+import { useCreateFollowupPlan, useDeleteFollowupPlan, useFollowupPlans } from "@/hooks/useFollowupPlans";
 import { useLeadsData } from "@/pages/companies/hooks";
 import { Lead } from "@/services/leads.service";
 import { FollowupPlan } from "@/services/followupPlans.service";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
+import ConfirmDialog from "@/components/ui/confirm-dialog";
 
 type ActivityProps = {
   lead?: Lead;
@@ -34,6 +35,7 @@ const Activity: FC<ActivityProps> = ({ lead }) => {
   const [selectedLeadsMap, setSelectedLeadsMap] = useState<Record<string, Lead>>({});
   const [leadsSearch, setLeadsSearch] = useState("");
   const [leadSelectorOpen, setLeadSelectorOpen] = useState(false);
+  const [planPendingDelete, setPlanPendingDelete] = useState<FollowupPlan | null>(null);
   const { toast } = useToast();
 
   // Dates with meetings - Nov 1 (already done), Nov 25-27 (available)
@@ -120,6 +122,7 @@ const Activity: FC<ActivityProps> = ({ lead }) => {
 
   const { mutate: createFollowupPlan, isPending: isCreatingFollowupPlan } =
     useCreateFollowupPlan();
+  const { mutate: deleteFollowupPlan, isPending: isDeletingPlan } = useDeleteFollowupPlan();
 
   const followupPlansParams = useMemo(() => ({ limit: 100 }), []);
   const {
@@ -236,6 +239,45 @@ const Activity: FC<ActivityProps> = ({ lead }) => {
     }
   };
 
+  const handleRequestPlanDeletion = (plan: FollowupPlan) => {
+    setPlanPendingDelete(plan);
+  };
+
+  const handleCancelPlanDeletion = () => {
+    if (isDeletingPlan) {
+      return;
+    }
+    setPlanPendingDelete(null);
+  };
+
+  const handleConfirmPlanDeletion = () => {
+    if (!planPendingDelete) {
+      return;
+    }
+
+    deleteFollowupPlan(planPendingDelete._id, {
+      onSuccess: (response) => {
+        toast({
+          title: "Followup plan deleted",
+          description:
+            response?.message ||
+            `Removed plan "${getTemplateTitle(planPendingDelete)}".`,
+        });
+        setPlanPendingDelete(null);
+      },
+      onError: (error: any) => {
+        toast({
+          title: "Failed to delete followup plan",
+          description:
+            error?.response?.data?.message ||
+            error?.message ||
+            "Please try again.",
+          variant: "destructive",
+        });
+      },
+    });
+  };
+
   const handleRunFollowupPlan = () => {
     if (!selectedTemplateId) {
       toast({
@@ -285,7 +327,8 @@ const Activity: FC<ActivityProps> = ({ lead }) => {
   };
 
   return (
-    <Card
+    <>
+      <Card
       className="w-full flex-1 min-h-0 flex flex-col rounded-3xl"
       style={{
         background:
@@ -632,6 +675,11 @@ const Activity: FC<ActivityProps> = ({ lead }) => {
                     const completedTasks =
                       plan.todo?.filter((task) => task.isComplete).length ?? 0;
                     const nextTask = plan.todo?.find((task) => !task.isComplete);
+                    const canDeletePlan = ["scheduled", "in_progress"].includes(
+                      plan.status
+                    );
+                    const isPlanDeletePending =
+                      planPendingDelete?._id === plan._id && isDeletingPlan;
                     return (
                       <div
                         key={plan._id}
@@ -650,11 +698,26 @@ const Activity: FC<ActivityProps> = ({ lead }) => {
                                 )}
                             </p>
                           </div>
-                          <Badge
-                            className={getPlanStatusBadgeClass(plan.status)}
-                          >
-                            {plan.status.replace("_", " ")}
-                          </Badge>
+                          <div className="flex items-center gap-2">
+                            <Badge
+                              className={getPlanStatusBadgeClass(plan.status)}
+                            >
+                              {plan.status.replace("_", " ")}
+                            </Badge>
+                            {canDeletePlan && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="text-red-200 hover:text-red-100 hover:bg-red-500/10"
+                                onClick={() => handleRequestPlanDeletion(plan)}
+                                disabled={isPlanDeletePending}
+                              >
+                                <Trash2 className="w-4 h-4 mr-1" />
+                                Delete
+                              </Button>
+                            )}
+                          </div>
                         </div>
                         <div className="text-xs text-white/70 flex flex-wrap gap-4">
                           <span>
@@ -877,8 +940,25 @@ const Activity: FC<ActivityProps> = ({ lead }) => {
             </div>
           </TabsContent>
         </Tabs>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+      <ConfirmDialog
+        open={Boolean(planPendingDelete)}
+        title="Delete followup plan?"
+        description={
+          planPendingDelete
+            ? `This will immediately delete "${getTemplateTitle(
+                planPendingDelete
+              )}" and its scheduled tasks for all included leads.`
+            : undefined
+        }
+        confirmText="Delete plan"
+        confirmVariant="destructive"
+        isPending={isDeletingPlan}
+        onConfirm={handleConfirmPlanDeletion}
+        onCancel={handleCancelPlanDeletion}
+      />
+    </>
   );
 };
 

@@ -42,3 +42,14 @@ export const useCreateFollowupPlan = () => {
   });
 };
 
+export const useDeleteFollowupPlan = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => followupPlansService.deletePlan(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: followupPlanKeys.all });
+    },
+  });
+};
+

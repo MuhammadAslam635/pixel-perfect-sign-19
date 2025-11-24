@@ -75,6 +75,15 @@ export interface FollowupPlanResponse {
   data: FollowupPlan;
 }
 
+export interface DeleteFollowupPlanResponse {
+  success: boolean;
+  message: string;
+  data: {
+    _id: string;
+    status: FollowupPlan["status"];
+  };
+}
+
 export interface FollowupPlanSchedulePayload {
   enabled?: boolean;
   timezone?: string;
@@ -111,6 +120,11 @@ export const followupPlansService = {
     payload: CreateFollowupPlanPayload
   ): Promise<FollowupPlanResponse> => {
     const response = await API.post("/followup/plans", payload);
+    return response.data;
+  },
+
+  deletePlan: async (id: string): Promise<DeleteFollowupPlanResponse> => {
+    const response = await API.delete(`/followup/plans/${id}`);
     return response.data;
   },
 };
