@@ -39,14 +39,16 @@ const Dashboard = () => {
         <div className="scrollbar-hide lg:flex w-full flex-col gap-4 overflow-y-scroll pr-1 md:gap-5 lg:basis-1/2 lg:min-w-0 lg:pr-3 h-full min-h-0 bg-transparent">
           <StatsCard />
 
-          <div className="grid grid-cols-2 gap-2 lg:gap-4">
-            <CommunicationHubCard />
-            <ProposalsToSendCard />
-          </div>
+          <div className="p-2 mt-6">
+            <div className="grid grid-cols-2 gap-4 lg:gap-4 mb-6">
+              <CommunicationHubCard />
+              <ProposalsToSendCard />
+            </div>
 
-          <div className="grid grid-cols-2 gap-2 lg:gap-4 mb-2">
-            <TopLeadsCard />
-            <CalendarCard />
+            <div className="grid grid-cols-2 gap-4 lg:gap-4 mb-6">
+              <TopLeadsCard />
+              <CalendarCard />
+            </div>
           </div>
         </div>
       </main>

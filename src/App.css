@@ -311,6 +311,12 @@ body {
   font-size: 11px;
 }
 
+@media (max-width: 640px) {
+  .calendar-label {
+    display: none !important;
+  }
+}
+
 .row-rail {
   position: absolute;
   left: -12px; /* outside the calendar pill */
@@ -338,6 +344,12 @@ body {
   border-radius: 9999px;
   background: #ffffff;
   box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+@media (max-width: 640px) {
+  .timeline-bar {
+    display: none !important;
+  }
 }
 
 .card-scroll {
