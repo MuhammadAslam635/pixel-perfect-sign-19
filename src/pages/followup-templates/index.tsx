@@ -468,10 +468,7 @@ const FollowupTemplatesPage = () => {
           </div>
         </TableCell>
         <TableCell className="text-center text-gray-200">
-          {convertUTCToLocalTime(template.timeOfDayToRun)}
-          <div className="text-xs text-gray-500">
-            {format(new Date(template.createdAt), "MMM d, yyyy")}
-          </div>
+          {convertUTCToLocalTime(template.timeOfDayToRun)} ({template.timeOfDayToRun} UTC)
         </TableCell>
         <TableCell className="text-right">
           <div className="flex items-center justify-end gap-2">
