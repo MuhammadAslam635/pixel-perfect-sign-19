@@ -1,4 +1,4 @@
-import { FC, useMemo, useState } from "react";
+import { FC, useEffect, useMemo, useState } from "react";
 import { Lead } from "@/services/leads.service";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,6 +14,8 @@ import {
   Sparkles,
   Loader2,
   CalendarPlus,
+  AlertTriangle,
+  CheckCircle2,
 } from "lucide-react";
 import { companiesService } from "@/services/companies.service";
 import { calendarService } from "@/services/calendar.service";
@@ -31,6 +33,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 type ScheduleMeetingForm = {
   subject: string;
@@ -48,22 +51,28 @@ type LeadDetailCardProps = {
   lead: Lead;
 };
 
+const MAX_SEARCH_RANGE_MS = 62 * 24 * 60 * 60 * 1000; // 62 days
+
+const formatDateTimeLocal = (date: Date) => {
+  const pad = (num: number) => String(num).padStart(2, "0");
+  const year = date.getFullYear();
+  const month = pad(date.getMonth() + 1);
+  const day = pad(date.getDate());
+  const hours = pad(date.getHours());
+  const minutes = pad(date.getMinutes());
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+};
+
 const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
   const [fillingData, setFillingData] = useState(false);
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
   const [schedulingMeeting, setSchedulingMeeting] = useState(false);
+  const [checkingMicrosoft, setCheckingMicrosoft] = useState(false);
+  const [microsoftConnected, setMicrosoftConnected] = useState<boolean | null>(null);
+  const [microsoftStatusMessage, setMicrosoftStatusMessage] = useState<string | null>(null);
+  const [microsoftStatusError, setMicrosoftStatusError] = useState<string | null>(null);
   const avatarLetter = lead.name?.charAt(0).toUpperCase() || "?";
   const avatarSrc = lead.pictureUrl;
-
-  const formatDateTimeLocal = (date: Date) => {
-    const pad = (num: number) => String(num).padStart(2, "0");
-    const year = date.getFullYear();
-    const month = pad(date.getMonth() + 1);
-    const day = pad(date.getDate());
-    const hours = pad(date.getHours());
-    const minutes = pad(date.getMinutes());
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
-  };
 
   const createInitialScheduleForm = useMemo<() => ScheduleMeetingForm>(() => {
     return () => {
@@ -92,6 +101,87 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
   const resetScheduleForm = () => {
     setScheduleForm(createInitialScheduleForm());
   };
+
+  const isSearchRangeTooLarge = useMemo(() => {
+    if (!scheduleForm.findAvailableSlot || !scheduleForm.startDate || !scheduleForm.endDate) {
+      return false;
+    }
+    const start = new Date(scheduleForm.startDate);
+    const end = new Date(scheduleForm.endDate);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+      return false;
+    }
+    return end.getTime() - start.getTime() > MAX_SEARCH_RANGE_MS;
+  }, [scheduleForm.findAvailableSlot, scheduleForm.startDate, scheduleForm.endDate]);
+
+  const maxSearchEndDate = useMemo(() => {
+    if (!scheduleForm.startDate) {
+      return undefined;
+    }
+    const start = new Date(scheduleForm.startDate);
+    if (Number.isNaN(start.getTime())) {
+      return undefined;
+    }
+    const max = new Date(start.getTime() + MAX_SEARCH_RANGE_MS);
+    return formatDateTimeLocal(max);
+  }, [scheduleForm.startDate]);
+
+  useEffect(() => {
+    if (!scheduleDialogOpen) {
+      setMicrosoftConnected(null);
+      setMicrosoftStatusMessage(null);
+      setMicrosoftStatusError(null);
+      setCheckingMicrosoft(false);
+      return;
+    }
+
+    let isActive = true;
+    setCheckingMicrosoft(true);
+    setMicrosoftStatusMessage(null);
+    setMicrosoftStatusError(null);
+
+    calendarService
+      .getMicrosoftConnectionStatus()
+      .then((response) => {
+        if (!isActive) {
+          return;
+        }
+        const connected = Boolean(response?.connected);
+        setMicrosoftConnected(connected);
+        if (connected) {
+          const note = response?.data?.providerUserEmail
+            ? `Connected as ${response.data.providerUserEmail}`
+            : "Microsoft Calendar is connected.";
+          setMicrosoftStatusMessage(note);
+          setMicrosoftStatusError(null);
+        } else {
+          setMicrosoftStatusMessage(null);
+          setMicrosoftStatusError(
+            "Microsoft Calendar is not connected. Connect it from Settings → Integrations."
+          );
+        }
+      })
+      .catch((error: any) => {
+        if (!isActive) {
+          return;
+        }
+        const message =
+          error?.response?.data?.message ||
+          "Unable to verify Microsoft connection. Please try again.";
+        setMicrosoftConnected(false);
+        setMicrosoftStatusMessage(null);
+        setMicrosoftStatusError(message);
+      })
+      .finally(() => {
+        if (isActive) {
+          setCheckingMicrosoft(false);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [scheduleDialogOpen]);
 
   // Determine API source based on lead fields
   const getApiSource = (): string => {
@@ -170,6 +260,24 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
   const handleScheduleMeeting = async () => {
     if (!lead._id) {
       toast.error("Missing lead identifier");
+      return;
+    }
+
+    if (checkingMicrosoft) {
+      toast.error("Please wait while we confirm your Microsoft connection.");
+      return;
+    }
+
+    if (!microsoftConnected) {
+      toast.error(
+        microsoftStatusError ||
+          "Microsoft Calendar is not connected. Connect it in Settings before scheduling."
+      );
+      return;
+    }
+
+    if (scheduleForm.findAvailableSlot && isSearchRangeTooLarge) {
+      toast.error("Search window must be less than 62 days from the start date.");
       return;
     }
 
@@ -519,6 +627,10 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
           setScheduleDialogOpen(open);
           if (!open) {
             resetScheduleForm();
+            setMicrosoftConnected(null);
+            setMicrosoftStatusMessage(null);
+            setMicrosoftStatusError(null);
+            setCheckingMicrosoft(false);
           }
         }}
       >
@@ -531,6 +643,39 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
           </DialogHeader>
 
           <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
+            {checkingMicrosoft && (
+              <Alert className="bg-white/5 border-white/10 text-white">
+                <Loader2 className="h-4 w-4 animate-spin text-white" />
+                <AlertDescription className="text-white/80">
+                  Checking Microsoft Calendar connection...
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {!checkingMicrosoft && microsoftConnected === false && (
+              <Alert variant="destructive" className="border-red-500/40 bg-red-500/10 text-white">
+                <AlertTriangle className="h-4 w-4 text-red-300" />
+                <div>
+                  <AlertTitle className="text-white">
+                    Microsoft not connected
+                  </AlertTitle>
+                  <AlertDescription className="text-white/80">
+                    {microsoftStatusError ||
+                      "Connect Microsoft in Settings → Integrations before scheduling a meeting."}
+                  </AlertDescription>
+                </div>
+              </Alert>
+            )}
+
+            {!checkingMicrosoft && microsoftConnected && microsoftStatusMessage && (
+              <Alert className="bg-white/10 border-white/15 text-white">
+                <CheckCircle2 className="h-4 w-4 text-emerald-300" />
+                <AlertDescription className="text-white/80">
+                  {microsoftStatusMessage}
+                </AlertDescription>
+              </Alert>
+            )}
+
             <div className="space-y-2">
               <Label className="text-xs text-white/70">Subject</Label>
               <Input
@@ -660,7 +805,13 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
                       }
                       className="bg-white/5 border-white/10 text-white text-sm"
                       placeholder="Defaults to end of day"
+                      max={maxSearchEndDate}
                     />
+                    {isSearchRangeTooLarge && (
+                      <p className="text-[10px] text-red-400">
+                        Search window must be less than 62 days from the start date.
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -700,7 +851,12 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
             <Button
               type="button"
               className="bg-white text-[#0b0f20] hover:bg-white/90"
-              disabled={schedulingMeeting}
+              disabled={
+                schedulingMeeting ||
+                checkingMicrosoft ||
+                microsoftConnected === false ||
+                (scheduleForm.findAvailableSlot && isSearchRangeTooLarge)
+              }
               onClick={handleScheduleMeeting}
             >
               {schedulingMeeting ? (

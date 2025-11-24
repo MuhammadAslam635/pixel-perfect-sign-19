@@ -25,6 +25,15 @@ export interface ScheduleMeetingResponse {
   };
 }
 
+export interface MicrosoftConnectionStatusResponse {
+  success: boolean;
+  connected: boolean;
+  data?: {
+    providerUserEmail?: string | null;
+    lastSyncAt?: string | null;
+  };
+}
+
 export const calendarService = {
   scheduleMeeting: async (
     payload: ScheduleMeetingPayload
@@ -32,5 +41,11 @@ export const calendarService = {
     const response = await API.post("/calendar/schedule-meeting", payload);
     return response.data;
   },
+  getMicrosoftConnectionStatus: async (): Promise<MicrosoftConnectionStatusResponse> => {
+    const response = await API.get("/calendar/connection-status");
+    return response.data;
+  },
 };
+
+export default calendarService;
 
