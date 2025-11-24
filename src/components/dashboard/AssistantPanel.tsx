@@ -121,7 +121,7 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
   const hasActiveChat = currentChatId || localMessages.length > 0;
 
   return (
-    <section className="assistant-panel mx-auto w-full h-full flex flex-col overflow-hidden relative">
+    <section className="hidden assistant-panel mx-auto w-full h-full lg:flex flex-col overflow-hidden relative sm:order-1">
       <div
         className="assistant-tools flex gap-2 mb-4"
         style={{ background: "#404040" }}

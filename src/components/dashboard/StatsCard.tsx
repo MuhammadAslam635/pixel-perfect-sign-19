@@ -13,12 +13,13 @@ const StatsCard = () => {
           </div>
 
           <div>
-            <p className="text-[44px] font-semibold tracking-tight text-white md:text-[50px]">220,342.76</p>
+            <p className="text-[44px] font-semibold tracking-tight text-white md:text-[50px]">
+              220,342.76
+            </p>
           </div>
         </div>
 
         <div className="relative flex h-full flex-1 items-end justify-center overflow-hidden p-0 bg-transparent min-h-[200px] md:min-h-[220px]">
-
           <div className="pointer-events-none absolute top-8 left-1/2 z-10 -translate-x-1/2 rounded-xl border border-white/10 bg-black/60 px-4 py-2 text-center text-white backdrop-blur">
             <span className="block text-xs text-white/60">Campaigns</span>
             <span className="block text-sm font-semibold">200</span>
@@ -26,9 +27,16 @@ const StatsCard = () => {
 
           <span className="pointer-events-none absolute top-16 left-1/2 z-0 h-[180px] w-px -translate-x-1/2 bg-gradient-to-b from-white/80 to-transparent opacity-80" />
           <span className="pointer-events-none absolute top-16 left-1/2 z-0 h-[180px] w-[2px] -translate-x-1/2 bg-black/40 blur-[2px] opacity-60" />
-          <span className="pointer-events-none absolute top-16 left-1/2 z-0 -translate-x-1/2 rounded-full bg-gradient-to-br from-cyan-400 to-indigo-400 shadow-[0_0_0_14px_rgba(104,179,183,0.35)]" style={{ width: 20, height: 20 }} />
+          <span
+            className="pointer-events-none absolute top-16 left-1/2 z-0 -translate-x-1/2 rounded-full bg-gradient-to-br from-cyan-400 to-indigo-400 shadow-[0_0_0_14px_rgba(104,179,183,0.35)]"
+            style={{ width: 20, height: 20 }}
+          />
 
-          <svg viewBox="0 0 460 162" preserveAspectRatio="none" className="absolute inset-0 z-0 h-full w-full">
+          <svg
+            viewBox="0 0 460 162"
+            preserveAspectRatio="none"
+            className="absolute inset-0 z-0 h-full w-full"
+          >
             <defs>
               {/* Blue line stroke with cyan→blue gradient */}
               <linearGradient id="line-blue" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -43,7 +51,13 @@ const StatsCard = () => {
                 <stop offset="100%" stopColor="#68B1B8" stopOpacity="0.42" />
               </linearGradient>
               {/* Soft glow for line */}
-              <filter id="line-glow" x="-10%" y="-10%" width="120%" height="120%">
+              <filter
+                id="line-glow"
+                x="-10%"
+                y="-10%"
+                width="120%"
+                height="120%"
+              >
                 <feGaussianBlur stdDeviation="2.5" result="blur" />
                 <feMerge>
                   <feMergeNode in="blur" />
