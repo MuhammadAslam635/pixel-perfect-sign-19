@@ -96,15 +96,29 @@ const ChatPage = () => {
   // Handle incoming message from URL parameter
   useEffect(() => {
     const messageFromUrl = searchParams.get("message");
+    const chatIdFromUrl = searchParams.get("chatId");
+
+    if (!messageFromUrl && !chatIdFromUrl) {
+      return;
+    }
+
+    const nextParams = new URLSearchParams(searchParams);
+
     if (messageFromUrl) {
-      // Set the message in composer
       setComposerValue(messageFromUrl);
-      // Start a new chat
       setIsCreatingNewChat(true);
       setSelectedChatId(null);
-      // Clear the URL parameter
-      setSearchParams({});
+      nextParams.delete("message");
     }
+
+    if (chatIdFromUrl) {
+      setSelectedChatId(chatIdFromUrl);
+      setIsCreatingNewChat(false);
+      setIsMobileListOpen(false);
+      nextParams.delete("chatId");
+    }
+
+    setSearchParams(nextParams);
   }, [searchParams, setSearchParams]);
 
   useEffect(() => {
