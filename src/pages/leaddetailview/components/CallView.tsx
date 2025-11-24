@@ -24,6 +24,7 @@ export const CallView = ({
   twilioStatusLoading,
 }: CallViewProps) => {
   const [volumeLevel, setVolumeLevel] = useState(0);
+  const [waveformData, setWaveformData] = useState<number[]>([]);
   const [isListening, setIsListening] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [callStatus, setCallStatus] = useState(
@@ -42,7 +43,8 @@ export const CallView = ({
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
-  const dataArrayRef = useRef<Uint8Array<ArrayBuffer> | null>(null);
+  const dataArrayRef = useRef<Uint8Array | null>(null);
+  const frequencyDataRef = useRef<Uint8Array | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const deviceRef = useRef<Device | null>(null);
@@ -171,6 +173,7 @@ export const CallView = ({
     }
     analyserRef.current = null;
     dataArrayRef.current = null;
+    frequencyDataRef.current = null;
 
     if (audioContextRef.current?.state !== "closed") {
       audioContextRef.current?.close().catch(() => undefined);
@@ -180,22 +183,41 @@ export const CallView = ({
     mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
     mediaStreamRef.current = null;
     setIsListening(false);
+    setWaveformData([]);
   }, []);
 
   const animateVolume = useCallback(() => {
     const analyser = analyserRef.current;
     const dataArray = dataArrayRef.current;
-    if (!analyser || !dataArray) return;
+    const frequencyData = frequencyDataRef.current;
+    if (!analyser || !dataArray || !frequencyData) return;
 
-    analyser.getByteTimeDomainData(dataArray);
+    // Create typed arrays for the analyser methods
+    const timeDomainArray = new Uint8Array(analyser.fftSize);
+    const freqArray = new Uint8Array(analyser.frequencyBinCount);
+    
+    analyser.getByteTimeDomainData(timeDomainArray);
     let sumSquares = 0;
-    for (let i = 0; i < dataArray.length; i++) {
-      const value = (dataArray[i] - 128) / 128;
+    for (let i = 0; i < timeDomainArray.length; i++) {
+      const value = (timeDomainArray[i] - 128) / 128;
       sumSquares += value * value;
     }
-    const rms = Math.sqrt(sumSquares / dataArray.length);
+    const rms = Math.sqrt(sumSquares / timeDomainArray.length);
     const smoothed = Math.min(1, rms * 3);
     setVolumeLevel((prev) => prev * 0.8 + smoothed * 0.2);
+
+    // Capture time-domain data for waveform (oscillates above/below zero)
+    const dataLength = timeDomainArray.length;
+    const barCount = 50; // Number of points in waveform
+    const step = Math.floor(dataLength / barCount);
+    const waveform = [];
+    for (let i = 0; i < barCount; i++) {
+      const index = i * step;
+      // Time-domain values are already normalized to -1 to 1 range
+      const value = (timeDomainArray[index] - 128) / 128;
+      waveform.push(value);
+    }
+    setWaveformData(waveform);
 
     animationFrameRef.current = requestAnimationFrame(animateVolume);
   }, []);
@@ -244,9 +266,8 @@ export const CallView = ({
       source.connect(analyser);
 
       analyserRef.current = analyser;
-      dataArrayRef.current = new Uint8Array(
-        new ArrayBuffer(analyser.fftSize)
-      );
+      dataArrayRef.current = new Uint8Array(analyser.fftSize);
+      frequencyDataRef.current = new Uint8Array(analyser.frequencyBinCount);
 
       setIsListening(true);
       animateVolume();
@@ -260,6 +281,15 @@ export const CallView = ({
       stopListening();
     }
   }, [animateVolume, isListening, stopListening]);
+
+  // Start listening to microphone when component mounts or Twilio becomes ready
+  useEffect(() => {
+    // Only prevent retry if it's a permission denial error
+    const isPermissionError = error?.includes("permission") || error?.includes("denied");
+    if (twilioReady && !isListening && !isPermissionError) {
+      startListening();
+    }
+  }, [twilioReady, isListening, error, startListening]);
 
   useEffect(() => {
     return () => {
@@ -335,7 +365,7 @@ export const CallView = ({
     device.on("disconnect", () => {
       setCallStatus("Call ended");
       setCallPhase("idle");
-      stopListening();
+      // Keep microphone listening for waveform visualization
       activeCallRef.current = null;
     });
 
@@ -359,13 +389,13 @@ export const CallView = ({
         callSidRef.current = getConnectionCallSid(connection);
         setCallPhase("connected");
         setCallStatus("Call connected");
-        startListening();
+        // Microphone is already listening, no need to start again
       });
 
       connection.on("disconnect", () => {
         setCallStatus("Call ended");
         setCallPhase("idle");
-        stopListening();
+        // Keep microphone listening for waveform visualization
         activeCallRef.current = null;
         void logCallCompletion("completed");
       });
@@ -373,7 +403,7 @@ export const CallView = ({
       connection.on("cancel", () => {
         setCallStatus("Call cancelled");
         setCallPhase("idle");
-        stopListening();
+        // Keep microphone listening for waveform visualization
         activeCallRef.current = null;
         void logCallCompletion("cancelled");
       });
@@ -381,7 +411,7 @@ export const CallView = ({
       connection.on("error", (event) => {
         setCallStatus(`Call error: ${event.message}`);
         setCallPhase("idle");
-        stopListening();
+        // Keep microphone listening for waveform visualization
         activeCallRef.current = null;
         void logCallCompletion("failed");
       });
@@ -427,7 +457,7 @@ export const CallView = ({
       );
       setCallPhase("idle");
       dialedNumberRef.current = null;
-      stopListening();
+      // Keep microphone listening for waveform visualization
     }
   }, [
     attachConnectionListeners,
@@ -444,8 +474,8 @@ export const CallView = ({
     activeCallRef.current = null;
     setCallStatus("Call ended");
     setCallPhase("idle");
-    stopListening();
-  }, [stopListening]);
+    // Keep microphone listening for waveform visualization
+  }, []);
 
   const formatCallDate = (value?: string | null) => {
     if (!value) {
@@ -495,8 +525,11 @@ export const CallView = ({
     return "text-emerald-300";
   };
 
-  const scale = 1 + volumeLevel * 0.6;
+  const scale = 1 + volumeLevel * 0.25;
   const glowOpacity = 0.35 + volumeLevel * 0.4;
+
+  // Apply the same scale to all circle elements
+  const circleScale = scale;
 
   const primaryActionDisabled =
     !twilioReady || callPhase === "ringing" || twilioStatusLoading;
@@ -514,16 +547,34 @@ export const CallView = ({
               "radial-gradient(circle, rgba(66,247,255,0.55) 0%, rgba(9,11,27,0) 70%)",
           }}
         ></div> */}
-        <div className="flex items-center justify-center">
+        <div className="flex items-center justify-center py-5">
           <div
-            className="flex items-center justify-center rounded-full border border-cyan-400/30 transition-all"
+            className="flex items-center justify-center rounded-full transition-all"
             style={{
               width: "300px",
               height: "300px",
-              opacity: 0.2 + volumeLevel * 0.4,
-              transform: `scale(${1 + volumeLevel * 0.2})`,
+              position: "relative",
+              transform: `scale(${circleScale})`,
+              transition: "transform 120ms ease-out",
             }}
           >
+            {/* Sphere with gradient edges to transparent center */}
+            <div
+              className="absolute inset-0 rounded-full"
+              style={{
+                background: `
+                  radial-gradient(circle at center, 
+                    transparent 0%, 
+                    transparent 55%, 
+                    rgba(66, 247, 255, 0.18) 65%, 
+                    rgba(66, 247, 255, 0.55) 70%
+                  )
+                `,
+                // opacity: 0.7 + volumeLevel * 0.25,
+                filter: "blur(0.5px)",
+              }}
+            />
+            {/* Inner button */}
             <div
               role="button"
               tabIndex={0}
@@ -548,7 +599,7 @@ export const CallView = ({
                   handleHangUp();
                 }
               }}
-              className={`flex items-center justify-center rounded-full border border-white/20 transition-colors ${
+              className={`flex items-center justify-center rounded-full transition-colors relative z-10 ${
                 !twilioReady
                   ? "cursor-not-allowed opacity-60"
                   : callPhase === "idle"
@@ -558,23 +609,130 @@ export const CallView = ({
                   : "cursor-not-allowed"
               }`}
               style={{
-                width: "220px",
-                height: "220px",
-                background:
-                  "radial-gradient(60% 60% at 50% 50%, rgba(11, 19, 38, 0.9) 0%, rgba(9, 11, 27, 0.6) 100%)",
-                boxShadow: `0 0 ${35 + volumeLevel * 80}px rgba(66, 247, 255, 0.35)`,
-                transform: `scale(${scale})`,
-                transition: "transform 120ms ease-out, box-shadow 120ms ease-out",
+                width: "300px",
+                height: "300px",
+                background: `
+                  radial-gradient(circle at center, 
+                    transparent 0%, 
+                    transparent 30%, 
+                    rgba(66, 247, 255, 0.01) 45%, 
+                    rgba(66, 247, 255, 0.02) 55%, 
+                    rgba(66, 247, 255, 0.04) 65%, 
+                    rgba(66, 247, 255, 0.08) 75%, 
+                    rgba(66, 247, 255, 0.15) 85%, 
+                    rgba(66, 247, 255, 0.25) 92%, 
+                    rgba(66, 247, 255, 0.45) 96%, 
+                    rgba(66, 247, 255, 0.7) 98.5%, 
+                    rgba(66, 247, 255, 1) 100%
+                  )
+                `,
+                border: "1px solid rgba(66, 247, 255, 0.55)",
+                // to add glow shadow
+                // 0 0 ${35 + volumeLevel * 80}px rgba(66, 247, 255, 0.35),
+                boxShadow: `
+                  inset 0 0 10px rgba(66, 247, 255, 0.08)
+                `,
+                transition: "box-shadow 120ms ease-out",
               }}
             >
-              <span className="text-white/80 text-sm tracking-wide uppercase">
+              {/* White gradient overlay - small spread */}
+              <div
+                className="absolute inset-0 rounded-full pointer-events-none"
+                style={{
+                  background: `
+                    radial-gradient(circle at center, 
+                      rgba(255, 255, 255, 0.12) 0%, 
+                      rgba(255, 255, 255, 0.08) 25%, 
+                      rgba(255, 255, 255, 0.04) 40%, 
+                      rgba(255, 255, 255, 0.02) 50%, 
+                      rgba(255, 255, 255, 0.01) 55%, 
+                      transparent 65%
+                    )
+                  `,
+                  zIndex: 1,
+                }}
+              />
+              {/* <span className="text-white/80 text-sm tracking-wide uppercase relative z-20">
                 {callPhase === "connected"
                   ? "On call"
                   : callPhase === "ringing"
                   ? "Ringing..."
                   : "Make a call"}
-              </span>
+              </span> */}
             </div>
+            {/* Waveform visualization - line wave spread across and beyond circle edges */}
+            {isListening && waveformData.length > 0 && (
+              <div
+                className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 pointer-events-none"
+                style={{
+                  width: "380px",
+                  height: "200px",
+                  zIndex: 30,
+                }}
+              >
+                <svg
+                  width="100%"
+                  height="100%"
+                  viewBox="0 0 380 200"
+                  preserveAspectRatio="none"
+                  style={{ overflow: "visible" }}
+                >
+                  <defs>
+                    <linearGradient id="waveformFade" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="white" stopOpacity="0" />
+                      <stop offset="15%" stopColor="white" stopOpacity="1" />
+                      <stop offset="85%" stopColor="white" stopOpacity="1" />
+                      <stop offset="100%" stopColor="white" stopOpacity="0" />
+                    </linearGradient>
+                    <mask id="waveformMask">
+                      <rect width="100%" height="100%" fill="url(#waveformFade)" />
+                    </mask>
+                  </defs>
+                  <path
+                    d={(() => {
+                      if (waveformData.length < 2) return '';
+                      const centerY = 100;
+                      const amplitude = 155; // Maximum amplitude for biggest, most visible waves
+                      
+                      // Create points array
+                      const points = waveformData.map((value, index) => {
+                        const x = (index / (waveformData.length - 1)) * 380;
+                        const y = centerY - (value * amplitude);
+                        return { x, y };
+                      });
+                      
+                      // Start path with first point
+                      let path = `M ${points[0].x} ${points[0].y}`;
+                      
+                      // Use cubic bezier curves for smooth interpolation
+                      for (let i = 0; i < points.length - 1; i++) {
+                        const p0 = i > 0 ? points[i - 1] : points[i];
+                        const p1 = points[i];
+                        const p2 = points[i + 1];
+                        const p3 = i < points.length - 2 ? points[i + 2] : points[i + 1];
+                        
+                        // Calculate control points for smooth cubic bezier
+                        const cp1x = p1.x + (p2.x - p0.x) / 6;
+                        const cp1y = p1.y + (p2.y - p0.y) / 6;
+                        const cp2x = p2.x - (p3.x - p1.x) / 6;
+                        const cp2y = p2.y - (p3.y - p1.y) / 6;
+                        
+                        // Use cubic bezier curve for smooth path
+                        path += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
+                      }
+                      
+                      return path;
+                    })()}
+                    fill="none"
+                    stroke="rgba(66, 247, 255, 0.9)"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    mask="url(#waveformMask)"
+                  />
+                </svg>
+              </div>
+            )}
           </div>
         </div>
       </div>
