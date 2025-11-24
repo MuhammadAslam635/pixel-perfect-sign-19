@@ -1366,3 +1366,22 @@ body {
 .chat-scroll-area [data-radix-scroll-area-scrollbar] {
   display: none !important;
 }
+
+/* Mobile search and filter styling - restore desktop shadow */
+@media (min-width: 640px) {
+  .mobile-select-trigger,
+  .mobile-search-input,
+  .mobile-count-badge {
+    box-shadow: 0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset !important;
+  }
+}
+
+/* Mobile search input background gradient */
+@media (max-width: 639px) {
+  .mobile-search-input {
+    background: linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%) !important;
+    color: #FFFFFF !important;
+    font-family: 'Poppins', sans-serif !important;
+    font-weight: 400 !important;
+  }
+}

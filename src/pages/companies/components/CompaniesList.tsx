@@ -11,7 +11,7 @@ import {
   PaginationPrevious,
   PaginationEllipsis,
 } from "@/components/ui/pagination";
-import { ArrowRight, Linkedin, Search } from "lucide-react";
+import { ArrowRight, Linkedin, Search, ArrowLeft } from "lucide-react";
 import { Company } from "@/services/companies.service";
 import CompanyExecutivesPanel from "./CompanyExecutivesPanel";
 
@@ -46,6 +46,8 @@ const CompaniesList: FC<CompaniesListProps> = ({
   onViewAllLeads,
   onExecutiveSelect,
 }) => {
+  // State to track if mobile executives view is open
+  const [mobileExecutivesView, setMobileExecutivesView] = useState(false);
   // Helper function to format URL and create clickable link
   const formatWebsiteUrl = (url: string | null | undefined): string => {
     if (!url) return "";
@@ -161,17 +163,21 @@ const CompaniesList: FC<CompaniesListProps> = ({
     return (
       <Card
         key={company._id}
-        className={`relative flex flex-col gap-4 sm:gap-6 md:flex-row md:items-center md:justify-between overflow-hidden bg-gradient-to-r from-[#13363b] via-[#1f4c55] to-[#16383f] border mb-4 ${
-          isActive ? "border-primary/60" : "border-[#274a4f]"
-        } rounded-[20px] sm:rounded-[30px] px-4 sm:px-7 py-4 sm:py-6 transition-all duration-300 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] before:absolute before:content-[''] before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[55%] before:w-[3px] sm:before:w-[5px] before:rounded-full ${
-          isActive ? "before:bg-primary" : "before:bg-white/75"
+        className={`relative flex flex-col gap-4 sm:gap-6 md:flex-row md:items-center md:justify-between overflow-hidden border mb-4 rounded-[20px] sm:rounded-[30px] px-4 sm:px-7 py-4 sm:py-6 transition-all duration-300 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] before:absolute before:content-[''] before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[55%] before:w-0 md:before:w-[3px] lg:before:w-[5px] before:rounded-full backdrop-blur-[22.6px] ${
+          isActive ? "md:before:bg-primary" : "md:before:bg-white/75"
         }`}
+        style={{
+          background: `linear-gradient(180deg, rgba(104, 177, 184, 0.1) 0%, rgba(104, 177, 184, 0.08) 100%), radial-gradient(50% 100% at 50% 0%, rgba(104, 177, 184, 0.1) 0%, rgba(104, 177, 184, 0) 100%)`,
+          border: "0.94px solid",
+          borderImageSource: `linear-gradient(135.28deg, rgba(255, 255, 255, 0.3) -128.53%, rgba(255, 255, 255, 0) 75.12%), linear-gradient(174.85deg, rgba(255, 255, 255, 0.1) 0.61%, rgba(255, 255, 255, 0) 18.03%)`,
+          borderImageSlice: 1,
+        }}
       >
         <div className="flex-1">
           <div className="flex flex-wrap items-center gap-2 text-white/90">
-            <h3 className="text-base sm:text-lg md:text-xl font-semibold text-white">
+            <div className="text-base sm:text-lg md:text-xl font-semibold text-white text-center sm:text-left sm:mx-0 mx-auto">
               {company.name}
-            </h3>
+            </div>
             {company.industry && (
               <span className="text-xs sm:text-sm text-white/70 font-medium">
                 | {company.industry}
@@ -181,68 +187,141 @@ const CompaniesList: FC<CompaniesListProps> = ({
           <p className="mt-2 text-xs sm:text-sm text-white/65 line-clamp-2">
             {company.description || company.about || "No description available"}
           </p>
-          <div className="mt-3 sm:mt-5 flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-white/75">
-            <Badge className="rounded-full bg-white/15 text-white border-white/20 px-3 sm:px-4 py-1 text-xs">
-              {employeeCount}
-            </Badge>
-            {primaryLinkedIn && (
-              <div className="flex items-center gap-1.5 sm:gap-2 bg-white/10 border border-white/20 rounded-full px-2 sm:px-3 py-1 max-w-[150px] sm:max-w-[220px]">
-                <Linkedin className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-white/85 flex-shrink-0" />
-                <a
-                  href={getFullUrl(primaryLinkedIn)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  className="font-medium text-white/85 truncate hover:text-white hover:underline text-xs"
-                >
-                  {formatWebsiteUrl(primaryLinkedIn)}
-                </a>
-              </div>
-            )}
-            {primaryEmail && (
-              <span className="rounded-full border border-white/15 bg-white/10 px-3 sm:px-4 py-1 font-medium text-white/80 text-xs truncate max-w-[200px]">
-                {primaryEmail}
-              </span>
-            )}
+          {/* Mobile: Side by side layout */}
+          <div className="mt-3 sm:mt-5 md:hidden flex flex-row items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-white/75">
+              <Badge className="rounded-full bg-white/15 text-white border-white/20 px-3 sm:px-4 py-1 text-xs">
+                {employeeCount}
+              </Badge>
+              {primaryLinkedIn && (
+                <div className="flex items-center gap-1.5 sm:gap-2 bg-white/10 border border-white/20 rounded-full px-2 sm:px-3 py-1 max-w-[150px] sm:max-w-[220px]">
+                  <Linkedin className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-white/85 flex-shrink-0" />
+                  <a
+                    href={getFullUrl(primaryLinkedIn)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="font-medium text-white/85 truncate hover:text-white hover:underline text-xs"
+                  >
+                    {formatWebsiteUrl(primaryLinkedIn)}
+                  </a>
+                </div>
+              )}
+              {primaryEmail && (
+                <span className="rounded-full border border-white/15 bg-white/10 px-3 sm:px-4 py-1 font-medium text-white/80 text-xs truncate max-w-[200px]">
+                  {primaryEmail}
+                </span>
+              )}
+            </div>
+            <div className="flex flex-row gap-2 items-center justify-end text-white/80">
+              {(company.website || primaryEmail) && (
+                <p className="text-xs sm:text-sm font-semibold text-white/75 text-right break-words">
+                  {company.website && (
+                    <a
+                      href={getFullUrl(company.website)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-white/85 hover:text-white hover:underline"
+                    >
+                      {formatWebsiteUrl(company.website)}
+                    </a>
+                  )}
+                  {company.website && primaryEmail && (
+                    <span className="mx-2 text-white/40">|</span>
+                  )}
+                  {primaryEmail && (
+                    <span className="text-white/70 break-all">
+                      {primaryEmail}
+                    </span>
+                  )}
+                </p>
+              )}
+              {company.address && (
+                <p className="text-xs text-white/55 text-right max-w-[220px]">
+                  {company.address}
+                </p>
+              )}
+            </div>
+          </div>
+          {/* Desktop: Original badges layout */}
+          <div className="hidden md:block mt-3 sm:mt-5">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-white/75">
+              <Badge className="rounded-full bg-white/15 text-white border-white/20 px-3 sm:px-4 py-1 text-xs">
+                {employeeCount}
+              </Badge>
+              {primaryLinkedIn && (
+                <div className="flex items-center gap-1.5 sm:gap-2 bg-white/10 border border-white/20 rounded-full px-2 sm:px-3 py-1 max-w-[150px] sm:max-w-[220px]">
+                  <Linkedin className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-white/85 flex-shrink-0" />
+                  <a
+                    href={getFullUrl(primaryLinkedIn)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="font-medium text-white/85 truncate hover:text-white hover:underline text-xs"
+                  >
+                    {formatWebsiteUrl(primaryLinkedIn)}
+                  </a>
+                </div>
+              )}
+              {primaryEmail && (
+                <span className="rounded-full border border-white/15 bg-white/10 px-3 sm:px-4 py-1 font-medium text-white/80 text-xs truncate max-w-[200px]">
+                  {primaryEmail}
+                </span>
+              )}
+            </div>
           </div>
         </div>
         <div className="w-full md:w-[260px] flex flex-col items-center md:items-end gap-2 sm:gap-3 text-white/80 md:ml-8">
-          {(company.website || primaryEmail) && (
-            <p className="text-xs sm:text-sm font-semibold text-white/75 text-center md:text-right break-words">
-              {company.website && (
-                <a
-                  href={getFullUrl(company.website)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  className="text-white/85 hover:text-white hover:underline"
-                >
-                  {formatWebsiteUrl(company.website)}
-                </a>
-              )}
-              {company.website && primaryEmail && (
-                <span className="mx-2 text-white/40">|</span>
-              )}
-              {primaryEmail && (
-                <span className="text-white/70 break-all">{primaryEmail}</span>
-              )}
-            </p>
-          )}
-          {company.address && (
-            <p className="text-xs text-white/55 text-center md:text-right max-w-full md:max-w-[220px]">
-              {company.address}
-            </p>
-          )}
-          <div className="flex flex-col sm:flex-row items-center gap-2 w-full md:w-auto">
+          <div className="hidden md:flex flex-row md:flex-col gap-4 md:gap-2 items-center md:items-end">
+            {(company.website || primaryEmail) && (
+              <p className="text-xs sm:text-sm font-semibold text-white/75 text-center md:text-right break-words flex-1 md:flex-none">
+                {company.website && (
+                  <a
+                    href={getFullUrl(company.website)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-white/85 hover:text-white hover:underline"
+                  >
+                    {formatWebsiteUrl(company.website)}
+                  </a>
+                )}
+                {company.website && primaryEmail && (
+                  <span className="mx-2 text-white/40">|</span>
+                )}
+                {primaryEmail && (
+                  <span className="text-white/70 break-all">
+                    {primaryEmail}
+                  </span>
+                )}
+              </p>
+            )}
+            {company.address && (
+              <p className="text-xs text-white/55 text-center md:text-right max-w-full md:max-w-[220px] flex-1 md:flex-none">
+                {company.address}
+              </p>
+            )}
+          </div>
+          <div className="flex flex-col sm:flex-row items-center md:items-center justify-end gap-2 w-full md:w-auto">
             <Button
               size="sm"
-              onClick={() => onSelectCompany(company._id)}
-              className="rounded-full bg-white/15 px-4 sm:px-6 py-1.5 text-xs font-semibold text-white hover:bg-white/25 border border-white/20 w-full md:w-auto"
+              onClick={() => {
+                if (window.innerWidth < 768) {
+                  // Mobile: show executives view and hide companies
+                  setMobileExecutivesView(true);
+                  onSelectCompany(company._id);
+                } else {
+                  // Desktop: toggle executives panel
+                  onSelectCompany(company._id);
+                }
+              }}
+              className="rounded-full bg-white/15 px-4 sm:px-6 py-1.5 text-xs font-semibold text-white hover:bg-white/25 border border-white/20 w-auto md:w-auto ml-auto md:ml-0"
             >
               <span className="hidden sm:inline">
                 {isActive ? "Close Executives" : "View Executives"}
               </span>
-              <span className="sm:hidden">{isActive ? "Close" : "View"}</span>
+              <span className="sm:hidden">View Executives</span>
               <ArrowRight className="ml-2 w-3 h-3" />
             </Button>
           </div>
@@ -351,6 +430,40 @@ const CompaniesList: FC<CompaniesListProps> = ({
     );
   };
 
+  // Mobile executives view - show only executives list
+  if (mobileExecutivesView && selectedCompany) {
+    return (
+      <div className="flex flex-col h-full md:hidden">
+        <div className="flex items-center gap-3 mb-4 pb-3 border-b border-white/10">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setMobileExecutivesView(false);
+              onSelectCompany("");
+            }}
+            className="text-white hover:text-white/80 hover:bg-white/10"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back
+          </Button>
+          <h3 className="text-base font-semibold text-white">
+            {selectedCompany.name} - Executives
+          </h3>
+        </div>
+        <div className="flex-1 overflow-y-auto pb-4 pr-3 custom-scrollbar-list">
+          <Card className="bg-[#1f3032] border-[#3A3A3A] p-3 sm:p-4">
+            <CompanyExecutivesPanel
+              company={selectedCompany}
+              onViewAllLeads={onViewAllLeads || (() => {})}
+              onExecutiveSelect={onExecutiveSelect}
+            />
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-full">
       {/* Scrollable content area */}
@@ -362,9 +475,9 @@ const CompaniesList: FC<CompaniesListProps> = ({
           : companies.map((company) => (
               <div key={company._id}>
                 {renderCompanyCard(company)}
-                {/* Show executives panel inline on mobile/tablet after the clicked company */}
+                {/* Show executives panel inline on desktop after the clicked company */}
                 {selectedCompanyId === company._id && (
-                  <div className="lg:hidden mt-4 mb-4">
+                  <div className="hidden lg:block mt-4 mb-4">
                     <Card className="bg-[#1f3032] border-[#3A3A3A] p-3 sm:p-4">
                       <CompanyExecutivesPanel
                         company={selectedCompany}

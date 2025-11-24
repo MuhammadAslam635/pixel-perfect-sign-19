@@ -10,7 +10,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { emailService } from "@/services/email.service";
 import { Email } from "@/types/email.types";
-import { Plus, Search, Mail, MailOpen, Star, Inbox as InboxIcon } from "lucide-react";
+import {
+  Plus,
+  Search,
+  Mail,
+  MailOpen,
+  Star,
+  Inbox as InboxIcon,
+} from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const InboxPage = () => {
@@ -48,8 +55,13 @@ const InboxPage = () => {
   });
 
   const starMutation = useMutation({
-    mutationFn: ({ emailId, isStarred }: { emailId: string; isStarred: boolean }) =>
-      emailService.starEmail(emailId, { isStarred }),
+    mutationFn: ({
+      emailId,
+      isStarred,
+    }: {
+      emailId: string;
+      isStarred: boolean;
+    }) => emailService.starEmail(emailId, { isStarred }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["inbox"] });
     },
@@ -74,16 +86,17 @@ const InboxPage = () => {
     },
   });
 
-  const filteredEmails = inboxData?.data?.emails?.filter((email) => {
-    if (!searchTerm) return true;
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      email.subject?.toLowerCase().includes(searchLower) ||
-      email.from.email.toLowerCase().includes(searchLower) ||
-      email.from.name?.toLowerCase().includes(searchLower) ||
-      email.body.text?.toLowerCase().includes(searchLower)
-    );
-  }) || [];
+  const filteredEmails =
+    inboxData?.data?.emails?.filter((email) => {
+      if (!searchTerm) return true;
+      const searchLower = searchTerm.toLowerCase();
+      return (
+        email.subject?.toLowerCase().includes(searchLower) ||
+        email.from.email.toLowerCase().includes(searchLower) ||
+        email.from.name?.toLowerCase().includes(searchLower) ||
+        email.body.text?.toLowerCase().includes(searchLower)
+      );
+    }) || [];
 
   const handleEmailClick = (email: Email) => {
     navigate(`/emails/${email._id}`);
@@ -100,16 +113,20 @@ const InboxPage = () => {
           {/* Header */}
           <div className="flex items-center justify-between mb-6 gap-4">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-white">Inbox</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-white">
+                Inbox
+              </h1>
               <p className="text-white/60 text-sm mt-1">
-                {statsData?.data?.unreadEmails || 0} unread of {statsData?.data?.totalEmails || 0} total
+                {statsData?.data?.unreadEmails || 0} unread of{" "}
+                {statsData?.data?.totalEmails || 0} total
               </p>
             </div>
-            <Button 
+            <Button
               onClick={handleCompose}
               className="rounded-full bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3] text-sm sm:text-base px-4 sm:px-6 py-2"
               style={{
-                boxShadow: "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                boxShadow:
+                  "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
               }}
             >
               <Plus className="h-4 w-4 mr-2" />
@@ -119,7 +136,7 @@ const InboxPage = () => {
 
           {/* Stats Cards */}
           {statsData?.data && (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+            <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
               <div className="relative flex-1 w-full">
                 <div className="absolute -inset-4 lg:-inset-8 bg-gradient-to-r from-cyan-500/20 via-blue-500/15 to-transparent blur-3xl opacity-60" />
                 <Card
@@ -128,12 +145,17 @@ const InboxPage = () => {
                     borderRadius: "30px",
                     opacity: 1,
                     borderWidth: "1px",
-                    background: "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
+                    background:
+                      "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
                   }}
                 >
                   <CardContent className="p-4 sm:p-5 lg:p-6">
-                    <p className="text-xs sm:text-sm text-gray-300 font-medium mb-3">Total</p>
-                    <p className="text-2xl sm:text-3xl font-bold text-white">{statsData.data.totalEmails}</p>
+                    <p className="text-xs sm:text-sm text-gray-300 font-medium mb-3">
+                      Total
+                    </p>
+                    <p className="text-2xl sm:text-3xl font-bold text-white">
+                      {statsData.data.totalEmails}
+                    </p>
                   </CardContent>
                 </Card>
               </div>
@@ -145,12 +167,17 @@ const InboxPage = () => {
                     borderRadius: "30px",
                     opacity: 1,
                     borderWidth: "1px",
-                    background: "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
+                    background:
+                      "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
                   }}
                 >
                   <CardContent className="p-4 sm:p-5 lg:p-6">
-                    <p className="text-xs sm:text-sm text-gray-300 font-medium mb-3">Unread</p>
-                    <p className="text-2xl sm:text-3xl font-bold text-white">{statsData.data.unreadEmails}</p>
+                    <p className="text-xs sm:text-sm text-gray-300 font-medium mb-3">
+                      Unread
+                    </p>
+                    <p className="text-2xl sm:text-3xl font-bold text-white">
+                      {statsData.data.unreadEmails}
+                    </p>
                   </CardContent>
                 </Card>
               </div>
@@ -162,12 +189,17 @@ const InboxPage = () => {
                     borderRadius: "30px",
                     opacity: 1,
                     borderWidth: "1px",
-                    background: "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
+                    background:
+                      "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
                   }}
                 >
                   <CardContent className="p-4 sm:p-5 lg:p-6">
-                    <p className="text-xs sm:text-sm text-gray-300 font-medium mb-3">Sent</p>
-                    <p className="text-2xl sm:text-3xl font-bold text-white">{statsData.data.sentEmails}</p>
+                    <p className="text-xs sm:text-sm text-gray-300 font-medium mb-3">
+                      Sent
+                    </p>
+                    <p className="text-2xl sm:text-3xl font-bold text-white">
+                      {statsData.data.sentEmails}
+                    </p>
                   </CardContent>
                 </Card>
               </div>
@@ -179,12 +211,17 @@ const InboxPage = () => {
                     borderRadius: "30px",
                     opacity: 1,
                     borderWidth: "1px",
-                    background: "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
+                    background:
+                      "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
                   }}
                 >
                   <CardContent className="p-4 sm:p-5 lg:p-6">
-                    <p className="text-xs sm:text-sm text-gray-300 font-medium mb-3">Received</p>
-                    <p className="text-2xl sm:text-3xl font-bold text-white">{statsData.data.receivedEmails}</p>
+                    <p className="text-xs sm:text-sm text-gray-300 font-medium mb-3">
+                      Received
+                    </p>
+                    <p className="text-2xl sm:text-3xl font-bold text-white">
+                      {statsData.data.receivedEmails}
+                    </p>
                   </CardContent>
                 </Card>
               </div>
@@ -199,7 +236,8 @@ const InboxPage = () => {
                 style={{
                   borderRadius: "30px",
                   borderWidth: "1px",
-                  background: "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
+                  background:
+                    "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
                 }}
               >
                 <CardHeader>
@@ -273,7 +311,8 @@ const InboxPage = () => {
                   className="pl-10 h-9 rounded-full border-0 text-gray-300 placeholder:text-gray-500 text-xs"
                   style={{
                     background: "#FFFFFF1A",
-                    boxShadow: "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                    boxShadow:
+                      "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
                   }}
                 />
               </div>
@@ -285,7 +324,8 @@ const InboxPage = () => {
                   borderRadius: "30px",
                   borderWidth: "1px",
                   borderColor: "rgba(255, 255, 255, 0.08)",
-                  background: "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
+                  background:
+                    "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
                   minHeight: "400px",
                   maxHeight: "calc(100vh - 500px)",
                 }}
@@ -301,7 +341,10 @@ const InboxPage = () => {
                   {isLoading ? (
                     <div className="space-y-3">
                       {[...Array(5)].map((_, i) => (
-                        <Skeleton key={i} className="h-32 w-full rounded-[20px]" />
+                        <Skeleton
+                          key={i}
+                          className="h-32 w-full rounded-[20px]"
+                        />
                       ))}
                     </div>
                   ) : filteredEmails.length === 0 ? (
@@ -309,9 +352,13 @@ const InboxPage = () => {
                       <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-4">
                         <Mail className="w-6 h-6 text-white/30" />
                       </div>
-                      <p className="text-white/70 text-base font-medium mb-1">No emails found</p>
+                      <p className="text-white/70 text-base font-medium mb-1">
+                        No emails found
+                      </p>
                       <p className="text-white/50 text-sm text-center max-w-md">
-                        {searchTerm ? "Try adjusting your search terms or clear the filter to see all emails." : "Your inbox is empty."}
+                        {searchTerm
+                          ? "Try adjusting your search terms or clear the filter to see all emails."
+                          : "Your inbox is empty."}
                       </p>
                     </div>
                   ) : (
@@ -327,31 +374,36 @@ const InboxPage = () => {
               </div>
 
               {/* Pagination */}
-              {inboxData?.data?.pagination && inboxData.data.pagination.pages > 1 && (
-                <div className="sticky bottom-0 left-0 right-0 z-10 bg-[#222B2C] py-2 -mx-4 sm:-mx-6 px-4 sm:px-6 border-t border-white/10">
-                  <div className="flex items-center justify-between">
-                    <Button
-                      variant="outline"
-                      onClick={() => setPage((p) => Math.max(1, p - 1))}
-                      disabled={page === 1}
-                      className="rounded-full bg-white/10 text-white border-white/20 hover:bg-white/20 disabled:opacity-50"
-                    >
-                      Previous
-                    </Button>
-                    <span className="text-sm text-white/70">
-                      Page {page} of {inboxData.data.pagination.pages}
-                    </span>
-                    <Button
-                      variant="outline"
-                      onClick={() => setPage((p) => Math.min(inboxData.data.pagination.pages, p + 1))}
-                      disabled={page === inboxData.data.pagination.pages}
-                      className="rounded-full bg-white/10 text-white border-white/20 hover:bg-white/20 disabled:opacity-50"
-                    >
-                      Next
-                    </Button>
+              {inboxData?.data?.pagination &&
+                inboxData.data.pagination.pages > 1 && (
+                  <div className="sticky bottom-0 left-0 right-0 z-10 bg-[#222B2C] py-2 -mx-4 sm:-mx-6 px-4 sm:px-6 border-t border-white/10">
+                    <div className="flex items-center justify-between">
+                      <Button
+                        variant="outline"
+                        onClick={() => setPage((p) => Math.max(1, p - 1))}
+                        disabled={page === 1}
+                        className="rounded-full bg-white/10 text-white border-white/20 hover:bg-white/20 disabled:opacity-50"
+                      >
+                        Previous
+                      </Button>
+                      <span className="text-sm text-white/70">
+                        Page {page} of {inboxData.data.pagination.pages}
+                      </span>
+                      <Button
+                        variant="outline"
+                        onClick={() =>
+                          setPage((p) =>
+                            Math.min(inboxData.data.pagination.pages, p + 1)
+                          )
+                        }
+                        disabled={page === inboxData.data.pagination.pages}
+                        className="rounded-full bg-white/10 text-white border-white/20 hover:bg-white/20 disabled:opacity-50"
+                      >
+                        Next
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
             </div>
           </div>
         </div>
@@ -361,4 +413,3 @@ const InboxPage = () => {
 };
 
 export default InboxPage;
-

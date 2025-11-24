@@ -17,7 +17,9 @@ import {
   Layers,
   Upload,
   Loader2,
+  Plus,
 } from "lucide-react";
+import CompaniesIcon from "@/components/icons/CompaniesIcon";
 import { Company, CompanyPerson } from "@/services/companies.service";
 import { Lead } from "@/services/leads.service";
 import { EmailDraftModal } from "@/pages/companies/components/EmailDraftModal";
@@ -513,7 +515,7 @@ const index = () => {
       <main className="relative px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] pt-24 sm:pt-28 lg:pt-32 pb-8 flex flex-col gap-6 text-white flex-1 overflow-y-auto">
         <div className="max-w-[1600px] mx-auto w-full">
           {/* Tabs */}
-          <div className="flex items-center justify-between mb-6 gap-4">
+          <div className="hidden md:flex items-center justify-between mb-6 gap-4">
             <div
               ref={containerRef}
               className="relative inline-flex w-fit gap-[10px] items-center rounded-full bg-[#2A2A2A] p-1"
@@ -614,7 +616,7 @@ const index = () => {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
+          <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
             {stats.map((stat) => (
               <div key={stat.title} className="relative flex-1 w-full">
                 {/* Gradient glow behind card */}
@@ -659,12 +661,34 @@ const index = () => {
           {/* Title and Filters Bar - Same Row */}
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 sm:gap-4 mb-5">
             {/* Heading */}
-            <h2 className="text-xl sm:text-2xl font-normal text-white">
-              {activeTab === "companies" ? "Companies" : "Leads"}
-            </h2>
+            <div className="flex items-center gap-3 md:gap-4 order-2 lg:order-1">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-12 lg:h-12 flex items-center justify-center flex-shrink-0">
+                <CompaniesIcon className="w-full h-full" />
+              </div>
+              <h2 className="text-xl sm:text-2xl font-normal text-white">
+                {activeTab === "companies" ? "Companies" : "Leads"}
+              </h2>
+              {activeTab === "companies" && (
+                <Button
+                  className="ml-auto flex items-center gap-2 rounded-lg px-4 py-2 text-white font-normal"
+                  style={{
+                    background:
+                      "linear-gradient(90deg, rgba(218, 228, 241, 0.2) 0%, rgba(221, 224, 238, 0.2) 100%)",
+                    backgroundBlendMode: "luminosity",
+                    boxShadow:
+                      "0px 4px 4px 0px #FFFFFF40 inset, 0px -4px 4px 0px #FFFFFF40 inset",
+                  }}
+                >
+                  <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center">
+                    <Plus className="w-3 h-3 text-white" />
+                  </div>
+                  <span>Add new Company</span>
+                </Button>
+              )}
+            </div>
 
             {/* Controls Container - responsive layout */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 order-1 lg:order-2">
               {/* Filter Buttons Row - wraps on mobile, stays in row on larger screens */}
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 flex-1">
                 {activeTab === "companies" ? (
@@ -674,24 +698,38 @@ const index = () => {
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none z-10" />
                       <Input
                         type="text"
-                        placeholder="Search companies..."
+                        placeholder="Search..."
                         value={companiesSearch}
                         onChange={(e) => setCompaniesSearch(e.target.value)}
-                        className="h-9 pl-10 pr-4 !rounded-full border-0 text-gray-300 placeholder:text-gray-500 text-xs w-full"
+                        className="h-9 pl-10 pr-12 sm:pr-4 rounded-lg sm:!rounded-full border border-gray-600 sm:border-0 text-white placeholder:text-gray-500 text-xs w-full bg-gray-800/50 sm:bg-[#FFFFFF1A] mobile-search-input"
                         style={{
-                          background: "#FFFFFF1A",
-                          boxShadow:
-                            "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                          boxShadow: "none",
                         }}
                       />
+                      {/* Filter Icon - Mobile Only */}
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 sm:hidden pointer-events-none z-10">
+                        <svg
+                          width="20"
+                          height="20"
+                          viewBox="0 0 32 32"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M28.3334 16.0001H11.86M6.04535 16.0001H3.66669M6.04535 16.0001C6.04535 15.2292 6.35159 14.4898 6.8967 13.9447C7.4418 13.3996 8.18112 13.0934 8.95202 13.0934C9.72292 13.0934 10.4622 13.3996 11.0073 13.9447C11.5524 14.4898 11.8587 15.2292 11.8587 16.0001C11.8587 16.771 11.5524 17.5103 11.0073 18.0554C10.4622 18.6005 9.72292 18.9067 8.95202 18.9067C8.18112 18.9067 7.4418 18.6005 6.8967 18.0554C6.35159 17.5103 6.04535 16.771 6.04535 16.0001ZM28.3334 24.8094H20.6694M20.6694 24.8094C20.6694 25.5805 20.3624 26.3206 19.8171 26.8659C19.2719 27.4111 18.5324 27.7174 17.7614 27.7174C16.9905 27.7174 16.2511 27.4098 15.706 26.8647C15.1609 26.3196 14.8547 25.5803 14.8547 24.8094M20.6694 24.8094C20.6694 24.0383 20.3624 23.2995 19.8171 22.7543C19.2719 22.209 18.5324 21.9027 17.7614 21.9027C16.9905 21.9027 16.2511 22.209 15.706 22.7541C15.1609 23.2992 14.8547 24.0385 14.8547 24.8094M14.8547 24.8094H3.66669M28.3334 7.19072H24.1934M18.3787 7.19072H3.66669M18.3787 7.19072C18.3787 6.41983 18.6849 5.68051 19.23 5.1354C19.7751 4.59029 20.5145 4.28406 21.2854 4.28406C21.6671 4.28406 22.045 4.35924 22.3977 4.50531C22.7503 4.65139 23.0708 4.86549 23.3407 5.1354C23.6106 5.40531 23.8247 5.72574 23.9708 6.07839C24.1168 6.43104 24.192 6.80902 24.192 7.19072C24.192 7.57243 24.1168 7.9504 23.9708 8.30306C23.8247 8.65571 23.6106 8.97614 23.3407 9.24605C23.0708 9.51596 22.7503 9.73006 22.3977 9.87613C22.045 10.0222 21.6671 10.0974 21.2854 10.0974C20.5145 10.0974 19.7751 9.79115 19.23 9.24605C18.6849 8.70094 18.3787 7.96162 18.3787 7.19072Z"
+                            stroke="white"
+                            strokeWidth="1.5"
+                            strokeMiterlimit="10"
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                      </div>
                     </div>
                     {filteredTotalCompanies !== undefined && (
                       <div
-                        className="px-3 py-1.5 sm:py-2 rounded-full text-gray-300 text-xs sm:text-sm font-medium whitespace-nowrap flex items-center justify-center"
+                        className="hidden sm:flex px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-full border border-gray-600 sm:border-0 text-gray-300 text-xs sm:text-sm font-medium whitespace-nowrap items-center justify-center bg-gray-800/50 sm:bg-[#FFFFFF1A] mobile-count-badge"
                         style={{
-                          background: "#FFFFFF1A",
-                          boxShadow:
-                            "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                          boxShadow: "none",
                         }}
                       >
                         {filteredTotalCompanies}{" "}
@@ -709,13 +747,29 @@ const index = () => {
                         placeholder="Search leads..."
                         value={leadsSearch}
                         onChange={(e) => setLeadsSearch(e.target.value)}
-                        className="h-9 pl-10 pr-4 !rounded-full border-0 text-gray-300 placeholder:text-gray-500 text-xs w-full"
+                        className="h-9 pl-10 pr-12 sm:pr-4 rounded-lg sm:!rounded-full border border-gray-600 sm:border-0 text-white placeholder:text-gray-500 text-xs w-full bg-gray-800/50 sm:bg-[#FFFFFF1A] mobile-search-input"
                         style={{
-                          background: "#FFFFFF1A",
-                          boxShadow:
-                            "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                          boxShadow: "none",
                         }}
                       />
+                      {/* Filter Icon - Mobile Only */}
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 sm:hidden pointer-events-none z-10">
+                        <svg
+                          width="20"
+                          height="20"
+                          viewBox="0 0 32 32"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M28.3334 16.0001H11.86M6.04535 16.0001H3.66669M6.04535 16.0001C6.04535 15.2292 6.35159 14.4898 6.8967 13.9447C7.4418 13.3996 8.18112 13.0934 8.95202 13.0934C9.72292 13.0934 10.4622 13.3996 11.0073 13.9447C11.5524 14.4898 11.8587 15.2292 11.8587 16.0001C11.8587 16.771 11.5524 17.5103 11.0073 18.0554C10.4622 18.6005 9.72292 18.9067 8.95202 18.9067C8.18112 18.9067 7.4418 18.6005 6.8967 18.0554C6.35159 17.5103 6.04535 16.771 6.04535 16.0001ZM28.3334 24.8094H20.6694M20.6694 24.8094C20.6694 25.5805 20.3624 26.3206 19.8171 26.8659C19.2719 27.4111 18.5324 27.7174 17.7614 27.7174C16.9905 27.7174 16.2511 27.4098 15.706 26.8647C15.1609 26.3196 14.8547 25.5803 14.8547 24.8094M20.6694 24.8094C20.6694 24.0383 20.3624 23.2995 19.8171 22.7543C19.2719 22.209 18.5324 21.9027 17.7614 21.9027C16.9905 21.9027 16.2511 22.209 15.706 22.7541C15.1609 23.2992 14.8547 24.0385 14.8547 24.8094M14.8547 24.8094H3.66669M28.3334 7.19072H24.1934M18.3787 7.19072H3.66669M18.3787 7.19072C18.3787 6.41983 18.6849 5.68051 19.23 5.1354C19.7751 4.59029 20.5145 4.28406 21.2854 4.28406C21.6671 4.28406 22.045 4.35924 22.3977 4.50531C22.7503 4.65139 23.0708 4.86549 23.3407 5.1354C23.6106 5.40531 23.8247 5.72574 23.9708 6.07839C24.1168 6.43104 24.192 6.80902 24.192 7.19072C24.192 7.57243 24.1168 7.9504 23.9708 8.30306C23.8247 8.65571 23.6106 8.97614 23.3407 9.24605C23.0708 9.51596 22.7503 9.73006 22.3977 9.87613C22.045 10.0222 21.6671 10.0974 21.2854 10.0974C20.5145 10.0974 19.7751 9.79115 19.23 9.24605C18.6849 8.70094 18.3787 7.96162 18.3787 7.19072Z"
+                            stroke="white"
+                            strokeWidth="1.5"
+                            strokeMiterlimit="10"
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                      </div>
                     </div>
                     {/* Company Filter Dropdown */}
                     <div className="relative w-full sm:w-auto sm:min-w-[140px]">
@@ -726,11 +780,9 @@ const index = () => {
                         }
                       >
                         <SelectTrigger
-                          className="h-9 pl-10 pr-4 rounded-full border-0 text-gray-300 text-xs w-full sm:w-auto"
+                          className="h-9 pl-10 pr-4 rounded-lg sm:rounded-full border border-gray-600 sm:border-0 text-gray-300 text-xs w-full sm:w-auto bg-gray-800/50 sm:bg-[#FFFFFF1A] mobile-select-trigger"
                           style={{
-                            background: "#FFFFFF1A",
-                            boxShadow:
-                              "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                            boxShadow: "none",
                           }}
                         >
                           <div className="absolute left-3 top-1/2 -translate-y-1/2">
@@ -788,11 +840,9 @@ const index = () => {
                     </div>
                     {filteredTotalLeads !== undefined && (
                       <div
-                        className="px-3 py-1.5 sm:py-2 rounded-full text-gray-300 text-xs sm:text-sm font-medium whitespace-nowrap flex items-center justify-center"
+                        className="hidden sm:flex px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-full border border-gray-600 sm:border-0 text-gray-300 text-xs sm:text-sm font-medium whitespace-nowrap items-center justify-center bg-gray-800/50 sm:bg-[#FFFFFF1A] mobile-count-badge"
                         style={{
-                          background: "#FFFFFF1A",
-                          boxShadow:
-                            "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                          boxShadow: "none",
                         }}
                       >
                         {filteredTotalLeads}{" "}
@@ -819,7 +869,7 @@ const index = () => {
               style={{
                 borderRadius: "30px",
                 borderWidth: "1px",
-                borderColor: "rgba(255, 255, 255, 0.08)",
+                // borderColor: "rgba(255, 255, 255, 0.08)",
                 background:
                   "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
               }}
