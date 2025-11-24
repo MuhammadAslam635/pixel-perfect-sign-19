@@ -1,0 +1,44 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  CreateFollowupPlanPayload,
+  followupPlansService,
+  FollowupPlansQueryParams,
+} from "@/services/followupPlans.service";
+
+export const followupPlanKeys = {
+  all: ["followup-plans"] as const,
+  lists: () => [...followupPlanKeys.all, "list"] as const,
+  list: (params: FollowupPlansQueryParams) =>
+    [...followupPlanKeys.lists(), params] as const,
+  details: () => [...followupPlanKeys.all, "detail"] as const,
+  detail: (id: string) => [...followupPlanKeys.details(), id] as const,
+};
+
+export const useFollowupPlans = (params: FollowupPlansQueryParams = {}) => {
+  return useQuery({
+    queryKey: followupPlanKeys.list(params),
+    queryFn: () => followupPlansService.getPlans(params),
+    keepPreviousData: true,
+  });
+};
+
+export const useFollowupPlan = (id: string) => {
+  return useQuery({
+    queryKey: followupPlanKeys.detail(id),
+    queryFn: () => followupPlansService.getPlanById(id),
+    enabled: !!id,
+  });
+};
+
+export const useCreateFollowupPlan = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: CreateFollowupPlanPayload) =>
+      followupPlansService.createPlan(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: followupPlanKeys.all });
+    },
+  });
+};
+
