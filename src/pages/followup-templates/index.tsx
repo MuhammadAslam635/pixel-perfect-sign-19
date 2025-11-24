@@ -76,6 +76,10 @@ import {
 } from "@/hooks/useFollowupTemplates";
 import { format, formatDistanceToNow } from "date-fns";
 import { isAxiosError } from "axios";
+import {
+  convertLocalTimeToUTC,
+  convertUTCToLocalTime,
+} from "@/utils/timezone";
 
 const followupTemplateSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -205,7 +209,9 @@ const FollowupTemplatesPage = () => {
         numberOfEmails: selectedTemplate.numberOfEmails,
         numberOfCalls: selectedTemplate.numberOfCalls,
         numberOfWhatsappMessages: selectedTemplate.numberOfWhatsappMessages,
-        timeOfDayToRun: selectedTemplate.timeOfDayToRun,
+        timeOfDayToRun: convertUTCToLocalTime(
+          selectedTemplate.timeOfDayToRun
+        ),
       });
     } else if (formMode === "create") {
       form.reset(defaultFormValues);
@@ -226,7 +232,7 @@ const FollowupTemplatesPage = () => {
       numberOfEmails: values.numberOfEmails,
       numberOfCalls: values.numberOfCalls,
       numberOfWhatsappMessages: values.numberOfWhatsappMessages,
-      timeOfDayToRun: values.timeOfDayToRun,
+      timeOfDayToRun: convertLocalTimeToUTC(values.timeOfDayToRun),
     };
 
     if (formMode === "edit" && selectedTemplate) {
@@ -462,7 +468,7 @@ const FollowupTemplatesPage = () => {
           </div>
         </TableCell>
         <TableCell className="text-center text-gray-200">
-          {template.timeOfDayToRun}
+          {convertUTCToLocalTime(template.timeOfDayToRun)}
           <div className="text-xs text-gray-500">
             {format(new Date(template.createdAt), "MMM d, yyyy")}
           </div>
