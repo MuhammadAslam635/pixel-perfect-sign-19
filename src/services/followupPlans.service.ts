@@ -14,6 +14,7 @@ export interface FollowupPlanTemplateRef {
   numberOfDaysToRun?: string;
   numberOfEmails?: string;
   numberOfCalls?: string;
+  numberOfWhatsappMessages?: string;
 }
 
 export interface FollowupPlanTodo {

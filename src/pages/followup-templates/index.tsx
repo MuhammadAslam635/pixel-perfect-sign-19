@@ -449,14 +449,81 @@ const FollowupTemplatesPage = () => {
     return plan.todo?.length || 0;
   };
 
-  const stats = useMemo(() => {
-    const visibleCount = templates.length || 1;
-    const sum = (key: keyof FollowupTemplate) =>
-      templates.reduce((total, template) => {
-        const value = Number(template[key] ?? 0);
-        return total + (Number.isNaN(value) ? 0 : value);
-      }, 0);
+  const parseNumericValue = (value?: string | number | null) => {
+    if (typeof value === "number") {
+      return Number.isFinite(value) ? value : 0;
+    }
 
+    if (typeof value === "string") {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : 0;
+    }
+
+    return 0;
+  };
+
+  const getPlanDurationDays = (plan: FollowupPlan) => {
+    if (typeof plan.templateId !== "string") {
+      const templateDuration = parseNumericValue(
+        plan.templateId?.numberOfDaysToRun ?? 0
+      );
+      if (templateDuration > 0) {
+        return templateDuration;
+      }
+    }
+
+    const maxTodoDay =
+      plan.todo?.reduce((max, todo) => {
+        const dayValue = parseNumericValue(todo.day ?? 0);
+        return dayValue > max ? dayValue : max;
+      }, 0) ?? 0;
+
+    return maxTodoDay;
+  };
+
+  const getPlanTouchpointsCount = (plan: FollowupPlan) => {
+    if (Array.isArray(plan.todo) && plan.todo.length > 0) {
+      return plan.todo.filter((todo) =>
+        ["email", "call", "whatsapp_message"].includes(todo.type)
+      ).length;
+    }
+
+    if (typeof plan.templateId !== "string") {
+      return (
+        parseNumericValue(plan.templateId?.numberOfEmails ?? 0) +
+        parseNumericValue(plan.templateId?.numberOfCalls ?? 0) +
+        parseNumericValue(plan.templateId?.numberOfWhatsappMessages ?? 0)
+      );
+    }
+
+    return 0;
+  };
+
+  const planStats = useMemo<{ avgDays: number | null; avgTouchpoints: number | null }>(() => {
+    if (!paginatedActivePlans.length) {
+      return {
+        avgDays: null,
+        avgTouchpoints: null,
+      };
+    }
+
+    const planCount = paginatedActivePlans.length;
+    const totalDuration = paginatedActivePlans.reduce(
+      (total, plan) => total + getPlanDurationDays(plan),
+      0
+    );
+    const totalTouchpoints = paginatedActivePlans.reduce(
+      (total, plan) => total + getPlanTouchpointsCount(plan),
+      0
+    );
+
+    return {
+      avgDays: Number((totalDuration / planCount).toFixed(1)),
+      avgTouchpoints: Number((totalTouchpoints / planCount).toFixed(1)),
+    };
+  }, [paginatedActivePlans]);
+
+  const stats = useMemo(() => {
     return [
       {
         id: "total",
@@ -467,24 +534,17 @@ const FollowupTemplatesPage = () => {
       {
         id: "days",
         label: "Avg. Days per Plan",
-        value: Number((sum("numberOfDaysToRun") / visibleCount).toFixed(1)),
+        value: planStats.avgDays,
         helper: "Based on current view",
       },
       {
         id: "touchpoints",
         label: "Avg. Touchpoints",
-        value: Number(
-          (
-            (sum("numberOfEmails") +
-              sum("numberOfCalls") +
-              sum("numberOfWhatsappMessages")) /
-            visibleCount
-          ).toFixed(1)
-        ),
+        value: planStats.avgTouchpoints,
         helper: "Emails + calls + WhatsApp",
       },
     ];
-  }, [templates, data]);
+  }, [data, planStats]);
 
   const renderTableBody = () => {
     if (isLoading) {
