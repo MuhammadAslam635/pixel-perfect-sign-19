@@ -162,7 +162,7 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
                       onExecutiveSelect?.(exec);
                     }
                   }}
-                  className="relative overflow-hidden rounded-xl sm:rounded-2xl border border-white/15 bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] px-3 sm:px-4 py-2.5 sm:py-3 mb-2 sm:mb-3 transition-all duration-300 hover:shadow-[0_12px_32px_rgba(0,0,0,0.3)] before:absolute before:content-[''] before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[55%] before:w-[3px] sm:before:w-[4px] before:rounded-full before:bg-white/70 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/60"
+                  className="relative overflow-hidden rounded-xl sm:rounded-2xl border border-white/15 bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] px-3 sm:px-4 py-2.5 sm:py-3 mb-2 sm:mb-3 transition-all duration-300 hover:shadow-[0_12px_32px_rgba(0,0,0,0.3)] sm:before:absolute sm:before:content-[''] sm:before:left-0 sm:before:top-1/2 sm:before:-translate-y-1/2 sm:before:h-[55%] sm:before:w-[3px] lg:before:w-[4px] sm:before:rounded-full sm:before:bg-white/70 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/60"
                 >
                   <div className="flex items-center justify-between gap-2 sm:gap-4">
                     <div className="flex-1 min-w-0">
@@ -215,7 +215,7 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
                             e.stopPropagation();
                             handleSyncExecutiveToGHL(exec, company._id);
                           }}
-                          className={`flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full border transition-colors ${
+                          className={`hidden sm:flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full border transition-colors ${
                             syncingExecutives[exec._id || exec.id!]
                               ? "bg-primary/50 border-primary/50 text-white cursor-wait"
                               : "bg-primary border-primary text-white hover:bg-primary/80 hover:border-primary/80"
