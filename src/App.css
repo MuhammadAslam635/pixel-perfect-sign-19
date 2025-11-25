@@ -813,7 +813,7 @@ body {
   background: linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%);
 }
 
-.stats-card::before {
+/* .stats-card::before {
   content: '';
   position: absolute;
   left: 162px;
@@ -823,7 +823,7 @@ body {
   border-radius: 100px;
   padding: 2px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 69.33%);
-}
+} */
 
 .stats-card::after {
   content: '';
