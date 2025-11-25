@@ -60,6 +60,7 @@ const index = () => {
     null
   );
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
+  const [isMobileExecutivesView, setIsMobileExecutivesView] = useState(false);
 
   // Companies filters and pagination
   const [companiesPage, setCompaniesPage] = useState(1);
@@ -661,7 +662,11 @@ const index = () => {
           {/* Title and Filters Bar - Same Row */}
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 sm:gap-4 mb-5">
             {/* Heading */}
-            <div className="flex items-center gap-3 md:gap-4 order-2 lg:order-1">
+            <div
+              className={`${
+                isMobileExecutivesView ? "hidden sm:flex" : "flex"
+              } items-center gap-3 md:gap-4 order-2 lg:order-1`}
+            >
               <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-12 lg:h-12 flex items-center justify-center flex-shrink-0">
                 <CompaniesIcon className="w-full h-full" />
               </div>
@@ -871,17 +876,11 @@ const index = () => {
           >
             {/* Left: Companies/Leads List */}
             <div
-              className="relative pt-3 sm:pt-4 px-3 sm:px-6 rounded-xl sm:rounded-2xl
+              className="relative pt-3 sm:pt-4 px-3 sm:px-6 rounded-xl sm:rounded-[30px]
             h-[calc(100vh-420px)] sm:h-[calc(100vh-380px)] md:h-[calc(100vh-360px)] lg:h-[calc(100vh-340px)]
             min-h-[350px] sm:min-h-[400px] md:min-h-[500px] max-h-[800px]
-            flex-1 overflow-y-auto w-full"
-              style={{
-                borderRadius: "30px",
-                borderWidth: "1px",
-                // borderColor: "rgba(255, 255, 255, 0.08)",
-                background:
-                  "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
-              }}
+            flex-1 overflow-y-auto w-full border-0 sm:border sm:border-white/10 bg-transparent
+            sm:bg-[linear-gradient(173.83deg,_rgba(255,255,255,0.08)_4.82%,_rgba(255,255,255,0)_38.08%,_rgba(255,255,255,0)_56.68%,_rgba(255,255,255,0.02)_95.1%)]"
             >
               {activeTab === "companies" ? (
                 <CompaniesList
@@ -899,6 +898,7 @@ const index = () => {
                   selectedCompany={selectedCompany}
                   onViewAllLeads={() => setActiveTab("leads")}
                   onExecutiveSelect={handleExecutiveSelect}
+                  onMobileExecutivesViewChange={setIsMobileExecutivesView}
                 />
               ) : (
                 <LeadsList

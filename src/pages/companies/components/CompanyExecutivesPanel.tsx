@@ -99,7 +99,7 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
 
   return (
     <>
-      <div className="flex items-center justify-between mb-3 sm:mb-4">
+      <div className="hidden sm:flex sm:items-center sm:justify-between mb-3 sm:mb-4">
         <div className="flex items-center gap-2">
           <div className="p-2 sm:p-3 md:p-4 mr-1 sm:mr-2 rounded-full bg-black/10 hover:bg-black/20 text-white flex items-center justify-center">
             <Users className="w-4 h-4 sm:w-5 sm:h-5" />

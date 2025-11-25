@@ -30,6 +30,7 @@ type CompaniesListProps = {
   selectedCompany?: Company;
   onViewAllLeads?: () => void;
   onExecutiveSelect?: (executive: any) => void;
+  onMobileExecutivesViewChange?: (isOpen: boolean) => void;
 };
 
 const CompaniesList: FC<CompaniesListProps> = ({
@@ -45,9 +46,19 @@ const CompaniesList: FC<CompaniesListProps> = ({
   selectedCompany,
   onViewAllLeads,
   onExecutiveSelect,
+  onMobileExecutivesViewChange,
 }) => {
   // State to track if mobile executives view is open
   const [mobileExecutivesView, setMobileExecutivesView] = useState(false);
+  useEffect(() => {
+    onMobileExecutivesViewChange?.(mobileExecutivesView);
+  }, [mobileExecutivesView, onMobileExecutivesViewChange]);
+
+  useEffect(() => {
+    return () => {
+      onMobileExecutivesViewChange?.(false);
+    };
+  }, [onMobileExecutivesViewChange]);
   const [isMobile, setIsMobile] = useState(false);
   const [visibleCount, setVisibleCount] = useState(2);
 
@@ -459,7 +470,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
   if (mobileExecutivesView && selectedCompany) {
     return (
       <div className="flex flex-col h-full md:hidden">
-        <div className="flex items-center gap-3 mb-4 pb-3 border-b border-white/10">
+        <div className="hidden sm:flex items-center gap-3 mb-4 pb-3 border-b border-white/10">
           <Button
             variant="ghost"
             size="sm"
@@ -477,7 +488,17 @@ const CompaniesList: FC<CompaniesListProps> = ({
           </h3>
         </div>
         <div className="flex-1 overflow-y-auto pb-4 pr-3 custom-scrollbar-list">
-          <Card className="bg-[#1f3032] border-[#3A3A3A] p-3 sm:p-4">
+          <div className="flex items-center gap-3 mb-3 sm:hidden">
+            <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
+              <img
+                src="/assets/leads-icon.png"
+                alt="Executives icon"
+                className="w-7 h-7 object-contain"
+              />
+            </div>
+            <span className="text-lg font-semibold text-white">Executives</span>
+          </div>
+          <Card className="bg-transparent border-transparent shadow-none sm:bg-[#1f3032] sm:border-[#3A3A3A] sm:shadow-sm p-3 sm:p-4">
             <CompanyExecutivesPanel
               company={selectedCompany}
               onViewAllLeads={onViewAllLeads || (() => {})}
