@@ -62,6 +62,8 @@ import {
   Plus,
   Search,
   Trash2,
+  RefreshCw,
+  Calendar,
 } from "lucide-react";
 import {
   FollowupTemplate,
@@ -74,6 +76,11 @@ import {
   useFollowupTemplates,
   useUpdateFollowupTemplate,
 } from "@/hooks/useFollowupTemplates";
+import {
+  useFollowupPlans,
+  useDeleteFollowupPlan,
+} from "@/hooks/useFollowupPlans";
+import { FollowupPlan } from "@/services/followupPlans.service";
 import { format, formatDistanceToNow } from "date-fns";
 import { isAxiosError } from "axios";
 import {
@@ -157,6 +164,9 @@ const FollowupTemplatesPage = () => {
     useState<FollowupTemplate | null>(null);
   const [templateToDelete, setTemplateToDelete] =
     useState<FollowupTemplate | null>(null);
+  const [plansPage, setPlansPage] = useState(1);
+  const [plansLimit, setPlansLimit] = useState(50);
+  const [planToDelete, setPlanToDelete] = useState<FollowupPlan | null>(null);
   const { toast } = useToast();
   const timeInputRef = useRef<HTMLInputElement | null>(null);
   const isTriggeringTimePicker = useRef(false);
@@ -188,6 +198,56 @@ const FollowupTemplatesPage = () => {
     useDeleteFollowupTemplate();
   const { mutate: duplicateTemplate, isPending: isDuplicating } =
     useDuplicateFollowupTemplate();
+
+  // Fetch all followup plans with a high limit to filter active ones
+  const plansQueryParams = useMemo(
+    () => ({
+      page: 1,
+      limit: 100, // Fetch more plans to filter active ones
+    }),
+    []
+  );
+
+  const {
+    data: followupPlansData,
+    isLoading: isFollowupPlansLoading,
+    isFetching: isFollowupPlansFetching,
+    refetch: refetchFollowupPlans,
+  } = useFollowupPlans(plansQueryParams);
+
+  const allPlans = useMemo(
+    () => (followupPlansData as any)?.data?.docs ?? [],
+    [followupPlansData]
+  );
+
+  // Filter for active plans (scheduled or in_progress)
+  const activePlans = useMemo(
+    () =>
+      allPlans.filter(
+        (plan: FollowupPlan) =>
+          plan.status === "scheduled" || plan.status === "in_progress"
+      ),
+    [allPlans]
+  );
+
+  // Client-side pagination for active plans
+  const activePlansTotalPages = Math.ceil(activePlans.length / plansLimit);
+
+  const paginatedActivePlans = useMemo(() => {
+    const start = (plansPage - 1) * plansLimit;
+    const end = start + plansLimit;
+    return activePlans.slice(start, end);
+  }, [activePlans, plansPage, plansLimit]);
+
+  // Reset to page 1 when active plans change
+  useEffect(() => {
+    if (plansPage > activePlansTotalPages && activePlansTotalPages > 0) {
+      setPlansPage(1);
+    }
+  }, [activePlansTotalPages, plansPage]);
+
+  const { mutate: deleteFollowupPlan, isPending: isDeletingPlan } =
+    useDeleteFollowupPlan();
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -336,6 +396,57 @@ const FollowupTemplatesPage = () => {
         });
       },
     });
+  };
+
+  const handleDeletePlan = () => {
+    if (!planToDelete) return;
+
+    deleteFollowupPlan(planToDelete._id, {
+      onSuccess: (response) => {
+        toast({
+          title: "Followup plan deleted",
+          description:
+            response?.message || "Followup plan has been deleted successfully.",
+        });
+        setPlanToDelete(null);
+        refetchFollowupPlans();
+      },
+      onError: (mutationError) => {
+        toast({
+          title: "Unable to delete followup plan",
+          description: getErrorMessage(mutationError, "Please try again."),
+          variant: "destructive",
+        });
+      },
+    });
+  };
+
+  const getTemplateTitle = (plan: FollowupPlan) => {
+    if (typeof plan.templateId === "string") {
+      return "Followup Plan";
+    }
+    return plan.templateId?.title || "Followup Plan";
+  };
+
+  const getPlanStatusBadgeClass = (status: string) => {
+    switch (status) {
+      case "completed":
+        return "bg-green-500/15 text-green-300 border border-green-400/30";
+      case "in_progress":
+        return "bg-blue-500/15 text-blue-200 border border-blue-400/30";
+      case "failed":
+        return "bg-red-500/15 text-red-300 border border-red-400/30";
+      default:
+        return "bg-white/10 text-white border border-white/20";
+    }
+  };
+
+  const getCompletedTodosCount = (plan: FollowupPlan) => {
+    return plan.todo?.filter((todo) => todo.isComplete).length || 0;
+  };
+
+  const getTotalTodosCount = (plan: FollowupPlan) => {
+    return plan.todo?.length || 0;
   };
 
   const stats = useMemo(() => {
@@ -577,6 +688,160 @@ const FollowupTemplatesPage = () => {
         </PaginationContent>
       </Pagination>
     );
+  };
+
+  const renderPlansPagination = () => {
+    if (activePlansTotalPages <= 1) return null;
+
+    const pages: number[] = [];
+    const maxVisible = 5;
+    let start = Math.max(1, plansPage - Math.floor(maxVisible / 2));
+    const end = Math.min(activePlansTotalPages, start + maxVisible - 1);
+
+    if (end - start < maxVisible - 1) {
+      start = Math.max(1, end - maxVisible + 1);
+    }
+
+    for (let i = start; i <= end; i += 1) {
+      pages.push(i);
+    }
+
+    return (
+      <Pagination>
+        <PaginationContent className="gap-1">
+          <PaginationItem>
+            <PaginationPrevious
+              className={
+                plansPage <= 1
+                  ? "pointer-events-none opacity-50"
+                  : "cursor-pointer hover:bg-white/10 transition-colors text-white"
+              }
+              onClick={(event) => {
+                event.preventDefault();
+                setPlansPage((prev) => Math.max(prev - 1, 1));
+              }}
+            />
+          </PaginationItem>
+          {pages.map((pageNumber) => (
+            <PaginationItem key={pageNumber}>
+              <PaginationLink
+                isActive={pageNumber === plansPage}
+                className="cursor-pointer hover:bg-white/10 transition-colors text-white"
+                onClick={(event) => {
+                  event.preventDefault();
+                  setPlansPage(pageNumber);
+                }}
+              >
+                {pageNumber}
+              </PaginationLink>
+            </PaginationItem>
+          ))}
+          <PaginationItem>
+            <PaginationNext
+              className={
+                plansPage >= activePlansTotalPages
+                  ? "pointer-events-none opacity-50"
+                  : "cursor-pointer hover:bg-white/10 transition-colors text-white"
+              }
+              onClick={(event) => {
+                event.preventDefault();
+                setPlansPage((prev) =>
+                  Math.min(prev + 1, activePlansTotalPages)
+                );
+              }}
+            />
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
+    );
+  };
+
+  const renderPlansTableBody = () => {
+    if (isFollowupPlansLoading) {
+      return (
+        <TableRow>
+          <TableCell colSpan={6} className="py-8 text-center text-gray-400">
+            Loading followup plans...
+          </TableCell>
+        </TableRow>
+      );
+    }
+
+    if (activePlans.length === 0) {
+      return (
+        <TableRow>
+          <TableCell colSpan={6} className="py-16">
+            <div className="flex flex-col items-center justify-center gap-4 text-center text-gray-400">
+              <Calendar className="h-10 w-10 opacity-60" />
+              <div>
+                <p className="text-lg font-semibold text-white">
+                  No active followup plans
+                </p>
+                <p className="text-sm text-gray-400">
+                  Active followup plans will appear here.
+                </p>
+              </div>
+            </div>
+          </TableCell>
+        </TableRow>
+      );
+    }
+
+    return paginatedActivePlans.map((plan: FollowupPlan) => (
+      <TableRow
+        key={plan._id}
+        className="border-white/5 bg-white/10 text-white"
+      >
+        <TableCell>
+          <div className="flex flex-col gap-1">
+            <span className="text-base font-semibold">
+              {getTemplateTitle(plan)}
+            </span>
+            {plan.summary && (
+              <span className="text-xs text-gray-400 line-clamp-1">
+                {plan.summary}
+              </span>
+            )}
+          </div>
+        </TableCell>
+        <TableCell>
+          <span
+            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getPlanStatusBadgeClass(
+              plan.status
+            )}`}
+          >
+            {plan.status === "in_progress"
+              ? "In Progress"
+              : plan.status === "scheduled"
+              ? "Scheduled"
+              : plan.status}
+          </span>
+        </TableCell>
+        <TableCell className="text-gray-200">
+          {format(new Date(plan.startDate), "MMM d, yyyy")}
+        </TableCell>
+        <TableCell className="text-center text-gray-200">
+          {getCompletedTodosCount(plan)} / {getTotalTodosCount(plan)}
+        </TableCell>
+        <TableCell className="text-gray-200">
+          {formatDistanceToNow(new Date(plan.createdAt), { addSuffix: true })}
+        </TableCell>
+        <TableCell className="text-right">
+          <div className="flex items-center justify-end gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 rounded-full text-red-400 hover:text-red-300"
+              onClick={() => setPlanToDelete(plan)}
+              aria-label="Delete plan"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        </TableCell>
+      </TableRow>
+    ));
   };
 
   return (
@@ -904,6 +1169,64 @@ const FollowupTemplatesPage = () => {
           </DialogContent>
         </Dialog>
 
+        <section className="rounded-3xl border border-white/5 bg-gradient-to-br from-white/5 to-transparent shadow-2xl shadow-black/30">
+          <div className="border-b border-white/5 px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-semibold text-white">
+                  Active Followup Plans
+                  {!isFollowupPlansLoading && (
+                    <span className="ml-2 text-base font-normal text-white/60">
+                      ({activePlans.length})
+                    </span>
+                  )}
+                </h2>
+                <p className="text-sm text-white/60">
+                  View and manage your active followup campaigns
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 rounded-full text-white hover:bg-white/10"
+                onClick={() => refetchFollowupPlans()}
+                disabled={isFollowupPlansFetching}
+                aria-label="Refresh plans"
+              >
+                <RefreshCw
+                  className={`h-4 w-4 ${
+                    isFollowupPlansFetching ? "animate-spin" : ""
+                  }`}
+                />
+              </Button>
+            </div>
+          </div>
+          <div className="overflow-hidden rounded-3xl border border-white/5">
+            <Table>
+              <TableHeader className="bg-white/5 text-xs uppercase tracking-wide text-white/60">
+                <TableRow className="border-white/5">
+                  <TableHead className="text-white/80">Plan</TableHead>
+                  <TableHead className="text-white/80">Status</TableHead>
+                  <TableHead className="text-white/80">Start Date</TableHead>
+                  <TableHead className="text-center text-white/80">
+                    Progress
+                  </TableHead>
+                  <TableHead className="text-white/80">Created</TableHead>
+                  <TableHead className="text-right text-white/80">
+                    Actions
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>{renderPlansTableBody()}</TableBody>
+            </Table>
+          </div>
+          {activePlansTotalPages > 1 && (
+            <div className="flex justify-center border-t border-white/5 py-6">
+              {renderPlansPagination()}
+            </div>
+          )}
+        </section>
+
         <ConfirmDialog
           open={!!templateToDelete}
           title="Delete template?"
@@ -914,6 +1237,18 @@ const FollowupTemplatesPage = () => {
           isPending={isDeleting}
           onConfirm={handleDelete}
           onCancel={() => setTemplateToDelete(null)}
+        />
+
+        <ConfirmDialog
+          open={!!planToDelete}
+          title="Delete followup plan?"
+          description="This followup plan will be permanently removed. This action cannot be undone."
+          confirmText="Delete"
+          cancelText="Cancel"
+          confirmVariant="destructive"
+          isPending={isDeletingPlan}
+          onConfirm={handleDeletePlan}
+          onCancel={() => setPlanToDelete(null)}
         />
       </main>
     </DashboardLayout>
