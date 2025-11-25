@@ -1,4 +1,4 @@
-import { FC, useMemo, useState } from "react";
+import { FC, useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -48,6 +48,34 @@ const CompaniesList: FC<CompaniesListProps> = ({
 }) => {
   // State to track if mobile executives view is open
   const [mobileExecutivesView, setMobileExecutivesView] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(2);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (isMobile) {
+      setVisibleCount(Math.min(2, companies.length));
+    } else {
+      setVisibleCount(companies.length);
+    }
+  }, [isMobile, companies.length]);
+
+  const handleLoadMore = () => {
+    setVisibleCount((prev) => Math.min(prev + 2, companies.length));
+  };
+
+  const displayedCompanies = isMobile
+    ? companies.slice(0, visibleCount)
+    : companies;
   // Helper function to format URL and create clickable link
   const formatWebsiteUrl = (url: string | null | undefined): string => {
     if (!url) return "";
@@ -469,7 +497,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
           ? renderLoading()
           : companies.length === 0
           ? renderEmpty()
-          : companies.map((company) => (
+          : displayedCompanies.map((company) => (
               <div key={company._id}>
                 {renderCompanyCard(company)}
                 {/* Show executives panel inline on desktop after the clicked company */}
@@ -487,6 +515,23 @@ const CompaniesList: FC<CompaniesListProps> = ({
               </div>
             ))}
       </div>
+
+      {isMobile && companies.length > 2 && (
+        <div className="flex flex-col items-center gap-2 pb-4">
+          <p className="text-xs text-white/70">
+            Showing 1 - {Math.min(visibleCount, companies.length)} of{" "}
+            {companies.length} Companies
+          </p>
+          {visibleCount < companies.length && (
+            <Button
+              onClick={handleLoadMore}
+              className="rounded-md px-6 py-2 text-sm font-medium text-white bg-[#596C6D] shadow-[0px_20px_40px_rgba(0,0,0,0.45)]"
+            >
+              Load More
+            </Button>
+          )}
+        </div>
+      )}
 
       {/* Fixed pagination at bottom */}
       {!loading && companies.length > 0 && renderPagination()}
