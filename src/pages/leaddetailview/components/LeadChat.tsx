@@ -7,30 +7,11 @@ import { Email } from "@/types/email.types";
 import { twilioService, LeadSmsMessage } from "@/services/twilio.service";
 import API from "@/utils/api";
 import { CallView } from "./CallView";
-
-type Message = {
-  id: number;
-  from: "lead" | "user";
-  text: string;
-  timestamp: string;
-  delivered?: boolean;
-};
-
-const mockMessages: Message[] = [
-  {
-    id: 1,
-    from: "user",
-    text: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard.",
-    timestamp: "09:42 AM",
-    delivered: true,
-  },
-  {
-    id: 2,
-    from: "lead",
-    text: "Lorem Ipsum is simply dummy text of the printing and typesetting industry.",
-    timestamp: "09:45 AM",
-  },
-];
+import {
+  whatsappService,
+  WhatsAppMessage as WhatsAppChatMessage,
+} from "@/services/whatsapp.service";
+import { connectionMessagesService } from "@/services/connectionMessages.service";
 
 type LeadChatProps = {
   lead?: Lead;
@@ -77,6 +58,27 @@ const fallbackLeadInfo = {
   position: "Chief Executive Officer",
 };
 
+const normalizePhoneNumber = (raw?: string | null): string | null => {
+  if (!raw) return null;
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+
+  let formatted = trimmed.replace(/[^+\d]/g, "");
+  if (formatted.startsWith("00")) {
+    formatted = "+" + formatted.slice(2);
+  }
+
+  if (!formatted.startsWith("+")) {
+    if (/^\d{10}$/.test(formatted)) {
+      formatted = "+1" + formatted;
+    } else {
+      return null;
+    }
+  }
+
+  return /^\+[1-9]\d{7,14}$/.test(formatted) ? formatted : null;
+};
+
 const LeadChat = ({ lead }: LeadChatProps) => {
   const displayName = lead?.name || fallbackLeadInfo.name;
   const position = lead?.position || fallbackLeadInfo.position;
@@ -86,6 +88,10 @@ const LeadChat = ({ lead }: LeadChatProps) => {
   const avatarLetter = displayName?.charAt(0).toUpperCase() || "?";
   const leadEmailLower = emailAddress?.toLowerCase() || null;
   const leadId = lead?._id;
+  const normalizedLeadPhone = useMemo(
+    () => normalizePhoneNumber(phoneNumber),
+    [phoneNumber]
+  );
 
   const [emailMessages, setEmailMessages] = useState<Email[]>([]);
   const [isEmailLoading, setIsEmailLoading] = useState(false);
@@ -93,6 +99,12 @@ const LeadChat = ({ lead }: LeadChatProps) => {
   const [fetchedEmailFor, setFetchedEmailFor] = useState<string | null>(null);
   const [smsInput, setSmsInput] = useState("");
   const [smsSendError, setSmsSendError] = useState<string | null>(null);
+  const [whatsappInput, setWhatsappInput] = useState("");
+  const [whatsappSendError, setWhatsappSendError] = useState<string | null>(
+    null
+  );
+  const [isGeneratingWhatsAppMessage, setIsGeneratingWhatsAppMessage] =
+    useState(false);
   const [twilioConnection, setTwilioConnection] = useState<{
     loading: boolean;
     ready: boolean;
@@ -115,23 +127,98 @@ const LeadChat = ({ lead }: LeadChatProps) => {
     container.scrollTop = container.scrollHeight;
   };
 
+  const {
+    data: whatsappConnectionsData,
+    isLoading: isWhatsAppConnectionLoading,
+    isError: isWhatsAppConnectionError,
+    error: whatsappConnectionsError,
+  } = useQuery({
+    queryKey: ["whatsapp-connections"],
+    queryFn: whatsappService.getConnections,
+    staleTime: 120000,
+  });
+
+  const whatsappConnections = whatsappConnectionsData?.credentials || [];
+  const primaryWhatsAppConnection = whatsappConnections[0] || null;
+  const whatsappReady = whatsappConnections.length > 0;
+  const whatsappPhoneNumberId =
+    primaryWhatsAppConnection?.phoneNumberId || null;
+
+  const whatsappConnectionErrorMessage = isWhatsAppConnectionError
+    ? (whatsappConnectionsError as any)?.response?.data?.message ||
+      (whatsappConnectionsError as Error)?.message ||
+      "Failed to load WhatsApp connection."
+    : null;
+
+  const twilioReady = twilioConnection.ready;
+  const twilioStatusLoading = twilioConnection.loading;
+  const whatsappStatusLoading = isWhatsAppConnectionLoading;
+
+  const whatsappUnavailableMessage = !phoneNumber
+    ? "Add a phone number for this lead to start WhatsApp chats."
+    : whatsappConnectionErrorMessage
+    ? whatsappConnectionErrorMessage
+    : !whatsappReady
+    ? "Connect a WhatsApp number in Settings → Integrations."
+    : !normalizedLeadPhone
+    ? "Lead phone number must include the country code."
+    : null;
+
+  const whatsappInputsDisabled =
+    whatsappStatusLoading ||
+    Boolean(whatsappUnavailableMessage) ||
+    !whatsappReady ||
+    !normalizedLeadPhone ||
+    !whatsappPhoneNumberId;
+  const canGenerateWhatsAppMessage = Boolean(lead?.companyId && lead?._id);
+
   const channelTabs = useMemo(() => {
-    const hasPhone = Boolean(lead?.phone);
-    const hasEmail = Boolean(lead?.email);
-    const statusText = (available: boolean) =>
-      available ? "Connected" : "Unavailable";
+    const hasPhone = Boolean(phoneNumber);
+    const hasEmail = Boolean(emailAddress);
+
+    const whatsappStatus = !hasPhone
+      ? "Add phone"
+      : isWhatsAppConnectionLoading
+      ? "Checking..."
+      : whatsappConnectionErrorMessage
+      ? "Error"
+      : whatsappReady
+      ? "Connected"
+      : "Not connected";
+
+    const smsStatus = !hasPhone
+      ? "Add phone"
+      : twilioStatusLoading
+      ? "Checking..."
+      : twilioReady
+      ? "Connected"
+      : "Not configured";
+
+    const emailStatus = hasEmail ? "Connected" : "Unavailable";
+
+    const whatsappAvailable =
+      hasPhone && (whatsappReady || isWhatsAppConnectionLoading);
+    const smsAvailable = hasPhone && (twilioReady || twilioStatusLoading);
 
     return [
       {
         label: "WhatsApp",
-        status: statusText(hasPhone),
-        isAvailable: hasPhone,
+        status: whatsappStatus,
+        isAvailable: whatsappAvailable,
       },
-      { label: "Email", status: statusText(hasEmail), isAvailable: hasEmail },
-      { label: "SMS", status: statusText(hasPhone), isAvailable: hasPhone },
-      { label: "Call", status: statusText(hasPhone), isAvailable: hasPhone },
+      { label: "Email", status: emailStatus, isAvailable: hasEmail },
+      { label: "SMS", status: smsStatus, isAvailable: smsAvailable },
+      { label: "Call", status: smsStatus, isAvailable: smsAvailable },
     ];
-  }, [lead?.phone, lead?.email]);
+  }, [
+    emailAddress,
+    phoneNumber,
+    isWhatsAppConnectionLoading,
+    whatsappConnectionErrorMessage,
+    whatsappReady,
+    twilioReady,
+    twilioStatusLoading,
+  ]);
 
   const firstAvailableTab =
     channelTabs.find((tab) => tab.isAvailable)?.label ||
@@ -141,6 +228,7 @@ const LeadChat = ({ lead }: LeadChatProps) => {
   const [activeTab, setActiveTab] = useState<string>(firstAvailableTab);
 
   useEffect(() => {
+    if (!firstAvailableTab) return;
     setActiveTab((prev) =>
       prev === firstAvailableTab ? prev : firstAvailableTab
     );
@@ -150,6 +238,61 @@ const LeadChat = ({ lead }: LeadChatProps) => {
     setEmailMessages([]);
     setFetchedEmailFor(null);
   }, [lead?._id]);
+
+  useEffect(() => {
+    setWhatsappInput("");
+    setWhatsappSendError(null);
+  }, [lead?._id]);
+
+  const whatsappConversationQueryKey = [
+    "whatsapp-conversation",
+    leadId,
+    normalizedLeadPhone,
+    whatsappPhoneNumberId,
+  ];
+
+  const whatsappConversationEnabled =
+    activeTab === "WhatsApp" &&
+    Boolean(
+      leadId && normalizedLeadPhone && whatsappReady && whatsappPhoneNumberId
+    );
+
+  const shouldPollWhatsApp =
+    whatsappConversationEnabled && Boolean(whatsappPhoneNumberId);
+
+  const {
+    data: whatsappConversationResponse,
+    isLoading: isWhatsAppConversationLoading,
+    isFetching: isWhatsAppConversationFetching,
+    isError: isWhatsAppConversationError,
+    error: whatsappConversationError,
+    refetch: refetchWhatsAppConversation,
+  } = useQuery({
+    queryKey: whatsappConversationQueryKey,
+    queryFn: () =>
+      whatsappService.getConversation({
+        contact: normalizedLeadPhone as string,
+        phoneNumberId: whatsappPhoneNumberId || undefined,
+        limit: 100,
+      }),
+    enabled: whatsappConversationEnabled,
+    refetchOnWindowFocus: shouldPollWhatsApp,
+    refetchInterval: shouldPollWhatsApp ? 5000 : false,
+    refetchIntervalInBackground: true,
+  });
+
+  const whatsappMessages =
+    (whatsappConversationResponse?.data as WhatsAppChatMessage[]) || [];
+
+  const isWhatsAppMessagesLoading =
+    isWhatsAppConversationLoading ||
+    (isWhatsAppConversationFetching && !whatsappConversationResponse);
+
+  const whatsappConversationErrorMessage = isWhatsAppConversationError
+    ? (whatsappConversationError as any)?.response?.data?.message ||
+      (whatsappConversationError as Error)?.message ||
+      "Failed to load WhatsApp conversation."
+    : null;
 
   useEffect(() => {
     let isMounted = true;
@@ -270,9 +413,6 @@ const LeadChat = ({ lead }: LeadChatProps) => {
     };
   }, [activeTab, leadEmailLower, fetchedEmailFor]);
 
-  const twilioReady = twilioConnection.ready;
-  const twilioStatusLoading = twilioConnection.loading;
-
   const {
     data: leadSmsResponse,
     isLoading: isSmsInitialLoading,
@@ -308,6 +448,12 @@ const LeadChat = ({ lead }: LeadChatProps) => {
     }
   }, [smsUnavailableMessage, smsSendError]);
 
+  useEffect(() => {
+    if (!whatsappUnavailableMessage && whatsappSendError) {
+      setWhatsappSendError(null);
+    }
+  }, [whatsappUnavailableMessage, whatsappSendError]);
+
   const orderedSmsMessages = useMemo(() => {
     return [...smsMessages].sort(
       (a, b) =>
@@ -318,8 +464,16 @@ const LeadChat = ({ lead }: LeadChatProps) => {
   useEffect(() => {
     if (activeTab === "WhatsApp") {
       scrollToBottom(whatsappScrollRef);
+      if (whatsappConversationEnabled) {
+        refetchWhatsAppConversation();
+      }
     }
-  }, [activeTab]);
+  }, [
+    activeTab,
+    whatsappMessages,
+    whatsappConversationEnabled,
+    refetchWhatsAppConversation,
+  ]);
 
   useEffect(() => {
     if (activeTab === "Email") {
@@ -358,6 +512,30 @@ const LeadChat = ({ lead }: LeadChatProps) => {
     },
   });
 
+  const whatsappMutation = useMutation({
+    mutationFn: (payload: { body: string }) =>
+      whatsappService.sendTextMessage({
+        phoneNumberId: whatsappPhoneNumberId as string,
+        to: normalizedLeadPhone as string,
+        body: payload.body,
+      }),
+    onSuccess: () => {
+      setWhatsappInput("");
+      setWhatsappSendError(null);
+      queryClient.invalidateQueries({
+        queryKey: whatsappConversationQueryKey,
+      });
+    },
+    onError: (mutationError: any) => {
+      const fallbackMessage =
+        mutationError?.response?.data?.message ||
+        mutationError?.response?.data?.error ||
+        mutationError?.message ||
+        "Failed to send WhatsApp message";
+      setWhatsappSendError(fallbackMessage);
+    },
+  });
+
   const handleSendSms = () => {
     if (
       !leadId ||
@@ -371,6 +549,82 @@ const LeadChat = ({ lead }: LeadChatProps) => {
       return;
     }
     smsMutation.mutate({ body: smsInput.trim() });
+  };
+
+  const handleSendWhatsappMessage = () => {
+    if (
+      !leadId ||
+      !normalizedLeadPhone ||
+      !whatsappPhoneNumberId ||
+      !whatsappInput.trim() ||
+      whatsappMutation.isPending ||
+      whatsappInputsDisabled
+    ) {
+      if (whatsappInputsDisabled && whatsappUnavailableMessage) {
+        setWhatsappSendError(whatsappUnavailableMessage);
+      }
+      return;
+    }
+
+    whatsappMutation.mutate({ body: whatsappInput.trim() });
+  };
+
+  const handleGenerateWhatsAppMessage = async () => {
+    if (!lead?.companyId || !lead?._id) {
+      setWhatsappSendError(
+        "Lead information is incomplete for generating suggestions."
+      );
+      return;
+    }
+
+    setIsGeneratingWhatsAppMessage(true);
+    setWhatsappSendError(null);
+    try {
+      const response =
+        await connectionMessagesService.generateConnectionMessage({
+          companyId: lead.companyId,
+          personId: lead._id,
+          tone: "friendly",
+        });
+      const generated =
+        response.data?.connectionMessage?.trim() ||
+        response.data?.connectionMessage;
+
+      if (generated) {
+        setWhatsappInput((prev) =>
+          prev ? `${prev}\n\n${generated}` : generated
+        );
+      } else {
+        setWhatsappSendError("No message suggestion was generated. Try again.");
+      }
+    } catch (error: any) {
+      const friendlyMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to generate a connection message.";
+      setWhatsappSendError(friendlyMessage);
+    } finally {
+      setIsGeneratingWhatsAppMessage(false);
+    }
+  };
+
+  const getWhatsAppMessageText = (message: WhatsAppChatMessage) => {
+    if (message.textBody) {
+      return message.textBody;
+    }
+    if (message.templateName) {
+      return `Template: ${message.templateName}`;
+    }
+    if (message.mediaType) {
+      return `${message.mediaType} attachment`;
+    }
+    if (message.interactive) {
+      return "Interactive message";
+    }
+    if (message.errorMessage) {
+      return `Error: ${message.errorMessage}`;
+    }
+    return "";
   };
 
   const getEmailBodyText = (email: Email) => {
@@ -492,88 +746,182 @@ const LeadChat = ({ lead }: LeadChatProps) => {
       {/* Content */}
       <div className="flex flex-col w-full">
         {activeTab === "WhatsApp" ? (
-          <>
-            <div
-              ref={whatsappScrollRef}
-              className="flex flex-col overflow-y-auto scrollbar-hide mb-6 h-[calc(100vh-350px)] lg:h-[calc(100vh-550px)]"
-            >
-              <div className="flex flex-col gap-4">
-                {mockMessages.map((message, index) => (
-                  <div
-                    key={`${message.id}-${index}`}
-                    className={`flex w-full items-start gap-3 ${
-                      message.from === "user" ? "justify-end" : "justify-start"
-                    }`}
-                  >
-                    {message.from === "lead" && (
-                      <div className="h-10 w-10 flex-shrink-0">
-                        {avatarSrc ? (
-                          <img
-                            src={avatarSrc}
-                            alt={`${displayName} avatar`}
-                            className="h-full w-full rounded-full object-cover"
-                          />
-                        ) : (
-                          <span className="flex h-full w-full items-center justify-center rounded-full bg-[#3d4f51] text-white text-2xl">
-                            {avatarLetter}
-                          </span>
-                        )}
-                      </div>
-                    )}
+          <div className="flex flex-1 flex-col">
+            {whatsappStatusLoading ? (
+              <div className="flex flex-1 flex-col items-center justify-center gap-3 py-20 text-white/70">
+                <Loader2 className="h-6 w-6 animate-spin text-white" />
+                <p>Checking WhatsApp connection...</p>
+              </div>
+            ) : whatsappUnavailableMessage ? (
+              <div className="flex w-full flex-1 items-center justify-center py-20 text-center text-white/70">
+                {whatsappUnavailableMessage}
+              </div>
+            ) : isWhatsAppMessagesLoading ? (
+              <div className="flex flex-1 flex-col items-center justify-center gap-3 py-20 text-white/70">
+                <Loader2 className="h-6 w-6 animate-spin text-white" />
+                <p>Loading WhatsApp conversation...</p>
+              </div>
+            ) : whatsappConversationErrorMessage ? (
+              <div className="flex w-full flex-1 items-center justify-center py-20 text-center text-red-300">
+                {whatsappConversationErrorMessage}
+              </div>
+            ) : whatsappMessages.length === 0 ? (
+              <div className="flex w-full flex-1 items-center justify-center py-20 text-center text-white/70">
+                No WhatsApp conversation with this lead yet.
+              </div>
+            ) : (
+              <div
+                ref={whatsappScrollRef}
+                className="flex flex-col overflow-y-auto scrollbar-hide mb-6 gap-4 h-[calc(100vh-350px)] lg:h-[calc(100vh-550px)]"
+              >
+                {whatsappMessages.map((message) => {
+                  const isOutbound = message.direction === "outbound";
+                  const statusDisplay = isOutbound
+                    ? getSmsStatusDisplay(message.messageStatus)
+                    : null;
+                  const renderedText = getWhatsAppMessageText(message);
+                  const timestamp =
+                    message.sentAt ||
+                    message.createdAt ||
+                    new Date().toISOString();
+
+                  return (
                     <div
-                      className={`flex max-w-[75%] sm:max-w-[65%] ${
-                        message.from === "user"
-                          ? "flex-row-reverse items-end"
-                          : "flex-row items-start"
-                      } gap-3`}
+                      key={message._id || message.messageId || timestamp}
+                      className={`flex w-full gap-3 ${
+                        isOutbound ? "justify-end" : "justify-start"
+                      }`}
                     >
-                      <div
-                        className={`rounded-2xl px-4 py-3 ${
-                          message.from === "user"
-                            ? "bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] text-white"
-                            : "bg-white/10 text-white/90"
-                        }`}
-                        style={
-                          message.from === "user"
-                            ? {
-                                background:
-                                  "linear-gradient(135deg, #3E65B4 0%, #68B3B7 100%)",
-                              }
-                            : {}
-                        }
-                      >
-                        <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                          {message.text}
-                        </p>
-                      </div>
-                      {message.from === "user" && (
-                        <div className="flex-shrink-0">
-                          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] flex items-center justify-center text-white font-semibold text-xs">
-                            E
-                          </div>
+                      {!isOutbound && (
+                        <div className="h-10 w-10 flex-shrink-0">
+                          {avatarSrc ? (
+                            <img
+                              src={avatarSrc}
+                              alt={`${displayName} avatar`}
+                              className="h-full w-full rounded-full object-cover"
+                            />
+                          ) : (
+                            <span className="flex h-full w-full items-center justify-center rounded-full bg-[#3d4f51] text-white text-2xl">
+                              {avatarLetter}
+                            </span>
+                          )}
                         </div>
                       )}
+                      <div
+                        className={`flex max-w-[80%] sm:max-w-[65%] flex-col gap-2 ${
+                          isOutbound ? "items-end" : "items-start"
+                        }`}
+                      >
+                        <div
+                          className={`w-full rounded-2xl px-4 py-3 ${
+                            isOutbound
+                              ? "bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] text-white"
+                              : "bg-white/10 text-white/90"
+                          }`}
+                          style={
+                            isOutbound
+                              ? {
+                                  background:
+                                    "linear-gradient(135deg, #3E65B4 0%, #68B3B7 100%)",
+                                }
+                              : {}
+                          }
+                        >
+                          <div className="flex items-center justify-between gap-4 text-xs text-white/70">
+                            <span className="font-semibold text-white">
+                              {isOutbound ? "You" : displayName}
+                            </span>
+                            <span className="text-white/60">
+                              {formatEmailTimestamp(timestamp)}
+                            </span>
+                          </div>
+                          {renderedText && (
+                            <p className="text-sm mt-2 whitespace-pre-wrap leading-relaxed">
+                              {renderedText}
+                            </p>
+                          )}
+                          {message.mediaUrl && (
+                            <a
+                              href={message.mediaUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="mt-2 inline-flex text-xs underline text-white/80"
+                            >
+                              View {message.mediaType || "media"}
+                            </a>
+                          )}
+                          {statusDisplay && (
+                            <span
+                              className={`mt-2 text-[11px] font-medium tracking-wide ${statusDisplay.className}`}
+                            >
+                              {statusDisplay.label}
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
-            </div>
+            )}
 
-            {/* Message Input */}
             <div className="flex items-center gap-3 rounded-full bg-white/10 px-4 py-3">
-              <button className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors">
-                <Plus size={14} className="text-white" />
+              <button
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                onClick={handleGenerateWhatsAppMessage}
+                disabled={
+                  isGeneratingWhatsAppMessage || !canGenerateWhatsAppMessage
+                }
+                title={
+                  !canGenerateWhatsAppMessage
+                    ? "Lead information is required to generate suggestions"
+                    : undefined
+                }
+              >
+                {isGeneratingWhatsAppMessage ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-white" />
+                ) : (
+                  <Plus size={14} className="text-white" />
+                )}
               </button>
               <input
                 type="text"
-                className="flex-1 bg-transparent outline-none border-none text-sm text-white placeholder:text-white/50"
-                placeholder="Type Message"
+                value={whatsappInput}
+                onChange={(event) => setWhatsappInput(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" && !event.shiftKey) {
+                    event.preventDefault();
+                    handleSendWhatsappMessage();
+                  }
+                }}
+                disabled={whatsappInputsDisabled}
+                className="flex-1 bg-transparent outline-none border-none text-sm text-white placeholder:text-white/50 disabled:opacity-50"
+                placeholder={
+                  whatsappUnavailableMessage
+                    ? whatsappUnavailableMessage
+                    : "Type WhatsApp message"
+                }
               />
-              <button className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] hover:opacity-90 transition-opacity">
-                <Send size={14} className="text-white" />
+              <button
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+                onClick={handleSendWhatsappMessage}
+                disabled={
+                  whatsappInputsDisabled ||
+                  !whatsappInput.trim() ||
+                  whatsappMutation.isPending
+                }
+              >
+                {whatsappMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-white" />
+                ) : (
+                  <Send size={14} className="text-white" />
+                )}
               </button>
             </div>
-          </>
+            {whatsappSendError && (
+              <p className="mt-2 text-xs text-red-300">{whatsappSendError}</p>
+            )}
+          </div>
         ) : activeTab === "Email" ? (
           <div className="flex flex-1 flex-col">
             {!emailAddress ? (
