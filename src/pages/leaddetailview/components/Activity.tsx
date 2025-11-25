@@ -200,6 +200,37 @@ const Activity: FC<ActivityProps> = ({ lead }) => {
     return formatDistanceToNow(date, { addSuffix: true });
   };
 
+  const getDisplayTime = (scheduledFor?: string) => {
+    if (!scheduledFor) {
+      return "";
+    }
+    const scheduledDate = new Date(scheduledFor);
+    if (Number.isNaN(scheduledDate.getTime())) {
+      return scheduledFor;
+    }
+    
+    const now = new Date();
+    
+    // If the scheduled time is in the past, calculate tomorrow's time
+    if (scheduledDate.getTime() < now.getTime()) {
+      // Get the time portion (hours, minutes, seconds, milliseconds) from scheduled date
+      const hours = scheduledDate.getHours();
+      const minutes = scheduledDate.getMinutes();
+      const seconds = scheduledDate.getSeconds();
+      const milliseconds = scheduledDate.getMilliseconds();
+      
+      // Create tomorrow's date with the same time
+      const tomorrow = new Date(now);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(hours, minutes, seconds, milliseconds);
+      
+      return formatRelativeTime(tomorrow.toISOString());
+    }
+    
+    // If the scheduled time is in the future, use it as is
+    return formatRelativeTime(scheduledFor);
+  };
+
   const getPlanStatusBadgeClass = (status: string) => {
     switch (status) {
       case "completed":
@@ -727,7 +758,7 @@ const Activity: FC<ActivityProps> = ({ lead }) => {
                             <span>
                               Next up: {nextTask.type.replace("_", " ")}{" "}
                               {nextTask.scheduledFor
-                                ? `on ${formatRelativeTime(nextTask.scheduledFor)}`
+                                ? `on ${getDisplayTime(nextTask.scheduledFor)}`
                                 : ""}
                             </span>
                           )}
