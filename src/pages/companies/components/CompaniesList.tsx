@@ -163,14 +163,11 @@ const CompaniesList: FC<CompaniesListProps> = ({
     return (
       <Card
         key={company._id}
-        className={`relative flex flex-col gap-4 sm:gap-6 md:flex-row md:items-center md:justify-between overflow-hidden border mb-4 rounded-[20px] sm:rounded-[30px] px-4 sm:px-7 py-4 sm:py-6 transition-all duration-300 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] before:absolute before:content-[''] before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[55%] before:w-0 md:before:w-[3px] lg:before:w-[5px] before:rounded-full backdrop-blur-[22.6px] ${
+        className={`relative flex flex-col gap-4 sm:gap-6 md:flex-row md:items-center md:justify-between overflow-hidden border-0 mb-4 rounded-[20px] sm:rounded-[30px] px-4 sm:px-7 py-4 sm:py-6 transition-all duration-300 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] before:absolute before:content-[''] before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[55%] before:w-0 md:before:w-[3px] lg:before:w-[5px] before:rounded-full backdrop-blur-[22.6px] ${
           isActive ? "md:before:bg-primary" : "md:before:bg-white/75"
         }`}
         style={{
           background: `linear-gradient(180deg, rgba(104, 177, 184, 0.1) 0%, rgba(104, 177, 184, 0.08) 100%), radial-gradient(50% 100% at 50% 0%, rgba(104, 177, 184, 0.1) 0%, rgba(104, 177, 184, 0) 100%)`,
-          border: "0.94px solid",
-          borderImageSource: `linear-gradient(135.28deg, rgba(255, 255, 255, 0.3) -128.53%, rgba(255, 255, 255, 0) 75.12%), linear-gradient(174.85deg, rgba(255, 255, 255, 0.1) 0.61%, rgba(255, 255, 255, 0) 18.03%)`,
-          borderImageSlice: 1,
         }}
       >
         <div className="flex-1">
