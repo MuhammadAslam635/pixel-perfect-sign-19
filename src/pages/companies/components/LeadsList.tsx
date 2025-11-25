@@ -265,14 +265,11 @@ const LeadsList: FC<LeadsListProps> = ({
     return (
       <Card
         key={lead._id}
-        className={`relative flex flex-col md:flex-row items-start md:items-center justify-between gap-4 sm:gap-6 border rounded-[20px] sm:rounded-[26px] px-4 sm:px-6 md:px-8 py-3 sm:py-4 pl-4 sm:pl-6 transition-all duration-300 hover:shadow-[0_18px_40px_rgba(0,0,0,0.3)] before:absolute before:content-[''] before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[60%] before:w-[3px] sm:before:w-[5px] before:rounded-full backdrop-blur-[22.6px] ${
+        className={`relative flex flex-col md:flex-row items-start md:items-center justify-between gap-4 sm:gap-6 border-0 rounded-[20px] sm:rounded-[26px] px-4 sm:px-6 md:px-8 py-3 sm:py-4 pl-4 sm:pl-6 transition-all duration-300 hover:shadow-[0_18px_40px_rgba(0,0,0,0.3)] before:absolute before:content-[''] before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[60%] before:w-[3px] sm:before:w-[5px] before:rounded-full backdrop-blur-[22.6px] ${
           isActive ? "before:bg-primary" : "before:bg-white/75"
         }`}
         style={{
           background: `linear-gradient(180deg, rgba(104, 177, 184, 0.1) 0%, rgba(104, 177, 184, 0.08) 100%), radial-gradient(50% 100% at 50% 0%, rgba(104, 177, 184, 0.1) 0%, rgba(104, 177, 184, 0) 100%)`,
-          border: "0.94px solid",
-          borderImageSource: `linear-gradient(135.28deg, rgba(255, 255, 255, 0.3) -128.53%, rgba(255, 255, 255, 0) 75.12%), linear-gradient(174.85deg, rgba(255, 255, 255, 0.1) 0.61%, rgba(255, 255, 255, 0) 18.03%)`,
-          borderImageSlice: 1,
         }}
       >
         <div className="flex-1 w-full md:w-auto">

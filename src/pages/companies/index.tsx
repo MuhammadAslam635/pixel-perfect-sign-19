@@ -694,18 +694,24 @@ const index = () => {
                 {activeTab === "companies" ? (
                   <>
                     {/* Search Input */}
-                    <div className="relative w-full sm:w-auto sm:min-w-[160px] sm:flex-1 lg:flex-none lg:min-w-[160px]">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none z-10" />
-                      <Input
-                        type="text"
-                        placeholder="Search..."
-                        value={companiesSearch}
-                        onChange={(e) => setCompaniesSearch(e.target.value)}
-                        className="h-9 pl-10 pr-12 sm:pr-4 rounded-lg sm:!rounded-full border border-gray-600 sm:border-0 text-white placeholder:text-gray-500 text-xs w-full bg-gray-800/50 sm:bg-[#FFFFFF1A] mobile-search-input"
-                        style={{
-                          boxShadow: "none",
-                        }}
-                      />
+                    <div className="relative w-full  sm:w-auto sm:min-w-[160px] sm:flex-1 lg:flex-none lg:min-w-[160px]">
+                      <div className="w-[85%]">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white pointer-events-none z-10" />
+                        <Input
+                          type="text"
+                          placeholder="Search..."
+                          value={companiesSearch}
+                          onChange={(e) => setCompaniesSearch(e.target.value)}
+                          className="
+    h-9 pl-10 pr-12 sm:pr-4 rounded-lg sm:!rounded-full 
+    border sm:border-0 text-white 
+    placeholder:text-gray-500 text-xs w-full 
+    bg-[linear-gradient(173.83deg,rgba(255,255,255,0.08)_4.82%,rgba(255,255,255,0.00002)_38.08%,rgba(255,255,255,0.00002)_56.68%,rgba(255,255,255,0.02)_95.1%)]
+    mobile-search-input
+  "
+                          style={{ boxShadow: "none" }}
+                        />
+                      </div>
                       {/* Filter Icon - Mobile Only */}
                       <div className="absolute right-3 top-1/2 -translate-y-1/2 sm:hidden pointer-events-none z-10">
                         <svg
