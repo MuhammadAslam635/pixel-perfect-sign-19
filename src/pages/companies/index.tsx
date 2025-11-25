@@ -665,7 +665,7 @@ const index = () => {
               <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-12 lg:h-12 flex items-center justify-center flex-shrink-0">
                 <CompaniesIcon className="w-full h-full" />
               </div>
-              <h2 className="text-xl sm:text-2xl font-normal text-white">
+              <h2 className="text-lg sm:text-lg font-normal text-white">
                 {activeTab === "companies" ? "Companies" : "Leads"}
               </h2>
               {activeTab === "companies" && (
@@ -703,11 +703,14 @@ const index = () => {
                           value={companiesSearch}
                           onChange={(e) => setCompaniesSearch(e.target.value)}
                           className="
-    h-9 pl-10 pr-12 sm:pr-4 rounded-lg sm:!rounded-full 
-    border sm:border-0 text-white 
-    placeholder:text-gray-500 text-xs w-full 
-    bg-[linear-gradient(173.83deg,rgba(255,255,255,0.08)_4.82%,rgba(255,255,255,0.00002)_38.08%,rgba(255,255,255,0.00002)_56.68%,rgba(255,255,255,0.02)_95.1%)]
-    mobile-search-input
+                                        px-4 from-[#1a1a1a] to-[#2a2a2a]
+                                        border border-white sm:border-0 text-white
+                                        placeholder:text-white text-xs w-full relative z-10
+                                        h-9 pl-10 pr-12 sm:pr-4 rounded-lg sm:!rounded-full
+                                        focus:outline-none focus:ring-[2px] focus:ring-transparent
+                                        shadow-[inset_0_0_10px_rgba(0,0,0,0.4)]
+                                        bg-[linear-gradient(173.83deg,rgba(255,255,255,0.08)_4.82%,rgba(255,255,255,0.00002)_38.08%,rgba(255,255,255,0.00002)_56.68%,rgba(255,255,255,0.02)_95.1%)]
+                                        mobile-search-input
   "
                           style={{ boxShadow: "none" }}
                         />
