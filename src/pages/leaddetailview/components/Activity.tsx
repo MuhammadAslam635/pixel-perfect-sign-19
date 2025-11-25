@@ -756,9 +756,9 @@ const Activity: FC<ActivityProps> = ({ lead }) => {
                           </span>
                           {nextTask && (
                             <span>
-                              Next up: {nextTask.type.replace("_", " ")}{" "}
+                              Next up: {nextTask.type.replace("_", " ")}
                               {nextTask.scheduledFor
-                                ? `on ${getDisplayTime(nextTask.scheduledFor)}`
+                                ? ` ${getDisplayTime(nextTask.scheduledFor)}`
                                 : ""}
                             </span>
                           )}
