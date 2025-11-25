@@ -145,6 +145,17 @@ class WhatsAppService {
     });
     return response.data;
   }
+
+  async markMessagesRead(payload: {
+    phoneNumberId: string;
+    messageIds: string[];
+  }): Promise<{
+    success: boolean;
+    data: Array<{ messageId: string; status: string }>;
+  }> {
+    const response = await API.post("/whatsapp/messages/mark-read", payload);
+    return response.data;
+  }
 }
 
 export const whatsappService = new WhatsAppService();

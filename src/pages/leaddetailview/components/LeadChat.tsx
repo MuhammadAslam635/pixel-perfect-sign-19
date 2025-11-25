@@ -120,6 +120,7 @@ const LeadChat = ({ lead }: LeadChatProps) => {
   const whatsappScrollRef = useRef<HTMLDivElement | null>(null);
   const emailScrollRef = useRef<HTMLDivElement | null>(null);
   const smsScrollRef = useRef<HTMLDivElement | null>(null);
+  const markedReadCacheRef = useRef<Set<string>>(new Set());
 
   const scrollToBottom = (ref: RefObject<HTMLDivElement>) => {
     const container = ref.current;
@@ -283,6 +284,18 @@ const LeadChat = ({ lead }: LeadChatProps) => {
 
   const whatsappMessages =
     (whatsappConversationResponse?.data as WhatsAppChatMessage[]) || [];
+
+  const unreadInboundMessageIds = useMemo(() => {
+    if (!whatsappConversationEnabled) return [];
+    return whatsappMessages
+      .filter(
+        (message) =>
+          message.direction === "inbound" &&
+          message.messageStatus !== "read" &&
+          Boolean(message.messageId)
+      )
+      .map((message) => message.messageId as string);
+  }, [whatsappMessages, whatsappConversationEnabled]);
 
   const isWhatsAppMessagesLoading =
     isWhatsAppConversationLoading ||
@@ -462,20 +475,6 @@ const LeadChat = ({ lead }: LeadChatProps) => {
   }, [smsMessages]);
 
   useEffect(() => {
-    if (activeTab === "WhatsApp") {
-      scrollToBottom(whatsappScrollRef);
-      if (whatsappConversationEnabled) {
-        refetchWhatsAppConversation();
-      }
-    }
-  }, [
-    activeTab,
-    whatsappMessages,
-    whatsappConversationEnabled,
-    refetchWhatsAppConversation,
-  ]);
-
-  useEffect(() => {
     if (activeTab === "Email") {
       scrollToBottom(emailScrollRef);
     }
@@ -535,6 +534,62 @@ const LeadChat = ({ lead }: LeadChatProps) => {
       setWhatsappSendError(fallbackMessage);
     },
   });
+
+  const markReadMutation = useMutation({
+    mutationFn: (messageIds: string[]) =>
+      whatsappService.markMessagesRead({
+        phoneNumberId: whatsappPhoneNumberId as string,
+        messageIds,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: whatsappConversationQueryKey,
+      });
+    },
+    onError: (_error, messageIds) => {
+      messageIds.forEach((id) => markedReadCacheRef.current.delete(id));
+    },
+  });
+
+  useEffect(() => {
+    if (activeTab === "WhatsApp") {
+      scrollToBottom(whatsappScrollRef);
+      if (whatsappConversationEnabled) {
+        refetchWhatsAppConversation();
+      }
+    }
+  }, [
+    activeTab,
+    whatsappMessages,
+    whatsappConversationEnabled,
+    refetchWhatsAppConversation,
+  ]);
+
+  useEffect(() => {
+    if (
+      !whatsappConversationEnabled ||
+      !whatsappPhoneNumberId ||
+      unreadInboundMessageIds.length === 0
+    ) {
+      return;
+    }
+
+    const pending = unreadInboundMessageIds.filter(
+      (id) => !markedReadCacheRef.current.has(id)
+    );
+
+    if (!pending.length) {
+      return;
+    }
+
+    pending.forEach((id) => markedReadCacheRef.current.add(id));
+    markReadMutation.mutate(pending);
+  }, [
+    unreadInboundMessageIds,
+    whatsappConversationEnabled,
+    whatsappPhoneNumberId,
+    markReadMutation,
+  ]);
 
   const handleSendSms = () => {
     if (
