@@ -46,15 +46,23 @@ export const EmailComposer = ({
   const [showCc, setShowCc] = useState(false);
   const [showBcc, setShowBcc] = useState(false);
 
-  const addRecipient = (email: string, list: string[], setList: (list: string[]) => void) => {
+  const addRecipient = (
+    email: string,
+    list: string[],
+    setList: (list: string[]) => void
+  ) => {
     const trimmed = email.trim();
     if (trimmed && !list.includes(trimmed)) {
       setList([...list, trimmed]);
     }
   };
 
-  const removeRecipient = (email: string, list: string[], setList: (list: string[]) => void) => {
-    setList(list.filter(e => e !== email));
+  const removeRecipient = (
+    email: string,
+    list: string[],
+    setList: (list: string[]) => void
+  ) => {
+    setList(list.filter((e) => e !== email));
   };
 
   const handleSend = () => {
@@ -68,22 +76,32 @@ export const EmailComposer = ({
       bcc: bcc.length > 0 ? bcc : undefined,
       subject: subject.trim(),
       text: body.trim() || undefined,
-      html: body.trim() ? `<p>${body.trim().replace(/\n/g, '<br>')}</p>` : undefined,
+      html: body.trim()
+        ? `<p>${body.trim().replace(/\n/g, "<br>")}</p>`
+        : undefined,
       threadId,
     });
   };
 
   return (
-    <Card className="h-full flex flex-col">
-      <CardHeader className="border-b">
-        <CardTitle>{threadId ? "Reply" : "Compose Email"}</CardTitle>
+    <Card className="h-full flex flex-col max-h-full overflow-hidden">
+      <CardHeader className="border-b py-3">
+        <CardTitle className="text-lg">
+          {threadId ? "Reply" : "Compose Email"}
+        </CardTitle>
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col gap-4 p-6">
-        <div className="space-y-2">
-          <Label htmlFor="to">To</Label>
+      <CardContent className="flex-1 flex flex-col gap-2 p-3 overflow-y-auto">
+        <div className="space-y-1">
+          <Label htmlFor="to" className="text-sm">
+            To
+          </Label>
           <div className="flex flex-wrap gap-2 items-center">
             {to.map((email) => (
-              <Badge key={email} variant="secondary" className="flex items-center gap-1">
+              <Badge
+                key={email}
+                variant="secondary"
+                className="flex items-center gap-1"
+              >
                 {email}
                 <button
                   onClick={() => removeRecipient(email, to, setTo)}
@@ -118,11 +136,17 @@ export const EmailComposer = ({
         </div>
 
         {showCc && (
-          <div className="space-y-2">
-            <Label htmlFor="cc">CC</Label>
+          <div className="space-y-1">
+            <Label htmlFor="cc" className="text-sm">
+              CC
+            </Label>
             <div className="flex flex-wrap gap-2 items-center">
               {cc.map((email) => (
-                <Badge key={email} variant="secondary" className="flex items-center gap-1">
+                <Badge
+                  key={email}
+                  variant="secondary"
+                  className="flex items-center gap-1"
+                >
                   {email}
                   <button
                     onClick={() => removeRecipient(email, cc, setCc)}
@@ -158,11 +182,17 @@ export const EmailComposer = ({
         )}
 
         {showBcc && (
-          <div className="space-y-2">
-            <Label htmlFor="bcc">BCC</Label>
+          <div className="space-y-1">
+            <Label htmlFor="bcc" className="text-sm">
+              BCC
+            </Label>
             <div className="flex flex-wrap gap-2 items-center">
               {bcc.map((email) => (
-                <Badge key={email} variant="secondary" className="flex items-center gap-1">
+                <Badge
+                  key={email}
+                  variant="secondary"
+                  className="flex items-center gap-1"
+                >
                   {email}
                   <button
                     onClick={() => removeRecipient(email, bcc, setBcc)}
@@ -199,29 +229,23 @@ export const EmailComposer = ({
 
         <div className="flex items-center gap-2">
           {!showCc && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowCc(true)}
-            >
+            <Button variant="ghost" size="sm" onClick={() => setShowCc(true)}>
               <Plus className="h-4 w-4 mr-1" />
               CC
             </Button>
           )}
           {!showBcc && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowBcc(true)}
-            >
+            <Button variant="ghost" size="sm" onClick={() => setShowBcc(true)}>
               <Plus className="h-4 w-4 mr-1" />
               BCC
             </Button>
           )}
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="subject">Subject</Label>
+        <div className="space-y-1">
+          <Label htmlFor="subject" className="text-sm">
+            Subject
+          </Label>
           <Input
             id="subject"
             placeholder="Email subject"
@@ -230,18 +254,20 @@ export const EmailComposer = ({
           />
         </div>
 
-        <div className="space-y-2 flex-1 flex flex-col">
-          <Label htmlFor="body">Message</Label>
+        <div className="space-y-1 flex flex-col">
+          <Label htmlFor="body" className="text-sm">
+            Message
+          </Label>
           <Textarea
             id="body"
             placeholder="Write your message here..."
             value={body}
             onChange={(e) => setBody(e.target.value)}
-            className="flex-1 min-h-[200px] resize-none"
+            className="min-h-[100px] max-h-[200px] resize-none"
           />
         </div>
 
-        <div className="flex items-center justify-between pt-4 border-t">
+        <div className="flex items-center justify-between pt-2 border-t mt-2">
           <Button variant="outline" onClick={onCancel} disabled={isLoading}>
             Cancel
           </Button>
@@ -257,4 +283,3 @@ export const EmailComposer = ({
     </Card>
   );
 };
-

@@ -33,7 +33,9 @@ const ComposePage = () => {
     onError: (error: any) => {
       toast({
         title: "Failed to send email",
-        description: error.response?.data?.message || "An error occurred while sending the email.",
+        description:
+          error.response?.data?.message ||
+          "An error occurred while sending the email.",
         variant: "destructive",
       });
     },
@@ -63,7 +65,11 @@ const ComposePage = () => {
           <div className="flex-1 min-h-0">
             <EmailComposer
               initialTo={initialTo}
-              initialSubject={initialSubject.startsWith("Re:") ? initialSubject : `Re: ${initialSubject}`}
+              initialSubject={
+                initialSubject.startsWith("Re:")
+                  ? initialSubject
+                  : `Re: ${initialSubject}`
+              }
               threadId={threadId}
               onSend={handleSend}
               onCancel={handleCancel}
@@ -77,4 +83,3 @@ const ComposePage = () => {
 };
 
 export default ComposePage;
-
