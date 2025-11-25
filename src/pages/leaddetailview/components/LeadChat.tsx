@@ -1,6 +1,13 @@
 import { RefObject, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Plus, Send } from "lucide-react";
+import {
+  ChevronDown,
+  Loader2,
+  MoreVertical,
+  Plus,
+  Send,
+  Trash2,
+} from "lucide-react";
 import { Lead } from "@/services/leads.service";
 import { emailService } from "@/services/email.service";
 import { Email } from "@/types/email.types";
@@ -105,6 +112,9 @@ const LeadChat = ({ lead }: LeadChatProps) => {
   );
   const [isGeneratingWhatsAppMessage, setIsGeneratingWhatsAppMessage] =
     useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [messageToDelete, setMessageToDelete] = useState<string | null>(null);
+  const [openMessageMenu, setOpenMessageMenu] = useState<string | null>(null);
   const [twilioConnection, setTwilioConnection] = useState<{
     loading: boolean;
     ready: boolean;
@@ -551,6 +561,46 @@ const LeadChat = ({ lead }: LeadChatProps) => {
     },
   });
 
+  const deleteConversationMutation = useMutation({
+    mutationFn: () =>
+      whatsappService.deleteConversation({
+        contact: normalizedLeadPhone as string,
+        phoneNumberId: whatsappPhoneNumberId || undefined,
+      }),
+    onSuccess: () => {
+      markedReadCacheRef.current.clear();
+      setShowDeleteConfirm(false);
+      queryClient.invalidateQueries({
+        queryKey: whatsappConversationQueryKey,
+      });
+    },
+    onError: (mutationError: any) => {
+      setWhatsappSendError(
+        mutationError?.response?.data?.message ||
+          mutationError?.message ||
+          "Failed to clear WhatsApp conversation"
+      );
+    },
+  });
+
+  const deleteMessageMutation = useMutation({
+    mutationFn: (messageId: string) => whatsappService.deleteMessage(messageId),
+    onSuccess: () => {
+      setMessageToDelete(null);
+      queryClient.invalidateQueries({
+        queryKey: whatsappConversationQueryKey,
+      });
+    },
+    onError: (mutationError: any) => {
+      setWhatsappSendError(
+        mutationError?.response?.data?.message ||
+          mutationError?.message ||
+          "Failed to delete message"
+      );
+      setMessageToDelete(null);
+    },
+  });
+
   useEffect(() => {
     if (activeTab === "WhatsApp") {
       scrollToBottom(whatsappScrollRef);
@@ -564,6 +614,27 @@ const LeadChat = ({ lead }: LeadChatProps) => {
     whatsappConversationEnabled,
     refetchWhatsAppConversation,
   ]);
+
+  useEffect(() => {
+    if (activeTab !== "WhatsApp" || !whatsappConversationEnabled) {
+      setShowDeleteConfirm(false);
+      setOpenMessageMenu(null);
+    }
+  }, [activeTab, whatsappConversationEnabled]);
+
+  useEffect(() => {
+    if (!openMessageMenu) return;
+    const handleClickOutside = () => {
+      setOpenMessageMenu(null);
+    };
+    const timer = setTimeout(() => {
+      document.addEventListener("click", handleClickOutside);
+    }, 0);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, [openMessageMenu]);
 
   useEffect(() => {
     if (
@@ -661,6 +732,50 @@ const LeadChat = ({ lead }: LeadChatProps) => {
     } finally {
       setIsGeneratingWhatsAppMessage(false);
     }
+  };
+
+  const handleDeleteWhatsAppConversation = () => {
+    if (
+      deleteConversationMutation.isPending ||
+      !whatsappConversationEnabled ||
+      !normalizedLeadPhone
+    ) {
+      return;
+    }
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDeleteWhatsAppConversation = () => {
+    if (
+      deleteConversationMutation.isPending ||
+      !whatsappConversationEnabled ||
+      !normalizedLeadPhone
+    ) {
+      return;
+    }
+    deleteConversationMutation.mutate();
+  };
+
+  const cancelDeleteWhatsAppConversation = () => {
+    if (deleteConversationMutation.isPending) {
+      return;
+    }
+    setShowDeleteConfirm(false);
+  };
+
+  const handleDeleteMessage = (messageId: string) => {
+    setMessageToDelete(messageId);
+    setOpenMessageMenu(null);
+  };
+
+  const confirmDeleteMessage = () => {
+    if (messageToDelete) {
+      deleteMessageMutation.mutate(messageToDelete);
+    }
+  };
+
+  const cancelDeleteMessage = () => {
+    setMessageToDelete(null);
   };
 
   const getWhatsAppMessageText = (message: WhatsAppChatMessage) => {
@@ -777,24 +892,50 @@ const LeadChat = ({ lead }: LeadChatProps) => {
             <p className="text-sm font-normal text-white/60">{position}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2 text-sm font-normal text-white/70 sm:ml-auto">
-          <span>{headerContactValue || "\u00A0"}</span>
-          <svg
-            width="12"
-            height="8"
-            viewBox="0 0 12 8"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className="ml-1"
-          >
-            <path
-              d="M1 1.5L6 6.5L11 1.5"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+        <div className="flex items-center gap-3 text-sm font-normal text-white/70 sm:ml-auto">
+          <div className="flex items-center gap-2">
+            <span>{headerContactValue || "\u00A0"}</span>
+            <ChevronDown className="h-3 w-3" />
+          </div>
+          {activeTab === "WhatsApp" && whatsappConversationEnabled && (
+            <div className="flex items-center gap-2">
+              {showDeleteConfirm ? (
+                <div className="flex items-center gap-2 rounded-full border border-white/30 px-3 py-1 text-xs text-white/80">
+                  <span>Clear chat?</span>
+                  <button
+                    type="button"
+                    onClick={confirmDeleteWhatsAppConversation}
+                    className="rounded-full bg-red-500/70 px-2 py-0.5 font-semibold text-white transition hover:bg-red-500 disabled:opacity-50"
+                    disabled={deleteConversationMutation.isPending}
+                  >
+                    {deleteConversationMutation.isPending ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      "Yes"
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={cancelDeleteWhatsAppConversation}
+                    className="rounded-full border border-white/40 px-2 py-0.5 transition hover:bg-white/10 disabled:opacity-50"
+                    disabled={deleteConversationMutation.isPending}
+                  >
+                    No
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleDeleteWhatsAppConversation}
+                  className="flex items-center gap-1 rounded-full border border-white/30 px-3 py-1 text-xs uppercase tracking-wide text-white/80 transition hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed"
+                  disabled={deleteConversationMutation.isPending}
+                >
+                  <Trash2 className="h-3 w-3" />
+                  Clear chat
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
       <div className="h-px w-full bg-white/30 mb-6" />
@@ -831,6 +972,8 @@ const LeadChat = ({ lead }: LeadChatProps) => {
               >
                 {whatsappMessages.map((message) => {
                   const isOutbound = message.direction === "outbound";
+                  const canDelete = isOutbound;
+                  const showMenu = openMessageMenu === message._id;
                   const statusDisplay = isOutbound
                     ? getSmsStatusDisplay(message.messageStatus)
                     : null;
@@ -843,7 +986,7 @@ const LeadChat = ({ lead }: LeadChatProps) => {
                   return (
                     <div
                       key={message._id || message.messageId || timestamp}
-                      className={`flex w-full gap-3 ${
+                      className={`group relative flex w-full gap-3 ${
                         isOutbound ? "justify-end" : "justify-start"
                       }`}
                     >
@@ -868,7 +1011,7 @@ const LeadChat = ({ lead }: LeadChatProps) => {
                         }`}
                       >
                         <div
-                          className={`w-full rounded-2xl px-4 py-3 ${
+                          className={`relative w-full rounded-2xl px-4 py-3 ${
                             isOutbound
                               ? "bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] text-white"
                               : "bg-white/10 text-white/90"
@@ -882,6 +1025,39 @@ const LeadChat = ({ lead }: LeadChatProps) => {
                               : {}
                           }
                         >
+                          {canDelete && (
+                            <>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setOpenMessageMenu(
+                                    showMenu ? null : message._id
+                                  );
+                                }}
+                                className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-white/20 opacity-0 transition-opacity hover:bg-white/30 group-hover:opacity-100"
+                              >
+                                <MoreVertical className="h-3.5 w-3.5 text-white" />
+                              </button>
+                              {showMenu && (
+                                <div
+                                  className="absolute -right-2 top-6 z-10 rounded-lg border border-white/20 bg-[#1a1a1a] shadow-lg"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleDeleteMessage(message._id)
+                                    }
+                                    className="flex w-full items-center gap-2 px-3 py-2 text-xs text-red-300 transition hover:bg-white/10 rounded-lg"
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                    Delete
+                                  </button>
+                                </div>
+                              )}
+                            </>
+                          )}
                           <div className="flex items-center justify-between gap-4 text-xs text-white/70">
                             <span className="font-semibold text-white">
                               {isOutbound ? "You" : displayName}
@@ -890,6 +1066,7 @@ const LeadChat = ({ lead }: LeadChatProps) => {
                               {formatEmailTimestamp(timestamp)}
                             </span>
                           </div>
+
                           {renderedText && (
                             <p className="text-sm mt-2 whitespace-pre-wrap leading-relaxed">
                               {renderedText}
@@ -917,6 +1094,48 @@ const LeadChat = ({ lead }: LeadChatProps) => {
                     </div>
                   );
                 })}
+              </div>
+            )}
+
+            {messageToDelete && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                <div className="rounded-lg bg-[#1a1a1a] border border-white/20 p-6 max-w-md w-full mx-4">
+                  <h3 className="text-lg font-semibold text-white mb-2">
+                    Delete Message
+                  </h3>
+                  <p className="text-sm text-white/70 mb-6">
+                    Are you sure you want to delete this message? This action
+                    cannot be undone.
+                  </p>
+                  <div className="flex items-center gap-3 justify-end">
+                    <button
+                      type="button"
+                      onClick={cancelDeleteMessage}
+                      disabled={deleteMessageMutation.isPending}
+                      className="rounded-lg border border-white/30 px-4 py-2 text-sm text-white transition hover:bg-white/10 disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={confirmDeleteMessage}
+                      disabled={deleteMessageMutation.isPending}
+                      className="rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-600 disabled:opacity-50 flex items-center gap-2"
+                    >
+                      {deleteMessageMutation.isPending ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Deleting...
+                        </>
+                      ) : (
+                        <>
+                          <Trash2 className="h-4 w-4" />
+                          Delete
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
 

@@ -156,6 +156,14 @@ class WhatsAppService {
     const response = await API.post("/whatsapp/messages/mark-read", payload);
     return response.data;
   }
+
+  async deleteMessage(messageId: string): Promise<{
+    success: boolean;
+    message: string;
+  }> {
+    const response = await API.delete(`/whatsapp/messages/${messageId}`);
+    return response.data;
+  }
 }
 
 export const whatsappService = new WhatsAppService();
