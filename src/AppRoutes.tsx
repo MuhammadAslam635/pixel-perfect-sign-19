@@ -164,7 +164,7 @@ const AppRoutes = () => {
       <Route
         path="/clients"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute moduleName="clients">
             <ClientsPage />
           </ProtectedRoute>
         }
