@@ -65,11 +65,7 @@ const ComposePage = () => {
           <div className="flex-1 min-h-0">
             <EmailComposer
               initialTo={initialTo}
-              initialSubject={
-                initialSubject.startsWith("Re:")
-                  ? initialSubject
-                  : `Re: ${initialSubject}`
-              }
+              initialSubject={initialSubject}
               threadId={threadId}
               onSend={handleSend}
               onCancel={handleCancel}

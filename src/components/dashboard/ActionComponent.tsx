@@ -112,10 +112,16 @@ export const ActionComponent = () => {
   });
 
   return (
-    <div className="flex min-w-[100px] justify-end relative" ref={actionsRef}>
-      <div
-        className="flex items-center gap-1"
-      >
+    <div
+      className="flex min-w-[100px] justify-end relative rounded-full"
+      ref={actionsRef}
+      style={{
+        background: "#FFFFFF1A",
+        boxShadow:
+          "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+      }}
+    >
+      <div className="flex items-center gap-1 p-2 px-4">
         <button
           aria-label="Toggle notifications"
           className={`relative flex h-8 w-8 items-center justify-center rounded-full border border-white/10 text-white transition ${
