@@ -670,7 +670,7 @@ const index = () => {
               </h2>
               {activeTab === "companies" && (
                 <Button
-                  className="ml-auto flex items-center gap-2 rounded-lg px-4 py-2 text-white font-normal"
+                  className="ml-auto flex items-center gap-2 rounded-md px-3 py-1.5 text-xs text-white font-normal sm:rounded-lg sm:px-4 sm:py-2 sm:text-sm"
                   style={{
                     background:
                       "linear-gradient(90deg, rgba(218, 228, 241, 0.2) 0%, rgba(221, 224, 238, 0.2) 100%)",
@@ -679,10 +679,10 @@ const index = () => {
                       "0px 4px 4px 0px #FFFFFF40 inset, 0px -4px 4px 0px #FFFFFF40 inset",
                   }}
                 >
-                  <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center">
+                  <div className="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center sm:w-5 sm:h-5">
                     <Plus className="w-3 h-3 text-white" />
                   </div>
-                  <span>Add new Company</span>
+                  <span className="tracking-tight">Add new Company</span>
                 </Button>
               )}
             </div>
