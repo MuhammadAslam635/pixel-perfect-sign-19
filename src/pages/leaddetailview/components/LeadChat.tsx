@@ -4,10 +4,7 @@ import { Loader2, Plus, Send } from "lucide-react";
 import { Lead } from "@/services/leads.service";
 import { emailService } from "@/services/email.service";
 import { Email } from "@/types/email.types";
-import {
-  twilioService,
-  LeadSmsMessage,
-} from "@/services/twilio.service";
+import { twilioService, LeadSmsMessage } from "@/services/twilio.service";
 import API from "@/utils/api";
 import { CallView } from "./CallView";
 
@@ -403,6 +400,10 @@ const LeadChat = ({ lead }: LeadChatProps) => {
   const headerContactValue =
     activeTab === "Email" ? emailAddress || "" : phoneNumber || "";
 
+  const handleComposeEmail = () => {
+    window.location.href = "http://localhost:8080/emails/compose";
+  };
+
   return (
     <section
       className="flex flex-col font-poppins items-center justify-center lg:p-10 p-5 max-w-full rounded-3xl"
@@ -670,6 +671,16 @@ const LeadChat = ({ lead }: LeadChatProps) => {
                 })}
               </div>
             )}
+            <div className="mt-4 flex justify-end">
+              <button
+                type="button"
+                onClick={handleComposeEmail}
+                className="inline-flex items-center gap-2 rounded-full bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] px-6 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+              >
+                <Send size={14} className="text-white" />
+                Compose Email
+              </button>
+            </div>
           </div>
         ) : activeTab === "SMS" ? (
           <div className="flex flex-1 flex-col">
@@ -803,9 +814,7 @@ const LeadChat = ({ lead }: LeadChatProps) => {
                 className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
                 onClick={handleSendSms}
                 disabled={
-                  smsInputsDisabled ||
-                  !smsInput.trim() ||
-                  smsMutation.isPending
+                  smsInputsDisabled || !smsInput.trim() || smsMutation.isPending
                 }
               >
                 {smsMutation.isPending ? (
