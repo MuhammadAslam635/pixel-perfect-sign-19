@@ -39,6 +39,25 @@ export interface UserListParams {
   trashed?: boolean;
 }
 
+export interface InviteUserPayload {
+  email: string;
+  roleId?: string | null;
+  role?: string;
+  message?: string;
+  expiresInDays?: number;
+}
+
+export interface InviteUserResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    invitationId: string;
+    email: string;
+    expiresAt: string;
+    role: string;
+  };
+}
+
 export interface CreateUserData {
   name: string;
   email: string;
@@ -184,6 +203,18 @@ export const userService = {
   updateUser: async (userId: string, data: UpdateUserData): Promise<UserResponse> => {
     try {
       const response = await API.post(`/users/${userId}`, data);
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  /**
+   * Invite a user via email
+   */
+  inviteUser: async (payload: InviteUserPayload): Promise<InviteUserResponse> => {
+    try {
+      const response = await API.post("/users/invite", payload);
       return response.data;
     } catch (error: any) {
       throw error;

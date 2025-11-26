@@ -1,17 +1,21 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import AuthLayout from "@/components/AuthLayout";
 import { AuthInput } from "@/components/ui/auth-input";
-import { authService } from "@/services/auth.service";
+import {
+  authService,
+  InvitationDetails,
+} from "@/services/auth.service";
 
 const SignUp = () => {
   const [companyName, setCompanyName] = useState("");
   const [industry, setIndustry] = useState("");
   const [email, setEmail] = useState("");
+  const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -19,11 +23,55 @@ const SignUp = () => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({
     companyName: "",
+    fullName: "",
     email: "",
     password: "",
     confirmPassword: "",
   });
+  const [invitationDetails, setInvitationDetails] = useState<InvitationDetails | null>(null);
+  const [invitationError, setInvitationError] = useState("");
+  const [invitationLoading, setInvitationLoading] = useState(false);
+  const [searchParams] = useSearchParams();
+  const inviteToken = searchParams.get("invite");
+  const isInviteFlow = Boolean(inviteToken);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!inviteToken) {
+      setInvitationDetails(null);
+      setInvitationError("");
+      return;
+    }
+
+    let isMounted = true;
+    const fetchInvitationDetails = async () => {
+      try {
+        setInvitationLoading(true);
+        setInvitationError("");
+        const response = await authService.getInvitationDetails(inviteToken);
+        if (!isMounted) return;
+        setInvitationDetails(response.data);
+        setEmail(response.data.email);
+      } catch (error: any) {
+        if (!isMounted) return;
+        const errorMessage =
+          error?.response?.data?.message ||
+          error?.response?.data?.errors?.[0]?.msg ||
+          "Unable to load invitation details. Please contact your admin.";
+        setInvitationDetails(null);
+        setInvitationError(errorMessage);
+      } finally {
+        if (isMounted) {
+          setInvitationLoading(false);
+        }
+      }
+    };
+
+    fetchInvitationDetails();
+    return () => {
+      isMounted = false;
+    };
+  }, [inviteToken]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -42,6 +90,9 @@ const SignUp = () => {
       case "email":
         setEmail(value);
         break;
+      case "fullName":
+        setFullName(value);
+        break;
       case "password":
         setPassword(value);
         break;
@@ -58,6 +109,7 @@ const SignUp = () => {
     e.preventDefault();
     setErrors({
       companyName: "",
+      fullName: "",
       email: "",
       password: "",
       confirmPassword: "",
@@ -66,11 +118,81 @@ const SignUp = () => {
     // Validate all fields
     const newErrors = {
       companyName: "",
+      fullName: "",
       email: "",
       password: "",
       confirmPassword: "",
     };
     let hasError = false;
+
+    if (isInviteFlow) {
+      if (!fullName.trim()) {
+        newErrors.fullName = "Full name is required";
+        hasError = true;
+      }
+      if (!password) {
+        newErrors.password = "Password is required";
+        hasError = true;
+      } else if (password.length < 8) {
+        newErrors.password = "Password must be at least 8 characters";
+        hasError = true;
+      }
+      if (!confirmPassword) {
+        newErrors.confirmPassword = "Confirm password is required";
+        hasError = true;
+      } else if (password !== confirmPassword) {
+        newErrors.confirmPassword = "Passwords do not match";
+        hasError = true;
+      }
+
+      if (hasError) {
+        setErrors(newErrors);
+        return;
+      }
+
+      if (!inviteToken) {
+        toast.error("Invitation token is missing. Please use the original link.");
+        return;
+      }
+
+      if (invitationError || !invitationDetails) {
+        toast.error(invitationError || "This invitation is no longer available.");
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const response = await authService.acceptInvitation({
+          token: inviteToken,
+          name: fullName.trim(),
+          password,
+          confirm_password: confirmPassword,
+        });
+
+        if (response.success) {
+          toast.success(
+            response.message || "Invitation accepted successfully. You can now log in."
+          );
+          setFullName("");
+          setPassword("");
+          setConfirmPassword("");
+          setTimeout(() => {
+            navigate("/");
+          }, 2000);
+        } else {
+          toast.error(response.message || "Unable to accept invitation.");
+        }
+      } catch (error: any) {
+        const errorMessage =
+          error.response?.data?.message ||
+          error.response?.data?.errors?.[0]?.msg ||
+          "Failed to accept invitation. Please try again.";
+        toast.error(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
 
     if (!companyName) {
       newErrors.companyName = "Company name is required";
@@ -116,14 +238,12 @@ const SignUp = () => {
           response.message ||
             "Verification email sent! Please check your inbox."
         );
-        // Clear form
         setCompanyName("");
         setIndustry("");
         setEmail("");
         setPassword("");
         setConfirmPassword("");
 
-        // Redirect to login after 2 seconds
         setTimeout(() => {
           navigate("/");
         }, 2000);
@@ -141,67 +261,165 @@ const SignUp = () => {
     }
   };
 
+  const disableInviteSubmission =
+    isInviteFlow && (invitationLoading || !!invitationError || !invitationDetails);
+  const isFormDisabled = loading || disableInviteSubmission;
+  const submitLabel = loading
+    ? isInviteFlow
+      ? "Submitting..."
+      : "Registering..."
+    : isInviteFlow
+    ? "Accept Invitation"
+    : "Register";
+  const invitationExpiryDisplay = invitationDetails
+    ? new Date(invitationDetails.expiresAt).toLocaleString()
+    : "";
+
   return (
     <AuthLayout
-      title="Register"
+      title={isInviteFlow ? "Join Your Workspace" : "Register"}
       subtitle={
         <p className="font-[Poppins] text-lg font-light text-white/65 underline underline-offset-[6px]">
-          Sign up to continue
+          {isInviteFlow
+            ? "Complete the details below to activate your account."
+            : "Sign up to continue"}
         </p>
       }
     >
       <form onSubmit={handleSubmit} className="space-y-4 font-[Poppins]">
-        <div className="space-y-2">
-          <Label htmlFor="companyName" className="text-base font-light text-white">
-            Company Name
-          </Label>
-          <AuthInput
-            id="companyName"
-            type="text"
-            name="companyName"
-            placeholder="Enter Your Company Name"
-            value={companyName}
-            onChange={(e) => handleChange(e, "companyName")}
-            className="text-base font-normal text-white/70"
-            disabled={loading}
-          />
-          {errors.companyName && (
-            <p className="text-sm text-red-400">{errors.companyName}</p>
-          )}
-        </div>
+        {isInviteFlow ? (
+          <>
+            <div className="rounded-2xl border border-white/15 bg-white/[0.03] p-5 space-y-2">
+              {invitationLoading ? (
+                <p className="text-sm text-white/70">
+                  Validating your invitation...
+                </p>
+              ) : invitationError ? (
+                <p className="text-sm text-red-300">{invitationError}</p>
+              ) : (
+                <>
+                  <p className="text-base text-white/80">
+                    You were invited to{" "}
+                    <span className="text-white font-semibold">
+                      {invitationDetails?.companyName}
+                    </span>
+                  </p>
+                  <p className="text-sm text-white/70">
+                    Role:&nbsp;
+                    <span className="text-white font-semibold">
+                      {invitationDetails?.role}
+                    </span>
+                  </p>
+                  <p className="text-sm text-white/70">
+                    Invited by{" "}
+                    <span className="text-white">
+                      {invitationDetails?.invitedBy}
+                    </span>
+                  </p>
+                  <p className="text-xs text-white/60">
+                    Expires {invitationExpiryDisplay}
+                  </p>
+                </>
+              )}
+            </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="industry" className="text-base font-light text-white">
-            Industry (Optional)
-          </Label>
-          <AuthInput
-            id="industry"
-            type="text"
-            name="industry"
-            placeholder="Enter Your Industry Name"
-            value={industry}
-            onChange={(e) => handleChange(e, "industry")}
-            className="text-base font-normal text-white/70"
-            disabled={loading}
-          />
-        </div>
+            <div className="space-y-2">
+              <Label htmlFor="fullName" className="text-base font-light text-white">
+                Full name
+              </Label>
+              <AuthInput
+                id="fullName"
+                type="text"
+                name="fullName"
+                placeholder="Enter your full name"
+                value={fullName}
+                onChange={(e) => handleChange(e, "fullName")}
+                className="text-base font-normal text-white/70"
+                disabled={isFormDisabled}
+              />
+              {errors.fullName && (
+                <p className="text-sm text-red-400">{errors.fullName}</p>
+              )}
+            </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="email" className="text-base font-light text-white">
-            Email
-          </Label>
-          <AuthInput
-            id="email"
-            type="email"
-            name="email"
-            placeholder="Enter Your Email"
-            value={email}
-            onChange={(e) => handleChange(e, "email")}
-            className="text-base font-normal text-white/70"
-            disabled={loading}
-          />
-          {errors.email && <p className="text-sm text-red-400">{errors.email}</p>}
-        </div>
+            <div className="space-y-2">
+              <Label htmlFor="inviteEmail" className="text-base font-light text-white">
+                Email
+              </Label>
+              <AuthInput
+                id="inviteEmail"
+                type="email"
+                name="inviteEmail"
+                value={email}
+                readOnly
+                disabled
+                className="text-base font-normal text-white/70 opacity-70"
+              />
+              <p className="text-xs text-white/55">
+                Invitations are tied to this email address.
+              </p>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="space-y-2">
+              <Label
+                htmlFor="companyName"
+                className="text-base font-light text-white"
+              >
+                Company Name
+              </Label>
+              <AuthInput
+                id="companyName"
+                type="text"
+                name="companyName"
+                placeholder="Enter Your Company Name"
+                value={companyName}
+                onChange={(e) => handleChange(e, "companyName")}
+                className="text-base font-normal text-white/70"
+                disabled={isFormDisabled}
+              />
+              {errors.companyName && (
+                <p className="text-sm text-red-400">{errors.companyName}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="industry" className="text-base font-light text-white">
+                Industry (Optional)
+              </Label>
+              <AuthInput
+                id="industry"
+                type="text"
+                name="industry"
+                placeholder="Enter Your Industry Name"
+                value={industry}
+                onChange={(e) => handleChange(e, "industry")}
+                className="text-base font-normal text-white/70"
+                disabled={isFormDisabled}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-base font-light text-white">
+                Email
+              </Label>
+              <AuthInput
+                id="email"
+                type="email"
+                name="email"
+                placeholder="Enter Your Email"
+                value={email}
+                onChange={(e) => handleChange(e, "email")}
+                className="text-base font-normal text-white/70"
+                disabled={isFormDisabled}
+              />
+              {errors.email && (
+                <p className="text-sm text-red-400">{errors.email}</p>
+              )}
+            </div>
+          </>
+        )}
 
         <div className="space-y-2">
           <Label htmlFor="password" className="text-base font-light text-white">
@@ -216,13 +434,14 @@ const SignUp = () => {
               value={password}
               onChange={(e) => handleChange(e, "password")}
               className="text-base font-normal text-white/70"
-              disabled={loading}
+              disabled={isFormDisabled}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 transition-colors hover:text-white z-20 cursor-pointer"
               aria-label="Toggle password visibility"
+              disabled={isFormDisabled}
             >
               {showPassword ? (
                 <EyeOff className="h-5 w-5" />
@@ -250,13 +469,14 @@ const SignUp = () => {
               value={confirmPassword}
               onChange={(e) => handleChange(e, "confirmPassword")}
               className="text-base font-normal text-white/70"
-              disabled={loading}
+              disabled={isFormDisabled}
             />
             <button
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
               className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 transition-colors hover:text-white z-20 cursor-pointer"
               aria-label="Toggle confirm password visibility"
+              disabled={isFormDisabled}
             >
               {showConfirmPassword ? (
                 <EyeOff className="h-5 w-5" />
@@ -272,10 +492,10 @@ const SignUp = () => {
 
         <Button
           type="submit"
-          className="mt-2 h-[56px] w-full rounded-[18px] bg-gradient-to-r from-[#69B4B7] via-[#5486D0] to-[#3E64B3] text-lg font-semibold text-white transition-all hover:brightness-110"
-          disabled={loading}
+          className="mt-2 h-[56px] w-full rounded-[18px] bg-gradient-to-r from-[#69B4B7] via-[#5486D0] to-[#3E64B3] text-lg font-semibold text-white transition-all hover:brightness-110 disabled:opacity-60"
+          disabled={isFormDisabled}
         >
-          {loading ? "Registering..." : "Register"}
+          {submitLabel}
         </Button>
 
         <p className="text-center text-base text-white/70">

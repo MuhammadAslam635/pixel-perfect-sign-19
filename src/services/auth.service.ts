@@ -32,6 +32,27 @@ export interface AuthResponse {
   user?: any;
 }
 
+export interface InvitationDetails {
+  email: string;
+  companyName: string;
+  role: string;
+  roleId?: string | null;
+  invitedBy: string;
+  expiresAt: string;
+}
+
+export interface InvitationDetailsResponse {
+  success: boolean;
+  data: InvitationDetails;
+}
+
+export interface AcceptInvitationData {
+  token: string;
+  name: string;
+  password: string;
+  confirm_password: string;
+}
+
 export const authService = {
   /**
    * Register a new user
@@ -116,6 +137,30 @@ export const authService = {
   verifyEmail: async (token: string): Promise<AuthResponse> => {
     try {
       const response = await API.get(`/verify-email?token=${token}`);
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  /**
+   * Fetch invitation details for a token
+   */
+  getInvitationDetails: async (token: string): Promise<InvitationDetailsResponse> => {
+    try {
+      const response = await API.get(`/invite/${token}`);
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  /**
+   * Accept an invitation
+   */
+  acceptInvitation: async (data: AcceptInvitationData): Promise<AuthResponse> => {
+    try {
+      const response = await API.post("/invite/accept", data);
       return response.data;
     } catch (error: any) {
       throw error;

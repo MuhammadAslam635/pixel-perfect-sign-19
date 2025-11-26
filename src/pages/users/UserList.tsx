@@ -7,6 +7,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Pagination,
   PaginationContent,
   PaginationItem,
@@ -33,6 +49,7 @@ import {
   Settings,
   LucideIcon,
   Download,
+  MailPlus,
 } from "lucide-react";
 import { userService, User } from "@/services/user.service";
 import { toast } from "sonner";
@@ -50,6 +67,26 @@ const UserList = () => {
   const [trashed, setTrashed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [availableRoles, setAvailableRoles] = useState<Role[]>([]);
+  const legacyRoleOptions = [
+    "CompanyAdmin",
+    "CompanyUser",
+    "CompanyViewer",
+  ] as const;
+  type LegacyRole = (typeof legacyRoleOptions)[number];
+  const defaultInviteForm = {
+    email: "",
+    roleId: "",
+    legacyRole: "CompanyUser" as LegacyRole,
+    expiresInDays: "7",
+    message: "",
+  };
+  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  const [inviteForm, setInviteForm] = useState(defaultInviteForm);
+  const [inviteSubmitting, setInviteSubmitting] = useState(false);
+  const [inviteErrors, setInviteErrors] = useState<{
+    email?: string;
+    expiresInDays?: string;
+  }>({});
   const quickActions = useMemo<
     {
       icon: LucideIcon;
@@ -144,6 +181,81 @@ const UserList = () => {
     });
     return map;
   }, [availableRoles]);
+
+  const resetInviteForm = () => {
+    setInviteForm(defaultInviteForm);
+    setInviteErrors({});
+  };
+
+  const handleInviteFieldChange = (
+    field: keyof typeof defaultInviteForm,
+    value: string
+  ) => {
+    setInviteForm((prev) => ({ ...prev, [field]: value }));
+    if (field === "email" && inviteErrors.email) {
+      setInviteErrors((prev) => ({ ...prev, email: undefined }));
+    }
+    if (field === "expiresInDays" && inviteErrors.expiresInDays) {
+      setInviteErrors((prev) => ({ ...prev, expiresInDays: undefined }));
+    }
+  };
+
+  const handleInviteSubmit = async (event?: React.FormEvent) => {
+    if (event) {
+      event.preventDefault();
+    }
+
+    const errors: typeof inviteErrors = {};
+    const trimmedEmail = inviteForm.email.trim();
+    if (!trimmedEmail) {
+      errors.email = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      errors.email = "Enter a valid email address";
+    }
+
+    let expiresInDays: number | undefined;
+    const trimmedExpiry = inviteForm.expiresInDays.trim();
+    if (trimmedExpiry) {
+      const parsed = Number(trimmedExpiry);
+      if (Number.isNaN(parsed)) {
+        errors.expiresInDays = "Expires in days must be a valid number";
+      } else if (parsed < 1 || parsed > 30) {
+        errors.expiresInDays = "Expires must be between 1 and 30 days";
+      } else {
+        expiresInDays = parsed;
+      }
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setInviteErrors(errors);
+      return;
+    }
+
+    try {
+      setInviteSubmitting(true);
+      await userService.inviteUser({
+        email: trimmedEmail,
+        roleId: inviteForm.roleId || undefined,
+        role: inviteForm.legacyRole,
+        message: inviteForm.message.trim()
+          ? inviteForm.message.trim()
+          : undefined,
+        expiresInDays,
+      });
+      toast.success("Invitation sent successfully");
+      resetInviteForm();
+      setInviteDialogOpen(false);
+      fetchUsers(true);
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message ||
+          error?.response?.data?.errors?.[0]?.msg ||
+          "Failed to send invitation"
+      );
+    } finally {
+      setInviteSubmitting(false);
+    }
+  };
 
   const renderRoleBadge = (userData: User) => {
     // Prefer RBAC roleId when available
@@ -382,6 +494,32 @@ const UserList = () => {
                   Create Employees
                 </span>
                 <span className="sm:hidden relative z-10">Create</span>
+              </Button>
+              <Button
+                type="button"
+                onClick={() => {
+                  resetInviteForm();
+                  setInviteDialogOpen(true);
+                }}
+                className="group relative overflow-hidden flex-1 sm:flex-none flex h-12 w-44 items-center justify-center rounded-full border border-white/40 px-0 text-sm font-medium tracking-wide text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] pl-4 pr-4 gap-2 before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/18 before:to-transparent before:transition-all before:duration-300 before:ease-in-out hover:before:from-white/30 hover:before:duration-200"
+                style={{
+                  background: "#FFFFFF1A",
+                  boxShadow:
+                    "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                }}
+              >
+                <span
+                  className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[120px] h-[120px] rounded-full pointer-events-none opacity-60 blur-[26px]"
+                  style={{
+                    background:
+                      "linear-gradient(180deg, #67B0B7 0%, #4066B3 100%)",
+                  }}
+                />
+                <MailPlus className="h-5 w-5 relative z-10" />
+                <span className="hidden sm:block relative z-10">
+                  Invite via Email
+                </span>
+                <span className="sm:hidden relative z-10">Invite</span>
               </Button>
             </div>
           </div>
@@ -656,6 +794,156 @@ const UserList = () => {
           </Pagination>
         )}
       </main>
+      <Dialog
+        open={inviteDialogOpen}
+        onOpenChange={(open) => {
+          setInviteDialogOpen(open);
+          if (!open) {
+            resetInviteForm();
+          }
+        }}
+      >
+        <DialogContent className="w-[92vw] max-w-xl sm:max-w-lg bg-[#121826] text-white border border-white/10 rounded-2xl sm:rounded-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6 space-y-5">
+          <DialogHeader className="space-y-2">
+            <DialogTitle className="text-2xl font-semibold text-white">
+              Invite a teammate
+            </DialogTitle>
+            <DialogDescription className="text-white/70">
+              Send an email invitation that links directly to the registration
+              flow for your workspace.
+            </DialogDescription>
+          </DialogHeader>
+          <form className="space-y-4" onSubmit={handleInviteSubmit}>
+            <div className="space-y-2">
+              <Label htmlFor="invite-email" className="text-sm text-white/80">
+                Email address
+              </Label>
+              <Input
+                id="invite-email"
+                type="email"
+                value={inviteForm.email}
+                onChange={(e) =>
+                  handleInviteFieldChange("email", e.target.value)
+                }
+                placeholder="teammate@example.com"
+                className="bg-[#0b0f1c] border-white/10 text-white placeholder:text-white/40"
+              />
+              {inviteErrors.email && (
+                <p className="text-xs text-red-400">{inviteErrors.email}</p>
+              )}
+            </div>
+
+            {availableRoles.length > 0 && (
+              <div className="space-y-2">
+                <Label className="text-sm text-white/80">
+                  RBAC role (optional)
+                </Label>
+                <Select
+                  value={inviteForm.roleId || "none"}
+                  onValueChange={(value) =>
+                    handleInviteFieldChange(
+                      "roleId",
+                      value === "none" ? "" : value
+                    )
+                  }
+                >
+                  <SelectTrigger className="bg-[#0b0f1c] border-white/10 text-white">
+                    <SelectValue placeholder="Select a role" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#0b0f1c] text-white border-white/10">
+                    <SelectItem value="none">No RBAC role</SelectItem>
+                    {availableRoles.map((role) => (
+                      <SelectItem key={role._id} value={role._id}>
+                        {role.displayName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label className="text-sm text-white/80">Legacy role</Label>
+              <Select
+                value={inviteForm.legacyRole}
+                onValueChange={(value) =>
+                  handleInviteFieldChange("legacyRole", value as LegacyRole)
+                }
+              >
+                <SelectTrigger className="bg-[#0b0f1c] border-white/10 text-white">
+                  <SelectValue placeholder="Select a legacy role" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#0b0f1c] text-white border-white/10">
+                  {legacyRoleOptions.map((role) => (
+                    <SelectItem key={role} value={role}>
+                      {role}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="invite-expiry" className="text-sm text-white/80">
+                Expires in (days)
+              </Label>
+              <Input
+                id="invite-expiry"
+                type="number"
+                min={1}
+                max={30}
+                value={inviteForm.expiresInDays}
+                onChange={(e) =>
+                  handleInviteFieldChange("expiresInDays", e.target.value)
+                }
+                className="bg-[#0b0f1c] border-white/10 text-white"
+              />
+              {inviteErrors.expiresInDays && (
+                <p className="text-xs text-red-400">
+                  {inviteErrors.expiresInDays}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="invite-message" className="text-sm text-white/80">
+                Personal message (optional)
+              </Label>
+              <Textarea
+                id="invite-message"
+                value={inviteForm.message}
+                onChange={(e) =>
+                  handleInviteFieldChange("message", e.target.value)
+                }
+                placeholder="Add context for your teammate..."
+                className="bg-[#0b0f1c] border-white/10 text-white placeholder:text-white/40 min-h-[90px]"
+              />
+            </div>
+
+            <div className="flex flex-col sm:flex-row sm:justify-end gap-3 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  resetInviteForm();
+                  setInviteDialogOpen(false);
+                }}
+                className="border-white/30 text-white hover:bg-white/10 w-full sm:w-auto"
+                disabled={inviteSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="bg-gradient-to-r from-[#69B4B7] via-[#5486D0] to-[#3E64B3] text-white hover:brightness-110 w-full sm:w-auto"
+                disabled={inviteSubmitting}
+              >
+                {inviteSubmitting ? "Sending..." : "Send invitation"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 };
