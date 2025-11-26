@@ -27,6 +27,7 @@ type CompaniesListProps = {
   loading: boolean;
   selectedCompanyId: string | null;
   onSelectCompany: (companyId: string) => void;
+  onDesktopExecutivesFocus?: () => void;
   search?: string;
   onSearchChange?: (search: string) => void;
   page?: number;
@@ -58,6 +59,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
   onViewAllLeads,
   onExecutiveSelect,
   onMobileExecutivesViewChange,
+  onDesktopExecutivesFocus,
   pageSize = 10,
   pageSizeOptions = [10, 25, 50, 100],
   onPageSizeChange,
@@ -364,6 +366,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
                 } else {
                   // Desktop: toggle executives panel
                   onSelectCompany(company._id);
+                  onDesktopExecutivesFocus?.();
                 }
               }}
               className="rounded-full bg-white/15 px-4 sm:px-6 py-1.5 text-xs font-semibold text-white hover:bg-white/25 border border-white/20 w-auto md:w-auto ml-auto md:ml-0"

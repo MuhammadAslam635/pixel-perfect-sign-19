@@ -361,12 +361,19 @@ const index = () => {
     }
   }, [fetchPhoneScript, phoneLead]);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const pageContentRef = useRef<HTMLElement | null>(null);
   const tabRefs = useRef<Record<TabKey, HTMLButtonElement | null>>({
     companies: null,
     leads: null,
   });
   const [indicatorStyles, setIndicatorStyles] = useState({ width: 0, left: 0 });
   const pageSizeOptions = [10, 25, 50, 100];
+  const handleDesktopExecutivesFocus = () => {
+    if (pageContentRef.current) {
+      pageContentRef.current.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const companiesParams = useMemo(() => {
     const params: CompaniesQueryParams = {
@@ -893,7 +900,10 @@ const index = () => {
 
   return (
     <DashboardLayout>
-      <main className="relative px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] pt-24 sm:pt-28 lg:pt-32 pb-8 flex flex-col gap-6 text-white flex-1 overflow-y-auto">
+      <main
+        ref={pageContentRef}
+        className="relative px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] pt-24 sm:pt-28 lg:pt-32 pb-8 flex flex-col gap-6 text-white flex-1 overflow-y-auto"
+      >
         <div className="max-w-[1600px] mx-auto w-full">
           {/* Tabs */}
           <div className="hidden md:flex items-center justify-between mb-6 gap-4">
@@ -1340,6 +1350,7 @@ const index = () => {
                   loading={loading}
                   selectedCompanyId={selectedCompanyId}
                   onSelectCompany={handleCompanyClick}
+                  onDesktopExecutivesFocus={handleDesktopExecutivesFocus}
                   search={companiesSearch}
                   onSearchChange={setCompaniesSearch}
                   page={companiesPage}
