@@ -65,12 +65,12 @@ const index = () => {
   // Companies filters and pagination
   const [companiesPage, setCompaniesPage] = useState(1);
   const [companiesSearch, setCompaniesSearch] = useState("");
-  const [companiesLimit] = useState(10); // Increased limit to show more items per page
+  const [companiesLimit, setCompaniesLimit] = useState(10);
 
   // Leads filters and pagination
   const [leadsPage, setLeadsPage] = useState(1);
   const [leadsSearch, setLeadsSearch] = useState("");
-  const [leadsLimit] = useState(10); // Increased limit to show more items per page
+  const [leadsLimit, setLeadsLimit] = useState(10);
   const [leadsCompanyFilter, setLeadsCompanyFilter] = useState<string | null>(
     null
   );
@@ -321,6 +321,7 @@ const index = () => {
     leads: null,
   });
   const [indicatorStyles, setIndicatorStyles] = useState({ width: 0, left: 0 });
+  const pageSizeOptions = [10, 25, 50, 100];
 
   const companiesParams = useMemo(
     () => ({
@@ -465,11 +466,11 @@ const index = () => {
   // Reset pagination when filters change
   useEffect(() => {
     setCompaniesPage(1);
-  }, [companiesSearch]);
+  }, [companiesSearch, companiesLimit]);
 
   useEffect(() => {
     setLeadsPage(1);
-  }, [leadsSearch, leadsCompanyFilter]);
+  }, [leadsSearch, leadsCompanyFilter, leadsLimit]);
 
   const handleLeadClick = (leadId: string) => {
     setSelectedLeadId((prev) => (prev === leadId ? null : leadId));
@@ -695,12 +696,16 @@ const index = () => {
             {/* Controls Container - responsive layout */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 order-1 lg:order-2">
               {/* Filter Buttons Row - wraps on mobile, stays in row on larger screens */}
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 flex-1">
+            <div
+              className={`flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-1 ${
+                activeTab === "companies" ? "sm:gap-1" : "sm:gap-3"
+              }`}
+            >
                 {activeTab === "companies" ? (
                   <>
                     {/* Search Input */}
-                    <div className="relative w-full  sm:w-auto sm:min-w-[160px] sm:flex-1 lg:flex-none lg:min-w-[160px]">
-                      <div className="w-[85%]">
+                    <div className="relative w-full  sm:w-auto sm:min-w-[160px] sm:flex-1 lg:flex-none lg:min-w-[160px] mr-2">
+                      <div className="w-full">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white pointer-events-none z-10" />
                         <Input
                           type="text"
@@ -876,11 +881,7 @@ const index = () => {
           >
             {/* Left: Companies/Leads List */}
             <div
-              className="relative pt-3 sm:pt-4 px-3 sm:px-6 rounded-xl sm:rounded-[30px]
-            h-[calc(100vh-420px)] sm:h-[calc(100vh-380px)] md:h-[calc(100vh-360px)] lg:h-[calc(100vh-340px)]
-            min-h-[350px] sm:min-h-[400px] md:min-h-[500px] max-h-[800px]
-            flex-1 overflow-y-auto w-full border-0 sm:border sm:border-white/10 bg-transparent
-            sm:bg-[linear-gradient(173.83deg,_rgba(255,255,255,0.08)_4.82%,_rgba(255,255,255,0)_38.08%,_rgba(255,255,255,0)_56.68%,_rgba(255,255,255,0.02)_95.1%)]"
+              className="relative pt-3 sm:pt-4 px-3 sm:px-6 rounded-xl sm:rounded-[30px] w-full border-0 sm:border sm:border-white/10 bg-transparent sm:bg-[linear-gradient(173.83deg,_rgba(255,255,255,0.08)_4.82%,_rgba(255,255,255,0)_38.08%,_rgba(255,255,255,0)_56.68%,_rgba(255,255,255,0.02)_95.1%)]"
             >
               {activeTab === "companies" ? (
                 <CompaniesList
@@ -899,6 +900,9 @@ const index = () => {
                   onViewAllLeads={() => setActiveTab("leads")}
                   onExecutiveSelect={handleExecutiveSelect}
                   onMobileExecutivesViewChange={setIsMobileExecutivesView}
+                  pageSize={companiesLimit}
+                  onPageSizeChange={setCompaniesLimit}
+                  pageSizeOptions={pageSizeOptions}
                 />
               ) : (
                 <LeadsList
@@ -926,6 +930,9 @@ const index = () => {
                   onLeadSynced={(leadId) => {
                     setSyncedLeadIds((prev) => new Set(prev).add(leadId));
                   }}
+                  pageSize={leadsLimit}
+                  onPageSizeChange={setLeadsLimit}
+                  pageSizeOptions={pageSizeOptions}
                 />
               )}
             </div>

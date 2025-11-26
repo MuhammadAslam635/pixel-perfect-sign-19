@@ -28,6 +28,13 @@ import LeadDetailsPanel from "./LeadDetailsPanel";
 import { highlevelService } from "@/services/highlevel.service";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type LeadsListProps = {
   leads: Lead[];
@@ -52,6 +59,9 @@ type LeadsListProps = {
   onPhoneClickFromSidebar?: (lead?: Lead, fallback?: any) => void;
   syncedLeadIds?: Set<string>;
   onLeadSynced?: (leadId: string) => void;
+  pageSize?: number;
+  pageSizeOptions?: number[];
+  onPageSizeChange?: (size: number) => void;
 };
 
 const getIconButtonClasses = (isDisabled: boolean) =>
@@ -75,11 +85,15 @@ const LeadsList: FC<LeadsListProps> = ({
   totalPages = 1,
   onPageChange,
   showFilters = true,
+  totalLeads,
   selectedLead,
   executiveFallback,
   onPhoneClickFromSidebar,
   syncedLeadIds = new Set(),
   onLeadSynced,
+  pageSize = 10,
+  pageSizeOptions = [10, 25, 50, 100],
+  onPageSizeChange,
 }) => {
   const navigate = useNavigate();
   const [syncingLeads, setSyncingLeads] = useState<Record<string, boolean>>({});
@@ -436,7 +450,7 @@ const LeadsList: FC<LeadsListProps> = ({
     const { pages, startPage, endPage } = paginationPages;
 
     return (
-      <div className="sticky bottom-0 left-0 right-0 z-10 bg-[#222B2C] py-2 -mx-4 sm:-mx-6 px-4 sm:px-6 border-t border-white/10">
+      <div className="bg-[#222B2C]/40 py-3 px-4 sm:px-6 border border-white/10 rounded-2xl">
         <Pagination>
           <PaginationContent className="gap-1">
             <PaginationItem>
@@ -529,10 +543,49 @@ const LeadsList: FC<LeadsListProps> = ({
     );
   };
 
+  const renderPageSizeSelector = (position: "top" | "bottom") => {
+    const totalCount = totalLeads ?? leads.length;
+    const hasData = totalCount > 0;
+    const start = hasData ? (page - 1) * pageSize + 1 : 0;
+    const end = hasData ? Math.min(page * pageSize, totalCount) : 0;
+
+    return (
+      <div
+        className={`flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between ${
+          position === "top" ? "mb-4" : "mt-4"
+        }`}
+      >
+        <p className="text-xs text-white/60">
+          {hasData
+            ? `Showing ${start}-${end} of ${totalCount} leads`
+            : "No leads to display"}
+        </p>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-white/60">Rows per page</span>
+          <Select
+            value={String(pageSize)}
+            onValueChange={(value) => onPageSizeChange?.(Number(value))}
+          >
+            <SelectTrigger className="h-8 w-[110px] rounded-full border border-white/20 bg-transparent text-white text-xs">
+              <SelectValue placeholder={`${pageSize}`} />
+            </SelectTrigger>
+            <SelectContent className="bg-[#1a1f1f] border border-white/10 text-white">
+              {pageSizeOptions.map((option) => (
+                <SelectItem key={option} value={String(option)}>
+                  {option} / page
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <div className="flex flex-col h-full">
-      {/* Scrollable content area */}
-      <div className="flex-1 overflow-y-auto space-y-4 pb-4 pr-3 custom-scrollbar-list">
+    <div className="flex flex-col">
+      {renderPageSizeSelector("top")}
+      <div className="space-y-4">
         {loading
           ? renderLoading()
           : leads.length === 0
@@ -561,7 +614,12 @@ const LeadsList: FC<LeadsListProps> = ({
       </div>
 
       {/* Fixed pagination at bottom */}
-      {!loading && leads.length > 0 && renderPagination()}
+      {!loading && leads.length > 0 && (
+        <>
+          {renderPagination()}
+          {renderPageSizeSelector("bottom")}
+        </>
+      )}
     </div>
   );
 };

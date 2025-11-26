@@ -3,6 +3,13 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Pagination,
   PaginationContent,
   PaginationItem,
@@ -31,6 +38,9 @@ type CompaniesListProps = {
   onViewAllLeads?: () => void;
   onExecutiveSelect?: (executive: any) => void;
   onMobileExecutivesViewChange?: (isOpen: boolean) => void;
+  pageSize?: number;
+  pageSizeOptions?: number[];
+  onPageSizeChange?: (size: number) => void;
 };
 
 const CompaniesList: FC<CompaniesListProps> = ({
@@ -43,10 +53,14 @@ const CompaniesList: FC<CompaniesListProps> = ({
   totalPages = 1,
   onPageChange,
   showFilters = true,
+  totalCompanies,
   selectedCompany,
   onViewAllLeads,
   onExecutiveSelect,
   onMobileExecutivesViewChange,
+  pageSize = 10,
+  pageSizeOptions = [10, 25, 50, 100],
+  onPageSizeChange,
 }) => {
   // State to track if mobile executives view is open
   const [mobileExecutivesView, setMobileExecutivesView] = useState(false);
@@ -373,7 +387,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
     const { pages, startPage, endPage } = paginationPages;
 
     return (
-      <div className="sticky bottom-0 left-0 right-0 z-10 bg-[#222B2C] py-2 -mx-4 sm:-mx-6 px-4 sm:px-6 border-t border-white/10">
+      <div className="bg-[#222B2C]/40 py-3 px-4 sm:px-6 border border-white/10 rounded-2xl">
         <Pagination>
           <PaginationContent className="gap-1">
             <PaginationItem>
@@ -466,10 +480,49 @@ const CompaniesList: FC<CompaniesListProps> = ({
     );
   };
 
+  const renderPageSizeSelector = (position: "top" | "bottom") => {
+    const totalCount = totalCompanies ?? companies.length;
+    const hasData = totalCount > 0;
+    const start = hasData ? (page - 1) * pageSize + 1 : 0;
+    const end = hasData ? Math.min(page * pageSize, totalCount) : 0;
+
+    return (
+      <div
+        className={`flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between ${
+          position === "top" ? "mb-4" : "mt-4"
+        }`}
+      >
+        <p className="text-xs text-white/60">
+          {hasData
+            ? `Showing ${start}-${end} of ${totalCount} companies`
+            : "No companies to display"}
+        </p>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-white/60">Rows per page</span>
+          <Select
+            value={String(pageSize)}
+            onValueChange={(value) => onPageSizeChange?.(Number(value))}
+          >
+            <SelectTrigger className="h-8 w-[110px] rounded-full border border-white/20 bg-transparent text-white text-xs">
+              <SelectValue placeholder={`${pageSize}`} />
+            </SelectTrigger>
+            <SelectContent className="bg-[#1a1f1f] border border-white/10 text-white">
+              {pageSizeOptions.map((option) => (
+                <SelectItem key={option} value={String(option)}>
+                  {option} / page
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+    );
+  };
+
   // Mobile executives view - show only executives list
   if (mobileExecutivesView && selectedCompany) {
     return (
-      <div className="flex flex-col h-full md:hidden">
+      <div className="flex flex-col md:hidden">
         <div className="hidden sm:flex items-center gap-3 mb-4 pb-3 border-b border-white/10">
           <Button
             variant="ghost"
@@ -487,7 +540,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
             {selectedCompany.name} - Executives
           </h3>
         </div>
-        <div className="flex-1 overflow-y-auto pb-4 pr-3 custom-scrollbar-list">
+        <div className="pb-4">
           <div className="flex items-center gap-3 mb-3 sm:hidden">
             <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
               <img
@@ -511,9 +564,9 @@ const CompaniesList: FC<CompaniesListProps> = ({
   }
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Scrollable content area */}
-      <div className="flex-1 overflow-y-auto space-y-4 pb-4 pr-3 custom-scrollbar-list">
+    <div className="flex flex-col">
+      {renderPageSizeSelector("top")}
+      <div className="space-y-4">
         {loading
           ? renderLoading()
           : companies.length === 0
@@ -555,7 +608,12 @@ const CompaniesList: FC<CompaniesListProps> = ({
       )}
 
       {/* Fixed pagination at bottom */}
-      {!loading && companies.length > 0 && renderPagination()}
+      {!loading && companies.length > 0 && (
+        <>
+          {renderPagination()}
+          {renderPageSizeSelector("bottom")}
+        </>
+      )}
     </div>
   );
 };
