@@ -717,7 +717,7 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
                   }))
                 }
                 className="bg-white/5 border-white/10 text-white text-sm"
-                placeholder="Optional location or meeting link"
+                placeholder="Optional location"
               />
             </div>
 
