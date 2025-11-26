@@ -341,7 +341,7 @@ const UserList = () => {
                   setTrashed((t) => !t);
                   setPage(1);
                 }}
-                className="group relative overflow-hidden flex-1 sm:flex-none flex h-12 items-center justify-center rounded-full border border-white/40 px-0 text-sm font-medium tracking-wide text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] pl-4 pr-4 gap-2 before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/18 before:to-transparent before:transition-all before:duration-300 before:ease-in-out hover:before:from-white/30 hover:before:duration-200"
+                className="group relative overflow-hidden flex-1 sm:flex-none flex h-12 w-32 items-center justify-center rounded-full border border-white/40 px-0 text-sm font-medium tracking-wide text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] pl-4 pr-4 gap-2 before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/18 before:to-transparent before:transition-all before:duration-300 before:ease-in-out hover:before:from-white/30 hover:before:duration-200"
                 style={{
                   background: "#FFFFFF1A",
                   boxShadow:
@@ -363,7 +363,7 @@ const UserList = () => {
               <Button
                 type="button"
                 onClick={() => navigate("/users/create")}
-                className="group relative overflow-hidden flex-1 sm:flex-none flex h-12 items-center justify-center rounded-full border border-white/40 px-0 text-sm font-medium tracking-wide text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] pl-4 pr-4 gap-2 before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/18 before:to-transparent before:transition-all before:duration-300 before:ease-in-out hover:before:from-white/30 hover:before:duration-200"
+                className="group relative overflow-hidden flex-1 sm:flex-none flex h-12 w-44 items-center justify-center rounded-full border border-white/40 px-0 text-sm font-medium tracking-wide text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] pl-4 pr-4 gap-2 before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/18 before:to-transparent before:transition-all before:duration-300 before:ease-in-out hover:before:from-white/30 hover:before:duration-200"
                 style={{
                   background: "#FFFFFF1A",
                   boxShadow:
@@ -387,8 +387,9 @@ const UserList = () => {
           </div>
         </section>
 
-        <section className="rounded-[32px] border border-white/10 bg-[linear-gradient(150deg,rgba(11,17,28,0.95),rgba(22,34,49,0.9))] shadow-[0_25px_60px_rgba(0,0,0,0.55)] overflow-hidden">
-          <div className="hidden lg:grid grid-cols-[1.2fr_1.5fr_0.8fr_0.8fr_1fr_140px] items-center gap-4 px-6 py-5 bg-white/5 border-b border-white/10 text-white/70 text-sm font-medium">
+        <section className="rounded-[32px] border border-white/10 bg-[linear-gradient(135deg,#0f1620,#1c2b37,#090f16)] shadow-[0_25px_60px_rgba(0,0,0,0.55)] overflow-hidden relative">
+          <div className="pointer-events-none absolute inset-0 opacity-80 bg-[radial-gradient(circle_at_8%_6%,rgba(67,173,189,0.7),transparent_18%)]" />
+          <div className="hidden lg:grid grid-cols-[1.2fr_1.5fr_0.8fr_0.8fr_1fr_140px] items-center gap-4 px-6 py-8 bg-[linear-gradient(135deg,rgba(19,26,36,0.95),rgba(10,16,24,0.95))] border-b border-white/10 text-white/75 text-sm font-medium relative z-10">
             <span>Name</span>
             <span>Email</span>
             <span>Role</span>
@@ -397,7 +398,7 @@ const UserList = () => {
             <span className="text-center">Actions</span>
           </div>
 
-          <div className="min-h-[420px]">
+          <div className="min-h-[420px] relative z-10">
             {loading ? (
               <div className="flex flex-col items-center justify-center py-16">
                 <div className="w-10 h-10 border-4 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin mb-4" />
@@ -424,7 +425,7 @@ const UserList = () => {
                     <div
                       key={user._id}
                       className={`grid grid-cols-[1.2fr_1.5fr_0.8fr_0.8fr_1fr_140px] items-center gap-4 px-6 py-5 text-sm border-b border-white/5 ${
-                        index % 2 === 0 ? "bg-white/[0.02]" : ""
+                        index % 2 === 0 ? "bg-[#222B2C]" : "bg-[#1B1B1B]"
                       }`}
                     >
                       <div className="font-medium text-white truncate">
@@ -434,12 +435,12 @@ const UserList = () => {
                       <div>{renderRoleBadge(user)}</div>
                       <div>
                         {user.status === "active" && (
-                          <Badge className="rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 px-4 py-1 text-xs">
+                          <Badge className="rounded-full bg-[#3AC143D6] text-[#FFFFFF99] border border-emerald-400/40 px-4 py-1 text-xs">
                             Active
                           </Badge>
                         )}
                         {user.status === "inactive" && (
-                          <Badge className="rounded-full bg-[#5A1212]/80 text-[#FF6B6B] border border-[#FF6B6B]/40 px-4 py-1 text-xs">
+                          <Badge className="rounded-full bg-[#F72E2E80] text-[#FFFFFF99] border border-[#FF6B6B]/40 px-4 py-1 text-xs">
                             Inactive
                           </Badge>
                         )}
