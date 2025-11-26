@@ -62,9 +62,29 @@ const ThreadsPage = () => {
                 {threadsData?.data?.pagination?.total || 0} conversations
               </p>
             </div>
-            <Button onClick={handleCompose}>
-              <Plus className="h-4 w-4 mr-2" />
-              Compose
+            <Button
+              size="sm"
+              onClick={handleCompose}
+              className="relative h-10 px-5 rounded-full border-0 text-white text-sm hover:bg-[#2F2F2F]/60 transition-all overflow-hidden"
+              style={{
+                background: "#FFFFFF1A",
+                boxShadow:
+                  "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+              }}
+            >
+              {/* radial element 150px 150px */}
+              <div
+                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[150px] h-[150px] rounded-full pointer-events-none"
+                style={{
+                  background:
+                    "radial-gradient(circle, #66AFB7 0%, transparent 70%)",
+                  backdropFilter: "blur(50px)",
+                  WebkitBackdropFilter: "blur(50px)",
+                  zIndex: -1,
+                }}
+              ></div>
+              <Plus className="w-4 h-4 mr-2 relative z-10" />
+              <span className="relative z-10">Compose</span>
             </Button>
           </div>
 
@@ -108,7 +128,10 @@ const ThreadsPage = () => {
                   placeholder="Search threads..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 rounded-full"
+                  style={{
+                    borderRadius: "9999px",
+                  }}
                 />
               </div>
 

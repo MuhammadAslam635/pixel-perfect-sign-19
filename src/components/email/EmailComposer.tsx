@@ -84,10 +84,17 @@ export const EmailComposer = ({
   };
 
   return (
-    <section className="h-full flex flex-col rounded-[32px] border border-white/10 bg-[linear-gradient(135deg,#0f1620,#1c2b37,#090f16)] shadow-[0_25px_60px_rgba(0,0,0,0.55)] overflow-hidden relative">
-      <div className="pointer-events-none absolute inset-0 opacity-80 bg-[radial-gradient(circle_at_8%_6%,rgba(67,173,189,0.7),transparent_18%)]" />
+    <section 
+      className="h-full flex flex-col rounded-[30px] border border-[#FFFFFF4D] shadow-2xl overflow-hidden relative"
+      style={{
+        borderRadius: "30px",
+        borderWidth: "1px",
+        background:
+          "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
+      }}
+    >
       <div className="flex flex-col h-full relative z-10">
-        <div className="p-6 pb-4 bg-[linear-gradient(135deg,rgba(19,26,36,0.95),rgba(10,16,24,0.95))] border-b border-white/10">
+        <div className="p-6 pb-4 border-b border-white/10">
           <h2 className="text-xl font-semibold text-white">
             {threadId ? "Reply" : "Compose Email"}
           </h2>

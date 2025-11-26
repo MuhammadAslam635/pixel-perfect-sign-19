@@ -122,15 +122,28 @@ const InboxPage = () => {
               </p>
             </div>
             <Button
+              size="sm"
               onClick={handleCompose}
-              className="rounded-full bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3] text-sm sm:text-base px-4 sm:px-6 py-2"
+              className="relative h-10 px-5 rounded-full border-0 text-white text-sm hover:bg-[#2F2F2F]/60 transition-all overflow-hidden"
               style={{
+                background: "#FFFFFF1A",
                 boxShadow:
                   "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
               }}
             >
-              <Plus className="h-4 w-4 mr-2" />
-              Compose
+              {/* radial element 150px 150px */}
+              <div
+                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[150px] h-[150px] rounded-full pointer-events-none"
+                style={{
+                  background:
+                    "radial-gradient(circle, #66AFB7 0%, transparent 70%)",
+                  backdropFilter: "blur(50px)",
+                  WebkitBackdropFilter: "blur(50px)",
+                  zIndex: -1,
+                }}
+              ></div>
+              <Plus className="w-4 h-4 mr-2 relative z-10" />
+              <span className="relative z-10">Compose</span>
             </Button>
           </div>
 
@@ -313,6 +326,7 @@ const InboxPage = () => {
                     background: "#FFFFFF1A",
                     boxShadow:
                       "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                    borderRadius: "9999px",
                   }}
                 />
               </div>
