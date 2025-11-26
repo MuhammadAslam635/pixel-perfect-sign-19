@@ -34,6 +34,7 @@ import {
   StatsPage,
 } from "@/pages/emails";
 import LeadChat from "./pages/leaddetailview/components/LeadChat";
+import MembersPermissions from "@/pages/admin/MembersPermissions";
 
 const AppRoutes = () => {
   return (
@@ -296,6 +297,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute moduleName="modules">
             <ModuleList />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/members/permissions"
+        element={
+          <ProtectedRoute allowedRoles={["Admin"]}>
+            <MembersPermissions />
           </ProtectedRoute>
         }
       />

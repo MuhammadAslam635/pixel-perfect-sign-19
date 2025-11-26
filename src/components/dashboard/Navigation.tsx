@@ -12,7 +12,8 @@ import {
   Mail,
   Shield,
   PhoneCall,
-  Target
+  Target,
+  UserCheck
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSelector } from "react-redux";
@@ -30,6 +31,7 @@ type NavLink = {
 
 const contactRoles = ["CompanyUser"];
 const adminRoles = ["Admin", "CompanyAdmin", "Company"];
+const superAdminRoles = ["Admin"];
 
 const navLinks: NavLink[] = [
   {
@@ -69,6 +71,14 @@ const navLinks: NavLink[] = [
     path: "/roles",
     match: (pathname: string) => pathname.startsWith("/roles"),
     roles: adminRoles,
+  },
+  {
+    id: "members-permissions",
+    label: "Members",
+    icon: UserCheck,
+    path: "/admin/members/permissions",
+    match: (pathname: string) => pathname.startsWith("/admin/members/permissions"),
+    roles: superAdminRoles,
   },
   {
     id: "emails",

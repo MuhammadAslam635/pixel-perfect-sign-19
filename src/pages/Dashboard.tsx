@@ -1,4 +1,8 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
+import { getUserData } from "@/utils/authHelpers";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import AssistantPanel from "@/components/dashboard/AssistantPanel";
 import StatsCard from "@/components/dashboard/StatsCard";
@@ -16,7 +20,18 @@ const getIsDesktop = () => {
 };
 
 const Dashboard = () => {
+  const navigate = useNavigate();
+  const { user } = useSelector((state: RootState) => state.auth);
+  const sessionUser = user || getUserData();
+  const userRole = sessionUser?.role;
   const [isDesktop, setIsDesktop] = useState(getIsDesktop);
+
+  // Redirect Admin users to Members & Permissions page
+  useEffect(() => {
+    if (userRole === "Admin") {
+      navigate("/admin/members/permissions", { replace: true });
+    }
+  }, [userRole, navigate]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -29,6 +44,11 @@ const Dashboard = () => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  // Don't render dashboard for Admin users (they'll be redirected)
+  if (userRole === "Admin") {
+    return null;
+  }
 
   const desktopLayout = (
     <main className="relative px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] mt-20 sm:mt-20 lg:mt-24 xl:mt-28 mb-0 flex flex-col lg:flex-row items-start gap-5 md:gap-6 lg:gap-8 text-white flex-1 min-h-0 overflow-hidden max-w-full">
