@@ -107,94 +107,110 @@ const RoleList = () => {
 
   return (
     <DashboardLayout>
-      <main className="relative px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] mt-20 sm:mt-20 lg:mt-24 xl:mt-28 mb-0 flex flex-col gap-6 text-white flex-1 overflow-y-auto">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-semibold text-white mb-2">
-              Roles & Permissions
-            </h1>
-            <p className="text-white/60 text-xs sm:text-sm">
-              Manage roles and their permissions
-            </p>
-          </div>
-          <Button
-            className="w-full sm:w-auto bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3]"
-            style={{
-              boxShadow:
-                "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
-            }}
-            onClick={() => navigate("/roles/create")}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">Create Role</span>
-            <span className="sm:hidden">Create</span>
-          </Button>
-        </div>
-
-        {/* Search */}
-        <div className="rounded-2xl border border-white/10 bg-[linear-gradient(135deg,rgba(58,62,75,0.82),rgba(28,30,40,0.94))] p-4 sm:p-6 shadow-[0_20px_34px_rgba(0,0,0,0.38)] backdrop-blur">
-          <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/50" />
-            <Input
-              placeholder="Search roles..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 w-full rounded-full bg-black/35 border border-white/10 text-white placeholder:text-white/50 focus:ring-2 focus:ring-cyan-400/40 text-sm sm:text-base"
-            />
-          </div>
-        </div>
-
-        {/* Table */}
-        <div className="rounded-2xl border border-white/10 bg-[linear-gradient(135deg,rgba(58,62,75,0.82),rgba(28,30,40,0.94))] shadow-[0_20px_34px_rgba(0,0,0,0.38)] backdrop-blur overflow-hidden">
-          {/* Table Header - Hidden on mobile */}
-          <div className="hidden lg:grid grid-cols-[1.5fr_1fr_1fr_1.5fr_80px] items-center gap-4 px-4 sm:px-6 py-4 bg-black/20 border-b border-white/10">
-            <div className="text-sm font-medium text-white/70">Role Name</div>
-            <div className="text-sm font-medium text-white/70">Type</div>
-            <div className="text-sm font-medium text-white/70">Status</div>
-            <div className="text-sm font-medium text-white/70">Permissions</div>
-            <div className="text-sm font-medium text-white/70 text-center">
-              Actions
+      <main className="relative px-4 sm:px-6 md:px-10 lg:px-14 xl:px-16 2xl:px-[96px] mt-20 lg:mt-24 xl:mt-28 mb-10 flex flex-col gap-8 text-white flex-1 overflow-y-auto">
+        <section className="p-5 sm:p-8 lg:p-2 space-y-6 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-6">
+          <div className="flex items-center gap-3 mt-2">
+            <div>
+              <h1 className="text-3xl md:text-[36px] font-semibold tracking-tight">
+                Roles & Permissions
+              </h1>
+              <p className="text-white/60 text-sm mt-2">
+                Keep access aligned with your employee experience.
+              </p>
             </div>
           </div>
+          <div className="flex flex-col justify-end xl:flex-row xl:items-center gap-4 w-full xl:w-auto">
+            <div className="relative w-full">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/60 z-20" />
+              <Input
+                placeholder="Search roles"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="px-4 bg-gradient-to-br from-[#1a1a1a] to-[#2a2a2a] border-transparent focus:outline-none focus:ring-[2px] focus:ring-transparent shadow-[inset_0_0_10px_rgba(0,0,0,0.4)] relative z-10 h-12 pl-10 pr-4 !rounded-full border-0 text-gray-300 placeholder:text-gray-500 text-sm w-full"
+                style={{
+                  background: "rgba(255, 255, 255, 0.1)",
+                  border: "1px solid rgba(0, 255, 255, 0.1)",
+                  borderRadius: "9999px",
+                  boxShadow:
+                    "rgba(255, 255, 255, 0.16) 0px 3.43px 3.43px 0px inset, rgba(255, 255, 255, 0.16) 0px -3.43px 3.43px 0px inset",
+                }}
+              />
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 w-full xl:w-auto">
+              <Button
+                type="button"
+                onClick={() => navigate("/roles/create")}
+                className="group relative overflow-hidden flex-1 sm:flex-none flex h-12 items-center justify-center rounded-full border border-white/40 text-sm font-medium tracking-wide text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] pl-4 pr-3 gap-2 before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/18 before:to-transparent before:transition-all before:duration-300 before:ease-in-out hover:before:from-white/30 hover:before:duration-200"
+                style={{
+                  background: "#FFFFFF1A",
+                  boxShadow:
+                    "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                }}
+              >
+                <span
+                  className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[120px] h-[120px] rounded-full pointer-events-none opacity-60 blur-[26px]"
+                  style={{
+                    background:
+                      "linear-gradient(180deg, #67B0B7 0%, #4066B3 100%)",
+                  }}
+                />
+                <Plus className="h-5 w-5 relative z-10" />
+                <span className="hidden sm:block relative z-10">
+                  Create Role
+                </span>
+                <span className="sm:hidden relative z-10">Create</span>
+              </Button>
+            </div>
+          </div>
+        </section>
 
-          {/* Table Body */}
-          <div className="min-h-[400px]">
+        <section className="rounded-[32px] border border-white/10 bg-[linear-gradient(135deg,#0f1620,#1c2b37,#090f16)] shadow-[0_25px_60px_rgba(0,0,0,0.55)] overflow-hidden relative">
+          <div className="pointer-events-none absolute inset-0 opacity-80 bg-[radial-gradient(circle_at_8%_6%,rgba(67,173,189,0.7),transparent_18%)]" />
+          <div className="hidden lg:grid grid-cols-[1.5fr_1fr_1fr_1.4fr_0.6fr] items-center gap-4 p-6 pt-12 bg-[linear-gradient(135deg,rgba(19,26,36,0.95),rgba(10,16,24,0.95))] border-b border-white/10 text-white/75 text-sm font-medium relative z-10">
+            <span>Role</span>
+            <span>Type</span>
+            <span>Status</span>
+            <span>Permissions</span>
+            <span className="text-center">Actions</span>
+          </div>
+
+          <div className="min-h-[420px] relative z-10">
             {loading ? (
               <div className="flex flex-col items-center justify-center py-16">
-                <div className="w-8 h-8 border-4 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin mb-3" />
+                <div className="w-10 h-10 border-4 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin mb-4" />
                 <p className="text-white/60 text-sm">Loading roles...</p>
               </div>
             ) : filteredRoles.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 px-4">
-                <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-4">
-                  <Shield className="w-6 h-6 text-white/30" />
+              <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+                <div className="w-20 h-20 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-5">
+                  <Shield className="w-8 h-8 text-white/25" />
                 </div>
-                <p className="text-white/70 text-base font-medium mb-1">
-                  {searchTerm ? "No roles found" : "No roles available"}
+                <p className="text-lg font-semibold text-white/80 mb-2">
+                  {searchTerm ? "No roles found" : "No roles yet"}
                 </p>
-                <p className="text-white/50 text-sm text-center max-w-md">
+                <p className="text-sm text-white/60 max-w-lg">
                   {searchTerm
-                    ? "Try adjusting your search terms."
-                    : "Create your first role to get started."}
+                    ? "Try a different search to locate the role you need."
+                    : "Roles you configure will show up here so you can align permissions quickly."}
                 </p>
               </div>
             ) : (
               <>
-                {/* Desktop Table View */}
                 <div className="hidden lg:block">
-                  {filteredRoles.map((role) => (
+                  {filteredRoles.map((role, index) => (
                     <div
                       key={role._id}
-                      className="grid grid-cols-[1.5fr_1fr_1fr_1.5fr_80px] items-center gap-4 px-4 sm:px-6 py-4 hover:bg-white/5 transition-colors border-b border-white/5 last:border-b-0"
+                      className={`grid grid-cols-[1.5fr_1fr_1fr_1.4fr_0.6fr] items-center gap-4 px-6 py-5 text-sm border-b border-white/5 ${
+                        index % 2 === 0 ? "bg-[#222B2C]" : "bg-[#1B1B1B]"
+                      }`}
                     >
                       <div>
                         <div className="font-medium text-white">
                           {role.displayName}
                         </div>
-                        <div className="text-white/50 text-sm">{role.name}</div>
+                        <div className="text-white/50 text-xs">{role.name}</div>
                       </div>
-                      <div>
+                      <div className="flex flex-wrap gap-1">
                         {role.type === "system" && (
                           <Badge className="bg-blue-600/20 text-blue-400 border border-blue-600/30 rounded-full px-3 py-1 text-xs">
                             System
@@ -213,16 +229,16 @@ const RoleList = () => {
                       </div>
                       <div>
                         {role.isActive ? (
-                          <Badge className="bg-green-600/20 text-green-400 border border-green-600/30 rounded-full px-3 py-1 text-xs">
+                          <Badge className="rounded-full bg-[#3AC143D6] text-[#FFFFFF99] border border-emerald-400/40 px-4 py-1 text-xs">
                             Active
                           </Badge>
                         ) : (
-                          <Badge className="bg-red-600/20 text-red-400 border border-red-600/30 rounded-full px-3 py-1 text-xs">
+                          <Badge className="rounded-full bg-[#F72E2E80] text-[#FFFFFF99] border border-[#FF6B6B]/40 px-4 py-1 text-xs">
                             Inactive
                           </Badge>
                         )}
                       </div>
-                      <div className="text-white/60 text-sm">
+                      <div className="text-white/70">
                         {role.permissions.length} module
                         {role.permissions.length !== 1 ? "s" : ""}
                       </div>
@@ -235,7 +251,7 @@ const RoleList = () => {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent
                             align="end"
-                            className="bg-[rgba(30,30,30,0.95)] border border-white/10 text-white shadow-lg rounded-lg w-40 backdrop-blur"
+                            className="bg-[rgba(30,30,30,0.95)] border border-white/10 text-white shadow-lg rounded-lg w-44 backdrop-blur"
                           >
                             <DropdownMenuItem
                               onClick={() =>
@@ -262,29 +278,30 @@ const RoleList = () => {
                   ))}
                 </div>
 
-                {/* Mobile Card View */}
                 <div className="lg:hidden space-y-4 p-4">
                   {filteredRoles.map((role) => (
                     <div
                       key={role._id}
-                      className="bg-black/20 rounded-xl border border-white/10 p-4 space-y-3"
+                      className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 space-y-4 shadow-[0_15px_35px_rgba(0,0,0,0.35)]"
                     >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-medium text-white mb-1">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="min-w-0">
+                          <p className="text-lg font-semibold truncate">
                             {role.displayName}
-                          </h3>
-                          <p className="text-white/50 text-sm">{role.name}</p>
+                          </p>
+                          <p className="text-white/60 text-sm truncate">
+                            {role.name}
+                          </p>
                         </div>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <button className="p-2 rounded-full hover:bg-white/10 text-white/70 hover:text-white transition flex-shrink-0">
+                            <button className="rounded-full border border-white/25 bg-white/5 text-white/80 p-2 hover:bg-white/10 transition">
                               <MoreVertical className="h-5 w-5" />
                             </button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent
                             align="end"
-                            className="bg-[rgba(30,30,30,0.95)] border border-white/10 text-white shadow-lg rounded-lg w-40 backdrop-blur"
+                            className="bg-[rgba(30,30,30,0.95)] border border-white/10 text-white shadow-lg rounded-lg w-44 backdrop-blur"
                           >
                             <DropdownMenuItem
                               onClick={() =>
@@ -324,23 +341,21 @@ const RoleList = () => {
                           </Badge>
                         )}
                         {role.isActive ? (
-                          <Badge className="bg-green-600/20 text-green-400 border border-green-600/30 rounded-full px-3 py-1 text-xs">
+                          <Badge className="rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 px-4 py-1 text-xs">
                             Active
                           </Badge>
                         ) : (
-                          <Badge className="bg-red-600/20 text-red-400 border border-red-600/30 rounded-full px-3 py-1 text-xs">
+                          <Badge className="rounded-full bg-[#5A1212]/80 text-[#FF6B6B] border border-[#FF6B6B]/40 px-4 py-1 text-xs">
                             Inactive
                           </Badge>
                         )}
                       </div>
-                      <div className="text-white/60 text-xs pt-2 border-t border-white/10">
+                      <div className="text-xs text-white/60 border-t border-white/10 pt-3">
                         Permissions: {role.permissions.length} module
                         {role.permissions.length !== 1 ? "s" : ""}
                       </div>
                       {role.description && (
-                        <div className="text-white/50 text-xs">
-                          {role.description}
-                        </div>
+                        <p className="text-white/50 text-xs">{role.description}</p>
                       )}
                     </div>
                   ))}
@@ -348,7 +363,7 @@ const RoleList = () => {
               </>
             )}
           </div>
-        </div>
+        </section>
       </main>
     </DashboardLayout>
   );
