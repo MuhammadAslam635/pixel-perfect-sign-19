@@ -6,14 +6,12 @@ import {
   Linkedin,
   MessageCircle,
   Send,
-  Upload,
   Loader2,
   Sparkles,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Lead } from "@/services/leads.service";
 import { CompanyPerson, companiesService } from "@/services/companies.service";
-import { highlevelService } from "@/services/highlevel.service";
 import { toast } from "sonner";
 
 type LeadDetailsPanelProps = {
@@ -25,8 +23,6 @@ type LeadDetailsPanelProps = {
     fallbackExecutive?: CompanyPerson | null
   ) => void;
   onLinkedinClick?: (lead: Lead) => void;
-  syncedLeadIds?: Set<string>;
-  onLeadSynced?: (leadId: string) => void;
 };
 
 const toStringOrUndefined = (value: unknown): string | undefined =>
@@ -45,12 +41,8 @@ const LeadDetailsPanel: FC<LeadDetailsPanelProps> = ({
   fallbackExecutive,
   onPhoneClick,
   onLinkedinClick,
-  syncedLeadIds = new Set(),
-  onLeadSynced,
 }) => {
-  const [syncingToGHL, setSyncingToGHL] = useState(false);
   const [fillingData, setFillingData] = useState(false);
-  const isSynced = lead?._id ? syncedLeadIds.has(lead._id) : false;
 
   const fallbackEmail = toStringOrUndefined(fallbackExecutive?.email);
   const fallbackPhone = toStringOrUndefined(fallbackExecutive?.phone);
@@ -81,35 +73,6 @@ const LeadDetailsPanel: FC<LeadDetailsPanelProps> = ({
   const isPhoneDisabled = !phone;
   const isEmailDisabled = !email;
   const isLinkedinDisabled = !linkedin;
-
-  const handleSyncToGHL = async () => {
-    if (!lead?._id || !lead?.companyId) {
-      toast.error("Cannot sync: Missing lead or company information");
-      return;
-    }
-
-    setSyncingToGHL(true);
-    try {
-      await highlevelService.createContactFromCompanyPerson({
-        companyPersonId: lead._id,
-        companyId: lead.companyId,
-        type: "lead",
-        source: "api v1",
-        tags: [],
-      });
-      // Mark as synced
-      onLeadSynced?.(lead._id);
-      toast.success("Lead synced to GoHighLevel successfully!");
-    } catch (error: any) {
-      const errorMessage =
-        error?.response?.data?.message ||
-        error?.message ||
-        "Failed to sync lead to GoHighLevel";
-      toast.error(errorMessage);
-    } finally {
-      setSyncingToGHL(false);
-    }
-  };
 
   const handleFillLeadData = async () => {
     if (!lead?._id || !lead?.companyId) {
@@ -239,30 +202,6 @@ const LeadDetailsPanel: FC<LeadDetailsPanelProps> = ({
           >
             <Send className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
           </button>
-          {lead && (
-            <button
-              className={`h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center border transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary/40 ${
-                syncingToGHL
-                  ? "bg-primary/50 border-primary/50 text-white cursor-wait"
-                  : isSynced
-                  ? "bg-white border-white text-gray-900 hover:bg-white/80 hover:text-gray-950"
-                  : "bg-white/5 border-white/10 text-white/30 hover:bg-white/10 hover:text-white/40"
-              }`}
-              onClick={handleSyncToGHL}
-              disabled={syncingToGHL}
-              aria-disabled={syncingToGHL}
-              title={isSynced ? "Synced to GoHighLevel" : "Sync to GoHighLevel"}
-            >
-              {syncingToGHL ? (
-                <Loader2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 animate-spin" />
-              ) : (
-                <Upload
-                  className="w-3 h-3 sm:w-3.5 sm:h-3.5"
-                  strokeWidth={isSynced ? 2.5 : 1.5}
-                />
-              )}
-            </button>
-          )}
           {lead && lead.companyId && (
             <button
               className={`h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center border transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary/40 ${
@@ -303,38 +242,6 @@ const LeadDetailsPanel: FC<LeadDetailsPanelProps> = ({
             <p className="text-xs text-white/40">
               {displayPosition || "Chief Executive Officer"}
             </p>
-            {lead && (
-              <button
-                onClick={handleSyncToGHL}
-                disabled={syncingToGHL}
-                className={`mt-4 px-4 py-2 disabled:cursor-wait text-xs font-medium rounded-full flex items-center gap-2 transition-colors ${
-                  syncingToGHL
-                    ? "bg-primary/50 text-white"
-                    : isSynced
-                    ? "bg-white text-gray-900 hover:bg-white/80"
-                    : "bg-primary hover:bg-primary/80 text-white"
-                }`}
-              >
-                {syncingToGHL ? (
-                  <>
-                    <Loader2 className="w-3 h-3 animate-spin" />
-                    <span>Syncing...</span>
-                  </>
-                ) : (
-                  <>
-                    <Upload
-                      className="w-3 h-3"
-                      strokeWidth={isSynced ? 2.5 : 1.5}
-                    />
-                    <span>
-                      {isSynced
-                        ? "Synced to GoHighLevel"
-                        : "Sync to GoHighLevel"}
-                    </span>
-                  </>
-                )}
-              </button>
-            )}
           </div>
         ) : (
           <p className="text-xs sm:text-sm text-muted-foreground/60 text-center py-6 sm:py-8">

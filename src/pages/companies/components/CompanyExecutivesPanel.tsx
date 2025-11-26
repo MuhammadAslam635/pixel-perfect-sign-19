@@ -1,9 +1,7 @@
-import { FC, useState } from "react";
+import { FC } from "react";
 import { Button } from "@/components/ui/button";
-import { Users, Linkedin, ArrowRight, Upload, Loader2 } from "lucide-react";
+import { Users, Linkedin, ArrowRight } from "lucide-react";
 import { Company, CompanyPerson } from "@/services/companies.service";
-import { highlevelService } from "@/services/highlevel.service";
-import { toast } from "sonner";
 
 type CompanyExecutivesPanelProps = {
   company?: Company;
@@ -16,87 +14,6 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
   onViewAllLeads,
   onExecutiveSelect,
 }) => {
-  const [syncingExecutives, setSyncingExecutives] = useState<
-    Record<string, boolean>
-  >({});
-  const [bulkSyncing, setBulkSyncing] = useState(false);
-
-  const handleSyncExecutiveToGHL = async (
-    executive: CompanyPerson,
-    companyId: string
-  ) => {
-    if (!executive._id && !executive.id) {
-      toast.error("Cannot sync: Missing executive ID");
-      return;
-    }
-
-    const execId = executive._id || executive.id!;
-    setSyncingExecutives((prev) => ({ ...prev, [execId]: true }));
-
-    try {
-      await highlevelService.createContactFromCompanyPerson({
-        companyPersonId: execId,
-        companyId: companyId,
-        type: "lead",
-        source: "api v1",
-        tags: [],
-      });
-      toast.success(
-        `${executive.name || "Executive"} synced to GoHighLevel successfully!`
-      );
-    } catch (error: any) {
-      const errorMessage =
-        error?.response?.data?.message ||
-        error?.message ||
-        "Failed to sync executive to GoHighLevel";
-      toast.error(errorMessage);
-    } finally {
-      setSyncingExecutives((prev) => ({ ...prev, [execId]: false }));
-    }
-  };
-
-  const handleBulkSyncAllExecutives = async () => {
-    if (!company?._id || !company?.people || company.people.length === 0) {
-      toast.error("No executives to sync");
-      return;
-    }
-
-    setBulkSyncing(true);
-    try {
-      const companyPersonIds = company.people
-        .filter((exec) => exec._id || exec.id)
-        .map((exec) => exec._id || exec.id!) as string[];
-
-      if (companyPersonIds.length === 0) {
-        toast.error("No valid executives to sync");
-        return;
-      }
-
-      const result = await highlevelService.bulkSyncContacts({
-        companyPersonIds,
-        type: "lead",
-        source: "api v1",
-        tags: [],
-      });
-
-      if (result.success) {
-        toast.success(
-          `Bulk sync completed! ${result.data.success} succeeded, ${result.data.failed} failed.`
-        );
-      } else {
-        toast.error(result.message || "Bulk sync failed");
-      }
-    } catch (error: any) {
-      const errorMessage =
-        error?.response?.data?.message ||
-        error?.message ||
-        "Failed to bulk sync executives to GoHighLevel";
-      toast.error(errorMessage);
-    } finally {
-      setBulkSyncing(false);
-    }
-  };
-
   return (
     <>
       <div className="hidden sm:flex sm:items-center sm:justify-between mb-3 sm:mb-4">
@@ -109,29 +26,6 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
           </h3>
         </div>
         <div className="flex items-center gap-2">
-          {company?.people && company.people.length > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleBulkSyncAllExecutives}
-              disabled={bulkSyncing}
-              className="h-auto px-2 py-1 text-xs text-primary hover:text-primary/80 disabled:opacity-50 flex items-center gap-1"
-            >
-              {bulkSyncing ? (
-                <>
-                  <Loader2 className="w-3 h-3 animate-spin" />
-                  <span className="hidden sm:inline">Syncing...</span>
-                </>
-              ) : (
-                <>
-                  <Upload className="w-3 h-3" />
-                  <span className="hidden sm:inline">
-                    Sync All ({company.people.length})
-                  </span>
-                </>
-              )}
-            </Button>
-          )}
           <Button
             variant="link"
             className="h-auto p-0 text-xs text-foreground/60 hover:text-foreground/80"
@@ -207,28 +101,6 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
                           }`}
                         />
                       </button>
-                      {(exec._id || exec.id) && company?._id && (
-                        <button
-                          type="button"
-                          disabled={syncingExecutives[exec._id || exec.id!]}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleSyncExecutiveToGHL(exec, company._id);
-                          }}
-                          className={`hidden sm:flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full border transition-colors ${
-                            syncingExecutives[exec._id || exec.id!]
-                              ? "bg-primary/50 border-primary/50 text-white cursor-wait"
-                              : "bg-primary border-primary text-white hover:bg-primary/80 hover:border-primary/80"
-                          }`}
-                          title="Sync to GoHighLevel"
-                        >
-                          {syncingExecutives[exec._id || exec.id!] ? (
-                            <Loader2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin" />
-                          ) : (
-                            <Upload className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                          )}
-                        </button>
-                      )}
                     </div>
                   </div>
                 </div>

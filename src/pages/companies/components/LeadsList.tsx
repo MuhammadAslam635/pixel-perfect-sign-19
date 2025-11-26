@@ -18,14 +18,12 @@ import {
   Phone,
   Send,
   Search,
-  Upload,
   Loader2,
   Sparkles,
 } from "lucide-react";
 import { Lead } from "@/services/leads.service";
 import { Company, companiesService } from "@/services/companies.service";
 import LeadDetailsPanel from "./LeadDetailsPanel";
-import { highlevelService } from "@/services/highlevel.service";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -57,8 +55,6 @@ type LeadsListProps = {
   selectedLead?: Lead;
   executiveFallback?: any;
   onPhoneClickFromSidebar?: (lead?: Lead, fallback?: any) => void;
-  syncedLeadIds?: Set<string>;
-  onLeadSynced?: (leadId: string) => void;
   pageSize?: number;
   pageSizeOptions?: number[];
   onPageSizeChange?: (size: number) => void;
@@ -89,47 +85,12 @@ const LeadsList: FC<LeadsListProps> = ({
   selectedLead,
   executiveFallback,
   onPhoneClickFromSidebar,
-  syncedLeadIds = new Set(),
-  onLeadSynced,
   pageSize = 10,
   pageSizeOptions = [10, 25, 50, 100],
   onPageSizeChange,
 }) => {
   const navigate = useNavigate();
-  const [syncingLeads, setSyncingLeads] = useState<Record<string, boolean>>({});
   const [fillingLeads, setFillingLeads] = useState<Record<string, boolean>>({});
-
-  const handleSyncLeadToGHL = async (lead: Lead) => {
-    if (!lead._id || !lead.companyId) {
-      toast.error("Cannot sync: Missing lead or company information");
-      return;
-    }
-
-    setSyncingLeads((prev) => ({ ...prev, [lead._id]: true }));
-
-    try {
-      await highlevelService.createContactFromCompanyPerson({
-        companyPersonId: lead._id,
-        companyId: lead.companyId,
-        type: "lead",
-        source: "api v1",
-        tags: [],
-      });
-      // Mark as synced
-      onLeadSynced?.(lead._id);
-      toast.success(
-        `${lead.name || "Lead"} synced to GoHighLevel successfully!`
-      );
-    } catch (error: any) {
-      const errorMessage =
-        error?.response?.data?.message ||
-        error?.message ||
-        "Failed to sync lead to GoHighLevel";
-      toast.error(errorMessage);
-    } finally {
-      setSyncingLeads((prev) => ({ ...prev, [lead._id]: false }));
-    }
-  };
 
   const handleFillLeadData = async (lead: Lead) => {
     if (!lead._id || !lead.companyId) {
@@ -248,8 +209,6 @@ const LeadsList: FC<LeadsListProps> = ({
     const hasPhone = displayPhone !== "N/A";
     const hasEmail = displayEmail !== "N/A";
     const hasLinkedin = Boolean(lead.linkedinUrl && lead.linkedinUrl.trim());
-    const isSynced = syncedLeadIds.has(lead._id);
-    const isSyncing = syncingLeads[lead._id];
     const isFilling = fillingLeads[lead._id];
     const canEnrich = Boolean(lead._id && lead.companyId);
 
@@ -374,31 +333,6 @@ const LeadsList: FC<LeadsListProps> = ({
               }
             >
               <Send className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-            </button>
-            <button
-              className={`h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center border transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary/40 ${
-                isSyncing
-                  ? "bg-primary/50 border-primary/50 text-white cursor-wait"
-                  : isSynced
-                  ? "bg-white border-white text-gray-900 hover:bg-white/80 hover:text-gray-950"
-                  : "bg-white/5 border-white/10 text-white/30 hover:bg-white/10 hover:text-white/40"
-              }`}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleSyncLeadToGHL(lead);
-              }}
-              disabled={isSyncing}
-              aria-disabled={isSyncing}
-              title={isSynced ? "Synced to GoHighLevel" : "Sync to GoHighLevel"}
-            >
-              {isSyncing ? (
-                <Loader2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 animate-spin" />
-              ) : (
-                <Upload
-                  className="w-3 h-3 sm:w-3.5 sm:h-3.5"
-                  strokeWidth={isSynced ? 2.5 : 1.5}
-                />
-              )}
             </button>
             <button
               className={`h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center border transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary/40 ${
@@ -603,8 +537,6 @@ const LeadsList: FC<LeadsListProps> = ({
                         fallbackExecutive={executiveFallback}
                         onPhoneClick={onPhoneClickFromSidebar}
                         onLinkedinClick={onLinkedinClick}
-                        syncedLeadIds={syncedLeadIds}
-                        onLeadSynced={onLeadSynced}
                       />
                     </Card>
                   </div>

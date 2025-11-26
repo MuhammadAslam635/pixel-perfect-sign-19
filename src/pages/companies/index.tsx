@@ -16,15 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  ArrowRight,
-  Search,
-  Filter,
-  Layers,
-  Upload,
-  Loader2,
-  Plus,
-} from "lucide-react";
+import { ArrowRight, Search, Filter, Layers, Plus } from "lucide-react";
 import CompaniesIcon from "@/components/icons/CompaniesIcon";
 import { Company, CompanyPerson } from "@/services/companies.service";
 import { Lead } from "@/services/leads.service";
@@ -34,7 +26,6 @@ import { PhoneCallModal } from "@/pages/companies/components/PhoneCallModal";
 import { toast } from "sonner";
 import CompaniesList from "./components/CompaniesList";
 import LeadsList from "./components/LeadsList";
-import { highlevelService } from "@/services/highlevel.service";
 import DetailsSidebar from "./components/DetailsSidebar";
 import CompanyExecutivesPanel from "./components/CompanyExecutivesPanel";
 import LeadDetailsPanel from "./components/LeadDetailsPanel";
@@ -132,8 +123,6 @@ const index = () => {
     useState<PhoneScriptMetadata | null>(null);
   const [phoneLoading, setPhoneLoading] = useState(false);
   const [phoneError, setPhoneError] = useState<string | null>(null);
-  const [bulkSyncingLeads, setBulkSyncingLeads] = useState(false);
-  const [syncedLeadIds, setSyncedLeadIds] = useState<Set<string>>(new Set());
   const [companyFiltersOpen, setCompanyFiltersOpen] = useState(false);
   const [leadFiltersOpen, setLeadFiltersOpen] = useState(false);
   const resetCompanyAdvancedFilters = useCallback(() => {
@@ -938,72 +927,6 @@ const index = () => {
               ))}
             </div>
 
-            {/* Sync All Button - Show when leads tab is active */}
-            {activeTab === "leads" && leads.length > 0 && (
-              <Button
-                onClick={async () => {
-                  if (leads.length === 0) {
-                    toast.error("No leads to sync");
-                    return;
-                  }
-
-                  setBulkSyncingLeads(true);
-                  try {
-                    const companyPersonIds = leads
-                      .filter((lead) => lead._id && lead.companyId)
-                      .map((lead) => lead._id) as string[];
-
-                    if (companyPersonIds.length === 0) {
-                      toast.error("No valid leads to sync");
-                      return;
-                    }
-
-                    const result = await highlevelService.bulkSyncContacts({
-                      companyPersonIds,
-                      type: "lead",
-                      source: "api v1",
-                      tags: [],
-                    });
-
-                    if (result.success) {
-                      // Mark all synced leads
-                      setSyncedLeadIds(new Set(companyPersonIds));
-                      toast.success(
-                        `Bulk sync completed! ${result.data.success} succeeded, ${result.data.failed} failed.`
-                      );
-                    } else {
-                      toast.error(result.message || "Bulk sync failed");
-                    }
-                  } catch (error: any) {
-                    const errorMessage =
-                      error?.response?.data?.message ||
-                      error?.message ||
-                      "Failed to bulk sync leads to GoHighLevel";
-                    toast.error(errorMessage);
-                  } finally {
-                    setBulkSyncingLeads(false);
-                  }
-                }}
-                disabled={bulkSyncingLeads}
-                className="rounded-full bg-primary hover:bg-primary/80 disabled:bg-primary/50 disabled:cursor-wait px-4 sm:px-6 py-2 text-xs sm:text-sm font-semibold text-white flex items-center gap-2"
-              >
-                {bulkSyncingLeads ? (
-                  <>
-                    <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
-                    <span className="hidden sm:inline">Syncing All...</span>
-                    <span className="sm:hidden">Syncing...</span>
-                  </>
-                ) : (
-                  <>
-                    <Upload className="w-3 h-3 sm:w-4 sm:h-4" />
-                    <span className="hidden sm:inline">
-                      Sync All ({leads.length})
-                    </span>
-                    <span className="sm:hidden">Sync All</span>
-                  </>
-                )}
-              </Button>
-            )}
           </div>
 
           {/* Stats Cards */}
@@ -1388,10 +1311,6 @@ const index = () => {
                   selectedLead={selectedLeadDetails}
                   executiveFallback={selectedExecutiveFallback}
                   onPhoneClickFromSidebar={handlePhoneClickFromSidebar}
-                  syncedLeadIds={syncedLeadIds}
-                  onLeadSynced={(leadId) => {
-                    setSyncedLeadIds((prev) => new Set(prev).add(leadId));
-                  }}
                   pageSize={leadsLimit}
                   onPageSizeChange={setLeadsLimit}
                   pageSizeOptions={pageSizeOptions}
