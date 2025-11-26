@@ -156,7 +156,7 @@ const UserList = () => {
 
     if (roleObject) {
       return (
-        <Badge className="bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 rounded-full px-3 py-1 text-xs">
+        <Badge className="bg-[#66AFB74D] text-[#66AFB7] border border-emerald-500/30 rounded-full px-3 py-1 text-xs">
           {roleObject.displayName}
         </Badge>
       );
@@ -389,7 +389,7 @@ const UserList = () => {
 
         <section className="rounded-[32px] border border-white/10 bg-[linear-gradient(135deg,#0f1620,#1c2b37,#090f16)] shadow-[0_25px_60px_rgba(0,0,0,0.55)] overflow-hidden relative">
           <div className="pointer-events-none absolute inset-0 opacity-80 bg-[radial-gradient(circle_at_8%_6%,rgba(67,173,189,0.7),transparent_18%)]" />
-          <div className="hidden lg:grid grid-cols-[1.2fr_1.5fr_0.8fr_0.8fr_1fr_140px] items-center gap-4 px-6 py-8 bg-[linear-gradient(135deg,rgba(19,26,36,0.95),rgba(10,16,24,0.95))] border-b border-white/10 text-white/75 text-sm font-medium relative z-10">
+          <div className="hidden lg:grid grid-cols-[1.2fr_1.5fr_0.8fr_0.8fr_1fr_140px] items-center gap-4 p-6 pt-12 bg-[linear-gradient(135deg,rgba(19,26,36,0.95),rgba(10,16,24,0.95))] border-b border-white/10 text-white/75 text-sm font-medium relative z-10">
             <span>Name</span>
             <span>Email</span>
             <span>Role</span>
@@ -463,7 +463,7 @@ const UserList = () => {
                               onClick={() =>
                                 navigate(`/users/${user._id}/edit`)
                               }
-                              className="rounded-full border border-emerald-500/50 bg-emerald-500/10 text-emerald-300 p-2 hover:bg-emerald-500/20 transition"
+                              className="text-[#3AC143D6] p-2 hover:bg-emerald-500/20 transition"
                               title="Download profile"
                             >
                               <Download className="h-4 w-4" />
@@ -473,7 +473,7 @@ const UserList = () => {
                               onClick={() =>
                                 navigate(`/users/${user._id}/edit`)
                               }
-                              className="rounded-full border border-white/25 bg-white/5 text-white/80 p-2 hover:bg-white/10 transition"
+                              className="text-[#EE2E6B] p-2 hover:bg-white/10 transition"
                               title="View employee"
                             >
                               <Eye className="h-4 w-4" />
@@ -486,7 +486,7 @@ const UserList = () => {
                                   resolveUserDisplayName(user)
                                 )
                               }
-                              className="rounded-full border border-red-500/40 bg-red-500/10 text-red-400 p-2 hover:bg-red-500/20 transition"
+                              className=" text-[#F72E2E80] p-2 hover:bg-red-500/20 transition"
                               title="Delete employee"
                             >
                               <Trash2 className="h-4 w-4" />
