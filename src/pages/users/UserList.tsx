@@ -473,7 +473,7 @@ const UserList = () => {
                               onClick={() =>
                                 navigate(`/users/${user._id}/edit`)
                               }
-                              className="text-[#EE2E6B] p-2 hover:bg-white/10 transition"
+                              className="text-white p-2 hover:bg-white/10 transition"
                               title="View employee"
                             >
                               <Eye className="h-4 w-4" />
