@@ -583,7 +583,7 @@ const LeadsList: FC<LeadsListProps> = ({
   };
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col pb-4">
       {renderPageSizeSelector("top")}
       <div className="space-y-4">
         {loading

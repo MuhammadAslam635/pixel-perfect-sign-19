@@ -54,6 +54,12 @@ export interface CompaniesQueryParams {
   search?: string;
   sortBy?: string;
   sortOrder?: "asc" | "desc" | 1 | -1;
+  industry?: string;
+  minEmployees?: number;
+  maxEmployees?: number;
+  hasPeople?: boolean;
+  hasWebsite?: boolean;
+  location?: string;
 }
 
 export const companiesService = {

@@ -3,6 +3,12 @@ import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -47,6 +53,14 @@ import {
 } from "@/services/connectionMessages.service";
 import { useQueryClient } from "@tanstack/react-query";
 
+const COMPANY_EMPLOYEE_RANGES = [
+  { value: "all", label: "All company sizes" },
+  { value: "small", label: "1-50 employees", min: 1, max: 50 },
+  { value: "medium", label: "50-250 employees", min: 50, max: 250 },
+  { value: "large", label: "250-1000 employees", min: 250, max: 1000 },
+  { value: "enterprise", label: "1000+ employees", min: 1000 },
+] as const;
+
 const index = () => {
   type TabKey = "companies" | "leads";
   const tabs: { id: TabKey; label: string }[] = [
@@ -66,6 +80,16 @@ const index = () => {
   const [companiesPage, setCompaniesPage] = useState(1);
   const [companiesSearch, setCompaniesSearch] = useState("");
   const [companiesLimit, setCompaniesLimit] = useState(10);
+  const [companiesIndustryFilter, setCompaniesIndustryFilter] =
+    useState<string>("all");
+  const [companiesEmployeeRange, setCompaniesEmployeeRange] =
+    useState<string>("all");
+  const [companiesLocationFilter, setCompaniesLocationFilter] =
+    useState<string>("");
+  const [companiesHasPeopleFilter, setCompaniesHasPeopleFilter] =
+    useState(false);
+  const [companiesHasWebsiteFilter, setCompaniesHasWebsiteFilter] =
+    useState(false);
 
   // Leads filters and pagination
   const [leadsPage, setLeadsPage] = useState(1);
@@ -74,6 +98,11 @@ const index = () => {
   const [leadsCompanyFilter, setLeadsCompanyFilter] = useState<string | null>(
     null
   );
+  const [leadsLocationFilter, setLeadsLocationFilter] = useState<string>("");
+  const [leadsPositionFilter, setLeadsPositionFilter] = useState<string>("");
+  const [leadsHasEmailFilter, setLeadsHasEmailFilter] = useState(false);
+  const [leadsHasPhoneFilter, setLeadsHasPhoneFilter] = useState(false);
+  const [leadsHasLinkedinFilter, setLeadsHasLinkedinFilter] = useState(false);
   const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [selectedExecutiveFallback, setSelectedExecutiveFallback] =
@@ -105,6 +134,22 @@ const index = () => {
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [bulkSyncingLeads, setBulkSyncingLeads] = useState(false);
   const [syncedLeadIds, setSyncedLeadIds] = useState<Set<string>>(new Set());
+  const [companyFiltersOpen, setCompanyFiltersOpen] = useState(false);
+  const [leadFiltersOpen, setLeadFiltersOpen] = useState(false);
+  const resetCompanyAdvancedFilters = useCallback(() => {
+    setCompaniesIndustryFilter("all");
+    setCompaniesEmployeeRange("all");
+    setCompaniesLocationFilter("");
+    setCompaniesHasPeopleFilter(false);
+    setCompaniesHasWebsiteFilter(false);
+  }, []);
+  const resetLeadAdvancedFilters = useCallback(() => {
+    setLeadsLocationFilter("");
+    setLeadsPositionFilter("");
+    setLeadsHasEmailFilter(false);
+    setLeadsHasPhoneFilter(false);
+    setLeadsHasLinkedinFilter(false);
+  }, []);
   const resolveErrorMessage = useCallback(
     (error: unknown, fallback: string) => {
       const err = error as any;
@@ -323,14 +368,54 @@ const index = () => {
   const [indicatorStyles, setIndicatorStyles] = useState({ width: 0, left: 0 });
   const pageSizeOptions = [10, 25, 50, 100];
 
-  const companiesParams = useMemo(
-    () => ({
+  const companiesParams = useMemo(() => {
+    const params: CompaniesQueryParams = {
       page: companiesPage,
       limit: companiesLimit,
       search: companiesSearch || undefined,
-    }),
-    [companiesPage, companiesLimit, companiesSearch]
-  );
+    };
+
+    if (companiesIndustryFilter !== "all") {
+      params.industry = companiesIndustryFilter;
+    }
+
+    if (companiesEmployeeRange !== "all") {
+      const range = COMPANY_EMPLOYEE_RANGES.find(
+        (option) => option.value === companiesEmployeeRange
+      );
+      if (range) {
+        if (typeof range.min === "number") {
+          params.minEmployees = range.min;
+        }
+        if (typeof range.max === "number") {
+          params.maxEmployees = range.max;
+        }
+      }
+    }
+
+    if (companiesHasPeopleFilter) {
+      params.hasPeople = true;
+    }
+
+    if (companiesHasWebsiteFilter) {
+      params.hasWebsite = true;
+    }
+
+    if (companiesLocationFilter.trim()) {
+      params.location = companiesLocationFilter.trim();
+    }
+
+    return params;
+  }, [
+    companiesPage,
+    companiesLimit,
+    companiesSearch,
+    companiesIndustryFilter,
+    companiesEmployeeRange,
+    companiesHasPeopleFilter,
+    companiesHasWebsiteFilter,
+    companiesLocationFilter,
+  ]);
 
   const {
     query: companiesQuery,
@@ -356,15 +441,292 @@ const index = () => {
     { enabled: activeTab === "leads" }
   );
 
-  const leadsParams = useMemo(
-    () => ({
+  const industryOptions = useMemo(() => {
+    const industries = new Set<string>();
+    allCompaniesForFilter.forEach((company) => {
+      if (company.industry) {
+        industries.add(company.industry);
+      }
+    });
+    return Array.from(industries).sort((a, b) => a.localeCompare(b));
+  }, [allCompaniesForFilter]);
+
+  const hasCompanyAdvancedFilters = useMemo(
+    () =>
+      companiesIndustryFilter !== "all" ||
+      companiesEmployeeRange !== "all" ||
+      companiesLocationFilter.trim() !== "" ||
+      companiesHasPeopleFilter ||
+      companiesHasWebsiteFilter,
+    [
+      companiesIndustryFilter,
+      companiesEmployeeRange,
+      companiesLocationFilter,
+      companiesHasPeopleFilter,
+      companiesHasWebsiteFilter,
+    ]
+  );
+
+  const hasLeadAdvancedFilters = useMemo(
+    () =>
+      leadsLocationFilter.trim() !== "" ||
+      leadsPositionFilter.trim() !== "" ||
+      leadsHasEmailFilter ||
+      leadsHasPhoneFilter ||
+      leadsHasLinkedinFilter,
+    [
+      leadsLocationFilter,
+      leadsPositionFilter,
+      leadsHasEmailFilter,
+      leadsHasPhoneFilter,
+      leadsHasLinkedinFilter,
+    ]
+  );
+
+  const companyFiltersPanel = (
+    <div className="flex flex-col gap-3 text-gray-100 text-xs">
+      <div>
+        <p className="text-[11px] uppercase tracking-[0.08em] text-gray-400 mb-2">
+          Industry
+        </p>
+        <Select
+          value={companiesIndustryFilter}
+          onValueChange={setCompaniesIndustryFilter}
+        >
+          <SelectTrigger className="h-9 w-full rounded-lg border border-white/15 bg-transparent text-white text-xs">
+            <SelectValue placeholder="All industries" />
+          </SelectTrigger>
+          <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a] rounded-xl max-h-60">
+            <SelectItem
+              value="all"
+              className="text-gray-300 focus:text-white focus:bg-white/10"
+            >
+              All industries
+            </SelectItem>
+            {industryOptions.map((industry) => (
+              <SelectItem
+                key={industry}
+                value={industry}
+                className="text-gray-300 focus:text-white focus:bg-white/10"
+              >
+                {industry}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div>
+        <p className="text-[11px] uppercase tracking-[0.08em] text-gray-400 mb-2">
+          Company size
+        </p>
+        <Select
+          value={companiesEmployeeRange}
+          onValueChange={setCompaniesEmployeeRange}
+        >
+          <SelectTrigger className="h-9 w-full rounded-lg border border-white/15 bg-transparent text-white text-xs">
+            <SelectValue placeholder="Company size" />
+          </SelectTrigger>
+          <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a] rounded-xl">
+            {COMPANY_EMPLOYEE_RANGES.map((option) => (
+              <SelectItem
+                key={option.value}
+                value={option.value}
+                className="text-gray-300 focus:text-white focus:bg-white/10"
+              >
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div>
+        <p className="text-[11px] uppercase tracking-[0.08em] text-gray-400 mb-2">
+          Location
+        </p>
+        <Input
+          type="text"
+          placeholder="City, state, or region"
+          value={companiesLocationFilter}
+          onChange={(e) => setCompaniesLocationFilter(e.target.value)}
+          className="h-9 rounded-lg border border-white/15 bg-transparent text-white placeholder:text-gray-500 text-xs"
+        />
+      </div>
+      <div className="flex flex-col gap-3">
+        <label className="flex items-center gap-2 cursor-pointer">
+          <Checkbox
+            checked={companiesHasPeopleFilter}
+            onCheckedChange={(checked) =>
+              setCompaniesHasPeopleFilter(Boolean(checked))
+            }
+            className="border-white/40 data-[state=checked]:bg-white data-[state=checked]:text-gray-900"
+          />
+          <span>Only companies with saved contacts</span>
+        </label>
+        <label className="flex items-center gap-2 cursor-pointer">
+          <Checkbox
+            checked={companiesHasWebsiteFilter}
+            onCheckedChange={(checked) =>
+              setCompaniesHasWebsiteFilter(Boolean(checked))
+            }
+            className="border-white/40 data-[state=checked]:bg-white data-[state=checked]:text-gray-900"
+          />
+          <span>Only companies with websites</span>
+        </label>
+      </div>
+      <div className="flex items-center justify-between">
+        {hasCompanyAdvancedFilters ? (
+          <Button
+            size="sm"
+            variant="ghost"
+            className="text-gray-300 hover:text-white px-2 py-1"
+            onClick={() => {
+              resetCompanyAdvancedFilters();
+              setCompanyFiltersOpen(false);
+            }}
+          >
+            Clear filters
+          </Button>
+        ) : (
+          <p className="text-[11px] text-gray-500">No filters applied</p>
+        )}
+        <Button
+          size="sm"
+          variant="secondary"
+          className="px-3 py-1 text-xs"
+          onClick={() => setCompanyFiltersOpen(false)}
+        >
+          Close
+        </Button>
+      </div>
+    </div>
+  );
+
+  const leadFiltersPanel = (
+    <div className="flex flex-col gap-3 text-gray-100 text-xs">
+      <div>
+        <p className="text-[11px] uppercase tracking-[0.08em] text-gray-400 mb-2">
+          Location
+        </p>
+        <Input
+          type="text"
+          placeholder="City, state, or region"
+          value={leadsLocationFilter}
+          onChange={(e) => setLeadsLocationFilter(e.target.value)}
+          className="h-9 rounded-lg border border-white/15 bg-transparent text-white placeholder:text-gray-500 text-xs"
+        />
+      </div>
+      <div>
+        <p className="text-[11px] uppercase tracking-[0.08em] text-gray-400 mb-2">
+          Title / Role
+        </p>
+        <Input
+          type="text"
+          placeholder="VP of Sales, CEO, ..."
+          value={leadsPositionFilter}
+          onChange={(e) => setLeadsPositionFilter(e.target.value)}
+          className="h-9 rounded-lg border border-white/15 bg-transparent text-white placeholder:text-gray-500 text-xs"
+        />
+      </div>
+      <div className="flex flex-col gap-3">
+        <label className="flex items-center gap-2 cursor-pointer">
+          <Checkbox
+            checked={leadsHasEmailFilter}
+            onCheckedChange={(checked) =>
+              setLeadsHasEmailFilter(Boolean(checked))
+            }
+            className="border-white/40 data-[state=checked]:bg-white data-[state=checked]:text-gray-900"
+          />
+          <span>Has verified email</span>
+        </label>
+        <label className="flex items-center gap-2 cursor-pointer">
+          <Checkbox
+            checked={leadsHasPhoneFilter}
+            onCheckedChange={(checked) =>
+              setLeadsHasPhoneFilter(Boolean(checked))
+            }
+            className="border-white/40 data-[state=checked]:bg-white data-[state=checked]:text-gray-900"
+          />
+          <span>Has phone number</span>
+        </label>
+        <label className="flex items-center gap-2 cursor-pointer">
+          <Checkbox
+            checked={leadsHasLinkedinFilter}
+            onCheckedChange={(checked) =>
+              setLeadsHasLinkedinFilter(Boolean(checked))
+            }
+            className="border-white/40 data-[state=checked]:bg-white data-[state=checked]:text-gray-900"
+          />
+          <span>Has LinkedIn profile</span>
+        </label>
+      </div>
+      <div className="flex items-center justify-between">
+        {hasLeadAdvancedFilters ? (
+          <Button
+            size="sm"
+            variant="ghost"
+            className="text-gray-300 hover:text-white px-2 py-1"
+            onClick={() => {
+              resetLeadAdvancedFilters();
+              setLeadFiltersOpen(false);
+            }}
+          >
+            Clear filters
+          </Button>
+        ) : (
+          <p className="text-[11px] text-gray-500">No filters applied</p>
+        )}
+        <Button
+          size="sm"
+          variant="secondary"
+          className="px-3 py-1 text-xs"
+          onClick={() => setLeadFiltersOpen(false)}
+        >
+          Close
+        </Button>
+      </div>
+    </div>
+  );
+
+  const leadsParams = useMemo(() => {
+    const params: LeadsQueryParams = {
       page: leadsPage,
       limit: leadsLimit,
       search: leadsSearch || undefined,
       companyId: leadsCompanyFilter || undefined,
-    }),
-    [leadsPage, leadsLimit, leadsSearch, leadsCompanyFilter]
-  );
+    };
+
+    if (leadsLocationFilter.trim()) {
+      params.location = leadsLocationFilter.trim();
+    }
+
+    if (leadsPositionFilter.trim()) {
+      params.position = leadsPositionFilter.trim();
+    }
+
+    if (leadsHasEmailFilter) {
+      params.hasEmail = true;
+    }
+
+    if (leadsHasPhoneFilter) {
+      params.hasPhone = true;
+    }
+
+    if (leadsHasLinkedinFilter) {
+      params.hasLinkedin = true;
+    }
+
+    return params;
+  }, [
+    leadsPage,
+    leadsLimit,
+    leadsSearch,
+    leadsCompanyFilter,
+    leadsLocationFilter,
+    leadsPositionFilter,
+    leadsHasEmailFilter,
+    leadsHasPhoneFilter,
+    leadsHasLinkedinFilter,
+  ]);
 
   const {
     query: leadsQuery,
@@ -466,11 +828,28 @@ const index = () => {
   // Reset pagination when filters change
   useEffect(() => {
     setCompaniesPage(1);
-  }, [companiesSearch, companiesLimit]);
+  }, [
+    companiesSearch,
+    companiesLimit,
+    companiesIndustryFilter,
+    companiesEmployeeRange,
+    companiesLocationFilter,
+    companiesHasPeopleFilter,
+    companiesHasWebsiteFilter,
+  ]);
 
   useEffect(() => {
     setLeadsPage(1);
-  }, [leadsSearch, leadsCompanyFilter, leadsLimit]);
+  }, [
+    leadsSearch,
+    leadsCompanyFilter,
+    leadsLimit,
+    leadsLocationFilter,
+    leadsPositionFilter,
+    leadsHasEmailFilter,
+    leadsHasPhoneFilter,
+    leadsHasLinkedinFilter,
+  ]);
 
   const handleLeadClick = (leadId: string) => {
     setSelectedLeadId((prev) => (prev === leadId ? null : leadId));
@@ -702,60 +1081,44 @@ const index = () => {
               }`}
             >
                 {activeTab === "companies" ? (
-                  <>
-                    {/* Search Input */}
-                    <div className="relative w-full  sm:w-auto sm:min-w-[160px] sm:flex-1 lg:flex-none lg:min-w-[160px] mr-2">
-                      <div className="w-full">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white pointer-events-none z-10" />
-                        <Input
-                          type="text"
-                          placeholder="Search..."
-                          value={companiesSearch}
-                          onChange={(e) => setCompaniesSearch(e.target.value)}
-                          className="
-                                        px-4 from-[#1a1a1a] to-[#2a2a2a]
-                                        border border-white sm:border-0 text-white
-                                        placeholder:text-white text-xs w-full relative z-10
-                                        h-9 pl-10 pr-12 sm:pr-4 rounded-lg sm:!rounded-full
-                                        focus:outline-none focus:ring-[2px] focus:ring-transparent
-                                        shadow-[inset_0_0_10px_rgba(0,0,0,0.4)]
-                                        bg-[linear-gradient(173.83deg,rgba(255,255,255,0.08)_4.82%,rgba(255,255,255,0.00002)_38.08%,rgba(255,255,255,0.00002)_56.68%,rgba(255,255,255,0.02)_95.1%)]
-                                        mobile-search-input
-  "
-                          style={{ boxShadow: "none" }}
-                        />
-                      </div>
-                      {/* Filter Icon - Mobile Only */}
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 sm:hidden pointer-events-none z-10">
-                        <svg
-                          width="20"
-                          height="20"
-                          viewBox="0 0 32 32"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            d="M28.3334 16.0001H11.86M6.04535 16.0001H3.66669M6.04535 16.0001C6.04535 15.2292 6.35159 14.4898 6.8967 13.9447C7.4418 13.3996 8.18112 13.0934 8.95202 13.0934C9.72292 13.0934 10.4622 13.3996 11.0073 13.9447C11.5524 14.4898 11.8587 15.2292 11.8587 16.0001C11.8587 16.771 11.5524 17.5103 11.0073 18.0554C10.4622 18.6005 9.72292 18.9067 8.95202 18.9067C8.18112 18.9067 7.4418 18.6005 6.8967 18.0554C6.35159 17.5103 6.04535 16.771 6.04535 16.0001ZM28.3334 24.8094H20.6694M20.6694 24.8094C20.6694 25.5805 20.3624 26.3206 19.8171 26.8659C19.2719 27.4111 18.5324 27.7174 17.7614 27.7174C16.9905 27.7174 16.2511 27.4098 15.706 26.8647C15.1609 26.3196 14.8547 25.5803 14.8547 24.8094M20.6694 24.8094C20.6694 24.0383 20.3624 23.2995 19.8171 22.7543C19.2719 22.209 18.5324 21.9027 17.7614 21.9027C16.9905 21.9027 16.2511 22.209 15.706 22.7541C15.1609 23.2992 14.8547 24.0385 14.8547 24.8094M14.8547 24.8094H3.66669M28.3334 7.19072H24.1934M18.3787 7.19072H3.66669M18.3787 7.19072C18.3787 6.41983 18.6849 5.68051 19.23 5.1354C19.7751 4.59029 20.5145 4.28406 21.2854 4.28406C21.6671 4.28406 22.045 4.35924 22.3977 4.50531C22.7503 4.65139 23.0708 4.86549 23.3407 5.1354C23.6106 5.40531 23.8247 5.72574 23.9708 6.07839C24.1168 6.43104 24.192 6.80902 24.192 7.19072C24.192 7.57243 24.1168 7.9504 23.9708 8.30306C23.8247 8.65571 23.6106 8.97614 23.3407 9.24605C23.0708 9.51596 22.7503 9.73006 22.3977 9.87613C22.045 10.0222 21.6671 10.0974 21.2854 10.0974C20.5145 10.0974 19.7751 9.79115 19.23 9.24605C18.6849 8.70094 18.3787 7.96162 18.3787 7.19072Z"
-                            stroke="white"
-                            strokeWidth="1.5"
-                            strokeMiterlimit="10"
-                            strokeLinecap="round"
-                          />
-                        </svg>
-                      </div>
+                  <div className="flex w-full flex-wrap items-center justify-end gap-2">
+                    <div className="relative min-w-[220px] flex-1 max-w-sm">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white pointer-events-none z-10" />
+                      <Input
+                        type="text"
+                        placeholder="Search companies..."
+                        value={companiesSearch}
+                        onChange={(e) => setCompaniesSearch(e.target.value)}
+                        className="px-4 border border-white sm:border-0 text-white placeholder:text-white text-xs w-full h-9 pl-10 pr-4 rounded-lg sm:!rounded-full focus:outline-none focus:ring-0 shadow-[inset_0_0_10px_rgba(0,0,0,0.4)] bg-[linear-gradient(173.83deg,rgba(255,255,255,0.08)_4.82%,rgba(255,255,255,0.00002)_38.08%,rgba(255,255,255,0.00002)_56.68%,rgba(255,255,255,0.02)_95.1%)]"
+                      />
                     </div>
                     {filteredTotalCompanies !== undefined && (
-                      <div
-                        className="hidden sm:flex px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-full border border-gray-600 sm:border-0 text-gray-300 text-xs sm:text-sm font-medium whitespace-nowrap items-center justify-center bg-gray-800/50 sm:bg-[#FFFFFF1A] mobile-count-badge"
-                        style={{
-                          boxShadow: "none",
-                        }}
-                      >
+                      <div className="px-3 py-1.5 rounded-full border border-gray-600 text-gray-300 text-xs sm:text-sm font-medium whitespace-nowrap bg-gray-800/50 sm:bg-[#FFFFFF1A]">
                         {filteredTotalCompanies}{" "}
                         {filteredTotalCompanies === 1 ? "company" : "companies"}
                       </div>
                     )}
-                  </>
+                    <Popover open={companyFiltersOpen} onOpenChange={setCompanyFiltersOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="h-9 rounded-full border border-white/20 bg-white/5 text-xs text-white flex items-center gap-2"
+                        >
+                          <Filter className="w-3.5 h-3.5" />
+                          <span>Filters</span>
+                          {hasCompanyAdvancedFilters && (
+                            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                          )}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent
+                        align="end"
+                        className="w-80 bg-[#121212] border border-white/10 rounded-2xl shadow-2xl p-4"
+                      >
+                        {companyFiltersPanel}
+                      </PopoverContent>
+                    </Popover>
+                  </div>
                 ) : (
                   <>
                     {/* Search Input */}
@@ -857,16 +1220,104 @@ const index = () => {
                         </SelectContent>
                       </Select>
                     </div>
-                    {filteredTotalLeads !== undefined && (
-                      <div
-                        className="hidden sm:flex px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-full border border-gray-600 sm:border-0 text-gray-300 text-xs sm:text-sm font-medium whitespace-nowrap items-center justify-center bg-gray-800/50 sm:bg-[#FFFFFF1A] mobile-count-badge"
-                        style={{
-                          boxShadow: "none",
-                        }}
-                      >
-                        {filteredTotalLeads}{" "}
-                        {filteredTotalLeads === 1 ? "lead" : "leads"}
+                    <div className="flex items-center gap-2">
+                      {filteredTotalLeads !== undefined && (
+                        <div
+                          className="hidden sm:flex px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-full border border-gray-600 sm:border-0 text-gray-300 text-xs sm:text-sm font-medium whitespace-nowrap items-center justify-center bg-gray-800/50 sm:bg-[#FFFFFF1A] mobile-count-badge"
+                          style={{
+                            boxShadow: "none",
+                          }}
+                        >
+                          {filteredTotalLeads}{" "}
+                          {filteredTotalLeads === 1 ? "lead" : "leads"}
+                        </div>
+                      )}
+                      <Popover open={leadFiltersOpen} onOpenChange={setLeadFiltersOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className="h-9 rounded-full border border-white/20 bg-white/5 text-xs text-white flex items-center gap-2"
+                          >
+                            <Filter className="w-3.5 h-3.5" />
+                            <span>Filters</span>
+                            {hasLeadAdvancedFilters && (
+                              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                            )}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent
+                          align="end"
+                          className="w-80 bg-[#121212] border border-white/10 rounded-2xl shadow-2xl p-4"
+                        >
+                          {leadFiltersPanel}
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    {false && (
+                    <div className="flex flex-col gap-2 border border-white/10 rounded-xl p-3 bg-white/5 mt-2">
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <div className="w-full sm:flex-1">
+                          <Input
+                            type="text"
+                            placeholder="Filter by location"
+                            value={leadsLocationFilter}
+                            onChange={(e) => setLeadsLocationFilter(e.target.value)}
+                            className="h-9 rounded-lg border border-white/10 text-xs text-white placeholder:text-gray-400 bg-transparent"
+                          />
+                        </div>
+                        <div className="w-full sm:flex-1">
+                          <Input
+                            type="text"
+                            placeholder="Filter by title or role"
+                            value={leadsPositionFilter}
+                            onChange={(e) => setLeadsPositionFilter(e.target.value)}
+                            className="h-9 rounded-lg border border-white/10 text-xs text-white placeholder:text-gray-400 bg-transparent"
+                          />
+                        </div>
                       </div>
+                      <div className="flex flex-wrap items-center gap-4 text-xs text-gray-200">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <Checkbox
+                            checked={leadsHasEmailFilter}
+                            onCheckedChange={(checked) =>
+                              setLeadsHasEmailFilter(Boolean(checked))
+                            }
+                            className="border-white/40 data-[state=checked]:bg-white data-[state=checked]:text-gray-900"
+                          />
+                          Has email
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <Checkbox
+                            checked={leadsHasPhoneFilter}
+                            onCheckedChange={(checked) =>
+                              setLeadsHasPhoneFilter(Boolean(checked))
+                            }
+                            className="border-white/40 data-[state=checked]:bg-white data-[state=checked]:text-gray-900"
+                          />
+                          Has phone
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <Checkbox
+                            checked={leadsHasLinkedinFilter}
+                            onCheckedChange={(checked) =>
+                              setLeadsHasLinkedinFilter(Boolean(checked))
+                            }
+                            className="border-white/40 data-[state=checked]:bg-white data-[state=checked]:text-gray-900"
+                          />
+                          Has LinkedIn
+                        </label>
+                        {hasLeadAdvancedFilters && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-gray-300 hover:text-white px-2 py-1"
+                            onClick={resetLeadAdvancedFilters}
+                          >
+                            Clear filters
+                          </Button>
+                        )}
+                      </div>
+                    </div>
                     )}
                   </>
                 )}

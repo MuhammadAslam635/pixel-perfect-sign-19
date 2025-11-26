@@ -1,5 +1,15 @@
 import API from "@/utils/api";
 
+export interface LeadCompanyInfo {
+  _id: string;
+  name?: string | null;
+  address?: string | null;
+  industry?: string | null;
+  website?: string | null;
+  employees?: number | null;
+  logo?: string | null;
+}
+
 export interface Lead {
   _id: string;
   companyId: string;
@@ -13,10 +23,11 @@ export interface Lead {
   position?: string;
   pictureUrl?: string;
   linkedinUrl?: string;
-  companyName?: string;
-  companyLocation?: string;
+  companyName?: string | null;
+  companyLocation?: string | null;
   createdAt: string;
   updatedAt: string;
+  company?: LeadCompanyInfo | null;
 }
 
 export interface LeadsResponse {
@@ -44,6 +55,13 @@ export interface LeadsQueryParams {
   companyId?: string;
   sortBy?: string;
   sortOrder?: "asc" | "desc" | 1 | -1;
+  position?: string;
+  location?: string;
+  hasEmail?: boolean;
+  hasPhone?: boolean;
+  hasLinkedin?: boolean;
+  createdFrom?: string;
+  createdTo?: string;
 }
 
 export const leadsService = {
@@ -52,120 +70,10 @@ export const leadsService = {
    */
   getLeads: async (params: LeadsQueryParams = {}): Promise<LeadsResponse> => {
     try {
-      const {
-        page = 1,
-        limit = 100,
-        search,
-        companyId,
-        sortBy,
-        sortOrder,
-      } = params;
-      
-      // Normalize search: trim whitespace and convert empty strings to undefined
-      const normalizedSearch = search?.trim() || undefined;
-
-      // Build query params for companies API
-      // Fetch all companies (or a large number) to ensure we get the filtered company
-      // Note: We don't apply search at company level because we need to search across all leads,
-      // not just leads from companies whose names match the search
-      const companiesParams: any = {
-        page: 1,
-        limit: 1000, // Fetch enough companies to find the one we need
-      };
-
-      // Fetch companies which includes people data
-      const response = await API.get("/companies/list", {
-        params: companiesParams,
+      const response = await API.get("/leads/list", {
+        params,
       });
-
-      if (response.data.success && response.data.data.docs) {
-        // Extract people from companies
-        let allPeople: Lead[] = [];
-
-        response.data.data.docs.forEach((company: any) => {
-          // Filter by companyId if provided
-          if (companyId && company._id !== companyId) {
-            return;
-          }
-
-          if (company.people && Array.isArray(company.people)) {
-            company.people.forEach((person: any) => {
-              allPeople.push({
-                ...person,
-                companyId: company._id,
-                companyName: company.name,
-                companyLocation: company.address,
-              });
-            });
-          }
-        });
-
-        // Always apply search filter on leads when search is provided
-        if (normalizedSearch) {
-          const searchLower = normalizedSearch.toLowerCase();
-          allPeople = allPeople.filter(
-            (person) =>
-              person.name?.toLowerCase().includes(searchLower) ||
-              person.email?.toLowerCase().includes(searchLower) ||
-              person.position?.toLowerCase().includes(searchLower) ||
-              person.companyName?.toLowerCase().includes(searchLower)
-          );
-        }
-
-        // Apply sorting
-        if (sortBy) {
-          allPeople.sort((a, b) => {
-            const aVal = (a as any)[sortBy] || "";
-            const bVal = (b as any)[sortBy] || "";
-            const comparison = aVal > bVal ? 1 : aVal < bVal ? -1 : 0;
-            return sortOrder === "desc" || sortOrder === -1
-              ? -comparison
-              : comparison;
-          });
-        }
-
-        // Apply pagination
-        const totalDocs = allPeople.length;
-        const totalPages = Math.ceil(totalDocs / limit);
-        const offset = (page - 1) * limit;
-        const paginatedPeople = allPeople.slice(offset, offset + limit);
-
-        return {
-          success: true,
-          message: "Leads fetched successfully",
-          data: paginatedPeople,
-          pagination: {
-            totalDocs,
-            offset,
-            limit,
-            totalPages,
-            page,
-            pagingCounter: offset + 1,
-            hasPrevPage: page > 1,
-            hasNextPage: page < totalPages,
-            prevPage: page > 1 ? page - 1 : null,
-            nextPage: page < totalPages ? page + 1 : null,
-          },
-        };
-      }
-
-      return {
-        success: false,
-        message: "Failed to fetch leads",
-        data: [],
-        pagination: {
-          totalDocs: 0,
-          offset: 0,
-          limit,
-          totalPages: 0,
-          page: 1,
-          pagingCounter: 0,
-          hasPrevPage: false,
-          hasNextPage: false,
-          prevPage: null,
-          nextPage: null,
-        },
-      };
+      return response.data;
     } catch (error: any) {
       throw error;
     }
@@ -177,33 +85,20 @@ export const leadsService = {
    */
   getLeadById: async (id: string): Promise<Lead> => {
     try {
-      // Fetch companies with a large limit to ensure we find the lead
-      const response = await API.get("/companies/list", {
+      const response = await API.get("/leads/list", {
         params: {
-          page: 1,
-          limit: 1000, // Fetch enough companies to find the lead
+          leadId: id,
+          limit: 1,
         },
       });
 
-      if (response.data.success && response.data.data.docs) {
-        // Search through all companies and their people to find the matching lead
-        for (const company of response.data.data.docs) {
-          if (company.people && Array.isArray(company.people)) {
-            const person = company.people.find((p: any) => p._id === id);
-            if (person) {
-              // Return the lead with company information attached
-              return {
-                ...person,
-                companyId: company._id,
-                companyName: company.name,
-                companyLocation: company.address,
-              };
-            }
-          }
+      if (response.data.success && Array.isArray(response.data.data)) {
+        const lead = response.data.data[0];
+        if (lead) {
+          return lead;
         }
       }
 
-      // If lead not found, throw an error
       throw new Error(`Lead with ID ${id} not found`);
     } catch (error: any) {
       throw error;
