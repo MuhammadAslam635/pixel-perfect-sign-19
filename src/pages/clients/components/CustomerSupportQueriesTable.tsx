@@ -135,28 +135,46 @@ const CustomerSupportQueriesTable: React.FC = () => {
         <Card className="mb-6 bg-transparent border-[#FFFFFF1A]">
           <CardContent className="flex flex-col md:flex-row md:items-center gap-4 p-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 z-10" />
               <Input
                 placeholder="Search by name, email, phone, or status..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 w-full rounded-full bg-[#FFFFFF1A] border-0 text-gray-300 placeholder:text-gray-500 focus:ring-0"
+                className="pl-10 w-full rounded-full bg-[#FFFFFF1A] border border-white/40 text-gray-300 placeholder:text-gray-500 focus:ring-0"
                 style={{
-                  boxShadow: '0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset'
+                  boxShadow: '0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset',
+                  borderRadius: '9999px'
                 }}
               />
             </div>
-            <Button
+            <button
               onClick={handleSync}
               disabled={isSyncing}
-              className="flex items-center gap-2 whitespace-nowrap rounded-full bg-[#FFFFFF1A] border-0 text-white hover:bg-[#2F2F2F]/60"
+              className="group relative overflow-hidden flex items-center justify-center h-10 rounded-full border border-white/40 px-3.5 gap-2 text-xs font-medium tracking-wide transition-all duration-400 ease-elastic text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/15 before:to-transparent before:transition-all before:duration-300 before:ease-in-out hover:before:from-white/25 hover:before:duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
-                boxShadow: '0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset'
+                background: "#FFFFFF1A",
+                boxShadow:
+                  "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
               }}
             >
-              <RefreshCwIcon className={`w-4 h-4 ${isSyncing ? "animate-spin" : ""}`} />
-              {isSyncing ? "Syncing..." : "Sync from Airtable"}
-            </Button>
+              <div
+                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[100px] h-[100px] rounded-full pointer-events-none"
+                style={{
+                  background:
+                    "linear-gradient(180deg, #67B0B7 0%, #4066B3 100%)",
+                  filter: "blur(20px)",
+                  WebkitFilter: "blur(20px)",
+                }}
+              ></div>
+              <RefreshCwIcon
+                className={`h-4 w-4 flex-shrink-0 transition-[color,filter] duration-250 ease-in-out text-white drop-shadow-[0_8px_18px_rgba(62,100,180,0.45)] ${
+                  isSyncing ? "animate-spin" : ""
+                }`}
+              />
+              <span className="whitespace-nowrap relative z-10">
+                {isSyncing ? "Syncing..." : "Sync from Airtable"}
+              </span>
+            </button>
           </CardContent>
         </Card>
 
@@ -174,7 +192,7 @@ const CustomerSupportQueriesTable: React.FC = () => {
         ) : (
           <>
             {/* Header */}
-            <div className="mb-4 border border-[#FFFFFF1A] rounded-full overflow-hidden">
+            <div className="mb-4 border border-[#FFFFFF1A] rounded-xl overflow-hidden">
               <div className="grid grid-cols-[1.2fr_1fr_1fr_0.8fr_0.8fr_0.8fr_80px] items-center gap-4 px-6 py-4 bg-[#FFFFFF05]">
                 <div className="text-sm text-gray-400">
                   Name
@@ -188,7 +206,7 @@ const CustomerSupportQueriesTable: React.FC = () => {
                 <div className="text-sm text-gray-400">
                   Start Time
                 </div>
-                <div className="text-sm text-gray-400 ml-6">
+                <div className="text-sm text-gray-400">
                   Status
                 </div>
                 <div className="text-sm text-gray-400 text-center">
