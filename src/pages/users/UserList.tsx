@@ -67,16 +67,9 @@ const UserList = () => {
   const [trashed, setTrashed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [availableRoles, setAvailableRoles] = useState<Role[]>([]);
-  const legacyRoleOptions = [
-    "CompanyAdmin",
-    "CompanyUser",
-    "CompanyViewer",
-  ] as const;
-  type LegacyRole = (typeof legacyRoleOptions)[number];
   const defaultInviteForm = {
     email: "",
     roleId: "",
-    legacyRole: "CompanyUser" as LegacyRole,
     expiresInDays: "7",
     message: "",
   };
@@ -236,7 +229,6 @@ const UserList = () => {
       await userService.inviteUser({
         email: trimmedEmail,
         roleId: inviteForm.roleId || undefined,
-        role: inviteForm.legacyRole,
         message: inviteForm.message.trim()
           ? inviteForm.message.trim()
           : undefined,
@@ -833,50 +825,25 @@ const UserList = () => {
               )}
             </div>
 
-            {availableRoles.length > 0 && (
-              <div className="space-y-2">
-                <Label className="text-sm text-white/80">
-                  RBAC role (optional)
-                </Label>
-                <Select
-                  value={inviteForm.roleId || "none"}
-                  onValueChange={(value) =>
-                    handleInviteFieldChange(
-                      "roleId",
-                      value === "none" ? "" : value
-                    )
-                  }
-                >
-                  <SelectTrigger className="bg-[#0b0f1c] border-white/10 text-white">
-                    <SelectValue placeholder="Select a role" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#0b0f1c] text-white border-white/10">
-                    <SelectItem value="none">No RBAC role</SelectItem>
-                    {availableRoles.map((role) => (
-                      <SelectItem key={role._id} value={role._id}>
-                        {role.displayName}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
             <div className="space-y-2">
-              <Label className="text-sm text-white/80">Legacy role</Label>
+              <Label className="text-sm text-white/80">Role (optional)</Label>
               <Select
-                value={inviteForm.legacyRole}
+                value={inviteForm.roleId || "none"}
                 onValueChange={(value) =>
-                  handleInviteFieldChange("legacyRole", value as LegacyRole)
+                  handleInviteFieldChange(
+                    "roleId",
+                    value === "none" ? "" : value
+                  )
                 }
               >
                 <SelectTrigger className="bg-[#0b0f1c] border-white/10 text-white">
-                  <SelectValue placeholder="Select a legacy role" />
+                  <SelectValue placeholder="Select a role (optional)" />
                 </SelectTrigger>
                 <SelectContent className="bg-[#0b0f1c] text-white border-white/10">
-                  {legacyRoleOptions.map((role) => (
-                    <SelectItem key={role} value={role}>
-                      {role}
+                  <SelectItem value="none">No role specified</SelectItem>
+                  {availableRoles.map((role) => (
+                    <SelectItem key={role._id} value={role._id}>
+                      {role.displayName}
                     </SelectItem>
                   ))}
                 </SelectContent>

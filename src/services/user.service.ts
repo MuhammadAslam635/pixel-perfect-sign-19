@@ -42,7 +42,6 @@ export interface UserListParams {
 export interface InviteUserPayload {
   email: string;
   roleId?: string | null;
-  role?: string;
   message?: string;
   expiresInDays?: number;
 }
@@ -200,7 +199,10 @@ export const userService = {
   /**
    * Update a user
    */
-  updateUser: async (userId: string, data: UpdateUserData): Promise<UserResponse> => {
+  updateUser: async (
+    userId: string,
+    data: UpdateUserData
+  ): Promise<UserResponse> => {
     try {
       const response = await API.post(`/users/${userId}`, data);
       return response.data;
@@ -212,7 +214,9 @@ export const userService = {
   /**
    * Invite a user via email
    */
-  inviteUser: async (payload: InviteUserPayload): Promise<InviteUserResponse> => {
+  inviteUser: async (
+    payload: InviteUserPayload
+  ): Promise<InviteUserResponse> => {
     try {
       const response = await API.post("/users/invite", payload);
       return response.data;
