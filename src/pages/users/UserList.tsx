@@ -341,7 +341,7 @@ const UserList = () => {
                   setTrashed((t) => !t);
                   setPage(1);
                 }}
-                className="group relative overflow-hidden flex-1 sm:flex-none flex h-12 w-32 items-center justify-center rounded-full border border-white/40 px-0 text-sm font-medium tracking-wide text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] pl-4 pr-4 gap-2 before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/18 before:to-transparent before:transition-all before:duration-300 before:ease-in-out hover:before:from-white/30 hover:before:duration-200"
+                className="group relative overflow-hidden flex-1 sm:flex-none flex h-12 items-center justify-center rounded-full border border-white/40 text-sm font-medium tracking-wide text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] pl-4 pr-3 gap-2 before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/18 before:to-transparent before:transition-all before:duration-300 before:ease-in-out hover:before:from-white/30 hover:before:duration-200"
                 style={{
                   background: "#FFFFFF1A",
                   boxShadow:
@@ -363,7 +363,7 @@ const UserList = () => {
               <Button
                 type="button"
                 onClick={() => navigate("/users/create")}
-                className="group relative overflow-hidden flex-1 sm:flex-none flex h-12 w-44 items-center justify-center rounded-full border border-white/40 px-0 text-sm font-medium tracking-wide text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] pl-4 pr-4 gap-2 before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/18 before:to-transparent before:transition-all before:duration-300 before:ease-in-out hover:before:from-white/30 hover:before:duration-200"
+                className="group relative overflow-hidden flex-1 sm:flex-none flex h-12 items-center justify-center rounded-full border border-white/40 text-sm font-medium tracking-wide text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] pl-4 pr-3 gap-2 before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/18 before:to-transparent before:transition-all before:duration-300 before:ease-in-out hover:before:from-white/30 hover:before:duration-200"
                 style={{
                   background: "#FFFFFF1A",
                   boxShadow:
