@@ -574,9 +574,9 @@ const CompaniesList: FC<CompaniesListProps> = ({
           : displayedCompanies.map((company) => (
               <div key={company._id}>
                 {renderCompanyCard(company)}
-                {/* Show executives panel inline on desktop after the clicked company */}
+                {/* Executives panel below the company card should not appear on desktop */}
                 {selectedCompanyId === company._id && (
-                  <div className="hidden lg:block mt-4 mb-4">
+                  <div className="block lg:hidden mt-4 mb-4">
                     <Card className="bg-[#1f3032] border-[#3A3A3A] p-3 sm:p-4">
                       <CompanyExecutivesPanel
                         company={selectedCompany}
