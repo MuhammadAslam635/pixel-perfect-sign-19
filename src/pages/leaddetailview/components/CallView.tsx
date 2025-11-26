@@ -34,12 +34,15 @@ export const CallView = ({
       ? "Ready to call"
       : twilioStatusMessage || "Twilio calling is unavailable."
   );
-  const [callPhase, setCallPhase] = useState<"idle" | "ringing" | "connected">(
-    "idle"
-  );
+  const [callPhase, setCallPhase] = useState<
+    "idle" | "ringing" | "incoming" | "connected"
+  >("idle");
   const [callLogs, setCallLogs] = useState<LeadCallLog[]>([]);
   const [callLogsLoading, setCallLogsLoading] = useState(false);
   const [callLogsError, setCallLogsError] = useState<string | null>(null);
+  const [isPollingAnalysis, setIsPollingAnalysis] = useState(false);
+  const [selectedFollowupLog, setSelectedFollowupLog] =
+    useState<LeadCallLog | null>(null);
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
@@ -101,6 +104,44 @@ export const CallView = ({
   useEffect(() => {
     fetchCallLogs();
   }, [fetchCallLogs]);
+
+  // When any call log has pending analysis (score or follow-up), poll the
+  // backend for a short window so the UI updates automatically once the
+  // webhook finishes transcription + analysis.
+  useEffect(() => {
+    if (!leadId || callLogs.length === 0) {
+      setIsPollingAnalysis(false);
+      return;
+    }
+
+    const hasPending = callLogs.some(
+      (log) =>
+        log.leadSuccessScoreStatus === "pending" ||
+        log.followupSuggestionStatus === "pending"
+    );
+
+    if (!hasPending) {
+      setIsPollingAnalysis(false);
+      return;
+    }
+
+    setIsPollingAnalysis(true);
+
+    const intervalId = window.setInterval(() => {
+      fetchCallLogs();
+    }, 5000);
+
+    // Stop polling after 60 seconds to avoid hammering the backend
+    const timeoutId = window.setTimeout(() => {
+      window.clearInterval(intervalId);
+      setIsPollingAnalysis(false);
+    }, 60000);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.clearTimeout(timeoutId);
+    };
+  }, [callLogs, fetchCallLogs, leadId]);
 
   const logCallCompletion = useCallback(
     async (status: LeadCallStatus = "completed") => {
@@ -334,6 +375,52 @@ export const CallView = ({
     return formatted;
   }, []);
 
+  const attachConnectionListeners = useCallback(
+    (connection: TwilioConnection) => {
+      connection.on("accept", () => {
+        callStartTimeRef.current = Date.now();
+        callSidRef.current = getConnectionCallSid(connection);
+        setCallPhase("connected");
+        setCallStatus("Call connected");
+        // Microphone is already listening, no need to start again
+      });
+
+      connection.on("disconnect", () => {
+        setCallStatus("Call ended");
+        setCallPhase("idle");
+        // Keep microphone listening for waveform visualization
+        activeCallRef.current = null;
+        void logCallCompletion("completed");
+      });
+
+      connection.on("cancel", () => {
+        // Twilio fires "cancel" when the remote party hangs up
+        // before the call is answered. If we've already marked
+        // a start time (i.e., call was accepted/connected),
+        // ignore this event to avoid confusing UI like
+        // "Call cancelled" while audio is still live.
+        if (callStartTimeRef.current) {
+          return;
+        }
+        setCallStatus("Call cancelled");
+        setCallPhase("idle");
+        // Keep microphone listening for waveform visualization
+        activeCallRef.current = null;
+        // For now we don't persist a separate "cancelled" log when
+        // the call never connected; disconnect events will handle logs.
+      });
+
+      connection.on("error", (event) => {
+        setCallStatus(`Call error: ${event.message}`);
+        setCallPhase("idle");
+        // Keep microphone listening for waveform visualization
+        activeCallRef.current = null;
+        void logCallCompletion("failed");
+      });
+    },
+    [logCallCompletion, startListening, stopListening]
+  );
+
   const ensureDevice = useCallback(async (): Promise<Device> => {
     if (deviceRef.current) {
       return deviceRef.current;
@@ -377,47 +464,62 @@ export const CallView = ({
       setCallStatus("Reconnecting to calling service...");
     });
 
+    // Handle incoming calls from Twilio (e.g., when someone dials your Twilio number)
+    device.on("incoming", (connection: any) => {
+      try {
+        callSidRef.current = getConnectionCallSid(connection);
+      } catch {
+        callSidRef.current = null;
+      }
+
+      const params = (connection as any)?.parameters || {};
+      const fromNumber =
+        params.From || params.from || params.Caller || params.caller || null;
+      dialedNumberRef.current =
+        typeof fromNumber === "string" ? fromNumber : null;
+
+      activeCallRef.current = connection;
+      attachConnectionListeners(connection as TwilioConnection);
+
+      setCallPhase("incoming");
+      setCallStatus("Incoming call...");
+    });
+
     await device.register();
     deviceRef.current = device;
     return device;
-  }, [stopListening]);
+  }, [attachConnectionListeners]);
 
-  const attachConnectionListeners = useCallback(
-    (connection: TwilioConnection) => {
-      connection.on("accept", () => {
-        callStartTimeRef.current = Date.now();
-        callSidRef.current = getConnectionCallSid(connection);
-        setCallPhase("connected");
-        setCallStatus("Call connected");
-        // Microphone is already listening, no need to start again
-      });
+  // Proactively initialize and register the Twilio Device so that
+  // incoming PSTN calls can be received even if the user hasn't
+  // placed an outbound call yet.
+  useEffect(() => {
+    if (!twilioReady || twilioStatusLoading) {
+      return;
+    }
 
-      connection.on("disconnect", () => {
-        setCallStatus("Call ended");
-        setCallPhase("idle");
-        // Keep microphone listening for waveform visualization
-        activeCallRef.current = null;
-        void logCallCompletion("completed");
-      });
+    let mounted = true;
 
-      connection.on("cancel", () => {
-        setCallStatus("Call cancelled");
-        setCallPhase("idle");
-        // Keep microphone listening for waveform visualization
-        activeCallRef.current = null;
-        void logCallCompletion("cancelled");
-      });
+    const initDevice = async () => {
+      try {
+        await ensureDevice();
+      } catch (initError) {
+        if (!mounted) return;
+        setError((prev) =>
+          prev ||
+          (initError instanceof Error
+            ? initError.message
+            : "Unable to initialize calling device.")
+        );
+      }
+    };
 
-      connection.on("error", (event) => {
-        setCallStatus(`Call error: ${event.message}`);
-        setCallPhase("idle");
-        // Keep microphone listening for waveform visualization
-        activeCallRef.current = null;
-        void logCallCompletion("failed");
-      });
-    },
-    [logCallCompletion, startListening, stopListening]
-  );
+    void initDevice();
+
+    return () => {
+      mounted = false;
+    };
+  }, [ensureDevice, twilioReady, twilioStatusLoading]);
 
   const handleCall = useCallback(async () => {
     if (callPhase === "ringing" || callPhase === "connected") {
@@ -465,8 +567,52 @@ export const CallView = ({
     ensureDevice,
     lead?.phone,
     normalizeNumber,
-    stopListening,
   ]);
+
+  const handleAnswerIncoming = useCallback(() => {
+    if (callPhase !== "incoming") {
+      return;
+    }
+    const connection = activeCallRef.current;
+    if (!connection) {
+      setCallStatus("No incoming call to answer.");
+      setCallPhase("idle");
+      return;
+    }
+    try {
+      (connection as any).accept();
+    } catch {
+      setCallStatus("Failed to answer call.");
+      setCallPhase("idle");
+      activeCallRef.current = null;
+    }
+  }, [callPhase]);
+
+  const handleDeclineIncoming = useCallback(() => {
+    if (callPhase !== "incoming") {
+      return;
+    }
+    const connection = activeCallRef.current;
+    if (!connection) {
+      setCallStatus("No incoming call to decline.");
+      setCallPhase("idle");
+      return;
+    }
+    try {
+      // Prefer reject for unanswered inbound calls; fall back to disconnect
+      if (typeof (connection as any).reject === "function") {
+        (connection as any).reject();
+      } else {
+        (connection as any).disconnect();
+      }
+    } catch {
+      // ignore errors, just reset UI state
+    } finally {
+      setCallStatus("Call declined");
+      setCallPhase("idle");
+      activeCallRef.current = null;
+    }
+  }, [callPhase]);
 
   const handleHangUp = useCallback(() => {
     activeCallRef.current?.disconnect();
@@ -584,6 +730,8 @@ export const CallView = ({
                 }
                 if (callPhase === "idle") {
                   handleCall();
+                } else if (callPhase === "incoming") {
+                  handleAnswerIncoming();
                 } else if (callPhase === "connected") {
                   handleHangUp();
                 }
@@ -595,6 +743,8 @@ export const CallView = ({
                 event.preventDefault();
                 if (callPhase === "idle") {
                   handleCall();
+                } else if (callPhase === "incoming") {
+                  handleAnswerIncoming();
                 } else if (callPhase === "connected") {
                   handleHangUp();
                 }
@@ -743,6 +893,8 @@ export const CallView = ({
           onClick={
             callPhase === "connected"
               ? handleHangUp
+              : callPhase === "incoming"
+              ? handleAnswerIncoming
               : callPhase === "idle" && twilioReady
               ? handleCall
               : undefined
@@ -754,10 +906,25 @@ export const CallView = ({
             ? "End call"
             : callPhase === "ringing"
             ? "Ringing..."
+            : callPhase === "incoming"
+            ? "Answer call"
             : "Make a call"}
         </Button>
 
         <p className="text-sm text-white/70">{callStatus}</p>
+
+        {callPhase === "incoming" && (
+          <div className="flex items-center gap-3">
+            <Button
+              type="button"
+              onClick={handleDeclineIncoming}
+              variant="destructive"
+              className="px-4 py-1 rounded-full text-xs font-semibold"
+            >
+              Decline
+            </Button>
+          </div>
+        )}
 
         {error && (
           <div className="text-sm text-red-300 bg-red-500/10 border border-red-500/20 px-4 py-2 rounded-full">
@@ -776,59 +943,146 @@ export const CallView = ({
             Call Logs
           </h2>
           <p className="text-sm text-white/60">
-            You can find all call logs and statics
+            Recent calls with transcription, success score and follow-up
+            suggestions.
           </p>
         </div>
 
         <div className="rounded-[32px] border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden shadow-[0_35px_120px_rgba(7,6,19,0.55)]">
-          <div className="grid grid-cols-5 px-8 py-5 text-[0.7rem] font-semibold uppercase tracking-[0.25em] text-white/50">
-            <span>Caller Information</span>
-            <span>Date</span>
-            <span>Duration</span>
-            <span>Channel</span>
-            <span>Status</span>
-          </div>
+          <div className="overflow-x-auto scrollbar-thin">
+            <div className="min-w-[1000px]">
+              <div className="grid grid-cols-7 gap-4 px-8 py-5 text-[0.7rem] font-semibold uppercase tracking-[0.25em] text-white/50">
+                <span>Caller</span>
+                <span>Date</span>
+                <span>Duration</span>
+                <span>Channel</span>
+                <span>Call Status</span>
+                <span>Success Score</span>
+                <span>Follow-up</span>
+              </div>
 
-          <div className="divide-y divide-white/5">
-            {callLogsLoading ? (
-              <div className="px-8 py-10 text-center text-sm text-white/70">
-                Loading call logs...
-              </div>
-            ) : callLogs.length === 0 ? (
-              <div className="px-8 py-10 text-center text-sm text-white/60">
-                {leadId
-                  ? "No calls have been logged yet."
-                  : "Select a lead to view call logs."}
-              </div>
-            ) : (
-              callLogs.map((log) => (
-                <div
-                  key={log._id}
-                  className="grid grid-cols-5 px-8 py-6 text-sm text-white/80 bg-white/[0.01] hover:bg-white/[0.04] transition-colors"
-                >
-                  <div className="flex flex-col gap-0.5">
-                    <span className="font-semibold text-white">
-                      {log.leadName || "Unknown caller"}
-                    </span>
-                    {log.leadPhone && (
-                      <span className="text-xs text-white/50">
-                        {log.leadPhone}
+              <div className="divide-y divide-white/5">
+                {callLogsLoading ? (
+                  <div className="px-8 py-10 text-center text-sm text-white/70">
+                    Loading call logs...
+                  </div>
+                ) : callLogs.length === 0 ? (
+                  <div className="px-8 py-10 text-center text-sm text-white/60">
+                    {leadId
+                      ? "No calls have been logged yet."
+                      : "Select a lead to view call logs."}
+                  </div>
+                ) : (
+                  callLogs.map((log) => {
+                const scoreStatus =
+                  log.leadSuccessScoreStatus || "not-requested";
+                const followupStatus =
+                  log.followupSuggestionStatus || "not-requested";
+
+                const renderStatusPill = (label: string, status: string) => {
+                  if (status === "pending") {
+                    return (
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-[0.65rem] font-medium bg-white/5 text-white/70 border border-white/10">
+                        {label}: Processing…
                       </span>
-                    )}
+                    );
+                  }
+                  if (status === "completed") {
+                    return (
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-[0.65rem] font-medium bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
+                        {label}: Ready
+                      </span>
+                    );
+                  }
+                  if (status === "failed") {
+                    return (
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-[0.65rem] font-medium bg-red-500/10 text-red-300 border border-red-500/20">
+                        {label}: Failed
+                      </span>
+                    );
+                  }
+                  return (
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-[0.65rem] font-medium bg-white/0 text-white/40 border border-white/5">
+                      {label}: N/A
+                    </span>
+                  );
+                };
+
+                const isFollowupCompleted = followupStatus === "completed";
+
+                return (
+                  <div
+                    key={log._id}
+                    className="grid grid-cols-7 gap-4 px-8 py-6 text-sm text-white/80 bg-white/[0.01] hover:bg-white/[0.04] transition-colors"
+                  >
+                    {/* Caller */}
+                    <div className="flex flex-col gap-0.5">
+                      <span className="font-semibold text-white">
+                        {log.leadName || "Unknown caller"}
+                      </span>
+                      {log.leadPhone && (
+                        <span className="text-xs text-white/50">
+                          {log.leadPhone}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Date */}
+                    <div className="text-white/70">
+                      {formatCallDate(log.startedAt)}
+                    </div>
+
+                    {/* Duration */}
+                    <div className="text-white/70">
+                      {formatDuration(log.durationSeconds)}
+                    </div>
+
+                    {/* Channel */}
+                    <div className="text-white/70">
+                      {log.channel || "Phone"}
+                    </div>
+
+                    {/* Call status */}
+                    <div
+                      className={`font-semibold ${getStatusColor(log.status)}`}
+                    >
+                      {formatStatus(log.status)}
+                    </div>
+
+                    {/* Success score */}
+                    <div className="flex flex-col gap-1">
+                      {renderStatusPill("Score", scoreStatus)}
+                      {scoreStatus === "completed" && (
+                        <span className="text-xs text-white/70">
+                          {typeof log.leadSuccessScore === "number"
+                            ? `${log.leadSuccessScore}/100`
+                            : "No score"}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Follow-up suggestion */}
+                    <div className="flex flex-col gap-1">
+                      {isFollowupCompleted ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-7 px-3 py-1 rounded-full border-white/20 bg-white/5 text-[0.7rem] text-white hover:bg-white/10 hover:text-white"
+                          onClick={() => setSelectedFollowupLog(log)}
+                        >
+                          View
+                        </Button>
+                      ) : (
+                        renderStatusPill("Follow-up", followupStatus)
+                      )}
+                    </div>
                   </div>
-                  <div className="text-white/70">
-                    {formatCallDate(log.startedAt)}
-                  </div>
-                  <div className="text-white/70">
-                    {formatDuration(log.durationSeconds)}
-                  </div>
-                  <div className="text-white/70">{log.channel || "Phone"}</div>
-                  <div className={`font-semibold ${getStatusColor(log.status)}`}>
-                    {formatStatus(log.status)}
-                  </div>
-                </div>
-              ))
+                );
+              })
             )}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -836,6 +1090,114 @@ export const CallView = ({
           <p className="text-sm text-red-300">{callLogsError}</p>
         )}
       </div>
+
+      {/* Follow-up suggestion modal */}
+      {selectedFollowupLog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md">
+          <div className="w-full max-w-2xl rounded-3xl border border-white/10 shadow-2xl p-6 md:p-8 text-left bg-gradient-to-b from-white/[0.06] via-white/[0.03] to-black/70 backdrop-blur-xl">
+            <div className="flex items-start justify-between gap-4 mb-4">
+              <div>
+                <h3 className="text-xl font-semibold text-white">
+                  Follow-up suggestions
+                </h3>
+                <p className="text-xs text-white/60 mt-1">
+                  Based on the last call with{" "}
+                  <span className="font-medium">
+                    {selectedFollowupLog.leadName || "this lead"}
+                  </span>{" "}
+                  on{" "}
+                  {formatCallDate(selectedFollowupLog.startedAt)}
+                  .
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                className="text-white/60 hover:text-white px-2 py-1"
+                onClick={() => setSelectedFollowupLog(null)}
+              >
+                ✕
+              </Button>
+            </div>
+
+            <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+              <div className="rounded-2xl bg-white/[0.03] border border-white/10 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/50 mb-1">
+                  Summary
+                </p>
+                <p className="text-sm text-white/80">
+                  {selectedFollowupLog.followupSuggestionSummary ||
+                    "No summary available for this call."}
+                </p>
+              </div>
+
+              {Array.isArray(
+                (selectedFollowupLog.followupSuggestionMetadata as any)
+                  ?.raw?.touchpoints
+              ) &&
+                (selectedFollowupLog.followupSuggestionMetadata as any).raw
+                  .touchpoints.length > 0 && (
+                  <div className="rounded-2xl bg-white/[0.03] border border-white/10 p-4 space-y-3">
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/50">
+                      Recommended touchpoints
+                    </p>
+                    <div className="space-y-3">
+                      {(selectedFollowupLog.followupSuggestionMetadata as any)
+                        .raw.touchpoints.map(
+                        (
+                          tp: {
+                            offset_hours?: number;
+                            channel?: string;
+                            message?: string;
+                          },
+                          index: number
+                        ) => (
+                          <div
+                            key={index}
+                            className="rounded-xl bg-black/40 border border-white/10 p-3"
+                          >
+                            <div className="flex items-center justify-between gap-2 mb-1.5">
+                              <span className="text-xs font-semibold text-white/80">
+                                Step {index + 1}
+                              </span>
+                              <span className="text-[0.7rem] px-2 py-0.5 rounded-full bg-white/10 text-white/80 uppercase tracking-[0.18em]">
+                                {tp.channel || "unspecified"}
+                              </span>
+                            </div>
+                            {typeof tp.offset_hours === "number" && (
+                              <p className="text-[0.7rem] text-white/60 mb-1">
+                                In approximately{" "}
+                                <span className="font-medium text-white/80">
+                                  {tp.offset_hours} hours
+                                </span>{" "}
+                                from the end of the call.
+                              </p>
+                            )}
+                            {tp.message && (
+                              <p className="text-xs text-white/80 whitespace-pre-line">
+                                {tp.message}
+                              </p>
+                            )}
+                          </div>
+                        )
+                      )}
+                    </div>
+                  </div>
+                )}
+            </div>
+
+            <div className="mt-6 flex justify-end">
+              <Button
+                type="button"
+                className="px-4 py-2 rounded-full text-sm font-semibold"
+                onClick={() => setSelectedFollowupLog(null)}
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

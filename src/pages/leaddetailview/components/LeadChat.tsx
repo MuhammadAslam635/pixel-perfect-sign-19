@@ -436,6 +436,11 @@ const LeadChat = ({ lead }: LeadChatProps) => {
     };
   }, [activeTab, leadEmailLower, fetchedEmailFor]);
 
+  const smsQueryEnabled =
+    activeTab === "SMS" && Boolean(leadId && phoneNumber) && twilioReady;
+
+  const shouldPollSms = smsQueryEnabled;
+
   const {
     data: leadSmsResponse,
     isLoading: isSmsInitialLoading,
@@ -446,10 +451,12 @@ const LeadChat = ({ lead }: LeadChatProps) => {
     queryKey: ["lead-sms", leadId],
     queryFn: () =>
       twilioService.getLeadMessages(leadId as string, { limit: 100 }),
-    enabled:
-      activeTab === "SMS" && Boolean(leadId && phoneNumber) && twilioReady,
-    refetchOnWindowFocus: false,
+    enabled: smsQueryEnabled,
+    refetchOnWindowFocus: smsQueryEnabled,
     staleTime: 30_000,
+    // Periodically poll for new SMS messages while the SMS tab is active
+    refetchInterval: shouldPollSms ? 5000 : false,
+    refetchIntervalInBackground: true,
   });
 
   const isSmsLoading =

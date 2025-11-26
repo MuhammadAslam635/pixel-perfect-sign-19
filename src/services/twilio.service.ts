@@ -73,6 +73,30 @@ export interface LeadCallLog {
   startedAt: string;
   endedAt?: string | null;
   metadata?: Record<string, any>;
+  // Twilio recording + transcription fields (may be undefined for older logs)
+  callSid?: string | null;
+  recordingSid?: string | null;
+  recordingUrl?: string | null;
+  transcriptionText?: string | null;
+  transcriptionStatus?: "pending" | "completed" | "failed" | "not-requested";
+  transcriptionProvider?: string | null;
+  transcriptionMetadata?: Record<string, any>;
+  // Post-call analysis fields
+  leadSuccessScoreStatus?:
+    | "not-requested"
+    | "pending"
+    | "completed"
+    | "failed";
+  leadSuccessScore?: number | null;
+  leadSuccessScoreMetadata?: Record<string, any>;
+  followupSuggestionStatus?:
+    | "not-requested"
+    | "pending"
+    | "completed"
+    | "failed";
+  followupTemplateId?: string | null;
+  followupSuggestionSummary?: string | null;
+  followupSuggestionMetadata?: Record<string, any>;
   createdAt: string;
   updatedAt: string;
 }
