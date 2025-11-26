@@ -84,28 +84,29 @@ export const EmailComposer = ({
   };
 
   return (
-    <Card className="h-full flex flex-col max-h-full overflow-hidden">
-      <CardHeader className="border-b py-3">
-        <CardTitle className="text-lg">
-          {threadId ? "Reply" : "Compose Email"}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="flex-1 flex flex-col gap-2 p-3 overflow-y-auto">
-        <div className="space-y-1">
-          <Label htmlFor="to" className="text-sm">
+    <section className="h-full flex flex-col rounded-[32px] border border-white/10 bg-[linear-gradient(135deg,#0f1620,#1c2b37,#090f16)] shadow-[0_25px_60px_rgba(0,0,0,0.55)] overflow-hidden relative">
+      <div className="pointer-events-none absolute inset-0 opacity-80 bg-[radial-gradient(circle_at_8%_6%,rgba(67,173,189,0.7),transparent_18%)]" />
+      <div className="flex flex-col h-full relative z-10">
+        <div className="p-6 pb-4 bg-[linear-gradient(135deg,rgba(19,26,36,0.95),rgba(10,16,24,0.95))] border-b border-white/10">
+          <h2 className="text-xl font-semibold text-white">
+            {threadId ? "Reply" : "Compose Email"}
+          </h2>
+        </div>
+        <div className="flex-1 flex flex-col gap-4 p-6 overflow-y-auto">
+        <div className="space-y-3">
+          <Label htmlFor="to" className="text-sm font-medium text-white/90">
             To
           </Label>
           <div className="flex flex-wrap gap-2 items-center">
             {to.map((email) => (
               <Badge
                 key={email}
-                variant="secondary"
-                className="flex items-center gap-1"
+                className="bg-[#66AFB74D] text-[#66AFB7] border border-emerald-500/30 rounded-full px-3 py-1 text-xs flex items-center gap-1"
               >
                 {email}
                 <button
                   onClick={() => removeRecipient(email, to, setTo)}
-                  className="ml-1 hover:text-destructive"
+                  className="ml-1 hover:text-red-400 transition-colors"
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -130,27 +131,26 @@ export const EmailComposer = ({
                   setToInput("");
                 }
               }}
-              className="flex-1 min-w-[200px]"
+              className="flex-1 min-w-[200px] bg-[#0b0f1c] border-white/10 text-white placeholder:text-white/40 focus:border-white/30 focus:ring-1 focus:ring-white/20 rounded-lg"
             />
           </div>
         </div>
 
         {showCc && (
-          <div className="space-y-1">
-            <Label htmlFor="cc" className="text-sm">
+          <div className="space-y-3">
+            <Label htmlFor="cc" className="text-sm font-medium text-white/90">
               CC
             </Label>
             <div className="flex flex-wrap gap-2 items-center">
               {cc.map((email) => (
                 <Badge
                   key={email}
-                  variant="secondary"
-                  className="flex items-center gap-1"
+                  className="bg-[#66AFB74D] text-[#66AFB7] border border-emerald-500/30 rounded-full px-3 py-1 text-xs flex items-center gap-1"
                 >
                   {email}
                   <button
                     onClick={() => removeRecipient(email, cc, setCc)}
-                    className="ml-1 hover:text-destructive"
+                    className="ml-1 hover:text-red-400 transition-colors"
                   >
                     <X className="h-3 w-3" />
                   </button>
@@ -175,28 +175,27 @@ export const EmailComposer = ({
                     setCcInput("");
                   }
                 }}
-                className="flex-1 min-w-[200px]"
+                className="flex-1 min-w-[200px] bg-[#0b0f1c] border-white/10 text-white placeholder:text-white/40 focus:border-white/30 focus:ring-1 focus:ring-white/20 rounded-lg"
               />
             </div>
           </div>
         )}
 
         {showBcc && (
-          <div className="space-y-1">
-            <Label htmlFor="bcc" className="text-sm">
+          <div className="space-y-3">
+            <Label htmlFor="bcc" className="text-sm font-medium text-white/90">
               BCC
             </Label>
             <div className="flex flex-wrap gap-2 items-center">
               {bcc.map((email) => (
                 <Badge
                   key={email}
-                  variant="secondary"
-                  className="flex items-center gap-1"
+                  className="bg-[#66AFB74D] text-[#66AFB7] border border-emerald-500/30 rounded-full px-3 py-1 text-xs flex items-center gap-1"
                 >
                   {email}
                   <button
                     onClick={() => removeRecipient(email, bcc, setBcc)}
-                    className="ml-1 hover:text-destructive"
+                    className="ml-1 hover:text-red-400 transition-colors"
                   >
                     <X className="h-3 w-3" />
                   </button>
@@ -221,7 +220,7 @@ export const EmailComposer = ({
                     setBccInput("");
                   }
                 }}
-                className="flex-1 min-w-[200px]"
+                className="flex-1 min-w-[200px] bg-[#0b0f1c] border-white/10 text-white placeholder:text-white/40 focus:border-white/30 focus:ring-1 focus:ring-white/20 rounded-lg"
               />
             </div>
           </div>
@@ -229,21 +228,31 @@ export const EmailComposer = ({
 
         <div className="flex items-center gap-2">
           {!showCc && (
-            <Button variant="ghost" size="sm" onClick={() => setShowCc(true)}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowCc(true)}
+              className="text-white/70 hover:text-white hover:bg-white/10 rounded-lg"
+            >
               <Plus className="h-4 w-4 mr-1" />
               CC
             </Button>
           )}
           {!showBcc && (
-            <Button variant="ghost" size="sm" onClick={() => setShowBcc(true)}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowBcc(true)}
+              className="text-white/70 hover:text-white hover:bg-white/10 rounded-lg"
+            >
               <Plus className="h-4 w-4 mr-1" />
               BCC
             </Button>
           )}
         </div>
 
-        <div className="space-y-1">
-          <Label htmlFor="subject" className="text-sm">
+        <div className="space-y-3">
+          <Label htmlFor="subject" className="text-sm font-medium text-white/90">
             Subject
           </Label>
           <Input
@@ -251,11 +260,12 @@ export const EmailComposer = ({
             placeholder="Email subject"
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
+            className="bg-[#0b0f1c] border-white/10 text-white placeholder:text-white/40 focus:border-white/30 focus:ring-1 focus:ring-white/20 rounded-lg"
           />
         </div>
 
-        <div className="space-y-1 flex flex-col">
-          <Label htmlFor="body" className="text-sm">
+        <div className="space-y-3 flex flex-col">
+          <Label htmlFor="body" className="text-sm font-medium text-white/90">
             Message
           </Label>
           <Textarea
@@ -263,23 +273,30 @@ export const EmailComposer = ({
             placeholder="Write your message here..."
             value={body}
             onChange={(e) => setBody(e.target.value)}
-            className="min-h-[100px] max-h-[200px] resize-none"
+            className="min-h-[120px] max-h-[200px] resize-none bg-[#0b0f1c] border-white/10 text-white placeholder:text-white/40 focus:border-white/30 focus:ring-1 focus:ring-white/20 rounded-lg"
           />
         </div>
 
-        <div className="flex items-center justify-between pt-2 border-t mt-2">
-          <Button variant="outline" onClick={onCancel} disabled={isLoading}>
+        <div className="flex items-center justify-between pt-4 border-t border-white/10 mt-4">
+          <Button
+            variant="outline"
+            onClick={onCancel}
+            disabled={isLoading}
+            className="border-white/30 text-white hover:bg-white/10 rounded-lg"
+          >
             Cancel
           </Button>
           <Button
             onClick={handleSend}
             disabled={isLoading || to.length === 0 || !subject.trim()}
+            className="bg-gradient-to-r from-[#69B4B7] via-[#5486D0] to-[#3E64B3] text-white hover:brightness-110 rounded-lg"
           >
             <Send className="h-4 w-4 mr-2" />
             {isLoading ? "Sending..." : "Send"}
           </Button>
         </div>
-      </CardContent>
-    </Card>
+        </div>
+      </div>
+    </section>
   );
 };
