@@ -13,12 +13,11 @@ import {
   Shield,
   PhoneCall,
   Target,
-  UserCheck
+  UserCheck,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
-
 
 type NavLink = {
   id: string;
@@ -77,7 +76,8 @@ const navLinks: NavLink[] = [
     label: "Members",
     icon: UserCheck,
     path: "/admin/members/permissions",
-    match: (pathname: string) => pathname.startsWith("/admin/members/permissions"),
+    match: (pathname: string) =>
+      pathname.startsWith("/admin/members/permissions"),
     roles: superAdminRoles,
   },
   {
@@ -109,9 +109,8 @@ const navLinks: NavLink[] = [
     path: "/contact-now",
     match: (pathname: string) => pathname.startsWith("/contact-now"),
     roles: contactRoles,
-  }
+  },
 ];
-
 
 const resolveActiveNav = (pathname: string, links: NavLink[]) => {
   const match = links.find((link) =>
@@ -151,7 +150,7 @@ export const Navigation = () => {
     setActiveNav(link.id);
     navigate(link.path);
   };
-  
+
   return (
     <nav className="hidden lg:flex scrollbar-hide flex-1 min-w-0 w-full lg:w-[780px] items-center justify-start lg:justify-center gap-2 overflow-x-auto flex-nowrap snap-x snap-mandatory pl-2 sm:pl-3 md:pl-4 pr-2 sm:pr-4">
       {filteredNavLinks.map((link) => {
@@ -166,20 +165,22 @@ export const Navigation = () => {
                 : "w-10 aspect-square text-white/85 hover:text-white hover:shadow-[0_16px_28px_rgba(0,0,0,0.35)] hover:justify-start hover:w-auto hover:aspect-auto hover:h-10 hover:pl-3 hover:pr-2.5 hover:gap-2 hover:z-10"
             } snap-start lg:snap-center before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/15 before:to-transparent before:transition-all before:duration-300 before:ease-in-out hover:before:from-white/25 hover:before:duration-200`}
             style={{
-              background: '#FFFFFF1A',
-              boxShadow: '0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset',
+              background: "#FFFFFF1A",
+              boxShadow:
+                "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
             }}
             onClick={() => handleNavigate(link)}
             aria-label={link.label}
             type="button"
           >
             {isActive && (
-              <div 
+              <div
                 className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[100px] h-[100px] rounded-full pointer-events-none"
                 style={{
-                  background: 'linear-gradient(180deg, #67B0B7 0%, #4066B3 100%)',
-                  filter: 'blur(20px)',
-                  WebkitFilter: 'blur(20px)',
+                  background:
+                    "linear-gradient(180deg, #67B0B7 0%, #4066B3 100%)",
+                  filter: "blur(20px)",
+                  WebkitFilter: "blur(20px)",
                 }}
               ></div>
             )}

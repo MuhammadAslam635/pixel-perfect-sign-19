@@ -16,18 +16,23 @@ import {
   PaginationEllipsis,
 } from "@/components/ui/pagination";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
   Search,
   Plus,
-  MoreVertical,
-  Pencil,
   Trash2,
   RotateCcw,
+  Eye,
+  LayoutDashboard,
+  LineChart,
+  Users2,
+  CalendarDays,
+  Building2,
+  Briefcase,
+  BookOpen,
+  Sparkles,
+  Bell,
+  Settings,
+  LucideIcon,
+  Download,
 } from "lucide-react";
 import { userService, User } from "@/services/user.service";
 import { toast } from "sonner";
@@ -45,6 +50,27 @@ const UserList = () => {
   const [trashed, setTrashed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [availableRoles, setAvailableRoles] = useState<Role[]>([]);
+  const quickActions = useMemo<
+    {
+      icon: LucideIcon;
+      label: string;
+      path?: string;
+    }[]
+  >(
+    () => [
+      { icon: LayoutDashboard, label: "Home", path: "/dashboard" },
+      { icon: LineChart, label: "Analytics" },
+      { icon: Users2, label: "Employees" },
+      { icon: CalendarDays, label: "Calendar" },
+      { icon: Building2, label: "Companies" },
+      { icon: Briefcase, label: "Projects" },
+      { icon: BookOpen, label: "Knowledge" },
+      { icon: Sparkles, label: "Automation" },
+      { icon: Bell, label: "Notifications" },
+      { icon: Settings, label: "Settings" },
+    ],
+    []
+  );
   const limit = 10;
 
   const fetchUsers = useCallback(
@@ -192,6 +218,18 @@ const UserList = () => {
     return null;
   }
 
+  const resolveUserDisplayName = (userData: User) =>
+    userData.name ||
+    `${userData.firstName || ""} ${userData.lastName || ""}`.trim() ||
+    userData.email.split("@")[0];
+
+  const currentUser = authState.user;
+  const currentUserName =
+    currentUser?.name ||
+    `${currentUser?.firstName || ""} ${currentUser?.lastName || ""}`.trim() ||
+    currentUser?.email ||
+    "User";
+
   const handleDelete = async (userId: string, userName: string) => {
     if (
       !window.confirm(
@@ -258,281 +296,300 @@ const UserList = () => {
 
   return (
     <DashboardLayout>
-      <main className="relative px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] mt-20 sm:mt-20 lg:mt-24 xl:mt-28 mb-0 flex flex-col gap-6 text-white flex-1 overflow-y-auto">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-semibold text-white mb-2">
-              Employees
-            </h1>
-            <p className="text-white/60 text-xs sm:text-sm">
-              Manage your employees
-            </p>
+      <main className="relative px-4 sm:px-6 md:px-10 lg:px-14 xl:px-16 2xl:px-[96px] mt-20 lg:mt-24 xl:mt-28 mb-10 flex flex-col gap-8 text-white flex-1 overflow-y-auto">
+        <section
+          className="p-5 sm:p-8 lg:p-2
+         space-y-6 flex justify-between"
+        >
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-center gap-3 mt-2">
+              <div>
+                <h1 className="text-3xl md:text-[36px] font-semibold tracking-tight">
+                  Employees
+                </h1>
+                <p className="text-white/60 text-sm mt-2">
+                  Manage your employees.
+                </p>
+              </div>
+            </div>
           </div>
-          <Button
-            className="w-full sm:w-auto bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3]"
-            style={{
-              boxShadow:
-                "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
-            }}
-            onClick={() => navigate("/users/create")}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">Create Employee</span>
-            <span className="sm:hidden">Create</span>
-          </Button>
-        </div>
 
-        {/* Search and Filters */}
-        <div className="rounded-2xl border border-white/10 bg-[linear-gradient(135deg,rgba(58,62,75,0.82),rgba(28,30,40,0.94))] p-4 sm:p-6 shadow-[0_20px_34px_rgba(0,0,0,0.38)] backdrop-blur">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-            <div className="flex-1 relative w-full">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/50" />
+          <div className="flex flex-col justify-end xl:flex-row xl:items-center gap-4">
+            <div className="relative w-full">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/60 z-20" />
               <Input
-                placeholder="Search by name, email..."
+                placeholder="Search employees"
                 value={searchTerm}
                 onChange={(e) => {
                   setSearchTerm(e.target.value);
                   setPage(1);
                 }}
-                className="pl-10 w-full rounded-full bg-black/35 border border-white/10 text-white placeholder:text-white/50 focus:ring-2 focus:ring-cyan-400/40 text-sm sm:text-base"
+                className="px-4 bg-gradient-to-br from-[#1a1a1a] to-[#2a2a2a] border-transparent focus:outline-none focus:ring-[2px] focus:ring-transparent shadow-[inset_0_0_10px_rgba(0,0,0,0.4)] relative z-10 h-12 pl-10 pr-4 !rounded-full border-0 text-gray-300 placeholder:text-gray-500 text-sm w-full"
+                style={{
+                  background: "rgba(255, 255, 255, 0.1)",
+                  border: "1px solid rgba(0, 255, 255, 0.1)",
+                  borderRadius: "9999px",
+                  boxShadow:
+                    "rgba(255, 255, 255, 0.16) 0px 3.43px 3.43px 0px inset, rgba(255, 255, 255, 0.16) 0px -3.43px 3.43px 0px inset",
+                }}
               />
             </div>
-            <Button
-              variant={trashed ? "destructive" : "outline"}
-              className="w-full sm:w-auto bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3]"
-              style={{
-                boxShadow:
-                  "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
-              }}
-              onClick={() => {
-                setTrashed((t) => !t);
-                setPage(1);
-              }}
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              <span className="hidden sm:inline">
-                {trashed ? "Show Active" : "Show Trash"}
-              </span>
-              <span className="sm:hidden">{trashed ? "Active" : "Trash"}</span>
-            </Button>
-          </div>
-        </div>
-
-        {/* Table */}
-        <div className="rounded-2xl border border-white/10 bg-[linear-gradient(135deg,rgba(58,62,75,0.82),rgba(28,30,40,0.94))] shadow-[0_20px_34px_rgba(0,0,0,0.38)] backdrop-blur overflow-hidden">
-          {/* Table Header - Hidden on mobile */}
-          <div className="hidden lg:grid grid-cols-[1.2fr_1.5fr_0.8fr_0.8fr_1fr_80px] items-center gap-4 px-4 sm:px-6 py-4 bg-black/20 border-b border-white/10">
-            <div className="text-sm font-medium text-white/70">Name</div>
-            <div className="text-sm font-medium text-white/70">Email</div>
-            <div className="text-sm font-medium text-white/70">Role</div>
-            <div className="text-sm font-medium text-white/70">Status</div>
-            <div className="text-sm font-medium text-white/70">Created At</div>
-            <div className="text-sm font-medium text-white/70 text-center">
-              Actions
+            <div className="flex flex-col sm:flex-row gap-3 w-full xl:w-auto">
+              <Button
+                type="button"
+                onClick={() => {
+                  setTrashed((t) => !t);
+                  setPage(1);
+                }}
+                className="group relative overflow-hidden flex-1 sm:flex-none flex h-12 items-center justify-center rounded-full border border-white/40 px-0 text-sm font-medium tracking-wide text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] pl-4 pr-4 gap-2 before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/18 before:to-transparent before:transition-all before:duration-300 before:ease-in-out hover:before:from-white/30 hover:before:duration-200"
+                style={{
+                  background: "#FFFFFF1A",
+                  boxShadow:
+                    "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                }}
+              >
+                <span
+                  className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[120px] h-[120px] rounded-full pointer-events-none opacity-60 blur-[26px]"
+                  style={{
+                    background:
+                      "linear-gradient(180deg, #67B0B7 0%, #4066B3 100%)",
+                  }}
+                />
+                <Trash2 className="h-5 w-5 relative z-10" />
+                <span className="relative z-10">
+                  {trashed ? "Show Active" : "Show Trash"}
+                </span>
+              </Button>
+              <Button
+                type="button"
+                onClick={() => navigate("/users/create")}
+                className="group relative overflow-hidden flex-1 sm:flex-none flex h-12 items-center justify-center rounded-full border border-white/40 px-0 text-sm font-medium tracking-wide text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] pl-4 pr-4 gap-2 before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/18 before:to-transparent before:transition-all before:duration-300 before:ease-in-out hover:before:from-white/30 hover:before:duration-200"
+                style={{
+                  background: "#FFFFFF1A",
+                  boxShadow:
+                    "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                }}
+              >
+                <span
+                  className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[120px] h-[120px] rounded-full pointer-events-none opacity-60 blur-[26px]"
+                  style={{
+                    background:
+                      "linear-gradient(180deg, #67B0B7 0%, #4066B3 100%)",
+                  }}
+                />
+                <Plus className="h-5 w-5 relative z-10" />
+                <span className="hidden sm:block relative z-10">
+                  Create Employees
+                </span>
+                <span className="sm:hidden relative z-10">Create</span>
+              </Button>
             </div>
           </div>
+        </section>
 
-          {/* Table Body */}
-          <div className="min-h-[400px]">
+        <section className="rounded-[32px] border border-white/10 bg-[linear-gradient(150deg,rgba(11,17,28,0.95),rgba(22,34,49,0.9))] shadow-[0_25px_60px_rgba(0,0,0,0.55)] overflow-hidden">
+          <div className="hidden lg:grid grid-cols-[1.2fr_1.5fr_0.8fr_0.8fr_1fr_140px] items-center gap-4 px-6 py-5 bg-white/5 border-b border-white/10 text-white/70 text-sm font-medium">
+            <span>Name</span>
+            <span>Email</span>
+            <span>Role</span>
+            <span>Status</span>
+            <span>Created at</span>
+            <span className="text-center">Actions</span>
+          </div>
+
+          <div className="min-h-[420px]">
             {loading ? (
               <div className="flex flex-col items-center justify-center py-16">
-                <div className="w-8 h-8 border-4 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin mb-3" />
-                <p className="text-white/60 text-sm">Loading users...</p>
+                <div className="w-10 h-10 border-4 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin mb-4" />
+                <p className="text-white/60 text-sm">Loading employees...</p>
               </div>
             ) : users.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 px-4">
-                <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-4">
-                  <Search className="w-6 h-6 text-white/30" />
+              <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+                <div className="w-20 h-20 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-5">
+                  <Search className="w-8 h-8 text-white/25" />
                 </div>
-                <p className="text-white/70 text-base font-medium mb-1">
-                  {searchTerm ? "No users found" : "No users available"}
+                <p className="text-lg font-semibold text-white/80 mb-2">
+                  {searchTerm ? "No employees found" : "No employees yet"}
                 </p>
-                <p className="text-white/50 text-sm text-center max-w-md">
+                <p className="text-sm text-white/60 max-w-lg">
                   {searchTerm
-                    ? "Try adjusting your search terms or clear the filter to see all users."
-                    : "There are no users in the database yet."}
+                    ? "Try adjusting your search to discover the people you are looking for."
+                    : "Employees you add will appear here. Start building your team."}
                 </p>
               </div>
             ) : (
               <>
-                {/* Desktop Table View */}
                 <div className="hidden lg:block">
-                  {users.map((user) => (
+                  {users.map((user, index) => (
                     <div
                       key={user._id}
-                      className="grid grid-cols-[1.2fr_1.5fr_0.8fr_0.8fr_1fr_80px] items-center gap-4 px-4 sm:px-6 py-4 hover:bg-white/5 transition-colors border-b border-white/5 last:border-b-0"
+                      className={`grid grid-cols-[1.2fr_1.5fr_0.8fr_0.8fr_1fr_140px] items-center gap-4 px-6 py-5 text-sm border-b border-white/5 ${
+                        index % 2 === 0 ? "bg-white/[0.02]" : ""
+                      }`}
                     >
                       <div className="font-medium text-white truncate">
-                        {user.name ||
-                          `${user.firstName || ""} ${
-                            user.lastName || ""
-                          }`.trim() ||
-                          user.email.split("@")[0]}
+                        {resolveUserDisplayName(user)}
                       </div>
                       <div className="text-white/70 truncate">{user.email}</div>
                       <div>{renderRoleBadge(user)}</div>
                       <div>
                         {user.status === "active" && (
-                          <Badge className="bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded-full px-3 py-1 text-xs">
+                          <Badge className="rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 px-4 py-1 text-xs">
                             Active
                           </Badge>
                         )}
                         {user.status === "inactive" && (
-                          <Badge className="bg-red-600/20 text-red-400 border border-red-600/30 rounded-full px-3 py-1 text-xs">
+                          <Badge className="rounded-full bg-[#5A1212]/80 text-[#FF6B6B] border border-[#FF6B6B]/40 px-4 py-1 text-xs">
                             Inactive
                           </Badge>
                         )}
                         {!user.status && (
-                          <Badge className="bg-white/10 text-white/70 border border-white/20 rounded-full px-3 py-1 text-xs">
+                          <Badge className="rounded-full bg-white/15 text-white/60 border border-white/25 px-4 py-1 text-xs">
                             N/A
                           </Badge>
                         )}
                       </div>
-                      <div className="text-white/60 text-sm">
+                      <div className="text-white/60">
                         {user.createdAt
                           ? new Date(user.createdAt).toLocaleDateString()
                           : "N/A"}
                       </div>
-                      <div className="flex justify-center">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button className="p-2 rounded-full hover:bg-white/10 text-white/70 hover:text-white transition">
-                              <MoreVertical className="h-5 w-5" />
+                      <div className="flex justify-center items-center gap-3">
+                        {!trashed ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                navigate(`/users/${user._id}/edit`)
+                              }
+                              className="rounded-full border border-emerald-500/50 bg-emerald-500/10 text-emerald-300 p-2 hover:bg-emerald-500/20 transition"
+                              title="Download profile"
+                            >
+                              <Download className="h-4 w-4" />
                             </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent
-                            align="end"
-                            className="bg-[rgba(30,30,30,0.95)] border border-white/10 text-white shadow-lg rounded-lg w-40 backdrop-blur"
+                            <button
+                              type="button"
+                              onClick={() =>
+                                navigate(`/users/${user._id}/edit`)
+                              }
+                              className="rounded-full border border-white/25 bg-white/5 text-white/80 p-2 hover:bg-white/10 transition"
+                              title="View employee"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleDelete(
+                                  user._id,
+                                  resolveUserDisplayName(user)
+                                )
+                              }
+                              className="rounded-full border border-red-500/40 bg-red-500/10 text-red-400 p-2 hover:bg-red-500/20 transition"
+                              title="Delete employee"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleRestore(user._id)}
+                            className="rounded-full border border-cyan-400/40 bg-cyan-500/10 text-cyan-300 p-2 hover:bg-cyan-500/20 transition"
+                            title="Restore employee"
                           >
-                            {!trashed ? (
-                              <>
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    navigate(`/users/${user._id}/edit`)
-                                  }
-                                  className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-white/10"
-                                >
-                                  <Pencil size={16} /> Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    handleDelete(
-                                      user._id,
-                                      user.name ||
-                                        `${user.firstName || ""} ${
-                                          user.lastName || ""
-                                        }`.trim() ||
-                                        user.email
-                                    )
-                                  }
-                                  className="flex items-center gap-2 px-3 py-2 hover:bg-red-600/30 text-red-400 cursor-pointer"
-                                >
-                                  <Trash2 size={16} /> Delete
-                                </DropdownMenuItem>
-                              </>
-                            ) : (
-                              <DropdownMenuItem
-                                onClick={() => handleRestore(user._id)}
-                                className="flex items-center gap-2 px-3 py-2 hover:bg-cyan-500/30 text-cyan-400 cursor-pointer"
-                              >
-                                <RotateCcw size={16} /> Restore
-                              </DropdownMenuItem>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                            <RotateCcw className="h-4 w-4" />
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))}
                 </div>
 
-                {/* Mobile Card View */}
                 <div className="lg:hidden space-y-4 p-4">
                   {users.map((user) => (
                     <div
                       key={user._id}
-                      className="bg-black/20 rounded-xl border border-white/10 p-4 space-y-3"
+                      className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 space-y-4 shadow-[0_15px_35px_rgba(0,0,0,0.35)]"
                     >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-medium text-white truncate mb-1">
-                            {user.name ||
-                              `${user.firstName || ""} ${
-                                user.lastName || ""
-                              }`.trim() ||
-                              user.email.split("@")[0]}
-                          </h3>
-                          <p className="text-white/70 text-sm truncate">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="min-w-0">
+                          <p className="text-lg font-semibold truncate">
+                            {resolveUserDisplayName(user)}
+                          </p>
+                          <p className="text-white/60 text-sm truncate">
                             {user.email}
                           </p>
                         </div>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button className="p-2 rounded-full hover:bg-white/10 text-white/70 hover:text-white transition flex-shrink-0">
-                              <MoreVertical className="h-5 w-5" />
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent
-                            align="end"
-                            className="bg-[rgba(30,30,30,0.95)] border border-white/10 text-white shadow-lg rounded-lg w-40 backdrop-blur"
-                          >
-                            {!trashed ? (
-                              <>
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    navigate(`/users/${user._id}/edit`)
-                                  }
-                                  className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-white/10"
-                                >
-                                  <Pencil size={16} /> Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    handleDelete(
-                                      user._id,
-                                      user.name ||
-                                        `${user.firstName || ""} ${
-                                          user.lastName || ""
-                                        }`.trim() ||
-                                        user.email
-                                    )
-                                  }
-                                  className="flex items-center gap-2 px-3 py-2 hover:bg-red-600/30 text-red-400 cursor-pointer"
-                                >
-                                  <Trash2 size={16} /> Delete
-                                </DropdownMenuItem>
-                              </>
-                            ) : (
-                              <DropdownMenuItem
-                                onClick={() => handleRestore(user._id)}
-                                className="flex items-center gap-2 px-3 py-2 hover:bg-cyan-500/30 text-cyan-400 cursor-pointer"
+                        <div className="flex items-center gap-2">
+                          {!trashed ? (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  navigate(`/users/${user._id}/edit`)
+                                }
+                                className="rounded-full border border-emerald-500/40 bg-emerald-500/10 text-emerald-300 p-2"
+                                title="Download profile"
                               >
-                                <RotateCcw size={16} /> Restore
-                              </DropdownMenuItem>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                                <Download className="h-4 w-4" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  navigate(`/users/${user._id}/edit`)
+                                }
+                                className="rounded-full border border-white/25 bg-white/5 text-white/80 p-2"
+                                title="View employee"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleDelete(
+                                    user._id,
+                                    resolveUserDisplayName(user)
+                                  )
+                                }
+                                className="rounded-full border border-red-500/40 bg-red-500/10 text-red-400 p-2"
+                                title="Delete employee"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleRestore(user._id)}
+                              className="rounded-full border border-cyan-400/40 bg-cyan-500/10 text-cyan-300 p-2"
+                              title="Restore employee"
+                            >
+                              <RotateCcw className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
                       </div>
                       <div className="flex flex-wrap gap-2">
                         {renderRoleBadge(user)}
                         {user.status === "active" && (
-                          <Badge className="bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded-full px-3 py-1 text-xs">
+                          <Badge className="rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 px-4 py-1 text-xs">
                             Active
                           </Badge>
                         )}
                         {user.status === "inactive" && (
-                          <Badge className="bg-red-600/20 text-red-400 border border-red-600/30 rounded-full px-3 py-1 text-xs">
+                          <Badge className="rounded-full bg-[#5A1212]/80 text-[#FF6B6B] border border-[#FF6B6B]/40 px-4 py-1 text-xs">
                             Inactive
                           </Badge>
                         )}
                         {!user.status && (
-                          <Badge className="bg-white/10 text-white/70 border border-white/20 rounded-full px-3 py-1 text-xs">
+                          <Badge className="rounded-full bg-white/15 text-white/60 border border-white/25 px-4 py-1 text-xs">
                             N/A
                           </Badge>
                         )}
                       </div>
-                      <div className="text-white/60 text-xs pt-2 border-t border-white/10">
-                        Created:{" "}
+                      <div className="text-xs text-white/60 border-t border-white/10 pt-3">
+                        Created at:{" "}
                         {user.createdAt
                           ? new Date(user.createdAt).toLocaleDateString()
                           : "N/A"}
@@ -543,29 +600,27 @@ const UserList = () => {
               </>
             )}
           </div>
-        </div>
+        </section>
 
-        {/* Pagination */}
         {totalPages > 1 && !loading && (
-          <Pagination className="mt-4 sm:mt-6">
+          <Pagination className="mt-2">
             <PaginationContent className="flex-wrap gap-2">
               <PaginationItem>
                 <PaginationPrevious
                   onClick={handlePrevious}
                   className={
                     page === 1
-                      ? "pointer-events-none opacity-50"
-                      : "cursor-pointer text-sm sm:text-base"
+                      ? "pointer-events-none opacity-40"
+                      : "cursor-pointer"
                   }
                 />
               </PaginationItem>
-              <div className="hidden sm:flex gap-1">
+              <div className="hidden sm:flex gap-2">
                 {paginationPages?.pages.map((pageNum) => (
                   <PaginationItem key={pageNum}>
                     <PaginationLink
                       isActive={page === pageNum}
                       onClick={() => handlePageChange(pageNum)}
-                      className="cursor-pointer"
                     >
                       {pageNum}
                     </PaginationLink>
@@ -574,7 +629,7 @@ const UserList = () => {
               </div>
               <div className="sm:hidden">
                 <PaginationItem>
-                  <PaginationLink isActive={true} className="cursor-pointer">
+                  <PaginationLink isActive className="cursor-default">
                     {page} / {totalPages}
                   </PaginationLink>
                 </PaginationItem>
@@ -591,8 +646,8 @@ const UserList = () => {
                   onClick={handleNext}
                   className={
                     page === totalPages
-                      ? "pointer-events-none opacity-50"
-                      : "cursor-pointer text-sm sm:text-base"
+                      ? "pointer-events-none opacity-40"
+                      : "cursor-pointer"
                   }
                 />
               </PaginationItem>
