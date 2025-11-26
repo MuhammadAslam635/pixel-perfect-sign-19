@@ -6,7 +6,7 @@ interface CompaniesIconProps {
 
 const CompaniesIcon: React.FC<CompaniesIconProps> = ({ className }) => {
   const mergedClass =
-    (className ? `${className} ` : "w-16 h-16 ") + "md:hidden";
+    (className ? `${className} ` : "w-16 h-16 ");
 
   return (
     <img

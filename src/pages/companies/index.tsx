@@ -668,7 +668,7 @@ const index = () => {
                 isMobileExecutivesView ? "hidden sm:flex" : "flex"
               } items-center gap-3 md:gap-4 order-2 lg:order-1`}
             >
-              <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-12 lg:h-12 flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 md:hidden flex items-center justify-center flex-shrink-0">
                 <CompaniesIcon className="w-full h-full" />
               </div>
               <h2 className="text-lg sm:text-lg font-normal text-white">
@@ -676,7 +676,7 @@ const index = () => {
               </h2>
               {activeTab === "companies" && (
                 <Button
-                  className="ml-auto flex items-center gap-2 rounded-md px-3 py-1.5 text-xs text-white font-normal sm:rounded-lg sm:px-4 sm:py-2 sm:text-sm"
+                  className="ml-auto md:hidden flex items-center gap-2 rounded-md px-3 py-1.5 text-xs text-white font-normal sm:rounded-lg sm:px-4 sm:py-2 sm:text-sm"
                   style={{
                     background:
                       "linear-gradient(90deg, rgba(218, 228, 241, 0.2) 0%, rgba(221, 224, 238, 0.2) 100%)",
