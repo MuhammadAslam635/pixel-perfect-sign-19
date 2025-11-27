@@ -5,6 +5,57 @@ import { formatDistanceToNow } from "date-fns";
 import { Star, Mail, MailOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+// Utility function to strip quoted email content
+const stripQuotedEmailContent = (content: string) => {
+  if (!content) {
+    return "";
+  }
+
+  const normalized = content.replace(/\r\n/g, "\n");
+  const quoteRegexes = [
+    /\nOn\s[\w\s,.:@]+\sat\s[\d:]+\s?[APM]+\s.+?\s?wrote:\s*/i,
+    /\nOn\s.+?\swrote:\s*/i,
+    /\nFrom:\s.+/i,
+    /\nSent:\s.+/i,
+    /\nSubject:\s.+/i,
+    /\nTo:\s.+/i,
+    /\nDate:\s.+/i,
+    /\n-{2,}\s*Original Message\s*-{2,}/i,
+    /\n-{2,}\s*Forwarded message\s*-{2,}/i,
+  ];
+
+  let cutoffIndex = normalized.length;
+  for (const regex of quoteRegexes) {
+    const matchIndex = normalized.search(regex);
+    if (matchIndex !== -1 && matchIndex < cutoffIndex) {
+      cutoffIndex = matchIndex;
+    }
+  }
+
+  const withoutMarkers = normalized.slice(0, cutoffIndex);
+  const withoutQuotedLines = withoutMarkers
+    .split("\n")
+    .filter(
+      (line) => !line.trim().startsWith(">") && !line.trim().startsWith("--")
+    )
+    .join("\n")
+    .trim();
+
+  if (withoutQuotedLines) {
+    return withoutQuotedLines;
+  }
+
+  const fallback = normalized
+    .split("\n")
+    .filter(
+      (line) => !line.trim().startsWith(">") && !line.trim().startsWith("--")
+    )
+    .join("\n")
+    .trim();
+
+  return fallback || content.trim();
+};
+
 interface EmailListItemProps {
   email: Email;
   onClick: () => void;
@@ -12,7 +63,12 @@ interface EmailListItemProps {
 
 export const EmailListItem = ({ email, onClick }: EmailListItemProps) => {
   const fromName = email.from.name || email.from.email.split("@")[0];
-  const preview = email.body.text?.substring(0, 100) || email.body.html?.replace(/<[^>]*>/g, "").substring(0, 100) || "No preview available";
+
+  // Clean the email content before creating preview
+  const cleanedText = email.body.text ? stripQuotedEmailContent(email.body.text) : "";
+  const cleanedHtml = email.body.html ? stripQuotedEmailContent(email.body.html.replace(/<[^>]*>/g, "")) : "";
+  const preview = (cleanedText || cleanedHtml)?.substring(0, 100) || "No preview available";
+
   const isUnread = !email.isRead;
   
   return (

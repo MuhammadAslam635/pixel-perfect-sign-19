@@ -6,6 +6,57 @@ import { formatDistanceToNow } from "date-fns";
 import { Star, Reply, Trash2, Archive, Mail, MailOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+// Utility function to strip quoted email content
+const stripQuotedEmailContent = (content: string) => {
+  if (!content) {
+    return "";
+  }
+
+  const normalized = content.replace(/\r\n/g, "\n");
+  const quoteRegexes = [
+    /\nOn\s[\w\s,.:@]+\sat\s[\d:]+\s?[APM]+\s.+?\s?wrote:\s*/i,
+    /\nOn\s.+?\swrote:\s*/i,
+    /\nFrom:\s.+/i,
+    /\nSent:\s.+/i,
+    /\nSubject:\s.+/i,
+    /\nTo:\s.+/i,
+    /\nDate:\s.+/i,
+    /\n-{2,}\s*Original Message\s*-{2,}/i,
+    /\n-{2,}\s*Forwarded message\s*-{2,}/i,
+  ];
+
+  let cutoffIndex = normalized.length;
+  for (const regex of quoteRegexes) {
+    const matchIndex = normalized.search(regex);
+    if (matchIndex !== -1 && matchIndex < cutoffIndex) {
+      cutoffIndex = matchIndex;
+    }
+  }
+
+  const withoutMarkers = normalized.slice(0, cutoffIndex);
+  const withoutQuotedLines = withoutMarkers
+    .split("\n")
+    .filter(
+      (line) => !line.trim().startsWith(">") && !line.trim().startsWith("--")
+    )
+    .join("\n")
+    .trim();
+
+  if (withoutQuotedLines) {
+    return withoutQuotedLines;
+  }
+
+  const fallback = normalized
+    .split("\n")
+    .filter(
+      (line) => !line.trim().startsWith(">") && !line.trim().startsWith("--")
+    )
+    .join("\n")
+    .trim();
+
+  return fallback || content.trim();
+};
+
 interface EmailViewerProps {
   email: Email;
   onStar: (isStarred: boolean) => void;
@@ -24,15 +75,17 @@ export const EmailViewer = ({
   isLoading = false,
 }: EmailViewerProps) => {
   const fromName = email.from.name || email.from.email.split("@")[0];
-  const toRecipients = email.to.map(r => r.name || r.email).join(", ");
-  const ccRecipients = email.cc?.map(r => r.name || r.email).join(", ");
-  const bccRecipients = email.bcc?.map(r => r.name || r.email).join(", ");
+  const toRecipients = email.to.map((r) => r.name || r.email).join(", ");
+  const ccRecipients = email.cc?.map((r) => r.name || r.email).join(", ");
+  const bccRecipients = email.bcc?.map((r) => r.name || r.email).join(", ");
 
   return (
     <Card className="h-full flex flex-col">
       <CardHeader className="border-b">
         <div className="flex items-start justify-between mb-4">
-          <CardTitle className="text-xl">{email.subject || "(No Subject)"}</CardTitle>
+          <CardTitle className="text-xl">
+            {email.subject || "(No Subject)"}
+          </CardTitle>
           <div className="flex items-center gap-2">
             {email.isStarred ? (
               <Button
@@ -84,34 +137,54 @@ export const EmailViewer = ({
         </div>
         <div className="space-y-2 text-sm">
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-muted-foreground w-20">From:</span>
-            <span>{fromName} &lt;{email.from.email}&gt;</span>
+            <span className="font-semibold text-muted-foreground w-20">
+              From:
+            </span>
+            <span>
+              {fromName} &lt;{email.from.email}&gt;
+            </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-muted-foreground w-20">To:</span>
+            <span className="font-semibold text-muted-foreground w-20">
+              To:
+            </span>
             <span>{toRecipients}</span>
           </div>
           {ccRecipients && (
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-muted-foreground w-20">CC:</span>
+              <span className="font-semibold text-muted-foreground w-20">
+                CC:
+              </span>
               <span>{ccRecipients}</span>
             </div>
           )}
           {bccRecipients && (
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-muted-foreground w-20">BCC:</span>
+              <span className="font-semibold text-muted-foreground w-20">
+                BCC:
+              </span>
               <span>{bccRecipients}</span>
             </div>
           )}
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-muted-foreground w-20">Date:</span>
+            <span className="font-semibold text-muted-foreground w-20">
+              Date:
+            </span>
             <span>
-              {new Date(email.createdAt).toLocaleString()} ({formatDistanceToNow(new Date(email.createdAt), { addSuffix: true })})
+              {new Date(email.createdAt).toLocaleString()} (
+              {formatDistanceToNow(new Date(email.createdAt), {
+                addSuffix: true,
+              })}
+              )
             </span>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-semibold text-muted-foreground w-20">Status:</span>
-            <Badge variant={email.direction === "inbound" ? "secondary" : "default"}>
+            <span className="font-semibold text-muted-foreground w-20">
+              Status:
+            </span>
+            <Badge
+              variant={email.direction === "inbound" ? "secondary" : "default"}
+            >
               {email.direction === "inbound" ? "Received" : "Sent"}
             </Badge>
             {email.deliveryStatus?.delivered && (
@@ -130,11 +203,13 @@ export const EmailViewer = ({
         {email.body.html ? (
           <div
             className="prose prose-invert max-w-none"
-            dangerouslySetInnerHTML={{ __html: email.body.html }}
+            dangerouslySetInnerHTML={{
+              __html: stripQuotedEmailContent(email.body.html),
+            }}
           />
         ) : (
           <div className="whitespace-pre-wrap text-sm">
-            {email.body.text || "No content"}
+            {stripQuotedEmailContent(email.body.text || "No content")}
           </div>
         )}
       </CardContent>
@@ -151,4 +226,3 @@ export const EmailViewer = ({
     </Card>
   );
 };
-
