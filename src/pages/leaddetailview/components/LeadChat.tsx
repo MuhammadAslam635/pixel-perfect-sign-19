@@ -103,10 +103,6 @@ const LeadChat = ({ lead }: LeadChatProps) => {
     [phoneNumber]
   );
 
-  const [emailMessages, setEmailMessages] = useState<Email[]>([]);
-  const [isEmailLoading, setIsEmailLoading] = useState(false);
-  const [emailError, setEmailError] = useState<string | null>(null);
-  const [fetchedEmailFor, setFetchedEmailFor] = useState<string | null>(null);
   const [smsInput, setSmsInput] = useState("");
   const [smsSendError, setSmsSendError] = useState<string | null>(null);
   const [whatsappInput, setWhatsappInput] = useState("");
@@ -256,11 +252,6 @@ const LeadChat = ({ lead }: LeadChatProps) => {
   }, [firstAvailableTab]);
 
   useEffect(() => {
-    setEmailMessages([]);
-    setFetchedEmailFor(null);
-  }, [lead?._id]);
-
-  useEffect(() => {
     setWhatsappInput("");
     setWhatsappSendError(null);
   }, [lead?._id]);
@@ -380,74 +371,59 @@ const LeadChat = ({ lead }: LeadChatProps) => {
     };
   }, []);
 
-  useEffect(() => {
-    const shouldFetchEmailConversation =
-      activeTab === "Email" &&
-      !!leadEmailLower &&
-      fetchedEmailFor !== leadEmailLower;
+  const emailConversationQueryKey = ["lead-email-conversation", leadEmailLower];
 
-    if (!shouldFetchEmailConversation) {
-      return;
-    }
+  const emailQueryEnabled = activeTab === "Email" && Boolean(leadEmailLower);
 
-    let isCancelled = false;
-
-    const fetchEmailConversation = async () => {
-      setIsEmailLoading(true);
-      setEmailError(null);
-
-      try {
-        const threadsResponse = await emailService.getEmailThreads({
-          limit: 100,
-        });
-        if (isCancelled) return;
-
-        const threads = threadsResponse.data?.threads || [];
-        const matchingThread = threads.find(
-          (thread) =>
-            Array.isArray(thread.participants) &&
-            thread.participants.some(
-              (participant) =>
-                participant.email?.toLowerCase() === leadEmailLower
-            )
-        );
-
-        if (!matchingThread) {
-          setEmailMessages([]);
-          setFetchedEmailFor(leadEmailLower);
-          return;
-        }
-
-        const threadResponse = await emailService.getThread(matchingThread._id);
-        if (isCancelled) return;
-
-        const emails = threadResponse.data?.emails || [];
-        const sortedEmails = [...emails].sort(
-          (a, b) =>
-            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-        );
-        setEmailMessages(sortedEmails);
-        setFetchedEmailFor(leadEmailLower);
-      } catch (error) {
-        if (!isCancelled) {
-          console.error("Failed to load email conversation", error);
-          setEmailError(
-            "Failed to load email conversation. Please try again later."
-          );
-        }
-      } finally {
-        if (!isCancelled) {
-          setIsEmailLoading(false);
-        }
+  const {
+    data: emailConversationData,
+    isLoading: isEmailConversationLoading,
+    isFetching: isEmailConversationFetching,
+    isError: isEmailConversationError,
+    error: emailConversationError,
+  } = useQuery({
+    queryKey: emailConversationQueryKey,
+    enabled: emailQueryEnabled,
+    staleTime: 60_000,
+    queryFn: async () => {
+      if (!leadEmailLower) {
+        return [];
       }
-    };
 
-    fetchEmailConversation();
+      const threadsResponse = await emailService.getEmailThreads({
+        limit: 100,
+      });
+      const threads = threadsResponse.data?.threads || [];
+      const matchingThread = threads.find(
+        (thread) =>
+          Array.isArray(thread.participants) &&
+          thread.participants.some(
+            (participant) => participant.email?.toLowerCase() === leadEmailLower
+          )
+      );
 
-    return () => {
-      isCancelled = true;
-    };
-  }, [activeTab, leadEmailLower, fetchedEmailFor]);
+      if (!matchingThread) {
+        return [];
+      }
+
+      const threadResponse = await emailService.getThread(matchingThread._id);
+      const emails = threadResponse.data?.emails || [];
+      return [...emails].sort(
+        (a, b) =>
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      );
+    },
+  });
+
+  const isEmailLoading =
+    isEmailConversationLoading ||
+    (isEmailConversationFetching && !emailConversationData);
+  const emailMessages = emailConversationData || [];
+  const emailError = isEmailConversationError
+    ? (emailConversationError as any)?.response?.data?.message ||
+      (emailConversationError as Error)?.message ||
+      "Failed to load email conversation. Please try again later."
+    : null;
 
   const smsQueryEnabled =
     activeTab === "SMS" && Boolean(leadId && phoneNumber) && twilioReady;
@@ -628,8 +604,7 @@ const LeadChat = ({ lead }: LeadChatProps) => {
       setEmailInput("");
       setEmailSubject(DEFAULT_EMAIL_SUBJECT);
       setEmailSendError(null);
-      // Invalidate email threads to refresh the conversation
-      queryClient.invalidateQueries({ queryKey: ["email-threads"] });
+      queryClient.invalidateQueries({ queryKey: emailConversationQueryKey });
     },
     onError: (mutationError: any) => {
       const fallbackMessage =
