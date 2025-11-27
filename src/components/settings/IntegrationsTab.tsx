@@ -12,14 +12,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -97,32 +89,17 @@ export const IntegrationsTab = () => {
   }>({ open: false, phoneNumberId: null });
   const [isDisconnectingWhatsApp, setIsDisconnectingWhatsApp] = useState(false);
   const [isTwilioStatusLoading, setIsTwilioStatusLoading] = useState(false);
-  const [isTwilioActionLoading, setIsTwilioActionLoading] = useState(false);
   const [twilioConnected, setTwilioConnected] = useState(false);
   const [twilioDetails, setTwilioDetails] = useState<{
     accountSid?: string | null;
     apiKeySid?: string | null;
     apiKeySecret?: string | null;
     authToken?: string | null;
-    lastConnectedAt?: string;
-    hasAllCredentials?: boolean;
+    callerId?: string | null;
+    lastConnectedAt?: string | null;
+    hasAllEnvVars?: boolean;
     missingFields?: string[];
-    ownerApplicationSid?: string | null;
-    ownerPhoneNumber?: string | null;
-    ownerCallerReady?: boolean;
   } | null>(null);
-  const [isTwilioModalOpen, setIsTwilioModalOpen] = useState(false);
-  const [twilioForm, setTwilioForm] = useState({
-    accountSid: "",
-    apiKeySid: "",
-    apiKeySecret: "",
-    authToken: "",
-    ownerApplicationSid: "",
-    ownerPhoneNumber: "",
-  });
-  const [isSavingTwilioCredentials, setIsSavingTwilioCredentials] =
-    useState(false);
-  const [twilioFormError, setTwilioFormError] = useState<string | null>(null);
   const [mailgunConfig, setMailgunConfig] = useState({
     apiKey: "",
     domain: "",
@@ -191,18 +168,6 @@ export const IntegrationsTab = () => {
     });
   };
 
-  const resetTwilioForm = () => {
-    setTwilioForm({
-      accountSid: "",
-      apiKeySid: "",
-      apiKeySecret: "",
-      authToken: "",
-      ownerApplicationSid: "",
-      ownerPhoneNumber: "",
-    });
-    setTwilioFormError(null);
-  };
-
   const fetchWhatsAppConnections = async () => {
     if (!user?.token) return;
 
@@ -247,22 +212,16 @@ const fetchTwilioStatus = async () => {
       const statusData = response.data.data || null;
       const ready =
         Boolean(response.data.connected) &&
-        Boolean(statusData?.hasAllCredentials);
+        Boolean(statusData?.hasAllEnvVars);
       setTwilioConnected(ready);
       setTwilioDetails(statusData);
     } else {
       setTwilioConnected(false);
       setTwilioDetails(null);
     }
-  } catch (error) {
+  } catch (_error) {
     setTwilioConnected(false);
     setTwilioDetails(null);
-    if (axios.isAxiosError(error) && error.response?.status === 404) {
-      toast({
-        title: "Twilio not configured",
-        description: "Company credentials aren’t added yet. Please add them.",
-      });
-    }
   } finally {
     setIsTwilioStatusLoading(false);
   }
@@ -541,8 +500,6 @@ useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const success = params.get("success");
     const error = params.get("error");
-    const twilioParam = params.get("twilio");
-    const twilioReason = params.get("reason");
     let shouldClear = false;
 
     if (success) {
@@ -558,26 +515,6 @@ useEffect(() => {
       toast({
         title: "Error",
         description: error,
-        variant: "destructive",
-      });
-      shouldClear = true;
-    }
-
-    if (twilioParam === "connected") {
-      toast({
-        title: "Twilio connected",
-        description: "Your Twilio account is now linked.",
-      });
-      fetchTwilioStatus();
-      shouldClear = true;
-    }
-
-    if (twilioParam === "error") {
-      toast({
-        title: "Twilio connection failed",
-        description:
-          twilioReason ||
-          "We could not connect to Twilio. Please try again.",
         variant: "destructive",
       });
       shouldClear = true;
@@ -611,46 +548,6 @@ useEffect(() => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refetchFacebookStatus]);
-
-  const handleTwilioModalOpen = () => {
-    resetTwilioForm();
-    setIsTwilioModalOpen(true);
-  };
-
-  const handleTwilioDisconnect = async () => {
-    if (!user?.token) {
-      toast({
-        title: "Error",
-        description: "User not authenticated. Please login again.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsTwilioActionLoading(true);
-    try {
-      await axios.delete(`${APP_BACKEND_URL}/twilio/disconnect`, {
-        headers: {
-          Authorization: `Bearer ${user.token}`,
-          "ngrok-skip-browser-warning": "true",
-        },
-      });
-      toast({
-        title: "Twilio disconnected",
-        description: "Your Twilio account has been disconnected.",
-      });
-      fetchTwilioStatus();
-    } catch (error: unknown) {
-      console.error("Error disconnecting Twilio:", error);
-      toast({
-        title: "Error",
-        description: "Failed to disconnect Twilio. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsTwilioActionLoading(false);
-    }
-  };
 
   const handleMicrosoftConnect = async () => {
     if (!user?.token) {
@@ -741,81 +638,6 @@ useEffect(() => {
       });
     } finally {
       setIsMicrosoftActionLoading(false);
-    }
-  };
-
-  const handleTwilioCredentialsSave = async () => {
-    if (!user?.token) {
-      toast({
-        title: "Error",
-        description: "User not authenticated. Please login again.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const requiredFields: Array<keyof typeof twilioForm> = [
-      "accountSid",
-      "apiKeySid",
-      "apiKeySecret",
-      "authToken",
-    ];
-    const missingRequired = requiredFields.some(
-      (field) => !twilioForm[field].trim()
-    );
-    if (missingRequired) {
-      setTwilioFormError(
-        "All required Twilio credential fields must be filled."
-      );
-      return;
-    }
-    setTwilioFormError(null);
-
-    const payload: Record<string, string> = {};
-    requiredFields.forEach((field) => {
-      payload[field] = twilioForm[field].trim();
-    });
-    if (twilioForm.ownerApplicationSid.trim()) {
-      payload.ownerApplicationSid = twilioForm.ownerApplicationSid.trim();
-    }
-    if (twilioForm.ownerPhoneNumber.trim()) {
-      payload.ownerPhoneNumber = twilioForm.ownerPhoneNumber.trim();
-    }
-
-    setIsSavingTwilioCredentials(true);
-    try {
-      await axios.post(`${APP_BACKEND_URL}/twilio/credentials`, payload, {
-        headers: {
-          Authorization: `Bearer ${user.token}`,
-          "ngrok-skip-browser-warning": "true",
-        },
-      });
-
-      toast({
-        title: "Twilio credentials saved",
-        description: "Employees can now be provisioned with Twilio assets.",
-      });
-
-      setIsTwilioModalOpen(false);
-      resetTwilioForm();
-      fetchTwilioStatus();
-    } catch (error: unknown) {
-      console.error("Error saving Twilio credentials:", error);
-      let errorMessage = "Failed to save Twilio credentials. Please verify the values.";
-      if (axios.isAxiosError(error)) {
-        if (error.response?.status === 404) {
-          errorMessage = "Company credentials aren’t added yet. Please add them.";
-        } else if (error.response?.data?.message) {
-          errorMessage = error.response.data.message;
-        }
-      }
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
-    } finally {
-      setIsSavingTwilioCredentials(false);
     }
   };
 
@@ -1678,10 +1500,10 @@ useEffect(() => {
                 </p>
                 <p className="text-xs sm:text-sm text-white/60 break-words">
                   {isTwilioStatusLoading
-                    ? "Checking credentials..."
+                    ? "Checking configuration..."
                     : twilioConnected
-                    ? "Twilio credentials ready for provisioning."
-                    : "Store your Twilio credentials to provision employee phone numbers."}
+                    ? "Twilio is globally configured for all companies."
+                    : "Twilio is not fully configured. Please contact your administrator."}
                 </p>
               </div>
             </div>
@@ -1690,25 +1512,13 @@ useEffect(() => {
               {twilioConnected && (
                 <span className="flex items-center gap-1 text-xs sm:text-sm text-emerald-400">
                   <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                  <span className="hidden sm:inline">Connected</span>
+                  <span className="hidden sm:inline">Configured</span>
                 </span>
-              )}
-              {twilioConnected && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleTwilioDisconnect}
-                  disabled={isTwilioActionLoading}
-                  className="w-full sm:w-auto border-rose-400/50 text-rose-300 hover:bg-rose-500/10 text-xs sm:text-sm"
-                >
-                  {isTwilioActionLoading ? "Disconnecting..." : "Disconnect"}
-                </Button>
               )}
               <Button
                 type="button"
                 size="sm"
-                onClick={handleTwilioModalOpen}
+                onClick={fetchTwilioStatus}
                 disabled={isTwilioStatusLoading}
                 className="w-full sm:w-auto bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3] text-xs sm:text-sm disabled:opacity-60 disabled:cursor-not-allowed"
                 style={{
@@ -1716,7 +1526,7 @@ useEffect(() => {
                     "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
                 }}
               >
-                {twilioConnected ? "Update credentials" : "Set credentials"}
+                {isTwilioStatusLoading ? "Refreshing..." : "Refresh status"}
               </Button>
             </div>
           </div>
@@ -1731,52 +1541,13 @@ useEffect(() => {
                 <p className="font-semibold text-white">API Key SID</p>
                 <p>{twilioDetails.apiKeySid || "Hidden"}</p>
               </div>
-              {twilioDetails.apiKeySecret && (
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <p className="font-semibold text-white">API Key Secret</p>
-                  <p>{twilioDetails.apiKeySecret}</p>
-                </div>
-              )}
-              {twilioDetails.authToken && (
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <p className="font-semibold text-white">Auth Token</p>
-                  <p>{twilioDetails.authToken}</p>
-                </div>
-              )}
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <p className="font-semibold text-white">Owner TwiML App SID</p>
-                <p>{twilioDetails.ownerApplicationSid || "Not set"}</p>
-              </div>
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <p className="font-semibold text-white">Owner Caller ID</p>
-                <p>{twilioDetails.ownerPhoneNumber || "Not set"}</p>
-              </div>
-              {twilioDetails.lastConnectedAt && (
-                <p className="text-white/60">
-                  Last updated:{" "}
-                  {new Date(twilioDetails.lastConnectedAt).toLocaleString()}
-                </p>
-              )}
-              {!twilioDetails.ownerCallerReady && (
-                <p className="text-amber-200">
-                  Add the owner TwiML App SID and caller ID to let company
-                  owners place calls or send SMS without provisioning an
-                  employee number.
-                </p>
-              )}
-              {/* {!twilioConnected && twilioDetails.missingFields?.length ? (
-                <p className="text-amber-200">
-                  Missing fields: {twilioDetails.missingFields.join(", ")}
-                </p>
-              ) : null} */}
+              {twilioDetails.missingFields &&
+                twilioDetails.missingFields.length > 0 && (
+                  <p className="text-amber-200">
+                    Missing env vars: {twilioDetails.missingFields.join(", ")}
+                  </p>
+                )}
             </div>
-          )}
-
-          {!twilioConnected && !isTwilioStatusLoading && (
-            <p className="text-xs sm:text-sm text-amber-300">
-              Add your Twilio credentials to automatically create TwiML apps
-              and numbers for your employees.
-            </p>
           )}
         </div>
 
@@ -2401,177 +2172,6 @@ useEffect(() => {
         </div>
 
       </CardContent>
-
-      <Dialog
-        open={isTwilioModalOpen}
-        onOpenChange={(open) => {
-          setIsTwilioModalOpen(open);
-          if (!open) {
-            resetTwilioForm();
-          }
-        }}
-      >
-        <DialogContent className="max-w-lg bg-[#0d0f17] text-white border border-white/10">
-          <DialogHeader>
-            <DialogTitle>Twilio credentials</DialogTitle>
-            <DialogDescription className="text-white/70">
-              Enter the Twilio credentials for your account. All four fields are
-              required.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="twilioAccountSid" className="text-white/80 text-sm">
-                Account SID
-              </Label>
-              <Input
-                id="twilioAccountSid"
-                value={twilioForm.accountSid}
-                onChange={(event) =>
-                  setTwilioForm((prev) => ({
-                    ...prev,
-                    accountSid: event.target.value,
-                  }))
-                }
-                placeholder="ACXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-                className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="twilioApiKeySid" className="text-white/80 text-sm">
-                API Key SID
-              </Label>
-              <Input
-                id="twilioApiKeySid"
-                value={twilioForm.apiKeySid}
-                onChange={(event) =>
-                  setTwilioForm((prev) => ({
-                    ...prev,
-                    apiKeySid: event.target.value,
-                  }))
-                }
-                placeholder="SKXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-                className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label
-                htmlFor="twilioApiKeySecret"
-                className="text-white/80 text-sm"
-              >
-                API Key Secret
-              </Label>
-              <Input
-                id="twilioApiKeySecret"
-                type="password"
-                value={twilioForm.apiKeySecret}
-                onChange={(event) =>
-                  setTwilioForm((prev) => ({
-                    ...prev,
-                    apiKeySecret: event.target.value,
-                  }))
-                }
-                placeholder="Your API key secret"
-                className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="twilioAuthToken" className="text-white/80 text-sm">
-                Auth Token
-              </Label>
-              <Input
-                id="twilioAuthToken"
-                type="password"
-                value={twilioForm.authToken}
-                onChange={(event) =>
-                  setTwilioForm((prev) => ({
-                    ...prev,
-                    authToken: event.target.value,
-                  }))
-                }
-                placeholder="Your auth token"
-                className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40"
-              />
-            </div>
-            <div className="space-y-2 pt-2 border-t border-white/10">
-              <Label
-                htmlFor="ownerApplicationSid"
-                className="text-white/80 text-sm"
-              >
-                Owner TwiML App SID (optional)
-              </Label>
-              <Input
-                id="ownerApplicationSid"
-                value={twilioForm.ownerApplicationSid}
-                onChange={(event) =>
-                  setTwilioForm((prev) => ({
-                    ...prev,
-                    ownerApplicationSid: event.target.value,
-                  }))
-                }
-                placeholder="APXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-                className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40"
-              />
-              <p className="text-xs text-white/50">
-                Used when the company owner makes calls or sends SMS without an
-                employee-specific TwiML app.
-              </p>
-            </div>
-            <div className="space-y-2">
-              <Label
-                htmlFor="ownerPhoneNumber"
-                className="text-white/80 text-sm"
-              >
-                Owner Caller ID (optional)
-              </Label>
-              <Input
-                id="ownerPhoneNumber"
-                value={twilioForm.ownerPhoneNumber}
-                onChange={(event) =>
-                  setTwilioForm((prev) => ({
-                    ...prev,
-                    ownerPhoneNumber: event.target.value,
-                  }))
-                }
-                placeholder="+14155552671"
-                className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40"
-              />
-              <p className="text-xs text-white/50">
-                Enter the E.164 phone number that should be used for the company
-                owner when placing calls or sending SMS.
-              </p>
-            </div>
-            {twilioFormError && (
-              <p className="text-xs text-amber-300">{twilioFormError}</p>
-            )}
-          </div>
-          <DialogFooter className="gap-2 pt-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setIsTwilioModalOpen(false);
-                resetTwilioForm();
-              }}
-              className="border-white/20 text-white/80 hover:bg-white/10"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              onClick={handleTwilioCredentialsSave}
-              disabled={isSavingTwilioCredentials}
-              className="bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3]"
-              style={{
-                boxShadow:
-                  "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
-              }}
-            >
-              {isSavingTwilioCredentials ? "Saving..." : "Save credentials"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       <ConfirmDialog
         open={disconnectDialog.open}
