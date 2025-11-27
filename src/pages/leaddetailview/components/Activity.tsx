@@ -119,6 +119,17 @@ const Activity: FC<ActivityProps> = ({ lead }) => {
   const { toast } = useToast();
   const leadId = lead?._id;
   const isCalendarTabActive = activeTab === "calendar";
+  const userTimeZone = useMemo(() => {
+    if (typeof Intl === "undefined" || typeof Intl.DateTimeFormat !== "function") {
+      return "UTC";
+    }
+    try {
+      return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+    } catch {
+      return "UTC";
+    }
+  }, []);
+
   const calendarMonthRange = useMemo(() => {
     const start = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
     const end = new Date(
@@ -188,7 +199,7 @@ const Activity: FC<ActivityProps> = ({ lead }) => {
     error: availabilityError,
     refetch: refetchAvailability,
   } = useQuery({
-    queryKey: ["calendar-available-slots", calendarMonthKey],
+    queryKey: ["calendar-available-slots", calendarMonthKey, userTimeZone],
     queryFn: () =>
       calendarService.getAvailableSlots({
         startDate: calendarRangeStartIso,
@@ -196,7 +207,8 @@ const Activity: FC<ActivityProps> = ({ lead }) => {
         durationMinutes: 30,
         intervalMinutes: 30,
         workingHours: "9,17",
-        weekdaysOnly: true,
+        weekdaysOnly: "true",
+        workingHoursTimeZone: userTimeZone,
       }),
     enabled: isCalendarTabActive,
     staleTime: 60 * 1000,
@@ -206,10 +218,17 @@ const Activity: FC<ActivityProps> = ({ lead }) => {
     () => leadMeetingsResponse?.data ?? [],
     [leadMeetingsResponse]
   );
-  const availableSlots = useMemo<AvailableSlot[]>(
-    () => availableSlotsResponse?.data ?? [],
-    [availableSlotsResponse]
-  );
+  const availableSlots = useMemo<AvailableSlot[]>(() => {
+    const slots = availableSlotsResponse?.data ?? [];
+    return slots.filter((slot) => {
+      const startDate = new Date(slot.start);
+      if (Number.isNaN(startDate.getTime())) {
+        return false;
+      }
+      const weekday = startDate.getDay(); // 0 = Sun, 6 = Sat
+      return weekday >= 1 && weekday <= 5;
+    });
+  }, [availableSlotsResponse]);
   const isLeadMeetingsBusy =
     isLeadMeetingsLoading || isLeadMeetingsFetching;
   const isAvailabilityBusy = isAvailabilityLoading || isAvailabilityFetching;
@@ -279,7 +298,8 @@ const Activity: FC<ActivityProps> = ({ lead }) => {
 
   const getFirstDayOfMonth = (date: Date) => {
     const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
-    return firstDay.getDay();
+    const sundayFirstIndex = firstDay.getDay(); // 0 (Sun) -> 6 (Sat)
+    return (sundayFirstIndex + 6) % 7; // convert to Monday-first index
   };
 
   const handlePrevMonth = () => {
