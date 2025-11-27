@@ -20,9 +20,12 @@ import {
   WhatsAppMessage as WhatsAppChatMessage,
 } from "@/services/whatsapp.service";
 import { connectionMessagesService } from "@/services/connectionMessages.service";
+import { SelectedCallLogView } from "../index";
 
 type LeadChatProps = {
   lead?: Lead;
+  selectedCallLogView: SelectedCallLogView;
+  setSelectedCallLogView: (view: SelectedCallLogView) => void;
 };
 
 type SmsStatusDisplay = {
@@ -89,7 +92,11 @@ const normalizePhoneNumber = (raw?: string | null): string | null => {
 
 const DEFAULT_EMAIL_SUBJECT = "Message from Lead Chat";
 
-const LeadChat = ({ lead }: LeadChatProps) => {
+const LeadChat = ({
+  lead,
+  selectedCallLogView,
+  setSelectedCallLogView,
+}: LeadChatProps) => {
   const displayName = lead?.name || fallbackLeadInfo.name;
   const position = lead?.position || fallbackLeadInfo.position;
   const phoneNumber = lead?.phone;
@@ -1649,6 +1656,8 @@ const LeadChat = ({ lead }: LeadChatProps) => {
                   "Company Twilio credentials aren't added yet."
             }
             twilioStatusLoading={twilioStatusLoading}
+            selectedCallLogView={selectedCallLogView}
+            setSelectedCallLogView={setSelectedCallLogView}
           />
         ) : (
           <div className="flex w-full flex-1 items-center justify-center py-20 text-lg font-medium text-white/70">
