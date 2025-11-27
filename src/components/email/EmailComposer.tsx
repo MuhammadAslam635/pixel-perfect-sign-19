@@ -5,8 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Send, X, Plus } from "lucide-react";
+import { Send, X, Plus, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { connectionMessagesService } from "@/services/connectionMessages.service";
+import { useToast } from "@/hooks/use-toast";
 
 interface EmailComposerProps {
   initialTo?: string[];
@@ -45,6 +47,8 @@ export const EmailComposer = ({
   const [body, setBody] = useState(initialBody);
   const [showCc, setShowCc] = useState(false);
   const [showBcc, setShowBcc] = useState(false);
+  const [isEnhancing, setIsEnhancing] = useState(false);
+  const { toast } = useToast();
 
   const addRecipient = (
     email: string,
@@ -83,8 +87,47 @@ export const EmailComposer = ({
     });
   };
 
+  const handleEnhanceWithAI = async () => {
+    if (!body.trim()) {
+      toast({
+        title: "No content to enhance",
+        description:
+          "Please write some content in the message box before using AI enhancement.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsEnhancing(true);
+    try {
+      const response = await connectionMessagesService.enhanceEmailContent({
+        content: body,
+        tone: "professional",
+      });
+
+      if (response.success) {
+        setBody(response.data.enhancedContent);
+        toast({
+          title: "Content enhanced!",
+          description: "Your message has been improved with AI assistance.",
+        });
+      } else {
+        throw new Error(response.message || "Failed to enhance content");
+      }
+    } catch (error) {
+      console.error("AI enhancement error:", error);
+      toast({
+        title: "Enhancement failed",
+        description: "Unable to enhance your content. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsEnhancing(false);
+    }
+  };
+
   return (
-    <section 
+    <section
       className="h-full flex flex-col rounded-[30px] border border-[#FFFFFF4D] shadow-2xl overflow-hidden relative"
       style={{
         borderRadius: "30px",
@@ -100,208 +143,230 @@ export const EmailComposer = ({
           </h2>
         </div>
         <div className="flex-1 flex flex-col gap-4 p-6 overflow-y-auto">
-        <div className="space-y-3">
-          <Label htmlFor="to" className="text-sm font-medium text-white/90">
-            To
-          </Label>
-          <div className="flex flex-wrap gap-2 items-center">
-            {to.map((email) => (
-              <Badge
-                key={email}
-                className="bg-[#66AFB74D] text-[#66AFB7] border border-emerald-500/30 rounded-full px-3 py-1 text-xs flex items-center gap-1"
-              >
-                {email}
-                <button
-                  onClick={() => removeRecipient(email, to, setTo)}
-                  className="ml-1 hover:text-red-400 transition-colors"
+          <div className="space-y-3">
+            <Label htmlFor="to" className="text-sm font-medium text-white/90">
+              To
+            </Label>
+            <div className="flex flex-wrap gap-2 items-center">
+              {to.map((email) => (
+                <Badge
+                  key={email}
+                  className="bg-[#66AFB74D] text-[#66AFB7] border border-emerald-500/30 rounded-full px-3 py-1 text-xs flex items-center gap-1"
                 >
-                  <X className="h-3 w-3" />
-                </button>
-              </Badge>
-            ))}
+                  {email}
+                  <button
+                    onClick={() => removeRecipient(email, to, setTo)}
+                    className="ml-1 hover:text-red-400 transition-colors"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+              <Input
+                id="to"
+                type="email"
+                placeholder="Recipient email"
+                value={toInput}
+                onChange={(e) => setToInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === ",") {
+                    e.preventDefault();
+                    addRecipient(toInput, to, setTo);
+                    setToInput("");
+                  }
+                }}
+                onBlur={() => {
+                  if (toInput.trim()) {
+                    addRecipient(toInput, to, setTo);
+                    setToInput("");
+                  }
+                }}
+                className="flex-1 min-w-[200px] bg-[#0b0f1c] border-white/10 text-white placeholder:text-white/40 focus:border-white/30 focus:ring-1 focus:ring-white/20 rounded-lg"
+              />
+            </div>
+          </div>
+
+          {showCc && (
+            <div className="space-y-3">
+              <Label htmlFor="cc" className="text-sm font-medium text-white/90">
+                CC
+              </Label>
+              <div className="flex flex-wrap gap-2 items-center">
+                {cc.map((email) => (
+                  <Badge
+                    key={email}
+                    className="bg-[#66AFB74D] text-[#66AFB7] border border-emerald-500/30 rounded-full px-3 py-1 text-xs flex items-center gap-1"
+                  >
+                    {email}
+                    <button
+                      onClick={() => removeRecipient(email, cc, setCc)}
+                      className="ml-1 hover:text-red-400 transition-colors"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+                <Input
+                  id="cc"
+                  type="email"
+                  placeholder="CC email"
+                  value={ccInput}
+                  onChange={(e) => setCcInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === ",") {
+                      e.preventDefault();
+                      addRecipient(ccInput, cc, setCc);
+                      setCcInput("");
+                    }
+                  }}
+                  onBlur={() => {
+                    if (ccInput.trim()) {
+                      addRecipient(ccInput, cc, setCc);
+                      setCcInput("");
+                    }
+                  }}
+                  className="flex-1 min-w-[200px] bg-[#0b0f1c] border-white/10 text-white placeholder:text-white/40 focus:border-white/30 focus:ring-1 focus:ring-white/20 rounded-lg"
+                />
+              </div>
+            </div>
+          )}
+
+          {showBcc && (
+            <div className="space-y-3">
+              <Label
+                htmlFor="bcc"
+                className="text-sm font-medium text-white/90"
+              >
+                BCC
+              </Label>
+              <div className="flex flex-wrap gap-2 items-center">
+                {bcc.map((email) => (
+                  <Badge
+                    key={email}
+                    className="bg-[#66AFB74D] text-[#66AFB7] border border-emerald-500/30 rounded-full px-3 py-1 text-xs flex items-center gap-1"
+                  >
+                    {email}
+                    <button
+                      onClick={() => removeRecipient(email, bcc, setBcc)}
+                      className="ml-1 hover:text-red-400 transition-colors"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+                <Input
+                  id="bcc"
+                  type="email"
+                  placeholder="BCC email"
+                  value={bccInput}
+                  onChange={(e) => setBccInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === ",") {
+                      e.preventDefault();
+                      addRecipient(bccInput, bcc, setBcc);
+                      setBccInput("");
+                    }
+                  }}
+                  onBlur={() => {
+                    if (bccInput.trim()) {
+                      addRecipient(bccInput, bcc, setBcc);
+                      setBccInput("");
+                    }
+                  }}
+                  className="flex-1 min-w-[200px] bg-[#0b0f1c] border-white/10 text-white placeholder:text-white/40 focus:border-white/30 focus:ring-1 focus:ring-white/20 rounded-lg"
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="flex items-center gap-2">
+            {!showCc && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowCc(true)}
+                className="text-white/70 hover:text-white hover:bg-white/10 rounded-lg"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                CC
+              </Button>
+            )}
+            {!showBcc && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowBcc(true)}
+                className="text-white/70 hover:text-white hover:bg-white/10 rounded-lg"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                BCC
+              </Button>
+            )}
+          </div>
+
+          <div className="space-y-3">
+            <Label
+              htmlFor="subject"
+              className="text-sm font-medium text-white/90"
+            >
+              Subject
+            </Label>
             <Input
-              id="to"
-              type="email"
-              placeholder="Recipient email"
-              value={toInput}
-              onChange={(e) => setToInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === ",") {
-                  e.preventDefault();
-                  addRecipient(toInput, to, setTo);
-                  setToInput("");
-                }
-              }}
-              onBlur={() => {
-                if (toInput.trim()) {
-                  addRecipient(toInput, to, setTo);
-                  setToInput("");
-                }
-              }}
-              className="flex-1 min-w-[200px] bg-[#0b0f1c] border-white/10 text-white placeholder:text-white/40 focus:border-white/30 focus:ring-1 focus:ring-white/20 rounded-lg"
+              id="subject"
+              placeholder="Email subject"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              className="bg-[#0b0f1c] border-white/10 text-white placeholder:text-white/40 focus:border-white/30 focus:ring-1 focus:ring-white/20 rounded-lg"
             />
           </div>
-        </div>
 
-        {showCc && (
-          <div className="space-y-3">
-            <Label htmlFor="cc" className="text-sm font-medium text-white/90">
-              CC
-            </Label>
-            <div className="flex flex-wrap gap-2 items-center">
-              {cc.map((email) => (
-                <Badge
-                  key={email}
-                  className="bg-[#66AFB74D] text-[#66AFB7] border border-emerald-500/30 rounded-full px-3 py-1 text-xs flex items-center gap-1"
-                >
-                  {email}
-                  <button
-                    onClick={() => removeRecipient(email, cc, setCc)}
-                    className="ml-1 hover:text-red-400 transition-colors"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </Badge>
-              ))}
-              <Input
-                id="cc"
-                type="email"
-                placeholder="CC email"
-                value={ccInput}
-                onChange={(e) => setCcInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === ",") {
-                    e.preventDefault();
-                    addRecipient(ccInput, cc, setCc);
-                    setCcInput("");
-                  }
-                }}
-                onBlur={() => {
-                  if (ccInput.trim()) {
-                    addRecipient(ccInput, cc, setCc);
-                    setCcInput("");
-                  }
-                }}
-                className="flex-1 min-w-[200px] bg-[#0b0f1c] border-white/10 text-white placeholder:text-white/40 focus:border-white/30 focus:ring-1 focus:ring-white/20 rounded-lg"
-              />
+          <div className="space-y-3 flex flex-col">
+            <div className="flex items-center justify-between">
+              <Label
+                htmlFor="body"
+                className="text-sm font-medium text-white/90"
+              >
+                Message
+              </Label>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleEnhanceWithAI}
+                disabled={isEnhancing}
+                className="text-white/70 hover:text-white hover:bg-white/10 rounded-lg flex items-center gap-1"
+              >
+                <Sparkles className="h-4 w-4" />
+                {isEnhancing ? "Generating..." : "Generate with AI"}
+              </Button>
             </div>
+            <Textarea
+              id="body"
+              placeholder="Write your message here..."
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              className="min-h-[120px] max-h-[200px] resize-none bg-[#0b0f1c] border-white/10 text-white placeholder:text-white/40 focus:border-white/30 focus:ring-1 focus:ring-white/20 rounded-lg"
+            />
           </div>
-        )}
 
-        {showBcc && (
-          <div className="space-y-3">
-            <Label htmlFor="bcc" className="text-sm font-medium text-white/90">
-              BCC
-            </Label>
-            <div className="flex flex-wrap gap-2 items-center">
-              {bcc.map((email) => (
-                <Badge
-                  key={email}
-                  className="bg-[#66AFB74D] text-[#66AFB7] border border-emerald-500/30 rounded-full px-3 py-1 text-xs flex items-center gap-1"
-                >
-                  {email}
-                  <button
-                    onClick={() => removeRecipient(email, bcc, setBcc)}
-                    className="ml-1 hover:text-red-400 transition-colors"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </Badge>
-              ))}
-              <Input
-                id="bcc"
-                type="email"
-                placeholder="BCC email"
-                value={bccInput}
-                onChange={(e) => setBccInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === ",") {
-                    e.preventDefault();
-                    addRecipient(bccInput, bcc, setBcc);
-                    setBccInput("");
-                  }
-                }}
-                onBlur={() => {
-                  if (bccInput.trim()) {
-                    addRecipient(bccInput, bcc, setBcc);
-                    setBccInput("");
-                  }
-                }}
-                className="flex-1 min-w-[200px] bg-[#0b0f1c] border-white/10 text-white placeholder:text-white/40 focus:border-white/30 focus:ring-1 focus:ring-white/20 rounded-lg"
-              />
-            </div>
+          <div className="flex items-center justify-between pt-4 border-t border-white/10 mt-4">
+            <Button
+              variant="outline"
+              onClick={onCancel}
+              disabled={isLoading}
+              className="border-white/30 text-white hover:bg-white/10 rounded-lg"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSend}
+              disabled={isLoading || to.length === 0 || !subject.trim()}
+              className="bg-gradient-to-r from-[#69B4B7] via-[#5486D0] to-[#3E64B3] text-white hover:brightness-110 rounded-lg"
+            >
+              <Send className="h-4 w-4 mr-2" />
+              {isLoading ? "Sending..." : "Send"}
+            </Button>
           </div>
-        )}
-
-        <div className="flex items-center gap-2">
-          {!showCc && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowCc(true)}
-              className="text-white/70 hover:text-white hover:bg-white/10 rounded-lg"
-            >
-              <Plus className="h-4 w-4 mr-1" />
-              CC
-            </Button>
-          )}
-          {!showBcc && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowBcc(true)}
-              className="text-white/70 hover:text-white hover:bg-white/10 rounded-lg"
-            >
-              <Plus className="h-4 w-4 mr-1" />
-              BCC
-            </Button>
-          )}
-        </div>
-
-        <div className="space-y-3">
-          <Label htmlFor="subject" className="text-sm font-medium text-white/90">
-            Subject
-          </Label>
-          <Input
-            id="subject"
-            placeholder="Email subject"
-            value={subject}
-            onChange={(e) => setSubject(e.target.value)}
-            className="bg-[#0b0f1c] border-white/10 text-white placeholder:text-white/40 focus:border-white/30 focus:ring-1 focus:ring-white/20 rounded-lg"
-          />
-        </div>
-
-        <div className="space-y-3 flex flex-col">
-          <Label htmlFor="body" className="text-sm font-medium text-white/90">
-            Message
-          </Label>
-          <Textarea
-            id="body"
-            placeholder="Write your message here..."
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            className="min-h-[120px] max-h-[200px] resize-none bg-[#0b0f1c] border-white/10 text-white placeholder:text-white/40 focus:border-white/30 focus:ring-1 focus:ring-white/20 rounded-lg"
-          />
-        </div>
-
-        <div className="flex items-center justify-between pt-4 border-t border-white/10 mt-4">
-          <Button
-            variant="outline"
-            onClick={onCancel}
-            disabled={isLoading}
-            className="border-white/30 text-white hover:bg-white/10 rounded-lg"
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSend}
-            disabled={isLoading || to.length === 0 || !subject.trim()}
-            className="bg-gradient-to-r from-[#69B4B7] via-[#5486D0] to-[#3E64B3] text-white hover:brightness-110 rounded-lg"
-          >
-            <Send className="h-4 w-4 mr-2" />
-            {isLoading ? "Sending..." : "Send"}
-          </Button>
-        </div>
         </div>
       </div>
     </section>

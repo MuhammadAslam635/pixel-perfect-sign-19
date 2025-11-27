@@ -114,6 +114,26 @@ export interface GenerateConnectionMessageResponse {
   data: ConnectionMessageData;
 }
 
+export interface EnhanceEmailContentInput {
+  content: string;
+  tone?: EmailTone;
+  context?: string;
+}
+
+export interface EnhanceEmailContentData {
+  originalContent: string;
+  enhancedContent: string;
+  tone: string;
+  characterCount: number;
+  wordCount: number;
+}
+
+export interface EnhanceEmailContentResponse {
+  success: boolean;
+  message?: string;
+  data: EnhanceEmailContentData;
+}
+
 export const connectionMessagesService = {
   generateEmailMessage: async (
     payload: GenerateEmailMessageInput
@@ -136,6 +156,13 @@ export const connectionMessagesService = {
     payload: GenerateConnectionMessageInput
   ): Promise<GenerateConnectionMessageResponse> => {
     const response = await API.post("/connection-messages/generate", payload);
+    return response.data;
+  },
+
+  enhanceEmailContent: async (
+    payload: EnhanceEmailContentInput
+  ): Promise<EnhanceEmailContentResponse> => {
+    const response = await API.post("/connection-messages/enhance-content", payload);
     return response.data;
   },
 };
