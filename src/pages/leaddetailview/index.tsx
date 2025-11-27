@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import LeadDetailCard from "./components/LeadDetailCard";
 import LeadChat from "./components/LeadChat";
@@ -12,6 +13,7 @@ import {
 import { Loader2, ArrowLeft, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { LeadCallLog } from "@/services/twilio.service";
 
 const LEAD_STAGE_DEFINITIONS = [
   { label: "New", min: 0, max: 10 },
@@ -56,9 +58,17 @@ const getStageState = (score: number | null, index: number) => {
   return "upcoming";
 };
 
+export type SelectedCallLogView =
+  | { type: "followup"; log: LeadCallLog }
+  | { type: "transcription"; log: LeadCallLog }
+  | { type: "recording"; log: LeadCallLog }
+  | null;
+
 const LeadDetailView = () => {
   const { leadId } = useParams<{ leadId: string }>();
   const navigate = useNavigate();
+  const [selectedCallLogView, setSelectedCallLogView] =
+    useState<SelectedCallLogView>(null);
 
   const {
     data: lead,
@@ -203,7 +213,11 @@ const LeadDetailView = () => {
               </div>
               {/* Middle: Lead Chat */}
               <div className="col-span-7 col-start-3 flex flex-col min-h-0">
-                <LeadChat lead={lead} />
+                <LeadChat
+                  lead={lead}
+                  selectedCallLogView={selectedCallLogView}
+                  setSelectedCallLogView={setSelectedCallLogView}
+                />
               </div>
               {/* Right: Activity Component */}
               <div
@@ -214,7 +228,11 @@ const LeadDetailView = () => {
                 //     "linear-gradient(173.83deg, rgba(255, 255, 255, 0.03) 4.82%, rgba(255, 255, 255, 2e-05) 38.08%, rgba(255, 255, 255, 2e-05) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
                 // }}
               >
-                <Activity lead={lead} />
+                <Activity
+                  lead={lead}
+                  selectedCallLogView={selectedCallLogView}
+                  setSelectedCallLogView={setSelectedCallLogView}
+                />
               </div>
             </div>
           )}

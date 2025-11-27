@@ -9,12 +9,16 @@ import {
   LeadCallStatus,
   CreateLeadCallLogPayload,
 } from "@/services/twilio.service";
+import API from "@/utils/api";
+import { SelectedCallLogView } from "../index";
 
 type CallViewProps = {
   lead?: Lead;
   twilioReady: boolean;
   twilioStatusMessage: string;
   twilioStatusLoading: boolean;
+  selectedCallLogView: SelectedCallLogView;
+  setSelectedCallLogView: (view: SelectedCallLogView) => void;
 };
 
 export const CallView = ({
@@ -22,6 +26,8 @@ export const CallView = ({
   twilioReady,
   twilioStatusMessage,
   twilioStatusLoading,
+  selectedCallLogView,
+  setSelectedCallLogView,
 }: CallViewProps) => {
   const [volumeLevel, setVolumeLevel] = useState(0);
   const [waveformData, setWaveformData] = useState<number[]>([]);
@@ -41,8 +47,11 @@ export const CallView = ({
   const [callLogsLoading, setCallLogsLoading] = useState(false);
   const [callLogsError, setCallLogsError] = useState<string | null>(null);
   const [isRefreshingCallLogs, setIsRefreshingCallLogs] = useState(false);
-  const [selectedFollowupLog, setSelectedFollowupLog] =
-    useState<LeadCallLog | null>(null);
+  const [recordingAudioUrl, setRecordingAudioUrl] = useState<string | null>(
+    null
+  );
+  const [recordingLoading, setRecordingLoading] = useState(false);
+  const [recordingError, setRecordingError] = useState<string | null>(null);
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
@@ -114,6 +123,53 @@ export const CallView = ({
       setIsRefreshingCallLogs(false);
     }
   }, [fetchCallLogs, leadId]);
+
+  const handleRecordingView = useCallback(
+    async (log: LeadCallLog) => {
+      setSelectedCallLogView({ type: "recording", log });
+      setRecordingAudioUrl(null);
+      setRecordingError(null);
+
+      if (!log._id) {
+        setRecordingError("Recording not available for this call.");
+        return;
+      }
+
+      try {
+        setRecordingLoading(true);
+        const response = await API.get(
+          `/twilio/calls/${log._id}/recording`,
+          {
+            responseType: "blob",
+          }
+        );
+        const blob = response.data as Blob;
+        const url = URL.createObjectURL(blob);
+        setRecordingAudioUrl(url);
+      } catch (err: any) {
+        console.error("Failed to load call recording", err);
+        setRecordingError(
+          err?.response?.data?.error ||
+            err?.message ||
+            "Unable to load call recording."
+        );
+      } finally {
+        setRecordingLoading(false);
+      }
+    },
+    [setSelectedCallLogView]
+  );
+
+  // Cleanup recording URL when view is cleared
+  useEffect(() => {
+    if (!selectedCallLogView || selectedCallLogView.type !== "recording") {
+      if (recordingAudioUrl) {
+        URL.revokeObjectURL(recordingAudioUrl);
+        setRecordingAudioUrl(null);
+      }
+      setRecordingError(null);
+    }
+  }, [selectedCallLogView, recordingAudioUrl]);
 
   const logCallCompletion = useCallback(
     async (status: LeadCallStatus = "completed") => {
@@ -934,16 +990,18 @@ export const CallView = ({
         </div>
 
         <div className="rounded-[32px] border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden shadow-[0_35px_120px_rgba(7,6,19,0.55)]">
-          <div className="overflow-x-auto scrollbar-thin">
-            <div className="min-w-[1000px]">
-              <div className="grid grid-cols-7 gap-4 px-8 py-5 text-[0.7rem] font-semibold uppercase tracking-[0.25em] text-white/50">
+            <div className="overflow-x-auto scrollbar-thin">
+              <div className="min-w-[1500px]">
+              <div className="grid grid-cols-9 gap-4 px-8 py-5 text-[0.7rem] font-semibold uppercase tracking-[0.25em] text-white/50">
                 <span>Caller</span>
                 <span>Date</span>
                 <span>Duration</span>
                 <span>Channel</span>
                 <span>Call Status</span>
-                <span>Success Score</span>
-                <span>Follow-up</span>
+                <span className="text-center">Success Score</span>
+                <span className="text-center">Recording</span>
+                <span className="text-center">Transcription</span>
+                <span className="text-center">Follow-up</span>
               </div>
 
               <div className="divide-y divide-white/5">
@@ -959,10 +1017,27 @@ export const CallView = ({
                   </div>
                 ) : (
                   callLogs.map((log) => {
-                const scoreStatus =
+                const rawScoreStatus =
                   log.leadSuccessScoreStatus || "not-requested";
-                const followupStatus =
+                const rawFollowupStatus =
                   log.followupSuggestionStatus || "not-requested";
+
+                // If there's no recording/transcription path, don't show
+                // endless "Processing…" – treat as not available.
+                const hasRecordingOrTranscript =
+                  !!log.recordingUrl ||
+                  !!log.transcriptionText ||
+                  (log.transcriptionStatus &&
+                    log.transcriptionStatus !== "not-requested");
+
+                const scoreStatus =
+                  rawScoreStatus === "pending" && !hasRecordingOrTranscript
+                    ? "not-requested"
+                    : rawScoreStatus;
+                const followupStatus =
+                  rawFollowupStatus === "pending" && !hasRecordingOrTranscript
+                    ? "not-requested"
+                    : rawFollowupStatus;
 
                 const renderStatusPill = (label: string, status: string) => {
                   if (status === "pending") {
@@ -986,9 +1061,10 @@ export const CallView = ({
                       </span>
                     );
                   }
+                  // status === "not-requested" or anything else treated as generic
                   return (
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-[0.65rem] font-medium bg-white/0 text-white/40 border border-white/5">
-                      {label}: N/A
+                      Not available
                     </span>
                   );
                 };
@@ -998,7 +1074,7 @@ export const CallView = ({
                 return (
                   <div
                     key={log._id}
-                    className="grid grid-cols-7 gap-4 px-8 py-6 text-sm text-white/80 bg-white/[0.01] hover:bg-white/[0.04] transition-colors"
+                    className="grid grid-cols-9 gap-4 px-8 py-6 text-sm text-white/80 bg-white/[0.01] hover:bg-white/[0.04] transition-colors"
                   >
                     {/* Caller */}
                     <div className="flex flex-col gap-0.5">
@@ -1035,26 +1111,104 @@ export const CallView = ({
                     </div>
 
                     {/* Success score */}
-                    <div className="flex flex-col gap-1">
-                      {renderStatusPill("Score", scoreStatus)}
-                      {scoreStatus === "completed" && (
-                        <span className="text-xs text-white/70">
-                          {typeof log.leadSuccessScore === "number"
-                            ? `${log.leadSuccessScore}/100`
-                            : "No score"}
-                        </span>
+                    <div className="flex flex-col items-center gap-1">
+                      {scoreStatus === "completed" &&
+                      typeof log.leadSuccessScore === "number" ? (
+                        (() => {
+                          const score = log.leadSuccessScore || 0;
+                          let colorClasses =
+                            "bg-emerald-500/10 text-emerald-300 border border-emerald-500/20";
+                          if (score < 40) {
+                            // Bad score = red
+                            colorClasses =
+                              "bg-red-500/10 text-red-300 border border-red-500/20";
+                          } else if (score < 80) {
+                            // Medium score = yellow
+                            colorClasses =
+                              "bg-yellow-500/10 text-yellow-300 border border-yellow-500/20";
+                          }
+                          return (
+                            <span
+                              className={`inline-flex items-center px-3 py-1 rounded-full text-[0.65rem] font-medium ${colorClasses}`}
+                            >
+                              Score: {score}/100
+                            </span>
+                          );
+                        })()
+                      ) : (
+                        renderStatusPill("Score", scoreStatus)
                       )}
                     </div>
 
-                    {/* Follow-up suggestion */}
-                    <div className="flex flex-col gap-1">
-                      {isFollowupCompleted ? (
+                    {/* Recording */}
+                    <div className="flex flex-col items-center justify-center pb-3">
+                      {log.recordingUrl || log.callSid ? (
                         <Button
                           type="button"
                           variant="outline"
                           size="sm"
                           className="h-7 px-3 py-1 rounded-full border-white/20 bg-white/5 text-[0.7rem] text-white hover:bg-white/10 hover:text-white"
-                          onClick={() => setSelectedFollowupLog(log)}
+                          onClick={() => {
+                            void handleRecordingView(log);
+                          }}
+                        >
+                          ▶ Play
+                        </Button>
+                      ) : (
+                        <span className="text-xs text-white/40 border border-white/5 rounded-full px-3 py-1">
+                          Not available
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Transcription */}
+                    <div className="flex flex-col gap-1 pr-6 items-center">
+                      {log.transcriptionStatus === "completed" &&
+                      log.transcriptionText ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-7 px-3 py-1 rounded-full border-white/20 bg-white/5 text-[0.7rem] text-white hover:bg-white/10 hover:text-white w-fit"
+                          onClick={() =>
+                            setSelectedCallLogView({
+                              type: "transcription",
+                              log,
+                            })
+                          }
+                        >
+                          👁 View
+                        </Button>
+                      ) : (
+                        <>
+                          {log.transcriptionStatus ? (
+                            <span className="inline-flex items-center px-3 py-1 rounded-full text-[0.65rem] font-medium bg-white/0 text-white/60 border border-white/10">
+                              {log.transcriptionStatus === "pending"
+                                ? "Transcription: Processing…"
+                                : log.transcriptionStatus === "failed"
+                                ? "Transcription: Failed"
+                                : "Not available"}
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-3 py-1 rounded-full text-[0.65rem] font-medium bg-white/0 text-white/40 border border-white/5">
+                              Not available
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </div>
+
+                    {/* Follow-up suggestion */}
+                    <div className="flex flex-col gap-1 items-center">
+                      {isFollowupCompleted ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-7 px-3 py-1 rounded-full border-white/20 bg-white/5 text-[0.7rem] text-white hover:bg-white/10 hover:text-white w-fit"
+                          onClick={() =>
+                            setSelectedCallLogView({ type: "followup", log })
+                          }
                         >
                           View
                         </Button>
@@ -1075,114 +1229,6 @@ export const CallView = ({
           <p className="text-sm text-red-300">{callLogsError}</p>
         )}
       </div>
-
-      {/* Follow-up suggestion modal */}
-      {selectedFollowupLog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md">
-          <div className="w-full max-w-2xl rounded-3xl border border-white/10 shadow-2xl p-6 md:p-8 text-left bg-gradient-to-b from-white/[0.06] via-white/[0.03] to-black/70 backdrop-blur-xl">
-            <div className="flex items-start justify-between gap-4 mb-4">
-              <div>
-                <h3 className="text-xl font-semibold text-white">
-                  Follow-up suggestions
-                </h3>
-                <p className="text-xs text-white/60 mt-1">
-                  Based on the last call with{" "}
-                  <span className="font-medium">
-                    {selectedFollowupLog.leadName || "this lead"}
-                  </span>{" "}
-                  on{" "}
-                  {formatCallDate(selectedFollowupLog.startedAt)}
-                  .
-                </p>
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                className="text-white/60 hover:text-white px-2 py-1"
-                onClick={() => setSelectedFollowupLog(null)}
-              >
-                ✕
-              </Button>
-            </div>
-
-            <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
-              <div className="rounded-2xl bg-white/[0.03] border border-white/10 p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/50 mb-1">
-                  Summary
-                </p>
-                <p className="text-sm text-white/80">
-                  {selectedFollowupLog.followupSuggestionSummary ||
-                    "No summary available for this call."}
-                </p>
-              </div>
-
-              {Array.isArray(
-                (selectedFollowupLog.followupSuggestionMetadata as any)
-                  ?.raw?.touchpoints
-              ) &&
-                (selectedFollowupLog.followupSuggestionMetadata as any).raw
-                  .touchpoints.length > 0 && (
-                  <div className="rounded-2xl bg-white/[0.03] border border-white/10 p-4 space-y-3">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/50">
-                      Recommended touchpoints
-                    </p>
-                    <div className="space-y-3">
-                      {(selectedFollowupLog.followupSuggestionMetadata as any)
-                        .raw.touchpoints.map(
-                        (
-                          tp: {
-                            offset_hours?: number;
-                            channel?: string;
-                            message?: string;
-                          },
-                          index: number
-                        ) => (
-                          <div
-                            key={index}
-                            className="rounded-xl bg-black/40 border border-white/10 p-3"
-                          >
-                            <div className="flex items-center justify-between gap-2 mb-1.5">
-                              <span className="text-xs font-semibold text-white/80">
-                                Step {index + 1}
-                              </span>
-                              <span className="text-[0.7rem] px-2 py-0.5 rounded-full bg-white/10 text-white/80 uppercase tracking-[0.18em]">
-                                {tp.channel || "unspecified"}
-                              </span>
-                            </div>
-                            {typeof tp.offset_hours === "number" && (
-                              <p className="text-[0.7rem] text-white/60 mb-1">
-                                In approximately{" "}
-                                <span className="font-medium text-white/80">
-                                  {tp.offset_hours} hours
-                                </span>{" "}
-                                from the end of the call.
-                              </p>
-                            )}
-                            {tp.message && (
-                              <p className="text-xs text-white/80 whitespace-pre-line">
-                                {tp.message}
-                              </p>
-                            )}
-                          </div>
-                        )
-                      )}
-                    </div>
-                  </div>
-                )}
-            </div>
-
-            <div className="mt-6 flex justify-end">
-              <Button
-                type="button"
-                className="px-4 py-2 rounded-full text-sm font-semibold"
-                onClick={() => setSelectedFollowupLog(null)}
-              >
-                Close
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
