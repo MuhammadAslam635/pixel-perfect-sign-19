@@ -6,6 +6,7 @@ import {
   MoreVertical,
   Plus,
   Send,
+  Sparkles,
   Trash2,
 } from "lucide-react";
 import { Lead } from "@/services/leads.service";
@@ -1393,9 +1394,42 @@ const LeadChat = ({ lead }: LeadChatProps) => {
               </div>
             )}
             <div className="flex flex-col gap-3 mt-6">
-              <div className="flex items-start gap-3 rounded-2xl bg-white/10 px-4 py-3 flex-wrap">
+              <div className="flex flex-col gap-3 rounded-2xl bg-white/10 px-4 py-3 sm:flex-row sm:items-center sm:flex-nowrap sm:gap-4">
+                <textarea
+                  value={emailInput}
+                  onChange={(event) => setEmailInput(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" && event.ctrlKey) {
+                      event.preventDefault();
+                      handleSendEmail();
+                    }
+                  }}
+                  disabled={!emailAddress}
+                  className="flex-1 w-full bg-transparent outline-none border-none text-sm text-white placeholder:text-white/50 resize-none min-h-[64px]"
+                  placeholder={
+                    !emailAddress
+                      ? "Add an email address to send emails"
+                      : "Write your email message (Ctrl+Enter to send)"
+                  }
+                  rows={3}
+                />
                 <button
-                  className="flex items-center gap-2 rounded-full bg-white/25 px-3 py-2 text-xs font-semibold text-white hover:bg-white/35 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="flex h-10 w-full sm:h-10 sm:w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+                  onClick={handleSendEmail}
+                  disabled={
+                    !emailAddress ||
+                    !emailInput.trim() ||
+                    emailMutation.isPending
+                  }
+                >
+                  {emailMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-white" />
+                  ) : (
+                    <Send size={14} className="text-white" />
+                  )}
+                </button>
+                <button
+                  className="flex items-center justify-center gap-3 rounded-full bg-gradient-to-r from-[#4E8ED1] via-[#3E65B4] to-[#1F2937] px-4 py-2 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(62,101,180,0.35)] ring-1 ring-white/20 transition-all w-full sm:w-auto sm:ml-auto disabled:opacity-40 disabled:cursor-not-allowed"
                   onClick={handleGenerateEmailMessage}
                   disabled={
                     isGeneratingEmailMessage || !lead?.companyId || !lead?._id
@@ -1408,47 +1442,18 @@ const LeadChat = ({ lead }: LeadChatProps) => {
                 >
                   {isGeneratingEmailMessage ? (
                     <>
-                      <Loader2 className="h-4 w-4 animate-spin text-white" />
+                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/25">
+                        <Loader2 className="h-4 w-4 animate-spin text-white" />
+                      </span>
                       <span>Generating…</span>
                     </>
                   ) : (
                     <>
-                      <Plus size={14} className="text-white" />
+                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/25">
+                        <Sparkles size={14} className="text-white" />
+                      </span>
                       <span>Generate with AI</span>
                     </>
-                  )}
-                </button>
-                <textarea
-                  value={emailInput}
-                  onChange={(event) => setEmailInput(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" && event.ctrlKey) {
-                      event.preventDefault();
-                      handleSendEmail();
-                    }
-                  }}
-                  disabled={!emailAddress}
-                  className="flex-1 bg-transparent outline-none border-none text-sm text-white placeholder:text-white/50 resize-none min-h-[48px] max-h-[64px]"
-                  placeholder={
-                    !emailAddress
-                      ? "Add an email address to send emails"
-                      : "Write your email message (Ctrl+Enter to send)"
-                  }
-                  rows={3}
-                />
-                <button
-                  className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed mt-1"
-                  onClick={handleSendEmail}
-                  disabled={
-                    !emailAddress ||
-                    !emailInput.trim() ||
-                    emailMutation.isPending
-                  }
-                >
-                  {emailMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin text-white" />
-                  ) : (
-                    <Send size={14} className="text-white" />
                   )}
                 </button>
               </div>
