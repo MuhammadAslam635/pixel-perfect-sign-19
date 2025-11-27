@@ -40,7 +40,7 @@ export const CallView = ({
   const [callLogs, setCallLogs] = useState<LeadCallLog[]>([]);
   const [callLogsLoading, setCallLogsLoading] = useState(false);
   const [callLogsError, setCallLogsError] = useState<string | null>(null);
-  const [isPollingAnalysis, setIsPollingAnalysis] = useState(false);
+  const [isRefreshingCallLogs, setIsRefreshingCallLogs] = useState(false);
   const [selectedFollowupLog, setSelectedFollowupLog] =
     useState<LeadCallLog | null>(null);
 
@@ -104,44 +104,16 @@ export const CallView = ({
   useEffect(() => {
     fetchCallLogs();
   }, [fetchCallLogs]);
-
-  // When any call log has pending analysis (score or follow-up), poll the
-  // backend for a short window so the UI updates automatically once the
-  // webhook finishes transcription + analysis.
-  useEffect(() => {
-    if (!leadId || callLogs.length === 0) {
-      setIsPollingAnalysis(false);
-      return;
+  
+  const handleRefreshCallLogs = useCallback(async () => {
+    if (!leadId) return;
+    try {
+      setIsRefreshingCallLogs(true);
+      await fetchCallLogs();
+    } finally {
+      setIsRefreshingCallLogs(false);
     }
-
-    const hasPending = callLogs.some(
-      (log) =>
-        log.leadSuccessScoreStatus === "pending" ||
-        log.followupSuggestionStatus === "pending"
-    );
-
-    if (!hasPending) {
-      setIsPollingAnalysis(false);
-      return;
-    }
-
-    setIsPollingAnalysis(true);
-
-    const intervalId = window.setInterval(() => {
-      fetchCallLogs();
-    }, 5000);
-
-    // Stop polling after 60 seconds to avoid hammering the backend
-    const timeoutId = window.setTimeout(() => {
-      window.clearInterval(intervalId);
-      setIsPollingAnalysis(false);
-    }, 60000);
-
-    return () => {
-      window.clearInterval(intervalId);
-      window.clearTimeout(timeoutId);
-    };
-  }, [callLogs, fetchCallLogs, leadId]);
+  }, [fetchCallLogs, leadId]);
 
   const logCallCompletion = useCallback(
     async (status: LeadCallStatus = "completed") => {
@@ -939,14 +911,26 @@ export const CallView = ({
       </div>
 
       <div className="w-full max-w-5xl mt-16 text-left space-y-4">
-        <div>
-          <h2 className="text-3xl font-semibold text-white leading-tight">
-            Call Logs
-          </h2>
-          <p className="text-sm text-white/60">
-            Recent calls with transcription, success score and follow-up
-            suggestions.
-          </p>
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h2 className="text-3xl font-semibold text-white leading-tight">
+              Call Logs
+            </h2>
+            <p className="text-sm text-white/60">
+              Recent calls with transcription, success score and follow-up
+              suggestions.
+            </p>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleRefreshCallLogs}
+            disabled={callLogsLoading || isRefreshingCallLogs || !leadId}
+            className="rounded-full border-white/20 text-xs text-white/80 hover:text-white"
+          >
+            {isRefreshingCallLogs ? "Refreshing..." : "Refresh"}
+          </Button>
         </div>
 
         <div className="rounded-[32px] border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden shadow-[0_35px_120px_rgba(7,6,19,0.55)]">
