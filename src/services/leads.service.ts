@@ -18,11 +18,13 @@ export interface Lead {
   name: string;
   email?: string;
   phone?: string;
+  whatsapp?: string;
   description?: string;
   location?: string;
   position?: string;
   pictureUrl?: string;
   linkedinUrl?: string;
+  language?: string;
   companyName?: string | null;
   companyLocation?: string | null;
   createdAt: string;

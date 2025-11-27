@@ -80,10 +80,12 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [editData, setEditData] = useState({
     phone: lead.phone || "",
+    whatsapp: lead.whatsapp || "",
     email: lead.email || "",
     linkedinUrl: lead.linkedinUrl || "",
     location: lead.location || lead.companyLocation || "",
     position: lead.position || "",
+    language: lead.language || "",
   });
   const avatarLetter = lead.name?.charAt(0).toUpperCase() || "?";
   const avatarSrc = lead.pictureUrl;
@@ -199,9 +201,10 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
 
 
   const handleWhatsAppClick = () => {
-    if (lead.phone) {
-      const whatsappPhone = lead.phone.replace(/\D/g, "");
-      window.open(`https://wa.me/${whatsappPhone}`, "_blank");
+    const whatsappNumber = lead.whatsapp || lead.phone;
+    if (whatsappNumber) {
+      const cleanNumber = whatsappNumber.replace(/\D/g, "");
+      window.open(`https://wa.me/${cleanNumber}`, "_blank");
     }
   };
 
@@ -263,10 +266,12 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
     if (!isEditing) {
       setEditData({
         phone: lead.phone || "",
+        whatsapp: lead.whatsapp || "",
         email: lead.email || "",
         linkedinUrl: lead.linkedinUrl || "",
         location: lead.location || lead.companyLocation || "",
         position: lead.position || "",
+        language: lead.language || "",
       });
     }
   }, [lead, isEditing]);
@@ -279,10 +284,12 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
     setIsEditing(false);
     setEditData({
       phone: lead.phone || "",
+      whatsapp: lead.whatsapp || "",
       email: lead.email || "",
       linkedinUrl: lead.linkedinUrl || "",
       location: lead.location || lead.companyLocation || "",
       position: lead.position || "",
+      language: lead.language || "",
     });
   };
 
@@ -304,10 +311,12 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
 
       const updatePayload: Partial<Lead> = {
         phone: editData.phone.trim() || undefined,
+        whatsapp: editData.whatsapp.trim() || undefined,
         email: editData.email.trim() || undefined,
         linkedinUrl: cleanedLinkedinUrl || undefined,
         location: editData.location.trim() || undefined,
         position: editData.position.trim() || undefined,
+        language: editData.language.trim() || undefined,
       };
 
       const response = await leadsService.updateLead(lead._id, updatePayload);
@@ -600,27 +609,47 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
             {/* WhatsApp */}
             <div className="flex flex-col gap-0.5">
               <label className="text-[10px] text-white/60">WhatsApp</label>
-              <div
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
-                style={{
-                  background: "#1a1a1a",
-                  border: "1px solid rgba(255, 255, 255, 0.1)",
-                }}
-              >
-                <MessageCircle className="w-3 h-3 text-white/60 flex-shrink-0" />
-                <span className="text-[10px] text-white flex-1 truncate">
-                  {lead.phone || "N/A"}
-                </span>
-                {lead.phone && (
-                  <button
-                    onClick={handleWhatsAppClick}
-                    className="text-white/60 hover:text-white transition-colors flex-shrink-0"
-                    title="Open WhatsApp"
-                  >
-                    <MessageCircle className="w-3 h-3" />
-                  </button>
-                )}
-              </div>
+              {isEditing ? (
+                <div
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
+                  style={{
+                    background: "#1a1a1a",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                  }}
+                >
+                  <MessageCircle className="w-3 h-3 text-white/60 flex-shrink-0" />
+                  <Input
+                    value={editData.whatsapp}
+                    onChange={(e) =>
+                      setEditData({ ...editData, whatsapp: e.target.value })
+                    }
+                    className="flex-1 h-6 text-[10px] bg-transparent border-0 text-white focus-visible:ring-0 focus-visible:ring-offset-0 px-2 py-0"
+                    placeholder="WhatsApp number"
+                  />
+                </div>
+              ) : (
+                <div
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
+                  style={{
+                    background: "#1a1a1a",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                  }}
+                >
+                  <MessageCircle className="w-3 h-3 text-white/60 flex-shrink-0" />
+                  <span className="text-[10px] text-white flex-1 truncate">
+                    {lead.whatsapp || "N/A"}
+                  </span>
+                  {lead.whatsapp && (
+                    <button
+                      onClick={handleWhatsAppClick}
+                      className="text-white/60 hover:text-white transition-colors flex-shrink-0"
+                      title="Open WhatsApp"
+                    >
+                      <MessageCircle className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Email */}
@@ -741,19 +770,41 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
               </div>
             </div>
 
-            {/* Language - Not available in Lead type, showing placeholder */}
+            {/* Language */}
             <div className="flex flex-col gap-0.5">
               <label className="text-[10px] text-white/60">Language</label>
-              <div
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
-                style={{
-                  background: "#1a1a1a",
-                  border: "1px solid rgba(255, 255, 255, 0.1)",
-                }}
-              >
-                <Languages className="w-3 h-3 text-white/60 flex-shrink-0" />
-                <span className="text-[10px] text-white">N/A</span>
-              </div>
+              {isEditing ? (
+                <div
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
+                  style={{
+                    background: "#1a1a1a",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                  }}
+                >
+                  <Languages className="w-3 h-3 text-white/60 flex-shrink-0" />
+                  <Input
+                    value={editData.language}
+                    onChange={(e) =>
+                      setEditData({ ...editData, language: e.target.value })
+                    }
+                    className="flex-1 h-6 text-[10px] bg-transparent border-0 text-white focus-visible:ring-0 focus-visible:ring-offset-0 px-2 py-0"
+                    placeholder="Language"
+                  />
+                </div>
+              ) : (
+                <div
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
+                  style={{
+                    background: "#1a1a1a",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                  }}
+                >
+                  <Languages className="w-3 h-3 text-white/60 flex-shrink-0" />
+                  <span className="text-[10px] text-white flex-1 truncate">
+                    {lead.language || "N/A"}
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Region */}

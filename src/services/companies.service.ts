@@ -8,6 +8,7 @@ export interface CompanyPerson {
   position?: string;
   email?: string;
   phone?: string;
+  whatsapp?: string;
   linkedin?: string;
   phones?: string[];
   emails?: string[];

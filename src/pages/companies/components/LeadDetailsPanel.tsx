@@ -1,4 +1,4 @@
-import { FC, useState } from "react";
+import React, { FC, useState } from "react";
 import {
   Users,
   Phone,
@@ -8,9 +8,13 @@ import {
   Send,
   Loader2,
   Sparkles,
+  Edit3,
+  Check,
+  X,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Lead } from "@/services/leads.service";
+import { Input } from "@/components/ui/input";
+import { Lead, leadsService } from "@/services/leads.service";
 import { CompanyPerson, companiesService } from "@/services/companies.service";
 import { toast } from "sonner";
 
@@ -43,9 +47,47 @@ const LeadDetailsPanel: FC<LeadDetailsPanelProps> = ({
   onLinkedinClick,
 }) => {
   const [fillingData, setFillingData] = useState(false);
+  const [isEditingWhatsapp, setIsEditingWhatsapp] = useState(false);
+  const [whatsappValue, setWhatsappValue] = useState("");
+  const [updatingWhatsapp, setUpdatingWhatsapp] = useState(false);
+
+  // Initialize whatsapp value when lead changes
+  React.useEffect(() => {
+    setWhatsappValue(lead?.whatsapp || fallbackExecutive?.phone || "");
+  }, [lead?.whatsapp, fallbackExecutive?.phone]);
+
+  const handleSaveWhatsapp = async () => {
+    if (!lead?._id) {
+      toast.error("Cannot update: No lead selected");
+      return;
+    }
+
+    setUpdatingWhatsapp(true);
+    try {
+      await leadsService.updateLead(lead._id, {
+        whatsapp: whatsappValue.trim() || null,
+      });
+      setIsEditingWhatsapp(false);
+      toast.success("WhatsApp number updated successfully");
+    } catch (error: any) {
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to update WhatsApp number";
+      toast.error(errorMessage);
+    } finally {
+      setUpdatingWhatsapp(false);
+    }
+  };
+
+  const handleCancelWhatsappEdit = () => {
+    setWhatsappValue(lead?.whatsapp || fallbackExecutive?.phone || "");
+    setIsEditingWhatsapp(false);
+  };
 
   const fallbackEmail = toStringOrUndefined(fallbackExecutive?.email);
   const fallbackPhone = toStringOrUndefined(fallbackExecutive?.phone);
+  const fallbackWhatsapp = toStringOrUndefined(fallbackExecutive?.whatsapp);
   const fallbackLinkedin = toStringOrUndefined(fallbackExecutive?.linkedin);
   const fallbackTitle =
     toStringOrUndefined(fallbackExecutive?.title) ??
@@ -68,8 +110,13 @@ const LeadDetailsPanel: FC<LeadDetailsPanelProps> = ({
   const linkedin =
     lead?.linkedinUrl ||
     (!lead && fallbackLinkedin ? fallbackLinkedin : undefined);
+  const whatsapp =
+    lead?.whatsapp ||
+    fallbackWhatsapp ||
+    (!lead && fallbackPhone ? fallbackPhone : undefined);
 
   const canSendLinkedin = Boolean(linkedin);
+  const canSendWhatsapp = Boolean(whatsapp);
   const isPhoneDisabled = !phone;
   const isEmailDisabled = !email;
   const isLinkedinDisabled = !linkedin;
@@ -164,16 +211,16 @@ const LeadDetailsPanel: FC<LeadDetailsPanelProps> = ({
             <Linkedin className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
           </button>
           <button
-            className={getIconButtonClasses(isPhoneDisabled)}
+            className={getIconButtonClasses(!canSendWhatsapp)}
             onClick={() => {
-              if (phone) {
-                const whatsappPhone = phone.replace(/\D/g, "");
+              if (whatsapp) {
+                const whatsappPhone = whatsapp.replace(/\D/g, "");
                 window.open(`https://wa.me/${whatsappPhone}`, "_blank");
               }
             }}
-            disabled={isPhoneDisabled}
-            aria-disabled={isPhoneDisabled}
-            title={isPhoneDisabled ? "No phone available" : "Open WhatsApp"}
+            disabled={!canSendWhatsapp}
+            aria-disabled={!canSendWhatsapp}
+            title={!canSendWhatsapp ? "No WhatsApp available" : "Open WhatsApp"}
           >
             <MessageCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
           </button>
@@ -226,23 +273,81 @@ const LeadDetailsPanel: FC<LeadDetailsPanelProps> = ({
 
       <div className="space-y-4 px-3 sm:px-4">
         {displayName ? (
-          <div className="flex flex-col items-center text-center py-4 sm:py-8">
-            <Avatar className="h-24 w-24 sm:h-32 sm:w-32 mb-3 sm:mb-4 border-2 sm:border-4 border-white/10">
-              <AvatarImage src={avatarSrc} alt={displayName} />
-              <AvatarFallback className="bg-[#3d4f51] text-white text-2xl sm:text-3xl">
-                {avatarLetter}
-              </AvatarFallback>
-            </Avatar>
-            <h4 className="text-lg sm:text-xl font-semibold text-white mb-2">
-              {displayName}
-            </h4>
-            <p className="text-xs sm:text-sm text-white/50 mb-1 break-words max-w-full">
-              {displayCompany}
-            </p>
-            <p className="text-xs text-white/40">
-              {displayPosition || "Chief Executive Officer"}
-            </p>
-          </div>
+          <>
+            <div className="flex flex-col items-center text-center py-4 sm:py-8">
+              <Avatar className="h-24 w-24 sm:h-32 sm:w-32 mb-3 sm:mb-4 border-2 sm:border-4 border-white/10">
+                <AvatarImage src={avatarSrc} alt={displayName} />
+                <AvatarFallback className="bg-[#3d4f51] text-white text-2xl sm:text-3xl">
+                  {avatarLetter}
+                </AvatarFallback>
+              </Avatar>
+              <h4 className="text-lg sm:text-xl font-semibold text-white mb-2">
+                {displayName}
+              </h4>
+              <p className="text-xs sm:text-sm text-white/50 mb-1 break-words max-w-full">
+                {displayCompany}
+              </p>
+              <p className="text-xs text-white/40">
+                {displayPosition || "Chief Executive Officer"}
+              </p>
+            </div>
+
+            {/* WhatsApp Contact Section */}
+            {lead && (
+              <div className="mt-4 sm:mt-6 space-y-2">
+                <p className="text-xs uppercase tracking-wide text-white/40 mb-2">
+                  WhatsApp
+                </p>
+                <div className="flex items-center gap-2">
+                  {isEditingWhatsapp ? (
+                    <>
+                      <Input
+                        type="tel"
+                        value={whatsappValue}
+                        onChange={(e) => setWhatsappValue(e.target.value)}
+                        placeholder="Enter WhatsApp number"
+                        className="flex-1 h-8 text-xs bg-white/5 border-white/20 text-white placeholder:text-white/40 focus:border-white/40"
+                        disabled={updatingWhatsapp}
+                      />
+                      <button
+                        onClick={handleSaveWhatsapp}
+                        disabled={updatingWhatsapp}
+                        className="h-8 w-8 rounded-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Save WhatsApp"
+                      >
+                        {updatingWhatsapp ? (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : (
+                          <Check className="w-3 h-3" />
+                        )}
+                      </button>
+                      <button
+                        onClick={handleCancelWhatsappEdit}
+                        disabled={updatingWhatsapp}
+                        className="h-8 w-8 rounded-full bg-gray-600 hover:bg-gray-700 text-white flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Cancel edit"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex-1 text-xs text-white/80 bg-white/5 px-3 py-2 rounded border border-white/10 min-h-[32px] flex items-center">
+                        {whatsapp || <span className="text-white/40">Not set</span>}
+                      </div>
+                      <button
+                        onClick={() => setIsEditingWhatsapp(true)}
+                        className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center"
+                        title="Edit WhatsApp"
+                      >
+                        <Edit3 className="w-3 h-3" />
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+          </>
         ) : (
           <p className="text-xs sm:text-sm text-muted-foreground/60 text-center py-6 sm:py-8">
             Select a lead to view details.
