@@ -1,5 +1,5 @@
 import { FC, useEffect, useMemo, useState } from "react";
-import { Lead } from "@/services/leads.service";
+import { Lead, leadsService } from "@/services/leads.service";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -16,6 +16,9 @@ import {
   CalendarPlus,
   AlertTriangle,
   CheckCircle2,
+  Edit2,
+  Save,
+  X,
 } from "lucide-react";
 import { companiesService } from "@/services/companies.service";
 import { calendarService } from "@/services/calendar.service";
@@ -34,6 +37,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useQueryClient } from "@tanstack/react-query";
 
 type ScheduleMeetingForm = {
   subject: string;
@@ -64,6 +68,7 @@ const formatDateTimeLocal = (date: Date) => {
 };
 
 const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
+  const queryClient = useQueryClient();
   const [fillingData, setFillingData] = useState(false);
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
   const [schedulingMeeting, setSchedulingMeeting] = useState(false);
@@ -71,6 +76,15 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
   const [microsoftConnected, setMicrosoftConnected] = useState<boolean | null>(null);
   const [microsoftStatusMessage, setMicrosoftStatusMessage] = useState<string | null>(null);
   const [microsoftStatusError, setMicrosoftStatusError] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [editData, setEditData] = useState({
+    phone: lead.phone || "",
+    email: lead.email || "",
+    linkedinUrl: lead.linkedinUrl || "",
+    location: lead.location || lead.companyLocation || "",
+    position: lead.position || "",
+  });
   const avatarLetter = lead.name?.charAt(0).toUpperCase() || "?";
   const avatarSrc = lead.pictureUrl;
 
@@ -183,19 +197,6 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
     };
   }, [scheduleDialogOpen]);
 
-  // Determine API source based on lead fields
-  const getApiSource = (): string => {
-    if (lead.exaItemId) {
-      return "Exa API";
-    }
-    if (lead.peopleWebsetId) {
-      return "PeopleWebset API";
-    }
-    // Default fallback
-    return "Unknown API";
-  };
-
-  const apiSource = getApiSource();
 
   const handleWhatsAppClick = () => {
     if (lead.phone) {
@@ -254,6 +255,79 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
       toast.error(errorMessage);
     } finally {
       setFillingData(false);
+    }
+  };
+
+  // Update editData when lead changes
+  useEffect(() => {
+    if (!isEditing) {
+      setEditData({
+        phone: lead.phone || "",
+        email: lead.email || "",
+        linkedinUrl: lead.linkedinUrl || "",
+        location: lead.location || lead.companyLocation || "",
+        position: lead.position || "",
+      });
+    }
+  }, [lead, isEditing]);
+
+  const handleEdit = () => {
+    setIsEditing(true);
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+    setEditData({
+      phone: lead.phone || "",
+      email: lead.email || "",
+      linkedinUrl: lead.linkedinUrl || "",
+      location: lead.location || lead.companyLocation || "",
+      position: lead.position || "",
+    });
+  };
+
+  const handleSave = async () => {
+    if (!lead._id) {
+      toast.error("Lead ID is missing");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      // Clean up LinkedIn URL - remove protocol and www if present
+      let cleanedLinkedinUrl = editData.linkedinUrl.trim();
+      if (cleanedLinkedinUrl) {
+        cleanedLinkedinUrl = cleanedLinkedinUrl
+          .replace(/^https?:\/\/(www\.)?/, "")
+          .replace(/^linkedin\.com\//, "");
+      }
+
+      const updatePayload: Partial<Lead> = {
+        phone: editData.phone.trim() || undefined,
+        email: editData.email.trim() || undefined,
+        linkedinUrl: cleanedLinkedinUrl || undefined,
+        location: editData.location.trim() || undefined,
+        position: editData.position.trim() || undefined,
+      };
+
+      const response = await leadsService.updateLead(lead._id, updatePayload);
+      
+      if (response.success) {
+        toast.success("Lead updated successfully");
+        setIsEditing(false);
+        // Invalidate and refetch lead data
+        await queryClient.invalidateQueries({ queryKey: ["lead", lead._id] });
+      } else {
+        toast.error(response.message || "Failed to update lead");
+      }
+    } catch (error: any) {
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to update lead";
+      toast.error(errorMessage);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -373,43 +447,95 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
           <h2 className="text-base font-semibold text-white mb-1 text-center break-words">
             {lead.name}
           </h2>
-          <p className="text-[10px] text-white/80 text-center break-words leading-tight">
-            {lead.companyName || "Company"} |{" "}
-            {lead.position || "Chief Executive Officer"}
-          </p>
+          {isEditing ? (
+            <div className="w-full px-2 mb-3">
+              <Input
+                value={editData.position}
+                onChange={(e) =>
+                  setEditData({ ...editData, position: e.target.value })
+                }
+                className="h-6 text-[10px] bg-white/5 border-white/20 text-white focus-visible:ring-1 focus-visible:ring-white/30 px-2"
+                placeholder="Position"
+              />
+            </div>
+          ) : (
+            <p className="text-[10px] text-white/80 text-center break-words leading-tight">
+              {lead.companyName || "Company"} |{" "}
+              {lead.position || "Chief Executive Officer"}
+            </p>
+          )}
           <div className="flex flex-col gap-2 w-full">
-            <button
-              onClick={handleFillPersonData}
-              disabled={fillingData || !lead._id || !lead.companyId}
-              className={`mt-3 inline-flex items-center justify-center gap-2 rounded-full border px-3 py-1 text-[10px] font-semibold transition-colors ${
-                fillingData
-                  ? "bg-white/15 border-white/20 text-white cursor-wait"
-                  : "bg-white/5 border-white/15 text-white hover:bg-white/15"
-              }`}
-            >
-              {fillingData ? (
-                <>
-                  <Loader2 className="w-3 h-3 animate-spin" />
-                  Filling...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-3 h-3" />
-                  Fill Missing Info
-                </>
-              )}
-            </button>
-            <Button
-              disabled={!lead._id}
-              onClick={() => {
-                resetScheduleForm();
-                setScheduleDialogOpen(true);
-              }}
-              className="w-full justify-center text-[10px] h-8 bg-white/15 hover:bg-white/25 text-white border border-white/20"
-            >
-              <CalendarPlus className="w-3 h-3 mr-1" />
-              Schedule Meeting
-            </Button>
+            {!isEditing ? (
+              <>
+                <button
+                  onClick={handleFillPersonData}
+                  disabled={fillingData || !lead._id || !lead.companyId}
+                  className={`mt-3 inline-flex items-center justify-center gap-2 rounded-full border px-3 py-1 text-[10px] font-semibold transition-colors ${
+                    fillingData
+                      ? "bg-white/15 border-white/20 text-white cursor-wait"
+                      : "bg-white/5 border-white/15 text-white hover:bg-white/15"
+                  }`}
+                >
+                  {fillingData ? (
+                    <>
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      Filling...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3 h-3" />
+                      Fill Missing Info
+                    </>
+                  )}
+                </button>
+                <Button
+                  onClick={handleEdit}
+                  className="w-full justify-center text-[10px] h-8 bg-white/15 hover:bg-white/25 text-white border border-white/20"
+                >
+                  <Edit2 className="w-3 h-3 mr-1" />
+                  Edit Details
+                </Button>
+                <Button
+                  disabled={!lead._id}
+                  onClick={() => {
+                    resetScheduleForm();
+                    setScheduleDialogOpen(true);
+                  }}
+                  className="w-full justify-center text-[10px] h-8 bg-white/15 hover:bg-white/25 text-white border border-white/20"
+                >
+                  <CalendarPlus className="w-3 h-3 mr-1" />
+                  Schedule Meeting
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="w-full justify-center text-[10px] h-8 bg-white/25 hover:bg-white/35 text-white border border-white/30"
+                >
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-3 h-3 mr-1" />
+                      Save Changes
+                    </>
+                  )}
+                </Button>
+                <Button
+                  onClick={handleCancel}
+                  disabled={isSaving}
+                  className="w-full justify-center text-[10px] h-8 bg-white/5 hover:bg-white/15 text-white border border-white/15"
+                >
+                  <X className="w-3 h-3 mr-1" />
+                  Cancel
+                </Button>
+              </>
+            )}
           </div>
         </div>
 
@@ -420,27 +546,47 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
             {/* Phone */}
             <div className="flex flex-col gap-0.5">
               <label className="text-[10px] text-white/60">Phone</label>
-              <div
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
-                style={{
-                  background: "#1a1a1a",
-                  border: "1px solid rgba(255, 255, 255, 0.1)",
-                }}
-              >
-                <Phone className="w-3 h-3 text-white/60 flex-shrink-0" />
-                <span className="text-[10px] text-white flex-1 truncate">
-                  {lead.phone || "N/A"}
-                </span>
-                {lead.phone && (
-                  <button
-                    onClick={handlePhoneClick}
-                    className="text-white/60 hover:text-white transition-colors flex-shrink-0"
-                    title="Call"
-                  >
-                    <Phone className="w-3 h-3" />
-                  </button>
-                )}
-              </div>
+              {isEditing ? (
+                <div
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
+                  style={{
+                    background: "#1a1a1a",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                  }}
+                >
+                  <Phone className="w-3 h-3 text-white/60 flex-shrink-0" />
+                  <Input
+                    value={editData.phone}
+                    onChange={(e) =>
+                      setEditData({ ...editData, phone: e.target.value })
+                    }
+                    className="flex-1 h-6 text-[10px] bg-transparent border-0 text-white focus-visible:ring-0 focus-visible:ring-offset-0 px-2 py-0"
+                    placeholder="Phone number"
+                  />
+                </div>
+              ) : (
+                <div
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
+                  style={{
+                    background: "#1a1a1a",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                  }}
+                >
+                  <Phone className="w-3 h-3 text-white/60 flex-shrink-0" />
+                  <span className="text-[10px] text-white flex-1 truncate">
+                    {lead.phone || "N/A"}
+                  </span>
+                  {lead.phone && (
+                    <button
+                      onClick={handlePhoneClick}
+                      className="text-white/60 hover:text-white transition-colors flex-shrink-0"
+                      title="Call"
+                    >
+                      <Phone className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* WhatsApp */}
@@ -472,57 +618,98 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
             {/* Email */}
             <div className="flex flex-col gap-0.5">
               <label className="text-[10px] text-white/60">Email</label>
-              <div
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
-                style={{
-                  background: "#1a1a1a",
-                  border: "1px solid rgba(255, 255, 255, 0.1)",
-                }}
-              >
-                <Mail className="w-3 h-3 text-white/60 flex-shrink-0" />
-                <span className="text-[10px] text-white flex-1 truncate">
-                  {lead.email || "N/A"}
-                </span>
-                {lead.email && (
-                  <button
-                    onClick={handleEmailClick}
-                    className="text-white/60 hover:text-white transition-colors flex-shrink-0"
-                    title="Send Email"
-                  >
-                    <Mail className="w-3 h-3" />
-                  </button>
-                )}
-              </div>
+              {isEditing ? (
+                <div
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
+                  style={{
+                    background: "#1a1a1a",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                  }}
+                >
+                  <Mail className="w-3 h-3 text-white/60 flex-shrink-0" />
+                  <Input
+                    type="email"
+                    value={editData.email}
+                    onChange={(e) =>
+                      setEditData({ ...editData, email: e.target.value })
+                    }
+                    className="flex-1 h-6 text-[10px] bg-transparent border-0 text-white focus-visible:ring-0 focus-visible:ring-offset-0 px-2 py-0"
+                    placeholder="Email address"
+                  />
+                </div>
+              ) : (
+                <div
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
+                  style={{
+                    background: "#1a1a1a",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                  }}
+                >
+                  <Mail className="w-3 h-3 text-white/60 flex-shrink-0" />
+                  <span className="text-[10px] text-white flex-1 truncate">
+                    {lead.email || "N/A"}
+                  </span>
+                  {lead.email && (
+                    <button
+                      onClick={handleEmailClick}
+                      className="text-white/60 hover:text-white transition-colors flex-shrink-0"
+                      title="Send Email"
+                    >
+                      <Mail className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* LinkedIn */}
             <div className="flex flex-col gap-0.5">
               <label className="text-[10px] text-white/60">LinkedIn</label>
-              <div
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
-                style={{
-                  background: "#1a1a1a",
-                  border: "1px solid rgba(255, 255, 255, 0.1)",
-                }}
-              >
-                <Linkedin className="w-3 h-3 text-white/60 flex-shrink-0" />
-                <span className="text-[10px] text-white flex-1 truncate">
-                  {lead.linkedinUrl
-                    ? `@${lead.linkedinUrl
-                        .replace(/^https?:\/\/(www\.)?linkedin\.com\//, "")
-                        .replace(/^\//, "")}`
-                    : "N/A"}
-                </span>
-                {lead.linkedinUrl && (
-                  <button
-                    onClick={handleLinkedinClick}
-                    className="text-white/60 hover:text-white transition-colors flex-shrink-0"
-                    title="Open LinkedIn"
-                  >
-                    <Linkedin className="w-3 h-3" />
-                  </button>
-                )}
-              </div>
+              {isEditing ? (
+                <div
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
+                  style={{
+                    background: "#1a1a1a",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                  }}
+                >
+                  <Linkedin className="w-3 h-3 text-white/60 flex-shrink-0" />
+                  <Input
+                    value={editData.linkedinUrl}
+                    onChange={(e) =>
+                      setEditData({ ...editData, linkedinUrl: e.target.value })
+                    }
+                    className="flex-1 h-6 text-[10px] bg-transparent border-0 text-white focus-visible:ring-0 focus-visible:ring-offset-0 px-2 py-0"
+                    placeholder="LinkedIn URL or username"
+                  />
+                </div>
+              ) : (
+                <div
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
+                  style={{
+                    background: "#1a1a1a",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                  }}
+                >
+                  <Linkedin className="w-3 h-3 text-white/60 flex-shrink-0" />
+                  <span className="text-[10px] text-white flex-1 truncate">
+                    {lead.linkedinUrl
+                      ? `@${lead.linkedinUrl
+                          .replace(/^https?:\/\/(www\.)?linkedin\.com\//, "")
+                          .replace(/^\//, "")}`
+                      : "N/A"}
+                  </span>
+                  {lead.linkedinUrl && (
+                    <button
+                      onClick={handleLinkedinClick}
+                      className="text-white/60 hover:text-white transition-colors flex-shrink-0"
+                      title="Open LinkedIn"
+                    >
+                      <Linkedin className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -564,18 +751,38 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
             {/* Region */}
             <div className="flex flex-col gap-0.5">
               <label className="text-[10px] text-white/60">Region</label>
-              <div
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
-                style={{
-                  background: "#1a1a1a",
-                  border: "1px solid rgba(255, 255, 255, 0.1)",
-                }}
-              >
-                <MapPin className="w-3 h-3 text-white/60 flex-shrink-0" />
-                <span className="text-[10px] text-white truncate">
-                  {lead.location || lead.companyLocation || "N/A"}
-                </span>
-              </div>
+              {isEditing ? (
+                <div
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
+                  style={{
+                    background: "#1a1a1a",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                  }}
+                >
+                  <MapPin className="w-3 h-3 text-white/60 flex-shrink-0" />
+                  <Input
+                    value={editData.location}
+                    onChange={(e) =>
+                      setEditData({ ...editData, location: e.target.value })
+                    }
+                    className="flex-1 h-6 text-[10px] bg-transparent border-0 text-white focus-visible:ring-0 focus-visible:ring-offset-0 px-2 py-0"
+                    placeholder="Location"
+                  />
+                </div>
+              ) : (
+                <div
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
+                  style={{
+                    background: "#1a1a1a",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                  }}
+                >
+                  <MapPin className="w-3 h-3 text-white/60 flex-shrink-0" />
+                  <span className="text-[10px] text-white truncate">
+                    {lead.location || lead.companyLocation || "N/A"}
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Status */}
@@ -595,29 +802,6 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
           </div>
         </div>
 
-        {/* Resource Section */}
-        <div className="mt-5 pt-3 border-t border-white/10">
-          <h3
-            className="text-white mb-1.5"
-            style={{
-              fontFamily: "Poppins, sans-serif",
-              fontWeight: 600,
-              fontSize: "12px",
-              color: "#FFFFFF",
-            }}
-          >
-            Resource
-          </h3>
-          <div
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
-            style={{
-              background: "#1a1a1a",
-              border: "1px solid rgba(255, 255, 255, 0.1)",
-            }}
-          >
-            <span className="text-[10px] text-white truncate">{apiSource}</span>
-          </div>
-        </div>
       </CardContent>
     </Card>
 

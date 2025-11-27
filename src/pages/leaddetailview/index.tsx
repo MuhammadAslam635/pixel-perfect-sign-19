@@ -77,12 +77,12 @@ const LeadDetailView = () => {
                 <LeadDetailCard lead={lead} />
               </div>
               {/* Middle: Lead Chat */}
-              <div className="col-span-6 col-start-3 flex flex-col min-h-0">
+              <div className="col-span-7 col-start-3 flex flex-col min-h-0">
                 <LeadChat lead={lead} />
               </div>
               {/* Right: Activity Component */}
               <div
-                className="col-span-4 col-start-9 flex flex-col min-h-0"
+                className="col-span-3 col-start-10 flex flex-col min-h-0"
                 // style={{
                 //   borderRadius: "20px",
                 //   background:

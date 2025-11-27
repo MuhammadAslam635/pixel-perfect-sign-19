@@ -846,7 +846,7 @@ const LeadChat = ({ lead }: LeadChatProps) => {
     >
       {/* Header Tabs */}
       <div className="w-full mb-6">
-        <div className="flex w-full items-center gap-6 sm:gap-8">
+        <div className="flex w-full items-center gap-3 sm:gap-4">
           {channelTabs.map((tab) => {
             const isActive = activeTab === tab.label;
 
@@ -855,16 +855,20 @@ const LeadChat = ({ lead }: LeadChatProps) => {
                 key={tab.label}
                 type="button"
                 onClick={() => setActiveTab(tab.label)}
-                className="relative pb-3 text-left"
+                className="relative pb-2 text-left"
               >
                 <span
-                  className={`text-sm font-medium sm:text-base lg:text-[16px] transition-colors ${
+                  className={`text-xs font-medium sm:text-sm transition-colors ${
                     isActive ? "text-white font-semibold" : "text-white/50"
                   }`}
                 >
                   {tab.label}
                 </span>
-                <span className="block text-[10px] text-white/40">
+                <span
+                  className={`block text-[9px] transition-colors ${
+                    isActive ? "text-white" : "text-white/50"
+                  }`}
+                >
                   {tab.status}
                 </span>
                 {isActive && (
@@ -877,9 +881,9 @@ const LeadChat = ({ lead }: LeadChatProps) => {
       </div>
 
       {/* Lead Info */}
-      <div className="flex w-full flex-col gap-6 py-6 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-4">
-          <div className="h-12 w-12 sm:h-14 sm:w-14">
+      <div className="flex w-full flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+          <div className="h-8 w-8 sm:h-10 sm:w-10">
             {avatarSrc ? (
               <img
                 src={avatarSrc}
@@ -887,22 +891,22 @@ const LeadChat = ({ lead }: LeadChatProps) => {
                 className="h-full w-full rounded-full object-cover"
               />
             ) : (
-              <span className="flex h-full w-full items-center justify-center rounded-full bg-[#3d4f51] text-white text-2xl">
+              <span className="flex h-full w-full items-center justify-center rounded-full bg-[#3d4f51] text-white text-base sm:text-lg">
                 {avatarLetter}
               </span>
             )}
           </div>
           <div className="flex flex-col">
-            <p className="text-lg font-bold sm:text-xl text-white">
+            <p className="text-sm font-bold sm:text-base text-white">
               {displayName}
             </p>
-            <p className="text-sm font-normal text-white/60">{position}</p>
+            <p className="text-xs font-normal text-white/60">{position}</p>
           </div>
         </div>
-        <div className="flex items-center gap-3 text-sm font-normal text-white/70 sm:ml-auto">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 text-xs font-normal text-white/70 sm:ml-auto">
+          <div className="flex items-center gap-1.5">
             <span>{headerContactValue || "\u00A0"}</span>
-            <ChevronDown className="h-3 w-3" />
+            <ChevronDown className="h-2.5 w-2.5" />
           </div>
           {activeTab === "WhatsApp" && whatsappConversationEnabled && (
             <div className="flex items-center gap-2">

@@ -119,4 +119,19 @@ export const leadsService = {
       throw error;
     }
   },
+
+  /**
+   * Update a lead by ID
+   */
+  updateLead: async (
+    id: string,
+    updateData: Partial<Lead>
+  ): Promise<{ success: boolean; message: string; data: Lead }> => {
+    try {
+      const response = await API.put(`/leads/${id}`, updateData);
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
 };
