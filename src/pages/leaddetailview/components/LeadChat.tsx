@@ -375,6 +375,8 @@ const LeadChat = ({ lead }: LeadChatProps) => {
 
   const emailQueryEnabled = activeTab === "Email" && Boolean(leadEmailLower);
 
+  const shouldPollEmail = emailQueryEnabled;
+
   const {
     data: emailConversationData,
     isLoading: isEmailConversationLoading,
@@ -384,7 +386,10 @@ const LeadChat = ({ lead }: LeadChatProps) => {
   } = useQuery({
     queryKey: emailConversationQueryKey,
     enabled: emailQueryEnabled,
-    staleTime: 60_000,
+    staleTime: 30_000,
+    refetchOnWindowFocus: emailQueryEnabled,
+    refetchInterval: shouldPollEmail ? 5000 : false,
+    refetchIntervalInBackground: true,
     queryFn: async () => {
       if (!leadEmailLower) {
         return [];
