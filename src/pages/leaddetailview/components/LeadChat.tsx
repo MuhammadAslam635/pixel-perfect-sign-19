@@ -1424,7 +1424,7 @@ const LeadChat = ({ lead }: LeadChatProps) => {
               </div>
             )}
             <div className="flex flex-col gap-3 mt-6">
-              <div className="flex flex-col gap-3 rounded-2xl bg-white/10 px-4 py-3 sm:flex-row sm:items-center sm:flex-nowrap sm:gap-4">
+              <div className="flex flex-col gap-3 rounded-2xl bg-white/10 px-4 py-2 sm:flex-row sm:items-center sm:flex-nowrap sm:gap-4">
                 <textarea
                   value={emailInput}
                   onChange={(event) => setEmailInput(event.target.value)}
@@ -1435,13 +1435,13 @@ const LeadChat = ({ lead }: LeadChatProps) => {
                     }
                   }}
                   disabled={!emailAddress}
-                  className="flex-1 w-full bg-transparent outline-none border-none text-sm text-white placeholder:text-white/50 resize-none min-h-[64px]"
+                  className="flex-1 w-full bg-transparent outline-none border-none text-sm text-white placeholder:text-white/50 resize-none min-h-[48px]"
                   placeholder={
                     !emailAddress
                       ? "Add an email address to send emails"
                       : "Write your email message (Ctrl+Enter to send)"
                   }
-                  rows={3}
+                  rows={2}
                 />
                 <button
                   className="flex h-10 w-full sm:h-10 sm:w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
