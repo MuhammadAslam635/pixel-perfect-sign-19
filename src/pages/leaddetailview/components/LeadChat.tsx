@@ -1430,8 +1430,8 @@ const LeadChat = ({
                 })}
               </div>
             )}
-            <div className="flex flex-col gap-3 mt-6">
-              <div className="flex flex-col gap-1 rounded-xl bg-white/10 px-3 py-1 sm:flex-row sm:items-center sm:flex-nowrap sm:gap-2">
+            <div className="flex flex-col gap-3 mt-1">
+              <div className="flex flex-col gap-1 rounded-full bg-white/10 px-3 py-1 sm:flex-row sm:items-center sm:flex-nowrap sm:gap-2">
                 <textarea
                   value={emailInput}
                   onChange={(event) => setEmailInput(event.target.value)}
@@ -1442,7 +1442,7 @@ const LeadChat = ({
                     }
                   }}
                   disabled={!emailAddress}
-                  className="flex-1 w-full bg-transparent outline-none border-none text-sm text-white placeholder:text-white/50 resize-none min-h-[24px]"
+                  className="flex-1 w-full bg-transparent outline-none border-none text-sm text-white placeholder:text-white/50 resize-none min-h-[45px] py-3"
                   placeholder={
                     !emailAddress
                       ? "Add an email address to send emails"
