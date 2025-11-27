@@ -327,14 +327,14 @@ const LeadChat = ({ lead }: LeadChatProps) => {
         const ready = Boolean(
           response.data?.success &&
             response.data?.connected &&
-            statusData?.hasAllCredentials
+            statusData?.hasAllEnvVars
         );
         const missingFields = statusData?.missingFields || [];
         const message = ready
           ? "Twilio calling and SMS are ready."
           : missingFields.length
-          ? `Twilio credentials aren't configured yet.`
-          : "Twilio credentials aren't configured yet.";
+          ? "Twilio is not fully configured. Please contact your administrator."
+          : "Twilio is not configured. Please contact your administrator.";
         if (isMounted) {
           setTwilioConnection({
             loading: false,
@@ -344,12 +344,9 @@ const LeadChat = ({ lead }: LeadChatProps) => {
           });
         }
       } catch (error: any) {
-        const status = error?.response?.status;
         const message =
-          status === 404
-            ? "Company Twilio credentials aren't added yet."
-            : error?.response?.data?.message ||
-              "Unable to verify Twilio credentials.";
+          error?.response?.data?.message ||
+          "Unable to verify Twilio configuration.";
         if (isMounted) {
           setTwilioConnection({
             loading: false,
@@ -468,7 +465,7 @@ const LeadChat = ({ lead }: LeadChatProps) => {
   const smsUnavailableMessage =
     !twilioReady && !twilioStatusLoading
       ? twilioConnection.message ||
-        "Company Twilio credentials aren't added yet."
+        "Twilio is not configured. Please contact your administrator."
       : null;
   const smsInputsDisabled = Boolean(smsUnavailableMessage) || !phoneNumber;
 
