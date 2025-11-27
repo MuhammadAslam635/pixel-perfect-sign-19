@@ -414,6 +414,14 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
       );
       setScheduleDialogOpen(false);
       resetScheduleForm();
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["lead-calendar-meetings", lead._id],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["calendar-available-slots"],
+        }),
+      ]);
     } catch (error: any) {
       const message =
         error?.response?.data?.message ||

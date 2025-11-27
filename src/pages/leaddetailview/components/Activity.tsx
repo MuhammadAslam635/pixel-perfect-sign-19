@@ -48,16 +48,66 @@ import {
   leadSummaryService,
   LeadSummaryResponse,
 } from "@/services/leadSummary.service";
-import { formatDistanceToNow } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import ConfirmDialog from "@/components/ui/confirm-dialog";
+import {
+  calendarService,
+  LeadMeetingRecord,
+  AvailableSlot,
+} from "@/services/calendar.service";
 
 type ActivityProps = {
   lead?: Lead;
 };
 
+type HydratedSlot = AvailableSlot & {
+  startDate: Date;
+  endDate: Date;
+};
+
+const resolveErrorMessage = (error: unknown) => {
+  if (!error) {
+    return null;
+  }
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === "string") {
+    return error;
+  }
+  return null;
+};
+
+const formatDateTimeRange = (start?: string, end?: string) => {
+  if (!start || !end) {
+    return "Time not available";
+  }
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+  if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
+    return "Time not available";
+  }
+  const sameDay =
+    startDate.getFullYear() === endDate.getFullYear() &&
+    startDate.getMonth() === endDate.getMonth() &&
+    startDate.getDate() === endDate.getDate();
+  if (sameDay) {
+    return `${format(startDate, "EEE, MMM d · h:mm a")} – ${format(
+      endDate,
+      "h:mm a"
+    )}`;
+  }
+  return `${format(startDate, "EEE, MMM d · h:mm a")} → ${format(
+    endDate,
+    "EEE, MMM d · h:mm a"
+  )}`;
+};
+
+const slotComparator = (a: Date, b: Date) => a.getTime() - b.getTime();
+
 const Activity: FC<ActivityProps> = ({ lead }) => {
   const [activeTab, setActiveTab] = useState("summary");
-  const [currentDate, setCurrentDate] = useState(new Date(2025, 10, 1)); // November 2025
+  const [currentDate, setCurrentDate] = useState(() => new Date());
   const [selectedTemplateId, setSelectedTemplateId] = useState("");
   const [selectedLeadsMap, setSelectedLeadsMap] = useState<
     Record<string, Lead>
@@ -68,6 +118,26 @@ const Activity: FC<ActivityProps> = ({ lead }) => {
     useState<FollowupPlan | null>(null);
   const { toast } = useToast();
   const leadId = lead?._id;
+  const isCalendarTabActive = activeTab === "calendar";
+  const calendarMonthRange = useMemo(() => {
+    const start = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+    const end = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth() + 1,
+      0,
+      23,
+      59,
+      59,
+      999
+    );
+    return { start, end };
+  }, [currentDate]);
+  const calendarMonthKey = useMemo(
+    () => `${currentDate.getFullYear()}-${currentDate.getMonth()}`,
+    [currentDate]
+  );
+  const calendarRangeStartIso = calendarMonthRange.start.toISOString();
+  const calendarRangeEndIso = calendarMonthRange.end.toISOString();
 
   const {
     data: leadSummaryResponse,
@@ -86,6 +156,63 @@ const Activity: FC<ActivityProps> = ({ lead }) => {
   });
 
   const leadSummary = leadSummaryResponse?.data ?? null;
+
+  const {
+    data: leadMeetingsResponse,
+    isLoading: isLeadMeetingsLoading,
+    isFetching: isLeadMeetingsFetching,
+    error: leadMeetingsError,
+    refetch: refetchLeadMeetings,
+  } = useQuery({
+    queryKey: ["lead-calendar-meetings", leadId, calendarMonthKey],
+    queryFn: () => {
+      if (!leadId) {
+        throw new Error("Lead ID is required");
+      }
+      return calendarService.getLeadMeetings({
+        personId: leadId,
+        startDate: calendarRangeStartIso,
+        endDate: calendarRangeEndIso,
+        sort: "asc",
+        limit: 500,
+      });
+    },
+    enabled: Boolean(leadId && isCalendarTabActive),
+    staleTime: 60 * 1000,
+  });
+
+  const {
+    data: availableSlotsResponse,
+    isLoading: isAvailabilityLoading,
+    isFetching: isAvailabilityFetching,
+    error: availabilityError,
+    refetch: refetchAvailability,
+  } = useQuery({
+    queryKey: ["calendar-available-slots", calendarMonthKey],
+    queryFn: () =>
+      calendarService.getAvailableSlots({
+        startDate: calendarRangeStartIso,
+        endDate: calendarRangeEndIso,
+        durationMinutes: 30,
+        intervalMinutes: 30,
+        workingHours: "9,17",
+        weekdaysOnly: true,
+      }),
+    enabled: isCalendarTabActive,
+    staleTime: 60 * 1000,
+  });
+
+  const leadMeetings = useMemo<LeadMeetingRecord[]>(
+    () => leadMeetingsResponse?.data ?? [],
+    [leadMeetingsResponse]
+  );
+  const availableSlots = useMemo<AvailableSlot[]>(
+    () => availableSlotsResponse?.data ?? [],
+    [availableSlotsResponse]
+  );
+  const isLeadMeetingsBusy =
+    isLeadMeetingsLoading || isLeadMeetingsFetching;
+  const isAvailabilityBusy = isAvailabilityLoading || isAvailabilityFetching;
 
   const refreshLeadSummaryMutation = useMutation<
     LeadSummaryResponse,
@@ -130,10 +257,6 @@ const Activity: FC<ActivityProps> = ({ lead }) => {
     isLeadSummaryLoading ||
     isLeadSummaryFetching ||
     refreshLeadSummaryMutation.isPending;
-
-  // Dates with meetings - Nov 1 (already done), Nov 25-27 (available)
-  const meetingDoneDates = [1];
-  const availableMeetingDates = [25, 26, 27];
 
   const monthNames = [
     "Jan",
@@ -332,6 +455,84 @@ const Activity: FC<ActivityProps> = ({ lead }) => {
   const summaryDashoffset =
     summaryCircumference * (1 - Math.min(1, Math.max(0, summaryProgress)));
 
+  const meetingDayMap = useMemo(() => {
+    const map = new Map<number, LeadMeetingRecord[]>();
+    leadMeetings.forEach((meeting) => {
+      const startDate = new Date(meeting.startDateTime);
+      if (
+        Number.isNaN(startDate.getTime()) ||
+        startDate.getMonth() !== currentDate.getMonth() ||
+        startDate.getFullYear() !== currentDate.getFullYear()
+      ) {
+        return;
+      }
+      const day = startDate.getDate();
+      const existing = map.get(day) ?? [];
+      existing.push(meeting);
+      map.set(day, existing);
+    });
+    return map;
+  }, [leadMeetings, currentDate]);
+
+  const availabilityDayMap = useMemo(() => {
+    const map = new Map<number, AvailableSlot[]>();
+    availableSlots.forEach((slot) => {
+      const startDate = new Date(slot.start);
+      if (
+        Number.isNaN(startDate.getTime()) ||
+        startDate.getMonth() !== currentDate.getMonth() ||
+        startDate.getFullYear() !== currentDate.getFullYear()
+      ) {
+        return;
+      }
+      const day = startDate.getDate();
+      const existing = map.get(day) ?? [];
+      existing.push(slot);
+      map.set(day, existing);
+    });
+    return map;
+  }, [availableSlots, currentDate]);
+
+  const sortedMeetings = useMemo(() => {
+    if (!leadMeetings.length) {
+      return [];
+    }
+    return [...leadMeetings].sort(
+      (a, b) =>
+        new Date(a.startDateTime).getTime() -
+        new Date(b.startDateTime).getTime()
+    );
+  }, [leadMeetings]);
+
+  const nextAvailableSlots = useMemo<HydratedSlot[]>(() => {
+    if (!availableSlots.length) {
+      return [];
+    }
+    return availableSlots
+      .map((slot) => ({
+        ...slot,
+        startDate: new Date(slot.start),
+        endDate: new Date(slot.end),
+      }))
+      .filter(
+        (slot) =>
+          !Number.isNaN(slot.startDate.getTime()) &&
+          slot.endDate.getTime() > Date.now()
+      )
+      .sort((a, b) => slotComparator(a.startDate, b.startDate))
+      .slice(0, 5);
+  }, [availableSlots]);
+
+  const leadMeetingsErrorMessage = resolveErrorMessage(leadMeetingsError);
+  const availabilityErrorMessage = resolveErrorMessage(availabilityError);
+  const isCalendarDataBusy =
+    isLeadMeetingsLoading ||
+    isLeadMeetingsFetching ||
+    isAvailabilityLoading ||
+    isAvailabilityFetching;
+  const todayRef = new Date();
+  const nowTimestamp = todayRef.getTime();
+
   const getTemplateTitle = (plan: FollowupPlan) => {
     if (typeof plan.templateId === "string") {
       return "Followup Plan";
@@ -381,6 +582,13 @@ const Activity: FC<ActivityProps> = ({ lead }) => {
       default:
         return "bg-white/10 text-white border border-white/20";
     }
+  };
+
+  const handleRefreshCalendarData = () => {
+    if (leadId) {
+      void refetchLeadMeetings();
+    }
+    void refetchAvailability();
   };
 
   const handleToggleLeadSelection = (leadItem: Lead) => {
@@ -651,185 +859,373 @@ const Activity: FC<ActivityProps> = ({ lead }) => {
 
             {/* Calendar Tab Content */}
             <TabsContent value="calendar" className="mt-6">
-              <div className="space-y-6">
-                {/* Calendar Widget */}
+              {!leadId ? (
                 <div
-                  className="rounded-lg p-6"
+                  className="rounded-lg p-6 text-white/70 text-sm"
                   style={{
                     background: "rgba(255, 255, 255, 0.03)",
                     border: "1px solid rgba(255, 255, 255, 0.1)",
                   }}
                 >
-                  {/* Month Navigation */}
-                  <div className="flex items-center justify-between mb-6">
-                    <button
-                      onClick={handlePrevMonth}
-                      className="text-white/70 hover:text-white transition-colors p-1"
-                    >
-                      <svg
-                        width="20"
-                        height="20"
-                        viewBox="0 0 20 20"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
+                  Select a lead to view scheduled meetings and availability.
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Calendar Widget */}
+                  <div
+                    className="rounded-lg p-6"
+                    style={{
+                      background: "rgba(255, 255, 255, 0.03)",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                    }}
+                  >
+                    {/* Month Navigation */}
+                    <div className="flex items-center justify-between mb-6">
+                      <button
+                        onClick={handlePrevMonth}
+                        className="text-white/70 hover:text-white transition-colors p-1"
+                        aria-label="Previous month"
                       >
-                        <path
-                          d="M12.5 15L7.5 10L12.5 5"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </button>
-                    <h3 className="text-white font-semibold text-lg">
-                      {monthNames[currentDate.getMonth()]}{" "}
-                      {currentDate.getFullYear()}
-                    </h3>
-                    <button
-                      onClick={handleNextMonth}
-                      className="text-white/70 hover:text-white transition-colors p-1"
-                    >
-                      <svg
-                        width="20"
-                        height="20"
-                        viewBox="0 0 20 20"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
+                        <svg
+                          width="20"
+                          height="20"
+                          viewBox="0 0 20 20"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M12.5 15L7.5 10L12.5 5"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </button>
+                      <h3 className="text-white font-semibold text-lg">
+                        {monthNames[currentDate.getMonth()]}{" "}
+                        {currentDate.getFullYear()}
+                      </h3>
+                      <button
+                        onClick={handleNextMonth}
+                        className="text-white/70 hover:text-white transition-colors p-1"
+                        aria-label="Next month"
                       >
-                        <path
-                          d="M7.5 15L12.5 10L7.5 5"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-
-                  {/* Days of Week */}
-                  <div className="grid grid-cols-7 gap-2 mb-2">
-                    {["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map(
-                      (day) => (
-                        <div
-                          key={day}
-                          className="text-center text-white/50 text-xs font-medium py-2"
+                        <svg
+                          width="20"
+                          height="20"
+                          viewBox="0 0 20 20"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
                         >
-                          {day}
-                        </div>
-                      )
-                    )}
-                  </div>
+                          <path
+                            d="M7.5 15L12.5 10L7.5 5"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </button>
+                    </div>
 
-                  {/* Calendar Grid */}
-                  <div className="grid grid-cols-7 gap-2">
-                    {getCalendarDays().map((day, index) => {
-                      if (day === null) {
-                        return <div key={index} className="aspect-square" />;
-                      }
-
-                      const isMeetingDone =
-                        currentDate.getMonth() === 10 &&
-                        meetingDoneDates.includes(day);
-                      const isAvailableMeeting =
-                        currentDate.getMonth() === 10 &&
-                        availableMeetingDates.includes(day);
-
-                      return (
-                        <div
-                          key={index}
-                          className={`aspect-square flex items-center justify-center relative ${
-                            isMeetingDone || isAvailableMeeting
-                              ? ""
-                              : "text-white/70"
-                          }`}
+                    <div className="flex flex-wrap items-center justify-between gap-3 mb-4 text-xs text-white/70">
+                      <span>
+                        {leadMeetings.length > 0
+                          ? `${leadMeetings.length} meeting${
+                              leadMeetings.length === 1 ? "" : "s"
+                            } scheduled this month`
+                          : "No meetings scheduled this month"}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        {isCalendarDataBusy && (
+                          <Loader2 className="w-4 h-4 animate-spin text-white/70" />
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-white/70 hover:text-white hover:bg-white/10"
+                          onClick={handleRefreshCalendarData}
+                          disabled={isCalendarDataBusy}
                         >
-                          {isMeetingDone && (
-                            <div
-                              className="absolute inset-0 rounded-full"
-                              style={{
-                                background: "rgba(6, 182, 212, 0.3)",
-                                border: "2px solid #06b6d4",
-                              }}
-                            />
-                          )}
-                          {isAvailableMeeting && (
-                            <div
-                              className="absolute inset-0 rounded-full"
-                              style={{
-                                background: "rgba(59, 130, 246, 0.3)",
-                                border: "2px solid #3b82f6",
-                              }}
-                            />
-                          )}
-                          <span
-                            className={`relative z-10 ${
-                              isMeetingDone || isAvailableMeeting
-                                ? "text-white font-medium"
-                                : ""
-                            }`}
+                          <RefreshCcw className="w-4 h-4 mr-2" />
+                          Refresh
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Days of Week */}
+                    <div className="grid grid-cols-7 gap-2 mb-2">
+                      {["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map(
+                        (day) => (
+                          <div
+                            key={day}
+                            className="text-center text-white/50 text-xs font-medium py-2"
                           >
                             {day}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
+                          </div>
+                        )
+                      )}
+                    </div>
 
-                {/* Calendar Legend */}
-                <div className="flex items-center gap-6">
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="w-4 h-4 rounded-full"
-                      style={{
-                        background: "rgba(6, 182, 212, 0.3)",
-                        border: "2px solid #06b6d4",
-                      }}
-                    />
-                    <span className="text-white/70 text-sm">
-                      Already meeting done
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="w-4 h-4 rounded-full"
-                      style={{
-                        background: "rgba(59, 130, 246, 0.3)",
-                        border: "2px solid #3b82f6",
-                      }}
-                    />
-                    <span className="text-white/70 text-sm">
-                      Available for meeting
-                    </span>
-                  </div>
-                </div>
+                    {/* Calendar Grid */}
+                    <div className="grid grid-cols-7 gap-2">
+                      {getCalendarDays().map((day, index) => {
+                        if (day === null) {
+                          return <div key={index} className="aspect-square" />;
+                        }
 
-                {/* Meeting Notes Section */}
-                <div>
-                  <h3 className="text-white font-bold mb-4">Meeting Notes</h3>
-                  <div className="space-y-3">
-                    {[1, 2, 3].map((index) => (
-                      <div
-                        key={index}
-                        className="rounded-lg p-4"
-                        style={{
-                          background: "rgba(255, 255, 255, 0.03)",
-                          border: "1px solid rgba(255, 255, 255, 0.1)",
-                        }}
-                      >
-                        <h4 className="text-white font-semibold mb-2">
-                          Proposal for projects
-                        </h4>
-                        <p className="text-white/70 text-sm">
-                          Lorem Ipsum is simply dummy text of the printing.
-                        </p>
+                        const dayMeetings = meetingDayMap.get(day) || [];
+                        const dayAvailability = availabilityDayMap.get(day) || [];
+                        const hasUpcomingMeeting = dayMeetings.some(
+                          (meeting) =>
+                            new Date(meeting.startDateTime).getTime() >=
+                            nowTimestamp
+                        );
+                        const hasCompletedMeeting = dayMeetings.some(
+                          (meeting) =>
+                            new Date(meeting.endDateTime).getTime() < nowTimestamp
+                        );
+                        const hasAvailability = dayAvailability.length > 0;
+                        const isToday =
+                          day === todayRef.getDate() &&
+                          currentDate.getMonth() === todayRef.getMonth() &&
+                          currentDate.getFullYear() === todayRef.getFullYear();
+                        const highlightClass = hasUpcomingMeeting
+                          ? "bg-indigo-500/30 border border-indigo-400/70"
+                          : hasCompletedMeeting
+                          ? "bg-teal-500/25 border border-teal-400/60"
+                          : hasAvailability
+                          ? "bg-blue-500/20 border border-blue-400/60"
+                          : "";
+                        const textClass =
+                          hasUpcomingMeeting || hasCompletedMeeting || hasAvailability
+                            ? "text-white font-medium"
+                            : "text-white/70";
+                        const labelParts = [];
+                        if (dayMeetings.length) {
+                          labelParts.push(
+                            `${dayMeetings.length} meeting${
+                              dayMeetings.length === 1 ? "" : "s"
+                            }`
+                          );
+                        }
+                        if (dayAvailability.length) {
+                          labelParts.push(
+                            `${dayAvailability.length} slot${
+                              dayAvailability.length === 1 ? "" : "s"
+                            } available`
+                          );
+                        }
+                        const ariaLabel =
+                          labelParts.length > 0
+                            ? `Day ${day}: ${labelParts.join(", ")}`
+                            : `Day ${day}`;
+
+                        return (
+                          <div
+                            key={index}
+                            className="aspect-square flex items-center justify-center relative"
+                            aria-label={ariaLabel}
+                            title={ariaLabel}
+                          >
+                            {(hasUpcomingMeeting ||
+                              hasCompletedMeeting ||
+                              hasAvailability) && (
+                              <div
+                                className={`absolute inset-0 rounded-full ${highlightClass}`}
+                              />
+                            )}
+                            {isToday && (
+                              <div className="absolute inset-0 rounded-full border border-white/40 pointer-events-none" />
+                            )}
+                            <span className={`relative z-10 ${textClass}`}>
+                              {day}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Calendar Legend */}
+                  <div className="flex flex-wrap items-center gap-6 text-sm text-white/70">
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded-full border border-indigo-400/70 bg-indigo-500/30" />
+                      <span>Upcoming meeting</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded-full border border-teal-400/60 bg-teal-500/25" />
+                      <span>Completed meeting</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded-full border border-blue-400/60 bg-blue-500/20" />
+                      <span>Available slot</span>
+                    </div>
+                  </div>
+
+                  {/* Data Sections */}
+                  <div className="space-y-6">
+                    <div
+                      className="rounded-lg p-6"
+                      style={{
+                        background: "rgba(255, 255, 255, 0.03)",
+                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                      }}
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                        <h3 className="text-white font-bold">Scheduled Meetings</h3>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-white/70 hover:text-white hover:bg-white/10"
+                          onClick={() => {
+                            void refetchLeadMeetings();
+                          }}
+                          disabled={isLeadMeetingsBusy}
+                        >
+                          <RefreshCcw
+                            className={`w-4 h-4 mr-2 ${
+                              isLeadMeetingsBusy ? "animate-spin" : ""
+                            }`}
+                          />
+                          Refresh
+                        </Button>
                       </div>
-                    ))}
+                      {isLeadMeetingsBusy ? (
+                        <div className="flex items-center gap-2 text-white/60 text-sm">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Loading meetings...
+                        </div>
+                      ) : sortedMeetings.length > 0 ? (
+                        <div className="space-y-3">
+                          {sortedMeetings.map((meeting) => {
+                            const meetingEnd = new Date(meeting.endDateTime);
+                            const meetingCompleted =
+                              meetingEnd.getTime() < nowTimestamp;
+                            return (
+                              <div
+                                key={meeting._id}
+                                className="rounded-lg p-4 border border-white/10 bg-white/5"
+                              >
+                                <div className="flex flex-wrap items-center justify-between gap-3">
+                                  <div>
+                                    <p className="text-white font-semibold text-sm">
+                                      {meeting.subject || "Meeting"}
+                                    </p>
+                                    <p className="text-xs text-white/60">
+                                      {formatDateTimeRange(
+                                        meeting.startDateTime,
+                                        meeting.endDateTime
+                                      )}
+                                    </p>
+                                  </div>
+                                  <Badge
+                                    className={
+                                      meetingCompleted
+                                        ? "bg-teal-500/20 text-teal-200 border border-teal-400/40"
+                                        : "bg-indigo-500/20 text-indigo-200 border border-indigo-400/40"
+                                    }
+                                  >
+                                    {meetingCompleted ? "Completed" : "Scheduled"}
+                                  </Badge>
+                                </div>
+                                {meeting.body && (
+                                  <p className="text-xs text-white/70 mt-2">
+                                    {meeting.body}
+                                  </p>
+                                )}
+                                {meeting.webLink && (
+                                  <a
+                                    href={meeting.webLink}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="text-xs text-sky-300 hover:text-sky-200 mt-2 inline-block"
+                                  >
+                                    Open calendar event →
+                                  </a>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <div className="text-sm text-white/60">
+                          No meetings scheduled for this lead in{" "}
+                          {monthNames[currentDate.getMonth()]}.
+                        </div>
+                      )}
+                      {leadMeetingsErrorMessage && (
+                        <div className="text-xs text-red-300 mt-3">
+                          {leadMeetingsErrorMessage}
+                        </div>
+                      )}
+                    </div>
+                    <div
+                      className="rounded-lg p-6"
+                      style={{
+                        background: "rgba(255, 255, 255, 0.03)",
+                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                      }}
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                        <h3 className="text-white font-bold">Available Slots</h3>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-white/70 hover:text-white hover:bg-white/10"
+                          onClick={() => {
+                            void refetchAvailability();
+                          }}
+                          disabled={isAvailabilityBusy}
+                        >
+                          <RefreshCcw
+                            className={`w-4 h-4 mr-2 ${
+                              isAvailabilityBusy ? "animate-spin" : ""
+                            }`}
+                          />
+                          Refresh
+                        </Button>
+                      </div>
+                      {isAvailabilityBusy ? (
+                        <div className="flex items-center gap-2 text-white/60 text-sm">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Calculating availability...
+                        </div>
+                      ) : nextAvailableSlots.length > 0 ? (
+                        <div className="space-y-3">
+                          {nextAvailableSlots.map((slot) => (
+                            <div
+                              key={slot.start}
+                              className="rounded-lg p-4 border border-white/10 bg-white/5"
+                            >
+                              <p className="text-white text-sm font-semibold">
+                                {format(slot.startDate, "EEE, MMM d")}
+                              </p>
+                              <p className="text-xs text-white/70">
+                                {format(slot.startDate, "h:mm a")} –{" "}
+                                {format(slot.endDate, "h:mm a")} ·{" "}
+                                {slot.durationMinutes} min
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-sm text-white/60">
+                          No availability detected for this range. Try selecting a
+                          different month or adjust your Microsoft calendar working
+                          hours.
+                        </div>
+                      )}
+                      {availabilityErrorMessage && (
+                        <div className="text-xs text-red-300 mt-3">
+                          {availabilityErrorMessage}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </TabsContent>
 
             {/* Followup Campaigns Tab Content */}

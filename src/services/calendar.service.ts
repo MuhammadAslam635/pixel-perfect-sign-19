@@ -22,6 +22,8 @@ export interface ScheduleMeetingResponse {
     subject?: string;
     startTime?: Record<string, unknown>;
     endTime?: Record<string, unknown>;
+    meetingJoinLink?: string;
+    leadMeetingId?: string | null;
   };
 }
 
@@ -34,6 +36,76 @@ export interface MicrosoftConnectionStatusResponse {
   };
 }
 
+export interface LeadMeetingRecord {
+  _id: string;
+  personId: string;
+  companyId: string;
+  scheduledByUserId?: string | null;
+  provider: string;
+  eventId: string;
+  subject: string;
+  body?: string;
+  location?: string;
+  startDateTime: string;
+  endDateTime: string;
+  durationMinutes?: number | null;
+  timezone?: string;
+  joinLink?: string | null;
+  webLink?: string | null;
+  attendees?: Array<{
+    email: string;
+    name?: string | null;
+    status?: string | null;
+    responseTime?: string | null;
+  }>;
+  status: "scheduled" | "completed" | "cancelled";
+  autoSelectedSlot?: boolean;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface LeadMeetingsQuery {
+  personId?: string;
+  startDate?: string;
+  endDate?: string;
+  limit?: number;
+  status?: string;
+  sort?: "asc" | "desc";
+}
+
+export interface LeadMeetingsResponse {
+  success: boolean;
+  data: LeadMeetingRecord[];
+  count: number;
+}
+
+export interface AvailableSlot {
+  start: string;
+  end: string;
+  durationMinutes: number;
+}
+
+export interface AvailableSlotsQuery {
+  startDate: string;
+  endDate: string;
+  durationMinutes?: number;
+  intervalMinutes?: number;
+  workingHours?: string;
+  workingHoursTimeZone?: string;
+  weekdaysOnly?: boolean | string;
+}
+
+export interface AvailableSlotsResponse {
+  success: boolean;
+  data: AvailableSlot[];
+  count: number;
+  searchRange?: {
+    start: string;
+    end: string;
+  };
+}
+
 export const calendarService = {
   scheduleMeeting: async (
     payload: ScheduleMeetingPayload
@@ -43,6 +115,18 @@ export const calendarService = {
   },
   getMicrosoftConnectionStatus: async (): Promise<MicrosoftConnectionStatusResponse> => {
     const response = await API.get("/calendar/connection-status");
+    return response.data;
+  },
+  getLeadMeetings: async (
+    params: LeadMeetingsQuery
+  ): Promise<LeadMeetingsResponse> => {
+    const response = await API.get("/calendar/meetings", { params });
+    return response.data;
+  },
+  getAvailableSlots: async (
+    params: AvailableSlotsQuery
+  ): Promise<AvailableSlotsResponse> => {
+    const response = await API.get("/calendar/available-slots", { params });
     return response.data;
   },
 };
