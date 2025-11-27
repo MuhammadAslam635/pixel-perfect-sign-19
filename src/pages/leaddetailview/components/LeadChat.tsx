@@ -956,7 +956,7 @@ const LeadChat = ({ lead }: LeadChatProps) => {
 
   return (
     <section
-      className="flex flex-col font-poppins items-center justify-center lg:p-2 p-2 max-w-full rounded-3xl"
+      className="flex flex-col font-poppins items-center justify-center lg:p-3 p-6 max-w-full rounded-3xl"
       style={{
         background:
           "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 2e-05) 38.08%, rgba(255, 255, 255, 2e-05) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
