@@ -963,7 +963,7 @@ const LeadChat = ({
 
   return (
     <section
-      className="flex flex-col font-poppins items-center justify-center lg:p-3 p-6 max-w-full rounded-3xl"
+      className="flex flex-col font-poppins items-center justify-center lg:p-7 p-6 max-w-full rounded-3xl"
       style={{
         background:
           "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 2e-05) 38.08%, rgba(255, 255, 255, 2e-05) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
@@ -1430,8 +1430,8 @@ const LeadChat = ({
                 })}
               </div>
             )}
-            <div className="flex flex-col gap-3 mt-1">
-              <div className="flex flex-col gap-1 rounded-full bg-white/10 px-3 py-1 sm:flex-row sm:items-center sm:flex-nowrap sm:gap-2">
+            <div className="flex flex-col gap-3 mt-[1px]">
+              <div className="flex flex-col gap-1 rounded-full bg-white/10 px-3 sm:flex-row sm:items-center sm:flex-nowrap sm:gap-2">
                 <textarea
                   value={emailInput}
                   onChange={(event) => setEmailInput(event.target.value)}
@@ -1442,7 +1442,7 @@ const LeadChat = ({
                     }
                   }}
                   disabled={!emailAddress}
-                  className="flex-1 w-full bg-transparent outline-none border-none text-sm text-white placeholder:text-white/50 resize-none min-h-[45px] py-3"
+                  className="flex-1 w-full bg-transparent outline-none border-none text-sm text-white placeholder:text-white/50 resize-none h-[45px] py-3"
                   placeholder={
                     !emailAddress
                       ? "Add an email address to send emails"
