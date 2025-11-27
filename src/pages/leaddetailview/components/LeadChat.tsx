@@ -956,7 +956,7 @@ const LeadChat = ({ lead }: LeadChatProps) => {
 
   return (
     <section
-      className="flex flex-col font-poppins items-center justify-center lg:p-10 p-5 max-w-full rounded-3xl"
+      className="flex flex-col font-poppins items-center justify-center lg:p-2 p-2 max-w-full rounded-3xl"
       style={{
         background:
           "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 2e-05) 38.08%, rgba(255, 255, 255, 2e-05) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
@@ -1424,7 +1424,7 @@ const LeadChat = ({ lead }: LeadChatProps) => {
               </div>
             )}
             <div className="flex flex-col gap-3 mt-6">
-              <div className="flex flex-col gap-3 rounded-2xl bg-white/10 px-4 py-2 sm:flex-row sm:items-center sm:flex-nowrap sm:gap-4">
+              <div className="flex flex-col gap-1 rounded-xl bg-white/10 px-3 py-1 sm:flex-row sm:items-center sm:flex-nowrap sm:gap-2">
                 <textarea
                   value={emailInput}
                   onChange={(event) => setEmailInput(event.target.value)}
@@ -1435,16 +1435,16 @@ const LeadChat = ({ lead }: LeadChatProps) => {
                     }
                   }}
                   disabled={!emailAddress}
-                  className="flex-1 w-full bg-transparent outline-none border-none text-sm text-white placeholder:text-white/50 resize-none min-h-[48px]"
+                  className="flex-1 w-full bg-transparent outline-none border-none text-sm text-white placeholder:text-white/50 resize-none min-h-[24px]"
                   placeholder={
                     !emailAddress
                       ? "Add an email address to send emails"
                       : "Write your email message (Ctrl+Enter to send)"
                   }
-                  rows={2}
+                  rows={1}
                 />
                 <button
-                  className="flex h-10 w-full sm:h-10 sm:w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="flex h-8 w-full sm:h-8 sm:w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
                   onClick={handleSendEmail}
                   disabled={
                     !emailAddress ||
@@ -1453,13 +1453,13 @@ const LeadChat = ({ lead }: LeadChatProps) => {
                   }
                 >
                   {emailMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin text-white" />
+                    <Loader2 className="h-3 w-3 animate-spin text-white" />
                   ) : (
-                    <Send size={14} className="text-white" />
+                    <Send size={12} className="text-white" />
                   )}
                 </button>
                 <button
-                  className="flex items-center justify-center gap-3 rounded-full bg-gradient-to-r from-[#4E8ED1] via-[#3E65B4] to-[#1F2937] px-4 py-2 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(62,101,180,0.35)] ring-1 ring-white/20 transition-all w-full sm:w-auto sm:ml-auto disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#4E8ED1] via-[#3E65B4] to-[#1F2937] px-3 py-1 text-xs font-semibold text-white shadow-[0_8px_20px_rgba(62,101,180,0.35)] ring-1 ring-white/20 transition-all w-full sm:w-auto sm:ml-auto disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
                   onClick={handleGenerateEmailMessage}
                   disabled={
                     isGeneratingEmailMessage || !lead?.companyId || !lead?._id
@@ -1472,17 +1472,17 @@ const LeadChat = ({ lead }: LeadChatProps) => {
                 >
                   {isGeneratingEmailMessage ? (
                     <>
-                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/25">
-                        <Loader2 className="h-4 w-4 animate-spin text-white" />
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/25">
+                        <Loader2 className="h-3 w-3 animate-spin text-white" />
                       </span>
-                      <span>Generating…</span>
+                      <span className="hidden sm:inline">Generating…</span>
                     </>
                   ) : (
                     <>
-                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/25">
-                        <Sparkles size={14} className="text-white" />
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/25">
+                        <Sparkles size={10} className="text-white" />
                       </span>
-                      <span>Generate with AI</span>
+                      <span className="hidden sm:inline">AI</span>
                     </>
                   )}
                 </button>
