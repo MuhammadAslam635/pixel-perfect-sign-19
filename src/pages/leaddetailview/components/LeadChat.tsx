@@ -919,6 +919,10 @@ const LeadChat = ({ lead }: LeadChatProps) => {
   const headerContactValue =
     activeTab === "Email" ? emailAddress || "" : phoneNumber || "";
 
+  const handleComposeEmail = () => {
+    window.location.href = `${import.meta.env.VITE_APP_API_URL}/emails/compose`;
+  };
+
   return (
     <section
       className="flex flex-col font-poppins items-center justify-center lg:p-10 p-5 max-w-full rounded-3xl"
