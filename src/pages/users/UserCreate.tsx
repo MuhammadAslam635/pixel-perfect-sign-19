@@ -355,8 +355,8 @@ const UserCreate = () => {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen mt-20 px-4 sm:px-6 py-4 sm:py-8 overflow-y-auto">
-        <div className="max-w-[1100px] mx-auto space-y-4 sm:space-y-6">
+      <main className="relative px-4 sm:px-6 md:px-10 lg:px-14 xl:px-16 2xl:px-[96px] mt-20 lg:mt-24 xl:mt-28 mb-10 flex flex-col gap-8 text-white flex-1 overflow-y-auto">
+        <div className="space-y-4 sm:space-y-6">
           {/* Header */}
           <div>
             <h1 className="text-2xl sm:text-3xl font-semibold text-white mb-2">
@@ -762,7 +762,7 @@ const UserCreate = () => {
             </Card>
           </form>
         </div>
-      </div>
+      </main>
     </DashboardLayout>
   );
 };
