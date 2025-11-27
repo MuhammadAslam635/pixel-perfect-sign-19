@@ -86,6 +86,8 @@ const normalizePhoneNumber = (raw?: string | null): string | null => {
   return /^\+[1-9]\d{7,14}$/.test(formatted) ? formatted : null;
 };
 
+const DEFAULT_EMAIL_SUBJECT = "Message from Lead Chat";
+
 const LeadChat = ({ lead }: LeadChatProps) => {
   const displayName = lead?.name || fallbackLeadInfo.name;
   const position = lead?.position || fallbackLeadInfo.position;
@@ -110,7 +112,14 @@ const LeadChat = ({ lead }: LeadChatProps) => {
   const [whatsappSendError, setWhatsappSendError] = useState<string | null>(
     null
   );
+  const [emailInput, setEmailInput] = useState("");
+  const [emailSubject, setEmailSubject] = useState<string>(
+    DEFAULT_EMAIL_SUBJECT
+  );
+  const [emailSendError, setEmailSendError] = useState<string | null>(null);
   const [isGeneratingWhatsAppMessage, setIsGeneratingWhatsAppMessage] =
+    useState(false);
+  const [isGeneratingEmailMessage, setIsGeneratingEmailMessage] =
     useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [messageToDelete, setMessageToDelete] = useState<string | null>(null);
@@ -253,6 +262,12 @@ const LeadChat = ({ lead }: LeadChatProps) => {
   useEffect(() => {
     setWhatsappInput("");
     setWhatsappSendError(null);
+  }, [lead?._id]);
+
+  useEffect(() => {
+    setEmailInput("");
+    setEmailSubject(DEFAULT_EMAIL_SUBJECT);
+    setEmailSendError(null);
   }, [lead?._id]);
 
   const whatsappConversationQueryKey = [
@@ -605,6 +620,26 @@ const LeadChat = ({ lead }: LeadChatProps) => {
     },
   });
 
+  const emailMutation = useMutation({
+    mutationFn: (payload: { to: string[]; subject: string; text: string }) =>
+      emailService.sendEmail(payload),
+    onSuccess: () => {
+      setEmailInput("");
+      setEmailSubject(DEFAULT_EMAIL_SUBJECT);
+      setEmailSendError(null);
+      // Invalidate email threads to refresh the conversation
+      queryClient.invalidateQueries({ queryKey: ["email-threads"] });
+    },
+    onError: (mutationError: any) => {
+      const fallbackMessage =
+        mutationError?.response?.data?.message ||
+        mutationError?.response?.data?.error ||
+        mutationError?.message ||
+        "Failed to send email";
+      setEmailSendError(fallbackMessage);
+    },
+  });
+
   useEffect(() => {
     if (activeTab === "WhatsApp") {
       scrollToBottom(whatsappScrollRef);
@@ -738,6 +773,62 @@ const LeadChat = ({ lead }: LeadChatProps) => {
     }
   };
 
+  const handleSendEmail = () => {
+    if (
+      !leadId ||
+      !emailAddress ||
+      !emailInput.trim() ||
+      emailMutation.isPending
+    ) {
+      return;
+    }
+    emailMutation.mutate({
+      to: [emailAddress],
+      subject: emailSubject?.trim() || DEFAULT_EMAIL_SUBJECT,
+      text: emailInput.trim(),
+    });
+  };
+
+  const handleGenerateEmailMessage = async () => {
+    if (!lead?.companyId || !lead?._id) {
+      setEmailSendError(
+        "Lead information is incomplete for generating suggestions."
+      );
+      return;
+    }
+
+    setIsGeneratingEmailMessage(true);
+    setEmailSendError(null);
+    try {
+      const response = await connectionMessagesService.generateEmailMessage({
+        companyId: lead.companyId,
+        personId: lead._id,
+        tone: "professional",
+      });
+
+      const generatedSubject =
+        response.data?.email?.subject?.trim() || DEFAULT_EMAIL_SUBJECT;
+      const generatedBody =
+        response.data?.email?.body?.trim() ||
+        response.data?.email?.bodyHtml?.trim();
+
+      if (generatedBody) {
+        setEmailInput(generatedBody);
+        setEmailSubject(generatedSubject);
+      } else {
+        setEmailSendError("No message suggestion was generated. Try again.");
+      }
+    } catch (error: any) {
+      const friendlyMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to generate a connection message.";
+      setEmailSendError(friendlyMessage);
+    } finally {
+      setIsGeneratingEmailMessage(false);
+    }
+  };
+
   const handleDeleteWhatsAppConversation = () => {
     if (
       deleteConversationMutation.isPending ||
@@ -827,10 +918,6 @@ const LeadChat = ({ lead }: LeadChatProps) => {
 
   const headerContactValue =
     activeTab === "Email" ? emailAddress || "" : phoneNumber || "";
-
-  const handleComposeEmail = () => {
-    window.location.href = "http://localhost:8080/emails/compose";
-  };
 
   return (
     <section
@@ -1301,15 +1388,69 @@ const LeadChat = ({ lead }: LeadChatProps) => {
                 })}
               </div>
             )}
-            <div className="mt-4 flex justify-end">
-              <button
-                type="button"
-                onClick={handleComposeEmail}
-                className="inline-flex items-center gap-2 rounded-full bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] px-6 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
-              >
-                <Send size={14} className="text-white" />
-                Compose Email
-              </button>
+            <div className="flex flex-col gap-3 mt-6">
+              <div className="flex items-start gap-3 rounded-2xl bg-white/10 px-4 py-3 flex-wrap">
+                <button
+                  className="flex items-center gap-2 rounded-full bg-white/25 px-3 py-2 text-xs font-semibold text-white hover:bg-white/35 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  onClick={handleGenerateEmailMessage}
+                  disabled={
+                    isGeneratingEmailMessage || !lead?.companyId || !lead?._id
+                  }
+                  title={
+                    !lead?.companyId || !lead?._id
+                      ? "Lead information is required to generate suggestions"
+                      : "Generate AI email suggestion"
+                  }
+                >
+                  {isGeneratingEmailMessage ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin text-white" />
+                      <span>Generating…</span>
+                    </>
+                  ) : (
+                    <>
+                      <Plus size={14} className="text-white" />
+                      <span>Generate with AI</span>
+                    </>
+                  )}
+                </button>
+                <textarea
+                  value={emailInput}
+                  onChange={(event) => setEmailInput(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" && event.ctrlKey) {
+                      event.preventDefault();
+                      handleSendEmail();
+                    }
+                  }}
+                  disabled={!emailAddress}
+                  className="flex-1 bg-transparent outline-none border-none text-sm text-white placeholder:text-white/50 resize-none min-h-[48px] max-h-[64px]"
+                  placeholder={
+                    !emailAddress
+                      ? "Add an email address to send emails"
+                      : "Write your email message (Ctrl+Enter to send)"
+                  }
+                  rows={3}
+                />
+                <button
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed mt-1"
+                  onClick={handleSendEmail}
+                  disabled={
+                    !emailAddress ||
+                    !emailInput.trim() ||
+                    emailMutation.isPending
+                  }
+                >
+                  {emailMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-white" />
+                  ) : (
+                    <Send size={14} className="text-white" />
+                  )}
+                </button>
+              </div>
+              {emailSendError && (
+                <p className="text-xs text-red-300">{emailSendError}</p>
+              )}
             </div>
           </div>
         ) : activeTab === "SMS" ? (
