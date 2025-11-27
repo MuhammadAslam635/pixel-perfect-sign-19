@@ -20,6 +20,9 @@ const SettingsPage = () => {
 
   const isAdmin = userRole === "Admin";
   const isCompany = userRole === "Company";
+  const canAccessIntegrations = ["Company", "CompanyAdmin"].includes(
+    userRole ?? ""
+  );
   const isCompanyUser = ["CompanyAdmin", "CompanyUser"].includes(
     userRole ?? ""
   );
@@ -50,7 +53,7 @@ const SettingsPage = () => {
         value: "integrations",
         label: "Integrations",
         icon: Plug,
-        hidden: !isCompany,
+        hidden: !canAccessIntegrations,
       },
       {
         value: "notifications",
@@ -61,7 +64,7 @@ const SettingsPage = () => {
     ];
 
     return baseTabs.filter((tab) => !tab.hidden);
-  }, [isCompany]);
+  }, [canAccessIntegrations]);
 
   return (
     <DashboardLayout>
@@ -140,7 +143,7 @@ const SettingsPage = () => {
                 <SecurityTab />
               </TabsContent>
 
-              {isCompany && (
+              {canAccessIntegrations && (
                 <TabsContent value="integrations" className="mt-0 space-y-6">
                   <IntegrationsTab />
                 </TabsContent>
