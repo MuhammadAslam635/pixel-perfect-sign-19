@@ -35,6 +35,8 @@ import {
   useLeadsData,
   buildStats,
 } from "./hooks";
+import { CompaniesQueryParams } from "@/services/companies.service";
+import { LeadsQueryParams } from "@/services/leads.service";
 import {
   connectionMessagesService,
   EmailMessage,
@@ -926,7 +928,6 @@ const index = () => {
                 </Button>
               ))}
             </div>
-
           </div>
 
           {/* Stats Cards */}
@@ -1008,49 +1009,83 @@ const index = () => {
             {/* Controls Container - responsive layout */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 order-1 lg:order-2">
               {/* Filter Buttons Row - wraps on mobile, stays in row on larger screens */}
-            <div
-              className={`flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-1 ${
-                activeTab === "companies" ? "sm:gap-1" : "sm:gap-3"
-              }`}
-            >
+              <div
+                className={`flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-1 ${
+                  activeTab === "companies" ? "sm:gap-1" : "sm:gap-3"
+                }`}
+              >
                 {activeTab === "companies" ? (
                   <div className="flex w-full flex-wrap items-center justify-end gap-2">
-                    <div className="relative min-w-[220px] flex-1 max-w-sm">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white pointer-events-none z-10" />
+                    {/* Search Input */}
+                    <div className="relative w-full sm:w-auto sm:min-w-[220px] sm:flex-1 lg:flex-none lg:min-w-[220px]">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none z-10" />
                       <Input
                         type="text"
                         placeholder="Search companies..."
                         value={companiesSearch}
                         onChange={(e) => setCompaniesSearch(e.target.value)}
-                        className="px-4 border border-white sm:border-0 text-white placeholder:text-white text-xs w-full h-9 pl-10 pr-4 rounded-lg sm:!rounded-full focus:outline-none focus:ring-0 shadow-[inset_0_0_10px_rgba(0,0,0,0.4)] bg-[linear-gradient(173.83deg,rgba(255,255,255,0.08)_4.82%,rgba(255,255,255,0.00002)_38.08%,rgba(255,255,255,0.00002)_56.68%,rgba(255,255,255,0.02)_95.1%)]"
+                        className="h-9 pl-10 pr-12 sm:pr-4 rounded-lg sm:!rounded-full border border-gray-600 sm:border-0 text-white placeholder:text-gray-500 text-xs w-full bg-gray-800/50 sm:bg-[#FFFFFF1A] mobile-search-input"
+                        style={{
+                          boxShadow: "none",
+                        }}
                       />
-                    </div>
-                    {filteredTotalCompanies !== undefined && (
-                      <div className="px-3 py-1.5 rounded-full border border-gray-600 text-gray-300 text-xs sm:text-sm font-medium whitespace-nowrap bg-gray-800/50 sm:bg-[#FFFFFF1A]">
-                        {filteredTotalCompanies}{" "}
-                        {filteredTotalCompanies === 1 ? "company" : "companies"}
-                      </div>
-                    )}
-                    <Popover open={companyFiltersOpen} onOpenChange={setCompanyFiltersOpen}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className="h-9 rounded-full border border-white/20 bg-white/5 text-xs text-white flex items-center gap-2"
+                      {/* Filter Icon - Mobile Only */}
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 sm:hidden pointer-events-none z-10">
+                        <svg
+                          width="20"
+                          height="20"
+                          viewBox="0 0 32 32"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
                         >
-                          <Filter className="w-3.5 h-3.5" />
-                          <span>Filters</span>
-                          {hasCompanyAdvancedFilters && (
-                            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                          )}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent
-                        align="end"
-                        className="w-80 bg-[#121212] border border-white/10 rounded-2xl shadow-2xl p-4"
+                          <path
+                            d="M28.3334 16.0001H11.86M6.04535 16.0001H3.66669M6.04535 16.0001C6.04535 15.2292 6.35159 14.4898 6.8967 13.9447C7.4418 13.3996 8.18112 13.0934 8.95202 13.0934C9.72292 13.0934 10.4622 13.3996 11.0073 13.9447C11.5524 14.4898 11.8587 15.2292 11.8587 16.0001C11.8587 16.771 11.5524 17.5103 11.0073 18.0554C10.4622 18.6005 9.72292 18.9067 8.95202 18.9067C8.18112 18.9067 7.4418 18.6005 6.8967 18.0554C6.35159 17.5103 6.04535 16.771 6.04535 16.0001ZM28.3334 24.8094H20.6694M20.6694 24.8094C20.6694 25.5805 20.3624 26.3206 19.8171 26.8659C19.2719 27.4111 18.5324 27.7174 17.7614 27.7174C16.9905 27.7174 16.2511 27.4098 15.706 26.8647C15.1609 26.3196 14.8547 25.5803 14.8547 24.8094M20.6694 24.8094C20.6694 24.0383 20.3624 23.2995 19.8171 22.7543C19.2719 22.209 18.5324 21.9027 17.7614 21.9027C16.9905 21.9027 16.2511 22.209 15.706 22.7541C15.1609 23.2992 14.8547 24.0385 14.8547 24.8094M14.8547 24.8094H3.66669M28.3334 7.19072H24.1934M18.3787 7.19072H3.66669M18.3787 7.19072C18.3787 6.41983 18.6849 5.68051 19.23 5.1354C19.7751 4.59029 20.5145 4.28406 21.2854 4.28406C21.6671 4.28406 22.045 4.35924 22.3977 4.50531C22.7503 4.65139 23.0708 4.86549 23.3407 5.1354C23.6106 5.40531 23.8247 5.72574 23.9708 6.07839C24.1168 6.43104 24.192 6.80902 24.192 7.19072C24.192 7.57243 24.1168 7.9504 23.9708 8.30306C23.8247 8.65571 23.6106 8.97614 23.3407 9.24605C23.0708 9.51596 22.7503 9.73006 22.3977 9.87613C22.045 10.0222 21.6671 10.0974 21.2854 10.0974C20.5145 10.0974 19.7751 9.79115 19.23 9.24605C18.6849 8.70094 18.3787 7.96162 18.3787 7.19072Z"
+                            stroke="white"
+                            strokeWidth="1.5"
+                            strokeMiterlimit="10"
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {filteredTotalCompanies !== undefined && (
+                        <div
+                          className="hidden sm:flex px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-full border border-gray-600 sm:border-0 text-gray-300 text-xs sm:text-sm font-medium whitespace-nowrap items-center justify-center bg-gray-800/50 sm:bg-[#FFFFFF1A] mobile-count-badge"
+                          style={{
+                            boxShadow: "none",
+                          }}
+                        >
+                          {filteredTotalCompanies}{" "}
+                          {filteredTotalCompanies === 1
+                            ? "company"
+                            : "companies"}
+                        </div>
+                      )}
+                      <Popover
+                        open={companyFiltersOpen}
+                        onOpenChange={setCompanyFiltersOpen}
                       >
-                        {companyFiltersPanel}
-                      </PopoverContent>
-                    </Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className="h-9 rounded-full border border-white/20 bg-white/5 text-xs text-white flex items-center gap-2"
+                          >
+                            <Filter className="w-3.5 h-3.5" />
+                            <span>Filters</span>
+                            {hasCompanyAdvancedFilters && (
+                              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                            )}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent
+                          align="end"
+                          className="w-80 bg-[#121212] border border-white/10 rounded-2xl shadow-2xl p-4"
+                        >
+                          {companyFiltersPanel}
+                        </PopoverContent>
+                      </Popover>
+                    </div>
                   </div>
                 ) : (
                   <>
@@ -1165,7 +1200,10 @@ const index = () => {
                           {filteredTotalLeads === 1 ? "lead" : "leads"}
                         </div>
                       )}
-                      <Popover open={leadFiltersOpen} onOpenChange={setLeadFiltersOpen}>
+                      <Popover
+                        open={leadFiltersOpen}
+                        onOpenChange={setLeadFiltersOpen}
+                      >
                         <PopoverTrigger asChild>
                           <Button
                             variant="outline"
@@ -1187,70 +1225,74 @@ const index = () => {
                       </Popover>
                     </div>
                     {false && (
-                    <div className="flex flex-col gap-2 border border-white/10 rounded-xl p-3 bg-white/5 mt-2">
-                      <div className="flex flex-col sm:flex-row gap-2">
-                        <div className="w-full sm:flex-1">
-                          <Input
-                            type="text"
-                            placeholder="Filter by location"
-                            value={leadsLocationFilter}
-                            onChange={(e) => setLeadsLocationFilter(e.target.value)}
-                            className="h-9 rounded-lg border border-white/10 text-xs text-white placeholder:text-gray-400 bg-transparent"
-                          />
+                      <div className="flex flex-col gap-2 border border-white/10 rounded-xl p-3 bg-white/5 mt-2">
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          <div className="w-full sm:flex-1">
+                            <Input
+                              type="text"
+                              placeholder="Filter by location"
+                              value={leadsLocationFilter}
+                              onChange={(e) =>
+                                setLeadsLocationFilter(e.target.value)
+                              }
+                              className="h-9 rounded-lg border border-white/10 text-xs text-white placeholder:text-gray-400 bg-transparent"
+                            />
+                          </div>
+                          <div className="w-full sm:flex-1">
+                            <Input
+                              type="text"
+                              placeholder="Filter by title or role"
+                              value={leadsPositionFilter}
+                              onChange={(e) =>
+                                setLeadsPositionFilter(e.target.value)
+                              }
+                              className="h-9 rounded-lg border border-white/10 text-xs text-white placeholder:text-gray-400 bg-transparent"
+                            />
+                          </div>
                         </div>
-                        <div className="w-full sm:flex-1">
-                          <Input
-                            type="text"
-                            placeholder="Filter by title or role"
-                            value={leadsPositionFilter}
-                            onChange={(e) => setLeadsPositionFilter(e.target.value)}
-                            className="h-9 rounded-lg border border-white/10 text-xs text-white placeholder:text-gray-400 bg-transparent"
-                          />
+                        <div className="flex flex-wrap items-center gap-4 text-xs text-gray-200">
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <Checkbox
+                              checked={leadsHasEmailFilter}
+                              onCheckedChange={(checked) =>
+                                setLeadsHasEmailFilter(Boolean(checked))
+                              }
+                              className="border-white/40 data-[state=checked]:bg-white data-[state=checked]:text-gray-900"
+                            />
+                            Has email
+                          </label>
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <Checkbox
+                              checked={leadsHasPhoneFilter}
+                              onCheckedChange={(checked) =>
+                                setLeadsHasPhoneFilter(Boolean(checked))
+                              }
+                              className="border-white/40 data-[state=checked]:bg-white data-[state=checked]:text-gray-900"
+                            />
+                            Has phone
+                          </label>
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <Checkbox
+                              checked={leadsHasLinkedinFilter}
+                              onCheckedChange={(checked) =>
+                                setLeadsHasLinkedinFilter(Boolean(checked))
+                              }
+                              className="border-white/40 data-[state=checked]:bg-white data-[state=checked]:text-gray-900"
+                            />
+                            Has LinkedIn
+                          </label>
+                          {hasLeadAdvancedFilters && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="text-gray-300 hover:text-white px-2 py-1"
+                              onClick={resetLeadAdvancedFilters}
+                            >
+                              Clear filters
+                            </Button>
+                          )}
                         </div>
                       </div>
-                      <div className="flex flex-wrap items-center gap-4 text-xs text-gray-200">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <Checkbox
-                            checked={leadsHasEmailFilter}
-                            onCheckedChange={(checked) =>
-                              setLeadsHasEmailFilter(Boolean(checked))
-                            }
-                            className="border-white/40 data-[state=checked]:bg-white data-[state=checked]:text-gray-900"
-                          />
-                          Has email
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <Checkbox
-                            checked={leadsHasPhoneFilter}
-                            onCheckedChange={(checked) =>
-                              setLeadsHasPhoneFilter(Boolean(checked))
-                            }
-                            className="border-white/40 data-[state=checked]:bg-white data-[state=checked]:text-gray-900"
-                          />
-                          Has phone
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <Checkbox
-                            checked={leadsHasLinkedinFilter}
-                            onCheckedChange={(checked) =>
-                              setLeadsHasLinkedinFilter(Boolean(checked))
-                            }
-                            className="border-white/40 data-[state=checked]:bg-white data-[state=checked]:text-gray-900"
-                          />
-                          Has LinkedIn
-                        </label>
-                        {hasLeadAdvancedFilters && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="text-gray-300 hover:text-white px-2 py-1"
-                            onClick={resetLeadAdvancedFilters}
-                          >
-                            Clear filters
-                          </Button>
-                        )}
-                      </div>
-                    </div>
                     )}
                   </>
                 )}
@@ -1264,9 +1306,7 @@ const index = () => {
             }`}
           >
             {/* Left: Companies/Leads List */}
-            <div
-              className="relative pt-3 sm:pt-4 px-3 sm:px-6 rounded-xl sm:rounded-[30px] w-full border-0 sm:border sm:border-white/10 bg-transparent sm:bg-[linear-gradient(173.83deg,_rgba(255,255,255,0.08)_4.82%,_rgba(255,255,255,0)_38.08%,_rgba(255,255,255,0)_56.68%,_rgba(255,255,255,0.02)_95.1%)]"
-            >
+            <div className="relative pt-3 sm:pt-4 px-3 sm:px-6 rounded-xl sm:rounded-[30px] w-full border-0 sm:border sm:border-white/10 bg-transparent sm:bg-[linear-gradient(173.83deg,_rgba(255,255,255,0.08)_4.82%,_rgba(255,255,255,0)_38.08%,_rgba(255,255,255,0)_56.68%,_rgba(255,255,255,0.02)_95.1%)]">
               {activeTab === "companies" ? (
                 <CompaniesList
                   companies={companies}
