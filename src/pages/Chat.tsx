@@ -453,25 +453,27 @@ const ChatPage = () => {
   return (
     <DashboardLayout>
       <Sheet open={isMobileListOpen} onOpenChange={setIsMobileListOpen}>
-        <main className="relative mt-28 flex w-full flex-1 min-h-screen lg:min-h-0 lg:max-h-[calc(100vh-6rem)] justify-center overflow-hidden px-4 pb-6 sm:px-6 md:px-10 lg:px-12 xl:px-16">
-          <div className="flex w-full flex-1 min-h-full flex-col gap-6 overflow-hidden lg:min-h-0">
-            <section className="flex flex-1 min-h-full flex-col gap-6 overflow-hidden lg:min-h-0 lg:flex-row lg:items-stretch">
+        <main className="mt-28 flex w-full justify-center px-4 pb-6 sm:px-6 md:px-10 lg:fixed lg:inset-0 lg:mt-0 lg:px-12 lg:pt-28 xl:px-16">
+          <div className="flex w-full lg:h-full flex-col gap-6">
+            <section className="flex flex-col gap-6 lg:h-full lg:flex-row lg:items-stretch lg:overflow-hidden">
               <div className="hidden lg:flex lg:h-full lg:shrink-0">
-                <ChatList
-                  chats={chatList as ChatSummary[]}
-                  isLoading={isChatListLoading}
-                  onSelectChat={selectChatFromList}
-                  onStartNewChat={handleStartNewChat}
-                  searchTerm={searchTerm}
-                  onSearchTermChange={setSearchTerm}
-                  selectedChatId={selectedChatId}
-                  className="h-full"
-                  onDeleteChat={handleDeleteChat}
-                  deletingChatId={deletingChatId}
-                />
+                <div className="overflow-visible p-1 -m-1">
+                  <ChatList
+                    chats={chatList as ChatSummary[]}
+                    isLoading={isChatListLoading}
+                    onSelectChat={selectChatFromList}
+                    onStartNewChat={handleStartNewChat}
+                    searchTerm={searchTerm}
+                    onSearchTermChange={setSearchTerm}
+                    selectedChatId={selectedChatId}
+                    className="h-full"
+                    onDeleteChat={handleDeleteChat}
+                    deletingChatId={deletingChatId}
+                  />
+                </div>
               </div>
 
-              <div className="flex flex-1 min-h-full flex-col gap-5 rounded-[32px] bg-transparent lg:min-h-0">
+              <div className="flex h-full flex-1 flex-col gap-5 rounded-[32px] bg-transparent lg:overflow-hidden">
                 <ChatMessages
                   chatTitle={resolvedChatTitle}
                   hasSelection={hasActiveConversation}
