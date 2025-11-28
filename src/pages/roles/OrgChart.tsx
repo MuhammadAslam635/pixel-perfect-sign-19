@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Role, PermissionAction, Module } from "@/types/rbac.types";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -9,6 +9,7 @@ import {
   Plus,
   Edit,
   Trash2,
+  X,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -29,6 +30,9 @@ interface TreeNodeProps {
   modules: Module[];
   onEdit: (roleId: string) => void;
   onDelete: (roleId: string, roleName: string) => void;
+  isFocused: boolean;
+  onFocus: (roleId: string | null) => void;
+  hasFocusedRole: boolean;
 }
 
 interface ModuleNodeProps {
@@ -147,8 +151,18 @@ const TreeNode: React.FC<TreeNodeProps> = ({
   modules,
   onEdit,
   onDelete,
+  isFocused,
+  onFocus,
+  hasFocusedRole,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // Auto-expand when focused
+  useEffect(() => {
+    if (isFocused) {
+      setIsExpanded(true);
+    }
+  }, [isFocused]);
 
   const getRoleColor = () => {
     if (!role.isActive) return "border-red-500/30 bg-red-500/10";
@@ -164,12 +178,20 @@ const TreeNode: React.FC<TreeNodeProps> = ({
     }
   };
 
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent triggering background click
+    if (!isFocused) {
+      setIsExpanded(!isExpanded);
+    }
+    onFocus(isFocused ? null : role._id);
+  };
+
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex flex-col items-center transition-all duration-300">
       {/* Role Node */}
       <div
-        className={`rounded-xl border-2 p-4 sm:p-6 min-w-[250px] sm:min-w-[280px] shadow-2xl backdrop-blur cursor-pointer transition-all hover:scale-105 ${getRoleColor()}`}
-        onClick={() => setIsExpanded(!isExpanded)}
+        className={`rounded-xl border-2 p-4 sm:p-6 min-w-[250px] sm:min-w-[280px] shadow-2xl backdrop-blur cursor-pointer transition-all hover:scale-105 relative ${getRoleColor()}`}
+        onClick={handleClick}
       >
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
@@ -195,6 +217,17 @@ const TreeNode: React.FC<TreeNodeProps> = ({
               <ChevronDown className="h-5 w-5 text-white/60" />
             ) : (
               <ChevronRight className="h-5 w-5 text-white/60" />
+            )}
+            {isFocused && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onFocus(null);
+                }}
+                className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition border border-white/20"
+              >
+                <X className="h-4 w-4" />
+              </button>
             )}
           </div>
         </div>
@@ -276,19 +309,59 @@ const OrgChart: React.FC<OrgChartProps> = ({
   onEdit,
   onDelete,
 }) => {
+  const [focusedRoleId, setFocusedRoleId] = useState<string | null>(null);
+
+  const handleFocus = (roleId: string | null) => {
+    setFocusedRoleId(roleId);
+  };
+
   return (
     <div className="w-full">
-      <div className="grid gap-12 md:gap-16 lg:gap-20 place-items-center">
-        {roles.map((role) => (
-          <TreeNode
-            key={role._id}
-            role={role}
-            modules={modules}
-            onEdit={onEdit}
-            onDelete={onDelete}
-          />
-        ))}
-      </div>
+      {/* Background overlay when focused */}
+      {focusedRoleId && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-10"
+          onClick={() => setFocusedRoleId(null)}
+        />
+      )}
+
+      {focusedRoleId ? (
+        /* Focused layout - centered and contained */
+        <div className="fixed inset-0 z-30 flex items-center justify-center p-6">
+          <div className="max-h-full overflow-y-auto w-full max-w-7xl p-4">
+            {roles
+              .filter((role) => role._id === focusedRoleId)
+              .map((role) => (
+                <TreeNode
+                  key={role._id}
+                  role={role}
+                  modules={modules}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                  isFocused={true}
+                  onFocus={handleFocus}
+                  hasFocusedRole={true}
+                />
+              ))}
+          </div>
+        </div>
+      ) : (
+        /* Normal grid layout */
+        <div className="grid gap-12 md:gap-16 lg:gap-20 place-items-center transition-all duration-300">
+          {roles.map((role) => (
+            <TreeNode
+              key={role._id}
+              role={role}
+              modules={modules}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              isFocused={false}
+              onFocus={handleFocus}
+              hasFocusedRole={false}
+            />
+          ))}
+        </div>
+      )}
 
       {roles.length === 0 && (
         <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
