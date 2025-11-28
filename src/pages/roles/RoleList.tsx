@@ -19,18 +19,25 @@ import {
   Pencil,
   Trash2,
   Shield,
+  Table,
+  Network,
 } from "lucide-react";
 import { rbacService } from "@/services/rbac.service";
-import { Role } from "@/types/rbac.types";
+import { Role, Module } from "@/types/rbac.types";
 import { toast } from "sonner";
 import { usePermissions } from "@/hooks/usePermissions";
+import OrgChart from "./OrgChart";
+
+type ViewMode = "table" | "chart";
 
 const RoleList = () => {
   const navigate = useNavigate();
   const { checkPermission, permissionsReady } = usePermissions();
   const [roles, setRoles] = useState<Role[]>([]);
+  const [modules, setModules] = useState<Module[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>("table");
 
   // Check if user has permission
   const hasAccess = permissionsReady
@@ -47,6 +54,7 @@ const RoleList = () => {
       return;
     }
     fetchRoles();
+    fetchModules();
   }, [hasAccess, navigate, permissionsReady]);
 
   const fetchRoles = async () => {
@@ -64,6 +72,17 @@ const RoleList = () => {
       toast.error(error?.response?.data?.message || "Failed to fetch roles");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchModules = async () => {
+    try {
+      const response = await rbacService.getAllModules(false);
+      if (response.success && response.data) {
+        setModules(response.data);
+      }
+    } catch (error: any) {
+      console.error("Error fetching modules:", error);
     }
   };
 
@@ -137,6 +156,37 @@ const RoleList = () => {
               />
             </div>
             <div className="flex flex-col sm:flex-row gap-3 w-full xl:w-auto">
+              {/* View Mode Toggle */}
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  onClick={() => setViewMode("table")}
+                  variant={viewMode === "table" ? "default" : "outline"}
+                  size="sm"
+                  className={`flex-1 sm:flex-none flex h-12 items-center justify-center rounded-full text-sm font-medium tracking-wide ${
+                    viewMode === "table"
+                      ? "bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3]"
+                      : "bg-white/5 border-white/10 text-white hover:bg-white/10"
+                  }`}
+                >
+                  <Table className="h-4 w-4 mr-2" />
+                  Table
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() => setViewMode("chart")}
+                  variant={viewMode === "chart" ? "default" : "outline"}
+                  size="sm"
+                  className={`flex-1 sm:flex-none flex h-12 items-center justify-center rounded-full text-sm font-medium tracking-wide ${
+                    viewMode === "chart"
+                      ? "bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3]"
+                      : "bg-white/5 border-white/10 text-white hover:bg-white/10"
+                  }`}
+                >
+                  <Network className="h-4 w-4 mr-2" />
+                  Chart
+                </Button>
+              </div>
               <Button
                 type="button"
                 onClick={() => navigate("/roles/create")}
@@ -179,6 +229,15 @@ const RoleList = () => {
               <div className="flex flex-col items-center justify-center py-16">
                 <div className="w-10 h-10 border-4 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin mb-4" />
                 <p className="text-white/60 text-sm">Loading roles...</p>
+              </div>
+            ) : viewMode === "chart" ? (
+              <div className="py-8">
+                <OrgChart
+                  roles={filteredRoles}
+                  modules={modules}
+                  onEdit={(roleId) => navigate(`/roles/${roleId}/edit`)}
+                  onDelete={handleDelete}
+                />
               </div>
             ) : filteredRoles.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
@@ -355,7 +414,9 @@ const RoleList = () => {
                         {role.permissions.length !== 1 ? "s" : ""}
                       </div>
                       {role.description && (
-                        <p className="text-white/50 text-xs">{role.description}</p>
+                        <p className="text-white/50 text-xs">
+                          {role.description}
+                        </p>
                       )}
                     </div>
                   ))}
