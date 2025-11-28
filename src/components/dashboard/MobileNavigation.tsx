@@ -46,11 +46,11 @@ const navLinks: NavLink[] = [
     match: (pathname: string) => pathname.startsWith("/companies"),
   },
   {
-    id: "clients",
-    label: "Clients",
+    id: "prospects",
+    label: "Prospects",
     icon: ClientsIcon as typeof Home,
-    path: "/clients",
-    match: (pathname: string) => pathname.startsWith("/clients"),
+    path: "/prospects",
+    match: (pathname: string) => pathname.startsWith("/prospects"),
   },
   { id: "chat", label: "Chat", icon: MessageSquare, path: "/chat" },
   {

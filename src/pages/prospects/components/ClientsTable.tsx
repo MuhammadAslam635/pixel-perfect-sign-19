@@ -10,9 +10,9 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useProspects, useSyncFromAirtableTable } from "@/hooks/useClients";
+import { useClients, useSyncFromAirtableTable } from "@/hooks/useProspects";
 import type { Client } from "@/services/clients.service";
-import ProspectDetailsModal from "./ProspectDetailsModal";
+import ClientDetailsModal from "./ClientDetailsModal";
 import { useToast } from "@/hooks/use-toast";
 import {
   DropdownMenu,
@@ -22,11 +22,15 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { TooltipProvider } from '@/components/ui/tooltip';
 
-const ProspectsTable: React.FC = () => {
+interface ClientsTableProps {
+  viewType?: "sessions" | "prospects" | "queries";
+}
+
+const ClientsTable: React.FC<ClientsTableProps> = ({ viewType = "sessions" }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [selectedProspect, setSelectedProspect] = useState<Client | null>(null);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { toast } = useToast();
 
@@ -36,7 +40,7 @@ const ProspectsTable: React.FC = () => {
   React.useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchQuery);
-      setCurrentPage(1); // Reset to first page when searching
+      setCurrentPage(1);
     }, 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
@@ -50,7 +54,23 @@ const ProspectsTable: React.FC = () => {
     [currentPage, debouncedSearch]
   );
 
-  const { data, isLoading, error } = useProspects(queryParams);
+  const { data, isLoading, error } = useClients(queryParams);
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const formatDuration = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${minutes}m ${secs}s`;
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -67,14 +87,14 @@ const ProspectsTable: React.FC = () => {
     }
   };
 
-  const handleViewDetails = (prospect: Client) => {
-    setSelectedProspect(prospect);
+  const handleViewDetails = (client: Client) => {
+    setSelectedClient(client);
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    setSelectedProspect(null);
+    setSelectedClient(null);
   };
 
   const handleSync = () => {
@@ -108,7 +128,7 @@ const ProspectsTable: React.FC = () => {
       >
         <CardContent className="p-6">
           <div className="text-center text-red-400">
-            Error loading prospects: {error.message}
+            Error loading sessions: {error.message}
           </div>
         </CardContent>
       </Card>
@@ -127,7 +147,7 @@ const ProspectsTable: React.FC = () => {
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 z-10" />
               <Input
-                placeholder="Search prospects by company name, website, or people..."
+                placeholder="Search by session ID, transcript, or status..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 w-full rounded-full bg-[#FFFFFF1A] border border-white/40 text-gray-300 placeholder:text-gray-500 focus:ring-0"
@@ -183,21 +203,24 @@ const ProspectsTable: React.FC = () => {
           <>
             {/* Header */}
             <div className="mb-4 border border-[#FFFFFF1A] rounded-xl overflow-hidden">
-              <div className="grid grid-cols-[1.5fr_1fr_1fr_0.8fr_0.8fr_80px] items-center gap-4 px-6 py-4 bg-[#FFFFFF05]">
+              <div className="grid grid-cols-[1.5fr_1fr_0.8fr_0.8fr_0.8fr_0.6fr_80px] items-center gap-4 px-6 py-4 bg-[#FFFFFF05]">
                 <div className="text-sm text-gray-400">
-                  Company Name
+                  Session ID
                 </div>
                 <div className="text-sm text-gray-400">
-                  Website
+                  Start Time
                 </div>
                 <div className="text-sm text-gray-400">
-                  People
-                </div>
-                <div className="text-sm text-gray-400">
-                  Emails
+                  Duration
                 </div>
                 <div className="text-sm text-gray-400">
                   Status
+                </div>
+                <div className="text-sm text-gray-400 text-center">
+                  Messages
+                </div>
+                <div className="text-sm text-gray-400">
+                  Avg Response
                 </div>
                 <div className="text-sm text-gray-400 text-center">
                   Actions
@@ -207,89 +230,60 @@ const ProspectsTable: React.FC = () => {
 
             {/* Table Body */}
             <div className="rounded-2xl overflow-hidden bg-[#FFFFFF03]">
-              {data?.data.docs.map((prospect) => {
-                const primaryPerson = prospect.people && prospect.people.length > 0 ? prospect.people[0] : null;
-                const emailsCount = prospect.companyEmails?.filter(e => e !== "not found in search").length || 0;
-                const peopleCount = prospect.people?.length || 0;
-
-                return (
-                  <div
-                    key={prospect._id}
-                    className="grid grid-cols-[1.5fr_1fr_1fr_0.8fr_0.8fr_80px] items-center gap-4 px-6 py-4 hover:bg-white/5 transition-colors border-b border-[#FFFFFF0D] last:border-b-0"
-                  >
-                    <div className="font-medium text-white truncate text-sm" title={prospect.companyName || "N/A"}>
-                      {prospect.companyName || "N/A"}
-                    </div>
-                    <div className="text-gray-300 text-sm truncate" title={prospect.companyWebsite || "N/A"}>
-                      {prospect.companyWebsite ? (
-                        <a
-                          href={`https://${prospect.companyWebsite}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-400 hover:underline"
-                        >
-                          {prospect.companyWebsite}
-                        </a>
-                      ) : (
-                        "N/A"
-                      )}
-                    </div>
-                    <div className="text-gray-300 text-sm">
-                      {peopleCount > 0 ? (
-                        <div className="flex flex-col">
-                          <span>{peopleCount} {peopleCount === 1 ? "person" : "people"}</span>
-                          {primaryPerson && primaryPerson.title && (
-                            <span className="text-xs text-gray-400 truncate" title={primaryPerson.title}>
-                              {primaryPerson.title}
-                            </span>
-                          )}
-                        </div>
-                      ) : (
-                        "N/A"
-                      )}
-                    </div>
-                    <div className="text-gray-300 text-sm">
-                      {emailsCount > 0 ? (
-                        <span>{emailsCount} {emailsCount === 1 ? "email" : "emails"}</span>
-                      ) : (
-                        "N/A"
-                      )}
-                    </div>
-                    <div>
-                      <Badge className={`${getStatusColor(prospect.status)} rounded-full px-3`}>
-                        {prospect.status}
-                      </Badge>
-                    </div>
-                    <div className="flex justify-center">
-                      <TooltipProvider>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button className="p-2 rounded-full hover:bg-white/10 text-gray-300 transition hover:scale-110">
-                              <MoreVertical className="h-5 w-5" />
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent
-                            align="end"
-                            className="bg-[#1a1a1a] border-[#2a2a2a] text-gray-200 shadow-lg rounded-lg w-40"
-                          >
-                            <DropdownMenuItem
-                              onClick={() => handleViewDetails(prospect)}
-                              className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-white/10"
-                            >
-                              <EyeIcon size={16} /> View Details
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TooltipProvider>
-                    </div>
+              {data?.data.docs.map((client) => (
+                <div
+                  key={client._id}
+                  className="grid grid-cols-[1.5fr_1fr_0.8fr_0.8fr_0.8fr_0.6fr_80px] items-center gap-4 px-6 py-4 hover:bg-white/5 transition-colors border-b border-[#FFFFFF0D] last:border-b-0"
+                >
+                  <div className="font-medium text-white truncate font-mono text-sm" title={client.sessionId}>
+                    {client.sessionId}
                   </div>
-                );
-              })}
+                  <div className="text-gray-300 text-sm">
+                    {formatDate(client.startTime)}
+                  </div>
+                  <div className="text-gray-300 text-sm">
+                    {formatDuration(client.duration)}
+                  </div>
+                  <div>
+                    <Badge className={`${getStatusColor(client.status)} rounded-full px-3`}>
+                      {client.status}
+                    </Badge>
+                  </div>
+                  <div className="text-gray-300 text-sm text-center">
+                    {client.messagesTotal}
+                  </div>
+                  <div className="text-gray-300 text-sm">
+                    {client.averageResponse}ms
+                  </div>
+                  <div className="flex justify-center">
+                    <TooltipProvider>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="p-2 rounded-full hover:bg-white/10 text-gray-300 transition hover:scale-110">
+                            <MoreVertical className="h-5 w-5" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                          align="end"
+                          className="bg-[#1a1a1a] border-[#2a2a2a] text-gray-200 shadow-lg rounded-lg w-40"
+                        >
+                          <DropdownMenuItem
+                            onClick={() => handleViewDetails(client)}
+                            className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-white/10"
+                          >
+                            <EyeIcon size={16} /> View Details
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TooltipProvider>
+                  </div>
+                </div>
+              ))}
               {data && data.data.docs.length === 0 && (
                 <div className="text-center text-gray-400 py-8">
                   {debouncedSearch
-                    ? `No prospects found matching "${debouncedSearch}"`
-                    : "No prospects found"}
+                    ? `No sessions found matching "${debouncedSearch}"`
+                    : "No sessions found"}
                 </div>
               )}
             </div>
@@ -314,7 +308,7 @@ const ProspectsTable: React.FC = () => {
                     <span className="font-medium text-white">
                       {data.data.totalDocs}
                     </span>{" "}
-                    prospects
+                    sessions
                   </div>
                   <div className="flex items-center justify-center space-x-2">
                     <Button
@@ -399,16 +393,17 @@ const ProspectsTable: React.FC = () => {
         )}
       </div>
 
-      {/* Prospect Details Modal */}
-      <ProspectDetailsModal
-        prospect={selectedProspect}
+      {/* Client Details Modal */}
+      <ClientDetailsModal
+        client={selectedClient}
         isOpen={isModalOpen}
         onClose={handleCloseModal}
+        viewType={viewType}
       />
     </div>
   );
 };
 
-export default ProspectsTable;
+export default ClientsTable;
 
 

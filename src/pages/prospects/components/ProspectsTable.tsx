@@ -10,9 +10,9 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCustomerSupportQueries, useSyncFromAirtableTable } from "@/hooks/useClients";
+import { useProspects, useSyncFromAirtableTable } from "@/hooks/useProspects";
 import type { Client } from "@/services/clients.service";
-import ClientDetailsModal from "./ClientDetailsModal";
+import ProspectDetailsModal from "./ProspectDetailsModal";
 import { useToast } from "@/hooks/use-toast";
 import {
   DropdownMenu,
@@ -22,11 +22,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { TooltipProvider } from '@/components/ui/tooltip';
 
-const CustomerSupportQueriesTable: React.FC = () => {
+const ProspectsTable: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [selectedQuery, setSelectedQuery] = useState<Client | null>(null);
+  const [selectedProspect, setSelectedProspect] = useState<Client | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { toast } = useToast();
 
@@ -36,7 +36,7 @@ const CustomerSupportQueriesTable: React.FC = () => {
   React.useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchQuery);
-      setCurrentPage(1);
+      setCurrentPage(1); // Reset to first page when searching
     }, 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
@@ -50,17 +50,7 @@ const CustomerSupportQueriesTable: React.FC = () => {
     [currentPage, debouncedSearch]
   );
 
-  const { data, isLoading, error } = useCustomerSupportQueries(queryParams);
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+  const { data, isLoading, error } = useProspects(queryParams);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -77,14 +67,14 @@ const CustomerSupportQueriesTable: React.FC = () => {
     }
   };
 
-  const handleViewDetails = (query: Client) => {
-    setSelectedQuery(query);
+  const handleViewDetails = (prospect: Client) => {
+    setSelectedProspect(prospect);
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    setSelectedQuery(null);
+    setSelectedProspect(null);
   };
 
   const handleSync = () => {
@@ -118,7 +108,7 @@ const CustomerSupportQueriesTable: React.FC = () => {
       >
         <CardContent className="p-6">
           <div className="text-center text-red-400">
-            Error loading queries: {error.message}
+            Error loading prospects: {error.message}
           </div>
         </CardContent>
       </Card>
@@ -137,7 +127,7 @@ const CustomerSupportQueriesTable: React.FC = () => {
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 z-10" />
               <Input
-                placeholder="Search by name, email, phone, or status..."
+                placeholder="Search prospects by company name, website, or people..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 w-full rounded-full bg-[#FFFFFF1A] border border-white/40 text-gray-300 placeholder:text-gray-500 focus:ring-0"
@@ -193,24 +183,21 @@ const CustomerSupportQueriesTable: React.FC = () => {
           <>
             {/* Header */}
             <div className="mb-4 border border-[#FFFFFF1A] rounded-xl overflow-hidden">
-              <div className="grid grid-cols-[1.2fr_1fr_1fr_0.8fr_0.8fr_0.8fr_80px] items-center gap-4 px-6 py-4 bg-[#FFFFFF05]">
+              <div className="grid grid-cols-[1.5fr_1fr_1fr_0.8fr_0.8fr_80px] items-center gap-4 px-6 py-4 bg-[#FFFFFF05]">
                 <div className="text-sm text-gray-400">
-                  Name
+                  Company Name
                 </div>
                 <div className="text-sm text-gray-400">
-                  Email
+                  Website
                 </div>
                 <div className="text-sm text-gray-400">
-                  Phone
+                  People
                 </div>
                 <div className="text-sm text-gray-400">
-                  Start Time
+                  Emails
                 </div>
                 <div className="text-sm text-gray-400">
                   Status
-                </div>
-                <div className="text-sm text-gray-400 text-center">
-                  Messages
                 </div>
                 <div className="text-sm text-gray-400 text-center">
                   Actions
@@ -220,41 +207,58 @@ const CustomerSupportQueriesTable: React.FC = () => {
 
             {/* Table Body */}
             <div className="rounded-2xl overflow-hidden bg-[#FFFFFF03]">
-              {data?.data.docs.map((query) => {
-                // Parse personalContactInfo for queries view
-                let contactInfo = null;
-                if (query.personalContactInfo?.value) {
-                  try {
-                    contactInfo = JSON.parse(query.personalContactInfo.value);
-                  } catch (e) {
-                    console.error("Error parsing personalContactInfo:", e);
-                  }
-                }
+              {data?.data.docs.map((prospect) => {
+                const primaryPerson = prospect.people && prospect.people.length > 0 ? prospect.people[0] : null;
+                const emailsCount = prospect.companyEmails?.filter(e => e !== "not found in search").length || 0;
+                const peopleCount = prospect.people?.length || 0;
 
                 return (
                   <div
-                    key={query._id}
-                    className="grid grid-cols-[1.2fr_1fr_1fr_0.8fr_0.8fr_0.8fr_80px] items-center gap-4 px-6 py-4 hover:bg-white/5 transition-colors border-b border-[#FFFFFF0D] last:border-b-0"
+                    key={prospect._id}
+                    className="grid grid-cols-[1.5fr_1fr_1fr_0.8fr_0.8fr_80px] items-center gap-4 px-6 py-4 hover:bg-white/5 transition-colors border-b border-[#FFFFFF0D] last:border-b-0"
                   >
-                    <div className="font-medium text-white truncate text-sm" title={contactInfo?.name || "N/A"}>
-                      {contactInfo?.name || "N/A"}
+                    <div className="font-medium text-white truncate text-sm" title={prospect.companyName || "N/A"}>
+                      {prospect.companyName || "N/A"}
                     </div>
-                    <div className="text-gray-300 text-sm truncate" title={contactInfo?.email || "N/A"}>
-                      {contactInfo?.email || "N/A"}
-                    </div>
-                    <div className="text-gray-300 text-sm truncate" title={contactInfo?.phone || "N/A"}>
-                      {contactInfo?.phone || "N/A"}
+                    <div className="text-gray-300 text-sm truncate" title={prospect.companyWebsite || "N/A"}>
+                      {prospect.companyWebsite ? (
+                        <a
+                          href={`https://${prospect.companyWebsite}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-400 hover:underline"
+                        >
+                          {prospect.companyWebsite}
+                        </a>
+                      ) : (
+                        "N/A"
+                      )}
                     </div>
                     <div className="text-gray-300 text-sm">
-                      {formatDate(query.startTime)}
+                      {peopleCount > 0 ? (
+                        <div className="flex flex-col">
+                          <span>{peopleCount} {peopleCount === 1 ? "person" : "people"}</span>
+                          {primaryPerson && primaryPerson.title && (
+                            <span className="text-xs text-gray-400 truncate" title={primaryPerson.title}>
+                              {primaryPerson.title}
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        "N/A"
+                      )}
+                    </div>
+                    <div className="text-gray-300 text-sm">
+                      {emailsCount > 0 ? (
+                        <span>{emailsCount} {emailsCount === 1 ? "email" : "emails"}</span>
+                      ) : (
+                        "N/A"
+                      )}
                     </div>
                     <div>
-                      <Badge className={`${getStatusColor(query.status)} rounded-full px-3`}>
-                        {query.status}
+                      <Badge className={`${getStatusColor(prospect.status)} rounded-full px-3`}>
+                        {prospect.status}
                       </Badge>
-                    </div>
-                    <div className="text-gray-300 text-sm text-center">
-                      {query.messagesTotal}
                     </div>
                     <div className="flex justify-center">
                       <TooltipProvider>
@@ -269,7 +273,7 @@ const CustomerSupportQueriesTable: React.FC = () => {
                             className="bg-[#1a1a1a] border-[#2a2a2a] text-gray-200 shadow-lg rounded-lg w-40"
                           >
                             <DropdownMenuItem
-                              onClick={() => handleViewDetails(query)}
+                              onClick={() => handleViewDetails(prospect)}
                               className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-white/10"
                             >
                               <EyeIcon size={16} /> View Details
@@ -284,8 +288,8 @@ const CustomerSupportQueriesTable: React.FC = () => {
               {data && data.data.docs.length === 0 && (
                 <div className="text-center text-gray-400 py-8">
                   {debouncedSearch
-                    ? `No queries found matching "${debouncedSearch}"`
-                    : "No queries found"}
+                    ? `No prospects found matching "${debouncedSearch}"`
+                    : "No prospects found"}
                 </div>
               )}
             </div>
@@ -310,7 +314,7 @@ const CustomerSupportQueriesTable: React.FC = () => {
                     <span className="font-medium text-white">
                       {data.data.totalDocs}
                     </span>{" "}
-                    queries
+                    prospects
                   </div>
                   <div className="flex items-center justify-center space-x-2">
                     <Button
@@ -395,17 +399,16 @@ const CustomerSupportQueriesTable: React.FC = () => {
         )}
       </div>
 
-      {/* Client Details Modal */}
-      <ClientDetailsModal
-        client={selectedQuery}
+      {/* Prospect Details Modal */}
+      <ProspectDetailsModal
+        prospect={selectedProspect}
         isOpen={isModalOpen}
         onClose={handleCloseModal}
-        viewType="queries"
       />
     </div>
   );
 };
 
-export default CustomerSupportQueriesTable;
+export default ProspectsTable;
 
 

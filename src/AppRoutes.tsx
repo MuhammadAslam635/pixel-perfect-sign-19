@@ -15,7 +15,7 @@ import NotFound from "@/pages/NotFound";
 import SettingsPage from "@/pages/Settings";
 import CompanyKnowledge from "@/pages/companyKnowledgeBase";
 import CampaignsPage from "@/pages/campaigns";
-import ClientsPage from "@/pages/clients";
+import ProspectsPage from "@/pages/prospects";
 import UserList from "@/pages/users/UserList";
 import UserCreate from "@/pages/users/UserCreate";
 import UserEdit from "@/pages/users/UserEdit";
@@ -163,10 +163,10 @@ const AppRoutes = () => {
         }
       />
       <Route
-        path="/clients"
+        path="/prospects"
         element={
           <ProtectedRoute moduleName="clients">
-            <ClientsPage />
+            <ProspectsPage />
           </ProtectedRoute>
         }
       />

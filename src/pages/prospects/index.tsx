@@ -6,16 +6,16 @@ import ClientsTable from './components/ClientsTable';
 import ProspectsTable from './components/ProspectsTable';
 import CustomerSupportQueriesTable from './components/CustomerSupportQueriesTable';
 
-const ClientsPage = () => {
+const ProspectsPage = () => {
   const [activeTab, setActiveTab] = useState('prospects');
 
   return (
     <DashboardLayout>
       <main className="relative px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] pt-24 sm:pt-28 lg:pt-32 pb-8 flex flex-col gap-6 text-white flex-1 overflow-y-auto">
         <div>
-          <h1 className="text-3xl font-bold text-white">Clients & Prospects</h1>
+          <h1 className="text-3xl font-bold text-white">Prospects</h1>
           <p className="text-gray-400 mt-2">
-            View and manage your clients, prospects, and customer support sessions
+            View and manage your prospects and customer support sessions
           </p>
         </div>
 
@@ -92,6 +92,6 @@ const ClientsPage = () => {
   );
 };
 
-export default ClientsPage;
+export default ProspectsPage;
 
 

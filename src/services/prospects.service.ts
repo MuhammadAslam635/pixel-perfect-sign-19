@@ -108,7 +108,7 @@ export interface ClientsQueryParams {
 }
 
 class ClientsService {
-  private baseUrl = '/prospects';
+  private baseUrl = '/client-customers';
 
   async getClients(params: ClientsQueryParams = {}): Promise<ClientsResponse> {
     const response = await API.get(`${this.baseUrl}/list`, { params });
