@@ -6,7 +6,6 @@ import {
   YAxis,
   ResponsiveContainer,
   Tooltip,
-  CartesianGrid,
 } from "recharts";
 import { format, parseISO, startOfDay, subDays, eachDayOfInterval } from "date-fns";
 import { Loader2 } from "lucide-react";
@@ -135,7 +134,7 @@ export const LeadsChart = () => {
 
   if (loading) {
     return (
-      <div className="relative sm:flex-1 h-full hidden sm:flex items-center justify-center min-h-[300px]">
+      <div className="relative sm:flex-1 h-full hidden sm:flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-white/70" />
       </div>
     );
@@ -143,7 +142,7 @@ export const LeadsChart = () => {
 
   if (error) {
     return (
-      <div className="relative sm:flex-1 h-full hidden sm:flex items-center justify-center min-h-[300px]">
+      <div className="relative sm:flex-1 h-full hidden sm:flex items-center justify-center">
         <p className="text-sm text-red-400">{error}</p>
       </div>
     );
@@ -151,18 +150,18 @@ export const LeadsChart = () => {
 
   if (chartData.length === 0) {
     return (
-      <div className="relative sm:flex-1 h-full hidden sm:flex items-center justify-center min-h-[300px]">
+      <div className="relative sm:flex-1 h-full hidden sm:flex items-center justify-center">
         <p className="text-sm text-white/50">No leads data available</p>
       </div>
     );
   }
 
   return (
-    <div className="relative sm:flex-1 h-full hidden sm:block min-h-[300px]">
-      <ResponsiveContainer width="100%" height="100%" minHeight={300}>
+    <div className="relative w-full h-full" style={{ height: '100%' }}>
+      <ResponsiveContainer width="100%" height="100%">
         <AreaChart
           data={chartData}
-          margin={{ top: 10, right: 15, left: 5, bottom: 40 }}
+          margin={{ top: 5, right: 0, left: 0, bottom: 0 }}
         >
           <defs>
             <linearGradient id="leadsAreaGradient" x1="0" y1="0" x2="0" y2="1">
@@ -176,33 +175,14 @@ export const LeadsChart = () => {
               <stop offset="100%" stopColor="#3E65B4" />
             </linearGradient>
           </defs>
-          <CartesianGrid
-            strokeDasharray="3 3"
-            stroke="rgba(255, 255, 255, 0.1)"
-            vertical={false}
-          />
-          <XAxis
-            dataKey="displayDate"
-            axisLine={false}
-            tickLine={false}
-            tick={{ fill: "#7A7A7A", fontSize: 9 }}
-            interval={Math.max(0, Math.floor(chartData.length / 7) - 1)} // Show approximately 7 labels
-            angle={-35}
-            textAnchor="end"
-            height={50}
-          />
-          <YAxis
-            axisLine={false}
-            tickLine={false}
-            tick={{ fill: "#7A7A7A", fontSize: 11 }}
-            width={30}
-          />
+          <XAxis hide />
+          <YAxis hide />
           <Tooltip content={<CustomTooltip />} />
           <Area
             type="monotone"
             dataKey="count"
             stroke="url(#leadsStrokeGradient)"
-            strokeWidth={3.5}
+            strokeWidth={4}
             strokeOpacity={0.6}
             fill="url(#leadsAreaGradient)"
             fillOpacity={0.7}

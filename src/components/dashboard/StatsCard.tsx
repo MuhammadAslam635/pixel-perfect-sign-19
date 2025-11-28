@@ -67,8 +67,10 @@ const StatsCard = () => {
             </p>
           )}
         </div>
+      </div>
 
-        {/* Right Section - Chart - Takes half width on desktop */}
+      {/* Chart - Absolutely positioned to touch bottom and right borders */}
+      <div className="absolute bottom-0 right-0 sm:left-[40%] left-0 h-full hidden sm:block z-0">
         <LeadsChart />
       </div>
     </section>
