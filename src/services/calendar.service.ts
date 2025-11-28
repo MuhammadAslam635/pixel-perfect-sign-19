@@ -106,6 +106,11 @@ export interface AvailableSlotsResponse {
   };
 }
 
+export interface DeleteMeetingResponse {
+  success: boolean;
+  message: string;
+}
+
 export const calendarService = {
   scheduleMeeting: async (
     payload: ScheduleMeetingPayload
@@ -127,6 +132,10 @@ export const calendarService = {
     params: AvailableSlotsQuery
   ): Promise<AvailableSlotsResponse> => {
     const response = await API.get("/calendar/available-slots", { params });
+    return response.data;
+  },
+  deleteMeeting: async (meetingId: string): Promise<DeleteMeetingResponse> => {
+    const response = await API.delete(`/calendar/meeting/${meetingId}`);
     return response.data;
   },
 };

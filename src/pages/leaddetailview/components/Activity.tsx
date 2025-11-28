@@ -155,6 +155,8 @@ const Activity: FC<ActivityProps> = ({
   const [leadSelectorOpen, setLeadSelectorOpen] = useState(false);
   const [planPendingDelete, setPlanPendingDelete] =
     useState<FollowupPlan | null>(null);
+  const [meetingPendingDelete, setMeetingPendingDelete] =
+    useState<LeadMeetingRecord | null>(null);
   const { toast } = useToast();
   const leadId = lead?._id;
   const isCalendarTabActive = activeTab === "calendar";
@@ -229,6 +231,33 @@ const Activity: FC<ActivityProps> = ({
     },
     enabled: Boolean(leadId && isCalendarTabActive),
     staleTime: 60 * 1000,
+  });
+
+  const deleteMeetingMutation = useMutation<
+    { success: boolean; message: string },
+    Error,
+    string
+  >({
+    mutationFn: async (meetingId: string) => {
+      return calendarService.deleteMeeting(meetingId);
+    },
+    onSuccess: (response, meetingId) => {
+      toast({
+        title: "Meeting deleted",
+        description: response.message || "Meeting has been successfully deleted from your calendar.",
+      });
+      refetchLeadMeetings();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to delete meeting",
+        description:
+          error?.response?.data?.message ||
+          error?.message ||
+          "Please try again.",
+        variant: "destructive",
+      });
+    },
   });
 
   const {
@@ -1520,15 +1549,32 @@ const Activity: FC<ActivityProps> = ({
                                       )}
                                     </p>
                                   </div>
-                                  <Badge
-                                    className={
-                                      meetingCompleted
-                                        ? "bg-teal-500/20 text-teal-200 border border-teal-400/40"
-                                        : "bg-indigo-500/20 text-indigo-200 border border-indigo-400/40"
-                                    }
-                                  >
-                                    {meetingCompleted ? "Completed" : "Scheduled"}
-                                  </Badge>
+                                  <div className="flex items-center gap-2">
+                                    <Badge
+                                      className={
+                                        meeting.status === "completed"
+                                          ? "bg-teal-500/20 text-teal-200 border border-teal-400/40"
+                                          : meeting.status === "cancelled"
+                                          ? "bg-red-500/20 text-red-200 border border-red-400/40"
+                                          : "bg-indigo-500/20 text-indigo-200 border border-indigo-400/40"
+                                      }
+                                    >
+                                      {meeting.status === "completed" ? "Completed" :
+                                       meeting.status === "cancelled" ? "Cancelled" : "Scheduled"}
+                                    </Badge>
+                                    {meeting.status === "scheduled" && (
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        className="text-red-200 hover:text-red-100 hover:bg-red-500/10 h-6 w-6 p-0"
+                                        onClick={() => setMeetingPendingDelete(meeting)}
+                                        disabled={deleteMeetingMutation.isPending}
+                                      >
+                                        <Trash2 className="w-3 h-3" />
+                                      </Button>
+                                    )}
+                                  </div>
                                 </div>
                                 {meeting.body && (
                                   <p className="text-xs text-white/70 mt-2">
@@ -1995,6 +2041,25 @@ const Activity: FC<ActivityProps> = ({
         isPending={isDeletingPlan}
         onConfirm={handleConfirmPlanDeletion}
         onCancel={handleCancelPlanDeletion}
+      />
+
+      <ConfirmDialog
+        open={Boolean(meetingPendingDelete)}
+        title="Delete meeting?"
+        description={
+          meetingPendingDelete
+            ? `This will permanently delete "${meetingPendingDelete.subject || "this meeting"}" from your Microsoft calendar and remove it from the lead's record.`
+            : undefined
+        }
+        confirmText="Delete meeting"
+        confirmVariant="destructive"
+        isPending={deleteMeetingMutation.isPending}
+        onConfirm={() => {
+          if (!meetingPendingDelete) return;
+          deleteMeetingMutation.mutate(meetingPendingDelete._id);
+          setMeetingPendingDelete(null);
+        }}
+        onCancel={() => setMeetingPendingDelete(null)}
       />
     </>
   );
