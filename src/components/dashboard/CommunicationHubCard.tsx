@@ -1,7 +1,9 @@
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Bell, Target } from "lucide-react";
+import { dashboardService, CommunicationEvent } from "@/services/dashboard.service";
 
 export default function CommunicationHubCard() {
   const [communications, setCommunications] = useState<CommunicationEvent[]>(
