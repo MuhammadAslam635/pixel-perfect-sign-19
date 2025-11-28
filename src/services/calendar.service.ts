@@ -111,6 +111,27 @@ export interface DeleteMeetingResponse {
   message: string;
 }
 
+export interface SyncMeetingsPayload {
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface SyncMeetingsResponse {
+  success: boolean;
+  message: string;
+  data: {
+    totalEvents: number;
+    syncedMeetings: number;
+    skippedEvents: number;
+    meetings: LeadMeetingRecord[];
+    skipped: Array<{
+      eventId: string;
+      subject: string;
+      reason: string;
+    }>;
+  };
+}
+
 export const calendarService = {
   scheduleMeeting: async (
     payload: ScheduleMeetingPayload
@@ -136,6 +157,10 @@ export const calendarService = {
   },
   deleteMeeting: async (meetingId: string): Promise<DeleteMeetingResponse> => {
     const response = await API.delete(`/calendar/meeting/${meetingId}`);
+    return response.data;
+  },
+  syncMeetings: async (payload: SyncMeetingsPayload = {}): Promise<SyncMeetingsResponse> => {
+    const response = await API.post('/calendar/sync-meetings', payload);
     return response.data;
   },
 };

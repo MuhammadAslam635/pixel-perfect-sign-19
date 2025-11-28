@@ -55,6 +55,7 @@ import {
   calendarService,
   LeadMeetingRecord,
   AvailableSlot,
+  SyncMeetingsResponse,
 } from "@/services/calendar.service";
 import { SelectedCallLogView } from "../index";
 import API from "@/utils/api";
@@ -701,10 +702,51 @@ const Activity: FC<ActivityProps> = ({
     }
   };
 
-  const handleRefreshCalendarData = () => {
-    if (leadId) {
+  const syncMeetingsMutation = useMutation<
+    SyncMeetingsResponse,
+    Error,
+    void
+  >({
+    mutationFn: async () => {
+      const startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+      const endDate = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth() + 1,
+        0,
+        23,
+        59,
+        59,
+        999
+      );
+      return calendarService.syncMeetings({
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+      });
+    },
+    onSuccess: (response) => {
+      toast({
+        title: "Calendar synced",
+        description: response.message || `Synced ${response.data.syncedMeetings} meetings from Outlook calendar.`,
+      });
+      // Refresh the meetings data after sync
       void refetchLeadMeetings();
-    }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to sync calendar",
+        description:
+          error?.response?.data?.message ||
+          error?.message ||
+          "Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleRefreshCalendarData = () => {
+    // First sync with Outlook calendar
+    syncMeetingsMutation.mutate();
+    // Then refresh availability slots
     void refetchAvailability();
   };
 
@@ -1367,7 +1409,7 @@ const Activity: FC<ActivityProps> = ({
                           : "No meetings scheduled this month"}
                       </span>
                       <div className="flex items-center gap-2">
-                        {isCalendarDataBusy && (
+                        {(isCalendarDataBusy || syncMeetingsMutation.isPending) && (
                           <Loader2 className="w-4 h-4 animate-spin text-white/70" />
                         )}
                         <Button
@@ -1375,10 +1417,10 @@ const Activity: FC<ActivityProps> = ({
                           size="sm"
                           className="text-white/70 hover:text-white hover:bg-white/10"
                           onClick={handleRefreshCalendarData}
-                          disabled={isCalendarDataBusy}
+                          disabled={isCalendarDataBusy || syncMeetingsMutation.isPending}
                         >
                           <RefreshCcw className="w-4 h-4 mr-2" />
-                          Refresh
+                          {syncMeetingsMutation.isPending ? "Syncing..." : "Refresh"}
                         </Button>
                       </div>
                     </div>
@@ -1508,17 +1550,15 @@ const Activity: FC<ActivityProps> = ({
                           variant="ghost"
                           size="sm"
                           className="text-white/70 hover:text-white hover:bg-white/10"
-                          onClick={() => {
-                            void refetchLeadMeetings();
-                          }}
-                          disabled={isLeadMeetingsBusy}
+                          onClick={handleRefreshCalendarData}
+                          disabled={isLeadMeetingsBusy || syncMeetingsMutation.isPending}
                         >
                           <RefreshCcw
                             className={`w-4 h-4 mr-2 ${
-                              isLeadMeetingsBusy ? "animate-spin" : ""
+                              isLeadMeetingsBusy || syncMeetingsMutation.isPending ? "animate-spin" : ""
                             }`}
                           />
-                          Refresh
+                          {syncMeetingsMutation.isPending ? "Syncing..." : "Refresh"}
                         </Button>
                       </div>
                       {isLeadMeetingsBusy ? (
@@ -1562,23 +1602,23 @@ const Activity: FC<ActivityProps> = ({
                                       {meeting.status === "completed" ? "Completed" :
                                        meeting.status === "cancelled" ? "Cancelled" : "Scheduled"}
                                     </Badge>
-                                    {meeting.status === "scheduled" && (
-                                      <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="sm"
-                                        className="text-red-200 hover:text-red-100 hover:bg-red-500/10 h-6 w-6 p-0"
-                                        onClick={() => setMeetingPendingDelete(meeting)}
-                                        disabled={deleteMeetingMutation.isPending}
-                                      >
-                                        <Trash2 className="w-3 h-3" />
-                                      </Button>
-                                    )}
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      className="text-red-200 hover:text-red-100 hover:bg-red-500/10 h-6 w-6 p-0"
+                                      onClick={() => setMeetingPendingDelete(meeting)}
+                                      disabled={deleteMeetingMutation.isPending}
+                                    >
+                                      <Trash2 className="w-3 h-3" />
+                                    </Button>
                                   </div>
                                 </div>
                                 {meeting.body && (
                                   <p className="text-xs text-white/70 mt-2">
-                                    {meeting.body}
+                                    {meeting.body.length > 200
+                                      ? `${meeting.body.substring(0, 200)}...`
+                                      : meeting.body}
                                   </p>
                                 )}
                                 {meeting.webLink && (
@@ -1620,17 +1660,15 @@ const Activity: FC<ActivityProps> = ({
                           variant="ghost"
                           size="sm"
                           className="text-white/70 hover:text-white hover:bg-white/10"
-                          onClick={() => {
-                            void refetchAvailability();
-                          }}
-                          disabled={isAvailabilityBusy}
+                          onClick={handleRefreshCalendarData}
+                          disabled={isAvailabilityBusy || syncMeetingsMutation.isPending}
                         >
                           <RefreshCcw
                             className={`w-4 h-4 mr-2 ${
-                              isAvailabilityBusy ? "animate-spin" : ""
+                              isAvailabilityBusy || syncMeetingsMutation.isPending ? "animate-spin" : ""
                             }`}
                           />
-                          Refresh
+                          {syncMeetingsMutation.isPending ? "Syncing..." : "Refresh"}
                         </Button>
                       </div>
                       {isAvailabilityBusy ? (
