@@ -64,6 +64,7 @@ import {
   Trash2,
   RefreshCw,
   Calendar,
+  Eye,
 } from "lucide-react";
 import {
   FollowupTemplate,
@@ -79,9 +80,11 @@ import {
 import {
   useFollowupPlans,
   useDeleteFollowupPlan,
+  useFollowupPlanSchedule,
 } from "@/hooks/useFollowupPlans";
 import { FollowupPlan } from "@/services/followupPlans.service";
 import { format, formatDistanceToNow } from "date-fns";
+import FollowupPlanSchedule from "@/components/dashboard/FollowupPlanSchedule";
 import { isAxiosError } from "axios";
 import {
   convertLocalTimeToUTC,
@@ -167,6 +170,8 @@ const FollowupTemplatesPage = () => {
   const [plansPage, setPlansPage] = useState(1);
   const [plansLimit, setPlansLimit] = useState(50);
   const [planToDelete, setPlanToDelete] = useState<FollowupPlan | null>(null);
+  const [selectedPlanForSchedule, setSelectedPlanForSchedule] =
+    useState<FollowupPlan | null>(null);
   const { toast } = useToast();
   const timeInputRef = useRef<HTMLInputElement | null>(null);
   const isTriggeringTimePicker = useRef(false);
@@ -248,6 +253,11 @@ const FollowupTemplatesPage = () => {
 
   const { mutate: deleteFollowupPlan, isPending: isDeletingPlan } =
     useDeleteFollowupPlan();
+
+  const {
+    data: planScheduleData,
+    isLoading: isPlanScheduleLoading,
+  } = useFollowupPlanSchedule(selectedPlanForSchedule?._id || "");
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -419,6 +429,14 @@ const FollowupTemplatesPage = () => {
         });
       },
     });
+  };
+
+  const handleViewPlanSchedule = (plan: FollowupPlan) => {
+    setSelectedPlanForSchedule(plan);
+  };
+
+  const handleCloseScheduleView = () => {
+    setSelectedPlanForSchedule(null);
   };
 
   const getTemplateTitle = (plan: FollowupPlan) => {
@@ -892,6 +910,16 @@ const FollowupTemplatesPage = () => {
               type="button"
               variant="ghost"
               size="icon"
+              className="h-9 w-9 rounded-full text-blue-400 hover:text-blue-300"
+              onClick={() => handleViewPlanSchedule(plan)}
+              aria-label="View schedule"
+            >
+              <Eye className="h-4 w-4" />
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
               className="h-9 w-9 rounded-full text-red-400 hover:text-red-300"
               onClick={() => setPlanToDelete(plan)}
               aria-label="Delete plan"
@@ -1310,6 +1338,22 @@ const FollowupTemplatesPage = () => {
           onConfirm={handleDeletePlan}
           onCancel={() => setPlanToDelete(null)}
         />
+
+        {/* Schedule View Modal */}
+        <Dialog open={!!selectedPlanForSchedule} onOpenChange={(open) => !open && handleCloseScheduleView()}>
+          <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Follow-up Plan Schedule</DialogTitle>
+            </DialogHeader>
+            {selectedPlanForSchedule && planScheduleData?.data && (
+              <FollowupPlanSchedule
+                plan={planScheduleData.data}
+                onClose={handleCloseScheduleView}
+                isLoading={isPlanScheduleLoading}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
       </main>
     </DashboardLayout>
   );

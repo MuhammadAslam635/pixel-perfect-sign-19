@@ -3,6 +3,7 @@ import {
   CreateFollowupPlanPayload,
   followupPlansService,
   FollowupPlansQueryParams,
+  FollowupPlanScheduleResponse,
 } from "@/services/followupPlans.service";
 
 export const followupPlanKeys = {
@@ -50,6 +51,20 @@ export const useDeleteFollowupPlan = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: followupPlanKeys.all });
     },
+  });
+};
+
+export const followupPlanScheduleKeys = {
+  all: ["followup-plan-schedules"] as const,
+  details: () => [...followupPlanScheduleKeys.all, "detail"] as const,
+  detail: (id: string) => [...followupPlanScheduleKeys.details(), id] as const,
+};
+
+export const useFollowupPlanSchedule = (id: string) => {
+  return useQuery({
+    queryKey: followupPlanScheduleKeys.detail(id),
+    queryFn: () => followupPlansService.getPlanSchedule(id),
+    enabled: !!id,
   });
 };
 

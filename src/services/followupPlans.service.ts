@@ -44,6 +44,27 @@ export interface FollowupPlan {
   updatedAt: string;
 }
 
+export interface FollowupPlanScheduleDay {
+  day: number;
+  date: string; // YYYY-MM-DD format
+  tasks: FollowupPlanTodo[];
+}
+
+export interface FollowupPlanSchedule {
+  totalDays: number;
+  startDate: string;
+  days: FollowupPlanScheduleDay[];
+  summary: {
+    totalTasks: number;
+    completedTasks: number;
+    pendingTasks: number;
+  };
+}
+
+export interface FollowupPlanWithSchedule extends FollowupPlan {
+  schedule: FollowupPlanSchedule;
+}
+
 export interface FollowupPlansPaginated {
   docs: FollowupPlan[];
   totalDocs: number;
@@ -74,6 +95,12 @@ export interface FollowupPlanResponse {
   success: boolean;
   message: string;
   data: FollowupPlan;
+}
+
+export interface FollowupPlanScheduleResponse {
+  success: boolean;
+  message: string;
+  data: FollowupPlanWithSchedule;
 }
 
 export interface DeleteFollowupPlanResponse {
@@ -126,6 +153,11 @@ export const followupPlansService = {
 
   deletePlan: async (id: string): Promise<DeleteFollowupPlanResponse> => {
     const response = await API.delete(`/followup/plans/${id}`);
+    return response.data;
+  },
+
+  getPlanSchedule: async (id: string): Promise<FollowupPlanScheduleResponse> => {
+    const response = await API.get(`/followup/plans/${id}/schedule`);
     return response.data;
   },
 };

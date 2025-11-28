@@ -49,6 +49,7 @@ import {
   LeadSummaryResponse,
 } from "@/services/leadSummary.service";
 import { format, formatDistanceToNow } from "date-fns";
+import { formatFollowupTaskTime, getNextUpMessage } from "@/utils/followupTaskTime";
 import ConfirmDialog from "@/components/ui/confirm-dialog";
 import {
   calendarService,
@@ -647,35 +648,8 @@ const Activity: FC<ActivityProps> = ({
     return plan.templateId?.title || "Followup Plan";
   };
 
-  const getDisplayTime = (scheduledFor?: string) => {
-    if (!scheduledFor) {
-      return "";
-    }
-    const scheduledDate = new Date(scheduledFor);
-    if (Number.isNaN(scheduledDate.getTime())) {
-      return scheduledFor;
-    }
-
-    const now = new Date();
-
-    // If the scheduled time is in the past, calculate tomorrow's time
-    if (scheduledDate.getTime() < now.getTime()) {
-      // Get the time portion (hours, minutes, seconds, milliseconds) from scheduled date
-      const hours = scheduledDate.getHours();
-      const minutes = scheduledDate.getMinutes();
-      const seconds = scheduledDate.getSeconds();
-      const milliseconds = scheduledDate.getMilliseconds();
-
-      // Create tomorrow's date with the same time
-      const tomorrow = new Date(now);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      tomorrow.setHours(hours, minutes, seconds, milliseconds);
-
-      return formatRelativeTime(tomorrow.toISOString());
-    }
-
-    // If the scheduled time is in the future, use it as is
-    return formatRelativeTime(scheduledFor);
+  const getDisplayTime = (scheduledFor?: string, isComplete?: boolean) => {
+    return formatFollowupTaskTime(scheduledFor, isComplete);
   };
 
   const getPlanStatusBadgeClass = (status: string) => {
@@ -1755,7 +1729,7 @@ const Activity: FC<ActivityProps> = ({
                               <span>
                                 Next up: {nextTask.type.replace("_", " ")}
                                 {nextTask.scheduledFor
-                                  ? ` ${getDisplayTime(nextTask.scheduledFor)}`
+                                  ? ` ${getDisplayTime(nextTask.scheduledFor, false)}`
                                   : ""}
                               </span>
                             )}
@@ -1997,6 +1971,7 @@ const Activity: FC<ActivityProps> = ({
           </Tabs>
         </CardContent>
       </Card>
+
       <ConfirmDialog
         open={Boolean(planPendingDelete)}
         title="Delete followup plan?"
