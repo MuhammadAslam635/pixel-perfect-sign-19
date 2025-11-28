@@ -16,10 +16,13 @@ import { toast } from "sonner";
 import { LeadCallLog } from "@/services/twilio.service";
 
 const LEAD_STAGE_DEFINITIONS = [
-  { label: "New", min: 0, max: 10 },
-  { label: "Immature", min: 10, max: 50 },
-  { label: "Mature", min: 50, max: 90 },
-  { label: "Ready to go", min: 90, max: 100 },
+  { label: "New", min: 0, max: 15 },
+  { label: "Interested", min: 15, max: 30 },
+  { label: "Follow-up", min: 30, max: 45 },
+  { label: "Appointment Booked", min: 45, max: 60 },
+  { label: "Proposal Sent", min: 60, max: 75 },
+  { label: "Follow-up to Close", min: 75, max: 90 },
+  { label: "Deal Closed", min: 90, max: 100 },
 ];
 
 const clampScore = (value: number | null) => {
@@ -133,7 +136,7 @@ const LeadDetailView = () => {
               Back to Companies
             </Button>
             <div className="w-full flex flex-col justify-left ml-10">
-              <div className="flex items-center justify-between text-[11px] uppercase tracking-wide text-white/50 mb-2 w-full max-w-4xl">
+              <div className="flex items-center justify-between text-[11px] uppercase tracking-wide text-white/50 mb-2 w-full max-w-5xl">
                 <span>Momentum status</span>
                 <span className="text-white/80">{summaryStatusText}</span>
               </div>
