@@ -350,20 +350,27 @@ const Activity: FC<ActivityProps> = ({
     []
   );
 
+  // Load recording when a recording view is selected
   useEffect(() => {
     if (
       selectedCallLogView?.type === "recording" &&
       selectedCallLogView.log._id
     ) {
       loadRecordingAudio(selectedCallLogView.log._id);
-    } else {
+    }
+  }, [selectedCallLogView, loadRecordingAudio]);
+
+  // Clean up recording URL and state when recording view is cleared
+  useEffect(() => {
+    if (!selectedCallLogView || selectedCallLogView.type !== "recording") {
       if (recordingAudioUrl) {
         URL.revokeObjectURL(recordingAudioUrl);
         setRecordingAudioUrl(null);
       }
       setRecordingError(null);
+      setRecordingLoading(false);
     }
-  }, [selectedCallLogView, loadRecordingAudio, recordingAudioUrl]);
+  }, [selectedCallLogView, recordingAudioUrl]);
 
   const monthNames = [
     "Jan",
@@ -833,7 +840,8 @@ const Activity: FC<ActivityProps> = ({
                     let viewScore: number | null = null;
                     if (
                       selectedCallLogView.type === "followup" ||
-                      selectedCallLogView.type === "transcription"
+                      selectedCallLogView.type === "transcription" ||
+                      selectedCallLogView.type === "recording"
                     ) {
                       const rawScore = selectedCallLogView.log.leadSuccessScore;
                       if (

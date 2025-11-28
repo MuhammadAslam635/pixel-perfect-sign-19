@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
 import AuthLayout from "./AuthLayout";
 import { authService } from "@/services/auth.service";
+import { leadsService } from "@/services/leads.service";
 import { fetchUserPermissions } from "@/store/slices/permissionsSlice";
 
 const SignIn = () => {
@@ -67,6 +68,22 @@ const SignIn = () => {
           })
         );
         dispatch(fetchUserPermissions());
+
+        // After successful login, immediately fetch leads once
+        // and log the response so we can inspect it during development.
+        try {
+          const leadsResponse = await leadsService.getLeads({
+            page: 1,
+            limit: 10,
+          });
+          // This will appear in the browser devtools console.
+          // It will NOT show in the backend terminal.
+          // For server-side logging, see backend `listLeads` logs.
+          console.log("[Post-login] /leads/list response:", leadsResponse);
+        } catch (leadsError) {
+          console.error("[Post-login] Error fetching leads:", leadsError);
+        }
+
         toast.success("Login successful!");
         navigate("/dashboard");
       } else {
