@@ -10,6 +10,7 @@ import CommunicationHubCard from "@/components/dashboard/CommunicationHubCard";
 import ProposalsToSendCard from "@/components/dashboard/ProposalsToSendCard";
 import TopLeadsCard from "@/components/dashboard/TopLeadsCard";
 import CalendarCard from "@/components/dashboard/CalendarCard";
+import FollowupTasksCard from "@/components/dashboard/FollowupTasksCard";
 import MobileAssistantCTA from "@/components/dashboard/MobileAssistantCTA";
 
 const getIsDesktop = () => {
@@ -69,6 +70,11 @@ const Dashboard = () => {
             <TopLeadsCard />
             <CalendarCard />
           </div>
+
+          <div className="grid grid-cols-2 gap-4 lg:gap-4 mb-6">
+            <FollowupTasksCard />
+            <div></div> {/* Empty space for balance */}
+          </div>
         </div>
       </div>
     </main>
@@ -87,6 +93,11 @@ const Dashboard = () => {
         <div className="grid grid-cols-2 gap-4">
           <TopLeadsCard />
           <CalendarCard />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <FollowupTasksCard />
+          <div></div> {/* Empty space for balance */}
         </div>
       </div>
 
