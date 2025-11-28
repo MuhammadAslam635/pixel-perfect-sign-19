@@ -1069,7 +1069,7 @@ const index = () => {
                         <PopoverTrigger asChild>
                           <Button
                             variant="outline"
-                            className="h-9 rounded-full border border-white/20 bg-white/5 text-xs text-white flex items-center gap-2"
+                            className="h-9 rounded-full border border-white/20 bg-gradient-to-r from-[#3aa7b3]/35 to-[#2d6f8a]/45 text-xs text-white flex items-center gap-2"
                           >
                             <Filter className="w-3.5 h-3.5" />
                             <span>Filters</span>
@@ -1207,7 +1207,7 @@ const index = () => {
                         <PopoverTrigger asChild>
                           <Button
                             variant="outline"
-                            className="h-9 rounded-full border border-white/20 bg-white/5 text-xs text-white flex items-center gap-2"
+                            className="h-9 rounded-full border border-white/20 bg-gradient-to-r from-[#3aa7b3]/35 to-[#2d6f8a]/45 text-xs text-white flex items-center gap-2"
                           >
                             <Filter className="w-3.5 h-3.5" />
                             <span>Filters</span>

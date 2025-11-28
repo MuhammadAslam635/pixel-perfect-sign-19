@@ -50,6 +50,11 @@ export interface Email {
   isStarred: boolean;
   isDeleted: boolean;
   sentiment?: EmailSentiment;
+  category?:
+    | "Marketing & Promotions"
+    | "Client Communication"
+    | "Internal Communication"
+    | "All Emails";
   createdAt: string;
   updatedAt: string;
   deletedAt?: string;
@@ -94,6 +99,11 @@ export interface GetInboxEmailsParams {
   limit?: number;
   unread?: boolean;
   starred?: boolean;
+  category?:
+    | "Marketing & Promotions"
+    | "Client Communication"
+    | "Internal Communication"
+    | "All Emails";
 }
 
 export interface GetEmailThreadsParams {
@@ -154,6 +164,12 @@ export interface EmailStats {
   receivedEmails: number;
   starredEmails: number;
   totalThreads: number;
+  categories?: {
+    "Marketing & Promotions": number;
+    "Client Communication": number;
+    "Internal Communication": number;
+    "All Emails": number;
+  };
 }
 
 export interface GetEmailStatsResponse {

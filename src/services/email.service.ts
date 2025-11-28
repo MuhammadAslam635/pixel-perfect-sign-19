@@ -133,4 +133,18 @@ export const emailService = {
       throw error;
     }
   },
+
+  /**
+   * Batch categorize emails using AI
+   */
+  batchCategorizeEmails: async (
+    limit?: number
+  ): Promise<{ success: boolean; message: string; data: any[] }> => {
+    try {
+      const response = await API.post("/emails/categorize/batch", { limit });
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
 };
