@@ -20,7 +20,7 @@ import UserList from "@/pages/users/UserList";
 import UserCreate from "@/pages/users/UserCreate";
 import UserEdit from "@/pages/users/UserEdit";
 import ContactNow from "@/pages/twilio-calling/ContactNow";
-import FollowupTemplatesPage from "@/pages/followup-templates";
+import FollowupTemplatesPage from "@/pages/followups";
 import LeadDetailView from "@/pages/leaddetailview";
 import RoleList from "@/pages/roles/RoleList";
 import RoleForm from "@/pages/roles/RoleForm";
@@ -171,7 +171,7 @@ const AppRoutes = () => {
         }
       />
       <Route
-        path="/followup-templates"
+        path="/followups"
         element={
           <ProtectedRoute moduleName="followup-templates">
             <FollowupTemplatesPage />
