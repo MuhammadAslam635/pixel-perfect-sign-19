@@ -1069,10 +1069,24 @@ const index = () => {
                         <PopoverTrigger asChild>
                           <Button
                             variant="outline"
-                            className="h-9 rounded-full border border-white/20 bg-gradient-to-r from-[#3aa7b3]/35 to-[#2d6f8a]/45 text-xs text-white flex items-center gap-2"
+                            className="relative overflow-hidden flex-none flex h-10 items-center justify-center rounded-full border border-white/40 px-0 text-xs font-medium tracking-wide transition-[width,background-color,box-shadow,padding,gap] duration-400 ease-elastic text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] justify-start w-auto h-10 pl-3.5 pr-3.5 gap-2 before:from-white/25 z-10 before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/15 before:to-transparent before:transition-all before:duration-300 before:ease-in-out"
+                            style={{
+                              background: "#FFFFFF1A",
+                              boxShadow:
+                                "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                            }}
                           >
-                            <Filter className="w-3.5 h-3.5" />
-                            <span>Filters</span>
+                            <div
+                              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[100px] h-[100px] rounded-full pointer-events-none"
+                              style={{
+                                background:
+                                  "linear-gradient(180deg, #67B0B7 0%, #4066B3 100%)",
+                                filter: "blur(20px)",
+                                WebkitFilter: "blur(20px)",
+                              }}
+                            ></div>
+                            <Filter className="w-3.5 h-3.5 flex-shrink-0 text-white drop-shadow-[0_8px_18px_rgba(62,100,180,0.45)]" />
+                            <span className="whitespace-nowrap ml-1.5 opacity-100 scale-100 translate-x-0 max-w-[200px]">Filters</span>
                             {hasCompanyAdvancedFilters && (
                               <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                             )}
@@ -1207,10 +1221,24 @@ const index = () => {
                         <PopoverTrigger asChild>
                           <Button
                             variant="outline"
-                            className="h-9 rounded-full border border-white/20 bg-gradient-to-r from-[#3aa7b3]/35 to-[#2d6f8a]/45 text-xs text-white flex items-center gap-2"
+                            className="relative overflow-hidden flex-none flex h-10 items-center justify-center rounded-full border border-white/40 px-0 text-xs font-medium tracking-wide transition-[width,background-color,box-shadow,padding,gap] duration-400 ease-elastic text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] justify-start w-auto h-10 pl-3.5 pr-3.5 gap-2 before:from-white/25 z-10 before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/15 before:to-transparent before:transition-all before:duration-300 before:ease-in-out"
+                            style={{
+                              background: "#FFFFFF1A",
+                              boxShadow:
+                                "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                            }}
                           >
-                            <Filter className="w-3.5 h-3.5" />
-                            <span>Filters</span>
+                            <div
+                              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[100px] h-[100px] rounded-full pointer-events-none"
+                              style={{
+                                background:
+                                  "linear-gradient(180deg, #67B0B7 0%, #4066B3 100%)",
+                                filter: "blur(20px)",
+                                WebkitFilter: "blur(20px)",
+                              }}
+                            ></div>
+                            <Filter className="w-3.5 h-3.5 flex-shrink-0 text-white drop-shadow-[0_8px_18px_rgba(62,100,180,0.45)]" />
+                            <span className="whitespace-nowrap ml-1.5 opacity-100 scale-100 translate-x-0 max-w-[200px]">Filters</span>
                             {hasLeadAdvancedFilters && (
                               <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                             )}
