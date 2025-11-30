@@ -26,6 +26,7 @@ import { Company, companiesService } from "@/services/companies.service";
 import LeadDetailsPanel from "./LeadDetailsPanel";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { ActiveNavButton } from "@/components/ui/active-nav-button";
 import {
   Select,
   SelectContent,
@@ -361,17 +362,15 @@ const LeadsList: FC<LeadsListProps> = ({
               )}
             </button>
           </div>
-          <button
+          <ActiveNavButton
+            icon={ArrowRight}
+            text="View Details"
             onClick={(e) => {
               e.stopPropagation();
               navigate(`/leads/${lead._id}`);
             }}
-            className="bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded-full px-6 sm:px-12 py-1.5 flex items-center gap-2 sm:gap-3 transition-colors w-full md:w-auto justify-center"
-          >
-            <span className="hidden sm:inline">View Details</span>
-            <span className="sm:hidden">Details</span>
-            <ArrowRight className="w-3 h-3" />
-          </button>
+            className="w-full md:w-auto justify-center"
+          />
         </div>
       </Card>
     );

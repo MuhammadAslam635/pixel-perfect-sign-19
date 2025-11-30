@@ -18,7 +18,8 @@ import {
   PaginationPrevious,
   PaginationEllipsis,
 } from "@/components/ui/pagination";
-import { ArrowRight, Linkedin, Search, ArrowLeft } from "lucide-react";
+import { ArrowRight, Linkedin, Search, ArrowLeft, Users } from "lucide-react";
+import { ActiveNavButton } from "@/components/ui/active-nav-button";
 import { Company } from "@/services/companies.service";
 import CompanyExecutivesPanel from "./CompanyExecutivesPanel";
 
@@ -218,7 +219,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
     return (
       <Card
         key={company._id}
-        className={`relative flex flex-col gap-4 sm:gap-6 md:flex-row md:items-center md:justify-between overflow-hidden border-0 mb-4 rounded-[20px] sm:rounded-[30px] px-4 sm:px-7 py-4 sm:py-6 transition-all duration-300 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] before:absolute before:content-[''] before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[55%] before:w-0 md:before:w-[3px] lg:before:w-[5px] before:rounded-full backdrop-blur-[22.6px] ${
+        className={`relative flex flex-col gap-2 sm:gap-3 md:flex-row md:items-center md:justify-between overflow-hidden border-0 mb-3 rounded-[20px] sm:rounded-[30px] px-4 sm:px-7 py-3 sm:py-4 transition-all duration-300 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] before:absolute before:content-[''] before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[55%] before:w-0 md:before:w-[3px] lg:before:w-[5px] before:rounded-full backdrop-blur-[22.6px] ${
           isActive ? "md:before:bg-primary" : "md:before:bg-white/75"
         }`}
         style={{
@@ -227,7 +228,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
       >
         <div className="flex-1">
           <div className="flex flex-wrap items-center gap-2 text-white/90">
-            <div className="text-base sm:text-lg md:text-xl font-semibold text-white text-center sm:text-left sm:mx-0 mx-auto">
+            <div className="text-sm sm:text-base md:text-lg font-semibold text-white text-center sm:text-left sm:mx-0 mx-auto">
               {company.name}
             </div>
             {company.industry && (
@@ -236,11 +237,11 @@ const CompaniesList: FC<CompaniesListProps> = ({
               </span>
             )}
           </div>
-          <p className="mt-2 text-xs sm:text-sm text-white/65 line-clamp-2">
+          <p className="mt-1 text-xs text-white/65 line-clamp-2">
             {company.description || company.about || "No description available"}
           </p>
           {/* Mobile: Side by side layout */}
-          <div className="mt-3 sm:mt-5 md:hidden flex flex-row items-center justify-between gap-4">
+          <div className="mt-2 sm:mt-3 md:hidden flex flex-row items-center justify-between gap-4">
             <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-white/75">
               <Badge className="rounded-full bg-white/15 text-white border-white/20 px-3 sm:px-4 py-1 text-xs">
                 {employeeCount}
@@ -297,7 +298,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
             </div>
           </div>
           {/* Desktop: Original badges layout */}
-          <div className="hidden md:block mt-3 sm:mt-5">
+          <div className="hidden md:block mt-2 sm:mt-3">
             <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-white/75">
               <Badge className="rounded-full bg-white/15 text-white border-white/20 px-3 sm:px-4 py-1 text-xs">
                 {employeeCount}
@@ -356,8 +357,9 @@ const CompaniesList: FC<CompaniesListProps> = ({
             )}
           </div>
           <div className="flex flex-col sm:flex-row items-center md:items-center justify-end gap-2 w-full md:w-auto">
-            <Button
-              size="sm"
+            <ActiveNavButton
+              icon={Users}
+              text={isActive ? "Close Executives" : "View Executives"}
               onClick={() => {
                 if (window.innerWidth < 768) {
                   // Mobile: show executives view and hide companies
@@ -369,14 +371,8 @@ const CompaniesList: FC<CompaniesListProps> = ({
                   onDesktopExecutivesFocus?.();
                 }
               }}
-              className="rounded-full bg-white/15 px-4 sm:px-6 py-1.5 text-xs font-semibold text-white hover:bg-white/25 border border-white/20 w-auto md:w-auto ml-auto md:ml-0"
-            >
-              <span className="hidden sm:inline">
-                {isActive ? "Close Executives" : "View Executives"}
-              </span>
-              <span className="sm:hidden">View Executives</span>
-              <ArrowRight className="ml-2 w-3 h-3" />
-            </Button>
+              className="w-auto md:w-auto ml-auto md:ml-0"
+            />
           </div>
         </div>
       </Card>
