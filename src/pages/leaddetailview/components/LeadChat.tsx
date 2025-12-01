@@ -8,6 +8,7 @@ import {
   Sparkles,
   Trash2,
 } from "lucide-react";
+import { ActiveNavButton } from "@/components/ui/primary-btn";
 import { Lead } from "@/services/leads.service";
 import { emailService } from "@/services/email.service";
 import { Email } from "@/types/email.types";
@@ -964,7 +965,7 @@ const LeadChat = ({
 
   return (
     <section
-      className="flex flex-col font-poppins h-full flex-1 min-h-0 lg:p-7 p-6 max-w-full rounded-3xl"
+      className="flex flex-col font-poppins h-full flex-1 min-h-[400px] lg:p-7 p-6 max-w-full rounded-3xl"
       style={{
         background:
           "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 2e-05) 38.08%, rgba(255, 255, 255, 2e-05) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
@@ -1419,22 +1420,22 @@ const LeadChat = ({
                   <label className="text-sm font-medium text-white/90">
                     Message
                   </label>
-                  <button
-                    type="button"
+                  <ActiveNavButton
+                    icon={Sparkles}
+                    text={
+                      isGeneratingEmailMessage ? "Generating..." : "Generate with AI"
+                    }
                     onClick={handleGenerateEmailMessage}
                     disabled={
                       isGeneratingEmailMessage || !lead?.companyId || !lead?._id
                     }
-                    className="text-white/70 hover:text-white hover:bg-white/10 rounded-lg flex items-center gap-1 px-2 py-1 text-xs disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    className="h-8 text-xs"
                     title={
                       !lead?.companyId || !lead?._id
                         ? "Lead information is required to generate suggestions"
                         : "Generate with AI"
                     }
-                  >
-                    <Sparkles className="h-4 w-4" />
-                    {isGeneratingEmailMessage ? "Generating..." : "Generate with AI"}
-                  </button>
+                  />
                 </div>
                 <div className="flex flex-col gap-2 rounded-lg bg-white/10 px-3 py-3 sm:flex-row sm:items-end sm:flex-nowrap sm:gap-2">
                   <textarea

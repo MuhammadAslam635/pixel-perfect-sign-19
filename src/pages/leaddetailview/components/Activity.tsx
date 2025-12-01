@@ -871,14 +871,14 @@ const Activity: FC<ActivityProps> = ({
   return (
     <>
       <Card
-        className="w-full h-full flex-1 min-h-0 flex flex-col rounded-3xl"
+        className="w-full flex flex-col rounded-3xl"
         style={{
           background:
             "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 2e-05) 38.08%, rgba(255, 255, 255, 2e-05) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
           border: "1px solid #FFFFFF0D",
         }}
       >
-        <CardContent className="p-6 flex-1 min-h-0 overflow-y-auto scrollbar-hide">
+        <CardContent className="p-6">
           <Tabs
             value={topLevelTab}
             onValueChange={(value) =>

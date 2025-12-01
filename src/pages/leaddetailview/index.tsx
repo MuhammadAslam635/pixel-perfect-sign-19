@@ -142,9 +142,7 @@ const LeadDetailView = () => {
 
   return (
     <DashboardLayout>
-      <main className="relative mt-24 pt-5 flex w-full flex-1 min-h-0 max-h-[calc(100vh-6rem)] px-6 pb-6 sm:px-10 md:px-14 lg:px-6 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0F172A] via-transparent to-[#05060A] opacity-70 pointer-events-none"></div>
-
+      <main className="relative mt-24 pt-5 flex w-full flex-1 min-h-0 max-h-[calc(100vh-6rem)] px-6 pb-6 sm:px-10 md:px-14 lg:px-6 overflow-y-auto overflow-x-hidden scrollbar-hide bg-[#0F0F0F]">
         <div className="relative z-10 flex w-full flex-1 min-h-0 flex-col gap-6">
           {/* Back Button & Summary Progress */}
           <div className="flex flex-row items-center gap-4">
@@ -233,13 +231,13 @@ const LeadDetailView = () => {
 
           {/* Grid Layout for Lead Detail Components */}
           {lead && !isLoading && (
-            <div className="grid grid-cols-12 gap-4 flex-1 min-h-0 items-stretch">
+            <div className="grid grid-cols-12 gap-4 flex-1 min-h-0 items-stretch w-full max-w-full">
               {/* Left: Lead Detail Card */}
-              <div className="col-span-2 flex flex-col min-h-0 h-full">
+              <div className="col-span-2 flex flex-col h-full">
                 <LeadDetailCard lead={lead} />
               </div>
               {/* Middle: Lead Chat */}
-              <div className="col-span-7 col-start-3 flex flex-col min-h-0 h-full">
+              <div className="col-span-7 col-start-3 flex flex-col flex-1 min-h-[400px] h-full">
                 <LeadChat
                   lead={lead}
                   selectedCallLogView={selectedCallLogView}
@@ -247,7 +245,7 @@ const LeadDetailView = () => {
                 />
               </div>
               {/* Right: Activity Component (with internal Activity/Company toggle) */}
-              <div className="col-span-3 col-start-10 flex flex-col min-h-0 h-full">
+              <div className="col-span-3 col-start-10 flex flex-col h-full">
                 <Activity
                   lead={lead}
                   selectedCallLogView={selectedCallLogView}
