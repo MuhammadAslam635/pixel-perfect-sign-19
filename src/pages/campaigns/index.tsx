@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { ActiveNavButton } from "@/components/ui/primary-btn";
 import { Input } from "@/components/ui/input";
 import {
   MapPin,
@@ -77,7 +78,7 @@ import {
 import ImageCarousel from "@/components/campaigns/ImageCarousel";
 import CreateCampaignModal from "@/components/campaigns/CreateCampaignModal";
 import FacebookIcon from "@/components/icons/FacebookIcon";
-import ArrowRightIcon from "@/components/icons/ArrowRightIcon";
+import { ArrowRight as ArrowRightIcon } from "lucide-react";
 
 const CampaignsPage = () => {
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
@@ -1033,18 +1034,12 @@ const CampaignsPage = () => {
                           ${campaign.estimatedBudget?.toLocaleString() || "0"}
                         </span>
                       </div>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="bg-[#252525] text-gray-300 hover:bg-[#2a2a2a] hover:text-white h-6 text-[10px] px-2.5 rounded-full"
-                        style={{
-                          border: "0.76px solid #FFFFFF1F",
-                        }}
+                      <ActiveNavButton
+                        icon={ArrowRightIcon}
+                        text="View Details"
                         onClick={() => handleViewDetails(campaign)}
-                      >
-                        View Details
-                        <ArrowRightIcon />
-                      </Button>
+                        className="h-7 text-[9px]"
+                      />
                     </div>
                   </CardContent>
                 </Card>
