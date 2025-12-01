@@ -18,6 +18,8 @@ import {
   Star,
   Inbox as InboxIcon,
   RefreshCw,
+  Send,
+  Download,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -269,13 +271,29 @@ const InboxPage = () => {
                     "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
                 }}
               >
-                <CardContent className="p-4 sm:p-5 lg:p-6">
-                  <p className="text-xs sm:text-sm text-gray-300 font-medium mb-3">
-                    Total
-                  </p>
-                  <p className="text-2xl sm:text-3xl font-bold text-white">
-                    {statsData.data.totalEmails}
-                  </p>
+                <CardContent className="p-3 sm:p-4 lg:p-5 h-full flex flex-col justify-between min-h-[120px] gap-2">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <p className="text-[11px] sm:text-xs text-gray-300 font-medium tracking-tight">
+                      Total
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center flex-shrink-0">
+                      <Mail
+                        className="w-full h-full"
+                        style={{
+                          background:
+                            "linear-gradient(135deg, #4285F4 0%, #34A853 50%, #FBBC05 100%)",
+                          WebkitBackgroundClip: "text",
+                          WebkitTextFillColor: "transparent",
+                          backgroundClip: "text",
+                        }}
+                      />
+                    </div>
+                    <p className="text-xl sm:text-2xl font-bold text-white">
+                      {statsData.data.totalEmails}
+                    </p>
+                  </div>
                 </CardContent>
               </Card>
             </div>
@@ -291,13 +309,29 @@ const InboxPage = () => {
                     "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
                 }}
               >
-                <CardContent className="p-4 sm:p-5 lg:p-6">
-                  <p className="text-xs sm:text-sm text-gray-300 font-medium mb-3">
-                    Unread
-                  </p>
-                  <p className="text-2xl sm:text-3xl font-bold text-white">
-                    {statsData.data.unreadEmails}
-                  </p>
+                <CardContent className="p-3 sm:p-4 lg:p-5 h-full flex flex-col justify-between min-h-[120px] gap-2">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <p className="text-[11px] sm:text-xs text-gray-300 font-medium tracking-tight">
+                      Unread
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center flex-shrink-0">
+                      <MailOpen
+                        className="w-full h-full"
+                        style={{
+                          background:
+                            "linear-gradient(135deg, #34A853 0%, #FBBC05 50%, #EA4335 100%)",
+                          WebkitBackgroundClip: "text",
+                          WebkitTextFillColor: "transparent",
+                          backgroundClip: "text",
+                        }}
+                      />
+                    </div>
+                    <p className="text-xl sm:text-2xl font-bold text-white">
+                      {statsData.data.unreadEmails}
+                    </p>
+                  </div>
                 </CardContent>
               </Card>
             </div>
@@ -313,13 +347,29 @@ const InboxPage = () => {
                     "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
                 }}
               >
-                <CardContent className="p-4 sm:p-5 lg:p-6">
-                  <p className="text-xs sm:text-sm text-gray-300 font-medium mb-3">
-                    Sent
-                  </p>
-                  <p className="text-2xl sm:text-3xl font-bold text-white">
-                    {statsData.data.sentEmails}
-                  </p>
+                <CardContent className="p-3 sm:p-4 lg:p-5 h-full flex flex-col justify-between min-h-[120px] gap-2">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <p className="text-[11px] sm:text-xs text-gray-300 font-medium tracking-tight">
+                      Sent
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center flex-shrink-0">
+                      <Send
+                        className="w-full h-full"
+                        style={{
+                          background:
+                            "linear-gradient(135deg, #FBBC05 0%, #EA4335 50%, #4285F4 100%)",
+                          WebkitBackgroundClip: "text",
+                          WebkitTextFillColor: "transparent",
+                          backgroundClip: "text",
+                        }}
+                      />
+                    </div>
+                    <p className="text-xl sm:text-2xl font-bold text-white">
+                      {statsData.data.sentEmails}
+                    </p>
+                  </div>
                 </CardContent>
               </Card>
             </div>
@@ -335,13 +385,29 @@ const InboxPage = () => {
                     "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
                 }}
               >
-                <CardContent className="p-4 sm:p-5 lg:p-6">
-                  <p className="text-xs sm:text-sm text-gray-300 font-medium mb-3">
-                    Received
-                  </p>
-                  <p className="text-2xl sm:text-3xl font-bold text-white">
-                    {statsData.data.receivedEmails}
-                  </p>
+                <CardContent className="p-3 sm:p-4 lg:p-5 h-full flex flex-col justify-between min-h-[120px] gap-2">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <p className="text-[11px] sm:text-xs text-gray-300 font-medium tracking-tight">
+                      Received
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center flex-shrink-0">
+                      <Download
+                        className="w-full h-full"
+                        style={{
+                          background:
+                            "linear-gradient(135deg, #EA4335 0%, #4285F4 50%, #34A853 100%)",
+                          WebkitBackgroundClip: "text",
+                          WebkitTextFillColor: "transparent",
+                          backgroundClip: "text",
+                        }}
+                      />
+                    </div>
+                    <p className="text-xl sm:text-2xl font-bold text-white">
+                      {statsData.data.receivedEmails}
+                    </p>
+                  </div>
                 </CardContent>
               </Card>
             </div>
