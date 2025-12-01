@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ArrowRight, Search, Filter, Layers, Plus } from "lucide-react";
-import { ActiveNavButton } from "@/components/ui/active-nav-button";
+import { ActiveNavButton } from "@/components/ui/primary-btn";
 import CompaniesIcon from "@/components/icons/CompaniesIcon";
 import { Company, CompanyPerson } from "@/services/companies.service";
 import { Lead } from "@/services/leads.service";
