@@ -252,6 +252,8 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
         toast.success(
           response.message || "Enrichment request submitted successfully"
         );
+        // Invalidate and refetch lead data
+        await queryClient.invalidateQueries({ queryKey: ["lead", lead._id] });
       } else {
         toast.error(response?.message || "Failed to enrich lead");
       }
