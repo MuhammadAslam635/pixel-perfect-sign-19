@@ -50,7 +50,10 @@ import {
   LeadSummaryResponse,
 } from "@/services/leadSummary.service";
 import { format, formatDistanceToNow } from "date-fns";
-import { formatFollowupTaskTime, getNextUpMessage } from "@/utils/followupTaskTime";
+import {
+  formatFollowupTaskTime,
+  getNextUpMessage,
+} from "@/utils/followupTaskTime";
 import ConfirmDialog from "@/components/ui/confirm-dialog";
 import {
   calendarService,
@@ -167,7 +170,10 @@ const Activity: FC<ActivityProps> = ({
   const leadId = lead?._id;
   const isCalendarTabActive = activeTab === "calendar";
   const userTimeZone = useMemo(() => {
-    if (typeof Intl === "undefined" || typeof Intl.DateTimeFormat !== "function") {
+    if (
+      typeof Intl === "undefined" ||
+      typeof Intl.DateTimeFormat !== "function"
+    ) {
       return "UTC";
     }
     try {
@@ -178,7 +184,11 @@ const Activity: FC<ActivityProps> = ({
   }, []);
 
   const calendarMonthRange = useMemo(() => {
-    const start = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+    const start = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      1
+    );
     const end = new Date(
       currentDate.getFullYear(),
       currentDate.getMonth() + 1,
@@ -250,7 +260,9 @@ const Activity: FC<ActivityProps> = ({
     onSuccess: (response, meetingId) => {
       toast({
         title: "Meeting deleted",
-        description: response.message || "Meeting has been successfully deleted from your calendar.",
+        description:
+          response.message ||
+          "Meeting has been successfully deleted from your calendar.",
       });
       refetchLeadMeetings();
     },
@@ -303,8 +315,7 @@ const Activity: FC<ActivityProps> = ({
       return weekday >= 1 && weekday <= 5;
     });
   }, [availableSlotsResponse]);
-  const isLeadMeetingsBusy =
-    isLeadMeetingsLoading || isLeadMeetingsFetching;
+  const isLeadMeetingsBusy = isLeadMeetingsLoading || isLeadMeetingsFetching;
   const isAvailabilityBusy = isAvailabilityLoading || isAvailabilityFetching;
 
   const refreshLeadSummaryMutation = useMutation<
@@ -359,31 +370,28 @@ const Activity: FC<ActivityProps> = ({
   }, [selectedCallLogView]);
 
   // Load recording audio URL when recording view is selected
-  const loadRecordingAudio = useCallback(
-    async (logId: string) => {
-      setRecordingAudioUrl(null);
-      setRecordingError(null);
-      try {
-        setRecordingLoading(true);
-        const response = await API.get(`/twilio/calls/${logId}/recording`, {
-          responseType: "blob",
-        });
-        const blob = response.data as Blob;
-        const url = URL.createObjectURL(blob);
-        setRecordingAudioUrl(url);
-      } catch (err: any) {
-        console.error("Failed to load call recording", err);
-        setRecordingError(
-          err?.response?.data?.error ||
-            err?.message ||
-            "Unable to load call recording."
-        );
-      } finally {
-        setRecordingLoading(false);
-      }
-    },
-    []
-  );
+  const loadRecordingAudio = useCallback(async (logId: string) => {
+    setRecordingAudioUrl(null);
+    setRecordingError(null);
+    try {
+      setRecordingLoading(true);
+      const response = await API.get(`/twilio/calls/${logId}/recording`, {
+        responseType: "blob",
+      });
+      const blob = response.data as Blob;
+      const url = URL.createObjectURL(blob);
+      setRecordingAudioUrl(url);
+    } catch (err: any) {
+      console.error("Failed to load call recording", err);
+      setRecordingError(
+        err?.response?.data?.error ||
+          err?.message ||
+          "Unable to load call recording."
+      );
+    } finally {
+      setRecordingLoading(false);
+    }
+  }, []);
 
   // Load recording when a recording view is selected
   useEffect(() => {
@@ -707,13 +715,13 @@ const Activity: FC<ActivityProps> = ({
     }
   };
 
-  const syncMeetingsMutation = useMutation<
-    SyncMeetingsResponse,
-    Error,
-    void
-  >({
+  const syncMeetingsMutation = useMutation<SyncMeetingsResponse, Error, void>({
     mutationFn: async () => {
-      const startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+      const startDate = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth(),
+        1
+      );
       const endDate = new Date(
         currentDate.getFullYear(),
         currentDate.getMonth() + 1,
@@ -731,7 +739,9 @@ const Activity: FC<ActivityProps> = ({
     onSuccess: (response) => {
       toast({
         title: "Calendar synced",
-        description: response.message || `Synced ${response.data.syncedMeetings} meetings from Outlook calendar.`,
+        description:
+          response.message ||
+          `Synced ${response.data.syncedMeetings} meetings from Outlook calendar.`,
       });
       // Refresh the meetings data after sync
       void refetchLeadMeetings();
@@ -937,33 +947,340 @@ const Activity: FC<ActivityProps> = ({
 
                 {/* Summary Tab Content */}
                 <TabsContent value="summary" className="mt-6">
-              {selectedCallLogView ? (
-                // Selected Call Log View Content
-                <div className="flex flex-col items-center space-y-6">
-                  {/* Circular Progress Indicator with Score */}
-                  {(() => {
-                    // Calculate the score for the selected view
-                    let viewScore: number | null = null;
-                    if (
-                      selectedCallLogView.type === "followup" ||
-                      selectedCallLogView.type === "transcription" ||
-                      selectedCallLogView.type === "recording"
-                    ) {
-                      const rawScore = selectedCallLogView.log.leadSuccessScore;
-                      if (
-                        typeof rawScore === "number" &&
-                        !Number.isNaN(rawScore)
-                      ) {
-                        viewScore = Math.max(0, Math.min(100, Math.round(rawScore)));
-                      }
-                    }
-                    // Use view score if available, otherwise fall back to summary score
-                    const displayScore = viewScore !== null ? viewScore : summaryScoreValue;
-                    const displayProgress = (displayScore ?? 0) / 100;
-                    const displayDashoffset =
-                      summaryCircumference * (1 - Math.min(1, Math.max(0, displayProgress)));
+                  {selectedCallLogView ? (
+                    // Selected Call Log View Content
+                    <div className="flex flex-col items-center space-y-6">
+                      {/* Circular Progress Indicator with Score */}
+                      {(() => {
+                        // Calculate the score for the selected view
+                        let viewScore: number | null = null;
+                        if (
+                          selectedCallLogView.type === "followup" ||
+                          selectedCallLogView.type === "transcription" ||
+                          selectedCallLogView.type === "recording"
+                        ) {
+                          const rawScore =
+                            selectedCallLogView.log.leadSuccessScore;
+                          if (
+                            typeof rawScore === "number" &&
+                            !Number.isNaN(rawScore)
+                          ) {
+                            viewScore = Math.max(
+                              0,
+                              Math.min(100, Math.round(rawScore))
+                            );
+                          }
+                        }
+                        // Use view score if available, otherwise fall back to summary score
+                        const displayScore =
+                          viewScore !== null ? viewScore : summaryScoreValue;
+                        const displayProgress = (displayScore ?? 0) / 100;
+                        const displayDashoffset =
+                          summaryCircumference *
+                          (1 - Math.min(1, Math.max(0, displayProgress)));
 
-                    return (
+                        return (
+                          <div className="relative w-48 h-48 mb-4">
+                            <svg
+                              className="w-full h-full transform -rotate-90"
+                              viewBox="0 0 100 100"
+                            >
+                              {/* Background circle */}
+                              <circle
+                                cx="50"
+                                cy="50"
+                                r="45"
+                                fill="none"
+                                stroke="#1a1a1a"
+                                strokeWidth="8"
+                              />
+                              {/* Progress circle */}
+                              <circle
+                                cx="50"
+                                cy="50"
+                                r="45"
+                                fill="none"
+                                stroke="url(#gradient-view)"
+                                strokeWidth="8"
+                                strokeLinecap="round"
+                                strokeDasharray={`${summaryCircumference}`}
+                                strokeDashoffset={`${displayDashoffset}`}
+                              />
+                              {/* Gradient definition */}
+                              <defs>
+                                <linearGradient
+                                  id="gradient-view"
+                                  x1="0%"
+                                  y1="0%"
+                                  x2="100%"
+                                  y2="100%"
+                                >
+                                  <stop offset="0%" stopColor="#3b82f6" />
+                                  <stop offset="100%" stopColor="#06b6d4" />
+                                </linearGradient>
+                              </defs>
+                            </svg>
+                            {/* Percentage text */}
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <span className="text-4xl font-bold text-white">
+                                {displayScore !== null
+                                  ? `${displayScore}%`
+                                  : "--"}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })()}
+
+                      {/* View-specific content */}
+                      {selectedCallLogView.type === "followup" && (
+                        <div className="w-full space-y-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <div>
+                              <h3 className="text-lg font-semibold text-white">
+                                Follow-up suggestions
+                              </h3>
+                              <p className="text-xs text-white/60 mt-1">
+                                Based on the last call with{" "}
+                                <span className="font-medium">
+                                  {selectedCallLogView.log.leadName ||
+                                    "this lead"}
+                                </span>{" "}
+                                on{" "}
+                                {formatCallDate(
+                                  selectedCallLogView.log.startedAt
+                                )}
+                                .
+                              </p>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="text-white/60 hover:text-white"
+                              onClick={() => setSelectedCallLogView(null)}
+                            >
+                              ✕
+                            </Button>
+                          </div>
+
+                          <div className="space-y-4 max-h-[calc(100vh-500px)] overflow-y-auto pr-1">
+                            <div
+                              className="rounded-lg p-4"
+                              style={{
+                                border: "1px solid rgba(255, 255, 255, 0.2)",
+                                background: "rgba(255, 255, 255, 0.02)",
+                              }}
+                            >
+                              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/50 mb-1">
+                                Summary
+                              </p>
+                              <p className="text-sm text-white/80">
+                                {selectedCallLogView.log
+                                  .followupSuggestionSummary ||
+                                  "No summary available for this call."}
+                              </p>
+                            </div>
+
+                            {Array.isArray(
+                              (
+                                selectedCallLogView.log
+                                  .followupSuggestionMetadata as any
+                              )?.raw?.touchpoints
+                            ) &&
+                              (
+                                selectedCallLogView.log
+                                  .followupSuggestionMetadata as any
+                              ).raw.touchpoints.length > 0 && (
+                                <div
+                                  className="rounded-lg p-4 space-y-3"
+                                  style={{
+                                    border:
+                                      "1px solid rgba(255, 255, 255, 0.2)",
+                                    background: "rgba(255, 255, 255, 0.02)",
+                                  }}
+                                >
+                                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/50">
+                                    Recommended touchpoints
+                                  </p>
+                                  <div className="space-y-3">
+                                    {(
+                                      selectedCallLogView.log
+                                        .followupSuggestionMetadata as any
+                                    ).raw.touchpoints.map(
+                                      (
+                                        tp: {
+                                          offset_hours?: number;
+                                          channel?: string;
+                                          message?: string;
+                                        },
+                                        index: number
+                                      ) => (
+                                        <div
+                                          key={index}
+                                          className="rounded-xl bg-black/40 border border-white/10 p-3"
+                                        >
+                                          <div className="flex items-center justify-between gap-2 mb-1.5">
+                                            <span className="text-xs font-semibold text-white/80">
+                                              Step {index + 1}
+                                            </span>
+                                            <span className="text-[0.7rem] px-2 py-0.5 rounded-full bg-white/10 text-white/80 uppercase tracking-[0.18em]">
+                                              {tp.channel || "unspecified"}
+                                            </span>
+                                          </div>
+                                          {typeof tp.offset_hours ===
+                                            "number" && (
+                                            <p className="text-[0.7rem] text-white/60 mb-1">
+                                              In approximately{" "}
+                                              <span className="font-medium text-white/80">
+                                                {tp.offset_hours} hours
+                                              </span>{" "}
+                                              from the end of the call.
+                                            </p>
+                                          )}
+                                          {tp.message && (
+                                            <p className="text-xs text-white/80 whitespace-pre-line">
+                                              {tp.message}
+                                            </p>
+                                          )}
+                                        </div>
+                                      )
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                          </div>
+                        </div>
+                      )}
+
+                      {selectedCallLogView.type === "transcription" && (
+                        <div className="w-full space-y-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <div>
+                              <h3 className="text-lg font-semibold text-white">
+                                Call transcription
+                              </h3>
+                              <p className="text-xs text-white/60 mt-1">
+                                {selectedCallLogView.log.leadName ||
+                                  "This lead"}{" "}
+                                —{" "}
+                                {formatCallDate(
+                                  selectedCallLogView.log.startedAt
+                                )}{" "}
+                                •{" "}
+                                {formatDuration(
+                                  selectedCallLogView.log.durationSeconds
+                                )}
+                              </p>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="text-white/60 hover:text-white"
+                              onClick={() => setSelectedCallLogView(null)}
+                            >
+                              ✕
+                            </Button>
+                          </div>
+
+                          <div
+                            className="rounded-lg p-4 max-h-[calc(100vh-500px)] overflow-y-auto"
+                            style={{
+                              border: "1px solid rgba(255, 255, 255, 0.2)",
+                              background: "rgba(255, 255, 255, 0.02)",
+                            }}
+                          >
+                            {selectedCallLogView.log.transcriptionText ? (
+                              <p className="text-sm text-white/80 whitespace-pre-wrap leading-relaxed">
+                                {selectedCallLogView.log.transcriptionText}
+                              </p>
+                            ) : (
+                              <p className="text-sm text-white/60">
+                                No transcription available for this call.
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {selectedCallLogView.type === "recording" && (
+                        <div className="w-full space-y-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <div>
+                              <h3 className="text-lg font-semibold text-white">
+                                Call recording
+                              </h3>
+                              <p className="text-xs text-white/60 mt-1">
+                                {selectedCallLogView.log.leadName ||
+                                  "This lead"}{" "}
+                                —{" "}
+                                {formatCallDate(
+                                  selectedCallLogView.log.startedAt
+                                )}{" "}
+                                •{" "}
+                                {formatDuration(
+                                  selectedCallLogView.log.durationSeconds
+                                )}
+                              </p>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="text-white/60 hover:text-white"
+                              onClick={() => setSelectedCallLogView(null)}
+                            >
+                              ✕
+                            </Button>
+                          </div>
+
+                          <div
+                            className="rounded-lg p-4"
+                            style={{
+                              border: "1px solid rgba(255, 255, 255, 0.2)",
+                              background: "rgba(255, 255, 255, 0.02)",
+                            }}
+                          >
+                            {recordingLoading && (
+                              <p className="text-sm text-white/70">
+                                Loading recording...
+                              </p>
+                            )}
+                            {!recordingLoading && recordingError && (
+                              <p className="text-sm text-red-300">
+                                {recordingError}
+                              </p>
+                            )}
+                            {!recordingLoading &&
+                              !recordingError &&
+                              recordingAudioUrl && (
+                                <audio
+                                  controls
+                                  className="w-full"
+                                  src={recordingAudioUrl}
+                                />
+                              )}
+                            {!recordingLoading &&
+                              !recordingError &&
+                              !recordingAudioUrl && (
+                                <p className="text-sm text-white/60">
+                                  Recording not available for this call.
+                                </p>
+                              )}
+                            <p className="mt-2 text-[0.7rem] text-white/40">
+                              Playback is streamed securely from EmpaTech
+                              servers. Seeking is supported by your browser's
+                              audio player.
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    // Default Summary Content
+                    <div className="flex flex-col items-center">
+                      {/* Circular Progress Indicator */}
                       <div className="relative w-48 h-48 mb-4">
                         <svg
                           className="w-full h-full transform -rotate-90"
@@ -984,16 +1301,16 @@ const Activity: FC<ActivityProps> = ({
                             cy="50"
                             r="45"
                             fill="none"
-                            stroke="url(#gradient-view)"
+                            stroke="url(#gradient)"
                             strokeWidth="8"
                             strokeLinecap="round"
                             strokeDasharray={`${summaryCircumference}`}
-                            strokeDashoffset={`${displayDashoffset}`}
+                            strokeDashoffset={`${summaryDashoffset}`}
                           />
                           {/* Gradient definition */}
                           <defs>
                             <linearGradient
-                              id="gradient-view"
+                              id="gradient"
                               x1="0%"
                               y1="0%"
                               x2="100%"
@@ -1007,1071 +1324,846 @@ const Activity: FC<ActivityProps> = ({
                         {/* Percentage text */}
                         <div className="absolute inset-0 flex items-center justify-center">
                           <span className="text-4xl font-bold text-white">
-                            {displayScore !== null ? `${displayScore}%` : "--"}
+                            {summaryScoreValue !== null
+                              ? `${summaryScoreValue}%`
+                              : "--"}
                           </span>
                         </div>
                       </div>
-                    );
-                  })()}
 
-                  {/* View-specific content */}
-                  {selectedCallLogView.type === "followup" && (
-                    <div className="w-full space-y-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <div>
-                          <h3 className="text-lg font-semibold text-white">
-                            Follow-up suggestions
-                          </h3>
-                          <p className="text-xs text-white/60 mt-1">
-                            Based on the last call with{" "}
-                            <span className="font-medium">
-                              {selectedCallLogView.log.leadName || "this lead"}
-                            </span>{" "}
-                            on {formatCallDate(selectedCallLogView.log.startedAt)}
-                            .
-                          </p>
+                      {/* Text below circle */}
+                      <p className="text-white text-center mb-8 text-sm text-white/70">
+                        {summaryScoreValue !== null
+                          ? "Based on recent WhatsApp, SMS, email, and call activity."
+                          : "Run the AI summary to compute the engagement score."}
+                      </p>
+
+                      {/* AI Summary Section */}
+                      <div
+                        className="w-full rounded-lg p-4"
+                        style={{
+                          border: "1px solid rgba(255, 255, 255, 0.2)",
+                          background: "rgba(255, 255, 255, 0.02)",
+                        }}
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
+                          <h3 className="text-white font-bold">AI Summary</h3>
+                          <ActiveNavButton
+                            icon={RefreshCcw}
+                            text={
+                              refreshLeadSummaryMutation.isPending
+                                ? "Updating..."
+                                : "Refresh"
+                            }
+                            onClick={handleRefreshLeadSummary}
+                            disabled={
+                              !leadId || refreshLeadSummaryMutation.isPending
+                            }
+                            className="h-8 text-xs"
+                          />
                         </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="text-white/60 hover:text-white"
-                          onClick={() => setSelectedCallLogView(null)}
-                        >
-                          ✕
-                        </Button>
-                      </div>
-
-                      <div className="space-y-4 max-h-[calc(100vh-500px)] overflow-y-auto pr-1">
-                        <div
-                          className="rounded-lg p-4"
-                          style={{
-                            border: "1px solid rgba(255, 255, 255, 0.2)",
-                            background: "rgba(255, 255, 255, 0.02)",
-                          }}
-                        >
-                          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/50 mb-1">
-                            Summary
-                          </p>
-                          <p className="text-sm text-white/80">
-                            {selectedCallLogView.log.followupSuggestionSummary ||
-                              "No summary available for this call."}
-                          </p>
-                        </div>
-
-                        {Array.isArray(
-                          (selectedCallLogView.log.followupSuggestionMetadata as any)
-                            ?.raw?.touchpoints
-                        ) &&
-                          (selectedCallLogView.log.followupSuggestionMetadata as any)
-                            .raw.touchpoints.length > 0 && (
-                            <div
-                              className="rounded-lg p-4 space-y-3"
-                              style={{
-                                border: "1px solid rgba(255, 255, 255, 0.2)",
-                                background: "rgba(255, 255, 255, 0.02)",
-                              }}
-                            >
-                              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/50">
-                                Recommended touchpoints
-                              </p>
-                              <div className="space-y-3">
-                                {(
-                                  selectedCallLogView.log
-                                    .followupSuggestionMetadata as any
-                                ).raw.touchpoints.map(
-                                  (
-                                    tp: {
-                                      offset_hours?: number;
-                                      channel?: string;
-                                      message?: string;
-                                    },
-                                    index: number
-                                  ) => (
-                                    <div
-                                      key={index}
-                                      className="rounded-xl bg-black/40 border border-white/10 p-3"
-                                    >
-                                      <div className="flex items-center justify-between gap-2 mb-1.5">
-                                        <span className="text-xs font-semibold text-white/80">
-                                          Step {index + 1}
-                                        </span>
-                                        <span className="text-[0.7rem] px-2 py-0.5 rounded-full bg-white/10 text-white/80 uppercase tracking-[0.18em]">
-                                          {tp.channel || "unspecified"}
-                                        </span>
-                                      </div>
-                                      {typeof tp.offset_hours === "number" && (
-                                        <p className="text-[0.7rem] text-white/60 mb-1">
-                                          In approximately{" "}
-                                          <span className="font-medium text-white/80">
-                                            {tp.offset_hours} hours
-                                          </span>{" "}
-                                          from the end of the call.
-                                        </p>
-                                      )}
-                                      {tp.message && (
-                                        <p className="text-xs text-white/80 whitespace-pre-line">
-                                          {tp.message}
-                                        </p>
-                                      )}
-                                    </div>
-                                  )
-                                )}
-                              </div>
+                        <p className="text-[11px] leading-tight text-white/50 mb-3 whitespace-nowrap overflow-hidden text-ellipsis">
+                          {summaryStatusLabel}
+                        </p>
+                        <div className="text-white/80 text-sm space-y-3 leading-relaxed min-h-[140px]">
+                          {isSummaryBusy ? (
+                            <div className="flex items-center text-white/60 text-sm">
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Generating the latest insights...
+                            </div>
+                          ) : summaryParagraphs.length > 0 ? (
+                            summaryParagraphs.map((paragraph, index) => (
+                              <p key={index}>{paragraph}</p>
+                            ))
+                          ) : (
+                            <div className="text-white/60 text-sm">
+                              No WhatsApp, SMS, email, or call activity recorded
+                              for {lead?.name || "this lead"} in the last 30
+                              day(s).
                             </div>
                           )}
+                        </div>
                       </div>
                     </div>
                   )}
-
-                  {selectedCallLogView.type === "transcription" && (
-                    <div className="w-full space-y-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <div>
-                          <h3 className="text-lg font-semibold text-white">
-                            Call transcription
-                          </h3>
-                          <p className="text-xs text-white/60 mt-1">
-                            {selectedCallLogView.log.leadName || "This lead"} —{" "}
-                            {formatCallDate(selectedCallLogView.log.startedAt)} •{" "}
-                            {formatDuration(
-                              selectedCallLogView.log.durationSeconds
-                            )}
-                          </p>
-                          {selectedCallLogView.log.transcriptionProvider && (
-                            <p className="mt-1 text-[0.7rem] text-white/50">
-                              Provider:{" "}
-                              <span className="font-medium text-white/70">
-                                {selectedCallLogView.log.transcriptionProvider}
-                              </span>
-                            </p>
-                          )}
-                        </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="text-white/60 hover:text-white"
-                          onClick={() => setSelectedCallLogView(null)}
-                        >
-                          ✕
-                        </Button>
-                      </div>
-
-                      <div
-                        className="rounded-lg p-4 max-h-[calc(100vh-500px)] overflow-y-auto"
-                        style={{
-                          border: "1px solid rgba(255, 255, 255, 0.2)",
-                          background: "rgba(255, 255, 255, 0.02)",
-                        }}
-                      >
-                        {selectedCallLogView.log.transcriptionText ? (
-                          <p className="text-sm text-white/80 whitespace-pre-wrap leading-relaxed">
-                            {selectedCallLogView.log.transcriptionText}
-                          </p>
-                        ) : (
-                          <p className="text-sm text-white/60">
-                            No transcription available for this call.
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {selectedCallLogView.type === "recording" && (
-                    <div className="w-full space-y-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <div>
-                          <h3 className="text-lg font-semibold text-white">
-                            Call recording
-                          </h3>
-                          <p className="text-xs text-white/60 mt-1">
-                            {selectedCallLogView.log.leadName || "This lead"} —{" "}
-                            {formatCallDate(selectedCallLogView.log.startedAt)} •{" "}
-                            {formatDuration(
-                              selectedCallLogView.log.durationSeconds
-                            )}
-                          </p>
-                        </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="text-white/60 hover:text-white"
-                          onClick={() => setSelectedCallLogView(null)}
-                        >
-                          ✕
-                        </Button>
-                      </div>
-
-                      <div
-                        className="rounded-lg p-4"
-                        style={{
-                          border: "1px solid rgba(255, 255, 255, 0.2)",
-                          background: "rgba(255, 255, 255, 0.02)",
-                        }}
-                      >
-                        {recordingLoading && (
-                          <p className="text-sm text-white/70">
-                            Loading recording...
-                          </p>
-                        )}
-                        {!recordingLoading && recordingError && (
-                          <p className="text-sm text-red-300">
-                            {recordingError}
-                          </p>
-                        )}
-                        {!recordingLoading &&
-                          !recordingError &&
-                          recordingAudioUrl && (
-                            <audio
-                              controls
-                              className="w-full"
-                              src={recordingAudioUrl}
-                            />
-                          )}
-                        {!recordingLoading &&
-                          !recordingError &&
-                          !recordingAudioUrl && (
-                            <p className="text-sm text-white/60">
-                              Recording not available for this call.
-                            </p>
-                          )}
-                        <p className="mt-2 text-[0.7rem] text-white/40">
-                          Playback is streamed securely from EmpaTech servers.
-                          Seeking is supported by your browser's audio player.
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                // Default Summary Content
-                <div className="flex flex-col items-center">
-                  {/* Circular Progress Indicator */}
-                  <div className="relative w-48 h-48 mb-4">
-                    <svg
-                      className="w-full h-full transform -rotate-90"
-                      viewBox="0 0 100 100"
-                    >
-                      {/* Background circle */}
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="45"
-                        fill="none"
-                        stroke="#1a1a1a"
-                        strokeWidth="8"
-                      />
-                      {/* Progress circle */}
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="45"
-                        fill="none"
-                        stroke="url(#gradient)"
-                        strokeWidth="8"
-                        strokeLinecap="round"
-                        strokeDasharray={`${summaryCircumference}`}
-                        strokeDashoffset={`${summaryDashoffset}`}
-                      />
-                      {/* Gradient definition */}
-                      <defs>
-                        <linearGradient
-                          id="gradient"
-                          x1="0%"
-                          y1="0%"
-                          x2="100%"
-                          y2="100%"
-                        >
-                          <stop offset="0%" stopColor="#3b82f6" />
-                          <stop offset="100%" stopColor="#06b6d4" />
-                        </linearGradient>
-                      </defs>
-                    </svg>
-                    {/* Percentage text */}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-4xl font-bold text-white">
-                        {summaryScoreValue !== null
-                          ? `${summaryScoreValue}%`
-                          : "--"}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Text below circle */}
-                  <p className="text-white text-center mb-8 text-sm text-white/70">
-                    {summaryScoreValue !== null
-                      ? "Based on recent WhatsApp, SMS, email, and call activity."
-                      : "Run the AI summary to compute the engagement score."}
-                  </p>
-
-                  {/* AI Summary Section */}
-                  <div
-                    className="w-full rounded-lg p-4"
-                    style={{
-                      border: "1px solid rgba(255, 255, 255, 0.2)",
-                      background: "rgba(255, 255, 255, 0.02)",
-                    }}
-                  >
-                    <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
-                      <h3 className="text-white font-bold">AI Summary</h3>
-                      <ActiveNavButton
-                        icon={RefreshCcw}
-                        text={
-                          refreshLeadSummaryMutation.isPending
-                            ? "Updating..."
-                            : "Refresh"
-                        }
-                        onClick={handleRefreshLeadSummary}
-                        disabled={!leadId || refreshLeadSummaryMutation.isPending}
-                        className="h-8 text-xs"
-                      />
-                    </div>
-                  <p className="text-[11px] leading-tight text-white/50 mb-3 whitespace-nowrap overflow-hidden text-ellipsis">
-                      {summaryStatusLabel}
-                    </p>
-                    <div className="text-white/80 text-sm space-y-3 leading-relaxed min-h-[140px]">
-                      {isSummaryBusy ? (
-                        <div className="flex items-center text-white/60 text-sm">
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Generating the latest insights...
-                        </div>
-                      ) : summaryParagraphs.length > 0 ? (
-                        summaryParagraphs.map((paragraph, index) => (
-                          <p key={index}>{paragraph}</p>
-                        ))
-                      ) : (
-                        <div className="text-white/60 text-sm">
-                          No WhatsApp, SMS, email, or call activity recorded for{" "}
-                          {lead?.name || "this lead"} in the last 30 day(s).
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
                 </TabsContent>
 
                 {/* Calendar Tab Content */}
                 <TabsContent value="calendar" className="mt-6">
-              {!leadId ? (
-                <div
-                  className="rounded-lg p-6 text-white/70 text-sm"
-                  style={{
-                    background: "rgba(255, 255, 255, 0.03)",
-                    border: "1px solid rgba(255, 255, 255, 0.1)",
-                  }}
-                >
-                  Select a lead to view scheduled meetings and availability.
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  {/* Calendar Widget */}
-                  <div
-                    className="rounded-lg p-6"
-                    style={{
-                      background: "rgba(255, 255, 255, 0.03)",
-                      border: "1px solid rgba(255, 255, 255, 0.1)",
-                    }}
-                  >
-                    {/* Month Navigation */}
-                    <div className="flex items-center justify-between mb-6">
-                      <button
-                        onClick={handlePrevMonth}
-                        className="text-white/70 hover:text-white transition-colors p-1"
-                        aria-label="Previous month"
-                      >
-                        <svg
-                          width="20"
-                          height="20"
-                          viewBox="0 0 20 20"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            d="M12.5 15L7.5 10L12.5 5"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      </button>
-                      <h3 className="text-white font-semibold text-lg">
-                        {monthNames[currentDate.getMonth()]}{" "}
-                        {currentDate.getFullYear()}
-                      </h3>
-                      <button
-                        onClick={handleNextMonth}
-                        className="text-white/70 hover:text-white transition-colors p-1"
-                        aria-label="Next month"
-                      >
-                        <svg
-                          width="20"
-                          height="20"
-                          viewBox="0 0 20 20"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            d="M7.5 15L12.5 10L7.5 5"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      </button>
-                    </div>
-
-                    <div className="flex flex-wrap items-center justify-between gap-3 mb-4 text-xs text-white/70">
-                      <span>
-                        {leadMeetings.length > 0
-                          ? `${leadMeetings.length} meeting${
-                              leadMeetings.length === 1 ? "" : "s"
-                            } scheduled this month`
-                          : "No meetings scheduled this month"}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        {(isCalendarDataBusy || syncMeetingsMutation.isPending) && (
-                          <Loader2 className="w-4 h-4 animate-spin text-white/70" />
-                        )}
-                        <ActiveNavButton
-                          icon={RefreshCcw}
-                          text={
-                            syncMeetingsMutation.isPending ? "Syncing..." : "Refresh"
-                          }
-                          onClick={handleRefreshCalendarData}
-                          disabled={
-                            isCalendarDataBusy || syncMeetingsMutation.isPending
-                          }
-                          className="h-8 text-xs"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Days of Week */}
-                    <div className="grid grid-cols-7 gap-2 mb-2">
-                      {["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map(
-                        (day) => (
-                          <div
-                            key={day}
-                            className="text-center text-white/50 text-xs font-medium py-2"
-                          >
-                            {day}
-                          </div>
-                        )
-                      )}
-                    </div>
-
-                    {/* Calendar Grid */}
-                    <div className="grid grid-cols-7 gap-2">
-                      {getCalendarDays().map((day, index) => {
-                        if (day === null) {
-                          return <div key={index} className="aspect-square" />;
-                        }
-
-                        const dayMeetings = meetingDayMap.get(day) || [];
-                        const dayAvailability = availabilityDayMap.get(day) || [];
-                        const hasUpcomingMeeting = dayMeetings.some(
-                          (meeting) =>
-                            new Date(meeting.startDateTime).getTime() >=
-                            nowTimestamp
-                        );
-                        const hasCompletedMeeting = dayMeetings.some(
-                          (meeting) =>
-                            new Date(meeting.endDateTime).getTime() < nowTimestamp
-                        );
-                        const hasAvailability = dayAvailability.length > 0;
-                        const isToday =
-                          day === todayRef.getDate() &&
-                          currentDate.getMonth() === todayRef.getMonth() &&
-                          currentDate.getFullYear() === todayRef.getFullYear();
-                        const highlightClass = hasUpcomingMeeting
-                          ? "bg-indigo-500/30 border border-indigo-400/70"
-                          : hasCompletedMeeting
-                          ? "bg-teal-500/25 border border-teal-400/60"
-                          : hasAvailability
-                          ? "bg-blue-500/20 border border-blue-400/60"
-                          : "";
-                        const textClass =
-                          hasUpcomingMeeting || hasCompletedMeeting || hasAvailability
-                            ? "text-white font-medium"
-                            : "text-white/70";
-                        const labelParts = [];
-                        if (dayMeetings.length) {
-                          labelParts.push(
-                            `${dayMeetings.length} meeting${
-                              dayMeetings.length === 1 ? "" : "s"
-                            }`
-                          );
-                        }
-                        if (dayAvailability.length) {
-                          labelParts.push(
-                            `${dayAvailability.length} slot${
-                              dayAvailability.length === 1 ? "" : "s"
-                            } available`
-                          );
-                        }
-                        const ariaLabel =
-                          labelParts.length > 0
-                            ? `Day ${day}: ${labelParts.join(", ")}`
-                            : `Day ${day}`;
-
-                        return (
-                          <div
-                            key={index}
-                            className="aspect-square flex items-center justify-center relative"
-                            aria-label={ariaLabel}
-                            title={ariaLabel}
-                          >
-                            {(hasUpcomingMeeting ||
-                              hasCompletedMeeting ||
-                              hasAvailability) && (
-                              <div
-                                className={`absolute inset-0 rounded-full ${highlightClass}`}
-                              />
-                            )}
-                            {isToday && (
-                              <div className="absolute inset-0 rounded-full border border-white/40 pointer-events-none" />
-                            )}
-                            <span className={`relative z-10 ${textClass}`}>
-                              {day}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Calendar Legend */}
-                  <div className="flex flex-wrap items-center gap-6 text-sm text-white/70">
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 rounded-full border border-indigo-400/70 bg-indigo-500/30" />
-                      <span>Upcoming meeting</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 rounded-full border border-teal-400/60 bg-teal-500/25" />
-                      <span>Completed meeting</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 rounded-full border border-blue-400/60 bg-blue-500/20" />
-                      <span>Available slot</span>
-                    </div>
-                  </div>
-
-                  {/* Data Sections */}
-                  <div className="space-y-6">
+                  {!leadId ? (
                     <div
-                      className="rounded-lg p-6"
+                      className="rounded-lg p-6 text-white/70 text-sm"
                       style={{
                         background: "rgba(255, 255, 255, 0.03)",
                         border: "1px solid rgba(255, 255, 255, 0.1)",
                       }}
                     >
-                      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-                        <h3 className="text-white font-bold">Scheduled Meetings</h3>
-                        <ActiveNavButton
-                          icon={RefreshCcw}
-                          text={
-                            syncMeetingsMutation.isPending ? "Syncing..." : "Refresh"
-                          }
-                          onClick={handleRefreshCalendarData}
-                          disabled={
-                            isLeadMeetingsBusy || syncMeetingsMutation.isPending
-                          }
-                          className="h-8 text-xs"
-                        />
-                      </div>
-                      {isLeadMeetingsBusy ? (
-                        <div className="flex items-center gap-2 text-white/60 text-sm">
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          Loading meetings...
+                      Select a lead to view scheduled meetings and availability.
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      {/* Calendar Widget */}
+                      <div
+                        className="rounded-lg p-6"
+                        style={{
+                          background: "rgba(255, 255, 255, 0.03)",
+                          border: "1px solid rgba(255, 255, 255, 0.1)",
+                        }}
+                      >
+                        {/* Month Navigation */}
+                        <div className="flex items-center justify-between mb-6">
+                          <button
+                            onClick={handlePrevMonth}
+                            className="text-white/70 hover:text-white transition-colors p-1"
+                            aria-label="Previous month"
+                          >
+                            <svg
+                              width="20"
+                              height="20"
+                              viewBox="0 0 20 20"
+                              fill="none"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                d="M12.5 15L7.5 10L12.5 5"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          </button>
+                          <h3 className="text-white font-semibold text-lg">
+                            {monthNames[currentDate.getMonth()]}{" "}
+                            {currentDate.getFullYear()}
+                          </h3>
+                          <button
+                            onClick={handleNextMonth}
+                            className="text-white/70 hover:text-white transition-colors p-1"
+                            aria-label="Next month"
+                          >
+                            <svg
+                              width="20"
+                              height="20"
+                              viewBox="0 0 20 20"
+                              fill="none"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                d="M7.5 15L12.5 10L7.5 5"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          </button>
                         </div>
-                      ) : sortedMeetings.length > 0 ? (
-                        <div className="space-y-3">
-                          {sortedMeetings.map((meeting) => {
-                            const meetingEnd = new Date(meeting.endDateTime);
-                            const meetingCompleted =
-                              meetingEnd.getTime() < nowTimestamp;
+
+                        <div className="flex flex-wrap items-center justify-between gap-3 mb-4 text-xs text-white/70">
+                          <span>
+                            {leadMeetings.length > 0
+                              ? `${leadMeetings.length} meeting${
+                                  leadMeetings.length === 1 ? "" : "s"
+                                } scheduled this month`
+                              : "No meetings scheduled this month"}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            {(isCalendarDataBusy ||
+                              syncMeetingsMutation.isPending) && (
+                              <Loader2 className="w-4 h-4 animate-spin text-white/70" />
+                            )}
+                            <ActiveNavButton
+                              icon={RefreshCcw}
+                              text={
+                                syncMeetingsMutation.isPending
+                                  ? "Syncing..."
+                                  : "Refresh"
+                              }
+                              onClick={handleRefreshCalendarData}
+                              disabled={
+                                isCalendarDataBusy ||
+                                syncMeetingsMutation.isPending
+                              }
+                              className="h-8 text-xs"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Days of Week */}
+                        <div className="grid grid-cols-7 gap-2 mb-2">
+                          {[
+                            "MON",
+                            "TUE",
+                            "WED",
+                            "THU",
+                            "FRI",
+                            "SAT",
+                            "SUN",
+                          ].map((day) => (
+                            <div
+                              key={day}
+                              className="text-center text-white/50 text-xs font-medium py-2"
+                            >
+                              {day}
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Calendar Grid */}
+                        <div className="grid grid-cols-7 gap-2">
+                          {getCalendarDays().map((day, index) => {
+                            if (day === null) {
+                              return (
+                                <div key={index} className="aspect-square" />
+                              );
+                            }
+
+                            const dayMeetings = meetingDayMap.get(day) || [];
+                            const dayAvailability =
+                              availabilityDayMap.get(day) || [];
+                            const hasUpcomingMeeting = dayMeetings.some(
+                              (meeting) =>
+                                new Date(meeting.startDateTime).getTime() >=
+                                nowTimestamp
+                            );
+                            const hasCompletedMeeting = dayMeetings.some(
+                              (meeting) =>
+                                new Date(meeting.endDateTime).getTime() <
+                                nowTimestamp
+                            );
+                            const hasAvailability = dayAvailability.length > 0;
+                            const isToday =
+                              day === todayRef.getDate() &&
+                              currentDate.getMonth() === todayRef.getMonth() &&
+                              currentDate.getFullYear() ===
+                                todayRef.getFullYear();
+                            const highlightClass = hasUpcomingMeeting
+                              ? "bg-indigo-500/30 border border-indigo-400/70"
+                              : hasCompletedMeeting
+                              ? "bg-teal-500/25 border border-teal-400/60"
+                              : hasAvailability
+                              ? "bg-blue-500/20 border border-blue-400/60"
+                              : "";
+                            const textClass =
+                              hasUpcomingMeeting ||
+                              hasCompletedMeeting ||
+                              hasAvailability
+                                ? "text-white font-medium"
+                                : "text-white/70";
+                            const labelParts = [];
+                            if (dayMeetings.length) {
+                              labelParts.push(
+                                `${dayMeetings.length} meeting${
+                                  dayMeetings.length === 1 ? "" : "s"
+                                }`
+                              );
+                            }
+                            if (dayAvailability.length) {
+                              labelParts.push(
+                                `${dayAvailability.length} slot${
+                                  dayAvailability.length === 1 ? "" : "s"
+                                } available`
+                              );
+                            }
+                            const ariaLabel =
+                              labelParts.length > 0
+                                ? `Day ${day}: ${labelParts.join(", ")}`
+                                : `Day ${day}`;
+
                             return (
                               <div
-                                key={meeting._id}
-                                className="rounded-lg p-4 border border-white/10 bg-white/5"
+                                key={index}
+                                className="aspect-square flex items-center justify-center relative"
+                                aria-label={ariaLabel}
+                                title={ariaLabel}
                               >
-                                <div className="flex flex-wrap items-center justify-between gap-3">
-                                  <div>
-                                    <p className="text-white font-semibold text-sm">
-                                      {meeting.subject || "Meeting"}
-                                    </p>
-                                    <p className="text-xs text-white/60">
-                                      {formatDateTimeRange(
-                                        meeting.startDateTime,
-                                        meeting.endDateTime
-                                      )}
-                                    </p>
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <Badge
-                                      className={
-                                        meeting.status === "completed"
-                                          ? "bg-teal-500/20 text-teal-200 border border-teal-400/40"
-                                          : meeting.status === "cancelled"
-                                          ? "bg-red-500/20 text-red-200 border border-red-400/40"
-                                          : "bg-indigo-500/20 text-indigo-200 border border-indigo-400/40"
-                                      }
-                                    >
-                                      {meeting.status === "completed" ? "Completed" :
-                                       meeting.status === "cancelled" ? "Cancelled" : "Scheduled"}
-                                    </Badge>
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="sm"
-                                      className="text-red-200 hover:text-red-100 hover:bg-red-500/10 h-6 w-6 p-0"
-                                      onClick={() => setMeetingPendingDelete(meeting)}
-                                      disabled={deleteMeetingMutation.isPending}
-                                    >
-                                      <Trash2 className="w-3 h-3" />
-                                    </Button>
-                                  </div>
-                                </div>
-                                {meeting.body && (
-                                  <p className="text-xs text-white/70 mt-2">
-                                    {meeting.body.length > 200
-                                      ? `${meeting.body.substring(0, 200)}...`
-                                      : meeting.body}
-                                  </p>
+                                {(hasUpcomingMeeting ||
+                                  hasCompletedMeeting ||
+                                  hasAvailability) && (
+                                  <div
+                                    className={`absolute inset-0 rounded-full ${highlightClass}`}
+                                  />
                                 )}
-                                {meeting.webLink && (
-                                  <a
-                                    href={meeting.webLink}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="text-xs text-sky-300 hover:text-sky-200 mt-2 inline-block"
-                                  >
-                                    Open calendar event →
-                                  </a>
+                                {isToday && (
+                                  <div className="absolute inset-0 rounded-full border border-white/40 pointer-events-none" />
                                 )}
+                                <span className={`relative z-10 ${textClass}`}>
+                                  {day}
+                                </span>
                               </div>
                             );
                           })}
                         </div>
-                      ) : (
-                        <div className="text-sm text-white/60">
-                          No meetings scheduled for this lead in{" "}
-                          {monthNames[currentDate.getMonth()]}.
-                        </div>
-                      )}
-                      {leadMeetingsErrorMessage && (
-                        <div className="text-xs text-red-300 mt-3">
-                          {leadMeetingsErrorMessage}
-                        </div>
-                      )}
-                    </div>
-                    <div
-                      className="rounded-lg p-6"
-                      style={{
-                        background: "rgba(255, 255, 255, 0.03)",
-                        border: "1px solid rgba(255, 255, 255, 0.1)",
-                      }}
-                    >
-                      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-                        <h3 className="text-white font-bold">Available Slots</h3>
-                        <ActiveNavButton
-                          icon={RefreshCcw}
-                          text={
-                            syncMeetingsMutation.isPending ? "Syncing..." : "Refresh"
-                          }
-                          onClick={handleRefreshCalendarData}
-                          disabled={
-                            isAvailabilityBusy || syncMeetingsMutation.isPending
-                          }
-                          className="h-8 text-xs"
-                        />
                       </div>
-                      {isAvailabilityBusy ? (
-                        <div className="flex items-center gap-2 text-white/60 text-sm">
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          Calculating availability...
+
+                      {/* Calendar Legend */}
+                      <div className="flex flex-wrap items-center gap-6 text-sm text-white/70">
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 rounded-full border border-indigo-400/70 bg-indigo-500/30" />
+                          <span>Upcoming meeting</span>
                         </div>
-                      ) : nextAvailableSlots.length > 0 ? (
-                        <div className="space-y-3">
-                          {nextAvailableSlots.map((slot) => (
-                            <div
-                              key={slot.start}
-                              className="rounded-lg p-4 border border-white/10 bg-white/5"
-                            >
-                              <p className="text-white text-sm font-semibold">
-                                {format(slot.startDate, "EEE, MMM d")}
-                              </p>
-                              <p className="text-xs text-white/70">
-                                {format(slot.startDate, "h:mm a")} –{" "}
-                                {format(slot.endDate, "h:mm a")} ·{" "}
-                                {slot.durationMinutes} min
-                              </p>
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 rounded-full border border-teal-400/60 bg-teal-500/25" />
+                          <span>Completed meeting</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 rounded-full border border-blue-400/60 bg-blue-500/20" />
+                          <span>Available slot</span>
+                        </div>
+                      </div>
+
+                      {/* Data Sections */}
+                      <div className="space-y-6">
+                        <div
+                          className="rounded-lg p-6"
+                          style={{
+                            background: "rgba(255, 255, 255, 0.03)",
+                            border: "1px solid rgba(255, 255, 255, 0.1)",
+                          }}
+                        >
+                          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                            <h3 className="text-white font-bold">
+                              Scheduled Meetings
+                            </h3>
+                            <ActiveNavButton
+                              icon={RefreshCcw}
+                              text={
+                                syncMeetingsMutation.isPending
+                                  ? "Syncing..."
+                                  : "Refresh"
+                              }
+                              onClick={handleRefreshCalendarData}
+                              disabled={
+                                isLeadMeetingsBusy ||
+                                syncMeetingsMutation.isPending
+                              }
+                              className="h-8 text-xs"
+                            />
+                          </div>
+                          {isLeadMeetingsBusy ? (
+                            <div className="flex items-center gap-2 text-white/60 text-sm">
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                              Loading meetings...
                             </div>
-                          ))}
+                          ) : sortedMeetings.length > 0 ? (
+                            <div className="space-y-3">
+                              {sortedMeetings.map((meeting) => {
+                                const meetingEnd = new Date(
+                                  meeting.endDateTime
+                                );
+                                const meetingCompleted =
+                                  meetingEnd.getTime() < nowTimestamp;
+                                return (
+                                  <div
+                                    key={meeting._id}
+                                    className="rounded-lg p-4 border border-white/10 bg-white/5"
+                                  >
+                                    <div className="flex flex-wrap items-center justify-between gap-3">
+                                      <div>
+                                        <p className="text-white font-semibold text-sm">
+                                          {meeting.subject || "Meeting"}
+                                        </p>
+                                        <p className="text-xs text-white/60">
+                                          {formatDateTimeRange(
+                                            meeting.startDateTime,
+                                            meeting.endDateTime
+                                          )}
+                                        </p>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <Badge
+                                          className={
+                                            meeting.status === "completed"
+                                              ? "bg-teal-500/20 text-teal-200 border border-teal-400/40"
+                                              : meeting.status === "cancelled"
+                                              ? "bg-red-500/20 text-red-200 border border-red-400/40"
+                                              : "bg-indigo-500/20 text-indigo-200 border border-indigo-400/40"
+                                          }
+                                        >
+                                          {meeting.status === "completed"
+                                            ? "Completed"
+                                            : meeting.status === "cancelled"
+                                            ? "Cancelled"
+                                            : "Scheduled"}
+                                        </Badge>
+                                        <Button
+                                          type="button"
+                                          variant="ghost"
+                                          size="sm"
+                                          className="text-red-200 hover:text-red-100 hover:bg-red-500/10 h-6 w-6 p-0"
+                                          onClick={() =>
+                                            setMeetingPendingDelete(meeting)
+                                          }
+                                          disabled={
+                                            deleteMeetingMutation.isPending
+                                          }
+                                        >
+                                          <Trash2 className="w-3 h-3" />
+                                        </Button>
+                                      </div>
+                                    </div>
+                                    {meeting.body && (
+                                      <p className="text-xs text-white/70 mt-2">
+                                        {meeting.body.length > 200
+                                          ? `${meeting.body.substring(
+                                              0,
+                                              200
+                                            )}...`
+                                          : meeting.body}
+                                      </p>
+                                    )}
+                                    {meeting.webLink && (
+                                      <a
+                                        href={meeting.webLink}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="text-xs text-sky-300 hover:text-sky-200 mt-2 inline-block"
+                                      >
+                                        Open calendar event →
+                                      </a>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <div className="text-sm text-white/60">
+                              No meetings scheduled for this lead in{" "}
+                              {monthNames[currentDate.getMonth()]}.
+                            </div>
+                          )}
+                          {leadMeetingsErrorMessage && (
+                            <div className="text-xs text-red-300 mt-3">
+                              {leadMeetingsErrorMessage}
+                            </div>
+                          )}
                         </div>
-                      ) : (
-                        <div className="text-sm text-white/60">
-                          No availability detected for this range. Try selecting a
-                          different month or adjust your Microsoft calendar working
-                          hours.
+                        <div
+                          className="rounded-lg p-6"
+                          style={{
+                            background: "rgba(255, 255, 255, 0.03)",
+                            border: "1px solid rgba(255, 255, 255, 0.1)",
+                          }}
+                        >
+                          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                            <h3 className="text-white font-bold">
+                              Available Slots
+                            </h3>
+                            <ActiveNavButton
+                              icon={RefreshCcw}
+                              text={
+                                syncMeetingsMutation.isPending
+                                  ? "Syncing..."
+                                  : "Refresh"
+                              }
+                              onClick={handleRefreshCalendarData}
+                              disabled={
+                                isAvailabilityBusy ||
+                                syncMeetingsMutation.isPending
+                              }
+                              className="h-8 text-xs"
+                            />
+                          </div>
+                          {isAvailabilityBusy ? (
+                            <div className="flex items-center gap-2 text-white/60 text-sm">
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                              Calculating availability...
+                            </div>
+                          ) : nextAvailableSlots.length > 0 ? (
+                            <div className="space-y-3">
+                              {nextAvailableSlots.map((slot) => (
+                                <div
+                                  key={slot.start}
+                                  className="rounded-lg p-4 border border-white/10 bg-white/5"
+                                >
+                                  <p className="text-white text-sm font-semibold">
+                                    {format(slot.startDate, "EEE, MMM d")}
+                                  </p>
+                                  <p className="text-xs text-white/70">
+                                    {format(slot.startDate, "h:mm a")} –{" "}
+                                    {format(slot.endDate, "h:mm a")} ·{" "}
+                                    {slot.durationMinutes} min
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-sm text-white/60">
+                              No availability detected for this range. Try
+                              selecting a different month or adjust your
+                              Microsoft calendar working hours.
+                            </div>
+                          )}
+                          {availabilityErrorMessage && (
+                            <div className="text-xs text-red-300 mt-3">
+                              {availabilityErrorMessage}
+                            </div>
+                          )}
                         </div>
-                      )}
-                      {availabilityErrorMessage && (
-                        <div className="text-xs text-red-300 mt-3">
-                          {availabilityErrorMessage}
-                        </div>
-                      )}
+                      </div>
                     </div>
-                  </div>
-                </div>
-              )}
+                  )}
                 </TabsContent>
 
                 {/* Followup Campaigns Tab Content */}
                 <TabsContent value="campaigns" className="mt-6 space-y-5">
-              <div
-                className="rounded-2xl p-6 space-y-4"
-                style={{
-                  background: "rgba(255,255,255,0.03)",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                }}
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-white font-semibold">
-                      Existing followups
-                    </p>
-                    <p className="text-sm text-white/60">
-                      Plans that already include this lead will show here so you
-                      can track status.
-                    </p>
-                  </div>
-                <ActiveNavButton
-                  icon={RefreshCcw}
-                  text={isFollowupPlansFetching ? "Refreshing..." : "Refresh"}
-                  onClick={() => refetchFollowupPlans()}
-                  disabled={isFollowupPlansFetching}
-                  className="h-8 text-xs"
-                />
-                </div>
+                  <div
+                    className="rounded-2xl p-6 space-y-4"
+                    style={{
+                      background: "rgba(255,255,255,0.03)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                    }}
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="text-white font-semibold">
+                          Existing followups
+                        </p>
+                        <p className="text-sm text-white/60">
+                          Plans that already include this lead will show here so
+                          you can track status.
+                        </p>
+                      </div>
+                      <ActiveNavButton
+                        icon={RefreshCcw}
+                        text={
+                          isFollowupPlansFetching ? "Refreshing..." : "Refresh"
+                        }
+                        onClick={() => refetchFollowupPlans()}
+                        disabled={isFollowupPlansFetching}
+                        className="h-8 text-xs"
+                      />
+                    </div>
 
-                {isFollowupPlansLoading ? (
-                  <div className="flex items-center justify-center py-6 text-sm text-white/60">
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Loading followup plans...
-                  </div>
-                ) : sortedLeadFollowupPlans.length > 0 ? (
-                  <div className="space-y-3">
-                    {sortedLeadFollowupPlans.map((plan) => {
-                      const totalTasks = plan.todo?.length ?? 0;
-                      const completedTasks =
-                        plan.todo?.filter((task) => task.isComplete).length ??
-                        0;
-                      const nextTask = plan.todo?.find(
-                        (task) => !task.isComplete
-                      );
-                      const canDeletePlan = [
-                        "scheduled",
-                        "in_progress",
-                      ].includes(plan.status);
-                      const isPlanDeletePending =
-                        planPendingDelete?._id === plan._id && isDeletingPlan;
-                      return (
-                        <div
-                          key={plan._id}
-                          className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3"
-                        >
-                          <div className="flex flex-wrap items-center justify-between gap-3">
-                            <div>
-                              <p className="text-white font-semibold">
-                                {getTemplateTitle(plan)}
-                              </p>
-                              <p className="text-xs text-white/60">
-                                Started {formatRelativeTime(plan.createdAt)}
-                                {plan.updatedAt &&
-                                  plan.updatedAt !== plan.createdAt && (
-                                    <>
-                                      {" "}
-                                      · Updated{" "}
-                                      {formatRelativeTime(plan.updatedAt)}
-                                    </>
-                                  )}
-                              </p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Badge
-                                className={getPlanStatusBadgeClass(plan.status)}
-                              >
-                                {plan.status.replace("_", " ")}
-                              </Badge>
-                              {canDeletePlan && (
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  className="text-red-200 hover:text-red-100 hover:bg-red-500/10"
-                                  onClick={() =>
-                                    handleRequestPlanDeletion(plan)
-                                  }
-                                  disabled={isPlanDeletePending}
-                                >
-                                  <Trash2 className="w-4 h-4 mr-1" />
-                                  Delete
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-                          <div className="text-xs text-white/70 flex flex-wrap gap-4">
-                            <span>
-                              Tasks: {completedTasks}/{totalTasks}
-                            </span>
-                            {nextTask && (
-                              <span>
-                                Next up: {nextTask.type.replace("_", " ")}
-                                {nextTask.scheduledFor
-                                  ? ` ${getDisplayTime(nextTask.scheduledFor, false)}`
-                                  : ""}
-                              </span>
-                            )}
-                            <span>ID: {plan._id.slice(-6)}</span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="text-sm text-white/60">
-                    No followup plans include this lead yet.
-                  </div>
-                )}
-              </div>
-
-              <div
-                className="rounded-2xl p-6 space-y-4"
-                style={{
-                  background: "rgba(255,255,255,0.03)",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                }}
-              >
-                <div className="flex items-center gap-3 text-white">
-                  <div className="p-2 rounded-full bg-white/10">
-                    <Info className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-base font-semibold">
-                      Automate followups
-                    </p>
-                    <p className="text-sm text-white/70">
-                      Choose a followup template and select leads to immediately
-                      create a personalized followup plan.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <span className="text-sm text-white/70">
-                      Followup template
-                    </span>
-                    <Select
-                      value={selectedTemplateId}
-                      onValueChange={setSelectedTemplateId}
-                      disabled={
-                        isFollowupTemplatesLoading ||
-                        followupTemplates.length === 0
-                      }
-                    >
-                      <SelectTrigger className="bg-white/5 text-white border-white/10">
-                        <SelectValue
-                          placeholder={
-                            isFollowupTemplatesLoading
-                              ? "Loading templates..."
-                              : followupTemplates.length
-                              ? "Select a template"
-                              : "No templates available"
-                          }
-                        />
-                      </SelectTrigger>
-                      <SelectContent className="bg-[#0b0f20] text-white border-white/10 max-h-72">
-                        {followupTemplates.map((template) => (
-                          <SelectItem key={template._id} value={template._id}>
-                            <div className="flex flex-col gap-1">
-                              <span className="text-sm font-medium">
-                                {template.title}
-                              </span>
-                              <span className="text-[11px] text-white/60">
-                                {template.numberOfDaysToRun} days ·{" "}
-                                {template.numberOfEmails} emails ·{" "}
-                                {template.numberOfCalls} calls
-                              </span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <span className="text-sm text-white/70">Leads</span>
-                    <Popover
-                      open={leadSelectorOpen}
-                      onOpenChange={setLeadSelectorOpen}
-                    >
-                      <PopoverTrigger asChild>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="w-full justify-between bg-white/5 text-white border-white/10 hover:bg-white/10"
-                        >
-                          <span>
-                            {selectedLeadIds.length > 0
-                              ? `${selectedLeadIds.length} ${
-                                  selectedLeadIds.length === 1
-                                    ? "lead"
-                                    : "leads"
-                                } selected`
-                              : "Select leads"}
-                          </span>
-                          <ChevronRight className="w-4 h-4 opacity-70" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[360px] p-0 bg-[#101426] border-white/10">
-                        <Command>
-                          <CommandInput
-                            placeholder="Search leads"
-                            value={leadsSearch}
-                            onValueChange={setLeadsSearch}
-                            className="text-white placeholder:text-white/40"
-                          />
-                          <CommandList>
-                            {isLeadsLoading ? (
-                              <div className="flex items-center justify-center py-4 text-xs text-white/60">
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                Loading leads...
-                              </div>
-                            ) : (
-                              <>
-                                <CommandEmpty className="p-4 text-xs text-white/60">
-                                  No leads found.
-                                </CommandEmpty>
-                                <CommandGroup className="max-h-64 overflow-y-auto">
-                                  {fetchedLeads.map((leadItem) => {
-                                    const leadId =
-                                      leadItem?._id || (leadItem as any)?.id;
-                                    if (!leadId) {
-                                      return null;
-                                    }
-                                    const isSelected = Boolean(
-                                      selectedLeadsMap[leadId]
-                                    );
-                                    return (
-                                      <CommandItem
-                                        key={leadId}
-                                        className="flex items-center gap-3 cursor-pointer"
-                                        onSelect={() =>
-                                          handleToggleLeadSelection(leadItem)
-                                        }
-                                      >
-                                        <Checkbox
-                                          checked={isSelected}
-                                          onCheckedChange={() =>
-                                            handleToggleLeadSelection(leadItem)
-                                          }
-                                          className="border-white/40 data-[state=checked]:bg-white/90"
-                                        />
-                                        <div className="flex flex-col">
-                                          <span className="text-sm text-white">
-                                            {leadItem.name || "Unnamed lead"}
-                                          </span>
-                                          <span className="text-xs text-white/60">
-                                            {leadItem.companyName ||
-                                              leadItem.position ||
-                                              "Unknown organization"}
-                                          </span>
-                                        </div>
-                                      </CommandItem>
-                                    );
-                                  })}
-                                </CommandGroup>
-                                {leadsError && (
-                                  <div className="px-4 py-3 text-xs text-red-300">
-                                    {leadsError.message}
-                                  </div>
-                                )}
-                              </>
-                            )}
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-
-                    {selectedLeads.length > 0 && (
-                      <div className="flex flex-wrap gap-2 pt-2">
-                        {selectedLeads.map((leadItem) => {
-                          const leadId = leadItem?._id || (leadItem as any)?.id;
-                          if (!leadId) {
-                            return null;
-                          }
+                    {isFollowupPlansLoading ? (
+                      <div className="flex items-center justify-center py-6 text-sm text-white/60">
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Loading followup plans...
+                      </div>
+                    ) : sortedLeadFollowupPlans.length > 0 ? (
+                      <div className="space-y-3">
+                        {sortedLeadFollowupPlans.map((plan) => {
+                          const totalTasks = plan.todo?.length ?? 0;
+                          const completedTasks =
+                            plan.todo?.filter((task) => task.isComplete)
+                              .length ?? 0;
+                          const nextTask = plan.todo?.find(
+                            (task) => !task.isComplete
+                          );
+                          const canDeletePlan = [
+                            "scheduled",
+                            "in_progress",
+                          ].includes(plan.status);
+                          const isPlanDeletePending =
+                            planPendingDelete?._id === plan._id &&
+                            isDeletingPlan;
                           return (
-                            <Badge
-                              key={leadId}
-                              variant="secondary"
-                              className="bg-white/10 text-white border border-white/20 flex items-center gap-1"
+                            <div
+                              key={plan._id}
+                              className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3"
                             >
-                              <Check className="w-3 h-3" />
-                              <span className="text-xs">
-                                {leadItem.name || "Lead"} ·{" "}
-                                {leadItem.companyName ||
-                                  leadItem.position ||
-                                  "Unknown"}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  handleToggleLeadSelection(leadItem)
-                                }
-                                className="ml-1"
-                                aria-label="Remove lead"
-                              >
-                                x
-                              </button>
-                            </Badge>
+                              <div className="flex flex-wrap items-center justify-between gap-3">
+                                <div>
+                                  <p className="text-white font-semibold">
+                                    {getTemplateTitle(plan)}
+                                  </p>
+                                  <p className="text-xs text-white/60">
+                                    Started {formatRelativeTime(plan.createdAt)}
+                                    {plan.updatedAt &&
+                                      plan.updatedAt !== plan.createdAt && (
+                                        <>
+                                          {" "}
+                                          · Updated{" "}
+                                          {formatRelativeTime(plan.updatedAt)}
+                                        </>
+                                      )}
+                                  </p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Badge
+                                    className={getPlanStatusBadgeClass(
+                                      plan.status
+                                    )}
+                                  >
+                                    {plan.status.replace("_", " ")}
+                                  </Badge>
+                                  {canDeletePlan && (
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      className="text-red-200 hover:text-red-100 hover:bg-red-500/10"
+                                      onClick={() =>
+                                        handleRequestPlanDeletion(plan)
+                                      }
+                                      disabled={isPlanDeletePending}
+                                    >
+                                      <Trash2 className="w-4 h-4 mr-1" />
+                                      Delete
+                                    </Button>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="text-xs text-white/70 flex flex-wrap gap-4">
+                                <span>
+                                  Tasks: {completedTasks}/{totalTasks}
+                                </span>
+                                {nextTask && (
+                                  <span>
+                                    Next up: {nextTask.type.replace("_", " ")}
+                                    {nextTask.scheduledFor
+                                      ? ` ${getDisplayTime(
+                                          nextTask.scheduledFor,
+                                          false
+                                        )}`
+                                      : ""}
+                                  </span>
+                                )}
+                                <span>ID: {plan._id.slice(-6)}</span>
+                              </div>
+                            </div>
                           );
                         })}
+                      </div>
+                    ) : (
+                      <div className="text-sm text-white/60">
+                        No followup plans include this lead yet.
                       </div>
                     )}
                   </div>
 
-                  <div className="flex items-center justify-between flex-wrap gap-3 pt-2 border-t border-white/10">
-                    <div className="text-sm text-white/60">
-                      Each selected lead will get a personalized followup plan
-                      using the template above.
+                  <div
+                    className="rounded-2xl p-6 space-y-4"
+                    style={{
+                      background: "rgba(255,255,255,0.03)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                    }}
+                  >
+                    <div className="flex items-center gap-3 text-white">
+                      <div className="p-2 rounded-full bg-white/10">
+                        <Info className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-base font-semibold">
+                          Automate followups
+                        </p>
+                        <p className="text-sm text-white/70">
+                          Choose a followup template and select leads to
+                          immediately create a personalized followup plan.
+                        </p>
+                      </div>
                     </div>
-                    <Button
-                      onClick={handleRunFollowupPlan}
-                      disabled={isCreatingFollowupPlan}
-                      className="bg-white/10 hover:bg-white/20 text-white border border-white/30"
-                    >
-                      {isCreatingFollowupPlan ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Starting...
-                        </>
-                      ) : (
-                        <>
-                          <MoveRight className="w-4 h-4 mr-2" />
-                          Run Followup
-                        </>
-                      )}
-                    </Button>
+
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <span className="text-sm text-white/70">
+                          Followup template
+                        </span>
+                        <Select
+                          value={selectedTemplateId}
+                          onValueChange={setSelectedTemplateId}
+                          disabled={
+                            isFollowupTemplatesLoading ||
+                            followupTemplates.length === 0
+                          }
+                        >
+                          <SelectTrigger className="bg-white/5 text-white border-white/10">
+                            <SelectValue
+                              placeholder={
+                                isFollowupTemplatesLoading
+                                  ? "Loading templates..."
+                                  : followupTemplates.length
+                                  ? "Select a template"
+                                  : "No templates available"
+                              }
+                            />
+                          </SelectTrigger>
+                          <SelectContent className="bg-[#0b0f20] text-white border-white/10 max-h-72">
+                            {followupTemplates.map((template) => (
+                              <SelectItem
+                                key={template._id}
+                                value={template._id}
+                              >
+                                <div className="flex flex-col gap-1">
+                                  <span className="text-sm font-medium">
+                                    {template.title}
+                                  </span>
+                                  <span className="text-[11px] text-white/60">
+                                    {template.numberOfDaysToRun} days ·{" "}
+                                    {template.numberOfEmails} emails ·{" "}
+                                    {template.numberOfCalls} calls
+                                  </span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <span className="text-sm text-white/70">Leads</span>
+                        <Popover
+                          open={leadSelectorOpen}
+                          onOpenChange={setLeadSelectorOpen}
+                        >
+                          <PopoverTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="w-full justify-between bg-white/5 text-white border-white/10 hover:bg-white/10"
+                            >
+                              <span>
+                                {selectedLeadIds.length > 0
+                                  ? `${selectedLeadIds.length} ${
+                                      selectedLeadIds.length === 1
+                                        ? "lead"
+                                        : "leads"
+                                    } selected`
+                                  : "Select leads"}
+                              </span>
+                              <ChevronRight className="w-4 h-4 opacity-70" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[360px] p-0 bg-[#101426] border-white/10">
+                            <Command>
+                              <CommandInput
+                                placeholder="Search leads"
+                                value={leadsSearch}
+                                onValueChange={setLeadsSearch}
+                                className="text-white placeholder:text-white/40"
+                              />
+                              <CommandList>
+                                {isLeadsLoading ? (
+                                  <div className="flex items-center justify-center py-4 text-xs text-white/60">
+                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                    Loading leads...
+                                  </div>
+                                ) : (
+                                  <>
+                                    <CommandEmpty className="p-4 text-xs text-white/60">
+                                      No leads found.
+                                    </CommandEmpty>
+                                    <CommandGroup className="max-h-64 overflow-y-auto">
+                                      {fetchedLeads.map((leadItem) => {
+                                        const leadId =
+                                          leadItem?._id ||
+                                          (leadItem as any)?.id;
+                                        if (!leadId) {
+                                          return null;
+                                        }
+                                        const isSelected = Boolean(
+                                          selectedLeadsMap[leadId]
+                                        );
+                                        return (
+                                          <CommandItem
+                                            key={leadId}
+                                            className="flex items-center gap-3 cursor-pointer"
+                                            onSelect={() =>
+                                              handleToggleLeadSelection(
+                                                leadItem
+                                              )
+                                            }
+                                          >
+                                            <Checkbox
+                                              checked={isSelected}
+                                              onCheckedChange={() =>
+                                                handleToggleLeadSelection(
+                                                  leadItem
+                                                )
+                                              }
+                                              className="border-white/40 data-[state=checked]:bg-white/90"
+                                            />
+                                            <div className="flex flex-col">
+                                              <span className="text-sm text-white">
+                                                {leadItem.name ||
+                                                  "Unnamed lead"}
+                                              </span>
+                                              <span className="text-xs text-white/60">
+                                                {leadItem.companyName ||
+                                                  leadItem.position ||
+                                                  "Unknown organization"}
+                                              </span>
+                                            </div>
+                                          </CommandItem>
+                                        );
+                                      })}
+                                    </CommandGroup>
+                                    {leadsError && (
+                                      <div className="px-4 py-3 text-xs text-red-300">
+                                        {leadsError.message}
+                                      </div>
+                                    )}
+                                  </>
+                                )}
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+
+                        {selectedLeads.length > 0 && (
+                          <div className="flex flex-wrap gap-2 pt-2">
+                            {selectedLeads.map((leadItem) => {
+                              const leadId =
+                                leadItem?._id || (leadItem as any)?.id;
+                              if (!leadId) {
+                                return null;
+                              }
+                              return (
+                                <Badge
+                                  key={leadId}
+                                  variant="secondary"
+                                  className="bg-white/10 text-white border border-white/20 flex items-center gap-1"
+                                >
+                                  <Check className="w-3 h-3" />
+                                  <span className="text-xs">
+                                    {leadItem.name || "Lead"} ·{" "}
+                                    {leadItem.companyName ||
+                                      leadItem.position ||
+                                      "Unknown"}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleToggleLeadSelection(leadItem)
+                                    }
+                                    className="ml-1"
+                                    aria-label="Remove lead"
+                                  >
+                                    x
+                                  </button>
+                                </Badge>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex items-center justify-between flex-wrap gap-3 pt-2 border-t border-white/10">
+                        <div className="text-sm text-white/60">
+                          Each selected lead will get a personalized followup
+                          plan using the template above.
+                        </div>
+                        <Button
+                          onClick={handleRunFollowupPlan}
+                          disabled={isCreatingFollowupPlan}
+                          className="bg-white/10 hover:bg-white/20 text-white border border-white/30"
+                        >
+                          {isCreatingFollowupPlan ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Starting...
+                            </>
+                          ) : (
+                            <>
+                              <MoveRight className="w-4 h-4 mr-2" />
+                              Run Followup
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
                 </TabsContent>
               </Tabs>
             </TabsContent>
@@ -2109,7 +2201,9 @@ const Activity: FC<ActivityProps> = ({
         title="Delete meeting?"
         description={
           meetingPendingDelete
-            ? `This will permanently delete "${meetingPendingDelete.subject || "this meeting"}" from your Microsoft calendar and remove it from the lead's record.`
+            ? `This will permanently delete "${
+                meetingPendingDelete.subject || "this meeting"
+              }" from your Microsoft calendar and remove it from the lead's record.`
             : undefined
         }
         confirmText="Delete meeting"
