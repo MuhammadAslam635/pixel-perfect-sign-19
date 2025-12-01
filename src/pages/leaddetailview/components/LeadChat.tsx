@@ -9,6 +9,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { ActiveNavButton } from "@/components/ui/primary-btn";
+import { Button } from "@/components/ui/button";
 import { Lead } from "@/services/leads.service";
 import { emailService } from "@/services/email.service";
 import { Email } from "@/types/email.types";
@@ -1655,8 +1656,62 @@ const LeadChat = ({
             />
           </div>
         ) : activeTab === "AI Call" ? (
-          <div className="flex w-full flex-1 items-center justify-center py-20 text-lg font-medium text-white/70">
-            Under Work.
+          <div className="flex flex-1 w-full flex-col items-center justify-start text-white/80 text-center gap-6 pt-6 pb-10 max-h-[calc(100vh-480px)] overflow-y-auto scrollbar-hide">
+            <div className="w-full max-w-5xl mt-10 text-left space-y-3">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-xl font-semibold text-white leading-snug">
+                    Call Logs
+                  </h2>
+                  <p className="text-xs text-white/60">
+                    Recent calls with transcription, success score and follow-up
+                    suggestions.
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    // TODO: Implement refresh functionality for AI Call tab
+                  }}
+                  disabled={!leadId}
+                  className="rounded-full border-white/20 text-[0.7rem] text-white/80 hover:text-white px-3 py-1"
+                >
+                  Refresh
+                </Button>
+              </div>
+
+              <div className="rounded-[24px] border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden shadow-[0_35px_120px_rgba(7,6,19,0.55)]">
+                <div className="overflow-x-auto scrollbar-thin">
+                  <div className="min-w-full">
+                    <div className="grid grid-cols-9 gap-2 px-4 py-3 text-[0.6rem] font-semibold uppercase tracking-[0.22em] text-white/50">
+                      <span>Caller</span>
+                      <span>Date</span>
+                      <span>Duration</span>
+                      <span>Channel</span>
+                      <span>Call Status</span>
+                      <span className="text-center">Success Score</span>
+                      <span className="text-center">Recording</span>
+                      <span className="text-center">Transcription</span>
+                      <span className="text-center">Follow-up</span>
+                    </div>
+
+                    <div className="divide-y divide-white/5">
+                      {!leadId ? (
+                        <div className="px-4 py-6 text-center text-xs text-white/60">
+                          Select a lead to view call logs.
+                        </div>
+                      ) : (
+                        <div className="px-4 py-6 text-center text-xs text-white/70">
+                          Call logs will be displayed here.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         ) : (
           <div className="flex w-full flex-1 items-center justify-center py-20 text-lg font-medium text-white/70">
