@@ -58,6 +58,7 @@ import {
   SyncMeetingsResponse,
 } from "@/services/calendar.service";
 import { SelectedCallLogView } from "../index";
+import CompanyTab from "./CompanyTab";
 import API from "@/utils/api";
 
 type ActivityProps = {
@@ -141,6 +142,9 @@ const Activity: FC<ActivityProps> = ({
   selectedCallLogView,
   setSelectedCallLogView,
 }) => {
+  const [topLevelTab, setTopLevelTab] = useState<"activity" | "company">(
+    "activity"
+  );
   const [activeTab, setActiveTab] = useState("summary");
   const [recordingAudioUrl, setRecordingAudioUrl] = useState<string | null>(
     null
@@ -874,34 +878,64 @@ const Activity: FC<ActivityProps> = ({
         }}
       >
         <CardContent className="p-6 flex-1 min-h-0 overflow-y-auto scrollbar-hide">
-          {/* Title */}
-          <h2 className="text-xl font-bold text-white mb-6">Activity</h2>
+          <Tabs
+            value={topLevelTab}
+            onValueChange={(value) =>
+              setTopLevelTab(value as "activity" | "company")
+            }
+            className="flex-1 flex flex-col min-h-0"
+          >
+            {/* Top-level Activity / Company toggle (replaces static heading) */}
+            <div className="mb-4">
+              <TabsList className="bg-transparent p-0 h-auto gap-4 border-none">
+                <TabsTrigger
+                  value="activity"
+                  className="px-0 py-2 text-xl font-bold text-white/60 data-[state=active]:text-white data-[state=active]:bg-transparent data-[state=active]:shadow-none border-none rounded-none data-[state=active]:border-b-2 data-[state=active]:border-white"
+                >
+                  Activity
+                </TabsTrigger>
+                <TabsTrigger
+                  value="company"
+                  className="px-0 py-2 text-xl font-bold text-white/60 data-[state=active]:text-white data-[state=active]:bg-transparent data-[state=active]:shadow-none border-none rounded-none data-[state=active]:border-b-2 data-[state=active]:border-white"
+                >
+                  Company
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
-          {/* Tabs */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-            <TabsList className="bg-transparent p-0 h-auto gap-4 border-none">
-              <TabsTrigger
-                value="summary"
-                className="px-0 py-2 text-white/40 data-[state=active]:text-white data-[state=active]:bg-transparent data-[state=active]:shadow-none border-none rounded-none data-[state=active]:border-b-2 data-[state=active]:border-white font-medium"
+            {/* Activity content (existing inner tabs) */}
+            <TabsContent
+              value="activity"
+              className="mt-2 data-[state=active]:flex data-[state=active]:flex-col"
+            >
+              <Tabs
+                value={activeTab}
+                onValueChange={setActiveTab}
+                className="mb-6"
               >
-                Summary
-              </TabsTrigger>
-              <TabsTrigger
-                value="calendar"
-                className="px-0 py-2 text-white/40 data-[state=active]:text-white data-[state=active]:bg-transparent data-[state=active]:shadow-none border-none rounded-none data-[state=active]:border-b-2 data-[state=active]:border-white font-medium"
-              >
-                Calendar
-              </TabsTrigger>
-              <TabsTrigger
-                value="campaigns"
-                className="px-0 py-2 text-white/40 data-[state=active]:text-white data-[state=active]:bg-transparent data-[state=active]:shadow-none border-none rounded-none data-[state=active]:border-b-2 data-[state=active]:border-white font-medium"
-              >
-                Followup Campaigns
-              </TabsTrigger>
-            </TabsList>
+                <TabsList className="bg-transparent p-0 h-auto gap-4 border-none">
+                  <TabsTrigger
+                    value="summary"
+                    className="px-0 py-2 text-white/40 data-[state=active]:text-white data-[state=active]:bg-transparent data-[state=active]:shadow-none border-none rounded-none data-[state=active]:border-b-2 data-[state=active]:border-white font-medium"
+                  >
+                    Summary
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="calendar"
+                    className="px-0 py-2 text-white/40 data-[state=active]:text-white data-[state=active]:bg-transparent data-[state=active]:shadow-none border-none rounded-none data-[state=active]:border-b-2 data-[state=active]:border-white font-medium"
+                  >
+                    Calendar
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="campaigns"
+                    className="px-0 py-2 text-white/40 data-[state=active]:text-white data-[state=active]:bg-transparent data-[state=active]:shadow-none border-none rounded-none data-[state=active]:border-b-2 data-[state=active]:border-white font-medium"
+                  >
+                    Followup Campaigns
+                  </TabsTrigger>
+                </TabsList>
 
-            {/* Summary Tab Content */}
-            <TabsContent value="summary" className="mt-6">
+                {/* Summary Tab Content */}
+                <TabsContent value="summary" className="mt-6">
               {selectedCallLogView ? (
                 // Selected Call Log View Content
                 <div className="flex flex-col items-center space-y-6">
@@ -1326,10 +1360,10 @@ const Activity: FC<ActivityProps> = ({
                   </div>
                 </div>
               )}
-            </TabsContent>
+                </TabsContent>
 
-            {/* Calendar Tab Content */}
-            <TabsContent value="calendar" className="mt-6">
+                {/* Calendar Tab Content */}
+                <TabsContent value="calendar" className="mt-6">
               {!leadId ? (
                 <div
                   className="rounded-lg p-6 text-white/70 text-sm"
@@ -1710,10 +1744,10 @@ const Activity: FC<ActivityProps> = ({
                   </div>
                 </div>
               )}
-            </TabsContent>
+                </TabsContent>
 
-            {/* Followup Campaigns Tab Content */}
-            <TabsContent value="campaigns" className="mt-6 space-y-5">
+                {/* Followup Campaigns Tab Content */}
+                <TabsContent value="campaigns" className="mt-6 space-y-5">
               <div
                 className="rounded-2xl p-6 space-y-4"
                 style={{
@@ -2059,6 +2093,16 @@ const Activity: FC<ActivityProps> = ({
                   </div>
                 </div>
               </div>
+                </TabsContent>
+              </Tabs>
+            </TabsContent>
+
+            {/* Company content */}
+            <TabsContent
+              value="company"
+              className="mt-2 data-[state=active]:flex data-[state=active]:flex-col"
+            >
+              <CompanyTab lead={lead} />
             </TabsContent>
           </Tabs>
         </CardContent>

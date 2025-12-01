@@ -4,7 +4,6 @@ import {
   ChevronDown,
   Loader2,
   MoreVertical,
-  Plus,
   Send,
   Sparkles,
   Trash2,
@@ -233,6 +232,8 @@ const LeadChat = ({
       { label: "Email", status: emailStatus, isAvailable: hasEmail },
       { label: "SMS", status: smsStatus, isAvailable: smsAvailable },
       { label: "Call", status: smsStatus, isAvailable: smsAvailable },
+      // New AI Call tab (simple placeholder for now)
+      { label: "AI Call", status: "Under Work.", isAvailable: true },
     ];
   }, [
     emailAddress,
@@ -1277,24 +1278,6 @@ const LeadChat = ({
             )}
 
             <div className="flex items-center gap-3 rounded-full bg-white/10 px-4 py-3">
-              <button
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                onClick={handleGenerateWhatsAppMessage}
-                disabled={
-                  isGeneratingWhatsAppMessage || !canGenerateWhatsAppMessage
-                }
-                title={
-                  !canGenerateWhatsAppMessage
-                    ? "Lead information is required to generate suggestions"
-                    : undefined
-                }
-              >
-                {isGeneratingWhatsAppMessage ? (
-                  <Loader2 className="h-4 w-4 animate-spin text-white" />
-                ) : (
-                  <Plus size={14} className="text-white" />
-                )}
-              </button>
               <input
                 type="text"
                 value={whatsappInput}
@@ -1431,68 +1414,63 @@ const LeadChat = ({
               </div>
             )}
             <div className="flex flex-col gap-3 mt-[1px]">
-              <div className="flex flex-col gap-1 rounded-full bg-white/10 px-3 sm:flex-row sm:items-center sm:flex-nowrap sm:gap-2">
-                <textarea
-                  value={emailInput}
-                  onChange={(event) => setEmailInput(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" && event.ctrlKey) {
-                      event.preventDefault();
-                      handleSendEmail();
+              <div className="space-y-3 flex flex-col">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-white/90">
+                    Message
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleGenerateEmailMessage}
+                    disabled={
+                      isGeneratingEmailMessage || !lead?.companyId || !lead?._id
                     }
-                  }}
-                  disabled={!emailAddress}
-                  className="flex-1 w-full bg-transparent outline-none border-none text-sm text-white placeholder:text-white/50 resize-none h-[45px] py-3"
-                  placeholder={
-                    !emailAddress
-                      ? "Add an email address to send emails"
-                      : "Write your email message (Ctrl+Enter to send)"
-                  }
-                  rows={1}
-                />
-                <button
-                  className="flex h-8 w-full sm:h-8 sm:w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
-                  onClick={handleSendEmail}
-                  disabled={
-                    !emailAddress ||
-                    !emailInput.trim() ||
-                    emailMutation.isPending
-                  }
-                >
-                  {emailMutation.isPending ? (
-                    <Loader2 className="h-3 w-3 animate-spin text-white" />
-                  ) : (
-                    <Send size={12} className="text-white" />
-                  )}
-                </button>
-                <button
-                  className="flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#4E8ED1] via-[#3E65B4] to-[#1F2937] px-3 py-1 text-xs font-semibold text-white shadow-[0_8px_20px_rgba(62,101,180,0.35)] ring-1 ring-white/20 transition-all w-full sm:w-auto sm:ml-auto disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
-                  onClick={handleGenerateEmailMessage}
-                  disabled={
-                    isGeneratingEmailMessage || !lead?.companyId || !lead?._id
-                  }
-                  title={
-                    !lead?.companyId || !lead?._id
-                      ? "Lead information is required to generate suggestions"
-                      : "Generate AI email suggestion"
-                  }
-                >
-                  {isGeneratingEmailMessage ? (
-                    <>
-                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/25">
-                        <Loader2 className="h-3 w-3 animate-spin text-white" />
-                      </span>
-                      <span className="hidden sm:inline">Generating…</span>
-                    </>
-                  ) : (
-                    <>
-                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/25">
-                        <Sparkles size={10} className="text-white" />
-                      </span>
-                      <span className="hidden sm:inline">AI</span>
-                    </>
-                  )}
-                </button>
+                    className="text-white/70 hover:text-white hover:bg-white/10 rounded-lg flex items-center gap-1 px-2 py-1 text-xs disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    title={
+                      !lead?.companyId || !lead?._id
+                        ? "Lead information is required to generate suggestions"
+                        : "Generate with AI"
+                    }
+                  >
+                    <Sparkles className="h-4 w-4" />
+                    {isGeneratingEmailMessage ? "Generating..." : "Generate with AI"}
+                  </button>
+                </div>
+                <div className="flex flex-col gap-2 rounded-lg bg-white/10 px-3 py-3 sm:flex-row sm:items-end sm:flex-nowrap sm:gap-2">
+                  <textarea
+                    value={emailInput}
+                    onChange={(event) => setEmailInput(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" && event.ctrlKey) {
+                        event.preventDefault();
+                        handleSendEmail();
+                      }
+                    }}
+                    disabled={!emailAddress}
+                    className="flex-1 w-full bg-transparent outline-none border-none text-sm text-white placeholder:text-white/50 resize-none min-h-[120px] max-h-[200px] py-2 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                    placeholder={
+                      !emailAddress
+                        ? "Add an email address to send emails"
+                        : "Write your email message (Ctrl+Enter to send)"
+                    }
+                    rows={5}
+                  />
+                  <button
+                    className="flex h-8 w-full sm:h-8 sm:w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+                    onClick={handleSendEmail}
+                    disabled={
+                      !emailAddress ||
+                      !emailInput.trim() ||
+                      emailMutation.isPending
+                    }
+                  >
+                    {emailMutation.isPending ? (
+                      <Loader2 className="h-3 w-3 animate-spin text-white" />
+                    ) : (
+                      <Send size={12} className="text-white" />
+                    )}
+                  </button>
+                </div>
               </div>
               {emailSendError && (
                 <p className="text-xs text-red-300">{emailSendError}</p>
@@ -1601,12 +1579,6 @@ const LeadChat = ({
             )}
 
             <div className="flex items-center gap-3 rounded-full bg-white/10 px-4 py-3">
-              <button
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                disabled={smsInputsDisabled}
-              >
-                <Plus size={14} className="text-white" />
-              </button>
               <input
                 type="text"
                 value={smsInput}
@@ -1659,6 +1631,10 @@ const LeadChat = ({
             selectedCallLogView={selectedCallLogView}
             setSelectedCallLogView={setSelectedCallLogView}
           />
+        ) : activeTab === "AI Call" ? (
+          <div className="flex w-full flex-1 items-center justify-center py-20 text-lg font-medium text-white/70">
+            Under Work.
+          </div>
         ) : (
           <div className="flex w-full flex-1 items-center justify-center py-20 text-lg font-medium text-white/70">
             In work

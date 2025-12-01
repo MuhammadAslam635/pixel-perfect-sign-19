@@ -966,13 +966,13 @@ export const CallView = ({
         </p>
       </div>
 
-      <div className="w-full max-w-5xl mt-16 text-left space-y-4">
+      <div className="w-full max-w-5xl mt-10 text-left space-y-3">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <h2 className="text-3xl font-semibold text-white leading-tight">
+            <h2 className="text-xl font-semibold text-white leading-snug">
               Call Logs
             </h2>
-            <p className="text-sm text-white/60">
+            <p className="text-xs text-white/60">
               Recent calls with transcription, success score and follow-up
               suggestions.
             </p>
@@ -983,16 +983,16 @@ export const CallView = ({
             size="sm"
             onClick={handleRefreshCallLogs}
             disabled={callLogsLoading || isRefreshingCallLogs || !leadId}
-            className="rounded-full border-white/20 text-xs text-white/80 hover:text-white"
+            className="rounded-full border-white/20 text-[0.7rem] text-white/80 hover:text-white px-3 py-1"
           >
             {isRefreshingCallLogs ? "Refreshing..." : "Refresh"}
           </Button>
         </div>
 
-        <div className="rounded-[32px] border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden shadow-[0_35px_120px_rgba(7,6,19,0.55)]">
+        <div className="rounded-[24px] border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden shadow-[0_35px_120px_rgba(7,6,19,0.55)]">
             <div className="overflow-x-auto scrollbar-thin">
-              <div className="min-w-[1500px]">
-              <div className="grid grid-cols-9 gap-4 px-8 py-5 text-[0.7rem] font-semibold uppercase tracking-[0.25em] text-white/50">
+              <div className="min-w-full">
+              <div className="grid grid-cols-9 gap-2 px-4 py-3 text-[0.6rem] font-semibold uppercase tracking-[0.22em] text-white/50">
                 <span>Caller</span>
                 <span>Date</span>
                 <span>Duration</span>
@@ -1006,11 +1006,11 @@ export const CallView = ({
 
               <div className="divide-y divide-white/5">
                 {callLogsLoading ? (
-                  <div className="px-8 py-10 text-center text-sm text-white/70">
+                  <div className="px-4 py-6 text-center text-xs text-white/70">
                     Loading call logs...
                   </div>
                 ) : callLogs.length === 0 ? (
-                  <div className="px-8 py-10 text-center text-sm text-white/60">
+                  <div className="px-4 py-6 text-center text-xs text-white/60">
                     {leadId
                       ? "No calls have been logged yet."
                       : "Select a lead to view call logs."}
@@ -1074,7 +1074,7 @@ export const CallView = ({
                 return (
                   <div
                     key={log._id}
-                    className="grid grid-cols-9 gap-4 px-8 py-6 text-sm text-white/80 bg-white/[0.01] hover:bg-white/[0.04] transition-colors"
+                    className="grid grid-cols-9 gap-2 px-4 py-3 text-[0.7rem] text-white/80 bg-white/[0.01] hover:bg-white/[0.04] transition-colors"
                   >
                     {/* Caller */}
                     <div className="flex flex-col gap-0.5">
@@ -1089,7 +1089,7 @@ export const CallView = ({
                     </div>
 
                     {/* Date */}
-                    <div className="text-white/70">
+                    <div className="text-white/70 break-words">
                       {formatCallDate(log.startedAt)}
                     </div>
 
@@ -1129,7 +1129,7 @@ export const CallView = ({
                           }
                           return (
                             <span
-                              className={`inline-flex items-center px-3 py-1 rounded-full text-[0.65rem] font-medium ${colorClasses}`}
+                              className={`inline-flex items-center px-2 py-1 rounded-full text-[0.6rem] font-medium ${colorClasses}`}
                             >
                               Score: {score}/100
                             </span>
@@ -1147,7 +1147,7 @@ export const CallView = ({
                           type="button"
                           variant="outline"
                           size="sm"
-                          className="h-7 px-3 py-1 rounded-full border-white/20 bg-white/5 text-[0.7rem] text-white hover:bg-white/10 hover:text-white"
+                          className="h-7 px-2 py-1 rounded-full border-white/20 bg-white/5 text-[0.65rem] text-white hover:bg-white/10 hover:text-white"
                           onClick={() => {
                             void handleRecordingView(log);
                           }}
@@ -1162,14 +1162,14 @@ export const CallView = ({
                     </div>
 
                     {/* Transcription */}
-                    <div className="flex flex-col gap-1 pr-6 items-center">
+                    <div className="flex flex-col gap-1 pr-3 items-center">
                       {log.transcriptionStatus === "completed" &&
                       log.transcriptionText ? (
                         <Button
                           type="button"
                           variant="outline"
                           size="sm"
-                          className="h-7 px-3 py-1 rounded-full border-white/20 bg-white/5 text-[0.7rem] text-white hover:bg-white/10 hover:text-white w-fit"
+                          className="h-7 px-2 py-1 rounded-full border-white/20 bg-white/5 text-[0.65rem] text-white hover:bg-white/10 hover:text-white w-fit"
                           onClick={() =>
                             setSelectedCallLogView({
                               type: "transcription",
@@ -1205,7 +1205,7 @@ export const CallView = ({
                           type="button"
                           variant="outline"
                           size="sm"
-                          className="h-7 px-3 py-1 rounded-full border-white/20 bg-white/5 text-[0.7rem] text-white hover:bg-white/10 hover:text-white w-fit"
+                          className="h-7 px-2 py-1 rounded-full border-white/20 bg-white/5 text-[0.65rem] text-white hover:bg-white/10 hover:text-white w-fit"
                           onClick={() =>
                             setSelectedCallLogView({ type: "followup", log })
                           }
