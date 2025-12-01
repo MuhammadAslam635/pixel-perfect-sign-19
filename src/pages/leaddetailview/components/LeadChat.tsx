@@ -1081,7 +1081,7 @@ const LeadChat = ({
       {/* Content */}
       <div className="flex flex-col w-full flex-1 min-h-0">
         {activeTab === "WhatsApp" ? (
-          <div className="flex flex-1 flex-col">
+          <div className="flex flex-1 flex-col min-h-0">
             {whatsappStatusLoading ? (
               <div className="flex flex-1 flex-col items-center justify-center gap-3 py-20 text-white/70">
                 <Loader2 className="h-6 w-6 animate-spin text-white" />
@@ -1107,7 +1107,7 @@ const LeadChat = ({
             ) : (
               <div
                 ref={whatsappScrollRef}
-                className="flex flex-col overflow-y-auto scrollbar-hide mb-6 gap-4 h-[calc(100vh-350px)] lg:h-[calc(100vh-550px)]"
+                className="flex flex-col overflow-y-auto scrollbar-hide mb-6 gap-4 flex-1 min-h-0"
               >
                 {whatsappMessages.map((message) => {
                   const isOutbound = message.direction === "outbound";
@@ -1278,7 +1278,7 @@ const LeadChat = ({
               </div>
             )}
 
-            <div className="flex items-center gap-3 rounded-full bg-white/10 px-4 py-3">
+            <div className="flex items-center gap-3 rounded-full bg-white/10 px-4 py-3 flex-shrink-0">
               <input
                 type="text"
                 value={whatsappInput}
@@ -1314,7 +1314,7 @@ const LeadChat = ({
               </button>
             </div>
             {whatsappSendError && (
-              <p className="mt-2 text-xs text-red-300">{whatsappSendError}</p>
+              <p className="mt-2 text-xs text-red-300 flex-shrink-0">{whatsappSendError}</p>
             )}
           </div>
         ) : activeTab === "Email" ? (
@@ -1448,13 +1448,13 @@ const LeadChat = ({
                       }
                     }}
                     disabled={!emailAddress}
-                    className="flex-1 w-full bg-transparent outline-none border-none text-sm text-white placeholder:text-white/50 resize-none min-h-[120px] max-h-[200px] py-2 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                    className="flex-1 w-full bg-transparent outline-none border-none text-sm text-white placeholder:text-white/50 resize-none min-h-[80px] max-h-[150px] py-2 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
                     placeholder={
                       !emailAddress
                         ? "Add an email address to send emails"
                         : "Write your email message (Ctrl+Enter to send)"
                     }
-                    rows={5}
+                    rows={3}
                   />
                   <button
                     className="flex h-8 w-full sm:h-8 sm:w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
@@ -1479,7 +1479,7 @@ const LeadChat = ({
             </div>
           </div>
         ) : activeTab === "SMS" ? (
-          <div className="flex flex-1 flex-col">
+          <div className="flex flex-1 flex-col min-h-0">
             {!phoneNumber ? (
               <div className="flex w-full flex-1 items-center justify-center py-20 text-center text-white/70">
                 Add a phone number for this lead to start SMS conversations.
@@ -1504,7 +1504,7 @@ const LeadChat = ({
             ) : (
               <div
                 ref={smsScrollRef}
-                className="flex flex-col overflow-y-auto scrollbar-hide mb-6 gap-4 h-[calc(100vh-350px)] lg:h-[calc(100vh-510px)]"
+                className="flex flex-col overflow-y-auto scrollbar-hide mb-6 gap-4 flex-1 min-h-0"
               >
                 {orderedSmsMessages.map((message) => {
                   const isOutbound = message.direction === "outbound";
@@ -1579,7 +1579,7 @@ const LeadChat = ({
               </div>
             )}
 
-            <div className="flex items-center gap-3 rounded-full bg-white/10 px-4 py-3">
+            <div className="flex items-center gap-3 rounded-full bg-white/10 px-4 py-3 flex-shrink-0">
               <input
                 type="text"
                 value={smsInput}
@@ -1615,7 +1615,7 @@ const LeadChat = ({
               </button>
             </div>
             {smsSendError && (
-              <p className="mt-2 text-xs text-red-300">{smsSendError}</p>
+              <p className="mt-2 text-xs text-red-300 flex-shrink-0">{smsSendError}</p>
             )}
           </div>
         ) : activeTab === "Call" ? (
