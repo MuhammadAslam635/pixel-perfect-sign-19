@@ -964,7 +964,7 @@ const LeadChat = ({
 
   return (
     <section
-      className="flex flex-col font-poppins items-center justify-center lg:p-7 p-6 max-w-full rounded-3xl"
+      className="flex flex-col font-poppins h-full flex-1 min-h-0 lg:p-7 p-6 max-w-full rounded-3xl"
       style={{
         background:
           "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 2e-05) 38.08%, rgba(255, 255, 255, 2e-05) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
@@ -1078,7 +1078,7 @@ const LeadChat = ({
       </div>
       <div className="h-px w-full bg-white/30 mb-6" />
       {/* Content */}
-      <div className="flex flex-col w-full">
+      <div className="flex flex-col w-full flex-1 min-h-0">
         {activeTab === "WhatsApp" ? (
           <div className="flex flex-1 flex-col">
             {whatsappStatusLoading ? (
