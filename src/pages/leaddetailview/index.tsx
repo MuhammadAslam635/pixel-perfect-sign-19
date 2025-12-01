@@ -168,7 +168,7 @@ const LeadDetailView = () => {
                   const baseCircleClasses =
                     "w-7 h-7 rounded-full flex items-center justify-center border text-xs font-semibold transition-colors duration-300";
                   const baseConnectorClasses =
-                    "flex-1 h-[2px] transition-colors duration-300";
+                    "flex-1 h-[2px] min-w-[40px] rounded-full transition-colors duration-300";
                   const circleClasses =
                     state === "completed"
                       ? `${baseCircleClasses} bg-gradient-to-r from-[#67B0B7] to-[#4066B3] border-transparent text-white shadow-[0_5px_18px_rgba(103,176,183,0.35)]`
@@ -181,15 +181,15 @@ const LeadDetailView = () => {
                       : `${baseConnectorClasses} bg-white/15`;
                   const labelClasses =
                     state === "completed" || state === "active"
-                      ? "text-white text-xs font-semibold uppercase tracking-wide"
-                      : "text-white/50 text-xs uppercase tracking-wide";
+                      ? "text-white text-[11px] font-semibold uppercase tracking-wide whitespace-nowrap"
+                      : "text-white/50 text-[11px] uppercase tracking-wide whitespace-nowrap";
 
                   return (
                     <div
                       key={definition.label}
                       className="flex items-center flex-1 gap-2"
                     >
-                      <div className="flex flex-col items-center gap-2 min-w-[70px]">
+                      <div className="flex flex-col items-center gap-2 min-w-[100px]">
                         <span className={labelClasses}>{definition.label}</span>
                         <div className={circleClasses}>
                           {state === "completed" ? (

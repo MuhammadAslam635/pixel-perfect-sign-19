@@ -3,6 +3,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { ActiveNavButton } from "@/components/ui/primary-btn";
 import {
   Select,
   SelectContent,
@@ -1315,29 +1316,19 @@ const Activity: FC<ActivityProps> = ({
                   >
                     <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
                       <h3 className="text-white font-bold">AI Summary</h3>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-white/80 hover:text-white hover:bg-white/10"
-                        onClick={handleRefreshLeadSummary}
-                        disabled={
-                          !leadId || refreshLeadSummaryMutation.isPending
+                      <ActiveNavButton
+                        icon={RefreshCcw}
+                        text={
+                          refreshLeadSummaryMutation.isPending
+                            ? "Updating..."
+                            : "Refresh"
                         }
-                      >
-                        {refreshLeadSummaryMutation.isPending ? (
-                          <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Updating...
-                          </>
-                        ) : (
-                          <>
-                            <RefreshCcw className="w-4 h-4 mr-2" />
-                            Refresh
-                          </>
-                        )}
-                      </Button>
+                        onClick={handleRefreshLeadSummary}
+                        disabled={!leadId || refreshLeadSummaryMutation.isPending}
+                        className="h-8 text-xs"
+                      />
                     </div>
-                    <p className="text-xs text-white/50 mb-3">
+                  <p className="text-[11px] leading-tight text-white/50 mb-3 whitespace-nowrap overflow-hidden text-ellipsis">
                       {summaryStatusLabel}
                     </p>
                     <div className="text-white/80 text-sm space-y-3 leading-relaxed min-h-[140px]">
@@ -1446,16 +1437,17 @@ const Activity: FC<ActivityProps> = ({
                         {(isCalendarDataBusy || syncMeetingsMutation.isPending) && (
                           <Loader2 className="w-4 h-4 animate-spin text-white/70" />
                         )}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-white/70 hover:text-white hover:bg-white/10"
+                        <ActiveNavButton
+                          icon={RefreshCcw}
+                          text={
+                            syncMeetingsMutation.isPending ? "Syncing..." : "Refresh"
+                          }
                           onClick={handleRefreshCalendarData}
-                          disabled={isCalendarDataBusy || syncMeetingsMutation.isPending}
-                        >
-                          <RefreshCcw className="w-4 h-4 mr-2" />
-                          {syncMeetingsMutation.isPending ? "Syncing..." : "Refresh"}
-                        </Button>
+                          disabled={
+                            isCalendarDataBusy || syncMeetingsMutation.isPending
+                          }
+                          className="h-8 text-xs"
+                        />
                       </div>
                     </div>
 
@@ -1580,20 +1572,17 @@ const Activity: FC<ActivityProps> = ({
                     >
                       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                         <h3 className="text-white font-bold">Scheduled Meetings</h3>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-white/70 hover:text-white hover:bg-white/10"
+                        <ActiveNavButton
+                          icon={RefreshCcw}
+                          text={
+                            syncMeetingsMutation.isPending ? "Syncing..." : "Refresh"
+                          }
                           onClick={handleRefreshCalendarData}
-                          disabled={isLeadMeetingsBusy || syncMeetingsMutation.isPending}
-                        >
-                          <RefreshCcw
-                            className={`w-4 h-4 mr-2 ${
-                              isLeadMeetingsBusy || syncMeetingsMutation.isPending ? "animate-spin" : ""
-                            }`}
-                          />
-                          {syncMeetingsMutation.isPending ? "Syncing..." : "Refresh"}
-                        </Button>
+                          disabled={
+                            isLeadMeetingsBusy || syncMeetingsMutation.isPending
+                          }
+                          className="h-8 text-xs"
+                        />
                       </div>
                       {isLeadMeetingsBusy ? (
                         <div className="flex items-center gap-2 text-white/60 text-sm">
@@ -1690,20 +1679,17 @@ const Activity: FC<ActivityProps> = ({
                     >
                       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                         <h3 className="text-white font-bold">Available Slots</h3>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-white/70 hover:text-white hover:bg-white/10"
+                        <ActiveNavButton
+                          icon={RefreshCcw}
+                          text={
+                            syncMeetingsMutation.isPending ? "Syncing..." : "Refresh"
+                          }
                           onClick={handleRefreshCalendarData}
-                          disabled={isAvailabilityBusy || syncMeetingsMutation.isPending}
-                        >
-                          <RefreshCcw
-                            className={`w-4 h-4 mr-2 ${
-                              isAvailabilityBusy || syncMeetingsMutation.isPending ? "animate-spin" : ""
-                            }`}
-                          />
-                          {syncMeetingsMutation.isPending ? "Syncing..." : "Refresh"}
-                        </Button>
+                          disabled={
+                            isAvailabilityBusy || syncMeetingsMutation.isPending
+                          }
+                          className="h-8 text-xs"
+                        />
                       </div>
                       {isAvailabilityBusy ? (
                         <div className="flex items-center gap-2 text-white/60 text-sm">
@@ -1765,20 +1751,13 @@ const Activity: FC<ActivityProps> = ({
                       can track status.
                     </p>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-white/70 hover:text-white hover:bg-white/10"
-                    onClick={() => refetchFollowupPlans()}
-                    disabled={isFollowupPlansFetching}
-                  >
-                    <RefreshCcw
-                      className={`w-4 h-4 mr-2 ${
-                        isFollowupPlansFetching ? "animate-spin" : ""
-                      }`}
-                    />
-                    Refresh
-                  </Button>
+                <ActiveNavButton
+                  icon={RefreshCcw}
+                  text={isFollowupPlansFetching ? "Refreshing..." : "Refresh"}
+                  onClick={() => refetchFollowupPlans()}
+                  disabled={isFollowupPlansFetching}
+                  className="h-8 text-xs"
+                />
                 </div>
 
                 {isFollowupPlansLoading ? (

@@ -25,6 +25,11 @@ import { calendarService } from "@/services/calendar.service";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -484,45 +489,68 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
           <div className="flex flex-col gap-2 w-full">
             {!isEditing ? (
               <>
-                <button
-                  onClick={handleFillPersonData}
-                  disabled={fillingData || !lead._id || !lead.companyId}
-                  className={`mt-3 inline-flex items-center justify-center gap-2 rounded-full border px-3 py-1 text-[10px] font-semibold transition-colors ${
-                    fillingData
-                      ? "bg-white/15 border-white/20 text-white cursor-wait"
-                      : "bg-white/5 border-white/15 text-white hover:bg-white/15"
-                  }`}
-                >
-                  {fillingData ? (
-                    <>
-                      <Loader2 className="w-3 h-3 animate-spin" />
-                      Filling...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-3 h-3" />
-                      Fill Missing Info
-                    </>
-                  )}
-                </button>
-                <Button
-                  onClick={handleEdit}
-                  className="w-full justify-center text-[10px] h-8 bg-white/15 hover:bg-white/25 text-white border border-white/20"
-                >
-                  <Edit2 className="w-3 h-3 mr-1" />
-                  Edit Details
-                </Button>
-                <Button
-                  disabled={!lead._id}
-                  onClick={() => {
-                    resetScheduleForm();
-                    setScheduleDialogOpen(true);
-                  }}
-                  className="w-full justify-center text-[10px] h-8 bg-white/15 hover:bg-white/25 text-white border border-white/20"
-                >
-                  <CalendarPlus className="w-3 h-3 mr-1" />
-                  Schedule Meeting
-                </Button>
+                <div className="mt-3 flex items-center justify-center gap-2">
+                  {/* Fill Missing Info */}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        onClick={handleFillPersonData}
+                        disabled={fillingData || !lead._id || !lead.companyId}
+                        className={`flex h-8 w-8 items-center justify-center rounded-full border text-white transition-colors ${
+                          fillingData
+                            ? "bg-white/15 border-white/25 cursor-wait opacity-70"
+                            : "bg-white/5 border-white/20 hover:bg-white/15"
+                        }`}
+                      >
+                        {fillingData ? (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : (
+                          <Sparkles className="w-3 h-3" />
+                        )}
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" align="center">
+                      <span className="text-xs">Fill missing info</span>
+                    </TooltipContent>
+                  </Tooltip>
+
+                  {/* Edit Details */}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        onClick={handleEdit}
+                        className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-white/5 text-white hover:bg-white/15 transition-colors"
+                      >
+                        <Edit2 className="w-3 h-3" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" align="center">
+                      <span className="text-xs">Edit details</span>
+                    </TooltipContent>
+                  </Tooltip>
+
+                  {/* Schedule Meeting */}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        disabled={!lead._id}
+                        onClick={() => {
+                          resetScheduleForm();
+                          setScheduleDialogOpen(true);
+                        }}
+                        className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-white/5 text-white hover:bg-white/15 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <CalendarPlus className="w-3 h-3" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" align="center">
+                      <span className="text-xs">Schedule meeting</span>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
               </>
             ) : (
               <>
