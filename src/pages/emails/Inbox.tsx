@@ -570,7 +570,7 @@ const InboxPage = () => {
 
             {/* Email List */}
             <div
-              className="relative pt-3 sm:pt-4 px-3 sm:px-6 rounded-xl sm:rounded-2xl flex-1 overflow-y-auto"
+              className="relative pt-3 sm:pt-4 px-3 sm:px-6 rounded-xl sm:rounded-2xl flex-1 overflow-y-auto scrollbar-hide"
               style={{
                 borderRadius: "30px",
                 borderWidth: "1px",
@@ -599,7 +599,7 @@ const InboxPage = () => {
                     {[...Array(5)].map((_, i) => (
                       <Skeleton
                         key={i}
-                        className="h-32 w-full rounded-[20px]"
+                        className="h-20 w-full rounded-[20px]"
                       />
                     ))}
                   </div>
