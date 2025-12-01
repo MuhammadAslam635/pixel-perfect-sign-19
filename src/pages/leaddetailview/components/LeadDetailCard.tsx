@@ -78,9 +78,15 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
   const [schedulingMeeting, setSchedulingMeeting] = useState(false);
   const [checkingMicrosoft, setCheckingMicrosoft] = useState(false);
-  const [microsoftConnected, setMicrosoftConnected] = useState<boolean | null>(null);
-  const [microsoftStatusMessage, setMicrosoftStatusMessage] = useState<string | null>(null);
-  const [microsoftStatusError, setMicrosoftStatusError] = useState<string | null>(null);
+  const [microsoftConnected, setMicrosoftConnected] = useState<boolean | null>(
+    null
+  );
+  const [microsoftStatusMessage, setMicrosoftStatusMessage] = useState<
+    string | null
+  >(null);
+  const [microsoftStatusError, setMicrosoftStatusError] = useState<
+    string | null
+  >(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [editData, setEditData] = useState({
@@ -124,7 +130,11 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
   };
 
   const isSearchRangeTooLarge = useMemo(() => {
-    if (!scheduleForm.findAvailableSlot || !scheduleForm.startDate || !scheduleForm.endDate) {
+    if (
+      !scheduleForm.findAvailableSlot ||
+      !scheduleForm.startDate ||
+      !scheduleForm.endDate
+    ) {
       return false;
     }
     const start = new Date(scheduleForm.startDate);
@@ -133,7 +143,11 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
       return false;
     }
     return end.getTime() - start.getTime() > MAX_SEARCH_RANGE_MS;
-  }, [scheduleForm.findAvailableSlot, scheduleForm.startDate, scheduleForm.endDate]);
+  }, [
+    scheduleForm.findAvailableSlot,
+    scheduleForm.startDate,
+    scheduleForm.endDate,
+  ]);
 
   const maxSearchEndDate = useMemo(() => {
     if (!scheduleForm.startDate) {
@@ -203,7 +217,6 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
       isActive = false;
     };
   }, [scheduleDialogOpen]);
-
 
   const handleWhatsAppClick = () => {
     const whatsappNumber = lead.whatsapp || lead.phone;
@@ -327,7 +340,7 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
       };
 
       const response = await leadsService.updateLead(lead._id, updatePayload);
-      
+
       if (response.success) {
         toast.success("Lead updated successfully");
         setIsEditing(false);
@@ -367,7 +380,9 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
     }
 
     if (scheduleForm.findAvailableSlot && isSearchRangeTooLarge) {
-      toast.error("Search window must be less than 62 days from the start date.");
+      toast.error(
+        "Search window must be less than 62 days from the start date."
+      );
       return;
     }
 
@@ -426,7 +441,8 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
     try {
       const response = await calendarService.scheduleMeeting(payload);
       toast.success(
-        response?.message || "Meeting scheduled successfully in Microsoft Calendar"
+        response?.message ||
+          "Meeting scheduled successfully in Microsoft Calendar"
       );
       setScheduleDialogOpen(false);
       resetScheduleForm();
@@ -451,448 +467,446 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
 
   return (
     <>
-    <Card
-      className="w-full h-full flex-1 min-h-0 flex flex-col overflow-hidden"
-      style={{
-        background:
-          "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 2e-05) 38.08%, rgba(255, 255, 255, 2e-05) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
-        border: "1px solid #FFFFFF0D",
-      }}
-    >
-      <CardContent className="p-4 flex-1 min-h-0 overflow-y-auto scrollbar-hide">
-        {/* Profile Section */}
-        <div className="flex flex-col items-center mb-6">
-          <Avatar className="h-20 w-20 mb-3 border-2 border-white/20">
-            <AvatarImage src={avatarSrc} alt={lead.name} />
-            <AvatarFallback className="bg-[#3d4f51] text-white text-2xl">
-              {avatarLetter}
-            </AvatarFallback>
-          </Avatar>
-          <h2 className="text-base font-semibold text-white mb-1 text-center break-words">
-            {lead.name}
-          </h2>
-          {isEditing ? (
-            <div className="w-full px-2 mb-3">
-              <Input
-                value={editData.position}
-                onChange={(e) =>
-                  setEditData({ ...editData, position: e.target.value })
-                }
-                className="h-6 text-[10px] bg-white/5 border-white/20 text-white focus-visible:ring-1 focus-visible:ring-white/30 px-2"
-                placeholder="Position"
-              />
-            </div>
-          ) : (
-            <p className="text-[10px] text-white/80 text-center break-words leading-tight">
-              {lead.companyName || "Company"} |{" "}
-              {lead.position || "Chief Executive Officer"}
-            </p>
-          )}
-          <div className="flex flex-col gap-2 w-full">
-            {!isEditing ? (
-              <>
-                <div className="mt-3 flex items-center justify-center gap-2">
-                  {/* Fill Missing Info */}
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        onClick={handleFillPersonData}
-                        disabled={fillingData || !lead._id || !lead.companyId}
-                        className={`flex h-8 w-8 items-center justify-center rounded-full border text-white transition-colors ${
-                          fillingData
-                            ? "bg-white/15 border-white/25 cursor-wait opacity-70"
-                            : "bg-white/5 border-white/20 hover:bg-white/15"
-                        }`}
-                      >
-                        {fillingData ? (
-                          <Loader2 className="w-3 h-3 animate-spin" />
-                        ) : (
-                          <Sparkles className="w-3 h-3" />
-                        )}
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom" align="center">
-                      <span className="text-xs">Fill missing info</span>
-                    </TooltipContent>
-                  </Tooltip>
-
-                  {/* Edit Details */}
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        onClick={handleEdit}
-                        className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-white/5 text-white hover:bg-white/15 transition-colors"
-                      >
-                        <Edit2 className="w-3 h-3" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom" align="center">
-                      <span className="text-xs">Edit details</span>
-                    </TooltipContent>
-                  </Tooltip>
-
-                  {/* Schedule Meeting */}
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        disabled={!lead._id}
-                        onClick={() => {
-                          resetScheduleForm();
-                          setScheduleDialogOpen(true);
-                        }}
-                        className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-white/5 text-white hover:bg-white/15 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <CalendarPlus className="w-3 h-3" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom" align="center">
-                      <span className="text-xs">Schedule meeting</span>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-              </>
+      <Card
+        className="w-full h-full flex-1 min-h-0 flex flex-col overflow-hidden"
+        style={{
+          background:
+            "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 2e-05) 38.08%, rgba(255, 255, 255, 2e-05) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
+          border: "1px solid #FFFFFF0D",
+        }}
+      >
+        <CardContent className="p-4 flex-1 min-h-0 overflow-y-auto scrollbar-hide">
+          {/* Profile Section */}
+          <div className="flex flex-col items-center mb-6">
+            <Avatar className="h-20 w-20 mb-3 border-2 border-white/20">
+              <AvatarImage src={avatarSrc} alt={lead.name} />
+              <AvatarFallback className="bg-[#3d4f51] text-white text-2xl">
+                {avatarLetter}
+              </AvatarFallback>
+            </Avatar>
+            <h2 className="text-base font-semibold text-white mb-1 text-center break-words">
+              {lead.name}
+            </h2>
+            {isEditing ? (
+              <div className="w-full px-2 mb-3">
+                <Input
+                  value={editData.position}
+                  onChange={(e) =>
+                    setEditData({ ...editData, position: e.target.value })
+                  }
+                  className="h-6 text-[10px] bg-white/5 border-white/20 text-white focus-visible:ring-1 focus-visible:ring-white/30 px-2"
+                  placeholder="Position"
+                />
+              </div>
             ) : (
-              <>
-                <Button
-                  onClick={handleSave}
-                  disabled={isSaving}
-                  className="w-full justify-center text-[10px] h-8 bg-white/25 hover:bg-white/35 text-white border border-white/30"
-                >
-                  {isSaving ? (
-                    <>
-                      <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-3 h-3 mr-1" />
-                      Save Changes
-                    </>
-                  )}
-                </Button>
-                <Button
-                  onClick={handleCancel}
-                  disabled={isSaving}
-                  className="w-full justify-center text-[10px] h-8 bg-white/5 hover:bg-white/15 text-white border border-white/15"
-                >
-                  <X className="w-3 h-3 mr-1" />
-                  Cancel
-                </Button>
-              </>
+              <p className="text-[10px] text-white/80 text-center break-words leading-tight">
+                {lead.companyName || "Company"} |{" "}
+                {lead.position || "Chief Executive Officer"}
+              </p>
             )}
-          </div>
-        </div>
+            <div className="flex flex-col gap-2 w-full">
+              {!isEditing ? (
+                <>
+                  <div className="mt-3 flex items-center justify-center gap-2">
+                    {/* Fill Missing Info */}
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          onClick={handleFillPersonData}
+                          disabled={fillingData || !lead._id || !lead.companyId}
+                          className={`flex h-8 w-8 items-center justify-center rounded-full border text-white transition-colors ${
+                            fillingData
+                              ? "bg-white/15 border-white/25 cursor-wait opacity-70"
+                              : "bg-white/5 border-white/20 hover:bg-white/15"
+                          }`}
+                        >
+                          {fillingData ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <Sparkles className="w-3 h-3" />
+                          )}
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" align="center">
+                        <span className="text-xs">Fill missing info</span>
+                      </TooltipContent>
+                    </Tooltip>
 
-        {/* Contact Section */}
-        <div className="mb-4">
-          <h3 className="text-sm font-semibold text-white mb-2">Contact</h3>
-          <div className="space-y-1.5">
-            {/* Phone */}
-            <div className="flex flex-col gap-0.5">
-              <label className="text-[10px] text-white/60">Phone</label>
-              {isEditing ? (
-                <div
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
-                  style={{
-                    background: "#1a1a1a",
-                    border: "1px solid rgba(255, 255, 255, 0.1)",
-                  }}
-                >
-                  <Phone className="w-3 h-3 text-white/60 flex-shrink-0" />
-                  <Input
-                    value={editData.phone}
-                    onChange={(e) =>
-                      setEditData({ ...editData, phone: e.target.value })
-                    }
-                    className="flex-1 h-6 text-[10px] bg-transparent border-0 text-white focus-visible:ring-0 focus-visible:ring-offset-0 px-2 py-0"
-                    placeholder="Phone number"
-                  />
-                </div>
-              ) : (
-                <div
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
-                  style={{
-                    background: "#1a1a1a",
-                    border: "1px solid rgba(255, 255, 255, 0.1)",
-                  }}
-                >
-                  <Phone className="w-3 h-3 text-white/60 flex-shrink-0" />
-                  <span className="text-[10px] text-white flex-1 truncate">
-                    {lead.phone || "N/A"}
-                  </span>
-                  {lead.phone && (
-                    <button
-                      onClick={handlePhoneClick}
-                      className="text-white/60 hover:text-white transition-colors flex-shrink-0"
-                      title="Call"
-                    >
-                      <Phone className="w-3 h-3" />
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
+                    {/* Edit Details */}
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          onClick={handleEdit}
+                          className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-white/5 text-white hover:bg-white/15 transition-colors"
+                        >
+                          <Edit2 className="w-3 h-3" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" align="center">
+                        <span className="text-xs">Edit details</span>
+                      </TooltipContent>
+                    </Tooltip>
 
-            {/* WhatsApp */}
-            <div className="flex flex-col gap-0.5">
-              <label className="text-[10px] text-white/60">WhatsApp</label>
-              {isEditing ? (
-                <div
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
-                  style={{
-                    background: "#1a1a1a",
-                    border: "1px solid rgba(255, 255, 255, 0.1)",
-                  }}
-                >
-                  <MessageCircle className="w-3 h-3 text-white/60 flex-shrink-0" />
-                  <Input
-                    value={editData.whatsapp}
-                    onChange={(e) =>
-                      setEditData({ ...editData, whatsapp: e.target.value })
-                    }
-                    className="flex-1 h-6 text-[10px] bg-transparent border-0 text-white focus-visible:ring-0 focus-visible:ring-offset-0 px-2 py-0"
-                    placeholder="WhatsApp number"
-                  />
-                </div>
+                    {/* Schedule Meeting */}
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          disabled={!lead._id}
+                          onClick={() => {
+                            resetScheduleForm();
+                            setScheduleDialogOpen(true);
+                          }}
+                          className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-white/5 text-white hover:bg-white/15 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <CalendarPlus className="w-3 h-3" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" align="center">
+                        <span className="text-xs">Schedule meeting</span>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                </>
               ) : (
-                <div
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
-                  style={{
-                    background: "#1a1a1a",
-                    border: "1px solid rgba(255, 255, 255, 0.1)",
-                  }}
-                >
-                  <MessageCircle className="w-3 h-3 text-white/60 flex-shrink-0" />
-                  <span className="text-[10px] text-white flex-1 truncate">
-                    {lead.whatsapp || "N/A"}
-                  </span>
-                  {lead.whatsapp && (
-                    <button
-                      onClick={handleWhatsAppClick}
-                      className="text-white/60 hover:text-white transition-colors flex-shrink-0"
-                      title="Open WhatsApp"
-                    >
-                      <MessageCircle className="w-3 h-3" />
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Email */}
-            <div className="flex flex-col gap-0.5">
-              <label className="text-[10px] text-white/60">Email</label>
-              {isEditing ? (
-                <div
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
-                  style={{
-                    background: "#1a1a1a",
-                    border: "1px solid rgba(255, 255, 255, 0.1)",
-                  }}
-                >
-                  <Mail className="w-3 h-3 text-white/60 flex-shrink-0" />
-                  <Input
-                    type="email"
-                    value={editData.email}
-                    onChange={(e) =>
-                      setEditData({ ...editData, email: e.target.value })
-                    }
-                    className="flex-1 h-6 text-[10px] bg-transparent border-0 text-white focus-visible:ring-0 focus-visible:ring-offset-0 px-2 py-0"
-                    placeholder="Email address"
-                  />
-                </div>
-              ) : (
-                <div
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
-                  style={{
-                    background: "#1a1a1a",
-                    border: "1px solid rgba(255, 255, 255, 0.1)",
-                  }}
-                >
-                  <Mail className="w-3 h-3 text-white/60 flex-shrink-0" />
-                  <span className="text-[10px] text-white flex-1 truncate">
-                    {lead.email || "N/A"}
-                  </span>
-                  {lead.email && (
-                    <button
-                      onClick={handleEmailClick}
-                      className="text-white/60 hover:text-white transition-colors flex-shrink-0"
-                      title="Send Email"
-                    >
-                      <Mail className="w-3 h-3" />
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* LinkedIn */}
-            <div className="flex flex-col gap-0.5">
-              <label className="text-[10px] text-white/60">LinkedIn</label>
-              {isEditing ? (
-                <div
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
-                  style={{
-                    background: "#1a1a1a",
-                    border: "1px solid rgba(255, 255, 255, 0.1)",
-                  }}
-                >
-                  <Linkedin className="w-3 h-3 text-white/60 flex-shrink-0" />
-                  <Input
-                    value={editData.linkedinUrl}
-                    onChange={(e) =>
-                      setEditData({ ...editData, linkedinUrl: e.target.value })
-                    }
-                    className="flex-1 h-6 text-[10px] bg-transparent border-0 text-white focus-visible:ring-0 focus-visible:ring-offset-0 px-2 py-0"
-                    placeholder="LinkedIn URL or username"
-                  />
-                </div>
-              ) : (
-                <div
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
-                  style={{
-                    background: "#1a1a1a",
-                    border: "1px solid rgba(255, 255, 255, 0.1)",
-                  }}
-                >
-                  <Linkedin className="w-3 h-3 text-white/60 flex-shrink-0" />
-                  <span className="text-[10px] text-white flex-1 truncate">
-                    {lead.linkedinUrl
-                      ? `@${lead.linkedinUrl
-                          .replace(/^https?:\/\/(www\.)?linkedin\.com\//, "")
-                          .replace(/^\//, "")}`
-                      : "N/A"}
-                  </span>
-                  {lead.linkedinUrl && (
-                    <button
-                      onClick={handleLinkedinClick}
-                      className="text-white/60 hover:text-white transition-colors flex-shrink-0"
-                      title="Open LinkedIn"
-                    >
-                      <Linkedin className="w-3 h-3" />
-                    </button>
-                  )}
-                </div>
+                <>
+                  <Button
+                    onClick={handleSave}
+                    disabled={isSaving}
+                    className="w-full justify-center text-[10px] h-8 bg-white/25 hover:bg-white/35 text-white border border-white/30"
+                  >
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-3 h-3 mr-1" />
+                        Save Changes
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    onClick={handleCancel}
+                    disabled={isSaving}
+                    className="w-full justify-center text-[10px] h-8 bg-white/5 hover:bg-white/15 text-white border border-white/15"
+                  >
+                    <X className="w-3 h-3 mr-1" />
+                    Cancel
+                  </Button>
+                </>
               )}
             </div>
           </div>
-        </div>
 
-        {/* Personal Section */}
-        <div>
-          <h3 className="text-sm font-semibold text-white mb-2">Personal</h3>
-          <div className="space-y-1.5">
-            {/* Date of Birth - Not available in Lead type, showing placeholder */}
-            <div className="flex flex-col gap-0.5">
-              <label className="text-[10px] text-white/60">Date of Birth</label>
-              <div
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
-                style={{
-                  background: "#1a1a1a",
-                  border: "1px solid rgba(255, 255, 255, 0.1)",
-                }}
-              >
-                <Calendar className="w-3 h-3 text-white/60 flex-shrink-0" />
-                <span className="text-[10px] text-white">N/A</span>
+          {/* Contact Section */}
+          <div className="mb-4">
+            <h3 className="text-sm font-semibold text-white mb-2">Contact</h3>
+            <div className="space-y-1.5">
+              {/* Phone */}
+              <div className="flex flex-col gap-0.5">
+                <label className="text-[10px] text-white/60">Phone</label>
+                {isEditing ? (
+                  <div
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
+                    style={{
+                      background: "#1a1a1a",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                    }}
+                  >
+                    <Input
+                      value={editData.phone}
+                      onChange={(e) =>
+                        setEditData({ ...editData, phone: e.target.value })
+                      }
+                      className="flex-1 h-6 text-[10px] bg-transparent border-0 text-white focus-visible:ring-0 focus-visible:ring-offset-0 px-2 py-0"
+                      placeholder="Phone number"
+                    />
+                  </div>
+                ) : (
+                  <div
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
+                    style={{
+                      background: "#1a1a1a",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                    }}
+                  >
+                    {lead.phone && (
+                      <button
+                        onClick={handlePhoneClick}
+                        className="text-white/60 hover:text-white transition-colors flex-shrink-0"
+                        title="Call"
+                      >
+                        <Phone className="w-3 h-3" />
+                      </button>
+                    )}
+                    <span className="text-[10px] text-white flex-1 truncate">
+                      {lead.phone || "N/A"}
+                    </span>
+                  </div>
+                )}
               </div>
-            </div>
 
-            {/* Language */}
-            <div className="flex flex-col gap-0.5">
-              <label className="text-[10px] text-white/60">Language</label>
-              {isEditing ? (
-                <div
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
-                  style={{
-                    background: "#1a1a1a",
-                    border: "1px solid rgba(255, 255, 255, 0.1)",
-                  }}
-                >
-                  <Languages className="w-3 h-3 text-white/60 flex-shrink-0" />
-                  <Input
-                    value={editData.language}
-                    onChange={(e) =>
-                      setEditData({ ...editData, language: e.target.value })
-                    }
-                    className="flex-1 h-6 text-[10px] bg-transparent border-0 text-white focus-visible:ring-0 focus-visible:ring-offset-0 px-2 py-0"
-                    placeholder="Language"
-                  />
-                </div>
-              ) : (
-                <div
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
-                  style={{
-                    background: "#1a1a1a",
-                    border: "1px solid rgba(255, 255, 255, 0.1)",
-                  }}
-                >
-                  <Languages className="w-3 h-3 text-white/60 flex-shrink-0" />
-                  <span className="text-[10px] text-white flex-1 truncate">
-                    {lead.language || "N/A"}
-                  </span>
-                </div>
-              )}
-            </div>
+              {/* WhatsApp */}
+              <div className="flex flex-col gap-0.5">
+                <label className="text-[10px] text-white/60">WhatsApp</label>
+                {isEditing ? (
+                  <div
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
+                    style={{
+                      background: "#1a1a1a",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                    }}
+                  >
+                    <MessageCircle className="w-3 h-3 text-white/60 flex-shrink-0" />
+                    <Input
+                      value={editData.whatsapp}
+                      onChange={(e) =>
+                        setEditData({ ...editData, whatsapp: e.target.value })
+                      }
+                      className="flex-1 h-6 text-[10px] bg-transparent border-0 text-white focus-visible:ring-0 focus-visible:ring-offset-0 px-2 py-0"
+                      placeholder="WhatsApp number"
+                    />
+                  </div>
+                ) : (
+                  <div
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
+                    style={{
+                      background: "#1a1a1a",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                    }}
+                  >
+                    <MessageCircle className="w-3 h-3 text-white/60 flex-shrink-0" />
+                    <span className="text-[10px] text-white flex-1 truncate">
+                      {lead.whatsapp || "N/A"}
+                    </span>
+                    {lead.whatsapp && (
+                      <button
+                        onClick={handleWhatsAppClick}
+                        className="text-white/60 hover:text-white transition-colors flex-shrink-0"
+                        title="Open WhatsApp"
+                      >
+                        <MessageCircle className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
 
-            {/* Region */}
-            <div className="flex flex-col gap-0.5">
-              <label className="text-[10px] text-white/60">Region</label>
-              {isEditing ? (
-                <div
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
-                  style={{
-                    background: "#1a1a1a",
-                    border: "1px solid rgba(255, 255, 255, 0.1)",
-                  }}
-                >
-                  <MapPin className="w-3 h-3 text-white/60 flex-shrink-0" />
-                  <Input
-                    value={editData.location}
-                    onChange={(e) =>
-                      setEditData({ ...editData, location: e.target.value })
-                    }
-                    className="flex-1 h-6 text-[10px] bg-transparent border-0 text-white focus-visible:ring-0 focus-visible:ring-offset-0 px-2 py-0"
-                    placeholder="Location"
-                  />
-                </div>
-              ) : (
-                <div
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
-                  style={{
-                    background: "#1a1a1a",
-                    border: "1px solid rgba(255, 255, 255, 0.1)",
-                  }}
-                >
-                  <MapPin className="w-3 h-3 text-white/60 flex-shrink-0" />
-                  <span className="text-[10px] text-white truncate">
-                    {lead.location || lead.companyLocation || "N/A"}
-                  </span>
-                </div>
-              )}
-            </div>
+              {/* Email */}
+              <div className="flex flex-col gap-0.5">
+                <label className="text-[10px] text-white/60">Email</label>
+                {isEditing ? (
+                  <div
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
+                    style={{
+                      background: "#1a1a1a",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                    }}
+                  >
+                    <Input
+                      type="email"
+                      value={editData.email}
+                      onChange={(e) =>
+                        setEditData({ ...editData, email: e.target.value })
+                      }
+                      className="flex-1 h-6 text-[10px] bg-transparent border-0 text-white focus-visible:ring-0 focus-visible:ring-offset-0 px-2 py-0"
+                      placeholder="Email address"
+                    />
+                  </div>
+                ) : (
+                  <div
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
+                    style={{
+                      background: "#1a1a1a",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                    }}
+                  >
+                    {lead.email && (
+                      <button
+                        onClick={handleEmailClick}
+                        className="text-white/60 hover:text-white transition-colors flex-shrink-0"
+                        title="Send Email"
+                      >
+                        <Mail className="w-3 h-3" />
+                      </button>
+                    )}
+                    <span className="text-[10px] text-white flex-1 truncate">
+                      {lead.email || "N/A"}
+                    </span>
+                  </div>
+                )}
+              </div>
 
-            {/* Status */}
-            <div className="flex flex-col gap-0.5">
-              <label className="text-[10px] text-white/60">Status</label>
-              <div
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
-                style={{
-                  background: "#1a1a1a",
-                  border: "1px solid rgba(255, 255, 255, 0.1)",
-                }}
-              >
-                <Eye className="w-3 h-3 text-white/60 flex-shrink-0" />
-                <span className="text-[10px] text-white">Active</span>
+              {/* LinkedIn */}
+              <div className="flex flex-col gap-0.5">
+                <label className="text-[10px] text-white/60">LinkedIn</label>
+                {isEditing ? (
+                  <div
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
+                    style={{
+                      background: "#1a1a1a",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                    }}
+                  >
+                    <Input
+                      value={editData.linkedinUrl}
+                      onChange={(e) =>
+                        setEditData({
+                          ...editData,
+                          linkedinUrl: e.target.value,
+                        })
+                      }
+                      className="flex-1 h-6 text-[10px] bg-transparent border-0 text-white focus-visible:ring-0 focus-visible:ring-offset-0 px-2 py-0"
+                      placeholder="LinkedIn URL or username"
+                    />
+                  </div>
+                ) : (
+                  <div
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
+                    style={{
+                      background: "#1a1a1a",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                    }}
+                  >
+                    {lead.linkedinUrl && (
+                      <button
+                        onClick={handleLinkedinClick}
+                        className="text-white/60 hover:text-white transition-colors flex-shrink-0"
+                        title="Open LinkedIn"
+                      >
+                        <Linkedin className="w-3 h-3" />
+                      </button>
+                    )}
+                    <span className="text-[10px] text-white flex-1 truncate">
+                      {lead.linkedinUrl
+                        ? `@${lead.linkedinUrl
+                            .replace(/^https?:\/\/(www\.)?linkedin\.com\//, "")
+                            .replace(/^\//, "")}`
+                        : "N/A"}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
-        </div>
 
-      </CardContent>
-    </Card>
+          {/* Personal Section */}
+          <div>
+            <h3 className="text-sm font-semibold text-white mb-2">Personal</h3>
+            <div className="space-y-1.5">
+              {/* Date of Birth - Not available in Lead type, showing placeholder */}
+              <div className="flex flex-col gap-0.5">
+                <label className="text-[10px] text-white/60">
+                  Date of Birth
+                </label>
+                <div
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
+                  style={{
+                    background: "#1a1a1a",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                  }}
+                >
+                  <Calendar className="w-3 h-3 text-white/60 flex-shrink-0" />
+                  <span className="text-[10px] text-white">N/A</span>
+                </div>
+              </div>
+
+              {/* Language */}
+              <div className="flex flex-col gap-0.5">
+                <label className="text-[10px] text-white/60">Language</label>
+                {isEditing ? (
+                  <div
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
+                    style={{
+                      background: "#1a1a1a",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                    }}
+                  >
+                    <Languages className="w-3 h-3 text-white/60 flex-shrink-0" />
+                    <Input
+                      value={editData.language}
+                      onChange={(e) =>
+                        setEditData({ ...editData, language: e.target.value })
+                      }
+                      className="flex-1 h-6 text-[10px] bg-transparent border-0 text-white focus-visible:ring-0 focus-visible:ring-offset-0 px-2 py-0"
+                      placeholder="Language"
+                    />
+                  </div>
+                ) : (
+                  <div
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
+                    style={{
+                      background: "#1a1a1a",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                    }}
+                  >
+                    <Languages className="w-3 h-3 text-white/60 flex-shrink-0" />
+                    <span className="text-[10px] text-white flex-1 truncate">
+                      {lead.language || "N/A"}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Region */}
+              <div className="flex flex-col gap-0.5">
+                <label className="text-[10px] text-white/60">Region</label>
+                {isEditing ? (
+                  <div
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
+                    style={{
+                      background: "#1a1a1a",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                    }}
+                  >
+                    <MapPin className="w-3 h-3 text-white/60 flex-shrink-0" />
+                    <Input
+                      value={editData.location}
+                      onChange={(e) =>
+                        setEditData({ ...editData, location: e.target.value })
+                      }
+                      className="flex-1 h-6 text-[10px] bg-transparent border-0 text-white focus-visible:ring-0 focus-visible:ring-offset-0 px-2 py-0"
+                      placeholder="Location"
+                    />
+                  </div>
+                ) : (
+                  <div
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
+                    style={{
+                      background: "#1a1a1a",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                    }}
+                  >
+                    <MapPin className="w-3 h-3 text-white/60 flex-shrink-0" />
+                    <span className="text-[10px] text-white truncate">
+                      {lead.location || lead.companyLocation || "N/A"}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Status */}
+              <div className="flex flex-col gap-0.5">
+                <label className="text-[10px] text-white/60">Status</label>
+                <div
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
+                  style={{
+                    background: "#1a1a1a",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                  }}
+                >
+                  <Eye className="w-3 h-3 text-white/60 flex-shrink-0" />
+                  <span className="text-[10px] text-white">Active</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <Dialog
         open={scheduleDialogOpen}
@@ -926,7 +940,10 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
             )}
 
             {!checkingMicrosoft && microsoftConnected === false && (
-              <Alert variant="destructive" className="border-red-500/40 bg-red-500/10 text-white">
+              <Alert
+                variant="destructive"
+                className="border-red-500/40 bg-red-500/10 text-white"
+              >
                 <AlertTriangle className="h-4 w-4 text-red-300" />
                 <div>
                   <AlertTitle className="text-white">
@@ -940,14 +957,16 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
               </Alert>
             )}
 
-            {!checkingMicrosoft && microsoftConnected && microsoftStatusMessage && (
-              <Alert className="bg-white/10 border-white/15 text-white">
-                <CheckCircle2 className="h-4 w-4 text-emerald-300" />
-                <AlertDescription className="text-white/80">
-                  {microsoftStatusMessage}
-                </AlertDescription>
-              </Alert>
-            )}
+            {!checkingMicrosoft &&
+              microsoftConnected &&
+              microsoftStatusMessage && (
+                <Alert className="bg-white/10 border-white/15 text-white">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-300" />
+                  <AlertDescription className="text-white/80">
+                    {microsoftStatusMessage}
+                  </AlertDescription>
+                </Alert>
+              )}
 
             <div className="space-y-2">
               <Label className="text-xs text-white/70">Subject</Label>
@@ -1082,7 +1101,8 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
                     />
                     {isSearchRangeTooLarge && (
                       <p className="text-[10px] text-red-400">
-                        Search window must be less than 62 days from the start date.
+                        Search window must be less than 62 days from the start
+                        date.
                       </p>
                     )}
                   </div>
