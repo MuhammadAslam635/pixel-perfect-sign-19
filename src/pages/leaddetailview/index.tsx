@@ -237,7 +237,7 @@ const LeadDetailView = () => {
                 <LeadDetailCard lead={lead} />
               </div>
               {/* Middle: Lead Chat */}
-              <div className="col-span-7 col-start-3 flex flex-col flex-1 min-h-[400px] h-full">
+              <div className="col-span-7 col-start-3 flex flex-col min-h-[200px]">
                 <LeadChat
                   lead={lead}
                   selectedCallLogView={selectedCallLogView}

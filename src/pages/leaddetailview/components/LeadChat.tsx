@@ -965,7 +965,7 @@ const LeadChat = ({
 
   return (
     <section
-      className="flex flex-col font-poppins h-full flex-1 min-h-[400px] lg:p-7 p-6 max-w-full rounded-3xl"
+      className="flex flex-col font-poppins max-h-[calc(100vh-120px)] lg:p-7 p-6 max-w-full rounded-3xl"
       style={{
         background:
           "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 2e-05) 38.08%, rgba(255, 255, 255, 2e-05) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
@@ -973,7 +973,7 @@ const LeadChat = ({
       }}
     >
       {/* Header Tabs */}
-      <div className="w-full mb-6">
+      <div className="w-full mb-3">
         <div className="flex w-full items-center gap-3 sm:gap-4">
           {channelTabs.map((tab) => {
             const isActive = activeTab === tab.label;
@@ -1009,7 +1009,7 @@ const LeadChat = ({
       </div>
 
       {/* Lead Info */}
-      <div className="flex w-full flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex w-full flex-col gap-3 py-1 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <div className="h-8 w-8 sm:h-10 sm:w-10">
             {avatarSrc ? (
@@ -1077,11 +1077,11 @@ const LeadChat = ({
           )}
         </div>
       </div>
-      <div className="h-px w-full bg-white/30 mb-6" />
+      <div className="h-px w-full bg-white/30 mb-3" />
       {/* Content */}
-      <div className="flex flex-col w-full flex-1 min-h-0">
+      <div className="flex flex-col w-full flex-1 min-h-0 px-1">
         {activeTab === "WhatsApp" ? (
-          <div className="flex flex-1 flex-col min-h-0">
+          <div className="flex flex-1 flex-col min-h-0 relative">
             {whatsappStatusLoading ? (
               <div className="flex flex-1 flex-col items-center justify-center gap-3 py-20 text-white/70">
                 <Loader2 className="h-6 w-6 animate-spin text-white" />
@@ -1107,7 +1107,7 @@ const LeadChat = ({
             ) : (
               <div
                 ref={whatsappScrollRef}
-                className="flex flex-col overflow-y-auto scrollbar-hide mb-6 gap-4 flex-1 min-h-0"
+                className="flex flex-col overflow-y-auto scrollbar-hide gap-2 flex-1 min-h-0 pb-16"
               >
                 {whatsappMessages.map((message) => {
                   const isOutbound = message.direction === "outbound";
@@ -1150,7 +1150,7 @@ const LeadChat = ({
                         }`}
                       >
                         <div
-                          className={`relative w-full rounded-2xl px-4 py-3 ${
+                          className={`w-full rounded-2xl px-3 py-2 ${
                             isOutbound
                               ? "bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] text-white"
                               : "bg-white/10 text-white/90"
@@ -1207,7 +1207,7 @@ const LeadChat = ({
                           </div>
 
                           {renderedText && (
-                            <p className="text-sm mt-2 whitespace-pre-wrap leading-relaxed">
+                            <p className="text-xs mt-1 whitespace-pre-wrap leading-relaxed">
                               {renderedText}
                             </p>
                           )}
@@ -1278,47 +1278,52 @@ const LeadChat = ({
               </div>
             )}
 
-            <div className="flex items-center gap-3 rounded-full bg-white/10 px-4 py-3 flex-shrink-0">
-              <input
-                type="text"
-                value={whatsappInput}
-                onChange={(event) => setWhatsappInput(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" && !event.shiftKey) {
-                    event.preventDefault();
-                    handleSendWhatsappMessage();
+            {/* Fixed input at bottom */}
+            <div className="sticky bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/60 to-transparent pt-4">
+              <div className="flex items-center gap-3 rounded-full bg-white/10 px-4 py-3 mx-1 mb-1">
+                <input
+                  type="text"
+                  value={whatsappInput}
+                  onChange={(event) => setWhatsappInput(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" && !event.shiftKey) {
+                      event.preventDefault();
+                      handleSendWhatsappMessage();
+                    }
+                  }}
+                  disabled={whatsappInputsDisabled}
+                  className="flex-1 bg-transparent outline-none border-none text-sm text-white placeholder:text-white/50 disabled:opacity-50"
+                  placeholder={
+                    whatsappUnavailableMessage
+                      ? whatsappUnavailableMessage
+                      : "Type WhatsApp message"
                   }
-                }}
-                disabled={whatsappInputsDisabled}
-                className="flex-1 bg-transparent outline-none border-none text-sm text-white placeholder:text-white/50 disabled:opacity-50"
-                placeholder={
-                  whatsappUnavailableMessage
-                    ? whatsappUnavailableMessage
-                    : "Type WhatsApp message"
-                }
-              />
-              <button
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
-                onClick={handleSendWhatsappMessage}
-                disabled={
-                  whatsappInputsDisabled ||
-                  !whatsappInput.trim() ||
-                  whatsappMutation.isPending
-                }
-              >
-                {whatsappMutation.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin text-white" />
-                ) : (
-                  <Send size={14} className="text-white" />
-                )}
-              </button>
+                />
+                <button
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+                  onClick={handleSendWhatsappMessage}
+                  disabled={
+                    whatsappInputsDisabled ||
+                    !whatsappInput.trim() ||
+                    whatsappMutation.isPending
+                  }
+                >
+                  {whatsappMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-white" />
+                  ) : (
+                    <Send size={14} className="text-white" />
+                  )}
+                </button>
+              </div>
+              {whatsappSendError && (
+                <p className="mt-2 text-xs text-red-300 mx-1 mb-1">
+                  {whatsappSendError}
+                </p>
+              )}
             </div>
-            {whatsappSendError && (
-              <p className="mt-2 text-xs text-red-300 flex-shrink-0">{whatsappSendError}</p>
-            )}
           </div>
         ) : activeTab === "Email" ? (
-          <div className="flex flex-1 flex-col min-h-0">
+          <div className="flex flex-1 flex-col min-h-0 relative">
             {!emailAddress ? (
               <div className="flex w-full flex-1 items-center justify-center py-20 text-center text-white/70">
                 Add an email address for this lead to view their conversation
@@ -1340,7 +1345,7 @@ const LeadChat = ({
             ) : (
               <div
                 ref={emailScrollRef}
-                className="flex flex-col overflow-y-auto scrollbar-hide mb-6 gap-4 flex-1 min-h-0"
+                className="flex flex-col overflow-y-auto scrollbar-hide gap-2 flex-1 min-h-0 pb-20"
               >
                 {emailMessages.map((email) => {
                   const isOutbound = email.direction === "outbound";
@@ -1377,7 +1382,7 @@ const LeadChat = ({
                         }`}
                       >
                         <div
-                          className={`w-full rounded-2xl px-4 py-3 ${
+                          className={`w-full rounded-2xl px-3 py-2 ${
                             isOutbound
                               ? "bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] text-white"
                               : "bg-white/10 text-white/90"
@@ -1399,11 +1404,11 @@ const LeadChat = ({
                               {formatEmailTimestamp(email.createdAt)}
                             </span>
                           </div>
-                          <p className="text-sm font-semibold mt-2">
+                          <p className="text-xs font-semibold mt-1">
                             {email.subject || "No subject"}
                           </p>
                           {emailBody && (
-                            <p className="text-sm mt-2 whitespace-pre-wrap leading-relaxed">
+                            <p className="text-xs mt-1 whitespace-pre-wrap leading-relaxed">
                               {emailBody}
                             </p>
                           )}
@@ -1414,72 +1419,80 @@ const LeadChat = ({
                 })}
               </div>
             )}
-            <div className="flex flex-col gap-3 mt-auto flex-shrink-0">
-              <div className="space-y-3 flex flex-col">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium text-white/90">
-                    Message
-                  </label>
-                  <ActiveNavButton
-                    icon={Sparkles}
-                    text={
-                      isGeneratingEmailMessage ? "Generating..." : "Generate with AI"
-                    }
-                    onClick={handleGenerateEmailMessage}
-                    disabled={
-                      isGeneratingEmailMessage || !lead?.companyId || !lead?._id
-                    }
-                    className="h-8 text-xs"
-                    title={
-                      !lead?.companyId || !lead?._id
-                        ? "Lead information is required to generate suggestions"
-                        : "Generate with AI"
-                    }
-                  />
-                </div>
-                <div className="flex flex-col gap-2 rounded-lg bg-white/10 px-3 py-3 sm:flex-row sm:items-end sm:flex-nowrap sm:gap-2">
-                  <textarea
-                    value={emailInput}
-                    onChange={(event) => setEmailInput(event.target.value)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" && event.ctrlKey) {
-                        event.preventDefault();
-                        handleSendEmail();
+
+            {/* Fixed input at bottom */}
+            <div className="sticky bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/60 to-transparent p-3">
+              <div className="flex flex-col gap-2 mx-1 mb-1">
+                <div className="space-y-2 flex flex-col">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-white/90">
+                      Compose
+                    </label>
+                    <ActiveNavButton
+                      icon={Sparkles}
+                      text={
+                        isGeneratingEmailMessage
+                          ? "Generating..."
+                          : "Generate with AI"
                       }
-                    }}
-                    disabled={!emailAddress}
-                    className="flex-1 w-full bg-transparent outline-none border-none text-sm text-white placeholder:text-white/50 resize-none min-h-[80px] max-h-[150px] py-2 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-                    placeholder={
-                      !emailAddress
-                        ? "Add an email address to send emails"
-                        : "Write your email message (Ctrl+Enter to send)"
-                    }
-                    rows={3}
-                  />
-                  <button
-                    className="flex h-8 w-full sm:h-8 sm:w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
-                    onClick={handleSendEmail}
-                    disabled={
-                      !emailAddress ||
-                      !emailInput.trim() ||
-                      emailMutation.isPending
-                    }
-                  >
-                    {emailMutation.isPending ? (
-                      <Loader2 className="h-3 w-3 animate-spin text-white" />
-                    ) : (
-                      <Send size={12} className="text-white" />
-                    )}
-                  </button>
+                      onClick={handleGenerateEmailMessage}
+                      disabled={
+                        isGeneratingEmailMessage ||
+                        !lead?.companyId ||
+                        !lead?._id
+                      }
+                      className="h-7 text-xs disabled:opacity-100"
+                      title={
+                        !lead?.companyId || !lead?._id
+                          ? "Lead information is required to generate suggestions"
+                          : "Generate with AI"
+                      }
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2 rounded-full bg-black px-3 py-2 sm:flex-row sm:items-end sm:flex-nowrap sm:gap-2">
+                    <textarea
+                      value={emailInput}
+                      onChange={(event) => setEmailInput(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" && event.ctrlKey) {
+                          event.preventDefault();
+                          handleSendEmail();
+                        }
+                      }}
+                      disabled={!emailAddress}
+                      className="flex-1 w-full bg-transparent outline-none border-none text-sm text-white placeholder:text-white/50 resize-none min-h-[35px] max-h-[90px] py-1 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                      placeholder={
+                        !emailAddress
+                          ? "Add an email address to send emails"
+                          : "Write your email message (Ctrl+Enter to send)"
+                      }
+                      rows={2}
+                    />
+                    <button
+                      className="flex h-7 w-full sm:h-7 sm:w-7 items-center justify-center rounded-full bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+                      onClick={handleSendEmail}
+                      disabled={
+                        !emailAddress ||
+                        !emailInput.trim() ||
+                        emailMutation.isPending
+                      }
+                    >
+                      {emailMutation.isPending ? (
+                        <Loader2 className="h-3 w-3 animate-spin text-white" />
+                      ) : (
+                        <Send size={10} className="text-white" />
+                      )}
+                    </button>
+                  </div>
                 </div>
+                {emailSendError && (
+                  <p className="text-xs text-red-300">{emailSendError}</p>
+                )}
               </div>
-              {emailSendError && (
-                <p className="text-xs text-red-300">{emailSendError}</p>
-              )}
             </div>
           </div>
         ) : activeTab === "SMS" ? (
-          <div className="flex flex-1 flex-col min-h-0">
+          <div className="flex flex-1 flex-col min-h-0 relative">
             {!phoneNumber ? (
               <div className="flex w-full flex-1 items-center justify-center py-20 text-center text-white/70">
                 Add a phone number for this lead to start SMS conversations.
@@ -1504,7 +1517,7 @@ const LeadChat = ({
             ) : (
               <div
                 ref={smsScrollRef}
-                className="flex flex-col overflow-y-auto scrollbar-hide mb-6 gap-4 flex-1 min-h-0"
+                className="flex flex-col overflow-y-auto scrollbar-hide gap-2 flex-1 min-h-0 pb-16"
               >
                 {orderedSmsMessages.map((message) => {
                   const isOutbound = message.direction === "outbound";
@@ -1539,7 +1552,7 @@ const LeadChat = ({
                         }`}
                       >
                         <div
-                          className={`w-full rounded-2xl px-4 py-3 ${
+                          className={`w-full rounded-2xl px-3 py-2 ${
                             isOutbound
                               ? "bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] text-white"
                               : "bg-white/10 text-white/90"
@@ -1561,7 +1574,7 @@ const LeadChat = ({
                               {formatEmailTimestamp(message.createdAt)}
                             </span>
                           </div>
-                          <p className="text-sm mt-2 whitespace-pre-wrap leading-relaxed">
+                          <p className="text-xs mt-1 whitespace-pre-wrap leading-relaxed">
                             {message.body}
                           </p>
                           {statusDisplay && (
@@ -1579,59 +1592,68 @@ const LeadChat = ({
               </div>
             )}
 
-            <div className="flex items-center gap-3 rounded-full bg-white/10 px-4 py-3 flex-shrink-0">
-              <input
-                type="text"
-                value={smsInput}
-                onChange={(event) => setSmsInput(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" && !event.shiftKey) {
-                    event.preventDefault();
-                    handleSendSms();
+            {/* Fixed input at bottom */}
+            <div className="sticky bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/60 to-transparent pt-4">
+              <div className="flex items-center gap-3 rounded-full bg-white/10 px-4 py-3 mx-1 mb-1">
+                <input
+                  type="text"
+                  value={smsInput}
+                  onChange={(event) => setSmsInput(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" && !event.shiftKey) {
+                      event.preventDefault();
+                      handleSendSms();
+                    }
+                  }}
+                  disabled={smsInputsDisabled}
+                  className="flex-1 bg-transparent outline-none border-none text-sm text-white placeholder:text-white/50 disabled:opacity-50"
+                  placeholder={
+                    smsUnavailableMessage
+                      ? smsUnavailableMessage
+                      : phoneNumber
+                      ? "Type SMS message"
+                      : "Add a phone number to send SMS"
                   }
-                }}
-                disabled={smsInputsDisabled}
-                className="flex-1 bg-transparent outline-none border-none text-sm text-white placeholder:text-white/50 disabled:opacity-50"
-                placeholder={
-                  smsUnavailableMessage
-                    ? smsUnavailableMessage
-                    : phoneNumber
-                    ? "Type SMS message"
-                    : "Add a phone number to send SMS"
-                }
-              />
-              <button
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
-                onClick={handleSendSms}
-                disabled={
-                  smsInputsDisabled || !smsInput.trim() || smsMutation.isPending
-                }
-              >
-                {smsMutation.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin text-white" />
-                ) : (
-                  <Send size={14} className="text-white" />
-                )}
-              </button>
+                />
+                <button
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+                  onClick={handleSendSms}
+                  disabled={
+                    smsInputsDisabled ||
+                    !smsInput.trim() ||
+                    smsMutation.isPending
+                  }
+                >
+                  {smsMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-white" />
+                  ) : (
+                    <Send size={14} className="text-white" />
+                  )}
+                </button>
+              </div>
+              {smsSendError && (
+                <p className="mt-2 text-xs text-red-300 mx-1 mb-1">
+                  {smsSendError}
+                </p>
+              )}
             </div>
-            {smsSendError && (
-              <p className="mt-2 text-xs text-red-300 flex-shrink-0">{smsSendError}</p>
-            )}
           </div>
         ) : activeTab === "Call" ? (
-          <CallView
-            lead={lead}
-            twilioReady={twilioReady}
-            twilioStatusMessage={
-              twilioStatusLoading
-                ? "Checking calling availability..."
-                : twilioConnection.message ||
-                  "Company Twilio credentials aren't added yet."
-            }
-            twilioStatusLoading={twilioStatusLoading}
-            selectedCallLogView={selectedCallLogView}
-            setSelectedCallLogView={setSelectedCallLogView}
-          />
+          <div className="flex w-full flex-1 items-center justify-center py-20 text-lg font-medium text-white/70">
+            <CallView
+              lead={lead}
+              twilioReady={twilioReady}
+              twilioStatusMessage={
+                twilioStatusLoading
+                  ? "Checking calling availability..."
+                  : twilioConnection.message ||
+                    "Company Twilio credentials aren't added yet."
+              }
+              twilioStatusLoading={twilioStatusLoading}
+              selectedCallLogView={selectedCallLogView}
+              setSelectedCallLogView={setSelectedCallLogView}
+            />
+          </div>
         ) : activeTab === "AI Call" ? (
           <div className="flex w-full flex-1 items-center justify-center py-20 text-lg font-medium text-white/70">
             Under Work.
