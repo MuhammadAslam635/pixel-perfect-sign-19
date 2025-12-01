@@ -255,7 +255,7 @@ const LeadsList: FC<LeadsListProps> = ({
               </span>
             )}
           </div>
-          <p className="text-[8px] font-bold text-white/60 mt-0.5">
+          <p className="text-[9px] font-bold text-white/60 mt-0.5">
             {lead.position || "Chief Executive Officer"}
           </p>
           <div className="mt-1 sm:mt-2 flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-gray-300">
