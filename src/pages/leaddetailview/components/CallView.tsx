@@ -60,9 +60,9 @@ export const CallView = ({
   const animationFrameRef = useRef<number | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const deviceRef = useRef<Device | null>(null);
-  const activeCallRef = useRef<
-    Awaited<ReturnType<Device["connect"]>> | null
-  >(null);
+  const activeCallRef = useRef<Awaited<ReturnType<Device["connect"]>> | null>(
+    null
+  );
   const callStartTimeRef = useRef<number | null>(null);
   const dialedNumberRef = useRef<string | null>(null);
   const callSidRef = useRef<string | null>(null);
@@ -113,7 +113,7 @@ export const CallView = ({
   useEffect(() => {
     fetchCallLogs();
   }, [fetchCallLogs]);
-  
+
   const handleRefreshCallLogs = useCallback(async () => {
     if (!leadId) return;
     try {
@@ -137,12 +137,9 @@ export const CallView = ({
 
       try {
         setRecordingLoading(true);
-        const response = await API.get(
-          `/twilio/calls/${log._id}/recording`,
-          {
-            responseType: "blob",
-          }
-        );
+        const response = await API.get(`/twilio/calls/${log._id}/recording`, {
+          responseType: "blob",
+        });
         const blob = response.data as Blob;
         const url = URL.createObjectURL(blob);
         setRecordingAudioUrl(url);
@@ -225,7 +222,9 @@ export const CallView = ({
     [fetchCallLogs, leadId, leadName, leadPhone]
   );
 
-  const getConnectionCallSid = (connection: TwilioConnection): string | null => {
+  const getConnectionCallSid = (
+    connection: TwilioConnection
+  ): string | null => {
     const parameters = (connection as any)?.parameters;
     const sid =
       parameters?.CallSid ||
@@ -264,7 +263,7 @@ export const CallView = ({
     // Create typed arrays for the analyser methods
     const timeDomainArray = new Uint8Array(analyser.fftSize);
     const freqArray = new Uint8Array(analyser.frequencyBinCount);
-    
+
     analyser.getByteTimeDomainData(timeDomainArray);
     let sumSquares = 0;
     for (let i = 0; i < timeDomainArray.length; i++) {
@@ -312,13 +311,15 @@ export const CallView = ({
       });
 
       mediaStreamRef.current = stream;
- 
+
       const AudioContextConstructor =
         typeof window !== "undefined"
           ? window.AudioContext ||
-            (window as typeof window & {
-              webkitAudioContext?: typeof AudioContext;
-            }).webkitAudioContext
+            (
+              window as typeof window & {
+                webkitAudioContext?: typeof AudioContext;
+              }
+            ).webkitAudioContext
           : null;
 
       if (!AudioContextConstructor) {
@@ -343,7 +344,8 @@ export const CallView = ({
     } catch (streamError) {
       console.error("Failed to start microphone", streamError);
       setError(
-        streamError instanceof DOMException && streamError.name === "NotAllowedError"
+        streamError instanceof DOMException &&
+          streamError.name === "NotAllowedError"
           ? "Microphone permission was denied."
           : "Unable to access the microphone. Please try again."
       );
@@ -354,7 +356,8 @@ export const CallView = ({
   // Start listening to microphone when component mounts or Twilio becomes ready
   useEffect(() => {
     // Only prevent retry if it's a permission denial error
-    const isPermissionError = error?.includes("permission") || error?.includes("denied");
+    const isPermissionError =
+      error?.includes("permission") || error?.includes("denied");
     if (twilioReady && !isListening && !isPermissionError) {
       startListening();
     }
@@ -533,11 +536,12 @@ export const CallView = ({
         await ensureDevice();
       } catch (initError) {
         if (!mounted) return;
-        setError((prev) =>
-          prev ||
-          (initError instanceof Error
-            ? initError.message
-            : "Unable to initialize calling device.")
+        setError(
+          (prev) =>
+            prev ||
+            (initError instanceof Error
+              ? initError.message
+              : "Unable to initialize calling device.")
         );
       }
     };
@@ -548,7 +552,6 @@ export const CallView = ({
       mounted = false;
     };
   }, [ensureDevice, twilioReady, twilioStatusLoading]);
-
 
   const handleCall = useCallback(async () => {
     if (callPhase === "ringing" || callPhase === "connected") {
@@ -582,9 +585,7 @@ export const CallView = ({
       attachConnectionListeners(connection);
     } catch (callError) {
       setCallStatus(
-        callError instanceof Error
-          ? callError.message
-          : "Unable to place call"
+        callError instanceof Error ? callError.message : "Unable to place call"
       );
       setCallPhase("idle");
       dialedNumberRef.current = null;
@@ -857,49 +858,60 @@ export const CallView = ({
                   style={{ overflow: "visible" }}
                 >
                   <defs>
-                    <linearGradient id="waveformFade" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <linearGradient
+                      id="waveformFade"
+                      x1="0%"
+                      y1="0%"
+                      x2="100%"
+                      y2="0%"
+                    >
                       <stop offset="0%" stopColor="white" stopOpacity="0" />
                       <stop offset="15%" stopColor="white" stopOpacity="1" />
                       <stop offset="85%" stopColor="white" stopOpacity="1" />
                       <stop offset="100%" stopColor="white" stopOpacity="0" />
                     </linearGradient>
                     <mask id="waveformMask">
-                      <rect width="100%" height="100%" fill="url(#waveformFade)" />
+                      <rect
+                        width="100%"
+                        height="100%"
+                        fill="url(#waveformFade)"
+                      />
                     </mask>
                   </defs>
                   <path
                     d={(() => {
-                      if (waveformData.length < 2) return '';
+                      if (waveformData.length < 2) return "";
                       const centerY = 100;
                       const amplitude = 155; // Maximum amplitude for biggest, most visible waves
-                      
+
                       // Create points array
                       const points = waveformData.map((value, index) => {
                         const x = (index / (waveformData.length - 1)) * 380;
-                        const y = centerY - (value * amplitude);
+                        const y = centerY - value * amplitude;
                         return { x, y };
                       });
-                      
+
                       // Start path with first point
                       let path = `M ${points[0].x} ${points[0].y}`;
-                      
+
                       // Use cubic bezier curves for smooth interpolation
                       for (let i = 0; i < points.length - 1; i++) {
                         const p0 = i > 0 ? points[i - 1] : points[i];
                         const p1 = points[i];
                         const p2 = points[i + 1];
-                        const p3 = i < points.length - 2 ? points[i + 2] : points[i + 1];
-                        
+                        const p3 =
+                          i < points.length - 2 ? points[i + 2] : points[i + 1];
+
                         // Calculate control points for smooth cubic bezier
                         const cp1x = p1.x + (p2.x - p0.x) / 6;
                         const cp1y = p1.y + (p2.y - p0.y) / 6;
                         const cp2x = p2.x - (p3.x - p1.x) / 6;
                         const cp2y = p2.y - (p3.y - p1.y) / 6;
-                        
+
                         // Use cubic bezier curve for smooth path
                         path += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
                       }
-                      
+
                       return path;
                     })()}
                     fill="none"
@@ -990,8 +1002,8 @@ export const CallView = ({
         </div>
 
         <div className="rounded-[24px] border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden shadow-[0_35px_120px_rgba(7,6,19,0.55)]">
-            <div className="overflow-x-auto scrollbar-thin">
-              <div className="min-w-full">
+          <div className="overflow-x-auto scrollbar-thin">
+            <div className="min-w-full">
               <div className="grid grid-cols-9 gap-2 px-4 py-3 text-[0.6rem] font-semibold uppercase tracking-[0.22em] text-white/50">
                 <span>Caller</span>
                 <span>Date</span>
@@ -1017,209 +1029,216 @@ export const CallView = ({
                   </div>
                 ) : (
                   callLogs.map((log) => {
-                const rawScoreStatus =
-                  log.leadSuccessScoreStatus || "not-requested";
-                const rawFollowupStatus =
-                  log.followupSuggestionStatus || "not-requested";
+                    const rawScoreStatus =
+                      log.leadSuccessScoreStatus || "not-requested";
+                    const rawFollowupStatus =
+                      log.followupSuggestionStatus || "not-requested";
 
-                // If there's no recording/transcription path, don't show
-                // endless "Processing…" – treat as not available.
-                const hasRecordingOrTranscript =
-                  !!log.recordingUrl ||
-                  !!log.transcriptionText ||
-                  (log.transcriptionStatus &&
-                    log.transcriptionStatus !== "not-requested");
+                    // If there's no recording/transcription path, don't show
+                    // endless "Processing…" – treat as not available.
+                    const hasRecordingOrTranscript =
+                      !!log.recordingUrl ||
+                      !!log.transcriptionText ||
+                      (log.transcriptionStatus &&
+                        log.transcriptionStatus !== "not-requested");
 
-                const scoreStatus =
-                  rawScoreStatus === "pending" && !hasRecordingOrTranscript
-                    ? "not-requested"
-                    : rawScoreStatus;
-                const followupStatus =
-                  rawFollowupStatus === "pending" && !hasRecordingOrTranscript
-                    ? "not-requested"
-                    : rawFollowupStatus;
+                    const scoreStatus =
+                      rawScoreStatus === "pending" && !hasRecordingOrTranscript
+                        ? "not-requested"
+                        : rawScoreStatus;
+                    const followupStatus =
+                      rawFollowupStatus === "pending" &&
+                      !hasRecordingOrTranscript
+                        ? "not-requested"
+                        : rawFollowupStatus;
 
-                const renderStatusPill = (label: string, status: string) => {
-                  if (status === "pending") {
-                    return (
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-[0.65rem] font-medium bg-white/5 text-white/70 border border-white/10">
-                        {label}: Processing…
-                      </span>
-                    );
-                  }
-                  if (status === "completed") {
-                    return (
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-[0.65rem] font-medium bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
-                        {label}: Ready
-                      </span>
-                    );
-                  }
-                  if (status === "failed") {
-                    return (
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-[0.65rem] font-medium bg-red-500/10 text-red-300 border border-red-500/20">
-                        {label}: Failed
-                      </span>
-                    );
-                  }
-                  // status === "not-requested" or anything else treated as generic
-                  return (
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-[0.65rem] font-medium bg-white/0 text-white/40 border border-white/5">
-                      Not available
-                    </span>
-                  );
-                };
-
-                const isFollowupCompleted = followupStatus === "completed";
-
-                return (
-                  <div
-                    key={log._id}
-                    className="grid grid-cols-9 gap-2 px-4 py-3 text-[0.7rem] text-white/80 bg-white/[0.01] hover:bg-white/[0.04] transition-colors"
-                  >
-                    {/* Caller */}
-                    <div className="flex flex-col gap-0.5">
-                      <span className="font-semibold text-white">
-                        {log.leadName || "Unknown caller"}
-                      </span>
-                      {log.leadPhone && (
-                        <span className="text-xs text-white/50">
-                          {log.leadPhone}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Date */}
-                    <div className="text-white/70 break-words">
-                      {formatCallDate(log.startedAt)}
-                    </div>
-
-                    {/* Duration */}
-                    <div className="text-white/70">
-                      {formatDuration(log.durationSeconds)}
-                    </div>
-
-                    {/* Channel */}
-                    <div className="text-white/70">
-                      {log.channel || "Phone"}
-                    </div>
-
-                    {/* Call status */}
-                    <div
-                      className={`font-semibold ${getStatusColor(log.status)}`}
-                    >
-                      {formatStatus(log.status)}
-                    </div>
-
-                    {/* Success score */}
-                    <div className="flex flex-col items-center gap-1">
-                      {scoreStatus === "completed" &&
-                      typeof log.leadSuccessScore === "number" ? (
-                        (() => {
-                          const score = log.leadSuccessScore || 0;
-                          let colorClasses =
-                            "bg-emerald-500/10 text-emerald-300 border border-emerald-500/20";
-                          if (score < 40) {
-                            // Bad score = red
-                            colorClasses =
-                              "bg-red-500/10 text-red-300 border border-red-500/20";
-                          } else if (score < 80) {
-                            // Medium score = yellow
-                            colorClasses =
-                              "bg-yellow-500/10 text-yellow-300 border border-yellow-500/20";
-                          }
-                          return (
-                            <span
-                              className={`inline-flex items-center px-2 py-1 rounded-full text-[0.6rem] font-medium ${colorClasses}`}
-                            >
-                              Score: {score}/100
-                            </span>
-                          );
-                        })()
-                      ) : (
-                        renderStatusPill("Score", scoreStatus)
-                      )}
-                    </div>
-
-                    {/* Recording */}
-                    <div className="flex flex-col items-center justify-center pb-3">
-                      {log.recordingUrl || log.callSid ? (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="h-7 px-2 py-1 rounded-full border-white/20 bg-white/5 text-[0.65rem] text-white hover:bg-white/10 hover:text-white"
-                          onClick={() => {
-                            void handleRecordingView(log);
-                          }}
-                        >
-                          ▶ Play
-                        </Button>
-                      ) : (
-                        <span className="text-xs text-white/40 border border-white/5 rounded-full px-3 py-1">
+                    const renderStatusPill = (
+                      label: string,
+                      status: string
+                    ) => {
+                      if (status === "pending") {
+                        return (
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-[0.65rem] font-medium bg-white/5 text-white/70 border border-white/10">
+                            {label}: Processing…
+                          </span>
+                        );
+                      }
+                      if (status === "completed") {
+                        return (
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-[0.65rem] font-medium bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
+                            {label}: Ready
+                          </span>
+                        );
+                      }
+                      if (status === "failed") {
+                        return (
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-[0.65rem] font-medium bg-red-500/10 text-red-300 border border-red-500/20">
+                            {label}: Failed
+                          </span>
+                        );
+                      }
+                      // status === "not-requested" or anything else treated as generic
+                      return (
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-[0.65rem] font-medium bg-white/0 text-white/40 border border-white/5">
                           Not available
                         </span>
-                      )}
-                    </div>
+                      );
+                    };
 
-                    {/* Transcription */}
-                    <div className="flex flex-col gap-1 pr-3 items-center">
-                      {log.transcriptionStatus === "completed" &&
-                      log.transcriptionText ? (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="h-7 px-2 py-1 rounded-full border-white/20 bg-white/5 text-[0.65rem] text-white hover:bg-white/10 hover:text-white w-fit"
-                          onClick={() =>
-                            setSelectedCallLogView({
-                              type: "transcription",
-                              log,
-                            })
-                          }
-                        >
-                          👁 View
-                        </Button>
-                      ) : (
-                        <>
-                          {log.transcriptionStatus ? (
-                            <span className="inline-flex items-center px-3 py-1 rounded-full text-[0.65rem] font-medium bg-white/0 text-white/60 border border-white/10">
-                              {log.transcriptionStatus === "pending"
-                                ? "Transcription: Processing…"
-                                : log.transcriptionStatus === "failed"
-                                ? "Transcription: Failed"
-                                : "Not available"}
+                    const isFollowupCompleted = followupStatus === "completed";
+
+                    return (
+                      <div
+                        key={log._id}
+                        className="grid grid-cols-9 gap-2 px-4 py-3 text-[0.7rem] text-white/80 bg-white/[0.01] hover:bg-white/[0.04] transition-colors"
+                      >
+                        {/* Caller */}
+                        <div className="flex flex-col gap-0.5">
+                          <span className="font-semibold text-white">
+                            {log.leadName || "Unknown caller"}
+                          </span>
+                          {log.leadPhone && (
+                            <span className="text-xs text-white/50">
+                              {log.leadPhone}
                             </span>
+                          )}
+                        </div>
+
+                        {/* Date */}
+                        <div className="text-white/70 break-words">
+                          {formatCallDate(log.startedAt)}
+                        </div>
+
+                        {/* Duration */}
+                        <div className="text-white/70">
+                          {formatDuration(log.durationSeconds)}
+                        </div>
+
+                        {/* Channel */}
+                        <div className="text-white/70">
+                          {log.channel || "Phone"}
+                        </div>
+
+                        {/* Call status */}
+                        <div
+                          className={`font-semibold ${getStatusColor(
+                            log.status
+                          )}`}
+                        >
+                          {formatStatus(log.status)}
+                        </div>
+
+                        {/* Success score */}
+                        <div className="flex flex-col items-center gap-1">
+                          {scoreStatus === "completed" &&
+                          typeof log.leadSuccessScore === "number"
+                            ? (() => {
+                                const score = log.leadSuccessScore || 0;
+                                let colorClasses =
+                                  "bg-emerald-500/10 text-emerald-300 border border-emerald-500/20";
+                                if (score < 40) {
+                                  // Bad score = red
+                                  colorClasses =
+                                    "bg-red-500/10 text-red-300 border border-red-500/20";
+                                } else if (score < 80) {
+                                  // Medium score = yellow
+                                  colorClasses =
+                                    "bg-yellow-500/10 text-yellow-300 border border-yellow-500/20";
+                                }
+                                return (
+                                  <span
+                                    className={`inline-flex items-center px-2 py-1 rounded-full text-[0.6rem] font-medium ${colorClasses}`}
+                                  >
+                                    Score: {score}/100
+                                  </span>
+                                );
+                              })()
+                            : renderStatusPill("Score", scoreStatus)}
+                        </div>
+
+                        {/* Recording */}
+                        <div className="flex flex-col items-center justify-center pb-3">
+                          {log.recordingUrl || log.callSid ? (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="h-7 px-2 py-1 rounded-full border-white/20 bg-white/5 text-[0.65rem] text-white hover:bg-white/10 hover:text-white"
+                              onClick={() => {
+                                void handleRecordingView(log);
+                              }}
+                            >
+                              ▶ Play
+                            </Button>
                           ) : (
-                            <span className="inline-flex items-center px-3 py-1 rounded-full text-[0.65rem] font-medium bg-white/0 text-white/40 border border-white/5">
+                            <span className="text-xs text-white/40 border border-white/5 rounded-full px-3 py-1">
                               Not available
                             </span>
                           )}
-                        </>
-                      )}
-                    </div>
+                        </div>
 
-                    {/* Follow-up suggestion */}
-                    <div className="flex flex-col gap-1 items-center">
-                      {isFollowupCompleted ? (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="h-7 px-2 py-1 rounded-full border-white/20 bg-white/5 text-[0.65rem] text-white hover:bg-white/10 hover:text-white w-fit"
-                          onClick={() =>
-                            setSelectedCallLogView({ type: "followup", log })
-                          }
-                        >
-                          View
-                        </Button>
-                      ) : (
-                        renderStatusPill("Follow-up", followupStatus)
-                      )}
-                    </div>
-                  </div>
-                );
-              })
-            )}
+                        {/* Transcription */}
+                        <div className="flex flex-col gap-1 pr-3 items-center">
+                          {log.transcriptionStatus === "completed" &&
+                          log.transcriptionText ? (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="h-7 px-2 py-1 rounded-full border-white/20 bg-white/5 text-[0.65rem] text-white hover:bg-white/10 hover:text-white w-fit"
+                              onClick={() =>
+                                setSelectedCallLogView({
+                                  type: "transcription",
+                                  log,
+                                })
+                              }
+                            >
+                              👁 View
+                            </Button>
+                          ) : (
+                            <>
+                              {log.transcriptionStatus ? (
+                                <span className="inline-flex items-center px-3 py-1 rounded-full text-[0.65rem] font-medium bg-white/0 text-white/60 border border-white/10">
+                                  {log.transcriptionStatus === "pending"
+                                    ? "Transcription: Processing…"
+                                    : log.transcriptionStatus === "failed"
+                                    ? "Transcription: Failed"
+                                    : "Not available"}
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center px-3 py-1 rounded-full text-[0.65rem] font-medium bg-white/0 text-white/40 border border-white/5">
+                                  Not available
+                                </span>
+                              )}
+                            </>
+                          )}
+                        </div>
+
+                        {/* Follow-up suggestion */}
+                        <div className="flex flex-col gap-1 items-center">
+                          {isFollowupCompleted ? (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="h-7 px-2 py-1 rounded-full border-white/20 bg-white/5 text-[0.65rem] text-white hover:bg-white/10 hover:text-white w-fit"
+                              onClick={() =>
+                                setSelectedCallLogView({
+                                  type: "followup",
+                                  log,
+                                })
+                              }
+                            >
+                              View
+                            </Button>
+                          ) : (
+                            renderStatusPill("Follow-up", followupStatus)
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </div>
           </div>
