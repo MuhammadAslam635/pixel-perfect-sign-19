@@ -1,13 +1,13 @@
-import { useState } from 'react';
-import DashboardLayout from '@/components/dashboard/DashboardLayout';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { MessageSquare, Users } from 'lucide-react';
-import ClientsTable from './components/ClientsTable';
-import ProspectsTable from './components/ProspectsTable';
-import CustomerSupportQueriesTable from './components/CustomerSupportQueriesTable';
+import { useState } from "react";
+import DashboardLayout from "@/components/dashboard/DashboardLayout";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { MessageSquare, Users } from "lucide-react";
+import ClientsTable from "./components/ClientsTable";
+import ProspectsTable from "./components/ProspectsTable";
+import CustomerSupportQueriesTable from "./components/CustomerSupportQueriesTable";
 
 const ProspectsPage = () => {
-  const [activeTab, setActiveTab] = useState('prospects');
+  const [activeTab, setActiveTab] = useState("sessions");
 
   return (
     <DashboardLayout>
@@ -27,13 +27,15 @@ const ProspectsPage = () => {
             orientation="vertical"
             className="flex flex-col lg:flex-row w-full"
           >
-            <div className="w-full lg:w-auto p-4 rounded-2xl border border-[#FFFFFF0D] shadow-inner flex flex-col gap-3 max-h-[60vh]"
+            <div
+              className="w-full lg:w-auto p-4 rounded-2xl border border-[#FFFFFF0D] shadow-inner flex flex-col gap-3 max-h-[60vh]"
               style={{
-                background: 'linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)'
+                background:
+                  "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
               }}
             >
               <TabsList className="flex flex-row lg:flex-col overflow-x-auto lg:overflow-x-visible items-start gap-3 bg-transparent border-0 p-0">
-                <TabsTrigger
+                {/* <TabsTrigger
                   value="prospects"
                   className="flex !justify-start whitespace-nowrap lg:w-full gap-2 py-3 px-4 rounded-full text-gray-300 font-medium
                             data-[state=active]:text-white
@@ -43,7 +45,7 @@ const ProspectsPage = () => {
                 >
                   <Users size={18} />
                   <span>Prospects</span>
-                </TabsTrigger>
+                </TabsTrigger> */}
 
                 <TabsTrigger
                   value="sessions"
@@ -93,5 +95,3 @@ const ProspectsPage = () => {
 };
 
 export default ProspectsPage;
-
-
