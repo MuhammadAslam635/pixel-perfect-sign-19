@@ -53,7 +53,7 @@ const AgentCard = ({ image, name, description }: AgentCardProps) => {
 
           {/* View Details Button */}
           <ActiveNavButton
-            className="mt-auto"
+            className="mt-auto h-7 text-[9px]"
             icon={ArrowRightIcon}
             text="View Details"
           />
