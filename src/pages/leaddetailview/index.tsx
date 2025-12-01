@@ -10,7 +10,18 @@ import {
   leadSummaryService,
   LeadSummaryResponse,
 } from "@/services/leadSummary.service";
-import { Loader2, ArrowLeft, Check } from "lucide-react";
+import {
+  Loader2,
+  ArrowLeft,
+  Check,
+  Sparkles,
+  Heart,
+  RefreshCw,
+  Calendar,
+  FileText,
+  Target,
+  Trophy,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { LeadCallLog } from "@/services/twilio.service";
@@ -23,6 +34,16 @@ const LEAD_STAGE_DEFINITIONS = [
   { label: "Proposal Sent", min: 60, max: 75 },
   { label: "Follow-up to Close", min: 75, max: 90 },
   { label: "Deal Closed", min: 90, max: 100 },
+];
+
+const STAGE_ICONS = [
+  Sparkles,
+  Heart,
+  RefreshCw,
+  Calendar,
+  FileText,
+  Target,
+  Trophy,
 ];
 
 const clampScore = (value: number | null) => {
@@ -174,7 +195,10 @@ const LeadDetailView = () => {
                           {state === "completed" ? (
                             <Check className="w-3.5 h-3.5" />
                           ) : (
-                            index + 1
+                            (() => {
+                              const IconComponent = STAGE_ICONS[index];
+                              return <IconComponent className="w-3.5 h-3.5" />;
+                            })()
                           )}
                         </div>
                       </div>
@@ -222,15 +246,8 @@ const LeadDetailView = () => {
                   setSelectedCallLogView={setSelectedCallLogView}
                 />
               </div>
-              {/* Right: Activity Component */}
-              <div
-                className="col-span-3 col-start-10 flex flex-col min-h-0"
-                // style={{
-                //   borderRadius: "20px",
-                //   background:
-                //     "linear-gradient(173.83deg, rgba(255, 255, 255, 0.03) 4.82%, rgba(255, 255, 255, 2e-05) 38.08%, rgba(255, 255, 255, 2e-05) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
-                // }}
-              >
+              {/* Right: Activity Component (with internal Activity/Company toggle) */}
+              <div className="col-span-3 col-start-10 flex flex-col min-h-0">
                 <Activity
                   lead={lead}
                   selectedCallLogView={selectedCallLogView}
