@@ -9,6 +9,7 @@ import { Send, X, Plus, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { connectionMessagesService } from "@/services/connectionMessages.service";
 import { useToast } from "@/hooks/use-toast";
+import { ActiveNavButton } from "@/components/ui/primary-btn";
 
 interface EmailComposerProps {
   initialTo?: string[];
@@ -328,24 +329,21 @@ export const EmailComposer = ({
               >
                 Message
               </Label>
-              <Button
+              <ActiveNavButton
                 type="button"
-                variant="ghost"
-                size="sm"
+                icon={Sparkles}
+                text={isEnhancing ? "Generating..." : "Generate with AI"}
                 onClick={handleEnhanceWithAI}
                 disabled={isEnhancing}
-                className="text-white/70 hover:text-white hover:bg-white/10 rounded-lg flex items-center gap-1"
-              >
-                <Sparkles className="h-4 w-4" />
-                {isEnhancing ? "Generating..." : "Generate with AI"}
-              </Button>
+                className="flex items-center gap-1"
+              />
             </div>
             <Textarea
               id="body"
               placeholder="Write your message here..."
               value={body}
               onChange={(e) => setBody(e.target.value)}
-              className="min-h-[120px] max-h-[200px] resize-none bg-[#0b0f1c] border-white/10 text-white placeholder:text-white/40 focus:border-white/30 focus:ring-1 focus:ring-white/20 rounded-lg"
+              className="min-h-[120px] max-h-[200px] resize-none border-white/10 text-white placeholder:text-white/40 focus:border-white/30 focus:ring-1 focus:ring-white/20 rounded-lg"
             />
           </div>
 
@@ -358,14 +356,13 @@ export const EmailComposer = ({
             >
               Cancel
             </Button>
-            <Button
+            <ActiveNavButton
+              icon={Send}
+              text={isLoading ? "Sending..." : "Send"}
               onClick={handleSend}
               disabled={isLoading || to.length === 0 || !subject.trim()}
-              className="bg-gradient-to-r from-[#69B4B7] via-[#5486D0] to-[#3E64B3] text-white hover:brightness-110 rounded-lg"
-            >
-              <Send className="h-4 w-4 mr-2" />
-              {isLoading ? "Sending..." : "Send"}
-            </Button>
+              className="flex items-center gap-2"
+            />
           </div>
         </div>
       </div>
