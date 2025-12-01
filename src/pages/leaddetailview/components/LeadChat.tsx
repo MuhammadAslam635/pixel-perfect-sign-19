@@ -1318,7 +1318,7 @@ const LeadChat = ({
             )}
           </div>
         ) : activeTab === "Email" ? (
-          <div className="flex flex-1 flex-col">
+          <div className="flex flex-1 flex-col min-h-0">
             {!emailAddress ? (
               <div className="flex w-full flex-1 items-center justify-center py-20 text-center text-white/70">
                 Add an email address for this lead to view their conversation
@@ -1340,7 +1340,7 @@ const LeadChat = ({
             ) : (
               <div
                 ref={emailScrollRef}
-                className="flex flex-col overflow-y-auto scrollbar-hide mb-6 gap-4 h-[calc(100vh-350px)] lg:h-[calc(100vh-510px)]"
+                className="flex flex-col overflow-y-auto scrollbar-hide mb-6 gap-4 flex-1 min-h-0"
               >
                 {emailMessages.map((email) => {
                   const isOutbound = email.direction === "outbound";
@@ -1414,7 +1414,7 @@ const LeadChat = ({
                 })}
               </div>
             )}
-            <div className="flex flex-col gap-3 mt-[1px]">
+            <div className="flex flex-col gap-3 mt-auto flex-shrink-0">
               <div className="space-y-3 flex flex-col">
                 <div className="flex items-center justify-between">
                   <label className="text-sm font-medium text-white/90">
