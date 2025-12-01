@@ -1,5 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowRightIcon } from "lucide-react";
+import { ActiveNavButton } from "@/components/ui/primary-btn";
 
 type AgentCardProps = {
   image: string;
@@ -51,22 +52,11 @@ const AgentCard = ({ image, name, description }: AgentCardProps) => {
           </div>
 
           {/* View Details Button */}
-          <button
-            className="mt-auto rounded-full  py-1 px-3 transition-all duration-200 flex justify-end gap-2 font-Inter hover:bg-[#FFFFFF26]"
-            style={{
-              background: "#FFFFFF1A",
-              border: "0.76px solid #FFFFFF1F",
-              fontFamily: "Inter, sans-serif",
-              fontWeight: 400,
-              fontSize: "10px",
-              color: "#FFFFFF",
-            }}
-          >
-            <span className="text-white font-normal font-Inter">
-              View Details
-            </span>
-            <ArrowRightIcon className="size-3 text-white" />
-          </button>
+          <ActiveNavButton
+            className="mt-auto"
+            icon={ArrowRightIcon}
+            text="View Details"
+          />
         </CardContent>
       </div>
     </Card>
