@@ -230,9 +230,6 @@ const LeadsList: FC<LeadsListProps> = ({
       }
     };
 
-    const viewButtonLabelDesktop = isActive ? "Close Details" : "View Details";
-    const viewButtonLabelMobile = isActive ? "Close" : "Details";
-
     return (
       <Card
         key={lead._id}
@@ -366,7 +363,7 @@ const LeadsList: FC<LeadsListProps> = ({
               e.stopPropagation();
               navigate(`/leads/${lead._id}`);
             }}
-            className="w-full md:w-auto"
+            className="w-auto md:w-auto ml-auto md:ml-0 text-xs px-2 py-1 h-8"
           />
         </div>
       </Card>

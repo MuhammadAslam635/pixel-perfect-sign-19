@@ -66,7 +66,7 @@ export const PhoneCallModal: FC<PhoneCallModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] max-w-[560px] max-h-[90vh] overflow-y-auto bg-[#1e2829] border-[#3A3A3A] text-white">
+      <DialogContent className="w-[95vw] max-w-[560px] max-h-[90vh] overflow-y-auto scrollbar-hide bg-[#1e2829] border-[#3A3A3A] text-white">
         <DialogHeader>
           <DialogTitle className="text-lg sm:text-xl font-semibold text-white">
             Call {leadName || "Lead"}
@@ -124,25 +124,40 @@ export const PhoneCallModal: FC<PhoneCallModalProps> = ({
                 {loading ? "Refreshing…" : "Regenerate"}
               </Button>
             </div>
-            <div className="relative max-h-48 sm:max-h-64 overflow-y-auto rounded-md border border-white/5 bg-[#253032]/40 p-3 text-xs sm:text-sm text-white/80 leading-relaxed">
+            <div className="relative max-h-48 sm:max-h-64 overflow-y-auto scrollbar-hide rounded-md border border-white/5 bg-[#253032]/40 p-3 text-xs sm:text-sm text-white/80 leading-relaxed">
               {script?.trim() ? (
                 <div className="prose prose-invert prose-sm max-w-none">
                   <ReactMarkdown
                     components={{
                       h3: ({ node, ...props }) => (
-                        <h3 className="text-base font-semibold text-primary mt-4 mb-2 first:mt-0" {...props} />
+                        <h3
+                          className="text-base font-semibold text-primary mt-4 mb-2 first:mt-0"
+                          {...props}
+                        />
                       ),
                       h4: ({ node, ...props }) => (
-                        <h4 className="text-sm font-semibold text-white/90 mt-3 mb-1.5" {...props} />
+                        <h4
+                          className="text-sm font-semibold text-white/90 mt-3 mb-1.5"
+                          {...props}
+                        />
                       ),
                       p: ({ node, ...props }) => (
-                        <p className="text-white/80 mb-2 leading-relaxed" {...props} />
+                        <p
+                          className="text-white/80 mb-2 leading-relaxed"
+                          {...props}
+                        />
                       ),
                       strong: ({ node, ...props }) => (
-                        <strong className="text-white font-semibold" {...props} />
+                        <strong
+                          className="text-white font-semibold"
+                          {...props}
+                        />
                       ),
                       ul: ({ node, ...props }) => (
-                        <ul className="list-disc list-inside ml-2 mb-2 space-y-1" {...props} />
+                        <ul
+                          className="list-disc list-inside ml-2 mb-2 space-y-1"
+                          {...props}
+                        />
                       ),
                       li: ({ node, ...props }) => (
                         <li className="text-white/80" {...props} />
@@ -157,7 +172,8 @@ export const PhoneCallModal: FC<PhoneCallModalProps> = ({
                 </div>
               ) : (
                 <p className="text-white/60">
-                  No phone script is available yet. Generate one to prepare for your call.
+                  No phone script is available yet. Generate one to prepare for
+                  your call.
                 </p>
               )}
               {loading && (

@@ -485,9 +485,9 @@ const index = () => {
     <DashboardLayout>
       <main
         ref={pageContentRef}
-        className="relative px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12 2xl:px-16 pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-6 sm:pb-8 flex flex-col gap-4 sm:gap-6 text-white flex-1 overflow-y-auto"
+        className="relative px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12 2xl:px-16 pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-6 sm:pb-8 flex flex-col gap-4 sm:gap-6 text-white min-h-0 overflow-y-auto scrollbar-hide"
       >
-        <div className="max-w-[1600px] mx-auto w-full">
+        <div className="max-w-[1600px] mx-auto w-full min-h-0">
           {/* Filters Bar */}
           <div className="flex flex-col sm:flex-row justify-end items-stretch sm:items-center gap-1.5 sm:gap-2 md:gap-3 mb-3 sm:mb-4 md:mb-5">
             {/* Controls Container */}

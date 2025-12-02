@@ -73,7 +73,7 @@ export const LinkedinMessageModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] max-w-[600px] max-h-[90vh] overflow-y-auto bg-[#1e2829] border-[#3A3A3A] text-white">
+      <DialogContent className="w-[95vw] max-w-[600px] max-h-[90vh] overflow-y-auto scrollbar-hide bg-[#1e2829] border-[#3A3A3A] text-white">
         <DialogHeader>
           <div className="flex flex-col gap-3">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">

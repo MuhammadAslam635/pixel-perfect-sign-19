@@ -358,7 +358,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
           <div className="flex flex-col sm:flex-row items-center md:items-center justify-end gap-0.5 sm:gap-1 w-full md:w-auto">
             <ActiveNavButton
               icon={Users}
-              text={isActive ? "Close Executives" : "View Executives"}
+              text={isActive ? "Close Details" : "View Details"}
               onClick={() => {
                 if (window.innerWidth < 768) {
                   // Mobile: show executives view and hide companies

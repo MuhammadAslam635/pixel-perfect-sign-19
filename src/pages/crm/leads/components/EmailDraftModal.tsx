@@ -70,7 +70,7 @@ export const EmailDraftModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] max-w-[600px] max-h-[100vh] overflow-y-auto bg-[#1e2829] border-[#2B2F30] border-2 text-white">
+      <DialogContent className="w-[95vw] max-w-[600px] max-h-[100vh] overflow-y-auto scrollbar-hide bg-[#1e2829] border-[#2B2F30] border-2 text-white">
         <DialogHeader>
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex-1">
