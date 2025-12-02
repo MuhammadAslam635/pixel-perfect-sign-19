@@ -1,25 +1,20 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
-import { Button } from "@/components/ui/button";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Plus } from "lucide-react";
-import CompaniesIcon from "@/components/icons/CompaniesIcon";
 import { Company, CompanyPerson } from "@/services/companies.service";
 import { toast } from "sonner";
 import CompaniesList from "./components/CompaniesList";
 import { DetailsSidebar } from "../shared/components";
 import { useCompaniesData } from "../shared/hooks";
 import { CompaniesQueryParams } from "@/services/companies.service";
-import { useQueryClient } from "@tanstack/react-query";
 import {
   StatsCards,
   SearchInput,
-  CountBadge,
   FilterButton,
   CompanyFiltersPanel,
 } from "../shared/components";
@@ -200,40 +195,8 @@ const index = () => {
     <DashboardLayout>
       <main className="relative px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12 2xl:px-16 pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-6 sm:pb-8 flex flex-col gap-4 sm:gap-6 text-white flex-1 overflow-y-auto">
         <div className="max-w-[1600px] mx-auto w-full">
-          {/* Stats Cards */}
-          <StatsCards stats={stats} />
-
-          {/* Title and Filters Bar - Same Row */}
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2 sm:gap-3 md:gap-4 mb-3 sm:mb-4 md:mb-5">
-            {/* Heading */}
-            <div
-              className={`${
-                isMobileExecutivesView ? "hidden sm:flex" : "flex"
-              } items-center gap-3 md:gap-4 order-2 lg:order-1`}
-            >
-              <div className="w-10 h-10 sm:w-12 sm:h-12 md:hidden flex items-center justify-center flex-shrink-0">
-                <CompaniesIcon className="w-full h-full" />
-              </div>
-              <h2 className="text-base sm:text-lg md:text-xl font-normal text-white">
-                Companies
-              </h2>
-              <Button
-                className="ml-auto md:hidden flex items-center gap-1.5 sm:gap-2 rounded-md px-2 py-1 sm:px-3 sm:py-1.5 text-xs text-white font-normal sm:rounded-lg sm:px-4 sm:py-2 sm:text-sm"
-                style={{
-                  background:
-                    "linear-gradient(90deg, rgba(218, 228, 241, 0.2) 0%, rgba(221, 224, 238, 0.2) 100%)",
-                  backgroundBlendMode: "luminosity",
-                  boxShadow:
-                    "0px 4px 4px 0px #FFFFFF40 inset, 0px -4px 4px 0px #FFFFFF40 inset",
-                }}
-              >
-                <div className="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center sm:w-5 sm:h-5">
-                  <Plus className="w-3 h-3 text-white" />
-                </div>
-                <span className="tracking-tight">Add new Company</span>
-              </Button>
-            </div>
-
+          {/* Filters Bar */}
+          <div className="flex flex-col  justify-end sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2 md:gap-3 mb-3 sm:mb-4 md:mb-5">
             {/* Controls Container */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2 md:gap-3 order-1 lg:order-2">
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2 flex-1">
@@ -244,11 +207,6 @@ const index = () => {
                     onChange={setCompaniesSearch}
                   />
                   <div className="flex items-center gap-2">
-                    <CountBadge
-                      count={filteredTotalCompanies}
-                      singular="company"
-                      plural="companies"
-                    />
                     <Popover
                       open={companyFiltersOpen}
                       onOpenChange={setCompanyFiltersOpen}
@@ -289,6 +247,10 @@ const index = () => {
               </div>
             </div>
           </div>
+
+          {/* Stats Cards */}
+          <StatsCards stats={stats} />
+
           {/* Split View */}
           <div
             className={`flex flex-col lg:flex-row items-start ${

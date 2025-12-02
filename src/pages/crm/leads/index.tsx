@@ -13,8 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Layers, Plus } from "lucide-react";
-import LeadsIcon from "@/components/icons/LeadsIcon";
+import { Layers } from "lucide-react";
 import { CompanyPerson } from "@/services/companies.service";
 import { Lead } from "@/services/leads.service";
 import { EmailDraftModal } from "./components/EmailDraftModal";
@@ -36,7 +35,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   StatsCards,
   SearchInput,
-  CountBadge,
   FilterButton,
   LeadsFiltersPanel,
 } from "../shared/components";
@@ -490,36 +488,8 @@ const index = () => {
         className="relative px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12 2xl:px-16 pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-6 sm:pb-8 flex flex-col gap-4 sm:gap-6 text-white flex-1 overflow-y-auto"
       >
         <div className="max-w-[1600px] mx-auto w-full">
-          {/* Stats Cards */}
-          <StatsCards stats={stats} />
-
-          {/* Title and Filters Bar */}
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2 sm:gap-3 md:gap-4 mb-3 sm:mb-4 md:mb-5">
-            {/* Heading */}
-            <div className="flex items-center gap-3 md:gap-4 order-2 lg:order-1">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 md:hidden flex items-center justify-center flex-shrink-0">
-                <LeadsIcon className="w-full h-full" />
-              </div>
-              <h2 className="text-base sm:text-lg md:text-xl font-normal text-white">
-                Leads
-              </h2>
-              <Button
-                className="ml-auto md:hidden flex items-center gap-1.5 sm:gap-2 rounded-md px-2 py-1 sm:px-3 sm:py-1.5 text-xs text-white font-normal sm:rounded-lg sm:px-4 sm:py-2 sm:text-sm"
-                style={{
-                  background:
-                    "linear-gradient(90deg, rgba(218, 228, 241, 0.2) 0%, rgba(221, 224, 238, 0.2) 100%)",
-                  backgroundBlendMode: "luminosity",
-                  boxShadow:
-                    "0px 4px 4px 0px #FFFFFF40 inset, 0px -4px 4px 0px #FFFFFF40 inset",
-                }}
-              >
-                <div className="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center sm:w-5 sm:h-5">
-                  <Plus className="w-3 h-3 text-white" />
-                </div>
-                <span className="tracking-tight">Add new Lead</span>
-              </Button>
-            </div>
-
+          {/* Filters Bar */}
+          <div className="flex flex-col sm:flex-row justify-end items-stretch sm:items-center gap-1.5 sm:gap-2 md:gap-3 mb-3 sm:mb-4 md:mb-5">
             {/* Controls Container */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2 md:gap-3 order-1 lg:order-2">
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2 flex-1">
@@ -599,11 +569,6 @@ const index = () => {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <CountBadge
-                      count={filteredTotalLeads}
-                      singular="lead"
-                      plural="leads"
-                    />
                     <Popover
                       open={leadFiltersOpen}
                       onOpenChange={setLeadFiltersOpen}
@@ -640,6 +605,10 @@ const index = () => {
               </div>
             </div>
           </div>
+
+          {/* Stats Cards */}
+          <StatsCards stats={stats} />
+
           {/* Split View */}
           <div
             className={`flex flex-col lg:flex-row items-start ${
