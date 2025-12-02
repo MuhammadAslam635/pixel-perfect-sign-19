@@ -92,7 +92,7 @@ export const ActionComponent = () => {
 
   const profileMenu = [
     {
-      title: "User Lists",
+      title: "Team Members",
       meta: "View and manage users",
       route: "/users",
     },
@@ -104,8 +104,8 @@ export const ActionComponent = () => {
     { title: "Settings", meta: "Manage preferences", route: "/settings" },
     { title: "Sign out", meta: "Log out of EmpaTech OS", route: null },
   ].filter((item) => {
-    // Hide "User Lists" for CompanyUser
-    if (item.title === "User Lists" && currentUser?.role === "CompanyUser") {
+    // Hide "Team Members" for CompanyUser
+    if (item.title === "Team Members" && currentUser?.role === "CompanyUser") {
       return false;
     }
     return true;
