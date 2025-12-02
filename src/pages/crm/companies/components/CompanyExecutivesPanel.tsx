@@ -56,30 +56,28 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
                       onExecutiveSelect?.(exec);
                     }
                   }}
-                  className="relative overflow-hidden rounded-xl sm:rounded-2xl border border-white/15 bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] px-3 sm:px-4 py-2.5 sm:py-3 mb-2 sm:mb-3 transition-all duration-300 hover:shadow-[0_12px_32px_rgba(0,0,0,0.3)] sm:before:absolute sm:before:content-[''] sm:before:left-0 sm:before:top-1/2 sm:before:-translate-y-1/2 sm:before:h-[55%] sm:before:w-[3px] lg:before:w-[4px] sm:before:rounded-full sm:before:bg-white/70 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/60"
+                  className="relative overflow-hidden rounded-xl sm:rounded-2xl border border-white/15 bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] px-2 sm:px-3 py-2 mb-2 max-w-sm h-14 transition-all duration-300 hover:shadow-[0_12px_32px_rgba(0,0,0,0.3)] sm:before:absolute sm:before:content-[''] sm:before:left-0 sm:before:top-1/2 sm:before:-translate-y-1/2 sm:before:h-[55%] sm:before:w-[3px] lg:before:w-[4px] sm:before:rounded-full sm:before:bg-white/70 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/60"
                 >
-                  <div className="flex items-center justify-between gap-2 sm:gap-4">
+                  <div className="flex items-center justify-between gap-2 h-full">
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs sm:text-sm font-semibold text-white mb-0.5 truncate">
+                      <p className="text-xs font-semibold text-white mb-0.5 truncate">
                         {exec.name || "N/A"}
                       </p>
-                      <p className="text-xs text-white/60 mb-1 sm:mb-2 line-clamp-2">
+                      <p className="text-[10px] text-white/60 line-clamp-2">
                         {exec.title || exec.position || "N/A"}
                         {exec.email && (
                           <>
-                            <span className="hidden sm:inline"> | </span>
-                            <span className="block sm:inline truncate">
-                              {exec.email}
-                            </span>
+                            <span className="inline"> | </span>
+                            <span className="truncate">{exec.email}</span>
                           </>
                         )}
                       </p>
                     </div>
-                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                    <div className="flex items-center gap-1 flex-shrink-0">
                       <button
                         type="button"
                         disabled={!hasLinkedin}
-                        className={`flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full border border-white/15 transition-colors ${
+                        className={`flex h-7 w-7 items-center justify-center rounded-full border border-white/15 transition-colors ${
                           hasLinkedin
                             ? "bg-white/15 text-white hover:bg-white/25"
                             : "bg-white/10 text-white/40 cursor-not-allowed"
@@ -96,7 +94,7 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
                         }}
                       >
                         <Linkedin
-                          className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${
+                          className={`h-3 w-3 ${
                             hasLinkedin ? "text-white" : "text-white/50"
                           }`}
                         />

@@ -236,7 +236,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
               </span>
             )}
           </div>
-          <p className="mt-0.5 text-[8px] sm:text-[9px] font-bold text-white/65 line-clamp-2">
+          <p className="mt-0.5 text-xs text-white/65 line-clamp-2">
             {company.description || company.about || "No description available"}
           </p>
           {/* Mobile: Side by side layout */}
