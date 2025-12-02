@@ -1,4 +1,5 @@
 import { FC, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Dialog,
   DialogContent,
@@ -15,6 +16,7 @@ type PhoneCallModalProps = {
   onClose: () => void;
   leadName?: string;
   phoneNumber?: string;
+  leadId?: string;
   script?: string | null;
   metadata?: PhoneScriptMetadata | null;
   loading?: boolean;
@@ -27,12 +29,14 @@ export const PhoneCallModal: FC<PhoneCallModalProps> = ({
   onClose,
   leadName,
   phoneNumber,
+  leadId,
   script,
   metadata,
   loading = false,
   error,
   onRegenerate,
 }) => {
+  const navigate = useNavigate();
   const sanitizedPhoneNumber = useMemo(
     () => phoneNumber?.replace(/\D/g, "") || "",
     [phoneNumber]
@@ -43,6 +47,15 @@ export const PhoneCallModal: FC<PhoneCallModalProps> = ({
       return;
     }
 
+    // If we have a leadId, navigate to the Lead Detail view,
+    // open the Call tab, and auto-start the Twilio call there.
+    if (leadId) {
+      navigate(`/leads/${leadId}?tab=Call&autoCall=1`);
+      onClose();
+      return;
+    }
+
+    // Fallback for cases where only a phone number is available
     window.open(`tel:${phoneNumber}`);
     onClose();
   };

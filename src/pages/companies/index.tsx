@@ -1399,6 +1399,7 @@ const index = () => {
         onClose={() => setPhoneModalOpen(false)}
         leadName={phoneLead?.name ?? phoneFallbackExecutive?.name}
         phoneNumber={phoneLead?.phone ?? phoneFallbackExecutive?.phone}
+        leadId={phoneLead?._id}
         script={phoneScript}
         metadata={phoneMetadata}
         loading={phoneLoading}

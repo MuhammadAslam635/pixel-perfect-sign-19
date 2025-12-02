@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
@@ -91,6 +91,9 @@ export type SelectedCallLogView =
 const LeadDetailView = () => {
   const { leadId } = useParams<{ leadId: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get("tab") || undefined;
+  const autoStartCall = searchParams.get("autoCall") === "1";
   const [selectedCallLogView, setSelectedCallLogView] =
     useState<SelectedCallLogView>(null);
 
@@ -240,6 +243,8 @@ const LeadDetailView = () => {
               <div className="col-span-7 col-start-3 flex flex-col min-h-[200px]">
                 <LeadChat
                   lead={lead}
+                  initialTab={initialTab || undefined}
+                  autoStartCall={autoStartCall}
                   selectedCallLogView={selectedCallLogView}
                   setSelectedCallLogView={setSelectedCallLogView}
                 />

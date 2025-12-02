@@ -17,6 +17,7 @@ type CallViewProps = {
   twilioReady: boolean;
   twilioStatusMessage: string;
   twilioStatusLoading: boolean;
+  autoStart?: boolean;
   selectedCallLogView: SelectedCallLogView;
   setSelectedCallLogView: (view: SelectedCallLogView) => void;
 };
@@ -26,6 +27,7 @@ export const CallView = ({
   twilioReady,
   twilioStatusMessage,
   twilioStatusLoading,
+  autoStart = false,
   selectedCallLogView,
   setSelectedCallLogView,
 }: CallViewProps) => {
@@ -66,6 +68,7 @@ export const CallView = ({
   const callStartTimeRef = useRef<number | null>(null);
   const dialedNumberRef = useRef<string | null>(null);
   const callSidRef = useRef<string | null>(null);
+  const autoStartTriggeredRef = useRef(false);
 
   type TwilioConnection = Awaited<ReturnType<Device["connect"]>>;
   type DeviceError = { message: string };
@@ -709,6 +712,26 @@ export const CallView = ({
 
   const primaryActionDisabled =
     !twilioReady || callPhase === "ringing" || twilioStatusLoading;
+
+  // Auto-start an outbound call when requested (e.g. from Companies -> Call Now)
+  useEffect(() => {
+    if (
+      autoStart &&
+      twilioReady &&
+      !twilioStatusLoading &&
+      callPhase === "idle" &&
+      !autoStartTriggeredRef.current
+    ) {
+      autoStartTriggeredRef.current = true;
+      void (async () => {
+        try {
+          await handleCall();
+        } catch {
+          // Swallow errors here; handleCall already updates UI state
+        }
+      })();
+    }
+  }, [autoStart, twilioReady, twilioStatusLoading, callPhase, handleCall]);
 
   return (
     <div className="flex flex-1 w-full flex-col items-center justify-start text-white/80 text-center gap-6 pt-6 pb-10 max-h-[calc(100vh-480px)] overflow-y-auto scrollbar-hide">

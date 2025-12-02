@@ -27,6 +27,8 @@ type LeadChatProps = {
   lead?: Lead;
   selectedCallLogView: SelectedCallLogView;
   setSelectedCallLogView: (view: SelectedCallLogView) => void;
+  initialTab?: string;
+  autoStartCall?: boolean;
 };
 
 type SmsStatusDisplay = {
@@ -97,6 +99,8 @@ const LeadChat = ({
   lead,
   selectedCallLogView,
   setSelectedCallLogView,
+  initialTab,
+  autoStartCall = false,
 }: LeadChatProps) => {
   const displayName = lead?.name || fallbackLeadInfo.name;
   const position = lead?.position || fallbackLeadInfo.position;
@@ -253,14 +257,27 @@ const LeadChat = ({
     channelTabs[0]?.label ||
     "WhatsApp";
 
-  const [activeTab, setActiveTab] = useState<string>(firstAvailableTab);
+  // Determine the preferred initial tab (e.g. force "Call" when coming from Companies -> Call Now)
+  const preferredInitialTab = useMemo(() => {
+    if (initialTab) {
+      const matching = channelTabs.find(
+        (tab) => tab.label.toLowerCase() === initialTab.toLowerCase()
+      );
+      if (matching && matching.isAvailable) {
+        return matching.label;
+      }
+    }
+    return firstAvailableTab;
+  }, [initialTab, channelTabs, firstAvailableTab]);
+
+  const [activeTab, setActiveTab] = useState<string>(preferredInitialTab);
 
   useEffect(() => {
-    if (!firstAvailableTab) return;
+    if (!preferredInitialTab) return;
     setActiveTab((prev) =>
-      prev === firstAvailableTab ? prev : firstAvailableTab
+      prev === preferredInitialTab ? prev : preferredInitialTab
     );
-  }, [firstAvailableTab]);
+  }, [preferredInitialTab]);
 
   useEffect(() => {
     setWhatsappInput("");
@@ -1724,6 +1741,7 @@ const LeadChat = ({
                     "Company Twilio credentials aren't added yet."
               }
               twilioStatusLoading={twilioStatusLoading}
+              autoStart={autoStartCall}
               selectedCallLogView={selectedCallLogView}
               setSelectedCallLogView={setSelectedCallLogView}
             />
