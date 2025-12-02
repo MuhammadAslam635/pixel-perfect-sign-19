@@ -485,10 +485,6 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
       )}
 
       <div className="assistant-composer mt-auto">
-        <div className="assistant-composer__chip font-poppins">
-          <Sparkles size={20} />
-          AI
-        </div>
         <div className="assistant-composer__entry">
           <input
             ref={inputRef}
@@ -511,7 +507,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
             )}
             onClick={handleMicClick}
           >
-            <Mic size={14} />
+            <Mic size={17} />
           </div>
           <div
             className={cn(
