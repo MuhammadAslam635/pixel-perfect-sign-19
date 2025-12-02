@@ -142,7 +142,7 @@ const LeadDetailView = () => {
 
   return (
     <DashboardLayout>
-      <main className="relative mt-24 pt-5 flex w-full flex-1 min-h-0 max-h-[calc(100vh-6rem)] px-6 pb-6 sm:px-10 md:px-14 lg:px-6 overflow-y-auto overflow-x-hidden scrollbar-hide bg-[#0F0F0F]">
+      <main className="relative mt-24 pt-5 flex w-full flex-1 min-h-0 max-h-[calc(100vh-6rem)] px-6 pb-6 sm:px-10 md:px-14 lg:px-6 overflow-y-hidden overflow-x-hidden scrollbar-hide bg-[#0F0F0F]">
         <div className="relative z-10 flex w-full flex-1 min-h-0 flex-col gap-6">
           {/* Back Button & Summary Progress */}
           <div className="flex flex-row items-center gap-4">
