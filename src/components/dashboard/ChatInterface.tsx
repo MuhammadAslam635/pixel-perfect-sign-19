@@ -46,6 +46,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
   const [isListening, setIsListening] = useState(false);
   const [interimTranscript, setInterimTranscript] = useState("");
   const scrollAreaRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -53,8 +54,16 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
   const userName = user?.name || user?.email?.split("@")[0] || "User";
   const greeting = getTimeBasedGreeting();
 
+  // Auto-scroll input to show latest text
+  useEffect(() => {
+    if (inputRef.current) {
+      // Scroll to the end of the input
+      inputRef.current.scrollLeft = inputRef.current.scrollWidth;
+    }
+  }, [message, interimTranscript]);
+
   // Real-time transcription functions
-  const startRealtimeTranscription = () => {
+  const startRealtimeTranscription = async () => {
     if (!deepgramTranscription.isSupported()) {
       toast({
         title: "Not Supported",
@@ -65,7 +74,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
       return;
     }
 
-    const success = deepgramTranscription.startListening(
+    const success = await deepgramTranscription.startListening(
       (transcript, isFinal) => {
         // Update interim transcript for real-time feedback
         setInterimTranscript(transcript);
@@ -482,6 +491,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
         </div>
         <div className="assistant-composer__entry">
           <input
+            ref={inputRef}
             className="assistant-composer__input font-poppins"
             type="text"
             placeholder={

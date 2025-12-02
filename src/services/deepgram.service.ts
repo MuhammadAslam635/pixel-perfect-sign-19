@@ -25,6 +25,9 @@ export class DeepgramTranscriptionService {
   private mediaRecorder: MediaRecorder | null = null;
   private stream: MediaStream | null = null;
   private isListening = false;
+  private audioContext: AudioContext | null = null;
+  private processor: ScriptProcessorNode | null = null;
+  private source: MediaStreamAudioSourceNode | null = null;
 
   // Callbacks
   private onTranscriptCallback:
@@ -34,9 +37,24 @@ export class DeepgramTranscriptionService {
   private onEndCallback: (() => void) | null = null;
 
   private getBackendWebSocketUrl(): string {
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const host = window.location.host;
-    return `${protocol}//${host}/deepgram/stream`;
+    const userData = localStorage.getItem("user");
+    let token = null;
+    if (userData) {
+      try {
+        const user = JSON.parse(userData);
+        token = user.token;
+      } catch (error) {
+        console.error("Error parsing user data for WebSocket auth:", error);
+      }
+    }
+
+    const tokenParam = token ? `?token=${encodeURIComponent(token)}` : "";
+    const backendUrl =
+      import.meta.env.VITE_APP_BACKEND_URL || "http://localhost:5111/api";
+    const url = new URL(backendUrl);
+    const wsProtocol = url.protocol === "https:" ? "wss:" : "ws:";
+
+    return `${wsProtocol}//${url.host}/api/deepgram/stream${tokenParam}`;
   }
 
   private setupWebSocket(): Promise<void> {
@@ -52,13 +70,11 @@ export class DeepgramTranscriptionService {
         try {
           const data: DeepgramMessage | string = JSON.parse(event.data);
 
-          // Handle connection confirmation
           if (typeof data === "object" && data.type === "connected") {
             console.log("Deepgram streaming ready");
             return;
           }
 
-          // Handle error messages
           if (typeof data === "object" && data.type === "error") {
             if (this.onErrorCallback) {
               this.onErrorCallback(
@@ -68,7 +84,6 @@ export class DeepgramTranscriptionService {
             return;
           }
 
-          // Handle transcription results
           if (typeof data === "object" && data.type === "Results") {
             const transcript =
               data.channel?.alternatives?.[0]?.transcript || "";
@@ -101,6 +116,43 @@ export class DeepgramTranscriptionService {
     });
   }
 
+  // Convert Float32Array to Int16Array (PCM format)
+  private convertFloat32ToInt16(buffer: Float32Array): Int16Array {
+    const int16Buffer = new Int16Array(buffer.length);
+    for (let i = 0; i < buffer.length; i++) {
+      const s = Math.max(-1, Math.min(1, buffer[i]));
+      int16Buffer[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
+    }
+    return int16Buffer;
+  }
+
+  // Setup audio processing using Web Audio API for raw PCM
+  private setupAudioProcessing(stream: MediaStream): void {
+    // Create audio context with 16kHz sample rate
+    this.audioContext = new AudioContext({ sampleRate: 16000 });
+    this.source = this.audioContext.createMediaStreamSource(stream);
+
+    // Create script processor for raw audio data
+    const bufferSize = 4096;
+    this.processor = this.audioContext.createScriptProcessor(bufferSize, 1, 1);
+
+    this.processor.onaudioprocess = (event) => {
+      if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+        const inputData = event.inputBuffer.getChannelData(0);
+        const int16Data = this.convertFloat32ToInt16(inputData);
+
+        // Send raw PCM data
+        if (int16Data.length > 0) {
+          this.socket.send(int16Data.buffer);
+          console.log("Sent audio data:", int16Data.length * 2, "bytes");
+        }
+      }
+    };
+
+    this.source.connect(this.processor);
+    this.processor.connect(this.audioContext.destination);
+  }
+
   async startListening(
     onTranscript: (text: string, isFinal: boolean) => void,
     onError?: (error: string) => void,
@@ -111,7 +163,6 @@ export class DeepgramTranscriptionService {
     }
 
     try {
-      // Set callbacks
       this.onTranscriptCallback = onTranscript;
       this.onErrorCallback = onError || null;
       this.onEndCallback = onEnd || null;
@@ -123,31 +174,18 @@ export class DeepgramTranscriptionService {
           channelCount: 1,
           echoCancellation: true,
           noiseSuppression: true,
+          autoGainControl: true,
         },
       });
 
       // Setup WebSocket connection to backend
       await this.setupWebSocket();
 
-      // Setup MediaRecorder to stream audio to backend
-      this.mediaRecorder = new MediaRecorder(this.stream, {
-        mimeType: "audio/webm;codecs=opus",
-      });
+      // Setup audio processing with Web Audio API
+      this.setupAudioProcessing(this.stream);
 
-      this.mediaRecorder.ondataavailable = (event) => {
-        if (
-          event.data.size > 0 &&
-          this.socket &&
-          this.socket.readyState === WebSocket.OPEN
-        ) {
-          // Send audio data directly to backend (it will handle Deepgram proxying)
-          this.socket.send(event.data);
-        }
-      };
-
-      // Start recording and streaming
-      this.mediaRecorder.start(100); // Send data every 100ms
       this.isListening = true;
+      console.log("Started listening with raw PCM audio");
 
       return true;
     } catch (error) {
@@ -178,9 +216,20 @@ export class DeepgramTranscriptionService {
   }
 
   private cleanup(): void {
-    // Stop MediaRecorder
-    if (this.mediaRecorder && this.mediaRecorder.state !== "inactive") {
-      this.mediaRecorder.stop();
+    // Disconnect audio processing
+    if (this.processor) {
+      this.processor.disconnect();
+      this.processor = null;
+    }
+
+    if (this.source) {
+      this.source.disconnect();
+      this.source = null;
+    }
+
+    if (this.audioContext) {
+      this.audioContext.close();
+      this.audioContext = null;
     }
 
     // Close WebSocket
@@ -193,7 +242,6 @@ export class DeepgramTranscriptionService {
       this.stream.getTracks().forEach((track) => track.stop());
     }
 
-    this.mediaRecorder = null;
     this.socket = null;
     this.stream = null;
   }
@@ -202,7 +250,8 @@ export class DeepgramTranscriptionService {
     return !!(
       navigator.mediaDevices &&
       navigator.mediaDevices.getUserMedia &&
-      window.WebSocket
+      window.WebSocket &&
+      window.AudioContext
     );
   }
 
