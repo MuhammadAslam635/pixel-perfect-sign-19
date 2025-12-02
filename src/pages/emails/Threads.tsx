@@ -29,19 +29,20 @@ const ThreadsPage = () => {
       }),
   });
 
-  const filteredThreads = threadsData?.data?.threads?.filter((thread) => {
-    if (!searchTerm) return true;
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      thread.subject?.toLowerCase().includes(searchLower) ||
-      thread.participants.some(
-        (p) =>
-          p.email.toLowerCase().includes(searchLower) ||
-          p.name?.toLowerCase().includes(searchLower)
-      ) ||
-      thread.lastMessagePreview?.toLowerCase().includes(searchLower)
-    );
-  }) || [];
+  const filteredThreads =
+    threadsData?.data?.threads?.filter((thread) => {
+      if (!searchTerm) return true;
+      const searchLower = searchTerm.toLowerCase();
+      return (
+        thread.subject?.toLowerCase().includes(searchLower) ||
+        thread.participants.some(
+          (p) =>
+            p.email.toLowerCase().includes(searchLower) ||
+            p.name?.toLowerCase().includes(searchLower)
+        ) ||
+        thread.lastMessagePreview?.toLowerCase().includes(searchLower)
+      );
+    }) || [];
 
   const handleThreadClick = (thread: EmailThread) => {
     navigate(`/emails/threads/${thread._id}`);
@@ -88,13 +89,13 @@ const ThreadsPage = () => {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 flex-1 min-h-0">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-300px)] min-h-0">
             <div className="lg:col-span-1">
-              <Card>
+              <Card className="h-full">
                 <CardHeader>
                   <CardTitle className="text-lg">Filters</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2">
+                <CardContent className="space-y-2 overflow-y-auto">
                   <Button
                     variant={filter === "all" ? "default" : "ghost"}
                     className="w-full justify-start"
@@ -135,7 +136,7 @@ const ThreadsPage = () => {
                 />
               </div>
 
-              <Card className="flex-1 flex flex-col min-h-0">
+              <Card className="h-full flex flex-col min-h-0">
                 <CardHeader className="border-b">
                   <CardTitle className="text-lg">
                     {filter === "all" && "All Threads"}
@@ -153,9 +154,13 @@ const ThreadsPage = () => {
                   ) : filteredThreads.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full text-center py-12">
                       <MessageSquare className="h-12 w-12 text-muted-foreground mb-4" />
-                      <p className="text-muted-foreground text-lg">No threads found</p>
+                      <p className="text-muted-foreground text-lg">
+                        No threads found
+                      </p>
                       <p className="text-muted-foreground text-sm mt-2">
-                        {searchTerm ? "Try adjusting your search" : "No email threads yet"}
+                        {searchTerm
+                          ? "Try adjusting your search"
+                          : "No email threads yet"}
                       </p>
                     </div>
                   ) : (
@@ -170,27 +175,32 @@ const ThreadsPage = () => {
                 </CardContent>
               </Card>
 
-              {threadsData?.data?.pagination && threadsData.data.pagination.pages > 1 && (
-                <div className="flex items-center justify-between">
-                  <Button
-                    variant="outline"
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    disabled={page === 1}
-                  >
-                    Previous
-                  </Button>
-                  <span className="text-sm text-muted-foreground">
-                    Page {page} of {threadsData.data.pagination.pages}
-                  </span>
-                  <Button
-                    variant="outline"
-                    onClick={() => setPage((p) => Math.min(threadsData.data.pagination.pages, p + 1))}
-                    disabled={page === threadsData.data.pagination.pages}
-                  >
-                    Next
-                  </Button>
-                </div>
-              )}
+              {threadsData?.data?.pagination &&
+                threadsData.data.pagination.pages > 1 && (
+                  <div className="flex items-center justify-between">
+                    <Button
+                      variant="outline"
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      disabled={page === 1}
+                    >
+                      Previous
+                    </Button>
+                    <span className="text-sm text-muted-foreground">
+                      Page {page} of {threadsData.data.pagination.pages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      onClick={() =>
+                        setPage((p) =>
+                          Math.min(threadsData.data.pagination.pages, p + 1)
+                        )
+                      }
+                      disabled={page === threadsData.data.pagination.pages}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                )}
             </div>
           </div>
         </div>
@@ -200,4 +210,3 @@ const ThreadsPage = () => {
 };
 
 export default ThreadsPage;
-

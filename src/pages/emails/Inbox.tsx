@@ -202,7 +202,7 @@ const InboxPage = () => {
     <DashboardLayout>
       <main className="relative px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] pt-24 sm:pt-28 lg:pt-32 pb-8 flex flex-col gap-6 text-white flex-1 overflow-y-auto max-w-[1600px] mx-auto w-full">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6 gap-4">
+        <div className="flex items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-white">Inbox</h1>
             <p className="text-white/60 text-sm mt-1">
@@ -258,7 +258,7 @@ const InboxPage = () => {
 
         {/* Stats Cards */}
         {statsData?.data && (
-          <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+          <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <div className="relative flex-1 w-full">
               <div className="absolute -inset-4 lg:-inset-8 bg-gradient-to-r from-cyan-500/20 via-blue-500/15 to-transparent blur-3xl opacity-60" />
               <Card
@@ -414,24 +414,22 @@ const InboxPage = () => {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 flex-1 min-h-0">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-300px)] min-h-0">
           {/* Sidebar Filters */}
           <div className="lg:col-span-1 space-y-4">
             <Card
-              className="border-[#FFFFFF4D]"
+              className="border-[#FFFFFF4D] h-full"
               style={{
                 borderRadius: "30px",
                 borderWidth: "1px",
                 background:
                   "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
-                minHeight: "450px",
-                maxHeight: "calc(100vh - 400px)",
               }}
             >
               <CardHeader>
                 <CardTitle className="text-lg text-white">Filters</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2">
+              <CardContent className="space-y-2 overflow-y-auto">
                 <Button
                   variant={
                     filter === "all" && !showCategories ? "default" : "ghost"
@@ -551,34 +549,67 @@ const InboxPage = () => {
 
           {/* Main Content */}
           <div className="lg:col-span-3 flex flex-col gap-4 min-h-0">
-            {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none z-10" />
-              <Input
-                placeholder="Search emails..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 h-9 rounded-full border-0 text-gray-300 placeholder:text-gray-500 text-xs"
-                style={{
-                  background: "#FFFFFF1A",
-                  boxShadow:
-                    "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
-                  borderRadius: "9999px",
-                }}
-              />
+            {/* Search and Pagination Row */}
+            <div className="flex gap-4 items-center">
+              {/* Search - 75% Width */}
+              <div className="relative flex-[3]">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none z-10" />
+                <Input
+                  placeholder="Search emails..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 h-9 rounded-full border-0 text-gray-300 placeholder:text-gray-500 text-xs w-full"
+                  style={{
+                    background: "#FFFFFF1A",
+                    boxShadow:
+                      "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                    borderRadius: "9999px",
+                  }}
+                />
+              </div>
+
+              {/* Pagination - 25% Width */}
+              {inboxData?.data?.pagination &&
+                inboxData.data.pagination.pages > 1 && (
+                  <div className="flex items-center justify-between gap-2 flex-[1]">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      disabled={page === 1}
+                      className="rounded-full bg-white/10 text-white border-white/20 hover:bg-white/20 disabled:opacity-50 px-4"
+                    >
+                      Previous
+                    </Button>
+                    <span className="text-sm text-white/70 whitespace-nowrap">
+                      Page {page} of {inboxData.data.pagination.pages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        setPage((p) =>
+                          Math.min(inboxData.data.pagination.pages, p + 1)
+                        )
+                      }
+                      disabled={page === inboxData.data.pagination.pages}
+                      className="rounded-full bg-white/10 text-white border-white/20 hover:bg-white/20 disabled:opacity-50 px-4"
+                    >
+                      Next
+                    </Button>
+                  </div>
+                )}
             </div>
 
             {/* Email List */}
             <div
-              className="relative pt-3 sm:pt-4 px-3 sm:px-6 rounded-xl sm:rounded-2xl flex-1 overflow-y-auto scrollbar-hide"
+              className="relative pt-3 sm:pt-4 px-3 sm:px-6 rounded-xl sm:rounded-2xl h-full overflow-y-auto scrollbar-hide"
               style={{
                 borderRadius: "30px",
                 borderWidth: "1px",
                 borderColor: "rgba(255, 255, 255, 0.08)",
                 background:
                   "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
-                minHeight: "400px",
-                maxHeight: "calc(100vh - 500px)",
               }}
             >
               <div className="mb-4 px-2">
@@ -593,7 +624,7 @@ const InboxPage = () => {
                     "Internal Communication"}
                 </h2>
               </div>
-              <div className="space-y-3 pb-4">
+              <div className="space-y-3 pb-4 overflow-y-auto">
                 {isLoading ? (
                   <div className="space-y-3">
                     {[...Array(5)].map((_, i) => (
@@ -628,38 +659,6 @@ const InboxPage = () => {
                 )}
               </div>
             </div>
-
-            {/* Pagination */}
-            {inboxData?.data?.pagination &&
-              inboxData.data.pagination.pages > 1 && (
-                <div className="sticky bottom-0 left-0 right-0 z-10 bg-[#222B2C] py-2 -mx-4 sm:-mx-6 px-4 sm:px-6 border-t border-white/10">
-                  <div className="flex items-center justify-between">
-                    <Button
-                      variant="outline"
-                      onClick={() => setPage((p) => Math.max(1, p - 1))}
-                      disabled={page === 1}
-                      className="rounded-full bg-white/10 text-white border-white/20 hover:bg-white/20 disabled:opacity-50"
-                    >
-                      Previous
-                    </Button>
-                    <span className="text-sm text-white/70">
-                      Page {page} of {inboxData.data.pagination.pages}
-                    </span>
-                    <Button
-                      variant="outline"
-                      onClick={() =>
-                        setPage((p) =>
-                          Math.min(inboxData.data.pagination.pages, p + 1)
-                        )
-                      }
-                      disabled={page === inboxData.data.pagination.pages}
-                      className="rounded-full bg-white/10 text-white border-white/20 hover:bg-white/20 disabled:opacity-50"
-                    >
-                      Next
-                    </Button>
-                  </div>
-                </div>
-              )}
           </div>
         </div>
       </main>
