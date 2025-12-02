@@ -33,8 +33,6 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
             ["bold", "italic", "underline", "strike"],
             [{ list: "ordered" }, { list: "bullet" }],
             [{ color: [] }, { background: [] }],
-            ["link"],
-            ["clean"],
           ]
         : false,
       clipboard: {
@@ -55,7 +53,6 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       "bullet",
       "color",
       "background",
-      "link",
     ],
     []
   );
@@ -130,10 +127,41 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       );
       activeButtons.forEach((button) => {
         const element = button as HTMLElement;
-        element.style.color = "#66AFB7";
-        element.style.stroke = "#66AFB7";
-        element.style.fill = "#66AFB7";
+        element.style.color = "cyan";
+        element.style.stroke = "cyan";
+        element.style.fill = "cyan";
       });
+
+      // Add CSS for hover effects
+      const hoverStyle = document.createElement("style");
+      hoverStyle.textContent = `
+        .ql-toolbar .ql-formats button:hover,
+        .ql-toolbar .ql-picker:hover {
+          color: cyan !important;
+          stroke: cyan !important;
+          fill: cyan !important;
+        }
+        .ql-toolbar .ql-formats button:hover .ql-stroke,
+        .ql-toolbar .ql-picker:hover .ql-stroke {
+          stroke: cyan !important;
+        }
+        .ql-toolbar .ql-formats button:hover .ql-fill,
+        .ql-toolbar .ql-picker:hover .ql-fill {
+          fill: cyan !important;
+        }
+        .ql-toolbar .ql-active {
+          color: cyan !important;
+          stroke: cyan !important;
+          fill: cyan !important;
+        }
+        .ql-toolbar .ql-active .ql-stroke {
+          stroke: cyan !important;
+        }
+        .ql-toolbar .ql-active .ql-fill {
+          fill: cyan !important;
+        }
+      `;
+      document.head.appendChild(hoverStyle);
     }
   }, [toolbar]);
 
