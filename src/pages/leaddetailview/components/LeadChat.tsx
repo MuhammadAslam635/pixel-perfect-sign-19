@@ -126,6 +126,7 @@ const LeadChat = ({
     useState(false);
   const [isGeneratingEmailMessage, setIsGeneratingEmailMessage] =
     useState(false);
+  const [isGeneratingSmsMessage, setIsGeneratingSmsMessage] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [messageToDelete, setMessageToDelete] = useState<string | null>(null);
   const [openMessageMenu, setOpenMessageMenu] = useState<string | null>(null);
@@ -820,6 +821,43 @@ const LeadChat = ({
     }
   };
 
+  const handleGenerateSmsMessage = async () => {
+    if (!lead?.companyId || !lead?._id) {
+      setSmsSendError(
+        "Lead information is incomplete for generating suggestions."
+      );
+      return;
+    }
+
+    setIsGeneratingSmsMessage(true);
+    setSmsSendError(null);
+    try {
+      const response =
+        await connectionMessagesService.generateConnectionMessage({
+          companyId: lead.companyId,
+          personId: lead._id,
+          tone: "neutral",
+        });
+      const generated =
+        response.data?.connectionMessage?.trim() ||
+        response.data?.connectionMessage;
+
+      if (generated) {
+        setSmsInput((prev) => (prev ? `${prev}\n\n${generated}` : generated));
+      } else {
+        setSmsSendError("No message suggestion was generated. Try again.");
+      }
+    } catch (error: any) {
+      const friendlyMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to generate a connection message.";
+      setSmsSendError(friendlyMessage);
+    } finally {
+      setIsGeneratingSmsMessage(false);
+    }
+  };
+
   const handleDeleteWhatsAppConversation = () => {
     if (
       deleteConversationMutation.isPending ||
@@ -1281,6 +1319,28 @@ const LeadChat = ({
 
             {/* Fixed input at bottom */}
             <div className="sticky bottom-0 left-0 right-0 pt-4">
+              <div className="flex items-center justify-end mb-2 mx-1">
+                <ActiveNavButton
+                  icon={Sparkles}
+                  text={
+                    isGeneratingWhatsAppMessage
+                      ? "Generating..."
+                      : "Generate with AI"
+                  }
+                  onClick={handleGenerateWhatsAppMessage}
+                  disabled={
+                    isGeneratingWhatsAppMessage ||
+                    !lead?.companyId ||
+                    !lead?._id
+                  }
+                  className="h-7 text-xs disabled:opacity-100"
+                  title={
+                    !lead?.companyId || !lead?._id
+                      ? "Lead information is required to generate suggestions"
+                      : "Generate with AI"
+                  }
+                />
+              </div>
               <div className="flex items-center gap-3 rounded-full bg-white/10 px-4 py-3 mx-1 mb-1">
                 <input
                   type="text"
@@ -1293,7 +1353,7 @@ const LeadChat = ({
                     }
                   }}
                   disabled={whatsappInputsDisabled}
-                  className="flex-1 bg-transparent outline-none border-none text-sm text-white placeholder:text-white/50 disabled:opacity-50"
+                  className="lead-chat-input flex-1 bg-transparent outline-none border-none text-sm text-white disabled:opacity-50"
                   placeholder={
                     whatsappUnavailableMessage
                       ? whatsappUnavailableMessage
@@ -1422,7 +1482,7 @@ const LeadChat = ({
             )}
 
             {/* Fixed input at bottom */}
-            <div className="sticky bottom-0 left-0 right-0 p-3">
+            <div className="sticky bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/60 to-transparent p-3">
               <div className="flex flex-col gap-2 mx-1 mb-1">
                 <div className="space-y-2 flex flex-col">
                   <div className="flex items-center justify-between">
@@ -1495,11 +1555,11 @@ const LeadChat = ({
         ) : activeTab === "SMS" ? (
           <div className="flex flex-1 flex-col min-h-0 relative">
             {!phoneNumber ? (
-              <div className="flex w-full flex-1 items-center justify-center py-20 text-center text-white/70">
+              <div className="flex w-full flex-1 items-center justify-center py-20 text-center text-white placeholder:text-white/50">
                 Add a phone number for this lead to start SMS conversations.
               </div>
             ) : smsUnavailableMessage ? (
-              <div className="flex w-full flex-1 items-center justify-center py-20 text-center text-amber-200">
+              <div className="flex w-full flex-1 items-center justify-center py-20 text-center text-white/50">
                 {smsUnavailableMessage}
               </div>
             ) : isSmsLoading ? (
@@ -1594,7 +1654,7 @@ const LeadChat = ({
             )}
 
             {/* Fixed input at bottom */}
-            <div className="sticky bottom-0 left-0 right-0 pt-4">
+            <div className="sticky bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/60 to-transparent pt-4">
               <div className="flex items-center gap-3 rounded-full bg-white/10 px-4 py-3 mx-1 mb-1">
                 <input
                   type="text"
@@ -1607,7 +1667,7 @@ const LeadChat = ({
                     }
                   }}
                   disabled={smsInputsDisabled}
-                  className="flex-1 bg-transparent outline-none border-none text-sm text-white placeholder:text-white/50 disabled:opacity-50"
+                  className="lead-chat-input flex-1 bg-transparent outline-none border-none text-sm text-white disabled:opacity-50"
                   placeholder={
                     smsUnavailableMessage
                       ? smsUnavailableMessage
