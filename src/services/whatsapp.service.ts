@@ -6,9 +6,7 @@ export interface WhatsAppCredential {
   businessAccountId: string;
   phoneNumberId: string;
   phoneNumber: string;
-  webhookUrl?: string | null;
   status: string;
-  lastSyncedAt?: string | null;
   tokens?: {
     accessToken?: string | null;
     verifyToken?: string | null;
@@ -80,8 +78,6 @@ class WhatsAppService {
     accessToken: string;
     verifyToken: string;
     appSecret?: string;
-    webhookUrl?: string;
-    metadata?: Record<string, unknown>;
   }): Promise<{
     success: boolean;
     message: string;
@@ -162,6 +158,24 @@ class WhatsAppService {
     message: string;
   }> {
     const response = await API.delete(`/whatsapp/messages/${messageId}`);
+    return response.data;
+  }
+
+  async validateConfig(payload: {
+    businessAccountId: string;
+    phoneNumberId: string;
+    accessToken: string;
+    appSecret?: string;
+  }): Promise<{
+    success: boolean;
+    message: string;
+    data?: {
+      phoneNumberId: string;
+      businessAccountId: string;
+      verifiedAt: string;
+    };
+  }> {
+    const response = await API.post("/integration/whatsapp/validate", payload);
     return response.data;
   }
 }

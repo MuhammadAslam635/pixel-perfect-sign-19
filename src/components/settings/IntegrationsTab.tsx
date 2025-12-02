@@ -81,7 +81,6 @@ export const IntegrationsTab = () => {
     accessToken: "",
     verifyToken: "",
     appSecret: "",
-    webhookUrl: "",
   });
   const [disconnectDialog, setDisconnectDialog] = useState<{
     open: boolean;
@@ -115,6 +114,8 @@ export const IntegrationsTab = () => {
   const [isSuggestingEmail, setIsSuggestingEmail] = useState(false);
   const [existingEmail, setExistingEmail] = useState<string>("");
   const [emailPrefix, setEmailPrefix] = useState<string>("");
+  const [isValidatingWhatsApp, setIsValidatingWhatsApp] = useState(false);
+  const [whatsappValidated, setWhatsappValidated] = useState(false);
   const [isMicrosoftStatusLoading, setIsMicrosoftStatusLoading] =
     useState(false);
   const [isMicrosoftActionLoading, setIsMicrosoftActionLoading] =
@@ -164,8 +165,8 @@ export const IntegrationsTab = () => {
       accessToken: "",
       verifyToken: "",
       appSecret: "",
-      webhookUrl: "",
     });
+    setWhatsappValidated(false);
   };
 
   const fetchWhatsAppConnections = async () => {
@@ -189,53 +190,53 @@ export const IntegrationsTab = () => {
     }
   };
 
-const fetchTwilioStatus = async () => {
-  if (!user?.token) {
-    setTwilioConnected(false);
-    setTwilioDetails(null);
-    return;
-  }
-
-  setIsTwilioStatusLoading(true);
-  try {
-    const response = await axios.get(
-      `${APP_BACKEND_URL}/twilio/connection-check`,
-      {
-        headers: {
-          Authorization: `Bearer ${user.token}`,
-          "ngrok-skip-browser-warning": "true",
-        },
-      }
-    );
-
-    if (response.data?.success) {
-      const statusData = response.data.data || null;
-      const ready =
-        Boolean(response.data.connected) &&
-        Boolean(statusData?.hasAllEnvVars);
-      setTwilioConnected(ready);
-      setTwilioDetails(statusData);
-    } else {
+  const fetchTwilioStatus = async () => {
+    if (!user?.token) {
       setTwilioConnected(false);
       setTwilioDetails(null);
+      return;
     }
-  } catch (_error) {
-    setTwilioConnected(false);
-    setTwilioDetails(null);
-  } finally {
-    setIsTwilioStatusLoading(false);
-  }
-};
+
+    setIsTwilioStatusLoading(true);
+    try {
+      const response = await axios.get(
+        `${APP_BACKEND_URL}/twilio/connection-check`,
+        {
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+
+      if (response.data?.success) {
+        const statusData = response.data.data || null;
+        const ready =
+          Boolean(response.data.connected) &&
+          Boolean(statusData?.hasAllEnvVars);
+        setTwilioConnected(ready);
+        setTwilioDetails(statusData);
+      } else {
+        setTwilioConnected(false);
+        setTwilioDetails(null);
+      }
+    } catch (_error) {
+      setTwilioConnected(false);
+      setTwilioDetails(null);
+    } finally {
+      setIsTwilioStatusLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchWhatsAppConnections();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.token]);
 
-useEffect(() => {
-  fetchTwilioStatus();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [user?.token]);
+  useEffect(() => {
+    fetchTwilioStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.token]);
 
   const fetchMicrosoftStatus = async () => {
     if (!user?.token) {
@@ -296,6 +297,15 @@ useEffect(() => {
       return;
     }
 
+    if (!whatsappValidated) {
+      toast({
+        title: "Validation Required",
+        description: "Please validate your configuration before saving.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const requiredFields: Array<keyof typeof whatsappForm> = [
       "businessAccountId",
       "phoneNumberId",
@@ -333,7 +343,6 @@ useEffect(() => {
         accessToken: whatsappForm.accessToken.trim(),
         verifyToken: whatsappForm.verifyToken.trim(),
         appSecret: whatsappForm.appSecret.trim() || undefined,
-        webhookUrl: whatsappForm.webhookUrl.trim() || undefined,
       };
 
       const response = await whatsappService.connect(payload);
@@ -379,7 +388,6 @@ useEffect(() => {
           accessToken: "",
           verifyToken: "",
           appSecret: "",
-          webhookUrl: primaryWhatsAppConnection.webhookUrl || "",
         });
       } else {
         resetWhatsAppForm();
@@ -1196,6 +1204,76 @@ useEffect(() => {
     }
   };
 
+  const handleValidateWhatsAppConfig = async () => {
+    if (!canManageWhatsApp) {
+      toast({
+        title: "Access restricted",
+        description:
+          "Only company owners or company admins can manage WhatsApp settings.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const requiredFields: Array<keyof typeof whatsappForm> = [
+      "businessAccountId",
+      "phoneNumberId",
+      "accessToken",
+    ];
+
+    for (const field of requiredFields) {
+      if (!whatsappForm[field]) {
+        toast({
+          title: "Missing information",
+          description: "Please fill in all required WhatsApp fields.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    if (!user?.token) {
+      toast({
+        title: "Error",
+        description: "User not authenticated. Please login again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsValidatingWhatsApp(true);
+    try {
+      const response = await whatsappService.validateConfig({
+        businessAccountId: whatsappForm.businessAccountId.trim(),
+        phoneNumberId: whatsappForm.phoneNumberId.trim(),
+        accessToken: whatsappForm.accessToken.trim(),
+        appSecret: whatsappForm.appSecret.trim() || undefined,
+      });
+
+      if (response?.success) {
+        setWhatsappValidated(true);
+        toast({
+          title: "Configuration Validated",
+          description:
+            response.message ||
+            "WhatsApp configuration validated successfully!",
+        });
+      }
+    } catch (error: any) {
+      console.error("Error validating WhatsApp config:", error);
+      setWhatsappValidated(false);
+      toast({
+        title: "Validation Failed",
+        description:
+          error?.response?.data?.message ||
+          "Failed to validate WhatsApp configuration. Please check your credentials.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsValidatingWhatsApp(false);
+    }
+  };
+
   // Handle prefix change and auto-suggest email
   const handleEmailPrefixChange = async (prefix: string) => {
     setEmailPrefix(prefix);
@@ -1739,11 +1817,6 @@ useEffect(() => {
                       <p className="break-all">
                         Business Account ID: {connection.businessAccountId}
                       </p>
-                      {connection.webhookUrl && (
-                        <p className="break-all">
-                          Webhook: {connection.webhookUrl}
-                        </p>
-                      )}
                       {connection.tokens?.accessToken && (
                         <p className="break-all">
                           Access Token: {connection.tokens.accessToken}
@@ -1873,47 +1946,55 @@ useEffect(() => {
                     className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 text-sm sm:text-base"
                   />
                 </div>
-                <div className="space-y-2 sm:col-span-2">
-                  <Label className="text-white/80 text-sm">
-                    Webhook URL (optional)
-                  </Label>
-                  <Input
-                    value={whatsappForm.webhookUrl}
-                    onChange={(event) =>
-                      handleWhatsAppInputChange(
-                        "webhookUrl",
-                        event.target.value
-                      )
-                    }
-                    placeholder="https://example.com/api/whatsapp/webhook"
-                    className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 text-sm sm:text-base"
-                  />
-                </div>
               </div>
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2">
+
+              {whatsappValidated && (
+                <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/30 p-3">
+                  <p className="text-emerald-400 text-sm font-medium flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                    Configuration validated successfully
+                  </p>
+                </div>
+              )}
+
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => {
                     resetWhatsAppForm();
                     setShowWhatsAppForm(false);
+                    setWhatsappValidated(false);
                   }}
                   className="w-full sm:w-auto border-white/20 text-white/70 hover:bg-white/10 text-sm"
                 >
                   Cancel
                 </Button>
-                <Button
-                  type="button"
-                  onClick={handleWhatsAppConnect}
-                  disabled={isSavingWhatsApp}
-                  className="w-full sm:w-auto bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3] text-sm"
-                  style={{
-                    boxShadow:
-                      "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
-                  }}
-                >
-                  {isSavingWhatsApp ? "Saving..." : "Save Connection"}
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    onClick={handleValidateWhatsAppConfig}
+                    disabled={isValidatingWhatsApp || isSavingWhatsApp}
+                    variant="outline"
+                    className="w-full sm:w-auto border-cyan-400/50 text-cyan-300 hover:bg-cyan-500/10 text-sm"
+                  >
+                    {isValidatingWhatsApp
+                      ? "Validating..."
+                      : "Check Configuration"}
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={handleWhatsAppConnect}
+                    disabled={isSavingWhatsApp || !whatsappValidated}
+                    className="w-full sm:w-auto bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3] text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{
+                      boxShadow:
+                        "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                    }}
+                  >
+                    {isSavingWhatsApp ? "Saving..." : "Save Connection"}
+                  </Button>
+                </div>
               </div>
             </div>
           )}
@@ -2170,7 +2251,6 @@ useEffect(() => {
             </div>
           )}
         </div>
-
       </CardContent>
 
       <ConfirmDialog
