@@ -1934,7 +1934,7 @@ export const IntegrationsTab = () => {
                 </div>
                 <div className="space-y-2 sm:col-span-1">
                   <Label className="text-white/80 text-sm">
-                    App Secret (optional)
+                    App Secret
                   </Label>
                   <Input
                     type="password"
