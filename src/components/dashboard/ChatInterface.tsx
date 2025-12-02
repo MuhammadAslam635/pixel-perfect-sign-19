@@ -9,6 +9,7 @@ import {
   SendChatMessagePayload,
   fetchChatById,
 } from "@/services/chat.service";
+import { deepgramTranscription } from "@/services/deepgram.service";
 import { ChatMessage } from "@/types/chat.types";
 import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
@@ -42,6 +43,8 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
   const [message, setMessage] = useState("");
   const [localMessages, setLocalMessages] =
     useState<ChatMessage[]>(initialMessages);
+  const [isListening, setIsListening] = useState(false);
+  const [interimTranscript, setInterimTranscript] = useState("");
   const scrollAreaRef = useRef<HTMLDivElement | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -49,6 +52,75 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
   const user = useSelector((state: RootState) => state.auth.user);
   const userName = user?.name || user?.email?.split("@")[0] || "User";
   const greeting = getTimeBasedGreeting();
+
+  // Real-time transcription functions
+  const startRealtimeTranscription = () => {
+    if (!deepgramTranscription.isSupported()) {
+      toast({
+        title: "Not Supported",
+        description:
+          "Real-time speech recognition is not supported in this browser. Please use Chrome, Edge, or Safari.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const success = deepgramTranscription.startListening(
+      (transcript, isFinal) => {
+        // Update interim transcript for real-time feedback
+        setInterimTranscript(transcript);
+
+        // If it's a final result, add it to the message
+        if (transcript && isFinal) {
+          setMessage((prev) => prev + (prev ? " " : "") + transcript);
+          setInterimTranscript("");
+        }
+      },
+      (error) => {
+        console.error("Speech recognition error:", error);
+        toast({
+          title: "Speech Recognition Error",
+          description: error,
+          variant: "destructive",
+        });
+        setIsListening(false);
+        setInterimTranscript("");
+      },
+      () => {
+        // On end
+        setIsListening(false);
+        // Move any remaining interim transcript to final message
+        if (interimTranscript.trim()) {
+          setMessage(
+            (prev) => prev + (prev ? " " : "") + interimTranscript.trim()
+          );
+          setInterimTranscript("");
+        }
+      }
+    );
+
+    if (success) {
+      setIsListening(true);
+    }
+  };
+
+  const stopRealtimeTranscription = () => {
+    deepgramTranscription.stopListening();
+    setIsListening(false);
+    // Move any remaining interim transcript to final message
+    if (interimTranscript.trim()) {
+      setMessage((prev) => prev + (prev ? " " : "") + interimTranscript.trim());
+      setInterimTranscript("");
+    }
+  };
+
+  const handleMicClick = () => {
+    if (isListening) {
+      stopRealtimeTranscription();
+    } else {
+      startRealtimeTranscription();
+    }
+  };
 
   // Fetch chat details when currentChatId changes
   const { data: chatDetail } = useQuery({
@@ -231,7 +303,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
   ]);
 
   const handleSendMessage = () => {
-    if (message.trim() && !isSendingMessage) {
+    if (message.trim() && !isSendingMessage && !isListening) {
       mutateSendMessage({
         message: message.trim(),
         chatId: currentChatId,
@@ -412,19 +484,30 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
           <input
             className="assistant-composer__input font-poppins"
             type="text"
-            placeholder="Ask Skylar"
-            value={message}
+            placeholder={
+              isListening ? "Listening... Click mic to stop" : "Ask Skylar"
+            }
+            value={message + (interimTranscript ? ` ${interimTranscript}` : "")}
             onChange={(e) => setMessage(e.target.value)}
             onKeyPress={handleKeyPress}
-            disabled={isSendingMessage}
+            disabled={isSendingMessage || isListening}
           />
         </div>
         <div className="assistant-composer__actions">
-          <div className="round-icon-btn--outline">
+          <div
+            className={cn(
+              "round-icon-btn--outline cursor-pointer",
+              isListening && "bg-red-500 text-white animate-pulse"
+            )}
+            onClick={handleMicClick}
+          >
             <Mic size={14} />
           </div>
           <div
-            className="round-icon-btn cursor-pointer"
+            className={cn(
+              "round-icon-btn cursor-pointer",
+              isListening && "opacity-50 cursor-not-allowed"
+            )}
             onClick={handleSendMessage}
           >
             {isSendingMessage ? (
