@@ -46,18 +46,34 @@ const Dashboard = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Disable body scrolling when Dashboard is mounted
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    
+    const originalOverflow = document.body.style.overflow;
+    const originalHtmlOverflow = document.documentElement.style.overflow;
+    
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+    
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      document.documentElement.style.overflow = originalHtmlOverflow;
+    };
+  }, []);
+
   // Don't render dashboard for Admin users (they'll be redirected)
   if (userRole === "Admin") {
     return null;
   }
 
   const desktopLayout = (
-    <main className="relative px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] mt-20 sm:mt-20 lg:mt-24 xl:mt-28 mb-0 flex flex-col lg:flex-row items-start gap-5 md:gap-6 lg:gap-8 text-white flex-1 min-h-0 overflow-hidden max-w-full">
-      <div className="w-full lg:basis-1/2 lg:min-w-0 h-full flex-1 min-h-0">
+    <main className="relative px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] mt-20 sm:mt-20 lg:mt-24 xl:mt-28 mb-0 flex flex-col lg:flex-row items-start gap-5 md:gap-6 lg:gap-8 text-white flex-1 min-h-0 max-w-full">
+      <div className="w-full lg:basis-1/2 lg:min-w-0 flex-1 min-h-0 overflow-hidden">
         <AssistantPanel isDesktop={isDesktop} />
       </div>
 
-      <div className="scrollbar-hide lg:flex w-full flex-col gap-4 overflow-y-scroll pr-1 md:gap-5 lg:basis-1/2 lg:min-w-0 lg:pr-3 h-full min-h-0 bg-transparent">
+      <div className="scrollbar-hide lg:flex w-full flex-col gap-4 overflow-y-auto pr-1 md:gap-5 lg:basis-1/2 lg:min-w-0 lg:pr-3 max-h-[calc(100vh-8rem)] bg-transparent">
         <StatsCard />
 
         <div className="p-2 mt-6">

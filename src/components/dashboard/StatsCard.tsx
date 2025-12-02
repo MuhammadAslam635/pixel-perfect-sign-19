@@ -26,7 +26,7 @@ const StatsCard = () => {
     fetchCampaignsStats();
   }, []);
   return (
-    <section className="stats-card relative w-full overflow-hidden rounded-[36px] border border-white/10 px-6 py-6 sm:px-8 sm:py-8">
+    <section className="stats-card relative w-full overflow-hidden rounded-[36px] border border-white/10 px-6 py-6 sm:px-8 sm:py-8 min-h-[200px] sm:min-h-[250px]">
       <div className="relative z-10 flex h-full flex-col sm:flex-row sm:items-start gap-6">
         {/* Left Section - Text Metrics - Takes less width on desktop to give more space to chart */}
         <div className="flex flex-col gap-3 sm:gap-4 sm:w-2/5 sm:flex-shrink-0">
