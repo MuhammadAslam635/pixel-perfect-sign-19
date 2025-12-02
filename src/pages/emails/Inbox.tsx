@@ -17,7 +17,6 @@ import {
   MailOpen,
   Star,
   Inbox as InboxIcon,
-  RefreshCw,
   Send,
   Download,
 } from "lucide-react";
@@ -135,27 +134,6 @@ const InboxPage = () => {
     },
   });
 
-  const batchCategorizeMutation = useMutation({
-    mutationFn: (limit?: number) => emailService.batchCategorizeEmails(limit),
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["inbox"] });
-      queryClient.invalidateQueries({ queryKey: ["emailStats"] });
-      toast({
-        title: "Categorization Complete",
-        description: `Successfully categorized ${
-          data.data.filter((r: any) => r.success).length
-        } emails`,
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to categorize emails. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
-
   const deleteMutation = useMutation({
     mutationFn: (emailId: string) => emailService.deleteEmail(emailId),
     onSuccess: () => {
@@ -211,24 +189,6 @@ const InboxPage = () => {
             </p>
           </div>
           <div className="flex gap-3">
-            <Button
-              size="sm"
-              onClick={() => batchCategorizeMutation.mutate(50)}
-              disabled={batchCategorizeMutation.isPending}
-              className="relative h-10 px-4 rounded-full border-0 text-white text-sm hover:bg-[#2F2F2F]/60 transition-all overflow-hidden"
-              style={{
-                background: "#FFFFFF1A",
-                boxShadow:
-                  "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
-              }}
-            >
-              <RefreshCw
-                className={`w-4 h-4 mr-2 ${
-                  batchCategorizeMutation.isPending ? "animate-spin" : ""
-                }`}
-              />
-              Categorize
-            </Button>
             <Button
               size="sm"
               onClick={handleCompose}
