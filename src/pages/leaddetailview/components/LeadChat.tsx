@@ -1280,7 +1280,7 @@ const LeadChat = ({
             )}
 
             {/* Fixed input at bottom */}
-            <div className="sticky bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/60 to-transparent pt-4">
+            <div className="sticky bottom-0 left-0 right-0 pt-4">
               <div className="flex items-center gap-3 rounded-full bg-white/10 px-4 py-3 mx-1 mb-1">
                 <input
                   type="text"
@@ -1422,7 +1422,7 @@ const LeadChat = ({
             )}
 
             {/* Fixed input at bottom */}
-            <div className="sticky bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/60 to-transparent p-3">
+            <div className="sticky bottom-0 left-0 right-0 p-3">
               <div className="flex flex-col gap-2 mx-1 mb-1">
                 <div className="space-y-2 flex flex-col">
                   <div className="flex items-center justify-between">
@@ -1594,7 +1594,7 @@ const LeadChat = ({
             )}
 
             {/* Fixed input at bottom */}
-            <div className="sticky bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/60 to-transparent pt-4">
+            <div className="sticky bottom-0 left-0 right-0 pt-4">
               <div className="flex items-center gap-3 rounded-full bg-white/10 px-4 py-3 mx-1 mb-1">
                 <input
                   type="text"
