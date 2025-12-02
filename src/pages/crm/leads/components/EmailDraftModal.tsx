@@ -8,7 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Bold, Italic, List, Edit, Sparkles, Pencil } from "lucide-react";
+import { Bold, Italic, List, Sparkles, Pencil } from "lucide-react";
 import {
   EmailMessage,
   EmailMessageMetadata,
@@ -35,7 +35,6 @@ export const EmailDraftModal = ({
   leadName,
   leadEmail,
   content,
-  metadata,
   loading = false,
   error,
   onRegenerate,

@@ -2,16 +2,16 @@ import { FC } from "react";
 import { Card } from "@/components/ui/card";
 import { Company, CompanyPerson } from "@/services/companies.service";
 import { Lead } from "@/services/leads.service";
-import CompanyExecutivesPanel from "./CompanyExecutivesPanel";
-import LeadDetailsPanel from "./LeadDetailsPanel";
+import CompanyExecutivesPanel from "../../companies/components/CompanyExecutivesPanel";
+import LeadDetailsPanel from "../../leads/components/LeadDetailsPanel";
 
 type DetailsSidebarProps = {
   activeTab: "companies" | "leads";
   isOpen: boolean;
   selectedCompany?: Company;
   selectedLead?: Lead;
-  onSwitchToLeads: () => void;
-  onEmailLead: (lead: Lead) => void;
+  onSwitchToLeads?: () => void;
+  onEmailLead?: (lead: Lead) => void;
   onExecutiveSelect?: (executive: CompanyPerson) => void;
   executiveFallback?: CompanyPerson | null;
   onPhoneLead?: (lead?: Lead, fallback?: CompanyPerson | null) => void;
@@ -43,7 +43,7 @@ const DetailsSidebar: FC<DetailsSidebarProps> = ({
       {activeTab === "companies" ? (
         <CompanyExecutivesPanel
           company={selectedCompany}
-          onViewAllLeads={onSwitchToLeads}
+          onViewAllLeads={onSwitchToLeads || (() => {})}
           onExecutiveSelect={onExecutiveSelect}
         />
       ) : (

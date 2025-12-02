@@ -18,7 +18,7 @@ import {
   PaginationPrevious,
   PaginationEllipsis,
 } from "@/components/ui/pagination";
-import { ArrowRight, Linkedin, Search, ArrowLeft, Users } from "lucide-react";
+import { Linkedin, Search, ArrowLeft, Users } from "lucide-react";
 import { ActiveNavButton } from "@/components/ui/primary-btn";
 import { Company } from "@/services/companies.service";
 import CompanyExecutivesPanel from "./CompanyExecutivesPanel";
@@ -54,7 +54,6 @@ const CompaniesList: FC<CompaniesListProps> = ({
   page = 1,
   totalPages = 1,
   onPageChange,
-  showFilters = true,
   totalCompanies,
   selectedCompany,
   onViewAllLeads,

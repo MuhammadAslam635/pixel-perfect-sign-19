@@ -25,7 +25,6 @@ import { Lead } from "@/services/leads.service";
 import { Company, companiesService } from "@/services/companies.service";
 import LeadDetailsPanel from "./LeadDetailsPanel";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import { ActiveNavButton } from "@/components/ui/primary-btn";
 import {
   Select,
@@ -81,7 +80,6 @@ const LeadsList: FC<LeadsListProps> = ({
   page = 1,
   totalPages = 1,
   onPageChange,
-  showFilters = true,
   totalLeads,
   selectedLead,
   executiveFallback,

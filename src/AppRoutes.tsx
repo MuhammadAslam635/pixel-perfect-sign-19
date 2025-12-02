@@ -8,7 +8,7 @@ import ResetPassword from "@/pages/auth/ResetPassword";
 import VerifyEmail from "@/pages/auth/VerifyEmail";
 import ResendEmail from "@/pages/auth/ResendEmail";
 import Dashboard from "@/pages/Dashboard";
-import CompanyDetail from "@/pages/companies";
+import CompanyDetail from "@/pages/crm/companies";
 import ChatPage from "@/pages/Chat";
 import AgentsPage from "@/pages/agents";
 import NotFound from "@/pages/NotFound";
@@ -21,7 +21,7 @@ import UserCreate from "@/pages/users/UserCreate";
 import UserEdit from "@/pages/users/UserEdit";
 import ContactNow from "@/pages/twilio-calling/ContactNow";
 import FollowupTemplatesPage from "@/pages/followups";
-import LeadDetailView from "@/pages/leaddetailview";
+import LeadDetailView, { SelectedCallLogView } from "@/pages/leaddetailview";
 import RoleList from "@/pages/roles/RoleList";
 import RoleForm from "@/pages/roles/RoleForm";
 import ModuleList from "@/pages/modules/ModuleList";
@@ -35,6 +35,7 @@ import {
 } from "@/pages/emails";
 import LeadChat from "./pages/leaddetailview/components/LeadChat";
 import MembersPermissions from "@/pages/admin/MembersPermissions";
+import LeadsPage from "@/pages/crm/leads";
 
 const AppRoutes = () => {
   return (
@@ -139,6 +140,14 @@ const AppRoutes = () => {
         }
       />
       <Route
+        path="/leads"
+        element={
+          <ProtectedRoute moduleName="leads">
+            <LeadsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/agents"
         element={
           <ProtectedRoute moduleName="agents">
@@ -150,7 +159,9 @@ const AppRoutes = () => {
         path="/leadchattest"
         element={
           <ProtectedRoute>
-            <LeadChat />
+            <LeadChat selectedCallLogView={null} setSelectedCallLogView={function (value: SelectedCallLogView | null): void {
+              throw new Error("Function not implemented.");
+            } } />
           </ProtectedRoute>
         }
       />

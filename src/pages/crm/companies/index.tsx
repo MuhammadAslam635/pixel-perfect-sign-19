@@ -1,0 +1,367 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import DashboardLayout from "@/components/dashboard/DashboardLayout";
+import { Button } from "@/components/ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Plus } from "lucide-react";
+import CompaniesIcon from "@/components/icons/CompaniesIcon";
+import { Company, CompanyPerson } from "@/services/companies.service";
+import { toast } from "sonner";
+import CompaniesList from "./components/CompaniesList";
+import { DetailsSidebar } from "../shared/components";
+import { useCompaniesData } from "../shared/hooks";
+import { CompaniesQueryParams } from "@/services/companies.service";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  StatsCards,
+  SearchInput,
+  CountBadge,
+  FilterButton,
+  CompanyFiltersPanel,
+} from "../shared/components";
+import { buildStats } from "../shared/hooks";
+
+const COMPANY_EMPLOYEE_RANGES = [
+  { value: "all", label: "All company sizes" },
+  { value: "small", label: "1-50 employees", min: 1, max: 50 },
+  { value: "medium", label: "50-250 employees", min: 50, max: 250 },
+  { value: "large", label: "250-1000 employees", min: 250, max: 1000 },
+  { value: "enterprise", label: "1000+ employees", min: 1000 },
+];
+
+const index = () => {
+  const navigate = useNavigate();
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(
+    null
+  );
+  const [isMobileExecutivesView, setIsMobileExecutivesView] = useState(false);
+
+  // Companies filters and pagination
+  const [companiesPage, setCompaniesPage] = useState(1);
+  const [companiesSearch, setCompaniesSearch] = useState("");
+  const [companiesLimit, setCompaniesLimit] = useState(10);
+  const [companiesIndustryFilter, setCompaniesIndustryFilter] =
+    useState<string>("all");
+  const [companiesEmployeeRange, setCompaniesEmployeeRange] =
+    useState<string>("all");
+  const [companiesLocationFilter, setCompaniesLocationFilter] =
+    useState<string>("");
+  const [companiesHasPeopleFilter, setCompaniesHasPeopleFilter] =
+    useState(false);
+  const [companiesHasWebsiteFilter, setCompaniesHasWebsiteFilter] =
+    useState(false);
+
+  const [selectedExecutive, setSelectedExecutive] =
+    useState<CompanyPerson | null>(null);
+  const [linkedinExecutive, setLinkedinExecutive] =
+    useState<CompanyPerson | null>(null);
+  const [phoneExecutive, setPhoneExecutive] = useState<CompanyPerson | null>(
+    null
+  );
+  const [companyFiltersOpen, setCompanyFiltersOpen] = useState(false);
+  const resetCompanyAdvancedFilters = useCallback(() => {
+    setCompaniesIndustryFilter("all");
+    setCompaniesEmployeeRange("all");
+    setCompaniesLocationFilter("");
+    setCompaniesHasPeopleFilter(false);
+    setCompaniesHasWebsiteFilter(false);
+    setCompanyFiltersOpen(false);
+  }, []);
+  const resolveErrorMessage = useCallback(
+    (error: unknown, fallback: string) => {
+      const err = error as any;
+      return (
+        err?.response?.data?.message ||
+        err?.data?.message ||
+        err?.message ||
+        fallback
+      );
+    },
+    []
+  );
+
+
+  const companiesParams = useMemo(() => {
+    const params: CompaniesQueryParams = {
+      page: companiesPage,
+      limit: companiesLimit,
+      search: companiesSearch || undefined,
+      sortBy: "createdAt",
+      sortOrder: -1,
+    };
+
+    if (companiesIndustryFilter !== "all") {
+      params.industry = companiesIndustryFilter;
+    }
+
+    if (companiesEmployeeRange !== "all") {
+      const range = COMPANY_EMPLOYEE_RANGES.find(
+        (option) => option.value === companiesEmployeeRange
+      );
+      if (range) {
+        if (typeof range.min === "number") {
+          params.minEmployees = range.min;
+        }
+        if (typeof range.max === "number") {
+          params.maxEmployees = range.max;
+        }
+      }
+    }
+
+    if (companiesHasPeopleFilter) {
+      params.hasPeople = true;
+    }
+
+    if (companiesHasWebsiteFilter) {
+      params.hasWebsite = true;
+    }
+
+    if (companiesLocationFilter.trim()) {
+      params.location = companiesLocationFilter.trim();
+    }
+
+    return params;
+  }, [
+    companiesPage,
+    companiesLimit,
+    companiesSearch,
+    companiesIndustryFilter,
+    companiesEmployeeRange,
+    companiesHasPeopleFilter,
+    companiesHasWebsiteFilter,
+    companiesLocationFilter,
+  ]);
+
+  const {
+    query: companiesQuery,
+    companies,
+    totalCompanies: filteredTotalCompanies,
+  } = useCompaniesData(companiesParams);
+
+  // Fetch total companies count without search/filter for stats
+  const { totalCompanies: totalCompaniesForStats } = useCompaniesData({
+    page: 1,
+    limit: 1,
+  });
+
+  const industryOptions = useMemo(() => {
+    const industries = new Set<string>();
+    companies.forEach((company) => {
+      if (company.industry) {
+        industries.add(company.industry);
+      }
+    });
+    return Array.from(industries).sort((a, b) => a.localeCompare(b));
+  }, [companies]);
+
+  const hasCompanyAdvancedFilters = useMemo(
+    () =>
+      companiesIndustryFilter !== "all" ||
+      companiesEmployeeRange !== "all" ||
+      companiesLocationFilter.trim() !== "" ||
+      companiesHasPeopleFilter ||
+      companiesHasWebsiteFilter,
+    [
+      companiesIndustryFilter,
+      companiesEmployeeRange,
+      companiesLocationFilter,
+      companiesHasPeopleFilter,
+      companiesHasWebsiteFilter,
+    ]
+  );
+
+  const loading = companiesQuery.isLoading;
+
+  const stats = useMemo(
+    () => buildStats(totalCompaniesForStats, undefined),
+    [totalCompaniesForStats]
+  );
+
+  useEffect(() => {
+    if (companiesQuery.error) {
+      const error = companiesQuery.error as any;
+      toast.error(
+        error?.response?.data?.message || "Failed to fetch companies"
+      );
+    }
+  }, [companiesQuery.error]);
+
+  const handleCompanyClick = (companyId: string) => {
+    setSelectedCompanyId((prev) => (prev === companyId ? null : companyId));
+  };
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setCompaniesPage(1);
+  }, [
+    companiesSearch,
+    companiesLimit,
+    companiesIndustryFilter,
+    companiesEmployeeRange,
+    companiesLocationFilter,
+    companiesHasPeopleFilter,
+    companiesHasWebsiteFilter,
+  ]);
+
+  const handleExecutiveSelect = (executive: CompanyPerson) => {
+    // Handle executive selection - navigate to lead details page
+    if (executive._id || executive.id) {
+      const leadId = executive._id || executive.id;
+      navigate(`/leads/${leadId}`);
+    } else {
+      // Fallback: just set selected executive for messaging
+      setSelectedExecutive(executive);
+    }
+  };
+
+  const isSidebarOpen = selectedCompanyId !== null;
+  const selectedCompany: Company | undefined = companies.find(
+    (company) => company._id === selectedCompanyId
+  );
+
+  return (
+    <DashboardLayout>
+      <main
+        className="relative px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] pt-24 sm:pt-28 lg:pt-32 pb-8 flex flex-col gap-6 text-white flex-1 overflow-y-auto"
+      >
+        <div className="max-w-[1600px] mx-auto w-full">
+          {/* Stats Cards */}
+          <StatsCards stats={stats} />
+
+          {/* Title and Filters Bar - Same Row */}
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 sm:gap-4 mb-5">
+            {/* Heading */}
+            <div
+              className={`${
+                isMobileExecutivesView ? "hidden sm:flex" : "flex"
+              } items-center gap-3 md:gap-4 order-2 lg:order-1`}
+            >
+              <div className="w-10 h-10 sm:w-12 sm:h-12 md:hidden flex items-center justify-center flex-shrink-0">
+                <CompaniesIcon className="w-full h-full" />
+              </div>
+              <h2 className="text-lg sm:text-lg font-normal text-white">
+                Companies
+              </h2>
+              <Button
+                className="ml-auto md:hidden flex items-center gap-2 rounded-md px-3 py-1.5 text-xs text-white font-normal sm:rounded-lg sm:px-4 sm:py-2 sm:text-sm"
+                style={{
+                  background:
+                    "linear-gradient(90deg, rgba(218, 228, 241, 0.2) 0%, rgba(221, 224, 238, 0.2) 100%)",
+                  backgroundBlendMode: "luminosity",
+                  boxShadow:
+                    "0px 4px 4px 0px #FFFFFF40 inset, 0px -4px 4px 0px #FFFFFF40 inset",
+                }}
+              >
+                <div className="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center sm:w-5 sm:h-5">
+                  <Plus className="w-3 h-3 text-white" />
+                </div>
+                <span className="tracking-tight">Add new Company</span>
+              </Button>
+            </div>
+
+            {/* Controls Container */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 order-1 lg:order-2">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-1 sm:gap-1">
+                <div className="flex w-full flex-wrap items-center justify-end gap-2">
+                  <SearchInput
+                    placeholder="Search companies..."
+                    value={companiesSearch}
+                    onChange={setCompaniesSearch}
+                  />
+                  <div className="flex items-center gap-2">
+                    <CountBadge
+                      count={filteredTotalCompanies}
+                      singular="company"
+                      plural="companies"
+                    />
+                    <Popover
+                      open={companyFiltersOpen}
+                      onOpenChange={setCompanyFiltersOpen}
+                    >
+                      <PopoverTrigger asChild>
+                        <FilterButton
+                          hasFilters={hasCompanyAdvancedFilters}
+                          onClick={() => setCompanyFiltersOpen(true)}
+                        />
+                      </PopoverTrigger>
+                      <PopoverContent
+                        align="end"
+                        className="w-80 bg-[#121212] border border-white/10 rounded-2xl shadow-2xl p-4"
+                      >
+                        <CompanyFiltersPanel
+                          industries={industryOptions}
+                          industryFilter={companiesIndustryFilter}
+                          onIndustryFilterChange={setCompaniesIndustryFilter}
+                          employeeRanges={COMPANY_EMPLOYEE_RANGES}
+                          employeeRange={companiesEmployeeRange}
+                          onEmployeeRangeChange={setCompaniesEmployeeRange}
+                          locationFilter={companiesLocationFilter}
+                          onLocationFilterChange={setCompaniesLocationFilter}
+                          hasPeopleFilter={companiesHasPeopleFilter}
+                          onHasPeopleFilterChange={setCompaniesHasPeopleFilter}
+                          hasWebsiteFilter={companiesHasWebsiteFilter}
+                          onHasWebsiteFilterChange={
+                            setCompaniesHasWebsiteFilter
+                          }
+                          hasFilters={hasCompanyAdvancedFilters}
+                          onResetFilters={resetCompanyAdvancedFilters}
+                          onClose={() => setCompanyFiltersOpen(false)}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          {/* Split View */}
+          <div
+            className={`flex flex-col lg:flex-row items-start ${
+              isSidebarOpen ? "gap-3 sm:gap-4 lg:gap-6" : ""
+            }`}
+          >
+            {/* Left: Companies List */}
+            <div className="relative pt-3 sm:pt-4 px-3 sm:px-6 rounded-xl sm:rounded-[30px] w-full border-0 sm:border sm:border-white/10 bg-transparent sm:bg-[linear-gradient(173.83deg,_rgba(255,255,255,0.08)_4.82%,_rgba(255,255,255,0)_38.08%,_rgba(255,255,255,0)_56.68%,_rgba(255,255,255,0.02)_95.1%)]">
+              <CompaniesList
+                companies={companies}
+                loading={loading}
+                selectedCompanyId={selectedCompanyId}
+                onSelectCompany={handleCompanyClick}
+                search={companiesSearch}
+                onSearchChange={setCompaniesSearch}
+                page={companiesPage}
+                totalPages={companiesQuery.data?.data.totalPages || 1}
+                onPageChange={setCompaniesPage}
+                totalCompanies={filteredTotalCompanies}
+                showFilters={false}
+                selectedCompany={selectedCompany}
+                onViewAllLeads={() => {}}
+                onExecutiveSelect={handleExecutiveSelect}
+                onMobileExecutivesViewChange={setIsMobileExecutivesView}
+                pageSize={companiesLimit}
+                onPageSizeChange={setCompaniesLimit}
+              />
+            </div>
+
+            {/* Right: Executives/Details Panel (Desktop only) */}
+            <div className="hidden lg:block">
+              <DetailsSidebar
+                activeTab="companies"
+                isOpen={isSidebarOpen}
+                selectedCompany={selectedCompany}
+                onSwitchToLeads={() => {}}
+                onExecutiveSelect={handleExecutiveSelect}
+              />
+            </div>
+          </div>
+        </div>
+      </main>
+    </DashboardLayout>
+  );
+};
+
+export default index;

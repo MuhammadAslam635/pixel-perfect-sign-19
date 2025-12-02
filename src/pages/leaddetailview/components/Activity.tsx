@@ -41,7 +41,7 @@ import {
   useDeleteFollowupPlan,
   useFollowupPlans,
 } from "@/hooks/useFollowupPlans";
-import { useLeadsData } from "@/pages/companies/hooks";
+import { useLeadsData } from "@/pages/crm/shared/hooks";
 import { Lead } from "@/services/leads.service";
 import { FollowupPlan } from "@/services/followupPlans.service";
 import { useToast } from "@/hooks/use-toast";

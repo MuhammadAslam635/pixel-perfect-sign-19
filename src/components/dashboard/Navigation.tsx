@@ -12,6 +12,7 @@ import {
   PhoneCall,
   Target,
   UserCheck,
+  Users,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSelector } from "react-redux";
@@ -44,6 +45,13 @@ const navLinks: NavLink[] = [
     icon: BarChart3,
     path: "/companies",
     match: (pathname: string) => pathname.startsWith("/companies"),
+  },
+  {
+    id: "leads",
+    label: "Leads",
+    icon: Users,
+    path: "/leads",
+    match: (pathname: string) => pathname.startsWith("/leads"),
   },
   {
     id: "prospects",
