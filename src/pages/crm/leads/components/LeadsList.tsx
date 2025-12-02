@@ -23,7 +23,6 @@ import {
 } from "lucide-react";
 import { Lead } from "@/services/leads.service";
 import { Company, companiesService } from "@/services/companies.service";
-import LeadDetailsPanel from "./LeadDetailsPanel";
 import { toast } from "sonner";
 import { ActiveNavButton } from "@/components/ui/primary-btn";
 import {
@@ -237,7 +236,7 @@ const LeadsList: FC<LeadsListProps> = ({
     return (
       <Card
         key={lead._id}
-        className={`relative flex flex-col md:flex-row items-start md:items-center justify-between gap-1 sm:gap-2 border-0 rounded-[20px] sm:rounded-[26px] px-5 sm:px-5 md:px-7 py-2 sm:py-2 pl-5 sm:pl-7 transition-all duration-300 hover:shadow-[0_18px_40px_rgba(0,0,0,0.3)] before:absolute before:content-[''] before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[60%] before:w-[3px] sm:before:w-[5px] before:rounded-full backdrop-blur-[22.6px] ${
+        className={`relative flex flex-col md:flex-row items-start md:items-center justify-between gap-1 sm:gap-1.5 md:gap-2 border-0 rounded-[16px] sm:rounded-[20px] md:rounded-[26px] px-3 sm:px-4 md:px-5 lg:px-7 py-1.5 sm:py-2 pl-3 sm:pl-4 md:pl-5 lg:pl-7 transition-all duration-300 hover:shadow-[0_18px_40px_rgba(0,0,0,0.3)] before:absolute before:content-[''] before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[55%] sm:before:h-[60%] before:w-[2px] sm:before:w-[3px] md:before:w-[5px] before:rounded-full backdrop-blur-[22.6px] ${
           isActive ? "before:bg-primary" : "before:bg-white/75"
         }`}
         style={{
@@ -253,10 +252,10 @@ const LeadsList: FC<LeadsListProps> = ({
               </span>
             )}
           </div>
-          <p className="text-[9px] font-bold text-white/60 mt-0.5">
+          <p className="text-[8px] sm:text-[9px] font-bold text-white/60 mt-0.5">
             {lead.position || "Chief Executive Officer"}
           </p>
-          <div className="mt-1 sm:mt-2 flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-gray-300">
+          <div className="mt-0.5 sm:mt-1 md:mt-2 flex flex-wrap items-center gap-1.5 sm:gap-2 md:gap-3 text-xs text-gray-300">
             <div className="flex items-center gap-1.5">
               <Linkedin className="w-5 h-5 sm:w-6 sm:h-6 rounded-full text-gray-800 bg-white border p-1 border-white/20 flex-shrink-0" />
               <span className="font-medium truncate max-w-[120px] sm:max-w-[200px]">
@@ -271,8 +270,8 @@ const LeadsList: FC<LeadsListProps> = ({
             </div>
           </div>
         </div>
-        <div className="flex flex-col items-end gap-1 sm:gap-2 w-full md:w-auto">
-          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap justify-center">
+        <div className="flex flex-col items-end gap-0.5 sm:gap-1 md:gap-2 w-full md:w-auto">
+          <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 flex-wrap justify-center">
             <button
               className={getIconButtonClasses(!hasPhone)}
               onClick={() => {
@@ -522,23 +521,7 @@ const LeadsList: FC<LeadsListProps> = ({
           : leads.length === 0
           ? renderEmpty()
           : leads.map((lead) => (
-              <div key={lead._id}>
-                {renderLeadCard(lead)}
-                {/* Show lead details panel inline on mobile/tablet after the clicked lead */}
-                {selectedLeadId === lead._id && (
-                  <div className="lg:hidden mt-2 mb-2">
-                    <Card className="bg-[#1f3032] border-[#3A3A3A] p-3 sm:p-4">
-                      <LeadDetailsPanel
-                        lead={selectedLead}
-                        onEmailClick={onEmailClick}
-                        fallbackExecutive={executiveFallback}
-                        onPhoneClick={onPhoneClickFromSidebar}
-                        onLinkedinClick={onLinkedinClick}
-                      />
-                    </Card>
-                  </div>
-                )}
-              </div>
+              <div key={lead._id}>{renderLeadCard(lead)}</div>
             ))}
       </div>
 

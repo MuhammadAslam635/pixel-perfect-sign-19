@@ -55,13 +55,6 @@ const index = () => {
   const [companiesHasWebsiteFilter, setCompaniesHasWebsiteFilter] =
     useState(false);
 
-  const [selectedExecutive, setSelectedExecutive] =
-    useState<CompanyPerson | null>(null);
-  const [linkedinExecutive, setLinkedinExecutive] =
-    useState<CompanyPerson | null>(null);
-  const [phoneExecutive, setPhoneExecutive] = useState<CompanyPerson | null>(
-    null
-  );
   const [companyFiltersOpen, setCompanyFiltersOpen] = useState(false);
   const resetCompanyAdvancedFilters = useCallback(() => {
     setCompaniesIndustryFilter("all");
@@ -71,19 +64,6 @@ const index = () => {
     setCompaniesHasWebsiteFilter(false);
     setCompanyFiltersOpen(false);
   }, []);
-  const resolveErrorMessage = useCallback(
-    (error: unknown, fallback: string) => {
-      const err = error as any;
-      return (
-        err?.response?.data?.message ||
-        err?.data?.message ||
-        err?.message ||
-        fallback
-      );
-    },
-    []
-  );
-
 
   const companiesParams = useMemo(() => {
     const params: CompaniesQueryParams = {
@@ -208,14 +188,7 @@ const index = () => {
   ]);
 
   const handleExecutiveSelect = (executive: CompanyPerson) => {
-    // Handle executive selection - navigate to lead details page
-    if (executive._id || executive.id) {
-      const leadId = executive._id || executive.id;
-      navigate(`/leads/${leadId}`);
-    } else {
-      // Fallback: just set selected executive for messaging
-      setSelectedExecutive(executive);
-    }
+    navigate(`/leads/${executive._id}`);
   };
 
   const isSidebarOpen = selectedCompanyId !== null;
@@ -225,15 +198,13 @@ const index = () => {
 
   return (
     <DashboardLayout>
-      <main
-        className="relative px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] pt-24 sm:pt-28 lg:pt-32 pb-8 flex flex-col gap-6 text-white flex-1 overflow-y-auto"
-      >
+      <main className="relative px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12 2xl:px-16 pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-6 sm:pb-8 flex flex-col gap-4 sm:gap-6 text-white flex-1 overflow-y-auto">
         <div className="max-w-[1600px] mx-auto w-full">
           {/* Stats Cards */}
           <StatsCards stats={stats} />
 
           {/* Title and Filters Bar - Same Row */}
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 sm:gap-4 mb-5">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2 sm:gap-3 md:gap-4 mb-3 sm:mb-4 md:mb-5">
             {/* Heading */}
             <div
               className={`${
@@ -243,11 +214,11 @@ const index = () => {
               <div className="w-10 h-10 sm:w-12 sm:h-12 md:hidden flex items-center justify-center flex-shrink-0">
                 <CompaniesIcon className="w-full h-full" />
               </div>
-              <h2 className="text-lg sm:text-lg font-normal text-white">
+              <h2 className="text-base sm:text-lg md:text-xl font-normal text-white">
                 Companies
               </h2>
               <Button
-                className="ml-auto md:hidden flex items-center gap-2 rounded-md px-3 py-1.5 text-xs text-white font-normal sm:rounded-lg sm:px-4 sm:py-2 sm:text-sm"
+                className="ml-auto md:hidden flex items-center gap-1.5 sm:gap-2 rounded-md px-2 py-1 sm:px-3 sm:py-1.5 text-xs text-white font-normal sm:rounded-lg sm:px-4 sm:py-2 sm:text-sm"
                 style={{
                   background:
                     "linear-gradient(90deg, rgba(218, 228, 241, 0.2) 0%, rgba(221, 224, 238, 0.2) 100%)",
@@ -264,9 +235,9 @@ const index = () => {
             </div>
 
             {/* Controls Container */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 order-1 lg:order-2">
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-1 sm:gap-1">
-                <div className="flex w-full flex-wrap items-center justify-end gap-2">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2 md:gap-3 order-1 lg:order-2">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2 flex-1">
+                <div className="flex w-full flex-wrap items-center justify-end gap-1.5 sm:gap-2">
                   <SearchInput
                     placeholder="Search companies..."
                     value={companiesSearch}
@@ -321,7 +292,7 @@ const index = () => {
           {/* Split View */}
           <div
             className={`flex flex-col lg:flex-row items-start ${
-              isSidebarOpen ? "gap-3 sm:gap-4 lg:gap-6" : ""
+              isSidebarOpen ? "gap-2 sm:gap-3 md:gap-4 lg:gap-6" : ""
             }`}
           >
             {/* Left: Companies List */}
@@ -353,7 +324,6 @@ const index = () => {
                 activeTab="companies"
                 isOpen={isSidebarOpen}
                 selectedCompany={selectedCompany}
-                onSwitchToLeads={() => {}}
                 onExecutiveSelect={handleExecutiveSelect}
               />
             </div>

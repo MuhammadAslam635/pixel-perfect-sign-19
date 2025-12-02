@@ -218,7 +218,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
     return (
       <Card
         key={company._id}
-        className={`relative flex flex-col gap-1 sm:gap-1 md:flex-row md:items-center md:justify-between overflow-hidden border-0 mb-2 rounded-[20px] sm:rounded-[30px] px-4 sm:px-5 py-2 sm:py-2 transition-all duration-300 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] before:absolute before:content-[''] before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[55%] before:w-0 md:before:w-[3px] lg:before:w-[5px] before:rounded-full backdrop-blur-[22.6px] ${
+        className={`relative flex flex-col gap-0.5 sm:gap-1 md:flex-row md:items-center md:justify-between overflow-hidden border-0 mb-1.5 sm:mb-2 rounded-[16px] sm:rounded-[20px] md:rounded-[30px] px-3 sm:px-4 md:px-5 py-1.5 sm:py-2 transition-all duration-300 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] before:absolute before:content-[''] before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[50%] sm:before:h-[55%] before:w-0 md:before:w-[2px] lg:before:w-[3px] xl:before:w-[5px] before:rounded-full backdrop-blur-[22.6px] ${
           isActive ? "md:before:bg-primary" : "md:before:bg-white/75"
         }`}
         style={{
@@ -236,11 +236,11 @@ const CompaniesList: FC<CompaniesListProps> = ({
               </span>
             )}
           </div>
-          <p className="mt-0.5 text-[9px] font-bold text-white/65 line-clamp-2">
+          <p className="mt-0.5 text-[8px] sm:text-[9px] font-bold text-white/65 line-clamp-2">
             {company.description || company.about || "No description available"}
           </p>
           {/* Mobile: Side by side layout */}
-          <div className="mt-1 sm:mt-2 md:hidden flex flex-row items-center justify-between gap-4">
+          <div className="mt-0.5 sm:mt-1 md:mt-2 md:hidden flex flex-row items-center justify-between gap-3 sm:gap-4">
             <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-white/75">
               <Badge className="rounded-full bg-white/15 text-white border-white/20 px-3 sm:px-4 py-1 text-xs">
                 {employeeCount}
@@ -297,7 +297,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
             </div>
           </div>
           {/* Desktop: Original badges layout */}
-          <div className="hidden md:block mt-1 sm:mt-2">
+          <div className="hidden md:block mt-0.5 sm:mt-1 md:mt-2">
             <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-white/75">
               <Badge className="rounded-full bg-white/15 text-white border-white/20 px-3 sm:px-4 py-1 text-xs">
                 {employeeCount}
@@ -324,8 +324,8 @@ const CompaniesList: FC<CompaniesListProps> = ({
             </div>
           </div>
         </div>
-        <div className="w-full md:w-[260px] flex flex-col items-center md:items-end gap-1 sm:gap-2 text-white/80 md:ml-8">
-          <div className="hidden md:flex flex-row md:flex-col gap-2 md:gap-1 items-center md:items-end">
+        <div className="w-full md:w-[240px] lg:w-[260px] flex flex-col items-center md:items-end gap-0.5 sm:gap-1 md:gap-2 text-white/80 md:ml-4 lg:ml-8">
+          <div className="hidden md:flex flex-row md:flex-col gap-1.5 md:gap-1 items-center md:items-end">
             {(company.website || primaryEmail) && (
               <p className="text-xs sm:text-sm font-semibold text-white/75 text-center md:text-right break-words flex-1 md:flex-none">
                 {company.website && (
@@ -355,7 +355,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
               </p>
             )}
           </div>
-          <div className="flex flex-col sm:flex-row items-center md:items-center justify-end gap-1 w-full md:w-auto">
+          <div className="flex flex-col sm:flex-row items-center md:items-center justify-end gap-0.5 sm:gap-1 w-full md:w-auto">
             <ActiveNavButton
               icon={Users}
               text={isActive ? "Close Executives" : "View Executives"}
@@ -370,7 +370,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
                   onDesktopExecutivesFocus?.();
                 }
               }}
-              className="w-auto md:w-auto ml-auto md:ml-0"
+              className="w-auto md:w-auto ml-auto md:ml-0 text-xs px-2 py-1 h-8"
             />
           </div>
         </div>
