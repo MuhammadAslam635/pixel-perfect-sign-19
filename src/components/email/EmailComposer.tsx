@@ -151,7 +151,7 @@ export const EmailComposer = ({
 
   return (
     <section
-      className="h-full flex flex-col rounded-[30px] border border-[#FFFFFF4D] shadow-2xl overflow-hidden relative"
+      className="flex flex-col rounded-[30px] border border-[#FFFFFF4D] shadow-2xl overflow-hidden relative"
       style={{
         borderRadius: "30px",
         borderWidth: "1px",
@@ -165,7 +165,7 @@ export const EmailComposer = ({
             {threadId ? "Reply" : "Compose Email"}
           </h2>
         </div>
-        <div className="flex-1 flex flex-col gap-4 p-6 overflow-y-auto">
+        <div className="flex flex-col gap-4 p-6 overflow-y-auto scrollbar-hide max-h-[calc(100vh-300px)]">
           <div className="space-y-3">
             <Label htmlFor="to" className="text-sm font-medium text-white/90">
               To
@@ -364,8 +364,8 @@ export const EmailComposer = ({
               value={body}
               onChange={setBody}
               placeholder="Write your message here..."
-              height="200px"
-              className="min-h-[120px] placeholder:text-white/40"
+              height="300px"
+              className="min-h-[200px] placeholder:text-white/40"
             />
           </div>
 

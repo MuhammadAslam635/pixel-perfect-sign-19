@@ -51,7 +51,7 @@ const ComposePage = () => {
 
   return (
     <DashboardLayout>
-      <main className="relative px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] mt-20 lg:mt-24 xl:mt-28 mb-10 flex flex-col gap-6 text-white flex-1 overflow-y-auto">
+      <main className="relative px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] mt-20 lg:mt-24 xl:mt-28 mb-10 flex flex-col gap-6 text-white h-full">
         <div className="flex w-full flex-1 min-h-0 flex-col gap-6 overflow-hidden max-w-5xl mx-auto">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" onClick={handleCancel}>
@@ -62,7 +62,7 @@ const ComposePage = () => {
             </h1>
           </div>
 
-          <div className="flex-1 min-h-0">
+          <div className="flex-1 min-h-0 overflow-hidden">
             <EmailComposer
               initialTo={initialTo}
               initialSubject={initialSubject}

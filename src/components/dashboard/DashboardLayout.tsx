@@ -7,8 +7,8 @@ type DashboardLayoutProps = {
 
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   return (
-    <div className="min-h-screen w-full overflow-x-hidden overflow-y-hidden bg-transparent">
-      <div className="relative min-h-screen w-full max-w-full bg-transparent md:bg-transparent text-white flex flex-col">
+    <div className="h-screen w-full overflow-x-hidden overflow-y-hidden bg-transparent">
+      <div className="relative h-screen w-full max-w-full bg-transparent md:bg-transparent text-white flex flex-col">
         {/* Mobile background elements */}
         <div className="pointer-events-none fixed inset-0 md:hidden" style={{ backdropFilter: 'blur(40px)', borderRadius: '40px', zIndex: 0 }}>
           {/* Base background with rounded corners */}
