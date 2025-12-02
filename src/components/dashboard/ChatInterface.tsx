@@ -507,7 +507,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
             )}
             onClick={handleMicClick}
           >
-            <Mic size={17} />
+            <Mic size={22} />
           </div>
           <div
             className={cn(
