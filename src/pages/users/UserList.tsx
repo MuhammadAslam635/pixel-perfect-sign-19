@@ -50,6 +50,7 @@ import {
   LucideIcon,
   Download,
   MailPlus,
+  Shield,
 } from "lucide-react";
 import { userService, User } from "@/services/user.service";
 import { toast } from "sonner";
@@ -441,31 +442,6 @@ const UserList = () => {
             <div className="flex flex-col sm:flex-row gap-3 w-full xl:w-auto">
               <Button
                 type="button"
-                onClick={() => {
-                  setTrashed((t) => !t);
-                  setPage(1);
-                }}
-                className="group relative overflow-hidden flex-1 sm:flex-none flex h-12 items-center justify-center rounded-full border border-white/40 text-sm font-medium tracking-wide text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] pl-4 pr-3 gap-2 before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/18 before:to-transparent before:transition-all before:duration-300 before:ease-in-out hover:before:from-white/30 hover:before:duration-200"
-                style={{
-                  background: "#FFFFFF1A",
-                  boxShadow:
-                    "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
-                }}
-              >
-                <span
-                  className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[120px] h-[120px] rounded-full pointer-events-none opacity-60 blur-[26px]"
-                  style={{
-                    background:
-                      "linear-gradient(180deg, #67B0B7 0%, #4066B3 100%)",
-                  }}
-                />
-                <Trash2 className="h-5 w-5 relative z-10" />
-                <span className="relative z-10">
-                  {trashed ? "Show Active" : "Show Trash"}
-                </span>
-              </Button>
-              <Button
-                type="button"
                 onClick={() => navigate("/users/create")}
                 className="group relative overflow-hidden flex-1 sm:flex-none flex h-12 items-center justify-center rounded-full border border-white/40 text-sm font-medium tracking-wide text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] pl-4 pr-3 gap-2 before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/18 before:to-transparent before:transition-all before:duration-300 before:ease-in-out hover:before:from-white/30 hover:before:duration-200"
                 style={{
@@ -512,6 +488,30 @@ const UserList = () => {
                   Invite via Email
                 </span>
                 <span className="sm:hidden relative z-10">Invite</span>
+              </Button>
+              <Button
+                type="button"
+                  onClick={() => {
+                    navigate("/roles");
+                }}
+                className="group relative overflow-hidden flex-1 sm:flex-none flex h-12 w-44 items-center justify-center rounded-full border border-white/40 px-0 text-sm font-medium tracking-wide text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] pl-4 pr-4 gap-2 before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/18 before:to-transparent before:transition-all before:duration-300 before:ease-in-out hover:before:from-white/30 hover:before:duration-200"
+                style={{
+                  background: "#FFFFFF1A",
+                  boxShadow:
+                    "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                }}
+              >
+                <span
+                  className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[120px] h-[120px] rounded-full pointer-events-none opacity-60 blur-[26px]"
+                  style={{
+                    background:
+                      "linear-gradient(180deg, #67B0B7 0%, #4066B3 100%)",
+                  }}
+                />
+                <Shield className="h-5 w-5 relative z-10" />
+                <span className="hidden sm:block relative z-10">
+                  Roles
+                </span>
               </Button>
             </div>
           </div>
