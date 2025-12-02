@@ -372,6 +372,8 @@ const index = () => {
       page: companiesPage,
       limit: companiesLimit,
       search: companiesSearch || undefined,
+      sortBy: "createdAt",
+      sortOrder: -1,
     };
 
     if (companiesIndustryFilter !== "all") {
@@ -692,6 +694,8 @@ const index = () => {
       limit: leadsLimit,
       search: leadsSearch || undefined,
       companyId: leadsCompanyFilter || undefined,
+      sortBy: "createdAt",
+      sortOrder: -1,
     };
 
     if (leadsLocationFilter.trim()) {
