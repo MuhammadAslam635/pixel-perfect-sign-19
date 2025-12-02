@@ -10,6 +10,8 @@ import { cn } from "@/lib/utils";
 import { connectionMessagesService } from "@/services/connectionMessages.service";
 import { useToast } from "@/hooks/use-toast";
 import { ActiveNavButton } from "@/components/ui/primary-btn";
+import { EmailTemplates } from "@/utils/emailTemplates";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 
 interface EmailComposerProps {
   initialTo?: string[];
@@ -75,21 +77,33 @@ export const EmailComposer = ({
       return;
     }
 
+    // Create plain text version from HTML for email clients that prefer text
+    const plainText = body.replace(/<[^>]*>/g, "").trim();
+
+    // Format email content using professional HTML template
+    const formattedContent = EmailTemplates.formatRichTextEmailContent(
+      body.trim(),
+      {
+        subject: subject.trim(),
+      }
+    );
+
     onSend({
       to,
       cc: cc.length > 0 ? cc : undefined,
       bcc: bcc.length > 0 ? bcc : undefined,
       subject: subject.trim(),
-      text: body.trim() || undefined,
-      html: body.trim()
-        ? `<p>${body.trim().replace(/\n/g, "<br>")}</p>`
-        : undefined,
+      text: plainText || undefined,
+      html: formattedContent.html || undefined,
       threadId,
     });
   };
 
   const handleEnhanceWithAI = async () => {
-    if (!body.trim()) {
+    // Strip HTML tags to get plain text for AI enhancement
+    const plainText = body.replace(/<[^>]*>/g, "").trim();
+
+    if (!plainText) {
       toast({
         title: "No content to enhance",
         description:
@@ -102,12 +116,20 @@ export const EmailComposer = ({
     setIsEnhancing(true);
     try {
       const response = await connectionMessagesService.enhanceEmailContent({
-        content: body,
+        content: plainText,
         tone: "professional",
       });
 
       if (response.success) {
-        setBody(response.data.enhancedContent);
+        // Convert the enhanced plain text back to HTML
+        const enhancedHtml = response.data.enhancedContent
+          .split("\n\n")
+          .map((paragraph) => paragraph.trim())
+          .filter((paragraph) => paragraph.length > 0)
+          .map((paragraph) => `<p>${paragraph.replace(/\n/g, "<br>")}</p>`)
+          .join("");
+
+        setBody(enhancedHtml);
         toast({
           title: "Content enhanced!",
           description: "Your message has been improved with AI assistance.",
@@ -338,12 +360,12 @@ export const EmailComposer = ({
                 className="flex items-center gap-1"
               />
             </div>
-            <Textarea
-              id="body"
-              placeholder="Write your message here..."
+            <RichTextEditor
               value={body}
-              onChange={(e) => setBody(e.target.value)}
-              className="min-h-[120px] max-h-[200px] resize-none border-white/10 text-white placeholder:text-white/40 focus:border-white/30 focus:ring-1 focus:ring-white/20 rounded-lg"
+              onChange={setBody}
+              placeholder="Write your message here..."
+              height="200px"
+              className="min-h-[120px] placeholder:text-white/40"
             />
           </div>
 
