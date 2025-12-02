@@ -21,7 +21,7 @@ import UserCreate from "@/pages/users/UserCreate";
 import UserEdit from "@/pages/users/UserEdit";
 import ContactNow from "@/pages/twilio-calling/ContactNow";
 import FollowupTemplatesPage from "@/pages/followups";
-import LeadDetailView, { SelectedCallLogView } from "@/pages/leaddetailview";
+import LeadDetailView, { SelectedCallLogView } from "@/pages/crm/leads/leaddetailview";
 import RoleList from "@/pages/roles/RoleList";
 import RoleForm from "@/pages/roles/RoleForm";
 import ModuleList from "@/pages/modules/ModuleList";
@@ -33,7 +33,7 @@ import {
   ThreadDetailPage,
   StatsPage,
 } from "@/pages/emails";
-import LeadChat from "./pages/leaddetailview/components/LeadChat";
+import LeadChat from "@/pages/crm/leads/leaddetailview/components/LeadChat";
 import MembersPermissions from "@/pages/admin/MembersPermissions";
 import LeadsPage from "@/pages/crm/leads";
 
