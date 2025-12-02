@@ -607,7 +607,6 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
             <div className="space-y-1.5">
               {/* Phone */}
               <div className="flex flex-col gap-0.5">
-                <label className="text-[10px] text-white/60">Phone</label>
                 {isEditing ? (
                   <div
                     className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
@@ -651,7 +650,6 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
 
               {/* WhatsApp */}
               <div className="flex flex-col gap-0.5">
-                <label className="text-[10px] text-white/60">WhatsApp</label>
                 {isEditing ? (
                   <div
                     className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
@@ -705,7 +703,6 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
 
               {/* Email */}
               <div className="flex flex-col gap-0.5">
-                <label className="text-[10px] text-white/60">Email</label>
                 {isEditing ? (
                   <div
                     className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
@@ -732,15 +729,18 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
                       border: "1px solid rgba(255, 255, 255, 0.1)",
                     }}
                   >
-                    {lead.email && (
-                      <button
-                        onClick={handleEmailClick}
-                        className="text-white/60 hover:text-white transition-colors flex-shrink-0"
-                        title="Send Email"
-                      >
-                        <Mail className="w-3 h-3" />
-                      </button>
-                    )}
+                    <button
+                      onClick={handleEmailClick}
+                      disabled={!lead.email}
+                      className={`flex-shrink-0 ${
+                        lead.email
+                          ? "text-white/60 hover:text-white transition-colors cursor-pointer"
+                          : "text-white/30 cursor-not-allowed"
+                      }`}
+                      title={lead.email ? "Send Email" : "No email available"}
+                    >
+                      <Mail className="w-3 h-3" />
+                    </button>
                     <span className="text-[10px] text-white flex-1 truncate">
                       {lead.email || "N/A"}
                     </span>
@@ -750,7 +750,6 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
 
               {/* LinkedIn */}
               <div className="flex flex-col gap-0.5">
-                <label className="text-[10px] text-white/60">LinkedIn</label>
                 {isEditing ? (
                   <div
                     className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
@@ -807,9 +806,6 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
             <div className="space-y-1.5">
               {/* Date of Birth - Not available in Lead type, showing placeholder */}
               <div className="flex flex-col gap-0.5">
-                <label className="text-[10px] text-white/60">
-                  Date of Birth
-                </label>
                 <div
                   className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
                   style={{
@@ -824,7 +820,6 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
 
               {/* Language */}
               <div className="flex flex-col gap-0.5">
-                <label className="text-[10px] text-white/60">Language</label>
                 {isEditing ? (
                   <div
                     className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
@@ -861,7 +856,6 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
 
               {/* Region */}
               <div className="flex flex-col gap-0.5">
-                <label className="text-[10px] text-white/60">Region</label>
                 {isEditing ? (
                   <div
                     className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
@@ -894,21 +888,6 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
                     </span>
                   </div>
                 )}
-              </div>
-
-              {/* Status */}
-              <div className="flex flex-col gap-0.5">
-                <label className="text-[10px] text-white/60">Status</label>
-                <div
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
-                  style={{
-                    background: "#1a1a1a",
-                    border: "1px solid rgba(255, 255, 255, 0.1)",
-                  }}
-                >
-                  <Eye className="w-3 h-3 text-white/60 flex-shrink-0" />
-                  <span className="text-[10px] text-white">Active</span>
-                </div>
               </div>
             </div>
           </div>

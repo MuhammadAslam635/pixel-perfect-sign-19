@@ -23,6 +23,11 @@ import {
   Trophy,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { LeadCallLog } from "@/services/twilio.service";
 
@@ -150,18 +155,14 @@ const LeadDetailView = () => {
           {/* Back Button & Summary Progress */}
           <div className="flex flex-row items-center gap-4">
             <Button
-              onClick={() => navigate("/companies")}
+              onClick={() => navigate("/leads")}
               variant="ghost"
               className="text-white/70 text-sm hover:text-white hover:bg-white/10 w-fit"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Companies
+              Back to Leads
             </Button>
             <div className="w-full flex flex-col justify-left ml-10">
-              <div className="flex items-center justify-between text-[11px] uppercase tracking-wide text-white/50 mb-2 w-full max-w-5xl">
-                <span>Momentum status</span>
-                <span className="text-white/80">{summaryStatusText}</span>
-              </div>
               <div className="mt-4 flex items-center justify-between gap-4 w-full max-w-5xl">
                 {LEAD_STAGE_DEFINITIONS.map((definition, index) => {
                   const state = getStageState(summaryScoreValue, index);
@@ -180,10 +181,6 @@ const LeadDetailView = () => {
                     state === "completed"
                       ? `${baseConnectorClasses} bg-gradient-to-r from-[#67B0B7] to-[#4066B3]`
                       : `${baseConnectorClasses} bg-white/15`;
-                  const labelClasses =
-                    state === "completed" || state === "active"
-                      ? "text-white text-[11px] font-semibold uppercase tracking-wide whitespace-nowrap"
-                      : "text-white/50 text-[11px] uppercase tracking-wide whitespace-nowrap";
 
                   return (
                     <div
@@ -191,17 +188,25 @@ const LeadDetailView = () => {
                       className="flex items-center flex-1 gap-2"
                     >
                       <div className="flex flex-col items-center gap-2 min-w-[100px]">
-                        <span className={labelClasses}>{definition.label}</span>
-                        <div className={circleClasses}>
-                          {state === "completed" ? (
-                            <Check className="w-3.5 h-3.5" />
-                          ) : (
-                            (() => {
-                              const IconComponent = STAGE_ICONS[index];
-                              return <IconComponent className="w-3.5 h-3.5" />;
-                            })()
-                          )}
-                        </div>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className={circleClasses}>
+                              {state === "completed" ? (
+                                <Check className="w-3.5 h-3.5" />
+                              ) : (
+                                (() => {
+                                  const IconComponent = STAGE_ICONS[index];
+                                  return (
+                                    <IconComponent className="w-3.5 h-3.5" />
+                                  );
+                                })()
+                              )}
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom" align="center">
+                            <p>{definition.label}</p>
+                          </TooltipContent>
+                        </Tooltip>
                       </div>
                       {!isLast && <div className={connectorClasses} />}
                     </div>
