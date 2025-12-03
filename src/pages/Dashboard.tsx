@@ -12,6 +12,7 @@ import TopLeadsCard from "@/components/dashboard/TopLeadsCard";
 import CalendarCard from "@/components/dashboard/CalendarCard";
 import FollowupTasksCard from "@/components/dashboard/FollowupTasksCard";
 import MobileAssistantCTA from "@/components/dashboard/MobileAssistantCTA";
+import LeadsScoreDistributionCard from "@/components/dashboard/LeadsScoreDistributionCard";
 
 const getIsDesktop = () => {
   if (typeof window === "undefined") {
@@ -69,26 +70,29 @@ const Dashboard = () => {
 
   const desktopLayout = (
     <main className="relative px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] mt-20 sm:mt-20 lg:mt-24 xl:mt-28 mb-0 flex flex-col lg:flex-row items-start gap-5 md:gap-6 lg:gap-8 text-white flex-1 min-h-0 max-w-full">
-      <div className="w-full lg:basis-1/2 lg:min-w-0 flex-1 min-h-0 overflow-hidden">
+      <div className="w-full lg:basis-1/2 lg:min-w-0 flex-1 min-h-0 overflow-hidden animate-in fade-in slide-in-from-left-8 duration-700">
         <AssistantPanel isDesktop={isDesktop} />
       </div>
 
-      <div className="scrollbar-hide lg:flex w-full flex-col gap-4 overflow-y-auto pr-1 md:gap-5 lg:basis-1/2 lg:min-w-0 lg:pr-3 max-h-[calc(100vh-8rem)] bg-transparent">
-        <StatsCard />
+      <div className="scrollbar-hide lg:flex w-full flex-col gap-4 overflow-y-auto pr-1 md:gap-5 lg:basis-1/2 lg:min-w-0 lg:pr-3 max-h-[calc(100vh-8rem)] bg-transparent animate-in fade-in slide-in-from-right-8 duration-700">
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150">
+          <StatsCard />
+        </div>
 
         <div className="p-2 mt-6">
-          <div className="grid grid-cols-2 gap-4 lg:gap-4 mb-6">
-            <CommunicationHubCard />
-            <ProposalsToSendCard />
+          <div className="grid grid-cols-2 gap-4 lg:gap-4 mb-6 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-300">
+            <LeadsScoreDistributionCard />
+            {/* <CommunicationHubCard />
+            <ProposalsToSendCard /> */}
           </div>
 
-          <div className="grid grid-cols-2 gap-4 lg:gap-4 mb-6">
-            <TopLeadsCard />
-            <CalendarCard />
+          <div className="grid grid-cols-2 gap-4 lg:gap-4 mb-6 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-[450ms]">
+            {/* <TopLeadsCard />
+            <CalendarCard /> */}
           </div>
 
-          <div className="grid grid-cols-2 gap-4 lg:gap-4 mb-6">
-            <FollowupTasksCard />
+          <div className="grid grid-cols-2 gap-4 lg:gap-4 mb-6 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-[600ms]">
+            {/* <FollowupTasksCard /> */}
             <div></div> {/* Empty space for balance */}
           </div>
         </div>
@@ -98,26 +102,30 @@ const Dashboard = () => {
 
   const mobileLayout = (
     <main className="relative z-10 flex flex-col gap-6 px-5 pt-28 pb-12 text-white lg:hidden">
-      <StatsCard />
+      <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <StatsCard />
+      </div>
 
       <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150">
           <CommunicationHubCard />
           <ProposalsToSendCard />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-300">
           <TopLeadsCard />
           <CalendarCard />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-[450ms]">
           <FollowupTasksCard />
           <div></div> {/* Empty space for balance */}
         </div>
       </div>
 
-      <MobileAssistantCTA />
+      <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-[600ms]">
+        <MobileAssistantCTA />
+      </div>
     </main>
   );
 

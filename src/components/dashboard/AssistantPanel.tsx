@@ -121,7 +121,7 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
   const hasActiveChat = currentChatId || localMessages.length > 0;
 
   return (
-    <section className="hidden assistant-panel mx-auto w-full h-full lg:flex flex-col overflow-hidden relative sm:order-1">
+    <section className="hidden assistant-panel mx-auto w-full h-full lg:flex flex-col overflow-hidden relative sm:order-1 animate-in fade-in duration-700">
       <div
         style={{
           position: "absolute",
@@ -132,6 +132,7 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
           borderRadius: "25px",
           width: "90%",
         }}
+        className="animate-in fade-in slide-in-from-top-4 duration-500 delay-200"
       >
         <div
           className="assistant-tools flex gap-2"

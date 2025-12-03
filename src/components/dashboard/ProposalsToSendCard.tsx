@@ -15,7 +15,7 @@ const proposals = [
 
 const ProposalsToSendCard = () => {
   return (
-    <article className="section-card !p-3">
+    <article className="section-card !p-3 transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-white/5 hover:scale-[1.02]">
       {/* <div className="section-card__top !top-[8px] lg:!top-[12px] !left-[12px] lg:!left-[18px] !right-[12px] lg:!right-[18px]"> */}
       {/* <div className="section-card__top-left gap-1.5 lg:gap-3"> */}
       {/* <div className="section-card__top-icon !w-7 !h-7 lg:!w-[35px] lg:!h-[35px]"> */}

@@ -49,8 +49,8 @@ const MobileAssistantCTA = () => {
   };
 
   return (
-    <div className="assistant-composer mobile-assistant-cta__composer mt-40">
-      <div className="assistant-composer__chip font-poppins">
+    <div className="assistant-composer mobile-assistant-cta__composer mt-40 transition-all duration-300 hover:shadow-lg hover:shadow-white/5">
+      <div className="assistant-composer__chip font-poppins animate-in fade-in duration-500">
         <Sparkles size={20} />
         AI
       </div>

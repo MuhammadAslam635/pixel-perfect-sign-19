@@ -2,8 +2,8 @@ import API from "@/utils/api";
 
 export interface CommunicationEvent {
   id: string;
-  type: 'email' | 'call' | 'sms' | 'whatsapp';
-  direction: 'inbound' | 'outbound';
+  type: "email" | "call" | "sms" | "whatsapp";
+  direction: "inbound" | "outbound";
   subject?: string;
   body?: string;
   duration?: number;
@@ -23,7 +23,7 @@ export interface TopLead {
   summaryText: string;
   lastGeneratedAt: string;
   communicationCount: number;
-  scoreType?: 'communication' | 'call' | 'sequence';
+  scoreType?: "communication" | "call" | "sequence";
 }
 
 export interface CalendarEvent {
@@ -70,6 +70,17 @@ export interface CampaignsStatistics {
   }>;
 }
 
+export interface ScoreDistributionData {
+  scoreRange: string;
+  leadCount: number;
+  percentage: number;
+}
+
+export interface ScoreDistributionResponse {
+  success: boolean;
+  chartData: ScoreDistributionData[];
+}
+
 export interface DashboardResponse<T> {
   success: boolean;
   data: T;
@@ -77,9 +88,23 @@ export interface DashboardResponse<T> {
 
 export const dashboardService = {
   /**
+   * Get leads score distribution
+   */
+  getLeadsScoreDistribution: async (): Promise<ScoreDistributionResponse> => {
+    try {
+      const response = await API.get("/dashboard/leads-score-distribution");
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  /**
    * Get recent communications events
    */
-  getRecentCommunications: async (): Promise<DashboardResponse<CommunicationEvent[]>> => {
+  getRecentCommunications: async (): Promise<
+    DashboardResponse<CommunicationEvent[]>
+  > => {
     try {
       const response = await API.get("/dashboard/recent-communications");
       return response.data;
@@ -103,7 +128,9 @@ export const dashboardService = {
   /**
    * Get recent calendar events
    */
-  getRecentCalendarEvents: async (): Promise<DashboardResponse<CalendarEvent[]>> => {
+  getRecentCalendarEvents: async (): Promise<
+    DashboardResponse<CalendarEvent[]>
+  > => {
     try {
       const response = await API.get("/dashboard/recent-calendar-events");
       return response.data;
@@ -115,7 +142,9 @@ export const dashboardService = {
   /**
    * Get recent followup tasks
    */
-  getRecentFollowupTasks: async (): Promise<DashboardResponse<FollowupTask[]>> => {
+  getRecentFollowupTasks: async (): Promise<
+    DashboardResponse<FollowupTask[]>
+  > => {
     try {
       const response = await API.get("/dashboard/recent-followup-tasks");
       return response.data;
@@ -127,7 +156,9 @@ export const dashboardService = {
   /**
    * Get campaigns statistics
    */
-  getCampaignsStatistics: async (): Promise<DashboardResponse<CampaignsStatistics>> => {
+  getCampaignsStatistics: async (): Promise<
+    DashboardResponse<CampaignsStatistics>
+  > => {
     try {
       const response = await API.get("/dashboard/campaigns-statistics");
       return response.data;

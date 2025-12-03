@@ -157,7 +157,7 @@ export const LeadsChart = () => {
   }
 
   return (
-    <div className="relative w-full h-full" style={{ height: '100%' }}>
+    <div className="relative w-full h-full animate-in fade-in duration-700" style={{ height: '100%' }}>
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart
           data={chartData}
