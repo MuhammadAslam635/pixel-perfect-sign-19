@@ -52,11 +52,15 @@ export default function TopLeadsCard() {
           </div>
         ) : error ? (
           <div className="p-3 text-center">
-            <span className="text-[10px] lg:text-xs text-muted-foreground">{error}</span>
+            <span className="text-[10px] lg:text-xs text-muted-foreground">
+              {error}
+            </span>
           </div>
         ) : leads.length === 0 ? (
           <div className="p-3 text-center">
-            <span className="text-[10px] lg:text-xs text-muted-foreground">No top leads found</span>
+            <span className="text-[10px] lg:text-xs text-muted-foreground">
+              No top leads found
+            </span>
           </div>
         ) : (
           leads.map((lead) => (
@@ -68,12 +72,13 @@ export default function TopLeadsCard() {
                 <span className="text-[10px] lg:text-sm font-normal text-foreground leading-tight">
                   {lead.name}
                 </span>
-              <div className="mt-0.5 lg:mt-1 flex items-center gap-1.5 lg:gap-2">
-                <BarChart3 className="w-3 h-3 lg:w-3.5 lg:h-3.5 text-white/70" />
-                <span className="text-[9px] lg:text-xs text-white/70">
-                  Score: {lead.momentumScore}% {lead.scoreType && `(${lead.scoreType})`}
-                </span>
-              </div>
+                <div className="mt-0.5 lg:mt-1 flex items-center gap-1.5 lg:gap-2">
+                  <BarChart3 className="w-3 h-3 lg:w-3.5 lg:h-3.5 text-white/70" />
+                  <span className="text-[9px] lg:text-xs text-white/70">
+                    Score: {lead.momentumScore}%{" "}
+                    {lead.scoreType && `(${lead.scoreType})`}
+                  </span>
+                </div>
               </div>
             </div>
           ))

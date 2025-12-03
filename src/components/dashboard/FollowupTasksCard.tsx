@@ -2,16 +2,23 @@ import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { CheckSquare, ArrowRight, Loader2, Mail, Phone, MessageCircle } from "lucide-react";
+import {
+  CheckSquare,
+  ArrowRight,
+  Loader2,
+  Mail,
+  Phone,
+  MessageCircle,
+} from "lucide-react";
 import { dashboardService, FollowupTask } from "@/services/dashboard.service";
 
 const getTaskIcon = (type: string) => {
   switch (type) {
-    case 'email':
+    case "email":
       return <Mail className="w-3 h-3 lg:w-4 lg:h-4" />;
-    case 'call':
+    case "call":
       return <Phone className="w-3 h-3 lg:w-4 lg:h-4" />;
-    case 'whatsapp_message':
+    case "whatsapp_message":
       return <MessageCircle className="w-3 h-3 lg:w-4 lg:h-4" />;
     default:
       return <CheckSquare className="w-3 h-3 lg:w-4 lg:h-4" />;
@@ -31,7 +38,9 @@ export default function FollowupTasksCard() {
         const response = await dashboardService.getRecentFollowupTasks();
         setTasks(response.data);
       } catch (err: any) {
-        setError(err?.response?.data?.message || "Failed to load followup tasks");
+        setError(
+          err?.response?.data?.message || "Failed to load followup tasks"
+        );
         console.error("Error fetching followup tasks:", err);
       } finally {
         setLoading(false);
@@ -45,19 +54,21 @@ export default function FollowupTasksCard() {
     if (!dateString) return "No due date";
     const date = new Date(dateString);
     const now = new Date();
-    const diffInHours = Math.floor((date.getTime() - now.getTime()) / (1000 * 60 * 60));
+    const diffInHours = Math.floor(
+      (date.getTime() - now.getTime()) / (1000 * 60 * 60)
+    );
 
     if (diffInHours < 24 && diffInHours > 0) {
       return `Due in ${diffInHours}h`;
     } else if (diffInHours <= 0) {
       return "Overdue";
     } else {
-      return date.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true
+      return date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
       });
     }
   };
@@ -87,11 +98,15 @@ export default function FollowupTasksCard() {
           </div>
         ) : error ? (
           <div className="p-3 text-center">
-            <span className="text-[10px] lg:text-xs text-muted-foreground">{error}</span>
+            <span className="text-[10px] lg:text-xs text-muted-foreground">
+              {error}
+            </span>
           </div>
         ) : tasks.length === 0 ? (
           <div className="p-3 text-center">
-            <span className="text-[10px] lg:text-xs text-muted-foreground">No pending tasks</span>
+            <span className="text-[10px] lg:text-xs text-muted-foreground">
+              No pending tasks
+            </span>
           </div>
         ) : (
           tasks.map((task) => (
@@ -110,19 +125,27 @@ export default function FollowupTasksCard() {
                     </span>
                     <Avatar className="w-4 h-4 lg:w-5 lg:h-5 flex-shrink-0">
                       <AvatarFallback className="bg-primary/20 text-primary text-[8px] lg:text-[10px]">
-                        {task.leadName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                        {task.leadName
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")
+                          .toUpperCase()
+                          .slice(0, 2)}
                       </AvatarFallback>
                     </Avatar>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-[9px] lg:text-xs text-muted-foreground/70 capitalize">
-                      {task.type.replace('_', ' ')}
+                      {task.type.replace("_", " ")}
                     </span>
-                    <span className={`text-[8px] lg:text-[10px] ${
-                      task.scheduledFor && new Date(task.scheduledFor) < new Date()
-                        ? 'text-red-400'
-                        : 'text-muted-foreground/60'
-                    }`}>
+                    <span
+                      className={`text-[8px] lg:text-[10px] ${
+                        task.scheduledFor &&
+                        new Date(task.scheduledFor) < new Date()
+                          ? "text-red-400"
+                          : "text-muted-foreground/60"
+                      }`}
+                    >
                       {formatTime(task.scheduledFor)}
                     </span>
                   </div>

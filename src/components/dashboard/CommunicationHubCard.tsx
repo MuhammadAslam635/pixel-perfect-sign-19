@@ -3,7 +3,10 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Bell, Target } from "lucide-react";
-import { dashboardService, CommunicationEvent } from "@/services/dashboard.service";
+import {
+  dashboardService,
+  CommunicationEvent,
+} from "@/services/dashboard.service";
 
 export default function CommunicationHubCard() {
   const [communications, setCommunications] = useState<CommunicationEvent[]>(
@@ -32,7 +35,10 @@ export default function CommunicationHubCard() {
     fetchCommunications();
   }, []);
   return (
-    <Card id="comm-hub-card" className="solid-card p-3 lg:p-5 transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-white/5 hover:scale-[1.02]">
+    <Card
+      id="comm-hub-card"
+      className="solid-card p-3 lg:p-5 transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-white/5 hover:scale-[1.02]"
+    >
       <div className="flex items-center justify-between mb-2 lg:mb-4">
         <div className="flex items-center gap-1.5 lg:gap-2">
           <Target className="w-3 h-3 lg:w-4 lg:h-4 text-foreground/50" />

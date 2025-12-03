@@ -18,7 +18,9 @@ export default function CalendarCard() {
         const response = await dashboardService.getRecentCalendarEvents();
         setEvents(response.data);
       } catch (err: any) {
-        setError(err?.response?.data?.message || "Failed to load calendar events");
+        setError(
+          err?.response?.data?.message || "Failed to load calendar events"
+        );
         console.error("Error fetching calendar events:", err);
       } finally {
         setLoading(false);
@@ -52,11 +54,15 @@ export default function CalendarCard() {
           </div>
         ) : error ? (
           <div className="p-3 text-center">
-            <span className="text-[10px] lg:text-xs text-muted-foreground">{error}</span>
+            <span className="text-[10px] lg:text-xs text-muted-foreground">
+              {error}
+            </span>
           </div>
         ) : events.length === 0 ? (
           <div className="p-3 text-center">
-            <span className="text-[10px] lg:text-xs text-muted-foreground">No upcoming events</span>
+            <span className="text-[10px] lg:text-xs text-muted-foreground">
+              No upcoming events
+            </span>
           </div>
         ) : (
           events.slice(0, 3).map((event, index) => {
@@ -71,18 +77,23 @@ export default function CalendarCard() {
             } else if (eventDate.toDateString() === tomorrow.toDateString()) {
               dateLabel = "Tomorrow";
             } else {
-              dateLabel = eventDate.toLocaleDateString('en-US', { weekday: 'long' });
+              dateLabel = eventDate.toLocaleDateString("en-US", {
+                weekday: "long",
+              });
             }
 
-            const timeString = eventDate.toLocaleTimeString('en-US', {
-              hour: 'numeric',
-              minute: '2-digit',
-              hour12: true
+            const timeString = eventDate.toLocaleTimeString("en-US", {
+              hour: "numeric",
+              minute: "2-digit",
+              hour12: true,
             });
 
             return (
               <div key={event.id}>
-                {index === 0 || (index > 0 && new Date(events[index - 1].startDateTime).toDateString() !== eventDate.toDateString()) ? (
+                {index === 0 ||
+                (index > 0 &&
+                  new Date(events[index - 1].startDateTime).toDateString() !==
+                    eventDate.toDateString()) ? (
                   <span className="calendar-label mb-1.5 lg:mb-2 inline-block text-[9px] lg:text-xs">
                     {dateLabel}
                   </span>
@@ -97,7 +108,12 @@ export default function CalendarCard() {
                       <div className="flex items-center gap-1.5 lg:gap-2 mt-0.5 lg:mt-1">
                         <Avatar className="w-4 h-4 lg:w-5 lg:h-5 flex-shrink-0">
                           <AvatarFallback className="bg-primary/20 text-primary text-[8px] lg:text-[10px]">
-                            {event.leadName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                            {event.leadName
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")
+                              .toUpperCase()
+                              .slice(0, 2)}
                           </AvatarFallback>
                         </Avatar>
                         <span className="text-[9px] lg:text-xs text-muted-foreground/60">

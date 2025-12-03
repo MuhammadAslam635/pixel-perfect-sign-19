@@ -7,7 +7,13 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from "recharts";
-import { format, parseISO, startOfDay, subDays, eachDayOfInterval } from "date-fns";
+import {
+  format,
+  parseISO,
+  startOfDay,
+  subDays,
+  eachDayOfInterval,
+} from "date-fns";
 import { Loader2 } from "lucide-react";
 import { leadsService, Lead } from "@/services/leads.service";
 
@@ -103,9 +109,7 @@ export const LeadsChart = () => {
 
         setChartData(processedData);
       } catch (err: any) {
-        setError(
-          err?.response?.data?.message || "Failed to load leads data"
-        );
+        setError(err?.response?.data?.message || "Failed to load leads data");
         console.error("Error fetching leads data:", err);
       } finally {
         setLoading(false);
@@ -157,7 +161,10 @@ export const LeadsChart = () => {
   }
 
   return (
-    <div className="relative w-full h-full animate-in fade-in duration-700" style={{ height: '100%' }}>
+    <div
+      className="relative w-full h-full animate-in fade-in duration-700"
+      style={{ height: "100%" }}
+    >
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart
           data={chartData}
@@ -170,7 +177,13 @@ export const LeadsChart = () => {
               <stop offset="57.4%" stopColor="#68B1B8" stopOpacity={0.01} />
               <stop offset="100%" stopColor="#68B1B8" stopOpacity={0.4} />
             </linearGradient>
-            <linearGradient id="leadsStrokeGradient" x1="0" y1="0" x2="1" y2="0">
+            <linearGradient
+              id="leadsStrokeGradient"
+              x1="0"
+              y1="0"
+              x2="1"
+              y2="0"
+            >
               <stop offset="0%" stopColor="#68B3B7" />
               <stop offset="100%" stopColor="#3E65B4" />
             </linearGradient>
