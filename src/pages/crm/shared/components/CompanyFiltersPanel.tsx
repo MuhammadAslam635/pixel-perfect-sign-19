@@ -9,6 +9,156 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+interface CompanyFiltersInlineProps {
+  // Industry filter
+  industries: string[];
+  industryFilter: string;
+  onIndustryFilterChange: (value: string) => void;
+
+  // Employee range filter
+  employeeRanges: Array<{ value: string; label: string }>;
+  employeeRange: string;
+  onEmployeeRangeChange: (value: string) => void;
+
+  // Location filter
+  locationFilter: string;
+  onLocationFilterChange: (value: string) => void;
+
+  // Checkbox filters
+  hasPeopleFilter: boolean;
+  onHasPeopleFilterChange: (checked: boolean) => void;
+  hasWebsiteFilter: boolean;
+  onHasWebsiteFilterChange: (checked: boolean) => void;
+
+  // Actions
+  hasFilters: boolean;
+  onResetFilters: () => void;
+}
+
+export const CompanyFiltersInline = ({
+  industries,
+  industryFilter,
+  onIndustryFilterChange,
+  employeeRanges,
+  employeeRange,
+  onEmployeeRangeChange,
+  locationFilter,
+  onLocationFilterChange,
+  hasPeopleFilter,
+  onHasPeopleFilterChange,
+  hasWebsiteFilter,
+  onHasWebsiteFilterChange,
+  hasFilters,
+  onResetFilters,
+}: CompanyFiltersInlineProps) => {
+  return (
+    <div className="flex items-center gap-3 flex-wrap">
+      {/* Industry Filter */}
+      <div className="flex items-center gap-2">
+        <label className="text-[11px] uppercase tracking-[0.08em] text-gray-400 whitespace-nowrap">
+          Industry:
+        </label>
+        <Select value={industryFilter} onValueChange={onIndustryFilterChange}>
+          <SelectTrigger className="h-8 w-32 rounded-lg border border-white/15 bg-transparent text-white text-xs">
+            <SelectValue placeholder="All" />
+          </SelectTrigger>
+          <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a] rounded-xl max-h-40">
+            <SelectItem
+              value="all"
+              className="text-gray-300 focus:text-white focus:bg-white/10"
+            >
+              All
+            </SelectItem>
+            {industries.map((industry) => (
+              <SelectItem
+                key={industry}
+                value={industry}
+                className="text-gray-300 focus:text-white focus:bg-white/10"
+              >
+                {industry}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Company Size Filter */}
+      <div className="flex items-center gap-2">
+        <label className="text-[11px] uppercase tracking-[0.08em] text-gray-400 whitespace-nowrap">
+          Size:
+        </label>
+        <Select value={employeeRange} onValueChange={onEmployeeRangeChange}>
+          <SelectTrigger className="h-8 w-28 rounded-lg border border-white/15 bg-transparent text-white text-xs">
+            <SelectValue placeholder="Any" />
+          </SelectTrigger>
+          <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a] rounded-xl">
+            {employeeRanges.map((option) => (
+              <SelectItem
+                key={option.value}
+                value={option.value}
+                className="text-gray-300 focus:text-white focus:bg-white/10"
+              >
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Location Filter */}
+      <div className="flex items-center gap-2">
+        <label className="text-[11px] uppercase tracking-[0.08em] text-gray-400 whitespace-nowrap">
+          Location:
+        </label>
+        <Input
+          type="text"
+          placeholder="City, state..."
+          value={locationFilter}
+          onChange={(e) => onLocationFilterChange(e.target.value)}
+          className="h-8 w-32 rounded-lg border border-white/15 bg-transparent text-white placeholder:text-gray-500 text-xs"
+        />
+      </div>
+
+      {/* Checkboxes */}
+      <div className="flex items-center gap-3">
+        <label className="flex items-center gap-1.5 cursor-pointer">
+          <Checkbox
+            checked={hasPeopleFilter}
+            onCheckedChange={(checked) =>
+              onHasPeopleFilterChange(Boolean(checked))
+            }
+            className="border-white/40 data-[state=checked]:bg-white data-[state=checked]:text-gray-900"
+          />
+          <span className="text-xs text-gray-300">Contacts</span>
+        </label>
+
+        <label className="flex items-center gap-1.5 cursor-pointer">
+          <Checkbox
+            checked={hasWebsiteFilter}
+            onCheckedChange={(checked) =>
+              onHasWebsiteFilterChange(Boolean(checked))
+            }
+            className="border-white/40 data-[state=checked]:bg-white data-[state=checked]:text-gray-900"
+          />
+          <span className="text-xs text-gray-300">Website</span>
+        </label>
+      </div>
+
+      {/* Clear Filters Button */}
+      {hasFilters && (
+        <Button
+          size="sm"
+          variant="ghost"
+          className="text-gray-300 hover:text-white px-2 py-1 h-8 text-xs"
+          onClick={onResetFilters}
+        >
+          Clear
+        </Button>
+      )}
+    </div>
+  );
+};
+
 interface CompanyFiltersPanelProps {
   // Industry filter
   industries: string[];

@@ -1,4 +1,5 @@
 import { FC, useEffect, useMemo, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,10 +19,12 @@ import {
   PaginationPrevious,
   PaginationEllipsis,
 } from "@/components/ui/pagination";
-import { Linkedin, Search, ArrowLeft, Users } from "lucide-react";
+import { Linkedin, Search, ArrowLeft, Users, Grid3X3, List, LayoutGrid } from "lucide-react";
 import { ActiveNavButton } from "@/components/ui/primary-btn";
 import { Company } from "@/services/companies.service";
 import CompanyExecutivesPanel from "./CompanyExecutivesPanel";
+
+type ViewMode = 'compact' | 'detailed' | 'card';
 
 type CompaniesListProps = {
   companies: Company[];
@@ -43,6 +46,8 @@ type CompaniesListProps = {
   pageSize?: number;
   pageSizeOptions?: number[];
   onPageSizeChange?: (size: number) => void;
+  viewMode?: ViewMode;
+  onViewModeChange?: (mode: ViewMode) => void;
 };
 
 const CompaniesList: FC<CompaniesListProps> = ({
@@ -63,6 +68,8 @@ const CompaniesList: FC<CompaniesListProps> = ({
   pageSize = 10,
   pageSizeOptions = [10, 25, 50, 100],
   onPageSizeChange,
+  viewMode = 'detailed',
+  onViewModeChange,
 }) => {
   // State to track if mobile executives view is open
   const [mobileExecutivesView, setMobileExecutivesView] = useState(false);
@@ -179,12 +186,51 @@ const CompaniesList: FC<CompaniesListProps> = ({
     };
   };
 
-  // Render loading state
+  // Render loading state with skeleton placeholders
   const renderLoading = () => (
-    <div className="flex flex-col items-center justify-center py-16">
-      <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin mb-3" />
-      <p className="text-white/60 text-sm">Loading companies...</p>
-    </div>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+      className={viewMode === 'card' ? "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3" : "space-y-4"}
+    >
+      {Array.from({ length: viewMode === 'card' ? 8 : 5 }).map((_, index) => (
+        <motion.div
+          key={index}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{
+            duration: 0.4,
+            delay: index * 0.1,
+            ease: "easeOut"
+          }}
+          className={viewMode === 'card'
+            ? "aspect-[3/1] rounded-lg border-0 bg-gradient-to-br from-gray-800/50 to-gray-900/30 border-white/10 overflow-hidden"
+            : "rounded-[16px] sm:rounded-[20px] md:rounded-[26px] border-0 bg-gradient-to-br from-gray-800/50 to-gray-900/30 border-white/10 px-3 sm:px-4 md:px-5 lg:px-7 py-1.5 sm:py-2 pl-3 sm:pl-4 md:pl-5 lg:pl-7"
+          }
+        >
+          <div className="flex flex-col gap-2">
+            {/* Skeleton content */}
+            <div className="flex items-center gap-2">
+              <div className="h-4 bg-white/10 rounded animate-pulse w-32"></div>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="h-3 bg-white/5 rounded animate-pulse w-20"></div>
+              <div className="h-3 bg-white/10 rounded animate-pulse w-16"></div>
+            </div>
+            {viewMode === 'detailed' && (
+              <>
+                <div className="h-2 bg-white/5 rounded animate-pulse w-full"></div>
+                <div className="flex gap-2">
+                  <div className="h-6 w-6 bg-white/10 rounded animate-pulse"></div>
+                  <div className="h-6 w-6 bg-white/5 rounded animate-pulse"></div>
+                </div>
+              </>
+            )}
+          </div>
+        </motion.div>
+      ))}
+    </motion.div>
   );
 
   // Render empty state
@@ -215,12 +261,74 @@ const CompaniesList: FC<CompaniesListProps> = ({
       primaryExecutive?.email || primaryExecutive?.emails?.[0] || null;
     const primaryLinkedIn = primaryExecutive?.linkedin || null;
 
+    if (viewMode === 'card') {
+      return (
+        <Card
+          key={company._id}
+          className={`relative flex flex-col gap-2 overflow-hidden border-0 rounded-lg p-3 transition-all duration-300 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] cursor-pointer ${selectedCompanyId ? 'aspect-[3/1]' : 'aspect-[4/1]'} before:absolute before:content-[''] before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[50%] before:w-[3px] before:rounded-full ${
+            isActive ? "ring-2 ring-primary before:bg-primary" : "before:bg-white/75"
+          }`}
+          style={{
+            background: `linear-gradient(180deg, rgba(104, 177, 184, 0.1) 0%, rgba(104, 177, 184, 0.08) 100%), radial-gradient(50% 100% at 50% 0%, rgba(104, 177, 184, 0.1) 0%, rgba(104, 177, 184, 0) 100%)`,
+          }}
+          onClick={() => {
+            if (window.innerWidth < 768) {
+              setMobileExecutivesView(true);
+              onSelectCompany(company._id);
+            } else {
+              onSelectCompany(company._id);
+              onDesktopExecutivesFocus?.();
+            }
+          }}
+        >
+          <div className="flex flex-col gap-1">
+            <h3 className="text-sm font-semibold text-white leading-tight truncate">
+              {company.name}
+              {company.industry && (
+                <span className="text-white/60 font-normal"> | {company.industry}</span>
+              )}
+            </h3>
+
+
+            <div className="flex flex-col gap-1">
+              {primaryEmail && (
+                <div className="flex items-center gap-1">
+                  <div className="w-2.5 h-2.5 rounded-full bg-white/20 flex items-center justify-center">
+                    <span className="text-[6px] text-white/80">@</span>
+                  </div>
+                  <span className="text-xs text-white/70 truncate">{primaryEmail}</span>
+                </div>
+              )}
+
+              {company.website && (
+                <div className="flex items-center gap-1">
+                  <div className="w-2.5 h-2.5 rounded-full bg-white/20 flex items-center justify-center">
+                    <span className="text-[6px] text-white/80">🌐</span>
+                  </div>
+                  <a
+                    href={getFullUrl(company.website)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-xs text-white/70 truncate hover:text-white hover:underline"
+                  >
+                    {formatWebsiteUrl(company.website)}
+                  </a>
+                </div>
+              )}
+            </div>
+          </div>
+        </Card>
+      );
+    }
+
+    // Default list view (compact/detailed)
     return (
       <Card
         key={company._id}
-        className={`relative flex flex-col gap-0.5 sm:gap-1 md:flex-row md:items-center md:justify-between overflow-hidden border-0 mb-1.5 sm:mb-2 rounded-[16px] sm:rounded-[20px] md:rounded-[30px] px-3 sm:px-4 md:px-5 py-1.5 sm:py-2 transition-all duration-300 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] before:absolute before:content-[''] before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[50%] sm:before:h-[55%] before:w-0 md:before:w-[2px] lg:before:w-[3px] xl:before:w-[5px] before:rounded-full backdrop-blur-[22.6px] ${
+        className={`relative flex flex-col gap-0.5 sm:gap-1 md:flex-row md:items-center md:justify-between overflow-hidden border-0 mb-1.5 sm:mb-2 rounded-[16px] sm:rounded-[20px] md:rounded-[30px] px-3 sm:px-4 md:px-5 py-1.5 sm:py-2 transition-all duration-300 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] ${viewMode !== 'compact' ? `before:absolute before:content-[''] before:-left-1 before:top-1/2 before:-translate-y-1/2 before:h-[55%] sm:before:h-[60%] before:w-0 md:before:w-[3px] lg:before:w-[4px] xl:before:w-[6px] before:rounded-full backdrop-blur-[22.6px] ${
           isActive ? "md:before:bg-primary" : "md:before:bg-white/75"
-        }`}
+        }` : ''}`}
         style={{
           background: `linear-gradient(180deg, rgba(104, 177, 184, 0.1) 0%, rgba(104, 177, 184, 0.08) 100%), radial-gradient(50% 100% at 50% 0%, rgba(104, 177, 184, 0.1) 0%, rgba(104, 177, 184, 0) 100%)`,
         }}
@@ -235,39 +343,111 @@ const CompaniesList: FC<CompaniesListProps> = ({
                 | {company.industry}
               </span>
             )}
-          </div>
-          <p className="mt-0.5 text-xs text-white/65 line-clamp-2">
-            {company.description || company.about || "No description available"}
-          </p>
-          {/* Mobile: Side by side layout */}
-          <div className="mt-0.5 sm:mt-1 md:mt-2 md:hidden flex flex-row items-center justify-between gap-3 sm:gap-4">
-            <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-white/75">
-              <Badge className="rounded-full bg-white/15 text-white border-white/20 px-3 sm:px-4 py-1 text-xs">
+            {viewMode === 'compact' && (
+              <Badge className="rounded-full bg-white/15 text-white border-white/20 px-2 py-0.5 text-xs">
                 {employeeCount}
               </Badge>
-              {primaryLinkedIn && (
-                <div className="flex items-center gap-1.5 sm:gap-2 bg-white/10 border border-white/20 rounded-full px-2 sm:px-3 py-1 max-w-[150px] sm:max-w-[220px]">
-                  <Linkedin className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-white/85 flex-shrink-0" />
-                  <a
-                    href={getFullUrl(primaryLinkedIn)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="font-medium text-white/85 truncate hover:text-white hover:underline text-xs"
-                  >
-                    {formatWebsiteUrl(primaryLinkedIn)}
-                  </a>
-                </div>
-              )}
-              {primaryEmail && (
-                <span className="rounded-full border border-white/15 bg-white/10 px-3 sm:px-4 py-1 font-medium text-white/80 text-xs truncate max-w-[200px]">
-                  {primaryEmail}
-                </span>
-              )}
+            )}
+          </div>
+          {viewMode === 'detailed' && (
+            <p className="mt-0.5 text-xs text-white/65 line-clamp-2">
+              {company.description || company.about || "No description available"}
+            </p>
+          )}
+          {/* Mobile: Side by side layout */}
+          {viewMode === 'detailed' && (
+            <div className="mt-0.5 sm:mt-1 md:mt-2 md:hidden flex flex-row items-center justify-between gap-3 sm:gap-4">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-white/75">
+                <Badge className="rounded-full bg-white/15 text-white border-white/20 px-3 sm:px-4 py-1 text-xs">
+                  {employeeCount}
+                </Badge>
+                {primaryLinkedIn && (
+                  <div className="flex items-center gap-1.5 sm:gap-2 bg-white/10 border border-white/20 rounded-full px-2 sm:px-3 py-1 max-w-[150px] sm:max-w-[220px]">
+                    <Linkedin className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-white/85 flex-shrink-0" />
+                    <a
+                      href={getFullUrl(primaryLinkedIn)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="font-medium text-white/85 truncate hover:text-white hover:underline text-xs"
+                    >
+                      {formatWebsiteUrl(primaryLinkedIn)}
+                    </a>
+                  </div>
+                )}
+                {primaryEmail && (
+                  <span className="rounded-full border border-white/15 bg-white/10 px-3 sm:px-4 py-1 font-medium text-white/80 text-xs truncate max-w-[200px]">
+                    {primaryEmail}
+                  </span>
+                )}
+              </div>
+              <div className="flex flex-row gap-2 items-center justify-end text-white/80">
+                {(company.website || primaryEmail) && (
+                  <p className="text-xs sm:text-sm font-semibold text-white/75 text-right break-words">
+                    {company.website && (
+                      <a
+                        href={getFullUrl(company.website)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-white/85 hover:text-white hover:underline"
+                      >
+                        {formatWebsiteUrl(company.website)}
+                      </a>
+                    )}
+                    {company.website && primaryEmail && (
+                      <span className="mx-2 text-white/40">|</span>
+                    )}
+                    {primaryEmail && (
+                      <span className="text-white/70 break-all">
+                        {primaryEmail}
+                      </span>
+                    )}
+                  </p>
+                )}
+                {company.address && (
+                  <p className="text-xs text-white/55 text-right max-w-[220px]">
+                    {company.address}
+                  </p>
+                )}
+              </div>
             </div>
-            <div className="flex flex-row gap-2 items-center justify-end text-white/80">
+          )}
+          {/* Desktop: Original badges layout */}
+          {viewMode === 'detailed' && (
+            <div className="hidden md:block mt-0.5 sm:mt-1 md:mt-2">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-white/75">
+                <Badge className="rounded-full bg-white/15 text-white border-white/20 px-3 sm:px-4 py-1 text-xs">
+                  {employeeCount}
+                </Badge>
+                {primaryLinkedIn && (
+                  <div className="flex items-center gap-1.5 sm:gap-2 bg-white/10 border border-white/20 rounded-full px-2 sm:px-3 py-1 max-w-[150px] sm:max-w-[220px]">
+                    <Linkedin className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-white/85 flex-shrink-0" />
+                    <a
+                      href={getFullUrl(primaryLinkedIn)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="font-medium text-white/85 truncate hover:text-white hover:underline text-xs"
+                    >
+                      {formatWebsiteUrl(primaryLinkedIn)}
+                    </a>
+                  </div>
+                )}
+                {primaryEmail && (
+                  <span className="rounded-full border border-white/15 bg-white/10 px-3 sm:px-4 py-1 font-medium text-white/80 text-xs truncate max-w-[200px]">
+                    {primaryEmail}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="w-full md:w-[240px] lg:w-[260px] flex flex-col items-center md:items-end gap-0.5 sm:gap-1 md:gap-2 text-white/80 md:ml-4 lg:ml-8">
+          {viewMode === 'detailed' && (
+            <div className="hidden md:flex flex-row md:flex-col gap-1.5 md:gap-1 items-center md:items-end">
               {(company.website || primaryEmail) && (
-                <p className="text-xs sm:text-sm font-semibold text-white/75 text-right break-words">
+                <p className="text-xs sm:text-sm font-semibold text-white/75 text-center md:text-right break-words flex-1 md:flex-none">
                   {company.website && (
                     <a
                       href={getFullUrl(company.website)}
@@ -290,71 +470,12 @@ const CompaniesList: FC<CompaniesListProps> = ({
                 </p>
               )}
               {company.address && (
-                <p className="text-xs text-white/55 text-right max-w-[220px]">
+                <p className="text-xs text-white/55 text-center md:text-right max-w-full md:max-w-[220px] flex-1 md:flex-none">
                   {company.address}
                 </p>
               )}
             </div>
-          </div>
-          {/* Desktop: Original badges layout */}
-          <div className="hidden md:block mt-0.5 sm:mt-1 md:mt-2">
-            <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-white/75">
-              <Badge className="rounded-full bg-white/15 text-white border-white/20 px-3 sm:px-4 py-1 text-xs">
-                {employeeCount}
-              </Badge>
-              {primaryLinkedIn && (
-                <div className="flex items-center gap-1.5 sm:gap-2 bg-white/10 border border-white/20 rounded-full px-2 sm:px-3 py-1 max-w-[150px] sm:max-w-[220px]">
-                  <Linkedin className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-white/85 flex-shrink-0" />
-                  <a
-                    href={getFullUrl(primaryLinkedIn)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="font-medium text-white/85 truncate hover:text-white hover:underline text-xs"
-                  >
-                    {formatWebsiteUrl(primaryLinkedIn)}
-                  </a>
-                </div>
-              )}
-              {primaryEmail && (
-                <span className="rounded-full border border-white/15 bg-white/10 px-3 sm:px-4 py-1 font-medium text-white/80 text-xs truncate max-w-[200px]">
-                  {primaryEmail}
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-        <div className="w-full md:w-[240px] lg:w-[260px] flex flex-col items-center md:items-end gap-0.5 sm:gap-1 md:gap-2 text-white/80 md:ml-4 lg:ml-8">
-          <div className="hidden md:flex flex-row md:flex-col gap-1.5 md:gap-1 items-center md:items-end">
-            {(company.website || primaryEmail) && (
-              <p className="text-xs sm:text-sm font-semibold text-white/75 text-center md:text-right break-words flex-1 md:flex-none">
-                {company.website && (
-                  <a
-                    href={getFullUrl(company.website)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="text-white/85 hover:text-white hover:underline"
-                  >
-                    {formatWebsiteUrl(company.website)}
-                  </a>
-                )}
-                {company.website && primaryEmail && (
-                  <span className="mx-2 text-white/40">|</span>
-                )}
-                {primaryEmail && (
-                  <span className="text-white/70 break-all">
-                    {primaryEmail}
-                  </span>
-                )}
-              </p>
-            )}
-            {company.address && (
-              <p className="text-xs text-white/55 text-center md:text-right max-w-full md:max-w-[220px] flex-1 md:flex-none">
-                {company.address}
-              </p>
-            )}
-          </div>
+          )}
           <div className="flex flex-col sm:flex-row items-center md:items-center justify-end gap-0.5 sm:gap-1 w-full md:w-auto">
             <ActiveNavButton
               icon={Users}
@@ -495,23 +616,68 @@ const CompaniesList: FC<CompaniesListProps> = ({
             ? `Showing ${start}-${end} of ${totalCount} companies`
             : "No companies to display"}
         </p>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-white/60">Rows per page</span>
-          <Select
-            value={String(pageSize)}
-            onValueChange={(value) => onPageSizeChange?.(Number(value))}
-          >
-            <SelectTrigger className="h-8 w-[110px] rounded-full border border-white/20 bg-transparent text-white text-xs">
-              <SelectValue placeholder={`${pageSize}`} />
-            </SelectTrigger>
-            <SelectContent className="bg-[#1a1f1f] border border-white/10 text-white">
-              {pageSizeOptions.map((option) => (
-                <SelectItem key={option} value={String(option)}>
-                  {option} / page
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="flex items-center gap-3">
+          {position === "top" && onViewModeChange && (
+            <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-full p-1">
+              <Button
+                variant={viewMode === 'compact' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => onViewModeChange('compact')}
+                className={`h-7 px-3 rounded-full text-xs font-medium transition-all ${
+                  viewMode === 'compact'
+                    ? 'bg-primary text-white shadow-sm'
+                    : 'text-white/70 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                <Grid3X3 className="w-3 h-3 mr-1.5" />
+                Compact
+              </Button>
+              <Button
+                variant={viewMode === 'card' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => onViewModeChange('card')}
+                className={`h-7 px-3 rounded-full text-xs font-medium transition-all ${
+                  viewMode === 'card'
+                    ? 'bg-primary text-white shadow-sm'
+                    : 'text-white/70 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                <LayoutGrid className="w-3 h-3 mr-1.5" />
+                Card
+              </Button>
+              <Button
+                variant={viewMode === 'detailed' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => onViewModeChange('detailed')}
+                className={`h-7 px-3 rounded-full text-xs font-medium transition-all ${
+                  viewMode === 'detailed'
+                    ? 'bg-primary text-white shadow-sm'
+                    : 'text-white/70 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                <List className="w-3 h-3 mr-1.5" />
+                Detailed
+              </Button>
+            </div>
+          )}
+          <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-full p-1">
+            <span className="text-xs text-white/60 px-2">Rows per page</span>
+            <Select
+              value={String(pageSize)}
+              onValueChange={(value) => onPageSizeChange?.(Number(value))}
+            >
+              <SelectTrigger className="h-7 w-[100px] rounded-full border border-white/20 bg-transparent text-white text-xs">
+                <SelectValue placeholder={`${pageSize}`} />
+              </SelectTrigger>
+              <SelectContent className="bg-[#1a1f1f] border border-white/10 text-white">
+                {pageSizeOptions.map((option) => (
+                  <SelectItem key={option} value={String(option)}>
+                    {option} / page
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
     );
@@ -562,31 +728,64 @@ const CompaniesList: FC<CompaniesListProps> = ({
   }
 
   return (
-    <div className="flex flex-col pb-4">
+    <div className={`flex flex-col pb-4 ${viewMode === 'card' ? 'px-2' : ''}`}>
       {renderPageSizeSelector("top")}
-      <div className="space-y-4">
-        {loading
-          ? renderLoading()
-          : companies.length === 0
-          ? renderEmpty()
-          : displayedCompanies.map((company) => (
-              <div key={company._id}>
-                {renderCompanyCard(company)}
-                {/* Executives panel below the company card should not appear on desktop */}
-                {selectedCompanyId === company._id && (
-                  <div className="block lg:hidden mt-2 mb-2">
-                    <Card className="bg-[#1f3032] border-[#3A3A3A] p-3 sm:p-4">
-                      <CompanyExecutivesPanel
-                        company={selectedCompany}
-                        onViewAllLeads={onViewAllLeads || (() => {})}
-                        onExecutiveSelect={onExecutiveSelect}
-                      />
-                    </Card>
-                  </div>
-                )}
-              </div>
-            ))}
-      </div>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={viewMode}
+          className={viewMode === 'card' ? "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3" : "space-y-4"}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          transition={{
+            duration: 0.3,
+            ease: "easeInOut",
+            staggerChildren: 0.05,
+            delayChildren: 0.1,
+          }}
+          layout
+        >
+          <AnimatePresence mode="popLayout">
+            {loading
+              ? renderLoading()
+              : companies.length === 0
+              ? renderEmpty()
+              : displayedCompanies.map((company, index) => (
+                  <motion.div
+                    key={company._id}
+                    layout
+                    initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                    transition={{
+                      duration: 0.4,
+                      ease: "easeOut",
+                      delay: index * 0.03,
+                    }}
+                    whileHover={{
+                      scale: 1.02,
+                      transition: { duration: 0.2 },
+                    }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    {renderCompanyCard(company)}
+                    {/* Executives panel below the company card should not appear on desktop */}
+                    {selectedCompanyId === company._id && viewMode !== 'card' && (
+                      <div className="block lg:hidden mt-2 mb-2">
+                        <Card className="bg-[#1f3032] border-[#3A3A3A] p-3 sm:p-4">
+                          <CompanyExecutivesPanel
+                            company={selectedCompany}
+                            onViewAllLeads={onViewAllLeads || (() => {})}
+                            onExecutiveSelect={onExecutiveSelect}
+                          />
+                        </Card>
+                      </div>
+                    )}
+                  </motion.div>
+                ))}
+          </AnimatePresence>
+        </motion.div>
+      </AnimatePresence>
 
       {isMobile && companies.length > 2 && (
         <div className="flex flex-col items-center gap-2 pb-4">

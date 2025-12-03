@@ -2,6 +2,123 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 
+interface LeadsFiltersInlineProps {
+  // Location filter
+  locationFilter: string;
+  onLocationFilterChange: (value: string) => void;
+
+  // Position filter
+  positionFilter: string;
+  onPositionFilterChange: (value: string) => void;
+
+  // Checkbox filters
+  hasEmailFilter: boolean;
+  onHasEmailFilterChange: (checked: boolean) => void;
+  hasPhoneFilter: boolean;
+  onHasPhoneFilterChange: (checked: boolean) => void;
+  hasLinkedinFilter: boolean;
+  onHasLinkedinFilterChange: (checked: boolean) => void;
+
+  // Actions
+  hasFilters: boolean;
+  onResetFilters: () => void;
+}
+
+export const LeadsFiltersInline = ({
+  locationFilter,
+  onLocationFilterChange,
+  positionFilter,
+  onPositionFilterChange,
+  hasEmailFilter,
+  onHasEmailFilterChange,
+  hasPhoneFilter,
+  onHasPhoneFilterChange,
+  hasLinkedinFilter,
+  onHasLinkedinFilterChange,
+  hasFilters,
+  onResetFilters,
+}: LeadsFiltersInlineProps) => {
+  return (
+    <div className="flex items-center gap-3 flex-wrap">
+      {/* Location Filter */}
+      <div className="flex items-center gap-2">
+        <label className="text-[11px] uppercase tracking-[0.08em] text-gray-400 whitespace-nowrap">
+          Location:
+        </label>
+        <Input
+          type="text"
+          placeholder="City, state..."
+          value={locationFilter}
+          onChange={(e) => onLocationFilterChange(e.target.value)}
+          className="h-8 w-32 rounded-lg border border-white/15 bg-transparent text-white placeholder:text-gray-500 text-xs"
+        />
+      </div>
+
+      {/* Position Filter */}
+      <div className="flex items-center gap-2">
+        <label className="text-[11px] uppercase tracking-[0.08em] text-gray-400 whitespace-nowrap">
+          Title:
+        </label>
+        <Input
+          type="text"
+          placeholder="VP, CEO..."
+          value={positionFilter}
+          onChange={(e) => onPositionFilterChange(e.target.value)}
+          className="h-8 w-32 rounded-lg border border-white/15 bg-transparent text-white placeholder:text-gray-500 text-xs"
+        />
+      </div>
+
+      {/* Checkboxes */}
+      <div className="flex items-center gap-3">
+        <label className="flex items-center gap-1.5 cursor-pointer">
+          <Checkbox
+            checked={hasEmailFilter}
+            onCheckedChange={(checked) =>
+              onHasEmailFilterChange(Boolean(checked))
+            }
+            className="border-white/40 data-[state=checked]:bg-white data-[state=checked]:text-gray-900"
+          />
+          <span className="text-xs text-gray-300">Email</span>
+        </label>
+
+        <label className="flex items-center gap-1.5 cursor-pointer">
+          <Checkbox
+            checked={hasPhoneFilter}
+            onCheckedChange={(checked) =>
+              onHasPhoneFilterChange(Boolean(checked))
+            }
+            className="border-white/40 data-[state=checked]:bg-white data-[state=checked]:text-gray-900"
+          />
+          <span className="text-xs text-gray-300">Phone</span>
+        </label>
+
+        <label className="flex items-center gap-1.5 cursor-pointer">
+          <Checkbox
+            checked={hasLinkedinFilter}
+            onCheckedChange={(checked) =>
+              onHasLinkedinFilterChange(Boolean(checked))
+            }
+            className="border-white/40 data-[state=checked]:bg-white data-[state=checked]:text-gray-900"
+          />
+          <span className="text-xs text-gray-300">LinkedIn</span>
+        </label>
+      </div>
+
+      {/* Clear Filters Button */}
+      {hasFilters && (
+        <Button
+          size="sm"
+          variant="ghost"
+          className="text-gray-300 hover:text-white px-2 py-1 h-8 text-xs"
+          onClick={onResetFilters}
+        >
+          Clear
+        </Button>
+      )}
+    </div>
+  );
+};
+
 interface LeadsFiltersPanelProps {
   // Location filter
   locationFilter: string;

@@ -15,7 +15,7 @@ interface StatsCardsProps {
 
 export const StatsCards = ({ stats }: StatsCardsProps) => {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4 mb-3 sm:mb-4 md:mb-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 md:gap-4 mb-3 sm:mb-4 md:mb-6">
       {stats.map((stat) => (
         <div key={stat.title} className="relative flex-1 w-full">
           {/* Gradient glow behind card */}
@@ -33,17 +33,18 @@ export const StatsCards = ({ stats }: StatsCardsProps) => {
                 <p className="text-[10px] sm:text-[11px] text-gray-300 font-medium tracking-tight">
                   {stat.title}
                 </p>
-                <Button
+                {/* View All link - Hidden */}
+                {/* <Button
                   variant="link"
                   className="h-auto p-0 text-[10px] text-gray-400 hover:text-white transition-colors underline-offset-4 hover:underline"
                 >
                   <span className="hidden sm:inline">{stat.link}</span>
                   <ArrowRight className="w-2.5 h-2.5 sm:ml-1" />
-                </Button>
+                </Button> */}
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center flex-shrink-0">
-                  <stat.icon className="w-full h-full text-white" />
+                  <stat.icon className="w-full h-full text-[#66AFB7]" />
                 </div>
                 <p className="text-lg sm:text-xl font-bold text-white">
                   {stat.value}

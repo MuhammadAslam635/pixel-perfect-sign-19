@@ -1,11 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
 import { Company, CompanyPerson } from "@/services/companies.service";
 import { toast } from "sonner";
 import CompaniesList from "./components/CompaniesList";
@@ -17,6 +14,7 @@ import {
   SearchInput,
   FilterButton,
   CompanyFiltersPanel,
+  CompanyFiltersInline,
 } from "../shared/components";
 import { buildStats } from "../shared/hooks";
 
@@ -28,17 +26,27 @@ const COMPANY_EMPLOYEE_RANGES = [
   { value: "enterprise", label: "1000+ employees", min: 1000 },
 ];
 
+type ViewMode = 'compact' | 'detailed' | 'card';
+
 const index = () => {
   const navigate = useNavigate();
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(
     null
   );
   const [isMobileExecutivesView, setIsMobileExecutivesView] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('detailed');
 
   // Companies filters and pagination
   const [companiesPage, setCompaniesPage] = useState(1);
   const [companiesSearch, setCompaniesSearch] = useState("");
-  const [companiesLimit, setCompaniesLimit] = useState(10);
+  const [companiesLimit, setCompaniesLimit] = useState(viewMode === 'card' ? 25 : 10);
+
+  // Update limit when view mode changes
+  useEffect(() => {
+    setCompaniesLimit(viewMode === 'card' ? 25 : 10);
+    // Reset to page 1 when changing view mode
+    setCompaniesPage(1);
+  }, [viewMode]);
   const [companiesIndustryFilter, setCompaniesIndustryFilter] =
     useState<string>("all");
   const [companiesEmployeeRange, setCompaniesEmployeeRange] =
@@ -193,10 +201,25 @@ const index = () => {
 
   return (
     <DashboardLayout>
-      <main className="relative px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12 2xl:px-16 pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-6 sm:pb-8 flex flex-col gap-4 sm:gap-6 text-white min-h-screen overflow-x-hidden">
-        <div className="max-w-[1600px] mx-auto w-full min-h-0">
+      <motion.main
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="relative px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12 2xl:px-16 pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-6 sm:pb-8 flex flex-col gap-4 sm:gap-6 text-white min-h-screen overflow-x-hidden"
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+          className="max-w-[1600px] mx-auto w-full min-h-0"
+        >
           {/* Filters Bar */}
-          <div className="flex flex-col  justify-end sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2 md:gap-3 mb-3 sm:mb-4 md:mb-5">
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: "easeOut", delay: 0.4 }}
+            className="flex flex-col  justify-end sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2 md:gap-3 mb-3 sm:mb-4 md:mb-5"
+          >
             {/* Controls Container */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2 md:gap-3 order-1 lg:order-2">
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2 flex-1">
@@ -207,46 +230,81 @@ const index = () => {
                     onChange={setCompaniesSearch}
                   />
                   <div className="flex items-center gap-2">
-                    <Popover
-                      open={companyFiltersOpen}
-                      onOpenChange={setCompanyFiltersOpen}
-                    >
-                      <PopoverTrigger asChild>
-                        <FilterButton
-                          hasFilters={hasCompanyAdvancedFilters}
-                          onClick={() => setCompanyFiltersOpen(true)}
-                        />
-                      </PopoverTrigger>
-                      <PopoverContent
-                        align="end"
-                        className="w-80 bg-[#121212] border border-white/10 rounded-2xl shadow-2xl p-4"
-                      >
-                        <CompanyFiltersPanel
-                          industries={industryOptions}
-                          industryFilter={companiesIndustryFilter}
-                          onIndustryFilterChange={setCompaniesIndustryFilter}
-                          employeeRanges={COMPANY_EMPLOYEE_RANGES}
-                          employeeRange={companiesEmployeeRange}
-                          onEmployeeRangeChange={setCompaniesEmployeeRange}
-                          locationFilter={companiesLocationFilter}
-                          onLocationFilterChange={setCompaniesLocationFilter}
-                          hasPeopleFilter={companiesHasPeopleFilter}
-                          onHasPeopleFilterChange={setCompaniesHasPeopleFilter}
-                          hasWebsiteFilter={companiesHasWebsiteFilter}
-                          onHasWebsiteFilterChange={
-                            setCompaniesHasWebsiteFilter
-                          }
-                          hasFilters={hasCompanyAdvancedFilters}
-                          onResetFilters={resetCompanyAdvancedFilters}
-                          onClose={() => setCompanyFiltersOpen(false)}
-                        />
-                      </PopoverContent>
-                    </Popover>
+                    <AnimatePresence mode="wait">
+                      {!companyFiltersOpen ? (
+                        <motion.div
+                          key="filter-button"
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.95 }}
+                          transition={{ duration: 0.15 }}
+                        >
+                          <FilterButton
+                            hasFilters={hasCompanyAdvancedFilters}
+                            onClick={() => setCompanyFiltersOpen(true)}
+                          />
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          key="filters-inline"
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          transition={{ duration: 0.2, ease: "easeOut" }}
+                          className="flex items-center gap-2"
+                        >
+                          <CompanyFiltersInline
+                            industries={industryOptions}
+                            industryFilter={companiesIndustryFilter}
+                            onIndustryFilterChange={setCompaniesIndustryFilter}
+                            employeeRanges={COMPANY_EMPLOYEE_RANGES}
+                            employeeRange={companiesEmployeeRange}
+                            onEmployeeRangeChange={setCompaniesEmployeeRange}
+                            locationFilter={companiesLocationFilter}
+                            onLocationFilterChange={setCompaniesLocationFilter}
+                            hasPeopleFilter={companiesHasPeopleFilter}
+                            onHasPeopleFilterChange={setCompaniesHasPeopleFilter}
+                            hasWebsiteFilter={companiesHasWebsiteFilter}
+                            onHasWebsiteFilterChange={
+                              setCompaniesHasWebsiteFilter
+                            }
+                            hasFilters={hasCompanyAdvancedFilters}
+                            onResetFilters={resetCompanyAdvancedFilters}
+                          />
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: 0.1, duration: 0.15 }}
+                          >
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-8 w-8 p-0 text-gray-400 hover:text-white hover:bg-white/10 rounded-full flex items-center justify-center"
+                              onClick={() => setCompanyFiltersOpen(false)}
+                            >
+                              <svg
+                                className="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M6 18L18 6M6 6l12 12"
+                                />
+                              </svg>
+                            </Button>
+                          </motion.div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Stats Cards */}
           <StatsCards stats={stats} />
@@ -276,6 +334,8 @@ const index = () => {
                 onMobileExecutivesViewChange={setIsMobileExecutivesView}
                 pageSize={companiesLimit}
                 onPageSizeChange={setCompaniesLimit}
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
               />
             </div>
           </div>
@@ -288,8 +348,8 @@ const index = () => {
             onExecutiveSelect={handleExecutiveSelect}
           />
 
-        </div>
-      </main>
+        </motion.div>
+      </motion.main>
     </DashboardLayout>
   );
 };
