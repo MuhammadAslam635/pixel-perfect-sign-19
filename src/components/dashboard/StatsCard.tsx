@@ -1,10 +1,14 @@
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
-import { dashboardService, CampaignsStatistics } from "@/services/dashboard.service";
+import {
+  dashboardService,
+  CampaignsStatistics,
+} from "@/services/dashboard.service";
 import { LeadsChart } from "./LeadsChart";
 
 const StatsCard = () => {
-  const [campaignsStats, setCampaignsStats] = useState<CampaignsStatistics | null>(null);
+  const [campaignsStats, setCampaignsStats] =
+    useState<CampaignsStatistics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -16,7 +20,9 @@ const StatsCard = () => {
         const response = await dashboardService.getCampaignsStatistics();
         setCampaignsStats(response.data);
       } catch (err: any) {
-        setError(err?.response?.data?.message || "Failed to load campaigns stats");
+        setError(
+          err?.response?.data?.message || "Failed to load campaigns stats"
+        );
         console.error("Error fetching campaigns stats:", err);
       } finally {
         setLoading(false);
@@ -44,14 +50,20 @@ const StatsCard = () => {
               >
                 {campaignsStats && campaignsStats.dailyCounts.length > 1
                   ? (() => {
-                      const recent = campaignsStats.dailyCounts.slice(-7).reduce((sum, day) => sum + day.count, 0);
-                      const previous = campaignsStats.dailyCounts.slice(-14, -7).reduce((sum, day) => sum + day.count, 0);
-                      const changeValue = previous > 0 ? ((recent - previous) / previous * 100) : 0;
+                      const recent = campaignsStats.dailyCounts
+                        .slice(-7)
+                        .reduce((sum, day) => sum + day.count, 0);
+                      const previous = campaignsStats.dailyCounts
+                        .slice(-14, -7)
+                        .reduce((sum, day) => sum + day.count, 0);
+                      const changeValue =
+                        previous > 0
+                          ? ((recent - previous) / previous) * 100
+                          : 0;
                       const change = changeValue.toFixed(1);
-                      return `${changeValue > 0 ? '+' : ''}${change}%`;
+                      return `${changeValue > 0 ? "+" : ""}${change}%`;
                     })()
-                  : '+0%'
-                }
+                  : "+0%"}
               </span>
             )}
           </div>
@@ -62,8 +74,8 @@ const StatsCard = () => {
           ) : error ? (
             <p className="text-sm text-red-400 mt-4">{error}</p>
           ) : (
-            <p className="text-[15px] sm:text-4xl md:text-5xl font-normal tracking-tight text-white mt-2 sm:mt-6 md:mt-32">
-              {campaignsStats?.totalCampaigns.toLocaleString() || '0'}
+            <p className="text-[15px] sm:text-4xl md:text-5xl font-normal tracking-tight text-white mt-2 sm:mt-6 md:mt-12">
+              {campaignsStats?.totalCampaigns.toLocaleString() || "0"}
             </p>
           )}
         </div>

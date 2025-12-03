@@ -144,7 +144,6 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
           <Plus size={14} />
         </div>
       </div>
-
       {/* Render Chat List or Chat Interface */}
       {showChatList ? (
         <ChatHistoryList
