@@ -591,7 +591,9 @@ const CampaignsPage = () => {
                     <div className="text-base sm:text-lg font-bold text-white mb-0.5">
                       845K
                     </div>
-                    <div className="text-[10px] text-gray-500 mb-0.5">Reach</div>
+                    <div className="text-[10px] text-gray-500 mb-0.5">
+                      Reach
+                    </div>
                     <div className="text-[10px] font-medium text-green-500">
                       ↑ 8%
                     </div>
@@ -600,8 +602,12 @@ const CampaignsPage = () => {
                     <div className="text-base sm:text-lg font-bold text-white mb-0.5">
                       32.5K
                     </div>
-                    <div className="text-[10px] text-gray-500 mb-0.5">Clicks</div>
-                    <div className="text-[10px] font-medium text-red-500">↓ 3%</div>
+                    <div className="text-[10px] text-gray-500 mb-0.5">
+                      Clicks
+                    </div>
+                    <div className="text-[10px] font-medium text-red-500">
+                      ↓ 3%
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -716,7 +722,9 @@ const CampaignsPage = () => {
                     <div className="text-base sm:text-lg font-bold text-white mb-0.5">
                       765K
                     </div>
-                    <div className="text-[10px] text-gray-500 mb-0.5">Reach</div>
+                    <div className="text-[10px] text-gray-500 mb-0.5">
+                      Reach
+                    </div>
                     <div className="text-[10px] font-medium text-green-500">
                       ↑ 10%
                     </div>
@@ -725,8 +733,12 @@ const CampaignsPage = () => {
                     <div className="text-base sm:text-lg font-bold text-white mb-0.5">
                       28.3K
                     </div>
-                    <div className="text-[10px] text-gray-500 mb-0.5">Clicks</div>
-                    <div className="text-[10px] font-medium text-red-500">↓ 2%</div>
+                    <div className="text-[10px] text-gray-500 mb-0.5">
+                      Clicks
+                    </div>
+                    <div className="text-[10px] font-medium text-red-500">
+                      ↓ 2%
+                    </div>
                   </div>
                 </div>
               </CardContent>
