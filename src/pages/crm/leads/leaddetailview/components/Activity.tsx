@@ -370,12 +370,39 @@ const Activity: FC<ActivityProps> = ({
   }, [selectedCallLogView]);
 
   // Load recording audio URL when recording view is selected
-  const loadRecordingAudio = useCallback(async (logId: string) => {
+  const loadRecordingAudio = useCallback(async (view: SelectedCallLogView) => {
+    const log = view?.log as any;
+    if (!log?._id) {
+      setRecordingError("Recording not available for this call.");
+      return;
+    }
+
     setRecordingAudioUrl(null);
     setRecordingError(null);
     try {
       setRecordingLoading(true);
-      const response = await API.get(`/twilio/calls/${logId}/recording`, {
+      const recordingUrl =
+        log.elevenlabsRecordingUrl || log.recordingUrl || null;
+
+      // If we have an inline ElevenLabs data: URL, use it directly
+      if (
+        typeof recordingUrl === "string" &&
+        recordingUrl.startsWith("data:audio/")
+      ) {
+        setRecordingAudioUrl(recordingUrl);
+        return;
+      }
+
+      const isElevenLabsCall =
+        !!log.elevenlabsCallId ||
+        !!log.elevenlabsRecordingUrl ||
+        log.metadata?.provider === "elevenlabs";
+
+      const endpoint = isElevenLabsCall
+        ? `/elevenlabs/calls/${log._id}/recording`
+        : `/twilio/calls/${log._id}/recording`;
+
+      const response = await API.get(endpoint, {
         responseType: "blob",
       });
       const blob = response.data as Blob;
@@ -399,7 +426,7 @@ const Activity: FC<ActivityProps> = ({
       selectedCallLogView?.type === "recording" &&
       selectedCallLogView.log._id
     ) {
-      loadRecordingAudio(selectedCallLogView.log._id);
+      loadRecordingAudio(selectedCallLogView);
     }
   }, [selectedCallLogView, loadRecordingAudio]);
 

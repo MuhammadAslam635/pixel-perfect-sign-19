@@ -97,6 +97,11 @@ export interface LeadCallLog {
   followupTemplateId?: string | null;
   followupSuggestionSummary?: string | null;
   followupSuggestionMetadata?: Record<string, any>;
+  // ElevenLabs-specific fields
+  elevenlabsCallId?: string | null;
+  elevenlabsRecordingUrl?: string | null;
+  elevenlabsTranscript?: string | null;
+  elevenlabsMetadata?: Record<string, any>;
   createdAt: string;
   updatedAt: string;
 }
@@ -218,6 +223,50 @@ export const twilioService = {
   ): Promise<{ success: boolean; data: LeadCallLog }> => {
     try {
       const response = await API.post("/twilio/calls", payload);
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+};
+
+/**
+ * ElevenLabs AI calling service
+ */
+export interface InitiateAICallResponse {
+  success: boolean;
+  message: string;
+  data: {
+    callId: string;
+    callLogId: string;
+    status: string;
+  };
+}
+
+export const elevenlabsService = {
+  /**
+   * Initiate an AI call via ElevenLabs
+   */
+  initiateAICall: async (
+    leadId: string
+  ): Promise<InitiateAICallResponse> => {
+    try {
+      const response = await API.post<InitiateAICallResponse>(
+        "/elevenlabs/calls",
+        { leadId }
+      );
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  /**
+   * Get call details from ElevenLabs
+   */
+  getCallDetails: async (callId: string): Promise<any> => {
+    try {
+      const response = await API.get(`/elevenlabs/calls/${callId}`);
       return response.data;
     } catch (error: any) {
       throw error;

@@ -8,6 +8,7 @@ import {
   LeadCallLog,
   LeadCallStatus,
   CreateLeadCallLogPayload,
+  elevenlabsService,
 } from "@/services/twilio.service";
 import API from "@/utils/api";
 import { SelectedCallLogView } from "../index";
@@ -20,6 +21,7 @@ type CallViewProps = {
   autoStart?: boolean;
   selectedCallLogView: SelectedCallLogView;
   setSelectedCallLogView: (view: SelectedCallLogView) => void;
+  mode?: "call" | "ai";
 };
 
 export const CallView = ({
@@ -30,6 +32,7 @@ export const CallView = ({
   autoStart = false,
   selectedCallLogView,
   setSelectedCallLogView,
+  mode = "call",
 }: CallViewProps) => {
   const [volumeLevel, setVolumeLevel] = useState(0);
   const [waveformData, setWaveformData] = useState<number[]>([]);
@@ -45,6 +48,7 @@ export const CallView = ({
   const [callPhase, setCallPhase] = useState<
     "idle" | "ringing" | "incoming" | "connected"
   >("idle");
+  const [aiCallLoading, setAiCallLoading] = useState(false);
   const [callLogs, setCallLogs] = useState<LeadCallLog[]>([]);
   const [callLogsLoading, setCallLogsLoading] = useState(false);
   const [callLogsError, setCallLogsError] = useState<string | null>(null);
@@ -130,32 +134,9 @@ export const CallView = ({
   const handleRecordingView = useCallback(
     async (log: LeadCallLog) => {
       setSelectedCallLogView({ type: "recording", log });
-      setRecordingAudioUrl(null);
-      setRecordingError(null);
-
-      if (!log._id) {
-        setRecordingError("Recording not available for this call.");
-        return;
-      }
-
-      try {
-        setRecordingLoading(true);
-        const response = await API.get(`/twilio/calls/${log._id}/recording`, {
-          responseType: "blob",
-        });
-        const blob = response.data as Blob;
-        const url = URL.createObjectURL(blob);
-        setRecordingAudioUrl(url);
-      } catch (err: any) {
-        console.error("Failed to load call recording", err);
-        setRecordingError(
-          err?.response?.data?.error ||
-            err?.message ||
-            "Unable to load call recording."
-        );
-      } finally {
-        setRecordingLoading(false);
-      }
+      // All actual audio fetching is handled in the Activity summary view,
+      // which listens to selectedCallLogView changes and chooses the correct
+      // provider-specific endpoint. We keep this handler as a pure selector.
     },
     [setSelectedCallLogView]
   );
@@ -621,6 +602,41 @@ export const CallView = ({
     }
   }, [callPhase]);
 
+  const handleAICall = useCallback(async () => {
+    if (!lead?._id) {
+      setError("Lead ID is missing");
+      return;
+    }
+
+    if (aiCallLoading) {
+      return;
+    }
+
+    try {
+      setAiCallLoading(true);
+      setError(null);
+      setCallStatus("Initiating AI call...");
+
+      const result = await elevenlabsService.initiateAICall(lead._id);
+
+      setCallStatus("AI call initiated successfully");
+      
+      // Refresh call logs after a short delay to show the new call
+      setTimeout(() => {
+        handleRefreshCallLogs();
+      }, 2000);
+    } catch (callError: any) {
+      const errorMessage =
+        callError?.response?.data?.error ||
+        callError?.message ||
+        "Failed to initiate AI call";
+      setError(errorMessage);
+      setCallStatus(errorMessage);
+    } finally {
+      setAiCallLoading(false);
+    }
+  }, [lead?._id, aiCallLoading]);
+
   const handleDeclineIncoming = useCallback(() => {
     if (callPhase !== "incoming") {
       return;
@@ -735,33 +751,24 @@ export const CallView = ({
 
   return (
     <div className="flex flex-1 w-full flex-col items-center justify-start text-white/80 text-center gap-6 pt-6 pb-10 max-h-[calc(100vh-480px)] overflow-y-auto scrollbar-hide">
-      <div className="flex flex-col items-center gap-4">
-        {/* <div
-          className="flex items-center justify-center rounded-full blur-3xl transition-opacity duration-200"
-          style={{
-            opacity: glowOpacity,
-            width: "260px",
-            height: "260px",
-            background:
-              "radial-gradient(circle, rgba(66,247,255,0.55) 0%, rgba(9,11,27,0) 70%)",
-          }}
-        ></div> */}
-        <div className="flex items-center justify-center py-5">
-          <div
-            className="flex items-center justify-center rounded-full transition-all"
-            style={{
-              width: "300px",
-              height: "300px",
-              position: "relative",
-              transform: `scale(${circleScale})`,
-              transition: "transform 120ms ease-out",
-            }}
-          >
-            {/* Sphere with gradient edges to transparent center */}
+      {mode === "call" && (
+        <div className="flex flex-col items-center gap-4">
+          <div className="flex items-center justify-center py-5">
             <div
-              className="absolute inset-0 rounded-full"
+              className="flex items-center justify-center rounded-full transition-all"
               style={{
-                background: `
+                width: "300px",
+                height: "300px",
+                position: "relative",
+                transform: `scale(${circleScale})`,
+                transition: "transform 120ms ease-out",
+              }}
+            >
+              {/* Sphere with gradient edges to transparent center */}
+              <div
+                className="absolute inset-0 rounded-full"
+                style={{
+                  background: `
                   radial-gradient(circle at center, 
                     transparent 0%, 
                     transparent 55%, 
@@ -769,52 +776,51 @@ export const CallView = ({
                     rgba(66, 247, 255, 0.55) 70%
                   )
                 `,
-                // opacity: 0.7 + volumeLevel * 0.25,
-                filter: "blur(0.5px)",
-              }}
-            />
-            {/* Inner button */}
-            <div
-              role="button"
-              tabIndex={0}
-              onClick={() => {
-                if (!twilioReady || primaryActionDisabled) {
-                  return;
-                }
-                if (callPhase === "idle") {
-                  handleCall();
-                } else if (callPhase === "incoming") {
-                  handleAnswerIncoming();
-                } else if (callPhase === "connected") {
-                  handleHangUp();
-                }
-              }}
-              onKeyDown={(event) => {
-                if (event.key !== "Enter" && event.key !== " ") {
-                  return;
-                }
-                event.preventDefault();
-                if (callPhase === "idle") {
-                  handleCall();
-                } else if (callPhase === "incoming") {
-                  handleAnswerIncoming();
-                } else if (callPhase === "connected") {
-                  handleHangUp();
-                }
-              }}
-              className={`flex items-center justify-center rounded-full transition-colors relative z-10 ${
-                !twilioReady
-                  ? "cursor-not-allowed opacity-60"
-                  : callPhase === "idle"
-                  ? "cursor-pointer hover:border-cyan-300/60"
-                  : callPhase === "connected"
-                  ? "cursor-pointer border-cyan-300/80"
-                  : "cursor-not-allowed"
-              }`}
-              style={{
-                width: "300px",
-                height: "300px",
-                background: `
+                  filter: "blur(0.5px)",
+                }}
+              />
+              {/* Inner button */}
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => {
+                  if (!twilioReady || primaryActionDisabled) {
+                    return;
+                  }
+                  if (callPhase === "idle") {
+                    handleCall();
+                  } else if (callPhase === "incoming") {
+                    handleAnswerIncoming();
+                  } else if (callPhase === "connected") {
+                    handleHangUp();
+                  }
+                }}
+                onKeyDown={(event) => {
+                  if (event.key !== "Enter" && event.key !== " ") {
+                    return;
+                  }
+                  event.preventDefault();
+                  if (callPhase === "idle") {
+                    handleCall();
+                  } else if (callPhase === "incoming") {
+                    handleAnswerIncoming();
+                  } else if (callPhase === "connected") {
+                    handleHangUp();
+                  }
+                }}
+                className={`flex items-center justify-center rounded-full transition-colors relative z-10 ${
+                  !twilioReady
+                    ? "cursor-not-allowed opacity-60"
+                    : callPhase === "idle"
+                    ? "cursor-pointer hover:border-cyan-300/60"
+                    : callPhase === "connected"
+                    ? "cursor-pointer border-cyan-300/80"
+                    : "cursor-not-allowed"
+                }`}
+                style={{
+                  width: "300px",
+                  height: "300px",
+                  background: `
                   radial-gradient(circle at center, 
                     transparent 0%, 
                     transparent 30%, 
@@ -829,20 +835,18 @@ export const CallView = ({
                     rgba(66, 247, 255, 1) 100%
                   )
                 `,
-                border: "1px solid rgba(66, 247, 255, 0.55)",
-                // to add glow shadow
-                // 0 0 ${35 + volumeLevel * 80}px rgba(66, 247, 255, 0.35),
-                boxShadow: `
+                  border: "1px solid rgba(66, 247, 255, 0.55)",
+                  boxShadow: `
                   inset 0 0 10px rgba(66, 247, 255, 0.08)
                 `,
-                transition: "box-shadow 120ms ease-out",
-              }}
-            >
-              {/* White gradient overlay - small spread */}
-              <div
-                className="absolute inset-0 rounded-full pointer-events-none"
-                style={{
-                  background: `
+                  transition: "box-shadow 120ms ease-out",
+                }}
+              >
+                {/* White gradient overlay - small spread */}
+                <div
+                  className="absolute inset-0 rounded-full pointer-events-none"
+                  style={{
+                    background: `
                     radial-gradient(circle at center, 
                       rgba(255, 255, 255, 0.12) 0%, 
                       rgba(255, 255, 255, 0.08) 25%, 
@@ -852,128 +856,129 @@ export const CallView = ({
                       transparent 65%
                     )
                   `,
-                  zIndex: 1,
-                }}
-              />
-              {/* <span className="text-white/80 text-sm tracking-wide uppercase relative z-20">
-                {callPhase === "connected"
-                  ? "On call"
-                  : callPhase === "ringing"
-                  ? "Ringing..."
-                  : "Make a call"}
-              </span> */}
-            </div>
-            {/* Waveform visualization - line wave spread across and beyond circle edges */}
-            {isListening && waveformData.length > 0 && (
-              <div
-                className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 pointer-events-none"
-                style={{
-                  width: "380px",
-                  height: "200px",
-                  zIndex: 30,
-                }}
-              >
-                <svg
-                  width="100%"
-                  height="100%"
-                  viewBox="0 0 380 200"
-                  preserveAspectRatio="none"
-                  style={{ overflow: "visible" }}
-                >
-                  <defs>
-                    <linearGradient
-                      id="waveformFade"
-                      x1="0%"
-                      y1="0%"
-                      x2="100%"
-                      y2="0%"
-                    >
-                      <stop offset="0%" stopColor="white" stopOpacity="0" />
-                      <stop offset="15%" stopColor="white" stopOpacity="1" />
-                      <stop offset="85%" stopColor="white" stopOpacity="1" />
-                      <stop offset="100%" stopColor="white" stopOpacity="0" />
-                    </linearGradient>
-                    <mask id="waveformMask">
-                      <rect
-                        width="100%"
-                        height="100%"
-                        fill="url(#waveformFade)"
-                      />
-                    </mask>
-                  </defs>
-                  <path
-                    d={(() => {
-                      if (waveformData.length < 2) return "";
-                      const centerY = 100;
-                      const amplitude = 155; // Maximum amplitude for biggest, most visible waves
-
-                      // Create points array
-                      const points = waveformData.map((value, index) => {
-                        const x = (index / (waveformData.length - 1)) * 380;
-                        const y = centerY - value * amplitude;
-                        return { x, y };
-                      });
-
-                      // Start path with first point
-                      let path = `M ${points[0].x} ${points[0].y}`;
-
-                      // Use cubic bezier curves for smooth interpolation
-                      for (let i = 0; i < points.length - 1; i++) {
-                        const p0 = i > 0 ? points[i - 1] : points[i];
-                        const p1 = points[i];
-                        const p2 = points[i + 1];
-                        const p3 =
-                          i < points.length - 2 ? points[i + 2] : points[i + 1];
-
-                        // Calculate control points for smooth cubic bezier
-                        const cp1x = p1.x + (p2.x - p0.x) / 6;
-                        const cp1y = p1.y + (p2.y - p0.y) / 6;
-                        const cp2x = p2.x - (p3.x - p1.x) / 6;
-                        const cp2y = p2.y - (p3.y - p1.y) / 6;
-
-                        // Use cubic bezier curve for smooth path
-                        path += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
-                      }
-
-                      return path;
-                    })()}
-                    fill="none"
-                    stroke="rgba(66, 247, 255, 0.9)"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    mask="url(#waveformMask)"
-                  />
-                </svg>
+                    zIndex: 1,
+                  }}
+                />
               </div>
-            )}
+              {/* Waveform visualization */}
+              {isListening && waveformData.length > 0 && (
+                <div
+                  className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 pointer-events-none"
+                  style={{
+                    width: "380px",
+                    height: "200px",
+                    zIndex: 30,
+                  }}
+                >
+                  <svg
+                    width="100%"
+                    height="100%"
+                    viewBox="0 0 380 200"
+                    preserveAspectRatio="none"
+                    style={{ overflow: "visible" }}
+                  >
+                    <defs>
+                      <linearGradient
+                        id="waveformFade"
+                        x1="0%"
+                        y1="0%"
+                        x2="100%"
+                        y2="0%"
+                      >
+                        <stop offset="0%" stopColor="white" stopOpacity="0" />
+                        <stop offset="15%" stopColor="white" stopOpacity="1" />
+                        <stop offset="85%" stopColor="white" stopOpacity="1" />
+                        <stop offset="100%" stopColor="white" stopOpacity="0" />
+                      </linearGradient>
+                      <mask id="waveformMask">
+                        <rect
+                          width="100%"
+                          height="100%"
+                          fill="url(#waveformFade)"
+                        />
+                      </mask>
+                    </defs>
+                    <path
+                      d={(() => {
+                        if (waveformData.length < 2) return "";
+                        const centerY = 100;
+                        const amplitude = 155;
+                        const points = waveformData.map((value, index) => {
+                          const x =
+                            (index / (waveformData.length - 1)) * 380;
+                          const y = centerY - value * amplitude;
+                          return { x, y };
+                        });
+                        let path = `M ${points[0].x} ${points[0].y}`;
+                        for (let i = 0; i < points.length - 1; i++) {
+                          const p0 = i > 0 ? points[i - 1] : points[i];
+                          const p1 = points[i];
+                          const p2 = points[i + 1];
+                          const p3 =
+                            i < points.length - 2
+                              ? points[i + 2]
+                              : points[i + 1];
+                          const cp1x = p1.x + (p2.x - p0.x) / 6;
+                          const cp1y = p1.y + (p2.y - p0.y) / 6;
+                          const cp2x = p2.x - (p3.x - p1.x) / 6;
+                          const cp2y = p2.y - (p3.y - p1.y) / 6;
+                          path += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
+                        }
+                        return path;
+                      })()}
+                      fill="none"
+                      stroke="rgba(66, 247, 255, 0.9)"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      mask="url(#waveformMask)"
+                    />
+                  </svg>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       <div className="flex flex-col items-center gap-3">
-        <Button
-          type="button"
-          onClick={
-            callPhase === "connected"
-              ? handleHangUp
-              : callPhase === "incoming"
-              ? handleAnswerIncoming
-              : callPhase === "idle" && twilioReady
-              ? handleCall
-              : undefined
-          }
-          disabled={primaryActionDisabled}
-          className="px-6 py-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 text-sm font-semibold text-white shadow-lg shadow-blue-900/40 hover:opacity-90 transition disabled:opacity-60 disabled:cursor-not-allowed"
-        >
-          {callPhase === "connected"
-            ? "End call"
-            : callPhase === "ringing"
-            ? "Ringing..."
-            : callPhase === "incoming"
-            ? "Answer call"
-            : "Make a call"}
-        </Button>
+        <div className="flex items-center gap-3">
+          {mode === "call" && (
+            <Button
+              type="button"
+              onClick={
+                callPhase === "connected"
+                  ? handleHangUp
+                  : callPhase === "incoming"
+                  ? handleAnswerIncoming
+                  : callPhase === "idle" && twilioReady
+                  ? handleCall
+                  : undefined
+              }
+              disabled={primaryActionDisabled}
+              className="px-6 py-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 text-sm font-semibold text-white shadow-lg shadow-blue-900/40 hover:opacity-90 transition disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {callPhase === "connected"
+                ? "End call"
+                : callPhase === "ringing"
+                ? "Ringing..."
+                : callPhase === "incoming"
+                ? "Answer call"
+                : "Make a call"}
+            </Button>
+          )}
+
+          {mode === "ai" && lead?._id && (
+            <Button
+              type="button"
+              onClick={handleAICall}
+              disabled={aiCallLoading}
+              className="px-6 py-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-600 text-sm font-semibold text-white shadow-lg shadow-purple-900/40 hover:opacity-90 transition disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {aiCallLoading ? "Initiating..." : "AI Call"}
+            </Button>
+          )}
+        </div>
 
         <p className="text-sm text-white/70">{callStatus}</p>
 
@@ -1026,7 +1031,7 @@ export const CallView = ({
 
         <div className="rounded-[24px] border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden shadow-[0_35px_120px_rgba(7,6,19,0.55)]">
           <div className="overflow-x-auto scrollbar-thin">
-            <div className="min-w-full">
+              <div className="min-w-full">
               <div className="grid grid-cols-9 gap-2 px-4 py-3 text-[0.6rem] font-semibold uppercase tracking-[0.22em] text-white/50">
                 <span>Caller</span>
                 <span>Date</span>
@@ -1044,14 +1049,37 @@ export const CallView = ({
                   <div className="px-4 py-6 text-center text-xs text-white/70">
                     Loading call logs...
                   </div>
-                ) : callLogs.length === 0 ? (
+                ) : (() => {
+                    // Classify calls by provider so that:
+                    // - Twilio calls appear under the "Call" tab
+                    // - ElevenLabs AI calls appear under the "AI Call" tab
+                    const filteredLogs = callLogs.filter((log) => {
+                      const isElevenLabsCall =
+                        !!log.elevenlabsCallId ||
+                        !!log.elevenlabsRecordingUrl ||
+                        log.metadata?.provider === "elevenlabs";
+
+                      if (mode === "ai") {
+                        return isElevenLabsCall;
+                      }
+
+                      // Default "call" mode: show non-ElevenLabs (Twilio) calls
+                      return !isElevenLabsCall;
+                    });
+
+                    if (filteredLogs.length === 0) {
+                      return (
                   <div className="px-4 py-6 text-center text-xs text-white/60">
-                    {leadId
-                      ? "No calls have been logged yet."
-                      : "Select a lead to view call logs."}
+                          {leadId
+                            ? mode === "ai"
+                              ? "No AI calls have been logged yet."
+                              : "No calls have been logged yet."
+                            : "Select a lead to view call logs."}
                   </div>
-                ) : (
-                  callLogs.map((log) => {
+                      );
+                    }
+
+                    return filteredLogs.map((log) => {
                     const rawScoreStatus =
                       log.leadSuccessScoreStatus || "not-requested";
                     const rawFollowupStatus =
@@ -1059,11 +1087,18 @@ export const CallView = ({
 
                     // If there's no recording/transcription path, don't show
                     // endless "Processing…" – treat as not available.
+                    // Check both Twilio and ElevenLabs sources
                     const hasRecordingOrTranscript =
                       !!log.recordingUrl ||
+                      !!log.elevenlabsRecordingUrl ||
                       !!log.transcriptionText ||
+                      !!log.elevenlabsTranscript ||
                       (log.transcriptionStatus &&
                         log.transcriptionStatus !== "not-requested");
+                    
+                    // Use ElevenLabs recording/transcript if available, otherwise fall back to Twilio
+                    const recordingUrl = log.elevenlabsRecordingUrl || log.recordingUrl;
+                    const transcriptText = log.elevenlabsTranscript || log.transcriptionText;
 
                     const scoreStatus =
                       rawScoreStatus === "pending" && !hasRecordingOrTranscript
@@ -1181,7 +1216,7 @@ export const CallView = ({
 
                         {/* Recording */}
                         <div className="flex flex-col items-center justify-center pb-3">
-                          {log.recordingUrl || log.callSid ? (
+                          {recordingUrl || log.callSid || log.elevenlabsCallId ? (
                             <Button
                               type="button"
                               variant="outline"
@@ -1202,8 +1237,8 @@ export const CallView = ({
 
                         {/* Transcription */}
                         <div className="flex flex-col gap-1 pr-3 items-center">
-                          {log.transcriptionStatus === "completed" &&
-                          log.transcriptionText ? (
+                          {(log.transcriptionStatus === "completed" && transcriptText) ||
+                          (log.elevenlabsTranscript && transcriptText) ? (
                             <Button
                               type="button"
                               variant="outline"
@@ -1260,8 +1295,8 @@ export const CallView = ({
                         </div>
                       </div>
                     );
-                  })
-                )}
+                  });
+                  })()}
               </div>
             </div>
           </div>
