@@ -193,7 +193,7 @@ const index = () => {
 
   return (
     <DashboardLayout>
-      <main className="relative px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12 2xl:px-16 pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-6 sm:pb-8 flex flex-col gap-4 sm:gap-6 text-white min-h-0 overflow-y-auto scrollbar-hide">
+      <main className="relative px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12 2xl:px-16 pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-6 sm:pb-8 flex flex-col gap-4 sm:gap-6 text-white min-h-screen overflow-x-hidden">
         <div className="max-w-[1600px] mx-auto w-full min-h-0">
           {/* Filters Bar */}
           <div className="flex flex-col  justify-end sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2 md:gap-3 mb-3 sm:mb-4 md:mb-5">
@@ -252,13 +252,12 @@ const index = () => {
           <StatsCards stats={stats} />
 
           {/* Split View */}
-          <div
-            className={`flex flex-col lg:flex-row items-start ${
-              isSidebarOpen ? "gap-2 sm:gap-3 md:gap-4 lg:gap-6" : ""
-            }`}
-          >
+          <div className="flex flex-col lg:flex-row items-start gap-2 sm:gap-3 md:gap-4 lg:gap-6">
             {/* Left: Companies List */}
-            <div className="relative pt-3 sm:pt-4 px-3 sm:px-6 rounded-xl sm:rounded-[30px] w-full border-0 sm:border sm:border-white/10 bg-transparent sm:bg-[linear-gradient(173.83deg,_rgba(255,255,255,0.08)_4.82%,_rgba(255,255,255,0)_38.08%,_rgba(255,255,255,0)_56.68%,_rgba(255,255,255,0.02)_95.1%)]">
+            <div
+              className={`relative pt-3 sm:pt-4 px-3 sm:px-6 rounded-xl sm:rounded-[30px] w-full border-0 sm:border sm:border-white/10 bg-transparent sm:bg-[linear-gradient(173.83deg,_rgba(255,255,255,0.08)_4.82%,_rgba(255,255,255,0)_38.08%,_rgba(255,255,255,0)_56.68%,_rgba(255,255,255,0.02)_95.1%)] ${isSidebarOpen ? "lg:mr-[360px] xl:mr-[420px]" : ""
+                }`}
+            >
               <CompaniesList
                 companies={companies}
                 loading={loading}
@@ -272,24 +271,23 @@ const index = () => {
                 totalCompanies={filteredTotalCompanies}
                 showFilters={false}
                 selectedCompany={selectedCompany}
-                onViewAllLeads={() => {}}
+                onViewAllLeads={() => { }}
                 onExecutiveSelect={handleExecutiveSelect}
                 onMobileExecutivesViewChange={setIsMobileExecutivesView}
                 pageSize={companiesLimit}
                 onPageSizeChange={setCompaniesLimit}
               />
             </div>
-
-            {/* Right: Executives/Details Panel (Desktop only) */}
-            <div className="hidden lg:block">
-              <DetailsSidebar
-                activeTab="companies"
-                isOpen={isSidebarOpen}
-                selectedCompany={selectedCompany}
-                onExecutiveSelect={handleExecutiveSelect}
-              />
-            </div>
           </div>
+
+          {/* Fixed sidebar (desktop only) */}
+          <DetailsSidebar
+            activeTab="companies"
+            isOpen={isSidebarOpen}
+            selectedCompany={selectedCompany}
+            onExecutiveSelect={handleExecutiveSelect}
+          />
+
         </div>
       </main>
     </DashboardLayout>

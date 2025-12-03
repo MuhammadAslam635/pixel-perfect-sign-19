@@ -21,24 +21,35 @@ const DetailsSidebar: FC<DetailsSidebarProps> = ({
   selectedLead,
   onSwitchToLeads,
   onExecutiveSelect,
-  executiveFallback,
 }) => (
   <div
-    className={`flex-shrink-0 overflow-hidden transition-all duration-300 ease-in-out sticky top-6 ${
-      isOpen
-        ? "w-full sm:w-[320px] md:w-[350px] lg:w-[400px] opacity-100"
-        : "w-0 opacity-0 pointer-events-none"
-    }`}
+    className={`
+      hidden lg:block
+      fixed
+      z-40
+      top-[120px]           /* adjust if your header is taller/shorter */
+      right-4 xl:right-8 2xl:right-16
+      transition-all
+      duration-300
+      ease-in-out
+      ${isOpen ? "opacity-100 translate-x-0 pointer-events-auto" : "opacity-0 translate-x-4 pointer-events-none"}
+    `}
   >
     <Card
-      className={`bg-[#222B2C] border-[#3A3A3A] p-3 sm:p-4 md:p-5 h-[calc(100vh-380px)] sm:h-[calc(100vh-360px)] lg:h-[calc(100vh-340px)] min-h-[350px] sm:min-h-[400px] md:min-h-[500px] max-h-[800px] overflow-y-auto scrollbar-hide transition-all duration-300 ease-in-out ${
-        isOpen ? "opacity-100 translate-x-0" : "opacity-0 translate-x-6"
-      }`}
+      className="
+        w-[320px] xl:w-[360px] 2xl:w-[380px]
+        bg-[#222B2C]
+        border-[#3A3A3A]
+        p-3 sm:p-4 md:p-5
+        max-h-[calc(100vh-140px)]
+        overflow-y-auto
+        scrollbar-hide
+      "
     >
       {activeTab === "companies" ? (
         <CompanyExecutivesPanel
           company={selectedCompany}
-          onViewAllLeads={onSwitchToLeads || (() => {})}
+          onViewAllLeads={onSwitchToLeads || (() => { })}
           onExecutiveSelect={onExecutiveSelect}
         />
       ) : (
