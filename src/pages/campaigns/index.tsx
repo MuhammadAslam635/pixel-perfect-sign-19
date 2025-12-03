@@ -537,8 +537,8 @@ const CampaignsPage = () => {
                       Facebook Ads
                     </h3>
                   </div>
-                  <Select defaultValue="last-month">
-                    <SelectTrigger className="w-[95px] h-7 bg-[#252525] border-[#3a3a3a] text-gray-300 text-[10px]">
+                  <Select defaultValue="last-week">
+                    <SelectTrigger className="w-[110px] h-7 bg-[#252525] border-[#3a3a3a] text-gray-300 text-[10px]">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a]">
@@ -668,8 +668,8 @@ const CampaignsPage = () => {
                       Google Ads
                     </h3>
                   </div>
-                  <Select defaultValue="last-month">
-                    <SelectTrigger className="w-[95px] h-7 bg-[#252525] border-[#3a3a3a] text-gray-300 text-[10px]">
+                  <Select defaultValue="last-week">
+                    <SelectTrigger className="w-[110px] h-7 bg-[#252525] border-[#3a3a3a] text-gray-300 text-[10px]">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a]">
