@@ -129,9 +129,9 @@ const CompanyKnowledgePage = () => {
 
     if (!files.length) {
       return (
-        <Card className="border border-white/15 bg-gradient-to-br from-[#1f3032] via-[#243f42] to-[#1b2c2d] text-center text-white/75 shadow-[0_22px_55px_-28px_rgba(19,82,87,0.6)] backdrop-blur-xl">
+        <Card className="border border-white/10 bg-transparent text-center text-white/75">
           <CardContent className="flex flex-col items-center gap-4 py-16">
-            <FileText className="h-16 w-16 text-cyan-200/70" />
+            <FileText className="h-16 w-16 text-white/40" />
             <h3 className="text-2xl font-semibold text-white">
               No files uploaded yet
             </h3>
@@ -140,11 +140,7 @@ const CompanyKnowledgePage = () => {
               These become the context your AI agents rely on.
             </p>
             <Button
-              className="mt-4 bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3]"
-              style={{
-                boxShadow:
-                  "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
-              }}
+              className="mt-4 bg-white/10 text-white hover:bg-white/20"
               onClick={() => setUploadOpen(true)}
             >
               <Plus className="mr-2 h-4 w-4" />
@@ -161,7 +157,7 @@ const CompanyKnowledgePage = () => {
           {files.map((file) => (
             <Card
               key={file._id}
-              className="border border-white/15 bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] text-white shadow-[0_24px_55px_-30px_rgba(19,82,87,0.7)] backdrop-blur-xl"
+              className="border border-white/10 bg-transparent text-white"
             >
               <CardHeader className="flex flex-row items-start justify-between space-y-0">
                 <div className="space-y-1">
@@ -204,7 +200,7 @@ const CompanyKnowledgePage = () => {
         </div>
 
         {totalPages > 1 && (
-          <div className="flex flex-col gap-4 rounded-2xl border border-white/15 bg-gradient-to-r from-[#1f3032]/90 via-[#243f42]/90 to-[#1b2c2d]/90 px-4 py-4 text-white/75 shadow-[0_18px_45px_-28px_rgba(19,82,87,0.55)] md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-transparent px-4 py-4 text-white/75 md:flex-row md:items-center md:justify-between">
             <p className="text-sm">{paginationSummary}</p>
             <div className="flex items-center gap-3">
               <Button
@@ -263,11 +259,7 @@ const CompanyKnowledgePage = () => {
             </p>
           </div>
           <Button
-            className="mt-4 bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3]"
-            style={{
-              boxShadow:
-                "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
-            }}
+            className="mt-4 bg-white/10 text-white hover:bg-white/20"
             onClick={() => setUploadOpen(true)}
           >
             <Plus className="mr-2 h-4 w-4" />
@@ -279,7 +271,7 @@ const CompanyKnowledgePage = () => {
       </div>
 
       <Dialog open={uploadOpen} onOpenChange={setUploadOpen}>
-        <DialogContent className="max-w-3xl border border-white/10 bg-[#1C1F2E]/95 text-white backdrop-blur-xl">
+        <DialogContent className="max-w-3xl border border-white/10 bg-[#1a1a1a] text-white">
           <DialogHeader>
             <DialogTitle>Upload to Company Knowledge</DialogTitle>
           </DialogHeader>
@@ -291,7 +283,7 @@ const CompanyKnowledgePage = () => {
       </Dialog>
 
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <AlertDialogContent className="border border-white/10 bg-[#1C1F2E] text-white">
+        <AlertDialogContent className="border border-white/10 bg-[#1a1a1a] text-white">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete file?</AlertDialogTitle>
             <AlertDialogDescription className="text-white/70">

@@ -36,10 +36,9 @@ const KnowledgeLayout = ({
   return (
     <DashboardLayout>
       <div className="relative flex-1 px-6 pb-12 pt-28 sm:px-10 md:px-14 lg:px-20">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0b1516] via-[#112123] to-[#070a0b] opacity-90" />
         <div className="relative z-10 mx-auto flex w-full max-w-[1400px] flex-col gap-8">
-          <header className="rounded-3xl border border-white/10 bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] p-8 text-white shadow-[0_22px_45px_-20px_rgba(19,82,87,0.55)]">
-            <span className="inline-flex w-fit items-center rounded-full border border-white/20 bg-white/10 px-4 py-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-cyan-200/80">
+          <header className="rounded-3xl border border-white/10 bg-transparent p-8 text-white">
+            <span className="inline-flex w-fit items-center rounded-full border border-white/20 bg-white/10 px-4 py-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-white/60">
               Knowledge Base
             </span>
             <h1 className="mt-4 text-3xl font-semibold leading-tight md:text-4xl">
@@ -59,7 +58,7 @@ const KnowledgeLayout = ({
             className="grid gap-6 lg:grid-cols-[260px,1fr]"
             orientation="vertical"
           >
-            <div className="rounded-3xl border border-white/10 bg-gradient-to-b from-[#1e2f31] via-[#223538] to-[#1b2a2b] p-4 shadow-[0_18px_40px_-20px_rgba(20,74,78,0.6)] backdrop-blur-xl">
+            <div className="rounded-3xl border border-white/10 bg-transparent p-4">
               <TabsList className="flex w-full flex-col gap-3 bg-transparent p-0">
                 {tabItems.map((tab) => {
                   const Icon = tab.icon;
@@ -67,9 +66,9 @@ const KnowledgeLayout = ({
                     <TabsTrigger
                       key={tab.id}
                       value={tab.id}
-                      className="group flex w-full items-center gap-3 rounded-2xl border border-white/0 bg-white/5 px-2 py-4 text-left text-sm font-medium text-white/70 transition hover:border-cyan-300/20 hover:bg-white/10 data-[state=active]:border-cyan-300/40 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#3aa7b3]/35 data-[state=active]:to-[#2d6f8a]/45 data-[state=active]:text-white"
+                      className="group flex w-full items-center gap-3 rounded-2xl border border-white/0 bg-white/5 px-2 py-4 text-left text-sm font-medium text-white/70 transition hover:border-white/20 hover:bg-white/10 data-[state=active]:border-white/20 data-[state=active]:bg-[#5FCFD3] data-[state=active]:text-white"
                     >
-                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/5 text-cyan-200/80 transition group-data-[state=active]:bg-white/15 group-data-[state=active]:text-white">
+                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/5 text-white/60 transition group-data-[state=active]:bg-white/20 group-data-[state=active]:text-white">
                         <Icon className="h-4 w-4" />
                       </span>
                       <div className="flex flex-1 flex-col gap-1 overflow-hidden text-left">
@@ -83,7 +82,7 @@ const KnowledgeLayout = ({
                 })}
               </TabsList>
             </div>
-            <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-[#1e2f31]/95 via-[#20383b]/90 to-[#182324]/95 p-8 shadow-[0_24px_55px_-25px_rgba(20,74,78,0.7)] backdrop-blur-xl">
+            <div className="rounded-3xl border border-white/10 bg-transparent p-8">
               <TabsContent value="company-knowledge" className="m-0">
                 {children}
               </TabsContent>
