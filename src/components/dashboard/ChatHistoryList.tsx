@@ -85,8 +85,8 @@ const ChatHistoryList: FC<ChatHistoryListProps> = ({
         className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden pr-2"
         style={
           {
-            scrollbarWidth: "thin",
-            scrollbarColor: "rgba(255, 255, 255, 0.3) transparent",
+            scrollbarWidth: "none",
+            scrollbarColor: "transparent transparent",
           } as React.CSSProperties
         }
         onWheel={(e) => {
@@ -95,17 +95,7 @@ const ChatHistoryList: FC<ChatHistoryListProps> = ({
       >
         <style>{`
           .flex-1.min-h-0.overflow-y-auto.overflow-x-hidden::-webkit-scrollbar {
-            width: 6px;
-          }
-          .flex-1.min-h-0.overflow-y-auto.overflow-x-hidden::-webkit-scrollbar-track {
-            background: transparent;
-          }
-          .flex-1.min-h-0.overflow-y-auto.overflow-x-hidden::-webkit-scrollbar-thumb {
-            background-color: rgba(255, 255, 255, 0.3);
-            border-radius: 3px;
-          }
-          .flex-1.min-h-0.overflow-y-auto.overflow-x-hidden::-webkit-scrollbar-thumb:hover {
-            background-color: rgba(255, 255, 255, 0.5);
+            display: none;
           }
         `}</style>
 
