@@ -750,7 +750,7 @@ body {
 
 .assistant-composer {
   position: absolute;
-  /* margin-top: 200px !important; */
+  margin-top: 100px;
   left: 50%;
   bottom: 50px;
   transform: translateX(-50%);

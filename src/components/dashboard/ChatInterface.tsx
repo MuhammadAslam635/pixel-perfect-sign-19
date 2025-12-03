@@ -343,7 +343,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
       ) : (
         <div
           ref={scrollAreaRef}
-          className="flex-1 min-h-0 space-y-4 overflow-y-auto scrollbar-hide px-2 py-4"
+          className="flex-1 min-h-0 space-y-4 overflow-y-auto scrollbar-hide px-2 py-28"
         >
           {localMessages.map((msg) => {
             const isAssistant = msg.role !== "user";

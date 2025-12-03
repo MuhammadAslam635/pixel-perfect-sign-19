@@ -123,25 +123,43 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
   return (
     <section className="hidden assistant-panel mx-auto w-full h-full lg:flex flex-col overflow-hidden relative sm:order-1">
       <div
-        className="assistant-tools flex gap-2 mb-4"
-        style={{ background: "#404040" }}
+        style={{
+          position: "absolute",
+          top: "15px",
+          left: "28px",
+          background: "#202020",
+          padding: "12px",
+          borderRadius: "25px",
+          width: "90%",
+        }}
       >
         <div
-          className="assistant-tool cursor-pointer"
-          onClick={() => setShowChatList(!showChatList)}
-          style={{ background: showChatList ? "#5D5D5D" : "transparent" }}
-        >
-          <List size={14} />
-        </div>
-        <div
-          className="assistant-tool cursor-pointer"
-          onClick={handleStartNewChat}
+          className="assistant-tools flex gap-2"
           style={{
-            background:
-              !showChatList && !hasActiveChat ? "#5D5D5D" : "transparent",
+            background: "#404040",
+            position: "relative",
+            top: "0",
+            left: "0",
+            width: "fit-content",
           }}
         >
-          <Plus size={14} />
+          <div
+            className="assistant-tool cursor-pointer"
+            onClick={() => setShowChatList(!showChatList)}
+            style={{ background: showChatList ? "#5D5D5D" : "transparent" }}
+          >
+            <List size={14} />
+          </div>
+          <div
+            className="assistant-tool cursor-pointer"
+            onClick={handleStartNewChat}
+            style={{
+              background:
+                !showChatList && !hasActiveChat ? "#5D5D5D" : "transparent",
+            }}
+          >
+            <Plus size={14} />
+          </div>
         </div>
       </div>
       {/* Render Chat List or Chat Interface */}

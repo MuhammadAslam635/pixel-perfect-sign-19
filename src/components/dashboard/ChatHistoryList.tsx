@@ -62,7 +62,7 @@ const ChatHistoryList: FC<ChatHistoryListProps> = ({
   return (
     <div className="flex h-full w-full flex-col overflow-hidden">
       <div className="pt-24 mb-6 space-y-4 flex-shrink-0 ">
-        <div className="relative">
+        <div className="relative mt-8">
           <Search className="pointer-events-none absolute left-5 top-1/2 size-4 -translate-y-1/2 text-white/60" />
           <Input
             value={searchTerm}
