@@ -38,7 +38,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 
-type ViewMode = 'compact' | 'detailed' | 'card';
+type ViewMode = "compact" | "detailed" | "card";
 
 type LeadsListProps = {
   leads: Lead[];
@@ -95,7 +95,7 @@ const LeadsList: FC<LeadsListProps> = ({
   pageSize = 10,
   pageSizeOptions = [10, 25, 50, 100],
   onPageSizeChange,
-  viewMode = 'detailed',
+  viewMode = "detailed",
   onViewModeChange,
 }) => {
   const navigate = useNavigate();
@@ -191,9 +191,13 @@ const LeadsList: FC<LeadsListProps> = ({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
-      className={viewMode === 'card' ? "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3" : "space-y-2"}
+      className={
+        viewMode === "card"
+          ? "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"
+          : "space-y-2"
+      }
     >
-      {Array.from({ length: viewMode === 'card' ? 8 : 5 }).map((_, index) => (
+      {Array.from({ length: viewMode === "card" ? 8 : 5 }).map((_, index) => (
         <motion.div
           key={index}
           initial={{ opacity: 0, y: 20 }}
@@ -201,11 +205,12 @@ const LeadsList: FC<LeadsListProps> = ({
           transition={{
             duration: 0.4,
             delay: index * 0.1,
-            ease: "easeOut"
+            ease: "easeOut",
           }}
-          className={viewMode === 'card'
-            ? "aspect-[3/1] rounded-lg border-0 bg-gradient-to-br from-gray-800/50 to-gray-900/30 border-white/10 overflow-hidden"
-            : "rounded-[16px] sm:rounded-[20px] md:rounded-[26px] border-0 bg-gradient-to-br from-gray-800/50 to-gray-900/30 border-white/10 px-3 sm:px-4 md:px-5 lg:px-7 py-1.5 sm:py-2 pl-3 sm:pl-4 md:pl-5 lg:pl-7"
+          className={
+            viewMode === "card"
+              ? "aspect-[3/1] rounded-lg border-0 bg-gradient-to-br from-gray-800/50 to-gray-900/30 border-white/10 overflow-hidden"
+              : "rounded-[16px] sm:rounded-[20px] md:rounded-[26px] border-0 bg-gradient-to-br from-gray-800/50 to-gray-900/30 border-white/10 px-3 sm:px-4 md:px-5 lg:px-7 py-1.5 sm:py-2 pl-3 sm:pl-4 md:pl-5 lg:pl-7"
           }
         >
           <div className="flex flex-col gap-2">
@@ -217,7 +222,7 @@ const LeadsList: FC<LeadsListProps> = ({
             <div className="flex items-center gap-2">
               <div className="h-4 bg-white/10 rounded animate-pulse w-24"></div>
             </div>
-            {viewMode === 'detailed' && (
+            {viewMode === "detailed" && (
               <>
                 <div className="h-2 bg-white/5 rounded animate-pulse w-full"></div>
                 <div className="flex gap-2">
@@ -283,12 +288,14 @@ const LeadsList: FC<LeadsListProps> = ({
       }
     };
 
-    if (viewMode === 'card') {
+    if (viewMode === "card") {
       return (
         <Card
           key={lead._id}
           className={`relative flex flex-col gap-2 overflow-hidden border-0 rounded-lg p-3 transition-all duration-300 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] cursor-pointer aspect-[3/1] before:absolute before:content-[''] before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[50%] before:w-[3px] before:rounded-full ${
-            isActive ? "ring-2 ring-primary before:bg-primary" : "before:bg-white/75"
+            isActive
+              ? "ring-2 ring-primary before:bg-primary"
+              : "before:bg-white/75"
           }`}
           style={{
             background: `linear-gradient(180deg, rgba(104, 177, 184, 0.1) 0%, rgba(104, 177, 184, 0.08) 100%), radial-gradient(50% 100% at 50% 0%, rgba(104, 177, 184, 0.1) 0%, rgba(104, 177, 184, 0) 100%)`,
@@ -299,7 +306,10 @@ const LeadsList: FC<LeadsListProps> = ({
             <h3 className="text-sm font-semibold text-white leading-tight truncate">
               {lead.name}
               {lead.position && (
-                <span className="text-white/60 font-normal"> | {lead.position}</span>
+                <span className="text-white/60 font-normal">
+                  {" "}
+                  | {lead.position}
+                </span>
               )}
             </h3>
 
@@ -308,7 +318,6 @@ const LeadsList: FC<LeadsListProps> = ({
                 {lead.companyName || "Company"}
               </Badge>
             </div>
-
           </div>
         </Card>
       );
@@ -318,9 +327,13 @@ const LeadsList: FC<LeadsListProps> = ({
     return (
       <Card
         key={lead._id}
-        className={`relative flex flex-col md:flex-row items-start md:items-center justify-between gap-1 sm:gap-1.5 md:gap-2 border-0 rounded-[16px] sm:rounded-[20px] md:rounded-[26px] px-3 sm:px-4 md:px-5 lg:px-7 py-1.5 sm:py-2 pl-3 sm:pl-4 md:pl-5 lg:pl-7 transition-all duration-300 hover:shadow-[0_18px_40px_rgba(0,0,0,0.3)] ${viewMode !== 'compact' ? `before:absolute before:content-[''] before:-left-1 before:top-1/2 before:-translate-y-1/2 before:h-[60%] sm:before:h-[65%] before:w-[3px] sm:before:w-[4px] md:before:w-[6px] before:rounded-full backdrop-blur-[22.6px] ${
-          isActive ? "before:bg-primary" : "before:bg-white/75"
-        }` : ''}`}
+        className={`relative flex flex-col md:flex-row items-start md:items-center justify-between gap-1 sm:gap-1.5 md:gap-2 border-0 rounded-[16px] sm:rounded-[20px] md:rounded-[26px] px-3 sm:px-4 md:px-5 lg:px-7 py-1.5 sm:py-2 pl-3 sm:pl-4 md:pl-5 lg:pl-7 transition-all duration-300 hover:shadow-[0_18px_40px_rgba(0,0,0,0.3)] ${
+          viewMode !== "compact"
+            ? `before:absolute before:content-[''] before:-left-1 before:top-1/2 before:-translate-y-1/2 before:h-[60%] sm:before:h-[65%] before:w-[3px] sm:before:w-[4px] md:before:w-[6px] before:rounded-full backdrop-blur-[22.6px] ${
+                isActive ? "before:bg-primary" : "before:bg-white/75"
+              }`
+            : ""
+        }`}
         style={{
           background: `linear-gradient(180deg, rgba(104, 177, 184, 0.1) 0%, rgba(104, 177, 184, 0.08) 100%), radial-gradient(50% 100% at 50% 0%, rgba(104, 177, 184, 0.1) 0%, rgba(104, 177, 184, 0) 100%)`,
         }}
@@ -334,7 +347,7 @@ const LeadsList: FC<LeadsListProps> = ({
               </span>
             )}
           </div>
-          {viewMode === 'detailed' && (
+          {viewMode === "detailed" && (
             <>
               <p className="text-[8px] sm:text-[9px] font-bold text-white/60 mt-0.5">
                 {lead.position || "Chief Executive Officer"}
@@ -361,7 +374,7 @@ const LeadsList: FC<LeadsListProps> = ({
           )}
         </div>
         <div className="flex flex-col items-end gap-0.5 sm:gap-1 md:gap-2 w-full md:w-auto">
-          {viewMode === 'detailed' && (
+          {viewMode === "detailed" && (
             <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 flex-wrap justify-center">
               <button
                 className={getIconButtonClasses(!hasPhone)}
@@ -441,7 +454,9 @@ const LeadsList: FC<LeadsListProps> = ({
                 disabled={!canEnrich || isFilling}
                 aria-disabled={!canEnrich || isFilling}
                 title={
-                  canEnrich ? "Fill missing information" : "Missing IDs to enrich"
+                  canEnrich
+                    ? "Fill missing information"
+                    : "Missing IDs to enrich"
                 }
               >
                 {isFilling ? (
@@ -459,7 +474,7 @@ const LeadsList: FC<LeadsListProps> = ({
               e.stopPropagation();
               navigate(`/leads/${lead._id}`);
             }}
-            className="w-auto md:w-auto ml-auto md:ml-0 text-xs px-2 py-1 h-8"
+            className="w-auto md:w-auto ml-auto md:ml-0 text-[10px] px-1.5 py-0.5 h-6"
           />
         </div>
       </Card>
@@ -587,39 +602,39 @@ const LeadsList: FC<LeadsListProps> = ({
           {position === "top" && onViewModeChange && (
             <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-full p-1">
               <Button
-                variant={viewMode === 'compact' ? 'default' : 'ghost'}
+                variant={viewMode === "compact" ? "default" : "ghost"}
                 size="sm"
-                onClick={() => onViewModeChange('compact')}
+                onClick={() => onViewModeChange("compact")}
                 className={`h-7 px-3 rounded-full text-xs font-medium transition-all ${
-                  viewMode === 'compact'
-                    ? 'bg-primary text-white shadow-sm'
-                    : 'text-white/70 hover:text-white hover:bg-white/10'
+                  viewMode === "compact"
+                    ? "bg-primary text-white shadow-sm"
+                    : "text-white/70 hover:text-white hover:bg-white/10"
                 }`}
               >
                 <Grid3X3 className="w-3 h-3 mr-1.5" />
                 Compact
               </Button>
               <Button
-                variant={viewMode === 'card' ? 'default' : 'ghost'}
+                variant={viewMode === "card" ? "default" : "ghost"}
                 size="sm"
-                onClick={() => onViewModeChange('card')}
+                onClick={() => onViewModeChange("card")}
                 className={`h-7 px-3 rounded-full text-xs font-medium transition-all ${
-                  viewMode === 'card'
-                    ? 'bg-primary text-white shadow-sm'
-                    : 'text-white/70 hover:text-white hover:bg-white/10'
+                  viewMode === "card"
+                    ? "bg-primary text-white shadow-sm"
+                    : "text-white/70 hover:text-white hover:bg-white/10"
                 }`}
               >
                 <LayoutGrid className="w-3 h-3 mr-1.5" />
                 Card
               </Button>
               <Button
-                variant={viewMode === 'detailed' ? 'default' : 'ghost'}
+                variant={viewMode === "detailed" ? "default" : "ghost"}
                 size="sm"
-                onClick={() => onViewModeChange('detailed')}
+                onClick={() => onViewModeChange("detailed")}
                 className={`h-7 px-3 rounded-full text-xs font-medium transition-all ${
-                  viewMode === 'detailed'
-                    ? 'bg-primary text-white shadow-sm'
-                    : 'text-white/70 hover:text-white hover:bg-white/10'
+                  viewMode === "detailed"
+                    ? "bg-primary text-white shadow-sm"
+                    : "text-white/70 hover:text-white hover:bg-white/10"
                 }`}
               >
                 <List className="w-3 h-3 mr-1.5" />
@@ -651,12 +666,16 @@ const LeadsList: FC<LeadsListProps> = ({
   };
 
   return (
-    <div className={`flex flex-col pb-4 ${viewMode === 'card' ? 'px-2' : ''}`}>
+    <div className={`flex flex-col pb-4 ${viewMode === "card" ? "px-2" : ""}`}>
       {renderPageSizeSelector("top")}
       <AnimatePresence mode="wait">
         <motion.div
           key={viewMode}
-          className={viewMode === 'card' ? "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3" : "space-y-2"}
+          className={
+            viewMode === "card"
+              ? "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"
+              : "space-y-2"
+          }
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}

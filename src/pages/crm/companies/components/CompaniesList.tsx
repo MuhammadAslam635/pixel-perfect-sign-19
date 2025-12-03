@@ -19,12 +19,20 @@ import {
   PaginationPrevious,
   PaginationEllipsis,
 } from "@/components/ui/pagination";
-import { Linkedin, Search, ArrowLeft, Users, Grid3X3, List, LayoutGrid } from "lucide-react";
+import {
+  Linkedin,
+  Search,
+  ArrowLeft,
+  Users,
+  Grid3X3,
+  List,
+  LayoutGrid,
+} from "lucide-react";
 import { ActiveNavButton } from "@/components/ui/primary-btn";
 import { Company } from "@/services/companies.service";
 import CompanyExecutivesPanel from "./CompanyExecutivesPanel";
 
-type ViewMode = 'compact' | 'detailed' | 'card';
+type ViewMode = "compact" | "detailed" | "card";
 
 type CompaniesListProps = {
   companies: Company[];
@@ -68,7 +76,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
   pageSize = 10,
   pageSizeOptions = [10, 25, 50, 100],
   onPageSizeChange,
-  viewMode = 'detailed',
+  viewMode = "detailed",
   onViewModeChange,
 }) => {
   // State to track if mobile executives view is open
@@ -192,9 +200,13 @@ const CompaniesList: FC<CompaniesListProps> = ({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
-      className={viewMode === 'card' ? "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3" : "space-y-4"}
+      className={
+        viewMode === "card"
+          ? "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"
+          : "space-y-4"
+      }
     >
-      {Array.from({ length: viewMode === 'card' ? 8 : 5 }).map((_, index) => (
+      {Array.from({ length: viewMode === "card" ? 8 : 5 }).map((_, index) => (
         <motion.div
           key={index}
           initial={{ opacity: 0, y: 20 }}
@@ -202,11 +214,12 @@ const CompaniesList: FC<CompaniesListProps> = ({
           transition={{
             duration: 0.4,
             delay: index * 0.1,
-            ease: "easeOut"
+            ease: "easeOut",
           }}
-          className={viewMode === 'card'
-            ? "aspect-[3/1] rounded-lg border-0 bg-gradient-to-br from-gray-800/50 to-gray-900/30 border-white/10 overflow-hidden"
-            : "rounded-[16px] sm:rounded-[20px] md:rounded-[26px] border-0 bg-gradient-to-br from-gray-800/50 to-gray-900/30 border-white/10 px-3 sm:px-4 md:px-5 lg:px-7 py-1.5 sm:py-2 pl-3 sm:pl-4 md:pl-5 lg:pl-7"
+          className={
+            viewMode === "card"
+              ? "aspect-[3/1] rounded-lg border-0 bg-gradient-to-br from-gray-800/50 to-gray-900/30 border-white/10 overflow-hidden"
+              : "rounded-[16px] sm:rounded-[20px] md:rounded-[26px] border-0 bg-gradient-to-br from-gray-800/50 to-gray-900/30 border-white/10 px-3 sm:px-4 md:px-5 lg:px-7 py-1.5 sm:py-2 pl-3 sm:pl-4 md:pl-5 lg:pl-7"
           }
         >
           <div className="flex flex-col gap-2">
@@ -218,7 +231,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
               <div className="h-3 bg-white/5 rounded animate-pulse w-20"></div>
               <div className="h-3 bg-white/10 rounded animate-pulse w-16"></div>
             </div>
-            {viewMode === 'detailed' && (
+            {viewMode === "detailed" && (
               <>
                 <div className="h-2 bg-white/5 rounded animate-pulse w-full"></div>
                 <div className="flex gap-2">
@@ -261,12 +274,16 @@ const CompaniesList: FC<CompaniesListProps> = ({
       primaryExecutive?.email || primaryExecutive?.emails?.[0] || null;
     const primaryLinkedIn = primaryExecutive?.linkedin || null;
 
-    if (viewMode === 'card') {
+    if (viewMode === "card") {
       return (
         <Card
           key={company._id}
-          className={`relative flex flex-col gap-2 overflow-hidden border-0 rounded-lg p-3 transition-all duration-300 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] cursor-pointer ${selectedCompanyId ? 'aspect-[3/1]' : 'aspect-[4/1]'} before:absolute before:content-[''] before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[50%] before:w-[3px] before:rounded-full ${
-            isActive ? "ring-2 ring-primary before:bg-primary" : "before:bg-white/75"
+          className={`relative flex flex-col gap-2 overflow-hidden border-0 rounded-lg p-3 transition-all duration-300 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] cursor-pointer ${
+            selectedCompanyId ? "aspect-[3/1]" : "aspect-[4/1]"
+          } before:absolute before:content-[''] before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[50%] before:w-[3px] before:rounded-full ${
+            isActive
+              ? "ring-2 ring-primary before:bg-primary"
+              : "before:bg-white/75"
           }`}
           style={{
             background: `linear-gradient(180deg, rgba(104, 177, 184, 0.1) 0%, rgba(104, 177, 184, 0.08) 100%), radial-gradient(50% 100% at 50% 0%, rgba(104, 177, 184, 0.1) 0%, rgba(104, 177, 184, 0) 100%)`,
@@ -285,10 +302,12 @@ const CompaniesList: FC<CompaniesListProps> = ({
             <h3 className="text-sm font-semibold text-white leading-tight truncate">
               {company.name}
               {company.industry && (
-                <span className="text-white/60 font-normal"> | {company.industry}</span>
+                <span className="text-white/60 font-normal">
+                  {" "}
+                  | {company.industry}
+                </span>
               )}
             </h3>
-
 
             <div className="flex flex-col gap-1">
               {primaryEmail && (
@@ -296,7 +315,9 @@ const CompaniesList: FC<CompaniesListProps> = ({
                   <div className="w-2.5 h-2.5 rounded-full bg-white/20 flex items-center justify-center">
                     <span className="text-[6px] text-white/80">@</span>
                   </div>
-                  <span className="text-xs text-white/70 truncate">{primaryEmail}</span>
+                  <span className="text-xs text-white/70 truncate">
+                    {primaryEmail}
+                  </span>
                 </div>
               )}
 
@@ -326,9 +347,13 @@ const CompaniesList: FC<CompaniesListProps> = ({
     return (
       <Card
         key={company._id}
-        className={`relative flex flex-col gap-0.5 sm:gap-1 md:flex-row md:items-center md:justify-between overflow-hidden border-0 mb-1.5 sm:mb-2 rounded-[16px] sm:rounded-[20px] md:rounded-[30px] px-3 sm:px-4 md:px-5 py-1.5 sm:py-2 transition-all duration-300 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] ${viewMode !== 'compact' ? `before:absolute before:content-[''] before:-left-1 before:top-1/2 before:-translate-y-1/2 before:h-[55%] sm:before:h-[60%] before:w-0 md:before:w-[3px] lg:before:w-[4px] xl:before:w-[6px] before:rounded-full backdrop-blur-[22.6px] ${
-          isActive ? "md:before:bg-primary" : "md:before:bg-white/75"
-        }` : ''}`}
+        className={`relative flex flex-col gap-0.5 sm:gap-1 md:flex-row md:items-center md:justify-between overflow-hidden border-0 mb-1.5 sm:mb-2 rounded-[16px] sm:rounded-[20px] md:rounded-[30px] px-3 sm:px-4 md:px-5 py-1.5 sm:py-2 transition-all duration-300 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] ${
+          viewMode !== "compact"
+            ? `before:absolute before:content-[''] before:-left-1 before:top-1/2 before:-translate-y-1/2 before:h-[55%] sm:before:h-[60%] before:w-0 md:before:w-[3px] lg:before:w-[4px] xl:before:w-[6px] before:rounded-full backdrop-blur-[22.6px] ${
+                isActive ? "md:before:bg-primary" : "md:before:bg-white/75"
+              }`
+            : ""
+        }`}
         style={{
           background: `linear-gradient(180deg, rgba(104, 177, 184, 0.1) 0%, rgba(104, 177, 184, 0.08) 100%), radial-gradient(50% 100% at 50% 0%, rgba(104, 177, 184, 0.1) 0%, rgba(104, 177, 184, 0) 100%)`,
         }}
@@ -343,19 +368,21 @@ const CompaniesList: FC<CompaniesListProps> = ({
                 | {company.industry}
               </span>
             )}
-            {viewMode === 'compact' && (
+            {viewMode === "compact" && (
               <Badge className="rounded-full bg-white/15 text-white border-white/20 px-2 py-0.5 text-xs">
                 {employeeCount}
               </Badge>
             )}
           </div>
-          {viewMode === 'detailed' && (
+          {viewMode === "detailed" && (
             <p className="mt-0.5 text-xs text-white/65 line-clamp-2">
-              {company.description || company.about || "No description available"}
+              {company.description ||
+                company.about ||
+                "No description available"}
             </p>
           )}
           {/* Mobile: Side by side layout */}
-          {viewMode === 'detailed' && (
+          {viewMode === "detailed" && (
             <div className="mt-0.5 sm:mt-1 md:mt-2 md:hidden flex flex-row items-center justify-between gap-3 sm:gap-4">
               <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-white/75">
                 <Badge className="rounded-full bg-white/15 text-white border-white/20 px-3 sm:px-4 py-1 text-xs">
@@ -414,7 +441,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
             </div>
           )}
           {/* Desktop: Original badges layout */}
-          {viewMode === 'detailed' && (
+          {viewMode === "detailed" && (
             <div className="hidden md:block mt-0.5 sm:mt-1 md:mt-2">
               <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-white/75">
                 <Badge className="rounded-full bg-white/15 text-white border-white/20 px-3 sm:px-4 py-1 text-xs">
@@ -444,7 +471,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
           )}
         </div>
         <div className="w-full md:w-[240px] lg:w-[260px] flex flex-col items-center md:items-end gap-0.5 sm:gap-1 md:gap-2 text-white/80 md:ml-4 lg:ml-8">
-          {viewMode === 'detailed' && (
+          {viewMode === "detailed" && (
             <div className="hidden md:flex flex-row md:flex-col gap-1.5 md:gap-1 items-center md:items-end">
               {(company.website || primaryEmail) && (
                 <p className="text-xs sm:text-sm font-semibold text-white/75 text-center md:text-right break-words flex-1 md:flex-none">
@@ -491,7 +518,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
                   onDesktopExecutivesFocus?.();
                 }
               }}
-              className="w-auto md:w-auto ml-auto md:ml-0 text-xs px-2 py-1 h-8"
+              className="w-auto md:w-auto ml-auto md:ml-0 text-[10px] px-1.5 py-0.5 h-6"
             />
           </div>
         </div>
@@ -620,39 +647,39 @@ const CompaniesList: FC<CompaniesListProps> = ({
           {position === "top" && onViewModeChange && (
             <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-full p-1">
               <Button
-                variant={viewMode === 'compact' ? 'default' : 'ghost'}
+                variant={viewMode === "compact" ? "default" : "ghost"}
                 size="sm"
-                onClick={() => onViewModeChange('compact')}
+                onClick={() => onViewModeChange("compact")}
                 className={`h-7 px-3 rounded-full text-xs font-medium transition-all ${
-                  viewMode === 'compact'
-                    ? 'bg-primary text-white shadow-sm'
-                    : 'text-white/70 hover:text-white hover:bg-white/10'
+                  viewMode === "compact"
+                    ? "bg-primary text-white shadow-sm"
+                    : "text-white/70 hover:text-white hover:bg-white/10"
                 }`}
               >
                 <Grid3X3 className="w-3 h-3 mr-1.5" />
                 Compact
               </Button>
               <Button
-                variant={viewMode === 'card' ? 'default' : 'ghost'}
+                variant={viewMode === "card" ? "default" : "ghost"}
                 size="sm"
-                onClick={() => onViewModeChange('card')}
+                onClick={() => onViewModeChange("card")}
                 className={`h-7 px-3 rounded-full text-xs font-medium transition-all ${
-                  viewMode === 'card'
-                    ? 'bg-primary text-white shadow-sm'
-                    : 'text-white/70 hover:text-white hover:bg-white/10'
+                  viewMode === "card"
+                    ? "bg-primary text-white shadow-sm"
+                    : "text-white/70 hover:text-white hover:bg-white/10"
                 }`}
               >
                 <LayoutGrid className="w-3 h-3 mr-1.5" />
                 Card
               </Button>
               <Button
-                variant={viewMode === 'detailed' ? 'default' : 'ghost'}
+                variant={viewMode === "detailed" ? "default" : "ghost"}
                 size="sm"
-                onClick={() => onViewModeChange('detailed')}
+                onClick={() => onViewModeChange("detailed")}
                 className={`h-7 px-3 rounded-full text-xs font-medium transition-all ${
-                  viewMode === 'detailed'
-                    ? 'bg-primary text-white shadow-sm'
-                    : 'text-white/70 hover:text-white hover:bg-white/10'
+                  viewMode === "detailed"
+                    ? "bg-primary text-white shadow-sm"
+                    : "text-white/70 hover:text-white hover:bg-white/10"
                 }`}
               >
                 <List className="w-3 h-3 mr-1.5" />
@@ -728,12 +755,16 @@ const CompaniesList: FC<CompaniesListProps> = ({
   }
 
   return (
-    <div className={`flex flex-col pb-4 ${viewMode === 'card' ? 'px-2' : ''}`}>
+    <div className={`flex flex-col pb-4 ${viewMode === "card" ? "px-2" : ""}`}>
       {renderPageSizeSelector("top")}
       <AnimatePresence mode="wait">
         <motion.div
           key={viewMode}
-          className={viewMode === 'card' ? "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3" : "space-y-4"}
+          className={
+            viewMode === "card"
+              ? "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"
+              : "space-y-4"
+          }
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
@@ -770,17 +801,18 @@ const CompaniesList: FC<CompaniesListProps> = ({
                   >
                     {renderCompanyCard(company)}
                     {/* Executives panel below the company card should not appear on desktop */}
-                    {selectedCompanyId === company._id && viewMode !== 'card' && (
-                      <div className="block lg:hidden mt-2 mb-2">
-                        <Card className="bg-[#1f3032] border-[#3A3A3A] p-3 sm:p-4">
-                          <CompanyExecutivesPanel
-                            company={selectedCompany}
-                            onViewAllLeads={onViewAllLeads || (() => {})}
-                            onExecutiveSelect={onExecutiveSelect}
-                          />
-                        </Card>
-                      </div>
-                    )}
+                    {selectedCompanyId === company._id &&
+                      viewMode !== "card" && (
+                        <div className="block lg:hidden mt-2 mb-2">
+                          <Card className="bg-[#1f3032] border-[#3A3A3A] p-3 sm:p-4">
+                            <CompanyExecutivesPanel
+                              company={selectedCompany}
+                              onViewAllLeads={onViewAllLeads || (() => {})}
+                              onExecutiveSelect={onExecutiveSelect}
+                            />
+                          </Card>
+                        </div>
+                      )}
                   </motion.div>
                 ))}
           </AnimatePresence>

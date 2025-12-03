@@ -1042,7 +1042,7 @@ const CampaignsPage = () => {
                         icon={ArrowRightIcon}
                         text="View Details"
                         onClick={() => handleViewDetails(campaign)}
-                        className="h-6 text-[8px] pl-2.5 pr-2.5 gap-1.5"
+                        className="h-5 text-[8px] pl-2 pr-2 gap-1"
                       />
                     </div>
                   </CardContent>
