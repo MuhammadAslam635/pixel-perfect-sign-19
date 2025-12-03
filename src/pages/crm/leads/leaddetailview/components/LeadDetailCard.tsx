@@ -909,17 +909,17 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
       >
         <DialogContent className="max-w-lg bg-[#0b0f20] text-white border border-white/10">
           <DialogHeader>
-            <DialogTitle>Schedule Meeting</DialogTitle>
-            <DialogDescription className="text-white/70">
+            <DialogTitle className="text-xs sm:text-sm font-semibold">Schedule Meeting</DialogTitle>
+            <DialogDescription className="text-xs text-white/70">
               Create a Microsoft Calendar event with {lead.name || "this lead"}.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
+          <div className="space-y-4 max-h-[70vh] overflow-y-auto scrollbar-hide px-1">
             {checkingMicrosoft && (
               <Alert className="bg-white/5 border-white/10 text-white">
                 <Loader2 className="h-4 w-4 animate-spin text-white" />
-                <AlertDescription className="text-white/80">
+                <AlertDescription className="text-xs text-white/80">
                   Checking Microsoft Calendar connection...
                 </AlertDescription>
               </Alert>
@@ -932,10 +932,10 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
               >
                 <AlertTriangle className="h-4 w-4 text-red-300" />
                 <div>
-                  <AlertTitle className="text-white">
+                  <AlertTitle className="text-xs font-semibold text-white">
                     Microsoft not connected
                   </AlertTitle>
-                  <AlertDescription className="text-white/80">
+                  <AlertDescription className="text-xs text-white/80">
                     {microsoftStatusError ||
                       "Connect Microsoft in Settings → Integrations before scheduling a meeting."}
                   </AlertDescription>
@@ -948,7 +948,7 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
               microsoftStatusMessage && (
                 <Alert className="bg-white/10 border-white/15 text-white">
                   <CheckCircle2 className="h-4 w-4 text-emerald-300" />
-                  <AlertDescription className="text-white/80">
+                  <AlertDescription className="text-xs text-white/80">
                     {microsoftStatusMessage}
                   </AlertDescription>
                 </Alert>
@@ -964,7 +964,7 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
                     subject: e.target.value,
                   }))
                 }
-                className="bg-white/5 border-white/10 text-white text-sm"
+                className="bg-white/5 border-white/10 text-white text-xs focus-visible:ring-1 focus-visible:ring-white/30"
                 placeholder="Meeting subject"
               />
             </div>
@@ -979,7 +979,7 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
                     body: e.target.value,
                   }))
                 }
-                className="bg-white/5 border-white/10 text-white text-sm min-h-[80px]"
+                className="bg-white/5 border-white/10 text-white text-xs min-h-[80px] focus-visible:ring-1 focus-visible:ring-white/30"
                 placeholder="Add context or agenda"
               />
             </div>
@@ -994,14 +994,14 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
                     location: e.target.value,
                   }))
                 }
-                className="bg-white/5 border-white/10 text-white text-sm"
+                className="bg-white/5 border-white/10 text-white text-xs focus-visible:ring-1 focus-visible:ring-white/30"
                 placeholder="Optional location"
               />
             </div>
 
             <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-3 py-2">
               <div>
-                <p className="text-sm font-medium text-white">Auto find slot</p>
+                <p className="text-xs font-medium text-white">Auto find slot</p>
                 <p className="text-xs text-white/60">
                   Let Microsoft calendar choose the first available time
                 </p>
@@ -1032,7 +1032,7 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
                         startDateTime: e.target.value,
                       }))
                     }
-                    className="bg-white/5 border-white/10 text-white text-sm"
+                    className="bg-white/5 border-white/10 text-white text-xs focus-visible:ring-1 focus-visible:ring-white/30 [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert"
                   />
                 </div>
                 <div className="space-y-2">
@@ -1048,7 +1048,7 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
                         endDateTime: e.target.value,
                       }))
                     }
-                    className="bg-white/5 border-white/10 text-white text-sm"
+                    className="bg-white/5 border-white/10 text-white text-xs focus-visible:ring-1 focus-visible:ring-white/30 [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert"
                   />
                 </div>
               </div>
@@ -1065,7 +1065,7 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
                       type="datetime-local"
                       value={scheduleForm.startDate}
                       disabled
-                      className="bg-white/10 border-white/10 text-white text-sm cursor-not-allowed opacity-70"
+                      className="bg-white/10 border-white/10 text-white text-xs cursor-not-allowed opacity-70 [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert"
                     />
                   </div>
                   <div className="space-y-2">
@@ -1081,12 +1081,12 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
                           endDate: e.target.value,
                         }))
                       }
-                      className="bg-white/5 border-white/10 text-white text-sm"
+                      className="bg-white/5 border-white/10 text-white text-xs focus-visible:ring-1 focus-visible:ring-white/30 [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert"
                       placeholder="Defaults to end of day"
                       max={maxSearchEndDate}
                     />
                     {isSearchRangeTooLarge && (
-                      <p className="text-[10px] text-red-400">
+                      <p className="text-xs text-red-400">
                         Search window must be less than 62 days from the start
                         date.
                       </p>
@@ -1108,7 +1108,7 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
                         durationMinutes: Number(e.target.value) || 30,
                       }))
                     }
-                    className="bg-white/5 border-white/10 text-white text-sm"
+                    className="bg-white/5 border-white/10 text-white text-xs focus-visible:ring-1 focus-visible:ring-white/30 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                 </div>
               </>

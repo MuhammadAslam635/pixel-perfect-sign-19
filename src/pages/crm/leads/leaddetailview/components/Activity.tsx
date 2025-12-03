@@ -928,15 +928,17 @@ const Activity: FC<ActivityProps> = ({
               <TabsList className="bg-transparent p-0 h-auto gap-4 border-none">
                 <TabsTrigger
                   value="activity"
-                  className="px-0 py-2 text-xl font-bold text-white/60 data-[state=active]:text-white data-[state=active]:bg-transparent data-[state=active]:shadow-none border-none rounded-none data-[state=active]:border-b-2 data-[state=active]:border-white"
+                  className="px-0 py-2 text-xs font-medium sm:text-sm text-white/60 data-[state=active]:text-white data-[state=active]:font-semibold data-[state=active]:bg-transparent data-[state=active]:shadow-none border-none rounded-none relative group"
                 >
                   Activity
+                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white hidden group-data-[state=active]:block" />
                 </TabsTrigger>
                 <TabsTrigger
                   value="company"
-                  className="px-0 py-2 text-xl font-bold text-white/60 data-[state=active]:text-white data-[state=active]:bg-transparent data-[state=active]:shadow-none border-none rounded-none data-[state=active]:border-b-2 data-[state=active]:border-white"
+                  className="px-0 py-2 text-xs font-medium sm:text-sm text-white/60 data-[state=active]:text-white data-[state=active]:font-semibold data-[state=active]:bg-transparent data-[state=active]:shadow-none border-none rounded-none relative group"
                 >
                   Company
+                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white hidden group-data-[state=active]:block" />
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -954,21 +956,24 @@ const Activity: FC<ActivityProps> = ({
                 <TabsList className="bg-transparent p-0 h-auto gap-4 border-none">
                   <TabsTrigger
                     value="summary"
-                    className="px-0 py-2 text-white/40 data-[state=active]:text-white data-[state=active]:bg-transparent data-[state=active]:shadow-none border-none rounded-none data-[state=active]:border-b-2 data-[state=active]:border-white font-medium"
+                    className="px-0 py-2 text-xs font-medium sm:text-sm text-white/40 data-[state=active]:text-white data-[state=active]:font-semibold data-[state=active]:bg-transparent data-[state=active]:shadow-none border-none rounded-none relative group"
                   >
                     Summary
+                    <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white hidden group-data-[state=active]:block" />
                   </TabsTrigger>
                   <TabsTrigger
                     value="calendar"
-                    className="px-0 py-2 text-white/40 data-[state=active]:text-white data-[state=active]:bg-transparent data-[state=active]:shadow-none border-none rounded-none data-[state=active]:border-b-2 data-[state=active]:border-white font-medium"
+                    className="px-0 py-2 text-xs font-medium sm:text-sm text-white/40 data-[state=active]:text-white data-[state=active]:font-semibold data-[state=active]:bg-transparent data-[state=active]:shadow-none border-none rounded-none relative group"
                   >
                     Calendar
+                    <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white hidden group-data-[state=active]:block" />
                   </TabsTrigger>
                   <TabsTrigger
                     value="campaigns"
-                    className="px-0 py-2 text-white/40 data-[state=active]:text-white data-[state=active]:bg-transparent data-[state=active]:shadow-none border-none rounded-none data-[state=active]:border-b-2 data-[state=active]:border-white font-medium"
+                    className="px-0 py-2 text-xs font-medium sm:text-sm text-white/40 data-[state=active]:text-white data-[state=active]:font-semibold data-[state=active]:bg-transparent data-[state=active]:shadow-none border-none rounded-none relative group"
                   >
-                    Followup Campaigns
+                    Follow-up
+                    <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white hidden group-data-[state=active]:block" />
                   </TabsTrigger>
                 </TabsList>
 
@@ -1359,7 +1364,7 @@ const Activity: FC<ActivityProps> = ({
                       </div>
 
                       {/* Text below circle */}
-                      <p className="text-white text-center mb-8 text-sm text-white/70">
+                      <p className="text-white text-center mb-8 text-xs text-white/70">
                         {summaryScoreValue !== null
                           ? "Based on recent WhatsApp, SMS, email, and call activity."
                           : "Run the AI summary to compute the engagement score."}
@@ -1374,7 +1379,7 @@ const Activity: FC<ActivityProps> = ({
                         }}
                       >
                         <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
-                          <h3 className="text-white font-bold">AI Summary</h3>
+                          <h3 className="text-white text-xs sm:text-sm font-semibold">AI Summary</h3>
                           <ActiveNavButton
                             icon={RefreshCcw}
                             text={
@@ -1392,9 +1397,9 @@ const Activity: FC<ActivityProps> = ({
                         <p className="text-[11px] leading-tight text-white/50 mb-3 whitespace-nowrap overflow-hidden text-ellipsis">
                           {summaryStatusLabel}
                         </p>
-                        <div className="text-white/80 text-sm space-y-3 leading-relaxed min-h-[140px]">
+                        <div className="text-white/80 text-xs  space-y-3 leading-relaxed min-h-[140px]">
                           {isSummaryBusy ? (
-                            <div className="flex items-center text-white/60 text-sm">
+                            <div className="flex items-center text-white/60 text-xs">
                               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                               Generating the latest insights...
                             </div>
@@ -1403,7 +1408,7 @@ const Activity: FC<ActivityProps> = ({
                               <p key={index}>{paragraph}</p>
                             ))
                           ) : (
-                            <div className="text-white/60 text-sm">
+                            <div className="text-white/60 text-xs">
                               No WhatsApp, SMS, email, or call activity recorded
                               for {lead?.name || "this lead"} in the last 30
                               day(s).
@@ -1419,7 +1424,7 @@ const Activity: FC<ActivityProps> = ({
                 <TabsContent value="calendar" className="mt-6">
                   {!leadId ? (
                     <div
-                      className="rounded-lg p-6 text-white/70 text-sm"
+                      className="rounded-lg p-6 text-white/70 text-xs"
                       style={{
                         background: "rgba(255, 255, 255, 0.03)",
                         border: "1px solid rgba(255, 255, 255, 0.1)",
@@ -1460,7 +1465,7 @@ const Activity: FC<ActivityProps> = ({
                               />
                             </svg>
                           </button>
-                          <h3 className="text-white font-semibold text-lg">
+                          <h3 className="text-white font-semibold text-xs sm:text-sm">
                             {monthNames[currentDate.getMonth()]}{" "}
                             {currentDate.getFullYear()}
                           </h3>
@@ -1625,7 +1630,7 @@ const Activity: FC<ActivityProps> = ({
                       </div>
 
                       {/* Calendar Legend */}
-                      <div className="flex flex-wrap items-center gap-6 text-sm text-white/70">
+                      <div className="flex flex-wrap items-center gap-6 text-xs text-white/70">
                         <div className="flex items-center gap-2">
                           <div className="w-4 h-4 rounded-full border border-indigo-400/70 bg-indigo-500/30" />
                           <span>Upcoming meeting</span>
@@ -1650,7 +1655,7 @@ const Activity: FC<ActivityProps> = ({
                           }}
                         >
                           <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-                            <h3 className="text-white font-bold">
+                            <h3 className="text-white font-semibold text-xs sm:text-sm">
                               Scheduled Meetings
                             </h3>
                             <ActiveNavButton
@@ -1669,7 +1674,7 @@ const Activity: FC<ActivityProps> = ({
                             />
                           </div>
                           {isLeadMeetingsBusy ? (
-                            <div className="flex items-center gap-2 text-white/60 text-sm">
+                            <div className="flex items-center gap-2 text-white/60 text-xs">
                               <Loader2 className="w-4 h-4 animate-spin" />
                               Loading meetings...
                             </div>
@@ -1688,7 +1693,7 @@ const Activity: FC<ActivityProps> = ({
                                   >
                                     <div className="flex flex-wrap items-center justify-between gap-3">
                                       <div>
-                                        <p className="text-white font-semibold text-sm">
+                                        <p className="text-white font-semibold text-xs sm:text-sm">
                                           {meeting.subject || "Meeting"}
                                         </p>
                                         <p className="text-xs text-white/60">
@@ -1755,7 +1760,7 @@ const Activity: FC<ActivityProps> = ({
                               })}
                             </div>
                           ) : (
-                            <div className="text-sm text-white/60">
+                            <div className="text-xs text-white/60">
                               No meetings scheduled for this lead in{" "}
                               {monthNames[currentDate.getMonth()]}.
                             </div>
@@ -1774,7 +1779,7 @@ const Activity: FC<ActivityProps> = ({
                           }}
                         >
                           <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-                            <h3 className="text-white font-bold">
+                            <h3 className="text-white font-semibold text-xs sm:text-sm">
                               Available Slots
                             </h3>
                             <ActiveNavButton
@@ -1793,7 +1798,7 @@ const Activity: FC<ActivityProps> = ({
                             />
                           </div>
                           {isAvailabilityBusy ? (
-                            <div className="flex items-center gap-2 text-white/60 text-sm">
+                            <div className="flex items-center gap-2 text-white/60 text-xs">
                               <Loader2 className="w-4 h-4 animate-spin" />
                               Calculating availability...
                             </div>
@@ -1804,7 +1809,7 @@ const Activity: FC<ActivityProps> = ({
                                   key={slot.start}
                                   className="rounded-lg p-4 border border-white/10 bg-white/5"
                                 >
-                                  <p className="text-white text-sm font-semibold">
+                                  <p className="text-white text-xs sm:text-sm font-semibold">
                                     {format(slot.startDate, "EEE, MMM d")}
                                   </p>
                                   <p className="text-xs text-white/70">
@@ -1816,7 +1821,7 @@ const Activity: FC<ActivityProps> = ({
                               ))}
                             </div>
                           ) : (
-                            <div className="text-sm text-white/60">
+                            <div className="text-xs text-white/60">
                               No availability detected for this range. Try
                               selecting a different month or adjust your
                               Microsoft calendar working hours.
@@ -1842,17 +1847,12 @@ const Activity: FC<ActivityProps> = ({
                       border: "1px solid rgba(255,255,255,0.08)",
                     }}
                   >
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <p className="text-white font-semibold">
+                    <div className="flex flex-col items-start justify-between gap-4">
+                      <div className="flex justify-between gap-4 items-center">
+                        <p className="text-xs font-semibold sm:text-sm">
                           Existing followups
                         </p>
-                        <p className="text-sm text-white/60">
-                          Plans that already include this lead will show here so
-                          you can track status.
-                        </p>
-                      </div>
-                      <ActiveNavButton
+                        <ActiveNavButton
                         icon={RefreshCcw}
                         text={
                           isFollowupPlansFetching ? "Refreshing..." : "Refresh"
@@ -1861,6 +1861,14 @@ const Activity: FC<ActivityProps> = ({
                         disabled={isFollowupPlansFetching}
                         className="h-8 text-xs"
                       />
+
+                        
+                      </div>
+                        <p className="text-xs text-white/60">
+                          Plans that already include this lead will show here so
+                          you can track status.
+                        </p>
+                      
                     </div>
 
                     {isFollowupPlansLoading ? (
@@ -1954,7 +1962,7 @@ const Activity: FC<ActivityProps> = ({
                         })}
                       </div>
                     ) : (
-                      <div className="text-sm text-white/60">
+                      <div className="text-xs text-white/60">
                         No followup plans include this lead yet.
                       </div>
                     )}
@@ -1967,15 +1975,15 @@ const Activity: FC<ActivityProps> = ({
                       border: "1px solid rgba(255,255,255,0.08)",
                     }}
                   >
-                    <div className="flex items-center gap-3 text-white">
+                    <div className="flex items-start gap-3 text-white">
                       <div className="p-2 rounded-full bg-white/10">
                         <Info className="w-5 h-5 text-white" />
                       </div>
                       <div>
-                        <p className="text-base font-semibold">
+                        <p className="text-xs sm:text-sm font-semibold">
                           Automate followups
                         </p>
-                        <p className="text-sm text-white/70">
+                        <p className="text-xs text-white/60">
                           Choose a followup template and select leads to
                           immediately create a personalized followup plan.
                         </p>
@@ -1984,7 +1992,7 @@ const Activity: FC<ActivityProps> = ({
 
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <span className="text-sm text-white/70">
+                        <span className="text-xs text-white/60">
                           Followup template
                         </span>
                         <Select
@@ -2029,7 +2037,7 @@ const Activity: FC<ActivityProps> = ({
                       </div>
 
                       <div className="space-y-2">
-                        <span className="text-sm text-white/70">Leads</span>
+                        <span className="text-xs text-white/60">Leads</span>
                         <Popover
                           open={leadSelectorOpen}
                           onOpenChange={setLeadSelectorOpen}
@@ -2038,7 +2046,7 @@ const Activity: FC<ActivityProps> = ({
                             <Button
                               type="button"
                               variant="outline"
-                              className="w-full justify-between bg-white/5 text-white border-white/10 hover:bg-white/10"
+                              className="w-full text-xs justify-between bg-white/5 text-white border-white/10 hover:bg-white/10"
                             >
                               <span>
                                 {selectedLeadIds.length > 0
@@ -2140,10 +2148,10 @@ const Activity: FC<ActivityProps> = ({
                                 <Badge
                                   key={leadId}
                                   variant="secondary"
-                                  className="bg-white/10 text-white border border-white/20 flex items-center gap-1"
+                                  className="bg-white/10 text-white border border-white/20 text-xs flex items-center gap-1"
                                 >
                                   <Check className="w-3 h-3" />
-                                  <span className="text-xs">
+                                  <span className="text-xs font-medium">
                                     {leadItem.name || "Lead"} ·{" "}
                                     {leadItem.companyName ||
                                       leadItem.position ||
@@ -2167,14 +2175,14 @@ const Activity: FC<ActivityProps> = ({
                       </div>
 
                       <div className="flex items-center justify-between flex-wrap gap-3 pt-2 border-t border-white/10">
-                        <div className="text-sm text-white/60">
+                        <div className="text-xs text-white/60">
                           Each selected lead will get a personalized followup
                           plan using the template above.
                         </div>
                         <Button
                           onClick={handleRunFollowupPlan}
                           disabled={isCreatingFollowupPlan}
-                          className="bg-white/10 hover:bg-white/20 text-white border border-white/30"
+                          className="bg-white/10 hover:bg-white/20 text-white border border-white/30 text-xs"
                         >
                           {isCreatingFollowupPlan ? (
                             <>

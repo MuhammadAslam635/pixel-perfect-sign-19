@@ -150,11 +150,33 @@ const LeadChat = ({
   const emailScrollRef = useRef<HTMLDivElement | null>(null);
   const smsScrollRef = useRef<HTMLDivElement | null>(null);
   const markedReadCacheRef = useRef<Set<string>>(new Set());
+  
+  // Refs for auto-expanding textareas
+  const whatsappTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const emailTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const smsTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   const scrollToBottom = (ref: RefObject<HTMLDivElement>) => {
     const container = ref.current;
     if (!container) return;
     container.scrollTop = container.scrollHeight;
+  };
+
+  // Auto-resize textarea to fit content (max 3 lines)
+  const autoResizeTextarea = (textarea: HTMLTextAreaElement | null) => {
+    if (!textarea) return;
+    
+    // Reset height to calculate new height
+    textarea.style.height = 'auto';
+    
+    // Calculate max height for 3 lines (approximately 20px per line + padding)
+    const lineHeight = 20;
+    const maxLines = 3;
+    const maxHeight = lineHeight * maxLines;
+    
+    // Set height based on content, capped at max
+    const newHeight = Math.min(textarea.scrollHeight, maxHeight);
+    textarea.style.height = `${newHeight}px`;
   };
 
   const {
@@ -1019,13 +1041,26 @@ const LeadChat = ({
   const headerContactValue =
     activeTab === "Email" ? emailAddress || "" : phoneNumber || "";
 
+  // Auto-resize textareas when content changes
+  useEffect(() => {
+    autoResizeTextarea(whatsappTextareaRef.current);
+  }, [whatsappInput]);
+
+  useEffect(() => {
+    autoResizeTextarea(emailTextareaRef.current);
+  }, [emailInput]);
+
+  useEffect(() => {
+    autoResizeTextarea(smsTextareaRef.current);
+  }, [smsInput]);
+
   const handleComposeEmail = () => {
     window.location.href = `${import.meta.env.VITE_APP_API_URL}/emails/compose`;
   };
 
   return (
     <section
-      className="flex flex-col font-poppins max-h-[calc(100vh-120px)] lg:p-7 p-6 max-w-full rounded-3xl"
+      className="flex flex-col font-poppins h-[calc(100vh-200px)] lg:p-7 p-6 max-w-full rounded-3xl"
       style={{
         background:
           "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 2e-05) 38.08%, rgba(255, 255, 255, 2e-05) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
@@ -1052,13 +1087,13 @@ const LeadChat = ({
                 >
                   {tab.label}
                 </span>
-                <span
+                {/* <span
                   className={`block text-[9px] transition-colors ${
                     isActive ? "text-white" : "text-white/50"
                   }`}
                 >
                   {tab.status}
-                </span>
+                </span> */}
                 {isActive && (
                   <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white" />
                 )}
@@ -1069,14 +1104,14 @@ const LeadChat = ({
       </div>
 
       {/* Lead Info */}
-      <div className="flex w-full flex-col gap-3 py-1 sm:flex-row sm:items-center sm:justify-between">
+      {/* <div className="flex w-full flex-col gap-3 py-1 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <div className="h-8 w-8 sm:h-10 sm:w-10">
             {avatarSrc ? (
               <img
                 src={avatarSrc}
                 alt={`${displayName} avatar`}
-                className="h-full w-full rounded-full object-cover"
+                className="h-full w-ful rounded-full object-cover"
               />
             ) : (
               <span className="flex h-full w-full items-center justify-center rounded-full bg-[#3d4f51] text-white text-base sm:text-lg">
@@ -1136,7 +1171,7 @@ const LeadChat = ({
             </div>
           )}
         </div>
-      </div>
+      </div> */}
       <div className="h-px w-full bg-white/30 mb-3" />
       {/* Content */}
       <div className="flex flex-col w-full flex-1 min-h-0 px-1">
@@ -1340,31 +1375,9 @@ const LeadChat = ({
 
             {/* Fixed input at bottom */}
             <div className="sticky bottom-0 left-0 right-0 pt-4">
-              <div className="flex items-center justify-end mb-2 mx-1">
-                <ActiveNavButton
-                  icon={Sparkles}
-                  text={
-                    isGeneratingWhatsAppMessage
-                      ? "Generating..."
-                      : "Generate with AI"
-                  }
-                  onClick={handleGenerateWhatsAppMessage}
-                  disabled={
-                    isGeneratingWhatsAppMessage ||
-                    !lead?.companyId ||
-                    !lead?._id
-                  }
-                  className="h-7 text-xs disabled:opacity-100"
-                  title={
-                    !lead?.companyId || !lead?._id
-                      ? "Lead information is required to generate suggestions"
-                      : "Generate with AI"
-                  }
-                />
-              </div>
-              <div className="flex items-center gap-3 rounded-full bg-white/10 px-4 py-3 mx-1 mb-1">
-                <input
-                  type="text"
+              <div className="flex items-center gap-2 rounded-full bg-white/10 px-4 py-3 mx-1 mb-1">
+                <textarea
+                  ref={whatsappTextareaRef}
                   value={whatsappInput}
                   onChange={(event) => setWhatsappInput(event.target.value)}
                   onKeyDown={(event) => {
@@ -1374,13 +1387,35 @@ const LeadChat = ({
                     }
                   }}
                   disabled={whatsappInputsDisabled}
-                  className="lead-chat-input flex-1 bg-transparent outline-none border-none text-sm text-white disabled:opacity-50"
+                  className="lead-chat-input flex-1 bg-transparent outline-none border-none text-sm text-white disabled:opacity-50 resize-none overflow-y-auto scrollbar-hide"
                   placeholder={
                     whatsappUnavailableMessage
                       ? whatsappUnavailableMessage
                       : "Type WhatsApp message"
                   }
+                  rows={1}
+                  style={{ minHeight: '20px', maxHeight: '60px' }}
                 />
+                <button
+                  className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-white/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  onClick={handleGenerateWhatsAppMessage}
+                  disabled={
+                    isGeneratingWhatsAppMessage ||
+                    !lead?.companyId ||
+                    !lead?._id
+                  }
+                  title={
+                    !lead?.companyId || !lead?._id
+                      ? "Lead information is required to generate suggestions"
+                      : "Generate with AI"
+                  }
+                >
+                  {isGeneratingWhatsAppMessage ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-white" />
+                  ) : (
+                    <Sparkles className="h-4 w-4 text-white" />
+                  )}
+                </button>
                 <button
                   className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
                   onClick={handleSendWhatsappMessage}
@@ -1504,28 +1539,9 @@ const LeadChat = ({
 
             {/* Fixed input at bottom */}
             <div className="sticky bottom-0 left-0 right-0 pt-4">
-              <div className="flex items-center justify-end mb-2 mx-1">
-                <ActiveNavButton
-                  icon={Sparkles}
-                  text={
-                    isGeneratingEmailMessage
-                      ? "Generating..."
-                      : "Generate with AI"
-                  }
-                  onClick={handleGenerateEmailMessage}
-                  disabled={
-                    isGeneratingEmailMessage || !lead?.companyId || !lead?._id
-                  }
-                  className="h-7 text-xs disabled:opacity-100"
-                  title={
-                    !lead?.companyId || !lead?._id
-                      ? "Lead information is required to generate suggestions"
-                      : "Generate with AI"
-                  }
-                />
-              </div>
-              <div className="flex items-center gap-3 rounded-full bg-white/10 px-4 py-3 mx-1 mb-1">
+              <div className="flex items-center gap-2 rounded-full bg-white/10 px-4 py-3 mx-1 mb-1">
                 <textarea
+                  ref={emailTextareaRef}
                   value={emailInput}
                   onChange={(event) => setEmailInput(event.target.value)}
                   onKeyDown={(event) => {
@@ -1535,14 +1551,33 @@ const LeadChat = ({
                     }
                   }}
                   disabled={!emailAddress}
-                  className="lead-chat-input flex-1 bg-transparent outline-none border-none text-sm text-white disabled:opacity-50 resize-none min-h-[20px] max-h-[60px] py-1 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                  className="lead-chat-input flex-1 bg-transparent outline-none border-none text-sm text-white disabled:opacity-50 resize-none overflow-y-auto scrollbar-hide"
                   placeholder={
                     !emailAddress
                       ? "Add an email address to send emails"
                       : "Write your email message (Ctrl+Enter to send)"
                   }
                   rows={1}
+                  style={{ minHeight: '20px', maxHeight: '60px' }}
                 />
+                <button
+                  className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-white/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+                  onClick={handleGenerateEmailMessage}
+                  disabled={
+                    isGeneratingEmailMessage || !lead?.companyId || !lead?._id
+                  }
+                  title={
+                    !lead?.companyId || !lead?._id
+                      ? "Lead information is required to generate suggestions"
+                      : "Generate with AI"
+                  }
+                >
+                  {isGeneratingEmailMessage ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-white" />
+                  ) : (
+                    <Sparkles className="h-4 w-4 text-white" />
+                  )}
+                </button>
                 <button
                   className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
                   onClick={handleSendEmail}
@@ -1669,29 +1704,9 @@ const LeadChat = ({
 
             {/* Fixed input at bottom */}
             <div className="sticky bottom-0 left-0 right-0 pt-4">
-              <div className="flex items-center justify-end mb-2 mx-1">
-                <ActiveNavButton
-                  icon={Sparkles}
-                  text={
-                    isGeneratingSmsMessage
-                      ? "Generating..."
-                      : "Generate with AI"
-                  }
-                  onClick={handleGenerateSmsMessage}
-                  disabled={
-                    isGeneratingSmsMessage || !lead?.companyId || !lead?._id
-                  }
-                  className="h-7 text-xs disabled:opacity-100"
-                  title={
-                    !lead?.companyId || !lead?._id
-                      ? "Lead information is required to generate suggestions"
-                      : "Generate with AI"
-                  }
-                />
-              </div>
-              <div className="flex items-center gap-3 rounded-full bg-white/10 px-4 py-3 mx-1 mb-1">
-                <input
-                  type="text"
+              <div className="flex items-center gap-2 rounded-full bg-white/10 px-4 py-3 mx-1 mb-1">
+                <textarea
+                  ref={smsTextareaRef}
                   value={smsInput}
                   onChange={(event) => setSmsInput(event.target.value)}
                   onKeyDown={(event) => {
@@ -1701,7 +1716,7 @@ const LeadChat = ({
                     }
                   }}
                   disabled={smsInputsDisabled}
-                  className="lead-chat-input flex-1 bg-transparent outline-none border-none text-sm text-white disabled:opacity-50"
+                  className="lead-chat-input flex-1 bg-transparent outline-none border-none text-sm text-white disabled:opacity-50 resize-none overflow-y-auto scrollbar-hide"
                   placeholder={
                     smsUnavailableMessage
                       ? smsUnavailableMessage
@@ -1709,7 +1724,27 @@ const LeadChat = ({
                       ? "Type SMS message"
                       : "Add a phone number to send SMS"
                   }
+                  rows={1}
+                  style={{ minHeight: '20px', maxHeight: '60px' }}
                 />
+                <button
+                  className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-white/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  onClick={handleGenerateSmsMessage}
+                  disabled={
+                    isGeneratingSmsMessage || !lead?.companyId || !lead?._id
+                  }
+                  title={
+                    !lead?.companyId || !lead?._id
+                      ? "Lead information is required to generate suggestions"
+                      : "Generate with AI"
+                  }
+                >
+                  {isGeneratingSmsMessage ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-white" />
+                  ) : (
+                    <Sparkles className="h-4 w-4 text-white" />
+                  )}
+                </button>
                 <button
                   className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
                   onClick={handleSendSms}

@@ -21,10 +21,10 @@ const CompanyTab: FC<CompanyTabProps> = ({ lead }) => {
   if (!companyName && !company) {
     return (
       <div className="flex flex-col">
-        <h2 className="text-xl font-bold text-white mb-4">Company</h2>
+        <h2 className="text-xs sm:text-sm font-semibold text-white mb-4">Company</h2>
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <Building2 className="w-12 h-12 text-white/30 mb-4" />
-          <p className="text-sm text-white/60">
+          <p className="text-xs text-white/60">
             No company information available for this lead.
           </p>
         </div>
@@ -46,8 +46,8 @@ const CompanyTab: FC<CompanyTabProps> = ({ lead }) => {
           </div>
         )}
         <div className="flex-1 min-w-0">
-          <h2 className="text-xl font-bold text-white mb-2">{companyName}</h2>
-          <div className="flex flex-wrap items-center gap-4 text-sm text-white/60">
+          <h2 className="text-xs sm:text-sm font-semibold text-white mb-2">{companyName}</h2>
+          <div className="flex flex-wrap items-center gap-4 text-xs text-white/60">
             {companyLocation && (
               <div className="flex items-center gap-1">
                 <MapPin className="w-4 h-4" />
@@ -71,7 +71,7 @@ const CompanyTab: FC<CompanyTabProps> = ({ lead }) => {
             <div className="flex items-center gap-3">
               <Globe className="w-5 h-5 text-white/60" />
               <div>
-                <p className="text-sm font-medium text-white">Website</p>
+                <p className="text-xs font-medium text-white">Website</p>
                 <p className="text-xs text-white/60">{company.website}</p>
               </div>
             </div>
@@ -83,7 +83,7 @@ const CompanyTab: FC<CompanyTabProps> = ({ lead }) => {
               }
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1 text-sm text-cyan-400 hover:text-cyan-300 transition-colors"
+              className="flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
             >
               Visit <ExternalLink className="w-3 h-3" />
             </a>
@@ -94,7 +94,7 @@ const CompanyTab: FC<CompanyTabProps> = ({ lead }) => {
           <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10">
             <Users className="w-5 h-5 text-white/60" />
             <div>
-              <p className="text-sm font-medium text-white">Company Size</p>
+              <p className="text-xs font-medium text-white">Company Size</p>
               <p className="text-xs text-white/60">
                 {company.employees > 1000
                   ? `${Math.floor(company.employees / 1000)}K+ employees`
@@ -108,7 +108,7 @@ const CompanyTab: FC<CompanyTabProps> = ({ lead }) => {
           <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10">
             <MapPin className="w-5 h-5 text-white/60" />
             <div>
-              <p className="text-sm font-medium text-white">Address</p>
+              <p className="text-xs font-medium text-white">Address</p>
               <p className="text-xs text-white/60">{company.address}</p>
             </div>
           </div>
@@ -119,7 +119,7 @@ const CompanyTab: FC<CompanyTabProps> = ({ lead }) => {
           <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10">
             <Briefcase className="w-5 h-5 text-white/60" />
             <div>
-              <p className="text-sm font-medium text-white">Position</p>
+              <p className="text-xs font-medium text-white">Position</p>
               <p className="text-xs text-white/60">{lead.position}</p>
             </div>
           </div>
