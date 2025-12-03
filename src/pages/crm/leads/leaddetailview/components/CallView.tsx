@@ -752,272 +752,14 @@ export const CallView = ({
   }, [autoStart, twilioReady, twilioStatusLoading, callPhase, handleCall]);
 
   return (
-    <div className="flex flex-1 w-full h-full flex-col items-center justify-start text-white/80 text-center gap-6 pt-6 pb-10 overflow-y-auto scrollbar-hide">
-      {mode === "call" && (
-        <div className="flex flex-col items-center gap-4">
-          <div className="flex items-center justify-center py-5">
-            <div
-              className="flex items-center justify-center rounded-full transition-all"
-              style={{
-                width: "250px",
-                height: "250px",
-                position: "relative",
-                transform: `scale(${circleScale})`,
-                transition: "transform 120ms ease-out",
-              }}
-            >
-              {/* Sphere with gradient edges to transparent center */}
-              <div
-                className="absolute inset-0 rounded-full"
-                style={{
-                  background: `
-                  radial-gradient(circle at center, 
-                    transparent 0%, 
-                    transparent 55%, 
-                    rgba(66, 247, 255, 0.18) 65%, 
-                    rgba(66, 247, 255, 0.55) 70%
-                  )
-                `,
-                  filter: "blur(0.5px)",
-                }}
-              />
-              {/* Inner button */}
-              <div
-                role="button"
-                tabIndex={0}
-                onClick={() => {
-                  if (!twilioReady || primaryActionDisabled) {
-                    return;
-                  }
-                  if (callPhase === "idle") {
-                    handleCall();
-                  } else if (callPhase === "incoming") {
-                    handleAnswerIncoming();
-                  } else if (callPhase === "connected") {
-                    handleHangUp();
-                  }
-                }}
-                onKeyDown={(event) => {
-                  if (event.key !== "Enter" && event.key !== " ") {
-                    return;
-                  }
-                  event.preventDefault();
-                  if (callPhase === "idle") {
-                    handleCall();
-                  } else if (callPhase === "incoming") {
-                    handleAnswerIncoming();
-                  } else if (callPhase === "connected") {
-                    handleHangUp();
-                  }
-                }}
-                className={`flex items-center justify-center rounded-full transition-colors relative z-10 ${
-                  !twilioReady
-                    ? "cursor-not-allowed opacity-60"
-                    : callPhase === "idle"
-                    ? "cursor-pointer hover:border-cyan-300/60"
-                    : callPhase === "connected"
-                    ? "cursor-pointer border-cyan-300/80"
-                    : "cursor-not-allowed"
-                }`}
-                style={{
-                  width: "250px",
-                  height: "250px",
-                  background: `
-                  radial-gradient(circle at center, 
-                    transparent 0%, 
-                    transparent 30%, 
-                    rgba(66, 247, 255, 0.01) 45%, 
-                    rgba(66, 247, 255, 0.02) 55%, 
-                    rgba(66, 247, 255, 0.04) 65%, 
-                    rgba(66, 247, 255, 0.08) 75%, 
-                    rgba(66, 247, 255, 0.15) 85%, 
-                    rgba(66, 247, 255, 0.25) 92%, 
-                    rgba(66, 247, 255, 0.45) 96%, 
-                    rgba(66, 247, 255, 0.7) 98.5%, 
-                    rgba(66, 247, 255, 1) 100%
-                  )
-                `,
-                  border: "1px solid rgba(66, 247, 255, 0.55)",
-                  boxShadow: `
-                  inset 0 0 10px rgba(66, 247, 255, 0.08)
-                `,
-                  transition: "box-shadow 120ms ease-out",
-                }}
-              >
-                {/* White gradient overlay - small spread */}
-                <div
-                  className="absolute inset-0 rounded-full pointer-events-none"
-                  style={{
-                    background: `
-                    radial-gradient(circle at center, 
-                      rgba(255, 255, 255, 0.12) 0%, 
-                      rgba(255, 255, 255, 0.08) 25%, 
-                      rgba(255, 255, 255, 0.04) 40%, 
-                      rgba(255, 255, 255, 0.02) 50%, 
-                      rgba(255, 255, 255, 0.01) 55%, 
-                      transparent 65%
-                    )
-                  `,
-                    zIndex: 1,
-                  }}
-                />
-              </div>
-              {/* Waveform visualization */}
-              {isListening && waveformData.length > 0 && (
-                <div
-                  className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 pointer-events-none"
-                  style={{
-                    width: "380px",
-                    height: "200px",
-                    zIndex: 30,
-                  }}
-                >
-                  <svg
-                    width="100%"
-                    height="100%"
-                    viewBox="0 0 380 200"
-                    preserveAspectRatio="none"
-                    style={{ overflow: "visible" }}
-                  >
-                    <defs>
-                      <linearGradient
-                        id="waveformFade"
-                        x1="0%"
-                        y1="0%"
-                        x2="100%"
-                        y2="0%"
-                      >
-                        <stop offset="0%" stopColor="white" stopOpacity="0" />
-                        <stop offset="15%" stopColor="white" stopOpacity="1" />
-                        <stop offset="85%" stopColor="white" stopOpacity="1" />
-                        <stop offset="100%" stopColor="white" stopOpacity="0" />
-                      </linearGradient>
-                      <mask id="waveformMask">
-                        <rect
-                          width="100%"
-                          height="100%"
-                          fill="url(#waveformFade)"
-                        />
-                      </mask>
-                    </defs>
-                    <path
-                      d={(() => {
-                        if (waveformData.length < 2) return "";
-                        const centerY = 100;
-                        const amplitude = 155;
-                        const points = waveformData.map((value, index) => {
-                          const x =
-                            (index / (waveformData.length - 1)) * 380;
-                          const y = centerY - value * amplitude;
-                          return { x, y };
-                        });
-                        let path = `M ${points[0].x} ${points[0].y}`;
-                        for (let i = 0; i < points.length - 1; i++) {
-                          const p0 = i > 0 ? points[i - 1] : points[i];
-                          const p1 = points[i];
-                          const p2 = points[i + 1];
-                          const p3 =
-                            i < points.length - 2
-                              ? points[i + 2]
-                              : points[i + 1];
-                          const cp1x = p1.x + (p2.x - p0.x) / 6;
-                          const cp1y = p1.y + (p2.y - p0.y) / 6;
-                          const cp2x = p2.x - (p3.x - p1.x) / 6;
-                          const cp2y = p2.y - (p3.y - p1.y) / 6;
-                          path += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
-                        }
-                        return path;
-                      })()}
-                      fill="none"
-                      stroke="rgba(66, 247, 255, 0.9)"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      mask="url(#waveformMask)"
-                    />
-                  </svg>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="flex flex-col items-center gap-3">
-        <div className="flex items-center gap-3">
-          {mode === "call" && (
-            <Button
-              type="button"
-              onClick={
-                callPhase === "connected"
-                  ? handleHangUp
-                  : callPhase === "incoming"
-                  ? handleAnswerIncoming
-                  : callPhase === "idle" && twilioReady
-                  ? handleCall
-                  : undefined
-              }
-              disabled={primaryActionDisabled}
-              className="px-6 py-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 text-sm font-semibold text-white shadow-lg shadow-blue-900/40 hover:opacity-90 transition disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {callPhase === "connected"
-                ? "End call"
-                : callPhase === "ringing"
-                ? "Ringing..."
-                : callPhase === "incoming"
-                ? "Answer call"
-                : "Make a call"}
-            </Button>
-          )}
-
-          {mode === "ai" && lead?._id && (
-            <Button
-              type="button"
-              onClick={handleAICall}
-              disabled={aiCallLoading}
-              className="px-6 py-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-600 text-sm font-semibold text-white shadow-lg shadow-purple-900/40 hover:opacity-90 transition disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {aiCallLoading ? "Initiating..." : "AI Call"}
-            </Button>
-          )}
-        </div>
-
-        <p className="text-sm text-white/70">{callStatus}</p>
-
-        {callPhase === "incoming" && (
-          <div className="flex items-center gap-3">
-            <Button
-              type="button"
-              onClick={handleDeclineIncoming}
-              variant="destructive"
-              className="px-4 py-1 rounded-full text-xs font-semibold"
-            >
-              Decline
-            </Button>
-          </div>
-        )}
-
-        {error && (
-          <div className="text-sm text-red-300 bg-red-500/10 border border-red-500/20 px-4 py-2 rounded-full">
-            {error}
-          </div>
-        )}
-
-        <p className="text-xs text-white/40">
-          Calls are routed via Twilio Voice with mic data processed locally.
-        </p>
-      </div>
-
-      <div className="w-full max-w-5xl mt-10 text-left space-y-3">
+    <div className="grid grid-cols-3 gap-6 flex-1 w-full h-full p-6 overflow-hidden">
+      {/* Left Side: Call History - 2/3 width */}
+      <div className="col-span-2 flex flex-col text-left space-y-3 overflow-y-auto scrollbar-hide">
         <div className="flex items-center justify-between gap-4">
           <div>
             <h2 className="text-xl font-semibold text-white leading-snug">
-              Call Logs
+              Call History
             </h2>
-            <p className="text-xs text-white/60">
-              Recent calls with transcription, success score and follow-up
-              suggestions.
-            </p>
           </div>
           <ActiveNavButton
             icon={RefreshCcw}
@@ -1028,221 +770,197 @@ export const CallView = ({
           />
         </div>
 
-        <div className="rounded-[24px] border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden shadow-[0_35px_120px_rgba(7,6,19,0.55)]">
-          <div className="overflow-x-auto scrollbar-thin">
-              <div className="min-w-full">
-              <div className="grid grid-cols-7 gap-2 px-4 py-3 text-[0.6rem] font-semibold uppercase tracking-[0.22em] text-white/50 text-center">
-                {/* <span>Caller</span> */}
-                <span>Date</span>
-                <span>Duration</span>
-                {/* <span>Channel</span> */}
-                <span>Status</span>
-                <span>Score</span>
-                <span>Recording</span>
-                <span>Transcript</span>
-                <span>Follow-Up</span>
-              </div>
+        <div className="space-y-3">
+          {callLogsLoading ? (
+            <div className="px-4 py-6 text-center text-xs text-white/70 rounded-2xl border border-white/10 bg-white/[0.03]">
+              Loading call logs...
+            </div>
+          ) : (() => {
+              // Classify calls by provider so that:
+              // - Twilio calls appear under the "Call" tab
+              // - ElevenLabs AI calls appear under the "AI Call" tab
+              const filteredLogs = callLogs.filter((log) => {
+                const isElevenLabsCall =
+                  !!log.elevenlabsCallId ||
+                  !!log.elevenlabsRecordingUrl ||
+                  log.metadata?.provider === "elevenlabs";
 
-              <div className="divide-y divide-white/5">
-                {callLogsLoading ? (
-                  <div className="px-4 py-6 text-center text-xs text-white/70">
-                    Loading call logs...
+                if (mode === "ai") {
+                  return isElevenLabsCall;
+                }
+
+                // Default "call" mode: show non-ElevenLabs (Twilio) calls
+                return !isElevenLabsCall;
+              });
+
+              if (filteredLogs.length === 0) {
+                return (
+                  <div className="px-4 py-6 text-center text-xs text-white/60 rounded-2xl border border-white/10 bg-white/[0.03]">
+                    {leadId
+                      ? mode === "ai"
+                        ? "No AI calls have been logged yet."
+                        : "No calls have been logged yet."
+                      : "Select a lead to view call logs."}
                   </div>
-                ) : (() => {
-                    // Classify calls by provider so that:
-                    // - Twilio calls appear under the "Call" tab
-                    // - ElevenLabs AI calls appear under the "AI Call" tab
-                    const filteredLogs = callLogs.filter((log) => {
-                      const isElevenLabsCall =
-                        !!log.elevenlabsCallId ||
-                        !!log.elevenlabsRecordingUrl ||
-                        log.metadata?.provider === "elevenlabs";
+                );
+              }
 
-                      if (mode === "ai") {
-                        return isElevenLabsCall;
-                      }
+              return filteredLogs.map((log) => {
+                const rawScoreStatus =
+                  log.leadSuccessScoreStatus || "not-requested";
+                const rawFollowupStatus =
+                  log.followupSuggestionStatus || "not-requested";
 
-                      // Default "call" mode: show non-ElevenLabs (Twilio) calls
-                      return !isElevenLabsCall;
-                    });
+                // If there's no recording/transcription path, don't show
+                // endless "Processing…" – treat as not available.
+                // Check both Twilio and ElevenLabs sources
+                const hasRecordingOrTranscript =
+                  !!log.recordingUrl ||
+                  !!log.elevenlabsRecordingUrl ||
+                  !!log.transcriptionText ||
+                  !!log.elevenlabsTranscript ||
+                  (log.transcriptionStatus &&
+                    log.transcriptionStatus !== "not-requested");
+                
+                // Use ElevenLabs recording/transcript if available, otherwise fall back to Twilio
+                const recordingUrl = log.elevenlabsRecordingUrl || log.recordingUrl;
+                const transcriptText = log.elevenlabsTranscript || log.transcriptionText;
 
-                    if (filteredLogs.length === 0) {
-                      return (
-                  <div className="px-4 py-6 text-center text-xs text-white/60">
-                          {leadId
-                            ? mode === "ai"
-                              ? "No AI calls have been logged yet."
-                              : "No calls have been logged yet."
-                            : "Select a lead to view call logs."}
-                  </div>
-                      );
-                    }
+                const scoreStatus =
+                  rawScoreStatus === "pending" && !hasRecordingOrTranscript
+                    ? "not-requested"
+                    : rawScoreStatus;
+                const followupStatus =
+                  rawFollowupStatus === "pending" &&
+                  !hasRecordingOrTranscript
+                    ? "not-requested"
+                    : rawFollowupStatus;
 
-                    return filteredLogs.map((log) => {
-                    const rawScoreStatus =
-                      log.leadSuccessScoreStatus || "not-requested";
-                    const rawFollowupStatus =
-                      log.followupSuggestionStatus || "not-requested";
+                // Determine call type display and icon background color
+                const isMissed = log.status === "missed" || log.status === "cancelled" || log.status === "failed";
+                const isIncoming = log.direction === "inbound";
+                const callTypeLabel = isMissed 
+                  ? "Outgoing Call" 
+                  : isIncoming 
+                  ? "Incoming Call" 
+                  : "Outgoing Call";
+                
+                const iconBgColor = isMissed 
+                  ? "bg-red-500/10" 
+                  : "bg-emerald-500/10";
+                
+                const iconColor = isMissed 
+                  ? "text-red-400" 
+                  : "text-emerald-400";
 
-                    // If there's no recording/transcription path, don't show
-                    // endless "Processing…" – treat as not available.
-                    // Check both Twilio and ElevenLabs sources
-                    const hasRecordingOrTranscript =
-                      !!log.recordingUrl ||
-                      !!log.elevenlabsRecordingUrl ||
-                      !!log.transcriptionText ||
-                      !!log.elevenlabsTranscript ||
-                      (log.transcriptionStatus &&
-                        log.transcriptionStatus !== "not-requested");
-                    
-                    // Use ElevenLabs recording/transcript if available, otherwise fall back to Twilio
-                    const recordingUrl = log.elevenlabsRecordingUrl || log.recordingUrl;
-                    const transcriptText = log.elevenlabsTranscript || log.transcriptionText;
+                const statusText = isMissed ? "Missed" : "";
 
-                    const scoreStatus =
-                      rawScoreStatus === "pending" && !hasRecordingOrTranscript
-                        ? "not-requested"
-                        : rawScoreStatus;
-                    const followupStatus =
-                      rawFollowupStatus === "pending" &&
-                      !hasRecordingOrTranscript
-                        ? "not-requested"
-                        : rawFollowupStatus;
+                return (
+                  <div
+                    key={log._id}
+                    className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden hover:bg-white/[0.05] transition-colors"
+                  >
+                    <div className="flex items-center justify-between px-4 py-3 gap-4">
+                      {/* Left side: Icon + Call Type + Duration */}
+                      <div className="flex items-center gap-3 flex-1">
+                        {/* Phone Icon */}
+                        <div className={`w-10 h-10 rounded-full ${iconBgColor} flex items-center justify-center flex-shrink-0`}>
+                          <svg 
+                            className={`w-5 h-5 ${iconColor}`} 
+                            fill="currentColor" 
+                            viewBox="0 0 24 24"
+                          >
+                            <path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 00-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z"/>
+                          </svg>
+                        </div>
 
-                    const renderStatusPill = (
-                      label: string,
-                      status: string
-                    ) => {
-                      if (status === "pending") {
-                        return (
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-[0.65rem] font-medium bg-white/5 text-white/70 border border-white/10">
-                            {label}: Processing…
-                          </span>
-                        );
-                      }
-                      if (status === "completed") {
-                        return (
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-[0.65rem] font-medium bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
-                            {label}: Ready
-                          </span>
-                        );
-                      }
-                      if (status === "failed") {
-                        return (
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-[0.65rem] font-medium bg-red-500/10 text-red-300 border border-red-500/20">
-                            {label}: Failed
-                          </span>
-                        );
-                      }
-                      // status === "not-requested" or anything else treated as generic
-                      return (
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-[0.65rem] font-medium bg-white/0 text-white/40 border border-white/5">
-                          Not available
-                        </span>
-                      );
-                    };
-
-                    const isFollowupCompleted = followupStatus === "completed";
-
-                    return (
-                      <div
-                        key={log._id}
-                        className="grid grid-cols-7 gap-2 px-4 py-3 text-[0.7rem] text-white/80 bg-white/[0.01] hover:bg-white/[0.04] transition-colors"
-                      >
-                        {/* Caller */}
-                        {/* <div className="flex flex-col gap-0.5">
-                          <span className="font-semibold text-white">
-                            {log.leadName || "Unknown caller"}
-                          </span>
-                          {log.leadPhone && (
-                            <span className="text-xs text-white/50">
-                              {log.leadPhone}
+                        {/* Call Type and Duration */}
+                        <div className="flex flex-col gap-0.5">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-white">
+                              {callTypeLabel}
                             </span>
-                          )}
-                        </div> */}
+                            {statusText && (
+                              <span className="text-xs text-red-400">
+                                {statusText}
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-xs text-white/60">
+                            Duration: {formatDuration(log.durationSeconds)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Right side: Play Button + Date */}
+                      <div className="flex items-center gap-3">
+                        {/* Play Button */}
+                        {recordingUrl || log.callSid || log.elevenlabsCallId ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              void handleRecordingView(log);
+                            }}
+                            className="w-10 h-10 rounded-full border-2 border-emerald-400/30 bg-emerald-500/10 flex items-center justify-center hover:bg-emerald-500/20 transition-colors flex-shrink-0"
+                          >
+                            <svg 
+                              className="w-4 h-4 text-emerald-400 ml-0.5" 
+                              fill="currentColor" 
+                              viewBox="0 0 24 24"
+                            >
+                              <path d="M8 5v14l11-7z"/>
+                            </svg>
+                          </button>
+                        ) : null}
 
                         {/* Date */}
-                        <div className="text-white/70 break-words text-center">
+                        <span className="text-xs text-white/60 whitespace-nowrap">
                           {formatCallDate(log.startedAt)}
-                        </div>
+                        </span>
+                      </div>
+                    </div>
 
-                        {/* Duration */}
-                        <div className="text-white/70 text-center">
-                          {formatDuration(log.durationSeconds)}
-                        </div>
-
-                        {/* Channel */}
-                        {/* <div className="text-white/70">
-                          {log.channel || "Phone"}
-                        </div> */}
-
-                        {/* Call status */}
-                        <div
-                          className={`font-semibold text-center ${getStatusColor(
-                            log.status
-                          )}`}
-                        >
-                          {formatStatus(log.status)}
-                        </div>
-
-                        {/* Success score */}
-                        <div className="flex flex-col items-center gap-1">
-                          {scoreStatus === "completed" &&
-                          typeof log.leadSuccessScore === "number"
-                            ? (() => {
+                    {/* Additional Info Section - Collapsible/Expandable area for Score, Transcript, Follow-up */}
+                    {(scoreStatus === "completed" || 
+                      (log.transcriptionStatus === "completed" && transcriptText) || 
+                      (log.elevenlabsTranscript && transcriptText) ||
+                      followupStatus === "completed") && (
+                      <div className="border-t border-white/5 px-4 py-3 bg-white/[0.01]">
+                        <div className="flex flex-wrap items-center gap-2">
+                          {/* Success Score */}
+                          {scoreStatus === "completed" && typeof log.leadSuccessScore === "number" && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-white/50">Score:</span>
+                              {(() => {
                                 const score = log.leadSuccessScore || 0;
                                 let colorClasses =
                                   "bg-emerald-500/10 text-emerald-300 border border-emerald-500/20";
                                 if (score < 40) {
-                                  // Bad score = red
                                   colorClasses =
                                     "bg-red-500/10 text-red-300 border border-red-500/20";
                                 } else if (score < 80) {
-                                  // Medium score = yellow
                                   colorClasses =
                                     "bg-yellow-500/10 text-yellow-300 border border-yellow-500/20";
                                 }
                                 return (
                                   <span
-                                    className={`inline-flex items-center px-2 py-1 rounded-full text-[0.6rem] font-medium ${colorClasses}`}
+                                    className={`inline-flex items-center px-2 py-1 rounded-full text-[0.65rem] font-medium ${colorClasses}`}
                                   >
-                                    Score: {score}/100
+                                    {score}/100
                                   </span>
                                 );
-                              })()
-                            : renderStatusPill("Score", scoreStatus)}
-                        </div>
-
-                        {/* Recording */}
-                        <div className="flex flex-col items-center justify-center pb-3">
-                          {recordingUrl || log.callSid || log.elevenlabsCallId ? (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              className="h-7 px-2 py-1 rounded-full border-white/20 bg-white/5 text-[0.65rem] text-white hover:bg-white/10 hover:text-white"
-                              onClick={() => {
-                                void handleRecordingView(log);
-                              }}
-                            >
-                              ▶ Play
-                            </Button>
-                          ) : (
-                            <span className="text-xs text-white/40 border border-white/5 rounded-full px-3 py-1">
-                              Not available
-                            </span>
+                              })()}
+                            </div>
                           )}
-                        </div>
 
-                        {/* Transcription */}
-                        <div className="flex flex-col gap-1 pr-3 items-center">
-                          {(log.transcriptionStatus === "completed" && transcriptText) ||
-                          (log.elevenlabsTranscript && transcriptText) ? (
+                          {/* Transcription */}
+                          {((log.transcriptionStatus === "completed" && transcriptText) ||
+                            (log.elevenlabsTranscript && transcriptText)) && (
                             <Button
                               type="button"
                               variant="outline"
                               size="sm"
-                              className="h-7 px-2 py-1 rounded-full border-white/20 bg-white/5 text-[0.65rem] text-white hover:bg-white/10 hover:text-white w-fit"
+                              className="h-7 px-3 py-1 rounded-full border-white/20 bg-white/5 text-[0.65rem] text-white hover:bg-white/10 hover:text-white"
                               onClick={() =>
                                 setSelectedCallLogView({
                                   type: "transcription",
@@ -1250,35 +968,17 @@ export const CallView = ({
                                 })
                               }
                             >
-                              👁 View
+                              📝 Transcript
                             </Button>
-                          ) : (
-                            <>
-                              {log.transcriptionStatus ? (
-                                <span className="inline-flex items-center px-3 py-1 rounded-full text-[0.65rem] font-medium bg-white/0 text-white/60 border border-white/10">
-                                  {log.transcriptionStatus === "pending"
-                                    ? "Transcription: Processing…"
-                                    : log.transcriptionStatus === "failed"
-                                    ? "Transcription: Failed"
-                                    : "Not available"}
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center px-3 py-1 rounded-full text-[0.65rem] font-medium bg-white/0 text-white/40 border border-white/5">
-                                  Not available
-                                </span>
-                              )}
-                            </>
                           )}
-                        </div>
 
-                        {/* Follow-up suggestion */}
-                        <div className="flex flex-col gap-1 items-center">
-                          {isFollowupCompleted ? (
+                          {/* Follow-up */}
+                          {followupStatus === "completed" && (
                             <Button
                               type="button"
                               variant="outline"
                               size="sm"
-                              className="h-7 px-2 py-1 rounded-full border-white/20 bg-white/5 text-[0.65rem] text-white hover:bg-white/10 hover:text-white w-fit"
+                              className="h-7 px-3 py-1 rounded-full border-white/20 bg-white/5 text-[0.65rem] text-white hover:bg-white/10 hover:text-white"
                               onClick={() =>
                                 setSelectedCallLogView({
                                   type: "followup",
@@ -1286,24 +986,288 @@ export const CallView = ({
                                 })
                               }
                             >
-                              View
+                              💡 Follow-up
                             </Button>
-                          ) : (
-                            renderStatusPill("Follow-up", followupStatus)
                           )}
                         </div>
                       </div>
-                    );
-                  });
-                  })()}
-              </div>
-            </div>
-          </div>
+                    )}
+                  </div>
+                );
+              });
+            })()}
         </div>
 
         {callLogsError && (
           <p className="text-sm text-red-300">{callLogsError}</p>
         )}
+      </div>
+
+      {/* Right Side: Web Call - 1/3 width */}
+      <div className="col-span-1 flex flex-col text-white/80 text-center gap-3 overflow-y-auto scrollbar-hide">
+        <h2 className="text-xl font-semibold text-white leading-snug text-left">
+          Web Call
+        </h2>
+        
+        {/* Card Container */}
+        <div className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden p-6 flex flex-col items-center gap-6">
+
+          {mode === "call" && (
+            <div className="flex flex-col items-center gap-4">
+              <div className="flex items-center justify-center py-5">
+                <div
+                  className="flex items-center justify-center rounded-full transition-all"
+                  style={{
+                    width: "100px",
+                    height: "100px",
+                    position: "relative",
+                    transform: `scale(${circleScale})`,
+                    transition: "transform 120ms ease-out",
+                  }}
+                >
+                  {/* Sphere with gradient edges to transparent center */}
+                  <div
+                    className="absolute inset-0 rounded-full"
+                    style={{
+                      background: `
+                      radial-gradient(circle at center, 
+                        transparent 0%, 
+                        transparent 55%, 
+                        rgba(66, 247, 255, 0.18) 65%, 
+                        rgba(66, 247, 255, 0.55) 70%
+                      )
+                    `,
+                      filter: "blur(0.5px)",
+                    }}
+                  />
+                  {/* Inner button */}
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => {
+                      if (!twilioReady || primaryActionDisabled) {
+                        return;
+                      }
+                      if (callPhase === "idle") {
+                        handleCall();
+                      } else if (callPhase === "incoming") {
+                        handleAnswerIncoming();
+                      } else if (callPhase === "connected") {
+                        handleHangUp();
+                      }
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key !== "Enter" && event.key !== " ") {
+                        return;
+                      }
+                      event.preventDefault();
+                      if (callPhase === "idle") {
+                        handleCall();
+                      } else if (callPhase === "incoming") {
+                        handleAnswerIncoming();
+                      } else if (callPhase === "connected") {
+                        handleHangUp();
+                      }
+                    }}
+                    className={`flex items-center justify-center rounded-full transition-colors relative z-10 ${
+                      !twilioReady
+                        ? "cursor-not-allowed opacity-60"
+                        : callPhase === "idle"
+                        ? "cursor-pointer hover:border-cyan-300/60"
+                        : callPhase === "connected"
+                        ? "cursor-pointer border-cyan-300/80"
+                        : "cursor-not-allowed"
+                    }`}
+                    style={{
+                      width: "100px",
+                      height: "100px",
+                      background: `
+                      radial-gradient(circle at center, 
+                        transparent 0%, 
+                        transparent 30%, 
+                        rgba(66, 247, 255, 0.01) 45%, 
+                        rgba(66, 247, 255, 0.02) 55%, 
+                        rgba(66, 247, 255, 0.04) 65%, 
+                        rgba(66, 247, 255, 0.08) 75%, 
+                        rgba(66, 247, 255, 0.15) 85%, 
+                        rgba(66, 247, 255, 0.25) 92%, 
+                        rgba(66, 247, 255, 0.45) 96%, 
+                        rgba(66, 247, 255, 0.7) 98.5%, 
+                        rgba(66, 247, 255, 1) 100%
+                      )
+                    `,
+                      border: "1px solid rgba(66, 247, 255, 0.55)",
+                      boxShadow: `
+                      inset 0 0 10px rgba(66, 247, 255, 0.08)
+                    `,
+                      transition: "box-shadow 120ms ease-out",
+                    }}
+                  >
+                    {/* White gradient overlay - small spread */}
+                    <div
+                      className="absolute inset-0 rounded-full pointer-events-none"
+                      style={{
+                        background: `
+                        radial-gradient(circle at center, 
+                          rgba(255, 255, 255, 0.12) 0%, 
+                          rgba(255, 255, 255, 0.08) 25%, 
+                          rgba(255, 255, 255, 0.04) 40%, 
+                          rgba(255, 255, 255, 0.02) 50%, 
+                          rgba(255, 255, 255, 0.01) 55%, 
+                          transparent 65%
+                        )
+                      `,
+                        zIndex: 1,
+                      }}
+                    />
+                  </div>
+                  {/* Waveform visualization */}
+                  {isListening && waveformData.length > 0 && (
+                    <div
+                      className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 pointer-events-none"
+                      style={{
+                        width: "380px",
+                        height: "200px",
+                        zIndex: 30,
+                      }}
+                    >
+                      <svg
+                        width="100%"
+                        height="100%"
+                        viewBox="0 0 380 200"
+                        preserveAspectRatio="none"
+                        style={{ overflow: "visible" }}
+                      >
+                        <defs>
+                          <linearGradient
+                            id="waveformFade"
+                            x1="0%"
+                            y1="0%"
+                            x2="100%"
+                            y2="0%"
+                          >
+                            <stop offset="0%" stopColor="white" stopOpacity="0" />
+                            <stop offset="15%" stopColor="white" stopOpacity="1" />
+                            <stop offset="85%" stopColor="white" stopOpacity="1" />
+                            <stop offset="100%" stopColor="white" stopOpacity="0" />
+                          </linearGradient>
+                          <mask id="waveformMask">
+                            <rect
+                              width="100%"
+                              height="100%"
+                              fill="url(#waveformFade)"
+                            />
+                          </mask>
+                        </defs>
+                        <path
+                          d={(() => {
+                            if (waveformData.length < 2) return "";
+                            const centerY = 100;
+                            const amplitude = 155;
+                            const points = waveformData.map((value, index) => {
+                              const x =
+                                (index / (waveformData.length - 1)) * 380;
+                              const y = centerY - value * amplitude;
+                              return { x, y };
+                            });
+                            let path = `M ${points[0].x} ${points[0].y}`;
+                            for (let i = 0; i < points.length - 1; i++) {
+                              const p0 = i > 0 ? points[i - 1] : points[i];
+                              const p1 = points[i];
+                              const p2 = points[i + 1];
+                              const p3 =
+                                i < points.length - 2
+                                  ? points[i + 2]
+                                  : points[i + 1];
+                              const cp1x = p1.x + (p2.x - p0.x) / 6;
+                              const cp1y = p1.y + (p2.y - p0.y) / 6;
+                              const cp2x = p2.x - (p3.x - p1.x) / 6;
+                              const cp2y = p2.y - (p3.y - p1.y) / 6;
+                              path += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
+                            }
+                            return path;
+                          })()}
+                          fill="none"
+                          stroke="rgba(66, 247, 255, 0.9)"
+                          strokeWidth="2.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          mask="url(#waveformMask)"
+                        />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="flex flex-col items-center gap-3">
+            <div className="flex items-center gap-3">
+              {mode === "call" && (
+                <Button
+                  type="button"
+                  onClick={
+                    callPhase === "connected"
+                      ? handleHangUp
+                      : callPhase === "incoming"
+                      ? handleAnswerIncoming
+                      : callPhase === "idle" && twilioReady
+                      ? handleCall
+                      : undefined
+                  }
+                  disabled={primaryActionDisabled}
+                  className="px-6 py-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 text-sm font-semibold text-white shadow-lg shadow-blue-900/40 hover:opacity-90 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {callPhase === "connected"
+                    ? "End call"
+                    : callPhase === "ringing"
+                    ? "Ringing..."
+                    : callPhase === "incoming"
+                    ? "Answer call"
+                    : "Make a call"}
+                </Button>
+              )}
+
+              {mode === "ai" && lead?._id && (
+                <Button
+                  type="button"
+                  onClick={handleAICall}
+                  disabled={aiCallLoading}
+                  className="px-6 py-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-600 text-sm font-semibold text-white shadow-lg shadow-purple-900/40 hover:opacity-90 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {aiCallLoading ? "Initiating..." : "AI Call"}
+                </Button>
+              )}
+            </div>
+
+            <p className="text-sm text-white/70">{callStatus}</p>
+
+            {callPhase === "incoming" && (
+              <div className="flex items-center gap-3">
+                <Button
+                  type="button"
+                  onClick={handleDeclineIncoming}
+                  variant="destructive"
+                  className="px-4 py-1 rounded-full text-xs font-semibold"
+                >
+                  Decline
+                </Button>
+              </div>
+            )}
+
+            {error && (
+              <div className="text-sm text-red-300 bg-red-500/10 border border-red-500/20 px-4 py-2 rounded-full">
+                {error}
+              </div>
+            )}
+
+            <p className="text-xs text-white/40">
+              Calls are routed via Twilio Voice with mic data processed locally.
+            </p>
+          </div>
+        </div>
+        {/* End of Card Container */}
       </div>
     </div>
   );
