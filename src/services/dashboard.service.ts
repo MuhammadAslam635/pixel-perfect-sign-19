@@ -71,9 +71,9 @@ export interface CampaignsStatistics {
 }
 
 export interface ScoreDistributionData {
-  scoreRange: string;
+  score: number;
   leadCount: number;
-  percentage: number;
+  scoreLabel: string;
 }
 
 export interface ScoreDistributionResponse {
