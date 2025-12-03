@@ -510,26 +510,26 @@ const CampaignsPage = () => {
             <Card
               className="relative border-[#FFFFFF4D] shadow-2xl w-full"
               style={{
-                height: "251px",
-                borderRadius: "30px",
+                height: "140px",
+                borderRadius: "16px",
                 opacity: 1,
                 borderWidth: "1px",
                 background:
                   "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
               }}
             >
-              <CardContent className="p-4 sm:p-5 lg:p-6 h-full flex flex-col justify-between">
+              <CardContent className="p-2.5 sm:p-3 h-full flex flex-col justify-between">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center flex-shrink-0">
-                      <FacebookIcon className="w-10 h-10 sm:w-12 sm:h-12" />
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center flex-shrink-0">
+                      <FacebookIcon className="w-6 h-6 sm:w-7 sm:h-7" />
                     </div>
                     <h3
                       className="text-white"
                       style={{
                         fontFamily: "Poppins",
                         fontWeight: 500,
-                        fontSize: "24px",
+                        fontSize: "14px",
                         lineHeight: "100%",
                         letterSpacing: "0%",
                       }}
@@ -538,7 +538,7 @@ const CampaignsPage = () => {
                     </h3>
                   </div>
                   <Select defaultValue="last-month">
-                    <SelectTrigger className="w-[130px] h-9 bg-[#252525] border-[#3a3a3a] text-gray-300 text-xs">
+                    <SelectTrigger className="w-[95px] h-7 bg-[#252525] border-[#3a3a3a] text-gray-300 text-[10px]">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a]">
@@ -575,37 +575,33 @@ const CampaignsPage = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="grid grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
+                <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
                   <div>
-                    <div className="text-2xl sm:text-3xl font-bold text-white mb-0.5 sm:mb-1">
+                    <div className="text-base sm:text-lg font-bold text-white mb-0.5">
                       1.2M
                     </div>
-                    <div className="text-xs text-gray-500 mb-1 sm:mb-1.5">
+                    <div className="text-[10px] text-gray-500 mb-0.5">
                       Impressions
                     </div>
-                    <div className="text-xs font-medium text-green-500">
+                    <div className="text-[10px] font-medium text-green-500">
                       ↑ 12%
                     </div>
                   </div>
                   <div>
-                    <div className="text-2xl sm:text-3xl font-bold text-white mb-0.5 sm:mb-1">
+                    <div className="text-base sm:text-lg font-bold text-white mb-0.5">
                       845K
                     </div>
-                    <div className="text-xs text-gray-500 mb-1 sm:mb-1.5">
-                      Reach
-                    </div>
-                    <div className="text-xs font-medium text-green-500">
+                    <div className="text-[10px] text-gray-500 mb-0.5">Reach</div>
+                    <div className="text-[10px] font-medium text-green-500">
                       ↑ 8%
                     </div>
                   </div>
                   <div>
-                    <div className="text-2xl sm:text-3xl font-bold text-white mb-0.5 sm:mb-1">
+                    <div className="text-base sm:text-lg font-bold text-white mb-0.5">
                       32.5K
                     </div>
-                    <div className="text-xs text-gray-500 mb-1 sm:mb-1.5">
-                      Clicks
-                    </div>
-                    <div className="text-xs font-medium text-red-500">↓ 3%</div>
+                    <div className="text-[10px] text-gray-500 mb-0.5">Clicks</div>
+                    <div className="text-[10px] font-medium text-red-500">↓ 3%</div>
                   </div>
                 </div>
               </CardContent>
@@ -619,20 +615,20 @@ const CampaignsPage = () => {
             <Card
               className="relative border-[#FFFFFF4D] shadow-2xl w-full"
               style={{
-                height: "251px",
-                borderRadius: "30px",
+                height: "140px",
+                borderRadius: "16px",
                 opacity: 1,
                 borderWidth: "1px",
                 background:
                   "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
               }}
             >
-              <CardContent className="p-4 sm:p-5 lg:p-6 h-full flex flex-col justify-between">
+              <CardContent className="p-2.5 sm:p-3 h-full flex flex-col justify-between">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center flex-shrink-0">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center flex-shrink-0">
                       <svg
-                        className="w-10 h-10 sm:w-12 sm:h-12"
+                        className="w-6 h-6 sm:w-7 sm:h-7"
                         viewBox="0 0 24 24"
                       >
                         <path
@@ -658,7 +654,7 @@ const CampaignsPage = () => {
                       style={{
                         fontFamily: "Poppins",
                         fontWeight: 500,
-                        fontSize: "24px",
+                        fontSize: "14px",
                         lineHeight: "100%",
                         letterSpacing: "0%",
                       }}
@@ -667,7 +663,7 @@ const CampaignsPage = () => {
                     </h3>
                   </div>
                   <Select defaultValue="last-month">
-                    <SelectTrigger className="w-[130px] h-9 bg-[#252525] border-[#3a3a3a] text-gray-300 text-xs">
+                    <SelectTrigger className="w-[95px] h-7 bg-[#252525] border-[#3a3a3a] text-gray-300 text-[10px]">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a]">
@@ -704,37 +700,33 @@ const CampaignsPage = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="grid grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
+                <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
                   <div>
-                    <div className="text-2xl sm:text-3xl font-bold text-white mb-0.5 sm:mb-1">
+                    <div className="text-base sm:text-lg font-bold text-white mb-0.5">
                       980K
                     </div>
-                    <div className="text-xs text-gray-500 mb-1 sm:mb-1.5">
+                    <div className="text-[10px] text-gray-500 mb-0.5">
                       Impressions
                     </div>
-                    <div className="text-xs font-medium text-green-500">
+                    <div className="text-[10px] font-medium text-green-500">
                       ↑ 15%
                     </div>
                   </div>
                   <div>
-                    <div className="text-2xl sm:text-3xl font-bold text-white mb-0.5 sm:mb-1">
+                    <div className="text-base sm:text-lg font-bold text-white mb-0.5">
                       765K
                     </div>
-                    <div className="text-xs text-gray-500 mb-1 sm:mb-1.5">
-                      Reach
-                    </div>
-                    <div className="text-xs font-medium text-green-500">
+                    <div className="text-[10px] text-gray-500 mb-0.5">Reach</div>
+                    <div className="text-[10px] font-medium text-green-500">
                       ↑ 10%
                     </div>
                   </div>
                   <div>
-                    <div className="text-2xl sm:text-3xl font-bold text-white mb-0.5 sm:mb-1">
+                    <div className="text-base sm:text-lg font-bold text-white mb-0.5">
                       28.3K
                     </div>
-                    <div className="text-xs text-gray-500 mb-1 sm:mb-1.5">
-                      Clicks
-                    </div>
-                    <div className="text-xs font-medium text-red-500">↓ 2%</div>
+                    <div className="text-[10px] text-gray-500 mb-0.5">Clicks</div>
+                    <div className="text-[10px] font-medium text-red-500">↓ 2%</div>
                   </div>
                 </div>
               </CardContent>
