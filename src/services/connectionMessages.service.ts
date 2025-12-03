@@ -24,6 +24,7 @@ export interface GenerateEmailMessageInput {
   tone?: EmailTone;
   length?: EmailLength;
   customInstructions?: string;
+  regenerate?: boolean;
 }
 
 export interface EmailMessage {
@@ -51,7 +52,9 @@ export interface GenerateEmailMessageResponse {
   message?: string;
   data: {
     email: EmailMessage;
+    messageId?: string;
     messageMetadata?: EmailMessageMetadata;
+    isExisting?: boolean;
   };
 }
 
@@ -61,6 +64,7 @@ export interface GeneratePhoneScriptInput {
   callObjective?: string;
   scriptLength?: "short" | "medium" | "long" | string;
   customInstructions?: string;
+  regenerate?: boolean;
 }
 
 export interface PhoneScriptMetadata {
@@ -77,7 +81,9 @@ export interface GeneratePhoneScriptResponse {
   message?: string;
   data: {
     script: string;
+    messageId?: string;
     metadata?: PhoneScriptMetadata;
+    isExisting?: boolean;
   };
 }
 
@@ -85,6 +91,7 @@ export interface GenerateConnectionMessageInput {
   companyId: string;
   personId: string;
   tone?: string;
+  regenerate?: boolean;
 }
 
 export interface ConnectionMessagePerson {
@@ -103,9 +110,12 @@ export interface ConnectionMessageCompany {
 
 export interface ConnectionMessageData {
   connectionMessage: string;
+  messageId?: string;
   characterCount?: number;
   person?: ConnectionMessagePerson;
   company?: ConnectionMessageCompany;
+  metadata?: any;
+  isExisting?: boolean;
 }
 
 export interface GenerateConnectionMessageResponse {
@@ -132,6 +142,30 @@ export interface EnhanceEmailContentResponse {
   success: boolean;
   message?: string;
   data: EnhanceEmailContentData;
+}
+
+export interface UpdateConnectionMessageInput {
+  messageId: string;
+  instructions: string;
+  messageType: "linkedin" | "email" | "phone";
+}
+
+export interface UpdateConnectionMessageData {
+  messageId: string;
+  messageType: "linkedin" | "email" | "phone";
+  content: string;
+  subject?: string;
+  bodyHtml?: string;
+  cta?: string;
+  ps?: string;
+  metadata?: any;
+  generationCount: number;
+}
+
+export interface UpdateConnectionMessageResponse {
+  success: boolean;
+  message?: string;
+  data: UpdateConnectionMessageData;
 }
 
 export const connectionMessagesService = {
@@ -162,7 +196,17 @@ export const connectionMessagesService = {
   enhanceEmailContent: async (
     payload: EnhanceEmailContentInput
   ): Promise<EnhanceEmailContentResponse> => {
-    const response = await API.post("/connection-messages/enhance-content", payload);
+    const response = await API.post(
+      "/connection-messages/enhance-content",
+      payload
+    );
+    return response.data;
+  },
+
+  updateConnectionMessage: async (
+    payload: UpdateConnectionMessageInput
+  ): Promise<UpdateConnectionMessageResponse> => {
+    const response = await API.put("/connection-messages/update", payload);
     return response.data;
   },
 };

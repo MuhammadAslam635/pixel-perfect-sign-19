@@ -70,6 +70,7 @@ const index = () => {
     useState<EmailMessageMetadata | null>(null);
   const [emailLoading, setEmailLoading] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
+  const [emailMessageId, setEmailMessageId] = useState<string | null>(null);
   const [linkedinModalOpen, setLinkedinModalOpen] = useState(false);
   const [linkedinLead, setLinkedinLead] = useState<Lead | null>(null);
   const [linkedinMessage, setLinkedinMessage] = useState<string | null>(null);
@@ -77,6 +78,9 @@ const index = () => {
   const [linkedinError, setLinkedinError] = useState<string | null>(null);
   const [linkedinMetadata, setLinkedinMetadata] =
     useState<ConnectionMessageData | null>(null);
+  const [linkedinMessageId, setLinkedinMessageId] = useState<string | null>(
+    null
+  );
   const [phoneModalOpen, setPhoneModalOpen] = useState(false);
   const [phoneLead, setPhoneLead] = useState<Lead | null>(null);
   const [phoneFallbackExecutive, setPhoneFallbackExecutive] =
@@ -86,6 +90,7 @@ const index = () => {
     useState<PhoneScriptMetadata | null>(null);
   const [phoneLoading, setPhoneLoading] = useState(false);
   const [phoneError, setPhoneError] = useState<string | null>(null);
+  const [phoneMessageId, setPhoneMessageId] = useState<string | null>(null);
   const [leadFiltersOpen, setLeadFiltersOpen] = useState(false);
 
   const resetLeadAdvancedFilters = useCallback(() => {
@@ -110,7 +115,7 @@ const index = () => {
   );
 
   const fetchEmailDraft = useCallback(
-    async (lead: Lead) => {
+    async (lead: Lead, regenerate = false) => {
       if (!lead.companyId || !lead._id) {
         const message = "Missing company or person identifiers for this lead.";
         setEmailDraft(null);
@@ -126,10 +131,12 @@ const index = () => {
         const response = await connectionMessagesService.generateEmailMessage({
           companyId: lead.companyId,
           personId: lead._id,
+          regenerate,
         });
 
         setEmailDraft(response.data.email);
         setEmailMetadata(response.data.messageMetadata ?? null);
+        setEmailMessageId(response.data.messageId || null);
       } catch (error) {
         const message = resolveErrorMessage(
           error,
@@ -145,7 +152,7 @@ const index = () => {
   );
 
   const fetchLinkedinMessage = useCallback(
-    async (lead: Lead) => {
+    async (lead: Lead, regenerate = false) => {
       if (!lead.companyId || !lead._id) {
         const message = "Missing company or person identifiers for this lead.";
         setLinkedinMessage(null);
@@ -163,10 +170,12 @@ const index = () => {
           await connectionMessagesService.generateConnectionMessage({
             companyId: lead.companyId,
             personId: lead._id,
+            regenerate,
           });
 
         setLinkedinMessage(response.data.connectionMessage);
         setLinkedinMetadata(response.data);
+        setLinkedinMessageId(response.data.messageId || null);
       } catch (error) {
         const message = resolveErrorMessage(
           error,
@@ -183,7 +192,7 @@ const index = () => {
   );
 
   const fetchPhoneScript = useCallback(
-    async (lead: Lead) => {
+    async (lead: Lead, regenerate = false) => {
       if (!lead.companyId || !lead._id) {
         const message = "Missing company or person identifiers for this lead.";
         setPhoneScript(null);
@@ -199,10 +208,12 @@ const index = () => {
         const response = await connectionMessagesService.generatePhoneScript({
           companyId: lead.companyId,
           personId: lead._id,
+          regenerate,
         });
 
         setPhoneScript(response.data.script);
         setPhoneMetadata(response.data.metadata ?? null);
+        setPhoneMessageId(response.data.messageId || null);
       } catch (error) {
         const message = resolveErrorMessage(
           error,
@@ -224,6 +235,7 @@ const index = () => {
       setEmailDraft(null);
       setEmailMetadata(null);
       setEmailError(null);
+      setEmailMessageId(null);
       fetchEmailDraft(lead);
       // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: ["leads"] });
@@ -234,9 +246,39 @@ const index = () => {
 
   const handleEmailRegenerate = useCallback(() => {
     if (selectedLead) {
-      fetchEmailDraft(selectedLead);
+      fetchEmailDraft(selectedLead, true); // Pass regenerate flag
     }
   }, [fetchEmailDraft, selectedLead]);
+
+  const handleEmailEdit = useCallback(
+    async (instructions: string) => {
+      if (!emailMessageId) return;
+
+      try {
+        const response =
+          await connectionMessagesService.updateConnectionMessage({
+            messageId: emailMessageId,
+            instructions,
+            messageType: "email",
+          });
+
+        // Update the email with the new content
+        setEmailDraft({
+          subject: response.data.subject || emailDraft?.subject || "",
+          body: response.data.content,
+          bodyHtml: response.data.bodyHtml,
+          cta: response.data.cta,
+          ps: response.data.ps,
+        });
+        toast.success("Email updated successfully!");
+      } catch (error) {
+        const message = resolveErrorMessage(error, "Failed to update email.");
+        setEmailError(message);
+        toast.error(message);
+      }
+    },
+    [emailMessageId, emailDraft, resolveErrorMessage]
+  );
 
   const handleLinkedinClick = useCallback(
     (lead: Lead) => {
@@ -245,6 +287,7 @@ const index = () => {
       setLinkedinMessage(null);
       setLinkedinError(null);
       setLinkedinMetadata(null);
+      setLinkedinMessageId(null);
       fetchLinkedinMessage(lead);
       // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: ["leads"] });
@@ -255,9 +298,36 @@ const index = () => {
 
   const handleLinkedinRegenerate = useCallback(() => {
     if (linkedinLead) {
-      fetchLinkedinMessage(linkedinLead);
+      fetchLinkedinMessage(linkedinLead, true); // Pass regenerate flag
     }
   }, [fetchLinkedinMessage, linkedinLead]);
+
+  const handleLinkedinEdit = useCallback(
+    async (instructions: string) => {
+      if (!linkedinMessageId) return;
+
+      try {
+        const response =
+          await connectionMessagesService.updateConnectionMessage({
+            messageId: linkedinMessageId,
+            instructions,
+            messageType: "linkedin",
+          });
+
+        // Update the message with the new content
+        setLinkedinMessage(response.data.content);
+        toast.success("LinkedIn message updated successfully!");
+      } catch (error) {
+        const message = resolveErrorMessage(
+          error,
+          "Failed to update LinkedIn message."
+        );
+        setLinkedinError(message);
+        toast.error(message);
+      }
+    },
+    [linkedinMessageId, resolveErrorMessage]
+  );
 
   const openPhoneModal = useCallback(
     (lead: Lead | null, fallback: CompanyPerson | null = null) => {
@@ -266,6 +336,7 @@ const index = () => {
       setPhoneScript(null);
       setPhoneMetadata(null);
       setPhoneError(null);
+      setPhoneMessageId(null);
       setPhoneModalOpen(true);
 
       if (!lead) {
@@ -299,13 +370,40 @@ const index = () => {
 
   const handlePhoneRegenerate = useCallback(() => {
     if (phoneLead) {
-      fetchPhoneScript(phoneLead);
+      fetchPhoneScript(phoneLead, true); // Pass regenerate flag
     } else {
       setPhoneError(
         "Cannot generate a phone script without selecting a synced lead."
       );
     }
   }, [fetchPhoneScript, phoneLead]);
+
+  const handlePhoneEdit = useCallback(
+    async (instructions: string) => {
+      if (!phoneMessageId) return;
+
+      try {
+        const response =
+          await connectionMessagesService.updateConnectionMessage({
+            messageId: phoneMessageId,
+            instructions,
+            messageType: "phone",
+          });
+
+        // Update the script with the new content
+        setPhoneScript(response.data.content);
+        toast.success("Phone script updated successfully!");
+      } catch (error) {
+        const message = resolveErrorMessage(
+          error,
+          "Failed to update phone script."
+        );
+        setPhoneError(message);
+        toast.error(message);
+      }
+    },
+    [phoneMessageId, resolveErrorMessage]
+  );
   const pageContentRef = useRef<HTMLElement | null>(null);
   const pageSizeOptions = [10, 25, 50, 100];
   const handleDesktopExecutivesFocus = () => {
@@ -667,6 +765,8 @@ const index = () => {
         loading={emailLoading}
         error={emailError}
         onRegenerate={handleEmailRegenerate}
+        messageId={emailMessageId}
+        onEdit={handleEmailEdit}
       />
       <LinkedinMessageModal
         open={linkedinModalOpen}
@@ -678,6 +778,8 @@ const index = () => {
         error={linkedinError}
         metadata={linkedinMetadata}
         onRegenerate={handleLinkedinRegenerate}
+        messageId={linkedinMessageId}
+        onEdit={handleLinkedinEdit}
       />
       <PhoneCallModal
         open={phoneModalOpen}
@@ -690,6 +792,8 @@ const index = () => {
         loading={phoneLoading}
         error={phoneError}
         onRegenerate={handlePhoneRegenerate}
+        messageId={phoneMessageId}
+        onEdit={handlePhoneEdit}
       />
     </DashboardLayout>
   );

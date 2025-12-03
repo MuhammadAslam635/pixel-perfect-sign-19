@@ -1,4 +1,4 @@
-import { FC, useMemo } from "react";
+import { FC, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Dialog,
@@ -7,7 +7,15 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, Phone, RefreshCcw } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  AlertCircle,
+  Phone,
+  RefreshCcw,
+  Edit,
+  Sparkles,
+  X,
+} from "lucide-react";
 import { PhoneScriptMetadata } from "@/services/connectionMessages.service";
 import ReactMarkdown from "react-markdown";
 
@@ -22,6 +30,8 @@ type PhoneCallModalProps = {
   loading?: boolean;
   error?: string | null;
   onRegenerate?: () => void;
+  messageId?: string;
+  onEdit?: (instructions: string) => void;
 };
 
 export const PhoneCallModal: FC<PhoneCallModalProps> = ({
@@ -35,8 +45,14 @@ export const PhoneCallModal: FC<PhoneCallModalProps> = ({
   loading = false,
   error,
   onRegenerate,
+  messageId,
+  onEdit,
 }) => {
   const navigate = useNavigate();
+  const [editMode, setEditMode] = useState(false);
+  const [editInstructions, setEditInstructions] = useState("");
+  const [editLoading, setEditLoading] = useState(false);
+
   const sanitizedPhoneNumber = useMemo(
     () => phoneNumber?.replace(/\D/g, "") || "",
     [phoneNumber]
@@ -64,9 +80,31 @@ export const PhoneCallModal: FC<PhoneCallModalProps> = ({
     onRegenerate?.();
   };
 
+  const handleEdit = async () => {
+    if (!editInstructions.trim() || !messageId || !onEdit) return;
+
+    setEditLoading(true);
+    try {
+      await onEdit(editInstructions);
+      setEditMode(false);
+      setEditInstructions("");
+    } catch (error) {
+      console.error("Error editing message:", error);
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  const toggleEditMode = () => {
+    setEditMode(!editMode);
+    if (!editMode) {
+      setEditInstructions("");
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] max-w-[560px] max-h-[90vh] overflow-y-auto scrollbar-hide bg-[#1e2829] border-[#3A3A3A] text-white">
+      <DialogContent className="w-[95vw] max-w-[560px] max-h-[90vh] overflow-x-hidden overflow-y-auto scrollbar-hide bg-[#1e2829] border-[#3A3A3A] text-white">
         <DialogHeader>
           <DialogTitle className="text-lg sm:text-xl font-semibold text-white">
             Call {leadName || "Lead"}
@@ -109,20 +147,63 @@ export const PhoneCallModal: FC<PhoneCallModalProps> = ({
           </div>
 
           <div className="rounded-lg border border-white/10 bg-[#2A3435]/40 p-3 sm:p-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-2">
-              <p className="text-xs uppercase tracking-wide text-white/40">
-                Call Script
-              </p>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleRegenerate}
-                disabled={loading}
-                className="text-xs text-white/80 hover:bg-white/10 rounded-full px-3 h-7 flex items-center gap-1.5 disabled:opacity-50 w-full sm:w-auto"
-              >
-                <RefreshCcw className="h-3.5 w-3.5" />
-                {loading ? "Refreshing…" : "Regenerate"}
-              </Button>
+            <div className="space-y-3">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                <p className="text-xs uppercase tracking-wide text-white/40">
+                  Call Script
+                </p>
+                <div className="flex items-center gap-2">
+                  {messageId && onEdit && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={toggleEditMode}
+                      disabled={loading || editLoading}
+                      className="text-xs text-white/80 hover:bg-white/10 rounded-full px-3 h-7 flex items-center gap-1.5 disabled:opacity-50"
+                    >
+                      <Edit className="h-3.5 w-3.5" />
+                      {editMode ? "Cancel Edit" : "Edit with AI"}
+                    </Button>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleRegenerate}
+                    disabled={loading || editLoading}
+                    className="text-xs text-white/80 hover:bg-white/10 rounded-full px-3 h-7 flex items-center gap-1.5 disabled:opacity-50 w-full sm:w-auto"
+                  >
+                    <RefreshCcw className="h-3.5 w-3.5" />
+                    {loading ? "Refreshing…" : "Regenerate"}
+                  </Button>
+                </div>
+              </div>
+
+              {editMode && (
+                <div className="mb-4 p-3 bg-[#1e2829]/50 rounded-lg border border-white/10">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs text-white/80 font-medium">
+                      Edit Instructions
+                    </p>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleEdit}
+                      disabled={editLoading || !editInstructions.trim()}
+                      className="text-xs bg-primary/20 hover:bg-primary/30 text-primary rounded-full px-3 h-6 flex items-center gap-1.5"
+                    >
+                      <Sparkles className="h-3 w-3" />
+                      {editLoading ? "Updating…" : "Apply"}
+                    </Button>
+                  </div>
+                  <Textarea
+                    value={editInstructions}
+                    onChange={(e) => setEditInstructions(e.target.value)}
+                    placeholder="Describe how you want to modify the script (e.g., 'Make it more concise', 'Add a question about their recent project', 'Focus more on value proposition')"
+                    className="scrollbar-hide min-h-[60px] w-full bg-[#2A3435]/50 border-white/5 text-white/90 resize-none focus-visible:ring-1 focus-visible:ring-primary/50 text-xs"
+                    disabled={editLoading}
+                  />
+                </div>
+              )}
             </div>
             <div className="relative max-h-48 sm:max-h-64 overflow-y-auto scrollbar-hide rounded-md border border-white/5 bg-[#253032]/40 p-3 text-xs sm:text-sm text-white/80 leading-relaxed">
               {script?.trim() ? (
