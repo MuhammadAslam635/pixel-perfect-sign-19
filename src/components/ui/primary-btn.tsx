@@ -20,11 +20,10 @@ export const ActiveNavButton = React.forwardRef<
       ref={ref}
       variant="outline"
       className={cn(
-        "relative overflow-hidden flex-none flex h-10 items-center justify-start rounded-full border border-white/40 px-0 text-xs font-medium tracking-wide transition-[width,background-color,box-shadow,padding,gap] duration-400 ease-elastic text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] w-auto pl-3.5 pr-3.5 gap-2 z-10 before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/15 before:to-transparent before:transition-all before:duration-300 before:ease-in-out",
+        "relative overflow-hidden flex-none flex h-10 items-center justify-start rounded-full border border-white/40 px-0 text-xs font-medium tracking-wide transition-[width,background-color,box-shadow,padding,gap] duration-400 ease-elastic text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] w-auto pl-3.5 pr-3.5 gap-2 z-10 before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/15 before:to-transparent before:transition-all before:duration-300 before:ease-in-out bg-gradient-to-r from-[#30cfd0] via-[#2a9cb3] to-[#1f6f86]",
         className
       )}
       style={{
-        background: "#FFFFFF1A",
         boxShadow:
           "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
       }}
