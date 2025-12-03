@@ -49,13 +49,13 @@ const Dashboard = () => {
   // Disable body scrolling when Dashboard is mounted
   useEffect(() => {
     if (typeof document === "undefined") return;
-    
+
     const originalOverflow = document.body.style.overflow;
     const originalHtmlOverflow = document.documentElement.style.overflow;
-    
+
     document.body.style.overflow = "hidden";
     document.documentElement.style.overflow = "hidden";
-    
+
     return () => {
       document.body.style.overflow = originalOverflow;
       document.documentElement.style.overflow = originalHtmlOverflow;
