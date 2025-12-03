@@ -1769,7 +1769,7 @@ const LeadChat = ({
             </div>
           </div>
         ) : activeTab === "Call" ? (
-          <div className="flex w-full flex-1 items-center justify-center py-20 text-lg font-medium text-white/70">
+          <div className="flex w-full flex-1 min-h-0 flex-col items-center text-lg font-medium text-white/70">
             <CallView
               lead={lead}
               twilioReady={twilioReady}
@@ -1786,7 +1786,7 @@ const LeadChat = ({
             />
           </div>
         ) : activeTab === "AI Call" ? (
-          <div className="flex w-full flex-1 items-center justify-center py-20 text-lg font-medium text-white/70">
+          <div className="flex w-full flex-1 min-h-0 flex-col items-center text-lg font-medium text-white/70">
             <CallView
               lead={lead}
               twilioReady={twilioReady}

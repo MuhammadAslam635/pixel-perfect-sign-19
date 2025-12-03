@@ -12,6 +12,8 @@ import {
 } from "@/services/twilio.service";
 import API from "@/utils/api";
 import { SelectedCallLogView } from "../index";
+import { ActiveNavButton } from "@/components/ui/primary-btn";
+import { RefreshCcw } from "lucide-react";
 
 type CallViewProps = {
   lead?: Lead;
@@ -750,15 +752,15 @@ export const CallView = ({
   }, [autoStart, twilioReady, twilioStatusLoading, callPhase, handleCall]);
 
   return (
-    <div className="flex flex-1 w-full flex-col items-center justify-start text-white/80 text-center gap-6 pt-6 pb-10 max-h-[calc(100vh-480px)] overflow-y-auto scrollbar-hide">
+    <div className="flex flex-1 w-full h-full flex-col items-center justify-start text-white/80 text-center gap-6 pt-6 pb-10 overflow-y-auto scrollbar-hide">
       {mode === "call" && (
         <div className="flex flex-col items-center gap-4">
           <div className="flex items-center justify-center py-5">
             <div
               className="flex items-center justify-center rounded-full transition-all"
               style={{
-                width: "300px",
-                height: "300px",
+                width: "250px",
+                height: "250px",
                 position: "relative",
                 transform: `scale(${circleScale})`,
                 transition: "transform 120ms ease-out",
@@ -818,8 +820,8 @@ export const CallView = ({
                     : "cursor-not-allowed"
                 }`}
                 style={{
-                  width: "300px",
-                  height: "300px",
+                  width: "250px",
+                  height: "250px",
                   background: `
                   radial-gradient(circle at center, 
                     transparent 0%, 
@@ -1017,31 +1019,28 @@ export const CallView = ({
               suggestions.
             </p>
           </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
+          <ActiveNavButton
+            icon={RefreshCcw}
+            text={isRefreshingCallLogs ? "Refreshing..." : "Refresh"}
             onClick={handleRefreshCallLogs}
             disabled={callLogsLoading || isRefreshingCallLogs || !leadId}
-            className="rounded-full border-white/20 text-[0.7rem] text-white/80 hover:text-white px-3 py-1"
-          >
-            {isRefreshingCallLogs ? "Refreshing..." : "Refresh"}
-          </Button>
+            className="h-8 text-xs"
+          />
         </div>
 
         <div className="rounded-[24px] border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden shadow-[0_35px_120px_rgba(7,6,19,0.55)]">
           <div className="overflow-x-auto scrollbar-thin">
               <div className="min-w-full">
-              <div className="grid grid-cols-9 gap-2 px-4 py-3 text-[0.6rem] font-semibold uppercase tracking-[0.22em] text-white/50">
-                <span>Caller</span>
+              <div className="grid grid-cols-7 gap-2 px-4 py-3 text-[0.6rem] font-semibold uppercase tracking-[0.22em] text-white/50 text-center">
+                {/* <span>Caller</span> */}
                 <span>Date</span>
                 <span>Duration</span>
-                <span>Channel</span>
-                <span>Call Status</span>
-                <span className="text-center">Success Score</span>
-                <span className="text-center">Recording</span>
-                <span className="text-center">Transcription</span>
-                <span className="text-center">Follow-up</span>
+                {/* <span>Channel</span> */}
+                <span>Status</span>
+                <span>Score</span>
+                <span>Recording</span>
+                <span>Transcript</span>
+                <span>Follow-Up</span>
               </div>
 
               <div className="divide-y divide-white/5">
@@ -1148,10 +1147,10 @@ export const CallView = ({
                     return (
                       <div
                         key={log._id}
-                        className="grid grid-cols-9 gap-2 px-4 py-3 text-[0.7rem] text-white/80 bg-white/[0.01] hover:bg-white/[0.04] transition-colors"
+                        className="grid grid-cols-7 gap-2 px-4 py-3 text-[0.7rem] text-white/80 bg-white/[0.01] hover:bg-white/[0.04] transition-colors"
                       >
                         {/* Caller */}
-                        <div className="flex flex-col gap-0.5">
+                        {/* <div className="flex flex-col gap-0.5">
                           <span className="font-semibold text-white">
                             {log.leadName || "Unknown caller"}
                           </span>
@@ -1160,26 +1159,26 @@ export const CallView = ({
                               {log.leadPhone}
                             </span>
                           )}
-                        </div>
+                        </div> */}
 
                         {/* Date */}
-                        <div className="text-white/70 break-words">
+                        <div className="text-white/70 break-words text-center">
                           {formatCallDate(log.startedAt)}
                         </div>
 
                         {/* Duration */}
-                        <div className="text-white/70">
+                        <div className="text-white/70 text-center">
                           {formatDuration(log.durationSeconds)}
                         </div>
 
                         {/* Channel */}
-                        <div className="text-white/70">
+                        {/* <div className="text-white/70">
                           {log.channel || "Phone"}
-                        </div>
+                        </div> */}
 
                         {/* Call status */}
                         <div
-                          className={`font-semibold ${getStatusColor(
+                          className={`font-semibold text-center ${getStatusColor(
                             log.status
                           )}`}
                         >

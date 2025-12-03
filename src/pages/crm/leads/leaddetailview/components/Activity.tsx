@@ -1380,19 +1380,15 @@ const Activity: FC<ActivityProps> = ({
                       >
                         <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
                           <h3 className="text-white text-xs sm:text-sm font-semibold">AI Summary</h3>
-                          <ActiveNavButton
-                            icon={RefreshCcw}
-                            text={
-                              refreshLeadSummaryMutation.isPending
-                                ? "Updating..."
-                                : "Refresh"
-                            }
+                          <button
                             onClick={handleRefreshLeadSummary}
                             disabled={
                               !leadId || refreshLeadSummaryMutation.isPending
                             }
-                            className="h-8 text-xs"
-                          />
+                            className="h-8 w-8 p-0 flex items-center justify-center text-white/70 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <RefreshCcw className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                         <p className="text-[11px] leading-tight text-white/50 mb-3 whitespace-nowrap overflow-hidden text-ellipsis">
                           {summaryStatusLabel}
@@ -1436,14 +1432,14 @@ const Activity: FC<ActivityProps> = ({
                     <div className="space-y-6">
                       {/* Calendar Widget */}
                       <div
-                        className="rounded-lg p-6"
+                        className="rounded-lg p-4"
                         style={{
                           background: "rgba(255, 255, 255, 0.03)",
                           border: "1px solid rgba(255, 255, 255, 0.1)",
                         }}
                       >
                         {/* Month Navigation */}
-                        <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center justify-between mb-3">
                           <button
                             onClick={handlePrevMonth}
                             className="text-white/70 hover:text-white transition-colors p-1"
@@ -1492,7 +1488,7 @@ const Activity: FC<ActivityProps> = ({
                           </button>
                         </div>
 
-                        <div className="flex flex-wrap items-center justify-between gap-3 mb-4 text-xs text-white/70">
+                        <div className="flex flex-wrap items-center justify-between gap-2 mb-2 text-xs text-white/70">
                           <span>
                             {leadMeetings.length > 0
                               ? `${leadMeetings.length} meeting${
@@ -1500,7 +1496,7 @@ const Activity: FC<ActivityProps> = ({
                                 } scheduled this month`
                               : "No meetings scheduled this month"}
                           </span>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center justify-center gap-2 w-full">
                             {(isCalendarDataBusy ||
                               syncMeetingsMutation.isPending) && (
                               <Loader2 className="w-4 h-4 animate-spin text-white/70" />
@@ -1523,7 +1519,7 @@ const Activity: FC<ActivityProps> = ({
                         </div>
 
                         {/* Days of Week */}
-                        <div className="grid grid-cols-7 gap-2 mb-2">
+                        <div className="grid grid-cols-7 gap-1 mb-1">
                           {[
                             "MON",
                             "TUE",
@@ -1535,7 +1531,7 @@ const Activity: FC<ActivityProps> = ({
                           ].map((day) => (
                             <div
                               key={day}
-                              className="text-center text-white/50 text-xs font-medium py-2"
+                              className="text-center text-white/50 text-xs font-medium py-1"
                             >
                               {day}
                             </div>
@@ -1543,7 +1539,7 @@ const Activity: FC<ActivityProps> = ({
                         </div>
 
                         {/* Calendar Grid */}
-                        <div className="grid grid-cols-7 gap-2">
+                        <div className="grid grid-cols-7 gap-1">
                           {getCalendarDays().map((day, index) => {
                             if (day === null) {
                               return (
@@ -1658,20 +1654,16 @@ const Activity: FC<ActivityProps> = ({
                             <h3 className="text-white font-semibold text-xs sm:text-sm">
                               Scheduled Meetings
                             </h3>
-                            <ActiveNavButton
-                              icon={RefreshCcw}
-                              text={
-                                syncMeetingsMutation.isPending
-                                  ? "Syncing..."
-                                  : "Refresh"
-                              }
+                            <button
                               onClick={handleRefreshCalendarData}
                               disabled={
                                 isLeadMeetingsBusy ||
                                 syncMeetingsMutation.isPending
                               }
-                              className="h-8 text-xs"
-                            />
+                              className="h-8 w-8 p-0 flex items-center justify-center text-white/70 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              <RefreshCcw className="w-3.5 h-3.5" />
+                            </button>
                           </div>
                           {isLeadMeetingsBusy ? (
                             <div className="flex items-center gap-2 text-white/60 text-xs">
@@ -1782,20 +1774,16 @@ const Activity: FC<ActivityProps> = ({
                             <h3 className="text-white font-semibold text-xs sm:text-sm">
                               Available Slots
                             </h3>
-                            <ActiveNavButton
-                              icon={RefreshCcw}
-                              text={
-                                syncMeetingsMutation.isPending
-                                  ? "Syncing..."
-                                  : "Refresh"
-                              }
+                            <button
                               onClick={handleRefreshCalendarData}
                               disabled={
                                 isAvailabilityBusy ||
                                 syncMeetingsMutation.isPending
                               }
-                              className="h-8 text-xs"
-                            />
+                              className="h-8 w-8 p-0 flex items-center justify-center text-white/70 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              <RefreshCcw className="w-3.5 h-3.5" />
+                            </button>
                           </div>
                           {isAvailabilityBusy ? (
                             <div className="flex items-center gap-2 text-white/60 text-xs">
@@ -1848,19 +1836,17 @@ const Activity: FC<ActivityProps> = ({
                     }}
                   >
                     <div className="flex flex-col items-start justify-between gap-4">
-                      <div className="flex justify-between gap-4 items-center">
+                      <div className="flex justify-between gap-4 items-center w-full">
                         <p className="text-xs font-semibold sm:text-sm">
                           Existing followups
                         </p>
-                        <ActiveNavButton
-                        icon={RefreshCcw}
-                        text={
-                          isFollowupPlansFetching ? "Refreshing..." : "Refresh"
-                        }
+                        <button
                         onClick={() => refetchFollowupPlans()}
                         disabled={isFollowupPlansFetching}
-                        className="h-8 text-xs"
-                      />
+                        className="h-8 w-8 p-0 flex items-center justify-center text-white/70 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed ml-auto"
+                      >
+                        <RefreshCcw className="w-3.5 h-3.5" />
+                      </button>
 
                         
                       </div>
