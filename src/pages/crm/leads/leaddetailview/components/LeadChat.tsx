@@ -229,6 +229,7 @@ const LeadChat = ({
     const whatsappAvailable =
       hasPhone && (whatsappReady || isWhatsAppConnectionLoading);
     const smsAvailable = hasPhone && (twilioReady || twilioStatusLoading);
+    const aiCallAvailable = hasPhone;
 
     return [
       {
@@ -239,8 +240,11 @@ const LeadChat = ({
       { label: "Email", status: emailStatus, isAvailable: hasEmail },
       { label: "SMS", status: smsStatus, isAvailable: smsAvailable },
       { label: "Call", status: smsStatus, isAvailable: smsAvailable },
-      // New AI Call tab (simple placeholder for now)
-      // { label: "AI Call", status: "Under Work.", isAvailable: true },
+      {
+        label: "AI Call",
+        status: aiCallAvailable ? "Ready" : "Add phone",
+        isAvailable: aiCallAvailable,
+      },
     ];
   }, [
     emailAddress,
@@ -1744,6 +1748,24 @@ const LeadChat = ({
               autoStart={autoStartCall}
               selectedCallLogView={selectedCallLogView}
               setSelectedCallLogView={setSelectedCallLogView}
+            />
+          </div>
+        ) : activeTab === "AI Call" ? (
+          <div className="flex w-full flex-1 items-center justify-center py-20 text-lg font-medium text-white/70">
+            <CallView
+              lead={lead}
+              twilioReady={twilioReady}
+              twilioStatusMessage={
+                twilioStatusLoading
+                  ? "Checking AI calling availability..."
+                  : twilioConnection.message ||
+                    "Company Twilio credentials aren't added yet."
+              }
+              twilioStatusLoading={twilioStatusLoading}
+              autoStart={false}
+              selectedCallLogView={selectedCallLogView}
+              setSelectedCallLogView={setSelectedCallLogView}
+              mode="ai"
             />
           </div>
         ) : (
