@@ -65,9 +65,22 @@ export const EmailListItem = ({ email, onClick }: EmailListItemProps) => {
   const fromName = email.from.name || email.from.email.split("@")[0];
 
   // Clean the email content before creating preview
-  const cleanedText = email.body.text
-    ? stripQuotedEmailContent(email.body.text)
-    : "";
+  let cleanedText = "";
+  if (email.body.text) {
+    const textContent = email.body.text;
+    // Check if text contains HTML tags
+    if (/<[^>]+>/.test(textContent)) {
+      // Strip HTML tags from text field
+      let stripped = textContent.replace(/<\/p>/gi, " ");
+      stripped = stripped.replace(/<br\s*\/?>/gi, " ");
+      stripped = stripped.replace(/<[^>]+>/g, "");
+      stripped = stripped.replace(/\s+/g, " ").trim();
+      cleanedText = stripQuotedEmailContent(stripped);
+    } else {
+      cleanedText = stripQuotedEmailContent(textContent);
+    }
+  }
+  
   const cleanedHtml = email.body.html
     ? stripQuotedEmailContent(email.body.html.replace(/<[^>]*>/g, ""))
     : "";
