@@ -1,11 +1,12 @@
 import React from "react";
+import { motion } from "framer-motion";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -88,240 +89,332 @@ const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
   const events = parseEvents(client.eventsJSON);
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0 text-white border-0">
-        {/* Glassmorphism Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-white/5 to-transparent backdrop-blur-xl rounded-lg pointer-events-none" />
-        <div className="absolute inset-0 bg-[#0b0f20]/80 backdrop-blur-md rounded-lg pointer-events-none" />
-        <div className="absolute inset-[1px] bg-gradient-to-br from-white/5 to-transparent rounded-lg pointer-events-none" />
-        <div className="absolute inset-0 border border-white/10 rounded-lg shadow-2xl shadow-black/50 pointer-events-none" />
-        
-        <div className="relative z-10 overflow-y-auto scrollbar-hide max-h-[90vh] p-9">
-          <DialogHeader className="mb-6 pb-4 border-b border-white/10">
-            <DialogTitle className="text-2xl font-bold text-white drop-shadow-lg">
-              Session Details
-            </DialogTitle>
-            <DialogDescription className="text-gray-300/80 mt-2">
-              Complete information about this {viewType === "queries" ? "query" : "session"}
-            </DialogDescription>
-          </DialogHeader>
+    <Sheet open={isOpen} onOpenChange={onClose}>
+      <SheetContent side="right" className="w-full sm:max-w-2xl lg:max-w-4xl overflow-hidden p-0 text-white border-0 bg-[#0a0a0a] border-l border-white/10 [&>button]:z-50 [&>button]:bg-white/10 [&>button]:hover:bg-white/20 [&>button]:text-white [&>button]:border-white/20">
+        {/* Background for sheet */}
+        <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-white/5 pointer-events-none" />
+
+        <div className="relative z-10 overflow-y-auto scrollbar-hide h-full p-6">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 }}
+          >
+            <SheetHeader className="mb-6 pb-4 border-b border-white/10 px-6 pt-6">
+              <SheetTitle className="text-2xl font-bold text-white drop-shadow-lg">
+                Session Details
+              </SheetTitle>
+              <SheetDescription className="text-gray-300/80 mt-2">
+                Complete information about this {viewType === "queries" ? "query" : "session"}
+              </SheetDescription>
+            </SheetHeader>
+          </motion.div>
 
           <div className="space-y-6">
             {/* Contact Information - Only show for queries view */}
             {viewType === "queries" && contactInfo && (
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, ease: "easeOut", delay: 0.3 }}
+              >
+                <Card className="bg-white/5 backdrop-blur-sm border-white/10 shadow-lg">
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2 text-white drop-shadow-md">
+                      <UserIcon className="w-5 h-5" />
+                      Contact Information
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-gray-300/80 flex items-center gap-2">
+                          <UserIcon className="w-4 h-4" />
+                          Name
+                        </p>
+                        <p className="text-sm text-white mt-1">{contactInfo.name || "N/A"}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-300/80 flex items-center gap-2">
+                          <MailIcon className="w-4 h-4" />
+                          Email
+                        </p>
+                        <p className="text-sm text-white mt-1 break-all">{contactInfo.email || "N/A"}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-300/80 flex items-center gap-2">
+                          <PhoneIcon className="w-4 h-4" />
+                          Phone
+                        </p>
+                        <p className="text-sm text-white mt-1">{contactInfo.phone || "N/A"}</p>
+                      </div>
+                      {client.personalContactInfo?.state && (
+                        <div>
+                          <p className="text-sm text-gray-300/80">Status</p>
+                          <Badge className="mt-1 bg-blue-100 text-blue-800 rounded-full">
+                            {client.personalContactInfo.state}
+                          </Badge>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+
+            {/* Session Information */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, ease: "easeOut", delay: 0.4 }}
+            >
               <Card className="bg-white/5 backdrop-blur-sm border-white/10 shadow-lg">
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2 text-white drop-shadow-md">
-                    <UserIcon className="w-5 h-5" />
-                    Contact Information
+                    <ActivityIcon className="w-5 h-5" />
+                    Session Information
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm text-gray-300/80 flex items-center gap-2">
-                        <UserIcon className="w-4 h-4" />
-                        Name
-                      </p>
-                      <p className="text-sm text-white mt-1">{contactInfo.name || "N/A"}</p>
+                      <p className="text-sm text-gray-300/80">Session ID</p>
+                      <p className="font-mono text-xs text-white break-all">{client.sessionId}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-300/80 flex items-center gap-2">
-                        <MailIcon className="w-4 h-4" />
-                        Email
-                      </p>
-                      <p className="text-sm text-white mt-1 break-all">{contactInfo.email || "N/A"}</p>
+                      <p className="text-sm text-gray-300/80">Status</p>
+                      <Badge className={`${getStatusColor(client.status)} rounded-full`}>
+                        {client.status}
+                      </Badge>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-300/80 flex items-center gap-2">
-                        <PhoneIcon className="w-4 h-4" />
-                        Phone
-                      </p>
-                      <p className="text-sm text-white mt-1">{contactInfo.phone || "N/A"}</p>
+                      <p className="text-sm text-gray-300/80">Start Time</p>
+                      <p className="text-sm text-white">{formatDate(client.startTime)}</p>
                     </div>
-                    {client.personalContactInfo?.state && (
-                      <div>
-                        <p className="text-sm text-gray-300/80">Status</p>
-                        <Badge className="mt-1 bg-blue-100 text-blue-800 rounded-full">
-                          {client.personalContactInfo.state}
-                        </Badge>
-                      </div>
-                    )}
+                    <div>
+                      <p className="text-sm text-gray-300/80">End Time</p>
+                      <p className="text-sm text-white">{formatDate(client.endTime)}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-300/80">Duration</p>
+                      <p className="text-sm text-white">{formatDuration(client.duration)}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-300/80">Airtable ID</p>
+                      <p className="font-mono text-xs text-white">{client.airtableId}</p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
-            )}
-
-            {/* Session Information */}
-            <Card className="bg-white/5 backdrop-blur-sm border-white/10 shadow-lg">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2 text-white drop-shadow-md">
-                  <ActivityIcon className="w-5 h-5" />
-                  Session Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-gray-300/80">Session ID</p>
-                    <p className="font-mono text-xs text-white break-all">{client.sessionId}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-300/80">Status</p>
-                    <Badge className={`${getStatusColor(client.status)} rounded-full`}>
-                      {client.status}
-                    </Badge>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-300/80">Start Time</p>
-                    <p className="text-sm text-white">{formatDate(client.startTime)}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-300/80">End Time</p>
-                    <p className="text-sm text-white">{formatDate(client.endTime)}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-300/80">Duration</p>
-                    <p className="text-sm text-white">{formatDuration(client.duration)}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-300/80">Airtable ID</p>
-                    <p className="font-mono text-xs text-white">{client.airtableId}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            </motion.div>
 
             {/* Metrics */}
-            <Card className="bg-white/5 backdrop-blur-sm border-white/10 shadow-lg">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2 text-white drop-shadow-md">
-                  <MessageSquareIcon className="w-5 h-5" />
-                  Session Metrics
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <div className="text-center p-4 bg-white/5 border border-white/10 rounded-lg">
-                    <p className="text-2xl font-bold text-white">{client.messagesTotal}</p>
-                    <p className="text-sm text-gray-300/80">Total Messages</p>
-                  </div>
-                  <div className="text-center p-4 bg-white/5 border border-white/10 rounded-lg">
-                    <p className="text-2xl font-bold text-white">{client.averageResponse}ms</p>
-                    <p className="text-sm text-gray-300/80">Avg Response</p>
-                  </div>
-                  <div className="text-center p-4 bg-white/5 border border-white/10 rounded-lg">
-                    <p className="text-2xl font-bold text-green-400">{client.toolCallsSuccess}</p>
-                    <p className="text-sm text-gray-300/80">Tool Calls (Success)</p>
-                  </div>
-                  <div className="text-center p-4 bg-white/5 border border-white/10 rounded-lg">
-                    <p className="text-2xl font-bold text-red-400">{client.toolCallsFailed}</p>
-                    <p className="text-sm text-gray-300/80">Tool Calls (Failed)</p>
-                  </div>
-                  <div className="text-center p-4 bg-white/5 border border-white/10 rounded-lg col-span-2">
-                    <p className="text-2xl font-bold text-white">{client.averageToolDuration}ms</p>
-                    <p className="text-sm text-gray-300/80">Avg Tool Duration</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Transcript */}
-            <Card className="bg-white/5 backdrop-blur-sm border-white/10 shadow-lg">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2 text-white drop-shadow-md">
-                  <MessageSquareIcon className="w-5 h-5" />
-                  Conversation Transcript
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="bg-white/5 border border-white/10 p-4 rounded-lg max-h-64 overflow-y-auto">
-                  <pre className="text-sm whitespace-pre-wrap font-sans text-gray-300">
-                    {client.transcript || "No transcript available"}
-                  </pre>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Events */}
-            {events.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: "easeOut", delay: 0.5 }}
+            >
               <Card className="bg-white/5 backdrop-blur-sm border-white/10 shadow-lg">
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2 text-white drop-shadow-md">
-                    <CalendarIcon className="w-5 h-5" />
-                    Session Events
+                    <MessageSquareIcon className="w-5 h-5" />
+                    Session Metrics
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2 max-h-64 overflow-y-auto">
-                    {events.map((event: any, index: number) => (
-                      <div
-                        key={index}
-                        className="p-3 bg-white/5 rounded-lg border border-white/10"
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1">
-                            <p className="font-semibold text-sm text-white">
-                              {event.event || event.type || "Event"}
-                            </p>
-                            {event.role && (
-                              <Badge variant="outline" className="mt-1 text-xs border-white/20 text-gray-300 rounded-full">
-                                {event.role}
-                              </Badge>
-                            )}
-                            {event.content && (
-                              <p className="text-xs text-gray-400 mt-2 line-clamp-2">
-                                {event.content}
-                              </p>
-                            )}
-                            {event.details && (
-                              <pre className="text-xs text-gray-400 mt-2 whitespace-pre-wrap">
-                                {JSON.stringify(event.details, null, 2)}
-                              </pre>
-                            )}
-                          </div>
-                          <div className="text-right">
-                            <p className="text-xs text-gray-400">
-                              {event.timestamp ? formatDate(event.timestamp) : "N/A"}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <motion.div
+                      className="text-center p-4 bg-white/5 border border-white/10 rounded-lg"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.5, delay: 0.6 }}
+                    >
+                      <p className="text-2xl font-bold text-white">{client.messagesTotal}</p>
+                      <p className="text-sm text-gray-300/80">Total Messages</p>
+                    </motion.div>
+                    <motion.div
+                      className="text-center p-4 bg-white/5 border border-white/10 rounded-lg"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.5, delay: 0.7 }}
+                    >
+                      <p className="text-2xl font-bold text-white">{client.averageResponse}ms</p>
+                      <p className="text-sm text-gray-300/80">Avg Response</p>
+                    </motion.div>
+                    <motion.div
+                      className="text-center p-4 bg-white/5 border border-white/10 rounded-lg"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.5, delay: 0.8 }}
+                    >
+                      <p className="text-2xl font-bold text-green-400">{client.toolCallsSuccess}</p>
+                      <p className="text-sm text-gray-300/80">Tool Calls (Success)</p>
+                    </motion.div>
+                    <motion.div
+                      className="text-center p-4 bg-white/5 border border-white/10 rounded-lg"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.5, delay: 0.9 }}
+                    >
+                      <p className="text-2xl font-bold text-red-400">{client.toolCallsFailed}</p>
+                      <p className="text-sm text-gray-300/80">Tool Calls (Failed)</p>
+                    </motion.div>
+                    <motion.div
+                      className="text-center p-4 bg-white/5 border border-white/10 rounded-lg col-span-2"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.5, delay: 1.0 }}
+                    >
+                      <p className="text-2xl font-bold text-white">{client.averageToolDuration}ms</p>
+                      <p className="text-sm text-gray-300/80">Avg Tool Duration</p>
+                    </motion.div>
                   </div>
                 </CardContent>
               </Card>
+            </motion.div>
+
+            {/* Transcript */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, ease: "easeOut", delay: 0.6 }}
+            >
+              <Card className="bg-white/5 backdrop-blur-sm border-white/10 shadow-lg">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2 text-white drop-shadow-md">
+                    <MessageSquareIcon className="w-5 h-5" />
+                    Conversation Transcript
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <motion.div
+                    className="bg-white/5 border border-white/10 p-4 rounded-lg max-h-64 overflow-y-auto scrollbar-hide"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.4, delay: 0.8 }}
+                  >
+                    <pre className="text-sm whitespace-pre-wrap font-sans text-gray-300">
+                      {client.transcript || "No transcript available"}
+                    </pre>
+                  </motion.div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Events */}
+            {events.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, ease: "easeOut", delay: 0.7 }}
+              >
+                <Card className="bg-white/5 backdrop-blur-sm border-white/10 shadow-lg">
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2 text-white drop-shadow-md">
+                      <CalendarIcon className="w-5 h-5" />
+                      Session Events
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <motion.div
+                      className="space-y-2 max-h-64 overflow-y-auto scrollbar-hide"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.4, delay: 0.9 }}
+                    >
+                      {events.map((event: any, index: number) => (
+                        <motion.div
+                          key={index}
+                          className="p-3 bg-white/5 rounded-lg border border-white/10"
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.4, delay: 1.0 + (index * 0.05) }}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1">
+                              <p className="font-semibold text-sm text-white">
+                                {event.event || event.type || "Event"}
+                              </p>
+                              {event.role && (
+                                <Badge variant="outline" className="mt-1 text-xs border-white/20 text-gray-300 rounded-full">
+                                  {event.role}
+                                </Badge>
+                              )}
+                              {event.content && (
+                                <p className="text-xs text-gray-400 mt-2 line-clamp-2">
+                                  {event.content}
+                                </p>
+                              )}
+                              {event.details && (
+                                <pre className="text-xs text-gray-400 mt-2 whitespace-pre-wrap">
+                                  {JSON.stringify(event.details, null, 2)}
+                                </pre>
+                              )}
+                            </div>
+                            <div className="text-right">
+                              <p className="text-xs text-gray-400">
+                                {event.timestamp ? formatDate(event.timestamp) : "N/A"}
+                              </p>
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </motion.div>
+                  </CardContent>
+                </Card>
+              </motion.div>
             )}
 
             {/* Timestamps */}
-            <Card className="bg-white/5 backdrop-blur-sm border-white/10 shadow-lg">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2 text-white drop-shadow-md">
-                  <ClockIcon className="w-5 h-5" />
-                  Timestamps
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-300/80">Created in System:</span>
-                    <span className="text-white">{formatDate(client.createdAt)}</span>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: "easeOut", delay: 0.8 }}
+            >
+              <Card className="bg-white/5 backdrop-blur-sm border-white/10 shadow-lg">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2 text-white drop-shadow-md">
+                    <ClockIcon className="w-5 h-5" />
+                    Timestamps
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2 text-sm">
+                    <motion.div
+                      className="flex justify-between"
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.4, delay: 1.0 }}
+                    >
+                      <span className="text-gray-300/80">Created in System:</span>
+                      <span className="text-white">{formatDate(client.createdAt)}</span>
+                    </motion.div>
+                    <motion.div
+                      className="flex justify-between"
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.4, delay: 1.1 }}
+                    >
+                      <span className="text-gray-300/80">Last Updated:</span>
+                      <span className="text-white">{formatDate(client.updatedAt)}</span>
+                    </motion.div>
+                    <motion.div
+                      className="flex justify-between"
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.4, delay: 1.2 }}
+                    >
+                      <span className="text-gray-300/80">Airtable Created:</span>
+                      <span className="text-white">{formatDate(client.airtableCreatedTime)}</span>
+                    </motion.div>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-300/80">Last Updated:</span>
-                    <span className="text-white">{formatDate(client.updatedAt)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-300/80">Airtable Created:</span>
-                    <span className="text-white">{formatDate(client.airtableCreatedTime)}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </motion.div>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 };
 

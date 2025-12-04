@@ -1,16 +1,14 @@
 import React, { useState, useMemo } from "react";
-import {
-  EyeIcon,
-  RefreshCwIcon,
-  MoreVertical,
-  Search,
-} from "lucide-react";
+import { EyeIcon, RefreshCwIcon, MoreVertical, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCustomerSupportQueries, useSyncFromAirtableTable } from "@/hooks/useProspects";
+import {
+  useCustomerSupportQueries,
+  useSyncFromAirtableTable,
+} from "@/hooks/useProspects";
 import type { Client } from "@/services/clients.service";
 import ClientDetailsModal from "./ClientDetailsModal";
 import { useToast } from "@/hooks/use-toast";
@@ -20,7 +18,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { TooltipProvider } from '@/components/ui/tooltip';
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const CustomerSupportQueriesTable: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -30,7 +28,8 @@ const CustomerSupportQueriesTable: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { toast } = useToast();
 
-  const { mutate: syncFromAirtable, isPending: isSyncing } = useSyncFromAirtableTable();
+  const { mutate: syncFromAirtable, isPending: isSyncing } =
+    useSyncFromAirtableTable();
 
   // Debounce search query
   React.useEffect(() => {
@@ -111,9 +110,11 @@ const CustomerSupportQueriesTable: React.FC = () => {
 
   if (error) {
     return (
-      <Card className="border-[#FFFFFF0D]"
+      <Card
+        className="border-[#FFFFFF0D]"
         style={{
-          background: 'linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)'
+          background:
+            "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
         }}
       >
         <CardContent className="p-6">
@@ -127,9 +128,11 @@ const CustomerSupportQueriesTable: React.FC = () => {
 
   return (
     <div className="w-full">
-      <div className='border border-[#FFFFFF0D] p-6 rounded-xl'
+      <div
+        className="border border-[#FFFFFF0D] p-6 rounded-xl"
         style={{
-          background: 'linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)'
+          background:
+            "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
         }}
       >
         <Card className="mb-6 bg-transparent border-[#FFFFFF1A]">
@@ -142,8 +145,9 @@ const CustomerSupportQueriesTable: React.FC = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 w-full rounded-full bg-[#FFFFFF1A] border border-white/40 text-gray-300 placeholder:text-gray-500 focus:ring-0"
                 style={{
-                  boxShadow: '0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset',
-                  borderRadius: '9999px'
+                  boxShadow:
+                    "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                  borderRadius: "9999px",
                 }}
               />
             </div>
@@ -194,27 +198,15 @@ const CustomerSupportQueriesTable: React.FC = () => {
             {/* Header */}
             <div className="mb-4 border border-[#FFFFFF1A] rounded-xl overflow-hidden">
               <div className="grid grid-cols-[1.2fr_1fr_1fr_0.8fr_0.8fr_0.8fr_80px] items-center gap-4 px-6 py-4 bg-[#FFFFFF05]">
-                <div className="text-sm text-gray-400">
-                  Name
-                </div>
-                <div className="text-sm text-gray-400">
-                  Email
-                </div>
-                <div className="text-sm text-gray-400">
-                  Phone
-                </div>
-                <div className="text-sm text-gray-400">
-                  Start Time
-                </div>
-                <div className="text-sm text-gray-400">
-                  Status
-                </div>
+                <div className="text-sm text-gray-400">Name</div>
+                <div className="text-sm text-gray-400">Email</div>
+                <div className="text-sm text-gray-400">Phone</div>
+                <div className="text-sm text-gray-400">Start Time</div>
+                <div className="text-sm text-gray-400">Status</div>
                 <div className="text-sm text-gray-400 text-center">
                   Messages
                 </div>
-                <div className="text-sm text-gray-400 text-center">
-                  Actions
-                </div>
+                <div className="text-sm text-gray-400 text-center">Actions</div>
               </div>
             </div>
 
@@ -236,20 +228,33 @@ const CustomerSupportQueriesTable: React.FC = () => {
                     key={query._id}
                     className="grid grid-cols-[1.2fr_1fr_1fr_0.8fr_0.8fr_0.8fr_80px] items-center gap-4 px-6 py-4 hover:bg-white/5 transition-colors border-b border-[#FFFFFF0D] last:border-b-0"
                   >
-                    <div className="font-medium text-white truncate text-sm" title={contactInfo?.name || "N/A"}>
+                    <div
+                      className="font-medium text-white truncate text-sm"
+                      title={contactInfo?.name || "N/A"}
+                    >
                       {contactInfo?.name || "N/A"}
                     </div>
-                    <div className="text-gray-300 text-sm truncate" title={contactInfo?.email || "N/A"}>
+                    <div
+                      className="text-gray-300 text-sm truncate"
+                      title={contactInfo?.email || "N/A"}
+                    >
                       {contactInfo?.email || "N/A"}
                     </div>
-                    <div className="text-gray-300 text-sm truncate" title={contactInfo?.phone || "N/A"}>
+                    <div
+                      className="text-gray-300 text-sm truncate"
+                      title={contactInfo?.phone || "N/A"}
+                    >
                       {contactInfo?.phone || "N/A"}
                     </div>
                     <div className="text-gray-300 text-sm">
                       {formatDate(query.startTime)}
                     </div>
                     <div>
-                      <Badge className={`${getStatusColor(query.status)} rounded-full px-3`}>
+                      <Badge
+                        className={`${getStatusColor(
+                          query.status
+                        )} rounded-full px-3`}
+                      >
                         {query.status}
                       </Badge>
                     </div>
@@ -322,7 +327,8 @@ const CustomerSupportQueriesTable: React.FC = () => {
                       disabled={!data.data.hasPrevPage}
                       className="px-3 bg-[#FFFFFF1A] border-0 text-gray-300 hover:bg-white/10"
                       style={{
-                        boxShadow: '0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset'
+                        boxShadow:
+                          "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
                       }}
                     >
                       <span className="hidden sm:inline">Previous</span>
@@ -354,14 +360,18 @@ const CustomerSupportQueriesTable: React.FC = () => {
                               }
                               size="sm"
                               onClick={() => setCurrentPage(pageNumber)}
-                              className={`w-9 h-9 p-0 ${pageNumber === currentPage
-                                ? "bg-white/20 text-white"
-                                : "bg-[#FFFFFF1A] border-0 text-gray-300 hover:bg-white/10"
-                                }`}
+                              className={`w-9 h-9 p-0 ${
+                                pageNumber === currentPage
+                                  ? "bg-white/20 text-white"
+                                  : "bg-[#FFFFFF1A] border-0 text-gray-300 hover:bg-white/10"
+                              }`}
                               style={
-                                pageNumber !== currentPage ? {
-                                  boxShadow: '0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset'
-                                } : undefined
+                                pageNumber !== currentPage
+                                  ? {
+                                      boxShadow:
+                                        "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                                    }
+                                  : undefined
                               }
                             >
                               {pageNumber}
@@ -382,7 +392,8 @@ const CustomerSupportQueriesTable: React.FC = () => {
                       disabled={!data.data.hasNextPage}
                       className="px-3 bg-[#FFFFFF1A] border-0 text-gray-300 hover:bg-white/10"
                       style={{
-                        boxShadow: '0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset'
+                        boxShadow:
+                          "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
                       }}
                     >
                       Next
@@ -407,5 +418,3 @@ const CustomerSupportQueriesTable: React.FC = () => {
 };
 
 export default CustomerSupportQueriesTable;
-
-
