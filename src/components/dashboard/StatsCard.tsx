@@ -4,7 +4,7 @@ import {
   dashboardService,
   CampaignsStatistics,
 } from "@/services/dashboard.service";
-import { LeadsChart } from "./LeadsChart";
+import { CampaignsChart } from "./CampaignsChart";
 
 const StatsCard = () => {
   const [campaignsStats, setCampaignsStats] =
@@ -83,7 +83,7 @@ const StatsCard = () => {
 
       {/* Chart - Absolutely positioned to touch bottom and right borders */}
       <div className="absolute bottom-0 right-0 sm:left-[40%] left-0 h-full hidden sm:block z-0">
-        <LeadsChart />
+        <CampaignsChart />
       </div>
     </section>
   );
