@@ -17,7 +17,7 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { emailService } from "@/services/email.service";
 import { Email } from "@/types/email.types";
-import { Plus, Search, Mail, Star, Inbox as InboxIcon } from "lucide-react";
+import { Plus, Search, Mail, Star, Inbox as InboxIcon, ChevronRight, ChevronDown } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 // Utility function to strip quoted email content
@@ -216,7 +216,7 @@ const InboxPage = () => {
 
   return (
     <DashboardLayout>
-      <main className="relative px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] pt-24 sm:pt-28 lg:pt-32 pb-8 flex flex-col gap-6 text-white flex-1 overflow-y-auto max-w-[1600px] mx-auto w-full">
+      <main className="relative px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] pt-24 sm:pt-28 lg:pt-32 pb-8 flex flex-col gap-6 text-white flex-1 overflow-hidden max-w-[1600px] mx-auto w-full">
         {/* Header */}
         <div className="flex items-center justify-between gap-4">
           <div>
@@ -293,26 +293,36 @@ const InboxPage = () => {
                 >
                   <InboxIcon className="h-4 w-4 mr-2" />
                   All Emails
-                  {inboxData?.data?.pagination?.total && (
-                    <Badge className="ml-auto bg-white/15 text-white border-white/20">
-                      {inboxData.data.pagination.total}
-                    </Badge>
-                  )}
+                  <div className="ml-auto flex items-center gap-1">
+                    {inboxData?.data?.pagination?.total ? (
+                      <Badge className="bg-white/15 text-white border-white/20">
+                        {inboxData.data.pagination.total}
+                      </Badge>
+                    ) : null}
+                    {showCategories ? (
+                      <ChevronDown className="h-3.5 w-3.5" />
+                    ) : (
+                      <ChevronRight className="h-3.5 w-3.5" />
+                    )}
+                  </div>
                 </Button>
                 {showCategories && (
-                  <>
+                  <div className="space-y-1 overflow-hidden animate-in slide-in-from-top-2 duration-200">
                     <Button
                       variant={
                         filter === "Client Communication" ? "default" : "ghost"
                       }
-                      className={`w-full justify-start rounded-full ml-4 ${
+                      className={`w-full justify-start rounded-full ml-6 text-sm ${
                         filter === "Client Communication"
                           ? "bg-white/15 text-white border border-white/20"
-                          : "text-white/70 hover:text-white hover:bg-white/10"
+                          : "text-white/60 hover:text-white hover:bg-white/10"
                       }`}
-                      onClick={() => setFilter("Client Communication")}
+                      onClick={() => {
+                        setFilter("Client Communication");
+                        setPage(1);
+                      }}
                     >
-                      <Mail className="h-3 w-3 mr-2" />
+                      <div className="h-1 w-1 rounded-full bg-current mr-2" />
                       Client Communication
                     </Button>
                     <Button
@@ -321,14 +331,17 @@ const InboxPage = () => {
                           ? "default"
                           : "ghost"
                       }
-                      className={`w-full justify-start rounded-full ml-4 ${
+                      className={`w-full justify-start rounded-full ml-6 text-sm ${
                         filter === "Marketing & Promotions"
                           ? "bg-white/15 text-white border border-white/20"
-                          : "text-white/70 hover:text-white hover:bg-white/10"
+                          : "text-white/60 hover:text-white hover:bg-white/10"
                       }`}
-                      onClick={() => setFilter("Marketing & Promotions")}
+                      onClick={() => {
+                        setFilter("Marketing & Promotions");
+                        setPage(1);
+                      }}
                     >
-                      <Mail className="h-3 w-3 mr-2" />
+                      <div className="h-1 w-1 rounded-full bg-current mr-2" />
                       Marketing & Promotions
                     </Button>
                     <Button
@@ -337,17 +350,20 @@ const InboxPage = () => {
                           ? "default"
                           : "ghost"
                       }
-                      className={`w-full justify-start rounded-full ml-4 ${
+                      className={`w-full justify-start rounded-full ml-6 text-sm ${
                         filter === "Internal Communication"
                           ? "bg-white/15 text-white border border-white/20"
-                          : "text-white/70 hover:text-white hover:bg-white/10"
+                          : "text-white/60 hover:text-white hover:bg-white/10"
                       }`}
-                      onClick={() => setFilter("Internal Communication")}
+                      onClick={() => {
+                        setFilter("Internal Communication");
+                        setPage(1);
+                      }}
                     >
-                      <Mail className="h-3 w-3 mr-2" />
+                      <div className="h-1 w-1 rounded-full bg-current mr-2" />
                       Internal Communication
                     </Button>
-                  </>
+                  </div>
                 )}
                 <Button
                   variant={filter === "unread" ? "default" : "ghost"}
@@ -356,15 +372,18 @@ const InboxPage = () => {
                       ? "bg-white/15 text-white border border-white/20"
                       : "text-white/70 hover:text-white hover:bg-white/10"
                   }`}
-                  onClick={() => setFilter("unread")}
+                  onClick={() => {
+                    setFilter("unread");
+                    setPage(1);
+                  }}
                 >
                   <Mail className="h-4 w-4 mr-2" />
                   Unread
-                  {statsData?.data?.unreadEmails && (
+                  {statsData?.data?.unreadEmails ? (
                     <Badge className="ml-auto bg-white/15 text-white border-white/20">
                       {statsData.data.unreadEmails}
                     </Badge>
-                  )}
+                  ) : null}
                 </Button>
                 <Button
                   variant={filter === "starred" ? "default" : "ghost"}
@@ -373,15 +392,18 @@ const InboxPage = () => {
                       ? "bg-white/15 text-white border border-white/20"
                       : "text-white/70 hover:text-white hover:bg-white/10"
                   }`}
-                  onClick={() => setFilter("starred")}
+                  onClick={() => {
+                    setFilter("starred");
+                    setPage(1);
+                  }}
                 >
                   <Star className="h-4 w-4 mr-2" />
                   Starred
-                  {statsData?.data?.starredEmails && (
+                  {statsData?.data?.starredEmails ? (
                     <Badge className="ml-auto bg-white/15 text-white border-white/20">
                       {statsData.data.starredEmails}
                     </Badge>
-                  )}
+                  ) : null}
                 </Button>
               </CardContent>
             </Card>
@@ -452,8 +474,8 @@ const InboxPage = () => {
                   "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
               }}
             >
-              <div className="mb-4 px-2">
-                <h2 className="text-lg font-semibold text-white">
+              <div className="mb-2 px-2">
+                <h2 className="text-sm font-semibold text-white">
                   {filter === "all" && "All Emails"}
                   {filter === "unread" && "Unread Emails"}
                   {filter === "starred" && "Starred Emails"}
@@ -464,13 +486,13 @@ const InboxPage = () => {
                     "Internal Communication"}
                 </h2>
               </div>
-              <div className="space-y-3 pb-4 overflow-y-auto">
+              <div className="space-y-1.5 pb-4 overflow-y-auto">
                 {isLoading ? (
-                  <div className="space-y-3">
-                    {[...Array(5)].map((_, i) => (
+                  <div className="space-y-1.5">
+                    {[...Array(8)].map((_, i) => (
                       <Skeleton
                         key={i}
-                        className="h-20 w-full rounded-[20px]"
+                        className="h-12 w-full rounded-[12px]"
                       />
                     ))}
                   </div>
@@ -489,12 +511,20 @@ const InboxPage = () => {
                     </p>
                   </div>
                 ) : (
-                  filteredEmails.map((email) => (
-                    <EmailListItem
+                  filteredEmails.map((email, index) => (
+                    <div
                       key={email._id}
-                      email={email}
-                      onClick={() => handleEmailClick(email)}
-                    />
+                      className="animate-in fade-in slide-in-from-bottom-2"
+                      style={{
+                        animationDelay: `${index * 30}ms`,
+                        animationFillMode: "backwards",
+                      }}
+                    >
+                      <EmailListItem
+                        email={email}
+                        onClick={() => handleEmailClick(email)}
+                      />
+                    </div>
                   ))
                 )}
               </div>
