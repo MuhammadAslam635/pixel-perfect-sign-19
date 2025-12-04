@@ -7,7 +7,7 @@ import { Company, CompanyPerson } from "@/services/companies.service";
 import { toast } from "sonner";
 import CompaniesList from "./components/CompaniesList";
 import { DetailsSidebar } from "../shared/components";
-import { useCompaniesData, useCrmStatsData } from "../shared/hooks";
+import { useCompaniesData, useCompanyCrmStatsData, useLeadsData } from "../shared/hooks";
 import { CompaniesQueryParams } from "@/services/companies.service";
 import {
   StatsCards,
@@ -125,13 +125,28 @@ const index = () => {
     totalCompanies: filteredTotalCompanies,
   } = useCompaniesData(companiesParams);
 
-  const { stats: crmStats } = useCrmStatsData();
+  // Filter-aware CRM stats for companies page
+  const { stats: companyCrmStats } = useCompanyCrmStatsData(companiesParams);
 
-  // Fetch total companies count without search/filter for stats
+  // Fallbacks if filtered stats are not yet available
   const { totalCompanies: totalCompaniesForStats } = useCompaniesData({
     page: 1,
     limit: 1,
   });
+
+  const { totalLeads: totalLeadsForStats } = useLeadsData(
+    { page: 1, limit: 1 },
+    { enabled: true }
+  );
+
+  // Prefer filtered stats, fall back to existing counts
+  const effectiveTotalCompanies =
+    companyCrmStats?.totalCompanies ??
+    filteredTotalCompanies ??
+    totalCompaniesForStats;
+
+  const effectiveTotalLeads =
+    companyCrmStats?.totalLeads ?? totalLeadsForStats;
 
   const industryOptions = useMemo(() => {
     const industries = new Set<string>();
@@ -164,18 +179,20 @@ const index = () => {
   const stats = useMemo(
     () =>
       buildStats({
-        totalCompanies: totalCompaniesForStats,
-        totalOutreach: crmStats?.totalOutreach,
-        totalResponse: crmStats?.totalResponse,
-        activeClients: crmStats?.activeClients,
-        messagesSent: crmStats?.messagesSent,
+        totalCompanies: effectiveTotalCompanies,
+        totalLeads: effectiveTotalLeads,
+        totalOutreach: companyCrmStats?.totalOutreach,
+        totalResponse: companyCrmStats?.totalResponse,
+        activeClients: companyCrmStats?.activeClients,
+        messagesSent: companyCrmStats?.messagesSent,
       }),
     [
-      totalCompaniesForStats,
-      crmStats?.totalOutreach,
-      crmStats?.totalResponse,
-      crmStats?.activeClients,
-      crmStats?.messagesSent,
+      effectiveTotalCompanies,
+      effectiveTotalLeads,
+      companyCrmStats?.totalOutreach,
+      companyCrmStats?.totalResponse,
+      companyCrmStats?.activeClients,
+      companyCrmStats?.messagesSent,
     ]
   );
 

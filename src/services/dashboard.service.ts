@@ -1,4 +1,5 @@
 import API from "@/utils/api";
+import { CompaniesQueryParams } from "./companies.service";
 
 export interface CommunicationEvent {
   id: string;
@@ -93,6 +94,11 @@ export interface CrmStats {
   messagesSent: number;
 }
 
+export interface CompanyCrmStats extends CrmStats {
+  totalCompanies: number;
+  totalLeads: number;
+}
+
 export const dashboardService = {
   /**
    * Get high-level CRM statistics (outreach, responses, active clients, messages)
@@ -100,6 +106,22 @@ export const dashboardService = {
   getCrmStats: async (): Promise<DashboardResponse<CrmStats>> => {
     try {
       const response = await API.get("/dashboard/crm-stats");
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  /**
+   * Get CRM statistics scoped to filtered companies
+   */
+  getCompanyCrmStats: async (
+    params: CompaniesQueryParams
+  ): Promise<DashboardResponse<CompanyCrmStats>> => {
+    try {
+      const response = await API.get("/dashboard/companies-stats", {
+        params,
+      });
       return response.data;
     } catch (error: any) {
       throw error;
