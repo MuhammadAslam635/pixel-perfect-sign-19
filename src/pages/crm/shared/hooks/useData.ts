@@ -12,6 +12,11 @@ import {
   LeadsResponse,
   LeadsQueryParams,
 } from "@/services/leads.service";
+import {
+  CrmStats,
+  dashboardService,
+  DashboardResponse,
+} from "@/services/dashboard.service";
 
 export const useCompaniesData = (params: CompaniesQueryParams) => {
   const query = useQuery<CompaniesResponse, Error>({
@@ -62,5 +67,25 @@ export const useLeadsData = (
     leads,
     totalLeads,
     pagination,
+  };
+};
+
+export const useCrmStatsData = () => {
+  const query = useQuery<DashboardResponse<CrmStats>, Error>({
+    queryKey: ["crm-stats"],
+    queryFn: () => dashboardService.getCrmStats(),
+    staleTime: 60 * 1000,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+  });
+
+  const stats = useMemo<CrmStats | undefined>(
+    () => query.data?.data,
+    [query.data?.data]
+  );
+
+  return {
+    query,
+    stats,
   };
 };

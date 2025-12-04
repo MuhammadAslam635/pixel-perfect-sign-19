@@ -7,7 +7,7 @@ import { Company, CompanyPerson } from "@/services/companies.service";
 import { toast } from "sonner";
 import CompaniesList from "./components/CompaniesList";
 import { DetailsSidebar } from "../shared/components";
-import { useCompaniesData } from "../shared/hooks";
+import { useCompaniesData, useCrmStatsData } from "../shared/hooks";
 import { CompaniesQueryParams } from "@/services/companies.service";
 import {
   StatsCards,
@@ -125,6 +125,8 @@ const index = () => {
     totalCompanies: filteredTotalCompanies,
   } = useCompaniesData(companiesParams);
 
+  const { stats: crmStats } = useCrmStatsData();
+
   // Fetch total companies count without search/filter for stats
   const { totalCompanies: totalCompaniesForStats } = useCompaniesData({
     page: 1,
@@ -160,8 +162,21 @@ const index = () => {
   const loading = companiesQuery.isLoading;
 
   const stats = useMemo(
-    () => buildStats(totalCompaniesForStats, undefined),
-    [totalCompaniesForStats]
+    () =>
+      buildStats({
+        totalCompanies: totalCompaniesForStats,
+        totalOutreach: crmStats?.totalOutreach,
+        totalResponse: crmStats?.totalResponse,
+        activeClients: crmStats?.activeClients,
+        messagesSent: crmStats?.messagesSent,
+      }),
+    [
+      totalCompaniesForStats,
+      crmStats?.totalOutreach,
+      crmStats?.totalResponse,
+      crmStats?.activeClients,
+      crmStats?.messagesSent,
+    ]
   );
 
   useEffect(() => {

@@ -12,6 +12,15 @@ export interface StatCard {
   link: string;
 }
 
+export interface CrmStatsValues {
+  totalCompanies?: number;
+  totalLeads?: number;
+  totalOutreach?: number;
+  totalResponse?: number;
+  activeClients?: number;
+  messagesSent?: number;
+}
+
 export const defaultStatsCards: StatCard[] = [
   {
     title: "Total Companies",
@@ -30,20 +39,31 @@ const parseStatValue = (value: number | undefined, fallback: string) =>
   value === undefined ? fallback : value.toString();
 
 export const buildStats = (
-  totalCompanies?: number,
-  totalLeads?: number,
+  overrides: CrmStatsValues = {},
   baseCards = defaultStatsCards
 ): StatCard[] => [
   {
     ...baseCards[0],
-    value: parseStatValue(totalCompanies, baseCards[0].value),
+    value: parseStatValue(overrides.totalCompanies, baseCards[0].value),
   },
   {
     ...baseCards[1],
-    value: parseStatValue(totalLeads, baseCards[1].value),
+    value: parseStatValue(overrides.totalLeads, baseCards[1].value),
   },
-  { ...baseCards[2] },
-  { ...baseCards[3] },
-  { ...baseCards[4] },
-  { ...baseCards[5] },
+  {
+    ...baseCards[2],
+    value: parseStatValue(overrides.totalOutreach, baseCards[2].value),
+  },
+  {
+    ...baseCards[3],
+    value: parseStatValue(overrides.totalResponse, baseCards[3].value),
+  },
+  {
+    ...baseCards[4],
+    value: parseStatValue(overrides.activeClients, baseCards[4].value),
+  },
+  {
+    ...baseCards[5],
+    value: parseStatValue(overrides.messagesSent, baseCards[5].value),
+  },
 ];

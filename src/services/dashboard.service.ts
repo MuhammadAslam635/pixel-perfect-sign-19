@@ -86,7 +86,26 @@ export interface DashboardResponse<T> {
   data: T;
 }
 
+export interface CrmStats {
+  totalOutreach: number;
+  totalResponse: number;
+  activeClients: number;
+  messagesSent: number;
+}
+
 export const dashboardService = {
+  /**
+   * Get high-level CRM statistics (outreach, responses, active clients, messages)
+   */
+  getCrmStats: async (): Promise<DashboardResponse<CrmStats>> => {
+    try {
+      const response = await API.get("/dashboard/crm-stats");
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
   /**
    * Get leads score distribution
    */
