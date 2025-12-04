@@ -79,7 +79,7 @@ const ClientsTable: React.FC<ClientsTableProps> = ({ viewType = "sessions" }) =>
       case "Active":
         return "bg-blue-100 text-blue-800 hover:bg-blue-200";
       case "Idle Timeout":
-        return "bg-yellow-100 text-yellow-800 hover:bg-yellow-200";
+        return "bg-gradient-to-r from-[#30cfd0] via-[#2a9cb3] to-[#1f6f86] text-white hover:from-[#25b8ba] hover:via-[#1f8ba0] hover:to-[#1a5f72]";
       case "Disconnected":
         return "bg-red-100 text-red-800 hover:bg-red-200";
       default:
