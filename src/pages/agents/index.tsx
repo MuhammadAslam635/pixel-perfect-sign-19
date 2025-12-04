@@ -1,5 +1,6 @@
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import AgentCard from "./components/AgentCard";
+import { motion } from "framer-motion";
 import kaiSales from "@/assets/kaisales.jpg";
 import auraContentCreator from "@/assets/auracontentcr.jpg";
 import lexOutreach from "@/assets/lexoutreach.jpg";
@@ -39,34 +40,104 @@ const agents = [
   },
 ];
 
+// Animation variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      duration: 0.6,
+      ease: "easeOut",
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const headerVariants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.8,
+      ease: "easeOut",
+    },
+  },
+};
+
+const cardsContainerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      duration: 0.6,
+      staggerChildren: 0.15,
+      delayChildren: 0.3,
+    },
+  },
+};
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 30, scale: 0.95 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      duration: 0.6,
+      ease: "easeOut",
+    },
+  },
+};
+
 const AgentsPage = () => {
   return (
     <DashboardLayout>
-      <main className="relative flex-1 px-6 pb-12 pt-28 sm:px-10 md:px-14 lg:px-20">
+      <motion.main
+        className="relative flex-1 px-6 pb-12 pt-28 sm:px-10 md:px-14 lg:px-20"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
         <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-[#0F172A] via-transparent to-[#05060A] opacity-70"></div>
-        <header className="flex flex-col gap-4 mb-12">
-          <span className="font-poppins font-medium text-4xl text-white">
+        <motion.header
+          className="flex flex-col gap-4 mb-12"
+          variants={headerVariants}
+        >
+          <motion.span
+            className="font-poppins font-medium text-4xl text-white"
+            variants={headerVariants}
+          >
             AI Agents
-          </span>
-          <h1 className="font-poppins font-light text-xl text-white">
+          </motion.span>
+          <motion.h1
+            className="font-poppins font-light text-xl text-white"
+            variants={headerVariants}
+          >
             Meet the specialists powering your autonomous growth{" "}
-          </h1>
-        </header>
-        <div
+          </motion.h1>
+        </motion.header>
+        <motion.div
           className="rounded-3xl p-6"
           style={{
             background:
               "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 2e-05) 38.08%, rgba(255, 255, 255, 2e-05) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
             border: "1px solid #FFFFFF4D",
           }}
+          variants={cardsContainerVariants}
         >
-          <section className="grid gap-6 p-6 sm:grid-cols-3 xl:grid-cols-3">
-            {agents.map((agent) => (
-              <AgentCard key={agent.name} {...agent} />
+          <motion.section
+            className="grid gap-6 p-6 sm:grid-cols-3 xl:grid-cols-3"
+            variants={cardsContainerVariants}
+          >
+            {agents.map((agent, index) => (
+              <motion.div key={agent.name} variants={cardVariants}>
+                <AgentCard {...agent} />
+              </motion.div>
             ))}
-          </section>
-        </div>
-      </main>
+          </motion.section>
+        </motion.div>
+      </motion.main>
     </DashboardLayout>
   );
 };
