@@ -90,7 +90,10 @@ const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="right" className="w-full sm:max-w-2xl lg:max-w-4xl overflow-hidden p-0 text-white border-0 bg-[#0a0a0a] border-l border-white/10 [&>button]:z-50 [&>button]:bg-white/10 [&>button]:hover:bg-white/20 [&>button]:text-white [&>button]:border-white/20">
+      <SheetContent
+        side="right"
+        className="w-full sm:max-w-2xl lg:max-w-4xl overflow-hidden p-0 text-white border-0 bg-[#0a0a0a] border-l border-white/10 [&>button]:z-50 [&>button]:bg-white/10 [&>button]:hover:bg-white/20 [&>button]:text-white [&>button]:border-white/20"
+      >
         {/* Background for sheet */}
         <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-white/5 pointer-events-none" />
 
@@ -105,7 +108,8 @@ const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
                 Session Details
               </SheetTitle>
               <SheetDescription className="text-gray-300/80 mt-2">
-                Complete information about this {viewType === "queries" ? "query" : "session"}
+                Complete information about this{" "}
+                {viewType === "queries" ? "query" : "session"}
               </SheetDescription>
             </SheetHeader>
           </motion.div>
@@ -132,21 +136,27 @@ const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
                           <UserIcon className="w-4 h-4" />
                           Name
                         </p>
-                        <p className="text-sm text-white mt-1">{contactInfo.name || "N/A"}</p>
+                        <p className="text-sm text-white mt-1">
+                          {contactInfo.name || "N/A"}
+                        </p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-300/80 flex items-center gap-2">
                           <MailIcon className="w-4 h-4" />
                           Email
                         </p>
-                        <p className="text-sm text-white mt-1 break-all">{contactInfo.email || "N/A"}</p>
+                        <p className="text-sm text-white mt-1 break-all">
+                          {contactInfo.email || "N/A"}
+                        </p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-300/80 flex items-center gap-2">
                           <PhoneIcon className="w-4 h-4" />
                           Phone
                         </p>
-                        <p className="text-sm text-white mt-1">{contactInfo.phone || "N/A"}</p>
+                        <p className="text-sm text-white mt-1">
+                          {contactInfo.phone || "N/A"}
+                        </p>
                       </div>
                       {client.personalContactInfo?.state && (
                         <div>
@@ -179,29 +189,43 @@ const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-gray-300/80">Session ID</p>
-                      <p className="font-mono text-xs text-white break-all">{client.sessionId}</p>
+                      <p className="font-mono text-xs text-white break-all">
+                        {client.sessionId}
+                      </p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-300/80">Status</p>
-                      <Badge className={`${getStatusColor(client.status)} rounded-full`}>
+                      <Badge
+                        className={`${getStatusColor(
+                          client.status
+                        )} rounded-full`}
+                      >
                         {client.status}
                       </Badge>
                     </div>
                     <div>
                       <p className="text-sm text-gray-300/80">Start Time</p>
-                      <p className="text-sm text-white">{formatDate(client.startTime)}</p>
+                      <p className="text-sm text-white">
+                        {formatDate(client.startTime)}
+                      </p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-300/80">End Time</p>
-                      <p className="text-sm text-white">{formatDate(client.endTime)}</p>
+                      <p className="text-sm text-white">
+                        {formatDate(client.endTime)}
+                      </p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-300/80">Duration</p>
-                      <p className="text-sm text-white">{formatDuration(client.duration)}</p>
+                      <p className="text-sm text-white">
+                        {formatDuration(client.duration)}
+                      </p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-300/80">Airtable ID</p>
-                      <p className="font-mono text-xs text-white">{client.airtableId}</p>
+                      <p className="font-mono text-xs text-white">
+                        {client.airtableId}
+                      </p>
                     </div>
                   </div>
                 </CardContent>
@@ -229,7 +253,9 @@ const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ duration: 0.5, delay: 0.6 }}
                     >
-                      <p className="text-2xl font-bold text-white">{client.messagesTotal}</p>
+                      <p className="text-2xl font-bold text-white">
+                        {client.messagesTotal}
+                      </p>
                       <p className="text-sm text-gray-300/80">Total Messages</p>
                     </motion.div>
                     <motion.div
@@ -238,7 +264,9 @@ const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ duration: 0.5, delay: 0.7 }}
                     >
-                      <p className="text-2xl font-bold text-white">{client.averageResponse}ms</p>
+                      <p className="text-2xl font-bold text-white">
+                        {client.averageResponse}ms
+                      </p>
                       <p className="text-sm text-gray-300/80">Avg Response</p>
                     </motion.div>
                     <motion.div
@@ -247,8 +275,12 @@ const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ duration: 0.5, delay: 0.8 }}
                     >
-                      <p className="text-2xl font-bold text-green-400">{client.toolCallsSuccess}</p>
-                      <p className="text-sm text-gray-300/80">Tool Calls (Success)</p>
+                      <p className="text-2xl font-bold text-green-400">
+                        {client.toolCallsSuccess}
+                      </p>
+                      <p className="text-sm text-gray-300/80">
+                        Tool Calls (Success)
+                      </p>
                     </motion.div>
                     <motion.div
                       className="text-center p-4 bg-white/5 border border-white/10 rounded-lg"
@@ -256,8 +288,12 @@ const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ duration: 0.5, delay: 0.9 }}
                     >
-                      <p className="text-2xl font-bold text-red-400">{client.toolCallsFailed}</p>
-                      <p className="text-sm text-gray-300/80">Tool Calls (Failed)</p>
+                      <p className="text-2xl font-bold text-red-400">
+                        {client.toolCallsFailed}
+                      </p>
+                      <p className="text-sm text-gray-300/80">
+                        Tool Calls (Failed)
+                      </p>
                     </motion.div>
                     <motion.div
                       className="text-center p-4 bg-white/5 border border-white/10 rounded-lg col-span-2"
@@ -265,8 +301,12 @@ const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ duration: 0.5, delay: 1.0 }}
                     >
-                      <p className="text-2xl font-bold text-white">{client.averageToolDuration}ms</p>
-                      <p className="text-sm text-gray-300/80">Avg Tool Duration</p>
+                      <p className="text-2xl font-bold text-white">
+                        {client.averageToolDuration}ms
+                      </p>
+                      <p className="text-sm text-gray-300/80">
+                        Avg Tool Duration
+                      </p>
                     </motion.div>
                   </div>
                 </CardContent>
@@ -328,7 +368,10 @@ const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
                           className="p-3 bg-white/5 rounded-lg border border-white/10"
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.4, delay: 1.0 + (index * 0.05) }}
+                          transition={{
+                            duration: 0.4,
+                            delay: 1.0 + index * 0.05,
+                          }}
                         >
                           <div className="flex items-start justify-between gap-2">
                             <div className="flex-1">
@@ -336,7 +379,10 @@ const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
                                 {event.event || event.type || "Event"}
                               </p>
                               {event.role && (
-                                <Badge variant="outline" className="mt-1 text-xs border-white/20 text-gray-300 rounded-full">
+                                <Badge
+                                  variant="outline"
+                                  className="mt-1 text-xs border-white/20 text-gray-300 rounded-full"
+                                >
                                   {event.role}
                                 </Badge>
                               )}
@@ -353,7 +399,9 @@ const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
                             </div>
                             <div className="text-right">
                               <p className="text-xs text-gray-400">
-                                {event.timestamp ? formatDate(event.timestamp) : "N/A"}
+                                {event.timestamp
+                                  ? formatDate(event.timestamp)
+                                  : "N/A"}
                               </p>
                             </div>
                           </div>
@@ -386,8 +434,12 @@ const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.4, delay: 1.0 }}
                     >
-                      <span className="text-gray-300/80">Created in System:</span>
-                      <span className="text-white">{formatDate(client.createdAt)}</span>
+                      <span className="text-gray-300/80">
+                        Created in System:
+                      </span>
+                      <span className="text-white">
+                        {formatDate(client.createdAt)}
+                      </span>
                     </motion.div>
                     <motion.div
                       className="flex justify-between"
@@ -396,7 +448,9 @@ const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
                       transition={{ duration: 0.4, delay: 1.1 }}
                     >
                       <span className="text-gray-300/80">Last Updated:</span>
-                      <span className="text-white">{formatDate(client.updatedAt)}</span>
+                      <span className="text-white">
+                        {formatDate(client.updatedAt)}
+                      </span>
                     </motion.div>
                     <motion.div
                       className="flex justify-between"
@@ -404,8 +458,12 @@ const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.4, delay: 1.2 }}
                     >
-                      <span className="text-gray-300/80">Airtable Created:</span>
-                      <span className="text-white">{formatDate(client.airtableCreatedTime)}</span>
+                      <span className="text-gray-300/80">
+                        Airtable Created:
+                      </span>
+                      <span className="text-white">
+                        {formatDate(client.airtableCreatedTime)}
+                      </span>
                     </motion.div>
                   </div>
                 </CardContent>
@@ -419,5 +477,3 @@ const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
 };
 
 export default ClientDetailsModal;
-
-
