@@ -1,5 +1,6 @@
 import { ChangeEvent, KeyboardEvent } from "react";
 import { Loader2, Plus, Send } from "lucide-react";
+import { motion } from "framer-motion";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 
@@ -42,6 +43,39 @@ const ChatComposer = ({
   const isSendDisabled =
     disabled || !value.trim() || isSending || isAwaitingResponse;
 
+  // Animation variants
+  const buttonHoverVariants = {
+    idle: { scale: 1 },
+    hover: {
+      scale: 1.05,
+      transition: { duration: 0.2, ease: "easeOut" }
+    },
+    tap: {
+      scale: 0.95,
+      transition: { duration: 0.1 }
+    },
+  };
+
+  const sendButtonVariants = {
+    idle: { scale: 1 },
+    hover: {
+      scale: 1.05,
+      transition: { duration: 0.2, ease: "easeOut" }
+    },
+    tap: {
+      scale: 0.95,
+      transition: { duration: 0.1 }
+    },
+    sending: {
+      scale: [1, 1.1, 1],
+      transition: {
+        duration: 0.6,
+        repeat: Infinity,
+        ease: "easeInOut"
+      }
+    }
+  };
+
   const handleSend = () => {
     // Validate that message is not empty before sending
     if (!disabled && !isAwaitingResponse && !isSending && value.trim()) {
@@ -50,7 +84,10 @@ const ChatComposer = ({
   };
 
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
       className="w-full rounded-full border border-white/10 p-2 shadow-[0_18px_48px_rgba(12,17,28,0.4)] backdrop-blur"
       style={{
         background: "rgba(255, 255, 255, 0.1)",
@@ -59,7 +96,11 @@ const ChatComposer = ({
       }}
     >
       <div className="flex items-center gap-3 px-2">
-        <label
+        <motion.label
+          variants={buttonHoverVariants}
+          initial="idle"
+          whileHover="hover"
+          whileTap="tap"
           className="flex size-11 cursor-pointer items-center justify-center rounded-full text-white/70 transition hover:border-white/20 hover:bg-white/10 focus-within:border-white/30 focus-within:bg-white/15 focus-within:text-white"
           aria-label="Attach file"
         >
@@ -70,7 +111,7 @@ const ChatComposer = ({
             onChange={handleFileChange}
             disabled={disabled || isAwaitingResponse}
           />
-        </label>
+        </motion.label>
 
         <Textarea
           value={value}
@@ -82,25 +123,33 @@ const ChatComposer = ({
           disabled={disabled}
         />
 
-        <Button
-          size="icon"
-          className="size-12 shrink-0 rounded-full text-white transition disabled:opacity-60"
-          style={{
-            background: "linear-gradient(226.23deg, #3F68B4 0%, #66B0B7 100%)",
-            boxShadow:
-              "0px 3.47px 3.47px 0px #FFFFFF40 inset, 0px -3.47px 3.47px 0px #FFFFFF40 inset",
-          }}
-          onClick={handleSend}
-          disabled={isSendDisabled}
+        <motion.div
+          variants={sendButtonVariants}
+          initial="idle"
+          whileHover={!isSendDisabled ? "hover" : "idle"}
+          whileTap={!isSendDisabled ? "tap" : "idle"}
+          animate={isSending ? "sending" : "idle"}
         >
-          {isSending ? (
-            <Loader2 className="size-5 animate-spin" />
-          ) : (
-            <Send className="size-5" />
-          )}
-        </Button>
+          <Button
+            size="icon"
+            className="size-12 shrink-0 rounded-full text-white transition disabled:opacity-60"
+            style={{
+              background: "linear-gradient(226.23deg, #3F68B4 0%, #66B0B7 100%)",
+              boxShadow:
+                "0px 3.47px 3.47px 0px #FFFFFF40 inset, 0px -3.47px 3.47px 0px #FFFFFF40 inset",
+            }}
+            onClick={handleSend}
+            disabled={isSendDisabled}
+          >
+            {isSending ? (
+              <Loader2 className="size-5 animate-spin" />
+            ) : (
+              <Send className="size-5" />
+            )}
+          </Button>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

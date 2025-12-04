@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef } from "react";
 import { Download, Loader2, Menu, Sparkles } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { ChatMessage } from "@/types/chat.types";
 import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
@@ -26,6 +27,84 @@ const ChatMessages = ({
 }: ChatMessagesProps) => {
   const conversation = useMemo(() => messages ?? [], [messages]);
   const scrollAreaRef = useRef<HTMLDivElement | null>(null);
+
+  // Animation variants for messages
+  const messageVariants = {
+    hidden: {
+      opacity: 0,
+      y: 20,
+      scale: 0.95,
+    },
+    visible: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      transition: {
+        duration: 0.4,
+        ease: [0.25, 0.46, 0.45, 0.94], // Custom easing for smooth animation
+      },
+    },
+    exit: {
+      opacity: 0,
+      scale: 0.95,
+      transition: {
+        duration: 0.2,
+      },
+    },
+  };
+
+  const typingVariants = {
+    hidden: {
+      opacity: 0,
+      scale: 0.8,
+      y: 10,
+    },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      y: 0,
+      transition: {
+        duration: 0.3,
+        ease: "easeOut",
+      },
+    },
+  };
+
+  // Bouncing dots animation for typing indicator
+  const dotVariants = {
+    animate: {
+      y: [0, -8, 0],
+      transition: {
+        duration: 0.8,
+        repeat: Infinity,
+        ease: "easeInOut",
+      },
+    },
+  };
+
+  const dotVariants2 = {
+    animate: {
+      y: [0, -8, 0],
+      transition: {
+        duration: 0.8,
+        repeat: Infinity,
+        ease: "easeInOut",
+        delay: 0.2,
+      },
+    },
+  };
+
+  const dotVariants3 = {
+    animate: {
+      y: [0, -8, 0],
+      transition: {
+        duration: 0.8,
+        repeat: Infinity,
+        ease: "easeInOut",
+        delay: 0.4,
+      },
+    },
+  };
 
   useEffect(() => {
     if (!scrollAreaRef.current) {
@@ -209,101 +288,131 @@ const ChatMessages = ({
         ref={scrollAreaRef}
         className="flex-1 min-h-0 space-y-4 overflow-y-auto scrollbar-hide px-6 py-6 sm:px-10 sm:py-8"
       >
-        {conversation.map((message) => {
-          const isAssistant = message.role !== "user";
-          return (
-            <div
-              key={message._id}
-              className={cn(
-                "flex w-full",
-                isAssistant ? "justify-start" : "justify-end"
-              )}
-            >
-              <div
+        <AnimatePresence mode="popLayout">
+          {conversation.map((message) => {
+            const isAssistant = message.role !== "user";
+            return (
+              <motion.div
+                key={message._id}
+                layout
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                variants={messageVariants}
                 className={cn(
-                  "max-w-[80%] rounded-3xl px-5 py-4 text-sm leading-relaxed shadow-lg sm:max-w-[70%]",
-                  isAssistant
-                    ? "rounded-bl-md bg-white/5 text-white"
-                    : "rounded-br-md bg-[linear-gradient(226.23deg,_#3E65B4_0%,_#68B3B7_100%)] text-white"
+                  "flex w-full",
+                  isAssistant ? "justify-start" : "justify-end"
                 )}
               >
-                <ReactMarkdown
-                  remarkPlugins={[remarkGfm]}
-                  rehypePlugins={[rehypeRaw, rehypeSanitize]}
-                  components={{
-                    table: ({ node, ...props }) => (
-                      <div className="my-4 max-w-[600px] overflow-x-auto rounded-lg border border-white/20">
-                        <table
-                          className="w-full table-auto border-collapse"
-                          {...props}
-                        />
-                      </div>
-                    ),
-                    thead: ({ node, ...props }) => (
-                      <thead className="bg-white/10" {...props} />
-                    ),
-                    tbody: ({ node, ...props }) => (
-                      <tbody className="divide-y divide-white/10" {...props} />
-                    ),
-                    tr: ({ node, ...props }) => (
-                      <tr
-                        className="transition-colors hover:bg-white/5"
-                        {...props}
-                      />
-                    ),
-                    th: ({ node, ...props }) => (
-                      <th
-                        className="max-w-[200px] break-words border border-white/20 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-white"
-                        {...props}
-                      />
-                    ),
-                    td: ({ node, ...props }) => (
-                      <td
-                        className="max-w-[200px] break-words border border-white/20 px-4 py-3 text-sm text-white/90"
-                        {...props}
-                      />
-                    ),
-                    a: ({ node, ...props }) => (
-                      <a
-                        className="max-w-full break-all text-blue-400 underline hover:text-blue-300"
-                        {...props}
-                      />
-                    ),
-                    code: ({ node, inline, ...props }: any) =>
-                      inline ? (
-                        <code
-                          className="max-w-full break-all rounded bg-white/10 px-1 py-0.5 text-xs"
-                          {...props}
-                        />
-                      ) : (
-                        <code
-                          className="my-2 block max-w-[600px] overflow-x-auto rounded bg-white/10 p-2 text-xs"
+                <div
+                  className={cn(
+                    "max-w-[80%] rounded-3xl px-5 py-4 text-sm leading-relaxed shadow-lg sm:max-w-[70%]",
+                    isAssistant
+                      ? "rounded-bl-md bg-white/5 text-white"
+                      : "rounded-br-md bg-[linear-gradient(226.23deg,_#3E65B4_0%,_#68B3B7_100%)] text-white"
+                  )}
+                >
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    rehypePlugins={[rehypeRaw, rehypeSanitize]}
+                    components={{
+                      table: ({ node, ...props }) => (
+                        <div className="my-4 max-w-[600px] overflow-x-auto rounded-lg border border-white/20">
+                          <table
+                            className="w-full table-auto border-collapse"
+                            {...props}
+                          />
+                        </div>
+                      ),
+                      thead: ({ node, ...props }) => (
+                        <thead className="bg-white/10" {...props} />
+                      ),
+                      tbody: ({ node, ...props }) => (
+                        <tbody className="divide-y divide-white/10" {...props} />
+                      ),
+                      tr: ({ node, ...props }) => (
+                        <tr
+                          className="transition-colors hover:bg-white/5"
                           {...props}
                         />
                       ),
-                    p: ({ node, ...props }) => (
-                      <p
-                        className="mb-2 max-w-[600px] break-words"
-                        style={{ overflowWrap: "anywhere" }}
-                        {...props}
-                      />
-                    ),
-                  }}
-                >
-                  {message.content}
-                </ReactMarkdown>
+                      th: ({ node, ...props }) => (
+                        <th
+                          className="max-w-[200px] break-words border border-white/20 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-white"
+                          {...props}
+                        />
+                      ),
+                      td: ({ node, ...props }) => (
+                        <td
+                          className="max-w-[200px] break-words border border-white/20 px-4 py-3 text-sm text-white/90"
+                          {...props}
+                        />
+                      ),
+                      a: ({ node, ...props }) => (
+                        <a
+                          className="max-w-full break-all text-blue-400 underline hover:text-blue-300"
+                          {...props}
+                        />
+                      ),
+                      code: ({ node, inline, ...props }: any) =>
+                        inline ? (
+                          <code
+                            className="max-w-full break-all rounded bg-white/10 px-1 py-0.5 text-xs"
+                            {...props}
+                          />
+                        ) : (
+                          <code
+                            className="my-2 block max-w-[600px] overflow-x-auto rounded bg-white/10 p-2 text-xs"
+                            {...props}
+                          />
+                        ),
+                      p: ({ node, ...props }) => (
+                        <p
+                          className="mb-2 max-w-[600px] break-words"
+                          style={{ overflowWrap: "anywhere" }}
+                          {...props}
+                        />
+                      ),
+                    }}
+                  >
+                    {message.content}
+                  </ReactMarkdown>
+                </div>
+              </motion.div>
+            );
+          })}
+          {isSending && (
+            <motion.div
+              key="typing-indicator"
+              initial="hidden"
+              animate="visible"
+              exit="hidden"
+              variants={typingVariants}
+              className="flex justify-start"
+            >
+              <div className="flex items-center gap-3 rounded-3xl bg-white/5 px-4 py-3 text-xs text-white/80">
+                <div className="flex items-center gap-1">
+                  <motion.div
+                    animate="animate"
+                    variants={dotVariants}
+                    className="w-2 h-2 bg-white/60 rounded-full"
+                  />
+                  <motion.div
+                    animate="animate"
+                    variants={dotVariants2}
+                    className="w-2 h-2 bg-white/60 rounded-full"
+                  />
+                  <motion.div
+                    animate="animate"
+                    variants={dotVariants3}
+                    className="w-2 h-2 bg-white/60 rounded-full"
+                  />
+                </div>
+                <span className="text-white/70">Thinking…</span>
               </div>
-            </div>
-          );
-        })}
-        {isSending ? (
-          <div className="flex justify-start">
-            <div className="flex items-center gap-2 rounded-3xl bg-white/5 px-4 py-2 text-xs text-white/80">
-              <Loader2 className="size-4 animate-spin" />
-              Thinking…
-            </div>
-          </div>
-        ) : null}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

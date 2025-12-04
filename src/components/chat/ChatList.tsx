@@ -7,6 +7,7 @@ import {
   EllipsisVertical,
   Trash2,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { ChatSummary } from "@/types/chat.types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -49,6 +50,44 @@ const ChatList = ({
   const truncateText = (text: string, limit: number) =>
     text.length > limit ? `${text.slice(0, limit - 1)}…` : text;
 
+  // Animation variants
+  const chatItemVariants = {
+    hidden: {
+      opacity: 0,
+      x: -20,
+      scale: 0.95,
+    },
+    visible: {
+      opacity: 1,
+      x: 0,
+      scale: 1,
+      transition: {
+        duration: 0.3,
+        ease: [0.25, 0.46, 0.45, 0.94],
+      },
+    },
+    exit: {
+      opacity: 0,
+      x: -20,
+      scale: 0.95,
+      transition: {
+        duration: 0.2,
+      },
+    },
+  };
+
+  const newChatButtonVariants = {
+    idle: { scale: 1 },
+    hover: {
+      scale: 1.02,
+      transition: { duration: 0.2, ease: "easeOut" }
+    },
+    tap: {
+      scale: 0.98,
+      transition: { duration: 0.1 }
+    },
+  };
+
   const filteredChats = useMemo(() => {
     if (!searchTerm) {
       return chats;
@@ -77,14 +116,21 @@ const ChatList = ({
       )}
     >
       <div className="mb-6 space-y-4">
-        <Button
-          variant="ghost"
-          className="group flex w-full items-center justify-start gap-3 rounded-2xl px-2 py-2 text-left text-sm font-medium text-white transition hover:bg-transparent hover:text-white/90"
-          onClick={onStartNewChat}
+        <motion.div
+          variants={newChatButtonVariants}
+          initial="idle"
+          whileHover="hover"
+          whileTap="tap"
         >
-          <PenSquare className="size-5 text-white/70 transition group-hover:text-white/90" />
-          <span>New Chat</span>
-        </Button>
+          <Button
+            variant="ghost"
+            className="group flex w-full items-center justify-start gap-3 rounded-2xl px-2 py-2 text-left text-sm font-medium text-white transition hover:bg-transparent hover:text-white/90"
+            onClick={onStartNewChat}
+          >
+            <PenSquare className="size-5 text-white/70 transition group-hover:text-white/90" />
+            <span>New Chat</span>
+          </Button>
+        </motion.div>
 
         <div className="relative">
           <Search className="pointer-events-none absolute left-5 top-1/2 size-4 -translate-y-1/2 text-white/60" />
@@ -124,22 +170,28 @@ const ChatList = ({
                 </Button>
               </div>
             ) : (
-              filteredChats.map((chat) => {
-                const isDeletingThisChat = deletingChatId === chat._id;
-                const lastMessage = chat.messages?.at(-1);
-                const fullTitle = chat.title || "Untitled Conversation";
-                const truncatedTitle = truncateText(fullTitle, 18);
+              <AnimatePresence mode="popLayout">
+                {filteredChats.map((chat) => {
+                  const isDeletingThisChat = deletingChatId === chat._id;
+                  const lastMessage = chat.messages?.at(-1);
+                  const fullTitle = chat.title || "Untitled Conversation";
+                  const truncatedTitle = truncateText(fullTitle, 18);
 
-                return (
-                  <div
-                    key={chat._id}
-                    className={cn(
-                      "group flex w-full items-center rounded-2xl border border-[#2B2A38]/40 bg-[#FFFFFF0A] px-4 py-4 shadow-[0_0_80px_rgba(0,0,0,0.08)] transition-all duration-300",
-                      selectedChatId === chat._id
-                        ? "border-white/60 bg-white/10 shadow-[0_0_90px_rgba(0,0,0,0.15)]"
-                        : "hover:border-white/30 hover:bg-white/12 hover:shadow-[0_0_90px_rgba(0,0,0,0.12)]"
-                    )}
-                  >
+                  return (
+                    <motion.div
+                      key={chat._id}
+                      layout
+                      initial="hidden"
+                      animate="visible"
+                      exit="exit"
+                      variants={chatItemVariants}
+                      className={cn(
+                        "group flex w-full items-center rounded-2xl border border-[#2B2A38]/40 bg-[#FFFFFF0A] px-4 py-4 shadow-[0_0_80px_rgba(0,0,0,0.08)] transition-all duration-300",
+                        selectedChatId === chat._id
+                          ? "border-white/60 bg-white/10 shadow-[0_0_90px_rgba(0,0,0,0.15)]"
+                          : "hover:border-white/30 hover:bg-white/12 hover:shadow-[0_0_90px_rgba(0,0,0,0.12)]"
+                      )}
+                    >
                     <button
                       type="button"
                       onClick={() => onSelectChat(chat._id)}
@@ -206,9 +258,10 @@ const ChatList = ({
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
-                  </div>
-                );
-              })
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
             )}
           </div>
         </ScrollArea>

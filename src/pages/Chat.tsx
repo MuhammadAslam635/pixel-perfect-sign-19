@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AxiosError } from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import ChatList from "@/components/chat/ChatList";
 import ChatMessages from "@/components/chat/ChatMessages";
@@ -25,6 +26,45 @@ const ChatPage = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
+
+  // Animation variants for page transitions
+  const pageVariants = {
+    hidden: {
+      opacity: 0,
+      scale: 0.98,
+    },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      transition: {
+        duration: 0.4,
+        ease: [0.25, 0.46, 0.45, 0.94],
+      },
+    },
+    exit: {
+      opacity: 0,
+      scale: 0.98,
+      transition: {
+        duration: 0.3,
+      },
+    },
+  };
+
+  const composerVariants = {
+    hidden: {
+      opacity: 0,
+      y: 20,
+    },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.3,
+        ease: "easeOut",
+        delay: 0.1,
+      },
+    },
+  };
 
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
   const [composerValue, setComposerValue] = useState("");
@@ -453,7 +493,13 @@ const ChatPage = () => {
   return (
     <DashboardLayout>
       <Sheet open={isMobileListOpen} onOpenChange={setIsMobileListOpen}>
-        <main className="mt-28 flex w-full justify-center px-4 pb-6 sm:px-6 md:px-10 lg:fixed lg:inset-0 lg:mt-0 lg:px-12 lg:pt-28 xl:px-16">
+        <motion.main
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+          variants={pageVariants}
+          className="mt-28 flex w-full justify-center px-4 pb-6 sm:px-6 md:px-10 lg:fixed lg:inset-0 lg:mt-0 lg:px-12 lg:pt-28 xl:px-16"
+        >
           <div className="flex w-full lg:h-full flex-col gap-6">
             <section className="flex flex-col gap-6 lg:h-full lg:flex-row lg:items-stretch lg:overflow-hidden">
               <div className="hidden lg:flex lg:h-full lg:shrink-0">
@@ -483,37 +529,51 @@ const ChatPage = () => {
                   onOpenChatList={() => setIsMobileListOpen(true)}
                 />
 
-                <div className="space-y-3">
-                  {pendingFile ? (
-                    <div className="flex items-center justify-between rounded-2xl border border-primary/30 bg-primary/10 px-4 py-2 text-sm text-primary">
-                      <span className="truncate">
-                        Attached file: {pendingFile.name}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-8 text-primary hover:text-primary"
-                        onClick={() => setPendingFile(null)}
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={hasActiveConversation ? "composer" : "empty"}
+                    initial="hidden"
+                    animate="visible"
+                    exit="hidden"
+                    variants={composerVariants}
+                    className="space-y-3"
+                  >
+                    {pendingFile ? (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="flex items-center justify-between rounded-2xl border border-primary/30 bg-primary/10 px-4 py-2 text-sm text-primary"
                       >
-                        <X className="size-4" />
-                      </Button>
-                    </div>
-                  ) : null}
+                        <span className="truncate">
+                          Attached file: {pendingFile.name}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="size-8 text-primary hover:text-primary"
+                          onClick={() => setPendingFile(null)}
+                        >
+                          <X className="size-4" />
+                        </Button>
+                      </motion.div>
+                    ) : null}
 
-                  <ChatComposer
-                    value={composerValue}
-                    onChange={setComposerValue}
-                    onSend={handleSendMessage}
-                    isSending={isSendingMessage}
-                    isAwaitingResponse={isSendingMessage}
-                    disabled={isConversationLoading}
-                    onUploadFile={setPendingFile}
-                  />
-                </div>
+                    <ChatComposer
+                      value={composerValue}
+                      onChange={setComposerValue}
+                      onSend={handleSendMessage}
+                      isSending={isSendingMessage}
+                      isAwaitingResponse={isSendingMessage}
+                      disabled={isConversationLoading}
+                      onUploadFile={setPendingFile}
+                    />
+                  </motion.div>
+                </AnimatePresence>
               </div>
             </section>
           </div>
-        </main>
+        </motion.main>
 
         <SheetContent
           side="left"
