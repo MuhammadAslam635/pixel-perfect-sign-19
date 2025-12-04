@@ -599,23 +599,23 @@ const UserEdit = () => {
                 transition={{ duration: 0.5, delay: 0.7, ease: "easeOut" }}
               >
                 <CardFooter className="flex flex-col sm:flex-row justify-end border-t border-white/10 pt-4 sm:pt-6 gap-3 px-0">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full sm:w-auto rounded-lg border border-white/20 bg-white/5 hover:bg-white/10 text-white transition-colors"
-                  onClick={() => navigate("/users")}
-                  disabled={loading}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full sm:w-auto rounded-lg bg-gradient-to-r from-[#69B4B7] via-[#5486D0] to-[#3E64B3] text-white hover:brightness-110 transition-all"
-                >
-                  {loading ? "Updating..." : "Update Employee"}
-                </Button>
-              </CardFooter>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full sm:w-auto rounded-lg border border-white/20 bg-white/5 hover:bg-white/10 text-white transition-colors"
+                    onClick={() => navigate("/users")}
+                    disabled={loading}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full sm:w-auto rounded-lg bg-gradient-to-r from-[#69B4B7] via-[#5486D0] to-[#3E64B3] text-white hover:brightness-110 transition-all"
+                  >
+                    {loading ? "Updating..." : "Update Employee"}
+                  </Button>
+                </CardFooter>
               </motion.div>
             </Card>
           </motion.form>
