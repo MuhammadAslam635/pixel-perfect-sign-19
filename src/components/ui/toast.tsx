@@ -23,11 +23,27 @@ const ToastViewport = React.forwardRef<
 ToastViewport.displayName = ToastPrimitives.Viewport.displayName;
 
 const toastVariants = cva(
-  "group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-md border p-6 pr-8 shadow-lg transition-all data-[swipe=cancel]:translate-x-0 data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)] data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[swipe=move]:transition-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=end]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-top-full data-[state=open]:sm:slide-in-from-bottom-full",
+  [
+    "group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden",
+    // Shape & layout
+    "rounded-2xl border border-white/14",
+    "px-5 py-4 sm:px-6 sm:py-4",
+    // Just transparent + blur, no gradient / glow
+    "bg-transparent backdrop-blur-[6px]",
+    // Text & simple depth
+    "text-white shadow-[0_18px_45px_rgba(0,0,0,0.45)]",
+    // Animations / swipe behaviour
+    "transition-all data-[swipe=cancel]:translate-x-0",
+    "data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)]",
+    "data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[swipe=move]:transition-none",
+    "data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=end]:animate-out",
+    "data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-right-full",
+    "data-[state=open]:slide-in-from-top-full data-[state=open]:sm:slide-in-from-bottom-full",
+  ].join(" "),
   {
     variants: {
       variant: {
-        default: "border bg-background text-foreground",
+        default: "",
         destructive:
           "destructive group border-destructive bg-destructive text-destructive-foreground",
       },
