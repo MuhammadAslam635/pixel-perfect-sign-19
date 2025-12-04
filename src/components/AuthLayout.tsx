@@ -20,7 +20,7 @@ export default function AuthLayout({
   return (
     <div className="min-h-screen w-full bg-[#050F1D] md:bg-[#050F1D] relative">
       {/* Mobile layout */}
-      <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden px-6 py-12 md:hidden" style={{ backgroundColor: '#1A1A1A' }}>
+      <div className="relative flex min-h-screen w-full items-center justify-center overflow-y-auto px-6 py-12 md:hidden" style={{ backgroundColor: '#1A1A1A' }}>
         <div className="pointer-events-none absolute inset-0 md:hidden" style={{ backdropFilter: 'blur(40px)', borderRadius: '40px' }}>
           {/* Base background with rounded corners */}
           <div className="absolute inset-0 bg-[#1A1A1A]" style={{ borderRadius: '40px' }} />
