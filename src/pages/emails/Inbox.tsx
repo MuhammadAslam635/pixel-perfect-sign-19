@@ -3,20 +3,21 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { EmailListItem } from "@/components/email/EmailListItem";
+import { EmailViewer } from "@/components/email/EmailViewer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { useToast } from "@/components/ui/use-toast";
 import { emailService } from "@/services/email.service";
 import { Email } from "@/types/email.types";
-import {
-  Plus,
-  Search,
-  Mail,
-  Star,
-  Inbox as InboxIcon,
-} from "lucide-react";
+import { Plus, Search, Mail, Star, Inbox as InboxIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 // Utility function to strip quoted email content
@@ -85,6 +86,8 @@ const InboxPage = () => {
   >("all");
   const [showCategories, setShowCategories] = useState(false);
   const [page, setPage] = useState(1);
+  const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const limit = 20;
 
   const { data: inboxData, isLoading } = useQuery({
@@ -166,11 +169,49 @@ const InboxPage = () => {
     }) || [];
 
   const handleEmailClick = (email: Email) => {
-    navigate(`/emails/${email._id}`);
+    setSelectedEmail(email);
+    setIsDrawerOpen(true);
+    // Mark email as read when opened
+    if (!email.isRead) {
+      markReadMutation.mutate({ emailId: email._id, isRead: true });
+    }
   };
 
   const handleCompose = () => {
     navigate("/emails/compose");
+  };
+
+  const handleReply = () => {
+    if (!selectedEmail) return;
+    const replyTo =
+      selectedEmail.direction === "inbound"
+        ? selectedEmail.from.email
+        : selectedEmail.to[0]?.email;
+    setIsDrawerOpen(false);
+    navigate(
+      `/emails/compose?to=${replyTo}&subject=${encodeURIComponent(
+        selectedEmail.subject
+      )}&threadId=${selectedEmail.threadId || ""}`
+    );
+  };
+
+  const handleEmailStar = (isStarred: boolean) => {
+    if (!selectedEmail) return;
+    starMutation.mutate({ emailId: selectedEmail._id, isStarred });
+    setSelectedEmail({ ...selectedEmail, isStarred });
+  };
+
+  const handleEmailMarkRead = (isRead: boolean) => {
+    if (!selectedEmail) return;
+    markReadMutation.mutate({ emailId: selectedEmail._id, isRead });
+    setSelectedEmail({ ...selectedEmail, isRead });
+  };
+
+  const handleEmailDelete = () => {
+    if (!selectedEmail) return;
+    deleteMutation.mutate(selectedEmail._id);
+    setIsDrawerOpen(false);
+    setSelectedEmail(null);
   };
 
   return (
@@ -461,6 +502,34 @@ const InboxPage = () => {
           </div>
         </div>
       </main>
+
+      {/* Email Drawer */}
+      <Sheet open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
+        <SheetContent
+          side="right"
+          className="w-full sm:max-w-2xl lg:max-w-3xl overflow-y-auto"
+        >
+          <SheetHeader>
+            <SheetTitle>Email Details</SheetTitle>
+          </SheetHeader>
+          {selectedEmail && (
+            <div className="mt-4">
+              <EmailViewer
+                email={selectedEmail}
+                onStar={handleEmailStar}
+                onMarkRead={handleEmailMarkRead}
+                onDelete={handleEmailDelete}
+                onReply={handleReply}
+                isLoading={
+                  starMutation.isPending ||
+                  markReadMutation.isPending ||
+                  deleteMutation.isPending
+                }
+              />
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
     </DashboardLayout>
   );
 };

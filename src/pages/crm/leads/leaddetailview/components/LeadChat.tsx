@@ -152,7 +152,7 @@ const LeadChat = ({
   const emailScrollRef = useRef<HTMLDivElement | null>(null);
   const smsScrollRef = useRef<HTMLDivElement | null>(null);
   const markedReadCacheRef = useRef<Set<string>>(new Set());
-  
+
   // Refs for auto-expanding textareas
   const whatsappTextareaRef = useRef<HTMLTextAreaElement>(null);
   const emailTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -168,15 +168,15 @@ const LeadChat = ({
   // Auto-resize textarea to fit content (max 3 lines)
   const autoResizeTextarea = (textarea: HTMLTextAreaElement | null) => {
     if (!textarea) return;
-    
+
     // Reset height to calculate new height
-    textarea.style.height = 'auto';
-    
+    textarea.style.height = "auto";
+
     // Calculate max height for 3 lines (approximately 20px per line + padding)
     const lineHeight = 20;
     const maxLines = 3;
     const maxHeight = lineHeight * maxLines;
-    
+
     // Set height based on content, capped at max
     const newHeight = Math.min(textarea.scrollHeight, maxHeight);
     textarea.style.height = `${newHeight}px`;
@@ -847,19 +847,19 @@ const LeadChat = ({
 
       const generatedSubject =
         response.data?.email?.subject?.trim() || DEFAULT_EMAIL_SUBJECT;
-      
+
       // Prefer HTML body, fallback to plain text converted to HTML
       let generatedBody = response.data?.email?.bodyHtml?.trim();
-      
+
       if (!generatedBody && response.data?.email?.body?.trim()) {
         // Convert plain text to HTML paragraphs
         const plainText = response.data.email.body.trim();
         generatedBody = plainText
-          .split('\n\n')
-          .map(paragraph => paragraph.trim())
-          .filter(paragraph => paragraph.length > 0)
-          .map(paragraph => `<p>${paragraph.replace(/\n/g, '<br>')}</p>`)
-          .join('');
+          .split("\n\n")
+          .map((paragraph) => paragraph.trim())
+          .filter((paragraph) => paragraph.length > 0)
+          .map((paragraph) => `<p>${paragraph.replace(/\n/g, "<br>")}</p>`)
+          .join("");
       }
 
       if (generatedBody) {
@@ -1076,7 +1076,7 @@ const LeadChat = ({
         !emailComposerRef.current.contains(event.target as Node)
       ) {
         if (isEmailEditorExpanded) {
-           setIsEmailEditorExpanded(false);
+          setIsEmailEditorExpanded(false);
         }
       }
     };
@@ -1086,8 +1086,6 @@ const LeadChat = ({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isEmailEditorExpanded]);
-
-
 
   const handleComposeEmail = () => {
     window.location.href = `${import.meta.env.VITE_APP_API_URL}/emails/compose`;
@@ -1429,7 +1427,7 @@ const LeadChat = ({
                       : "Type WhatsApp message"
                   }
                   rows={1}
-                  style={{ minHeight: '20px', maxHeight: '60px' }}
+                  style={{ minHeight: "20px", maxHeight: "60px" }}
                 />
                 <button
                   className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-white/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
@@ -1573,71 +1571,61 @@ const LeadChat = ({
             )}
 
             {/* Fixed input at bottom */}
-            <div className="sticky bottom-0 left-0 right-0 pt-4" ref={emailComposerRef}>
-              <div
-                className={`flex gap-2 bg-white/10 px-4 py-3 mx-1 mb-1 transition-all duration-200 ${
-                  isEmailEditorExpanded ? "rounded-2xl items-end" : "rounded-2xl items-center"
-                }`}
-              >
-                {/* Rich Text Editor */}
-                <div className="flex-1 relative">
-                  <RichTextEditor
-                    value={emailInput}
-                    onChange={setEmailInput}
-                    placeholder={
-                      !emailAddress
-                        ? "Add an email address to send emails"
-                        : "Write your email message..."
+            <div className="sticky bottom-0 left-0 right-0 pt-4">
+              <div className="flex items-center gap-2 rounded-full bg-white/10 px-4 py-3 mx-1 mb-1">
+                <textarea
+                  ref={emailTextareaRef}
+                  value={emailInput}
+                  onChange={(event) => setEmailInput(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" && event.ctrlKey) {
+                      event.preventDefault();
+                      handleSendEmail();
                     }
-                    height={isEmailEditorExpanded ? "80px" : "20px"}
-                    toolbar={true}
-                    onFocus={() => setIsEmailEditorExpanded(true)}
-                    className={`text-xs w-full transition-all duration-200 ${
-                      !isEmailEditorExpanded
-                        ? "[&_.ql-toolbar]:hidden [&_.ql-container]:border-none [&_.ql-editor]:!p-0 [&_.ql-editor]:!min-h-0 [&_.ql-editor]:!pb-0"
-                        : ""
-                    }`}
-                  />
-                </div>
-                
-                {/* Action Buttons */}
-                <div className="flex items-center justify-end gap-2 relative z-10">
-                  <button
-                    type="button"
-                    className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-white/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0 cursor-pointer"
-                    onClick={handleGenerateEmailMessage}
-                    disabled={
-                      isGeneratingEmailMessage || !lead?.companyId || !lead?._id
-                    }
-                    title={
-                      !lead?.companyId || !lead?._id
-                        ? "Lead information is required to generate suggestions"
-                        : "Generate with AI"
-                    }
-                  >
-                    {isGeneratingEmailMessage ? (
-                      <Loader2 className="h-4 w-4 animate-spin text-white" />
-                    ) : (
-                      <Sparkles className="h-4 w-4 text-white" />
-                    )}
-                  </button>
-                  <button
-                    type="button"
-                    className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0 cursor-pointer"
-                    onClick={handleSendEmail}
-                    disabled={
-                      !emailAddress ||
-                      !emailInput.trim() ||
-                      emailMutation.isPending
-                    }
-                  >
-                    {emailMutation.isPending ? (
-                      <Loader2 className="h-4 w-4 animate-spin text-white" />
-                    ) : (
-                      <Send size={14} className="text-white" />
-                    )}
-                  </button>
-                </div>
+                  }}
+                  disabled={!emailAddress}
+                  className="lead-chat-input flex-1 bg-transparent outline-none border-none text-xs text-white disabled:opacity-50 resize-none overflow-y-auto scrollbar-hide"
+                  placeholder={
+                    !emailAddress
+                      ? "Add an email address to send emails"
+                      : "Write your email message (Ctrl+Enter to send)"
+                  }
+                  rows={1}
+                  style={{ minHeight: "20px", maxHeight: "60px" }}
+                />
+                <button
+                  className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-white/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+                  onClick={handleGenerateEmailMessage}
+                  disabled={
+                    isGeneratingEmailMessage || !lead?.companyId || !lead?._id
+                  }
+                  title={
+                    !lead?.companyId || !lead?._id
+                      ? "Lead information is required to generate suggestions"
+                      : "Generate with AI"
+                  }
+                >
+                  {isGeneratingEmailMessage ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-white" />
+                  ) : (
+                    <Sparkles className="h-4 w-4 text-white" />
+                  )}
+                </button>
+                <button
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+                  onClick={handleSendEmail}
+                  disabled={
+                    !emailAddress ||
+                    !emailInput.trim() ||
+                    emailMutation.isPending
+                  }
+                >
+                  {emailMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-white" />
+                  ) : (
+                    <Send size={14} className="text-white" />
+                  )}
+                </button>
               </div>
               {emailSendError && (
                 <p className="mt-2 text-xs text-red-300 mx-1 mb-1">
@@ -1770,7 +1758,7 @@ const LeadChat = ({
                       : "Add a phone number to send SMS"
                   }
                   rows={1}
-                  style={{ minHeight: '20px', maxHeight: '60px' }}
+                  style={{ minHeight: "20px", maxHeight: "60px" }}
                 />
                 <button
                   className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-white/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
