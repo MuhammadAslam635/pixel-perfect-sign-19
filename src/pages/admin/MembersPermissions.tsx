@@ -27,7 +27,27 @@ import { toast } from "sonner";
 
 const MembersPermissions = () => {
   const authState = useSelector((state: RootState) => state.auth);
-  const userRole = authState.user?.role;
+
+  // Get user's role name - prioritize roleId over legacy role
+  // Note: Admin role is intentionally kept as legacy system role (not roleId-based)
+  const getUserRoleName = (): string | null => {
+    const user = authState.user;
+    if (!user) return null;
+
+    // PRIORITY 1: Check populated roleId (new RBAC system)
+    if (user.roleId && typeof user.roleId === "object") {
+      return (user.roleId as any).name;
+    }
+
+    // PRIORITY 2: Fallback to legacy role string
+    if (user.role && typeof user.role === "string") {
+      return user.role;
+    }
+
+    return null;
+  };
+
+  const userRoleName = getUserRoleName();
 
   const [companies, setCompanies] = useState<Company[]>([]);
   const [expandedCompanies, setExpandedCompanies] = useState<Set<string>>(new Set());
@@ -43,14 +63,14 @@ const MembersPermissions = () => {
 
   // Check if user is Admin
   useEffect(() => {
-    if (userRole !== "Admin") {
+    if (userRoleName !== "Admin") {
       toast.error("Access denied. Admin access required.");
     }
-  }, [userRole]);
+  }, [userRoleName]);
 
   const fetchCompanies = useCallback(
     async (resetPage = false) => {
-      if (userRole !== "Admin") return;
+      if (userRoleName !== "Admin") return;
 
       setLoadingCompanies(true);
       try {
@@ -77,12 +97,12 @@ const MembersPermissions = () => {
         setLoadingCompanies(false);
       }
     },
-    [page, searchTerm, limit, userRole]
+    [page, searchTerm, limit, userRoleName]
   );
 
   const fetchCompanyAdmins = useCallback(
     async (companyId: string) => {
-      if (userRole !== "Admin") return;
+      if (userRoleName !== "Admin") return;
 
       setLoadingAdmins((prev) => ({ ...prev, [companyId]: true }));
       try {
@@ -108,7 +128,7 @@ const MembersPermissions = () => {
         setLoadingAdmins((prev) => ({ ...prev, [companyId]: false }));
       }
     },
-    [userRole]
+    [userRoleName]
   );
 
   useEffect(() => {
@@ -136,7 +156,7 @@ const MembersPermissions = () => {
     userId: string,
     currentStatus: string
   ) => {
-    if (userRole !== "Admin") return;
+    if (userRoleName !== "Admin") return;
 
     const newStatus = currentStatus === "active" ? "inactive" : "active";
     
@@ -176,7 +196,7 @@ const MembersPermissions = () => {
     companyId: string,
     newStatus: "active" | "inactive"
   ) => {
-    if (userRole !== "Admin") return;
+    if (userRoleName !== "Admin") return;
 
     const targetCompany = companies.find((c) => c._id === companyId);
     if (!targetCompany) {
@@ -270,7 +290,7 @@ const MembersPermissions = () => {
     }
   };
 
-  if (userRole !== "Admin") {
+  if (userRoleName !== "Admin") {
     return (
       <DashboardLayout>
         <main className="relative px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] mt-20 sm:mt-20 lg:mt-24 xl:mt-28 mb-0 flex flex-col gap-6 text-white flex-1 overflow-y-auto">

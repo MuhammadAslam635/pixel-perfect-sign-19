@@ -21,6 +21,25 @@ export const ActionComponent = () => {
   // Get user from Redux store
   const currentUser = useSelector((state: RootState) => state.auth.user);
 
+  // Get user's role name - prioritize roleId over legacy role
+  const getUserRoleName = (): string | null => {
+    if (!currentUser) return null;
+
+    // PRIORITY 1: Check populated roleId (new RBAC system)
+    if (currentUser.roleId && typeof currentUser.roleId === "object") {
+      return (currentUser.roleId as any).name;
+    }
+
+    // PRIORITY 2: Fallback to legacy role string
+    if (currentUser.role && typeof currentUser.role === "string") {
+      return currentUser.role;
+    }
+
+    return null;
+  };
+
+  const userRoleName = getUserRoleName();
+
   // Fetch and sync user profile from API
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -105,7 +124,7 @@ export const ActionComponent = () => {
     { title: "Sign out", meta: "Log out of EmpaTech OS", route: null },
   ].filter((item) => {
     // Hide "Team Members" for CompanyUser
-    if (item.title === "Team Members" && currentUser?.role === "CompanyUser") {
+    if (item.title === "Team Members" && userRoleName === "CompanyUser") {
       return false;
     }
     return true;
