@@ -375,7 +375,9 @@ const LeadsList: FC<LeadsListProps> = ({
             <Tooltip>
               <TooltipTrigger asChild>
                 <h3 className="text-xs sm:text-base font-semibold cursor-default">
-                  {lead.name.length > 20 ? `${lead.name.slice(0, 20)}...` : lead.name}
+                  {lead.name.length > 20
+                    ? `${lead.name.slice(0, 20)}...`
+                    : lead.name}
                 </h3>
               </TooltipTrigger>
               <TooltipContent>
@@ -386,7 +388,10 @@ const LeadsList: FC<LeadsListProps> = ({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span className="text-xs text-white/70 cursor-default">
-                    | {lead.companyName.length > 20 ? `${lead.companyName.slice(0, 20)}...` : lead.companyName}
+                    |{" "}
+                    {lead.companyName.length > 20
+                      ? `${lead.companyName.slice(0, 20)}...`
+                      : lead.companyName}
                   </span>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -401,7 +406,10 @@ const LeadsList: FC<LeadsListProps> = ({
                 <TooltipTrigger asChild>
                   <p className="text-[8px] sm:text-[9px] font-bold text-white/60 mt-0.5 cursor-default">
                     {(lead.position || "Chief Executive Officer").length > 20
-                      ? `${(lead.position || "Chief Executive Officer").slice(0, 20)}...`
+                      ? `${(lead.position || "Chief Executive Officer").slice(
+                          0,
+                          20
+                        )}...`
                       : lead.position || "Chief Executive Officer"}
                   </p>
                 </TooltipTrigger>
@@ -508,7 +516,9 @@ const LeadsList: FC<LeadsListProps> = ({
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>
-                    {!hasLinkedin ? "No LinkedIn available" : "Send LinkedIn DM"}
+                    {!hasLinkedin
+                      ? "No LinkedIn available"
+                      : "Send LinkedIn DM"}
                   </p>
                 </TooltipContent>
               </Tooltip>
