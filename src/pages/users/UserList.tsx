@@ -448,13 +448,11 @@ const UserList = () => {
                   setSearchTerm(e.target.value);
                   setPage(1);
                 }}
-                className="px-4 bg-gradient-to-br from-[#1a1a1a] to-[#2a2a2a] border-transparent focus:outline-none focus:ring-[2px] focus:ring-transparent shadow-[inset_0_0_10px_rgba(0,0,0,0.4)] relative z-10 h-12 pl-10 pr-4 !rounded-full border-0 text-gray-300 placeholder:text-gray-500 text-sm w-full"
+                className="h-9 pl-10 pr-4 !rounded-full border-0 text-gray-300 placeholder:text-gray-500 text-xs w-full"
                 style={{
-                  background: "rgba(255, 255, 255, 0.1)",
-                  border: "1px solid rgba(0, 255, 255, 0.1)",
-                  borderRadius: "9999px",
+                  background: "#FFFFFF1A",
                   boxShadow:
-                    "rgba(255, 255, 255, 0.16) 0px 3.43px 3.43px 0px inset, rgba(255, 255, 255, 0.16) 0px -3.43px 3.43px 0px inset",
+                    "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
                 }}
               />
             </div>
@@ -462,7 +460,7 @@ const UserList = () => {
               <Button
                 type="button"
                 onClick={() => navigate("/users/create")}
-                className="group relative overflow-hidden flex-1 sm:flex-none flex h-12 items-center justify-center rounded-full border border-white/40 text-sm font-medium tracking-wide text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] pl-4 pr-3 gap-2 before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/18 before:to-transparent before:transition-all before:duration-300 before:ease-in-out hover:before:from-white/30 hover:before:duration-200"
+                className="relative h-9 px-4 rounded-full border-0 text-white text-xs hover:bg-[#2F2F2F]/60 transition-all w-full sm:w-auto lg:flex-shrink-0 overflow-hidden"
                 style={{
                   background: "#FFFFFF1A",
                   boxShadow:
@@ -488,7 +486,7 @@ const UserList = () => {
                   resetInviteForm();
                   setInviteDialogOpen(true);
                 }}
-                className="group relative overflow-hidden flex-1 sm:flex-none flex h-12 w-44 items-center justify-center rounded-full border border-white/40 px-0 text-sm font-medium tracking-wide text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] pl-4 pr-4 gap-2 before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/18 before:to-transparent before:transition-all before:duration-300 before:ease-in-out hover:before:from-white/30 hover:before:duration-200"
+                className="relative h-9 px-4 rounded-full border-0 text-white text-xs hover:bg-[#2F2F2F]/60 transition-all w-full sm:w-auto lg:flex-shrink-0 overflow-hidden"
                 style={{
                   background: "#FFFFFF1A",
                   boxShadow:
@@ -513,7 +511,7 @@ const UserList = () => {
                   onClick={() => {
                     navigate("/roles");
                 }}
-                className="group relative overflow-hidden flex-1 sm:flex-none flex h-12 w-44 items-center justify-center rounded-full border border-white/40 px-0 text-sm font-medium tracking-wide text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] pl-4 pr-4 gap-2 before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/18 before:to-transparent before:transition-all before:duration-300 before:ease-in-out hover:before:from-white/30 hover:before:duration-200"
+                className="relative h-9 px-4 rounded-full border-0 text-white text-xs hover:bg-[#2F2F2F]/60 transition-all w-full sm:w-auto lg:flex-shrink-0 overflow-hidden"
                 style={{
                   background: "#FFFFFF1A",
                   boxShadow:
