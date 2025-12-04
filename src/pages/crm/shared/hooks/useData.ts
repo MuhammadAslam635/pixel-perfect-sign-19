@@ -14,9 +14,11 @@ import {
 } from "@/services/leads.service";
 import {
   CrmStats,
+  CompanyCrmStats,
   dashboardService,
   DashboardResponse,
 } from "@/services/dashboard.service";
+import { CompaniesQueryParams } from "@/services/companies.service";
 
 export const useCompaniesData = (params: CompaniesQueryParams) => {
   const query = useQuery<CompaniesResponse, Error>({
@@ -80,6 +82,26 @@ export const useCrmStatsData = () => {
   });
 
   const stats = useMemo<CrmStats | undefined>(
+    () => query.data?.data,
+    [query.data?.data]
+  );
+
+  return {
+    query,
+    stats,
+  };
+};
+
+export const useCompanyCrmStatsData = (params: CompaniesQueryParams) => {
+  const query = useQuery<DashboardResponse<CompanyCrmStats>, Error>({
+    queryKey: ["company-crm-stats", params],
+    queryFn: () => dashboardService.getCompanyCrmStats(params),
+    staleTime: 60 * 1000,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+  });
+
+  const stats = useMemo<CompanyCrmStats | undefined>(
     () => query.data?.data,
     [query.data?.data]
   );
