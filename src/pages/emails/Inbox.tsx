@@ -17,7 +17,15 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { emailService } from "@/services/email.service";
 import { Email } from "@/types/email.types";
-import { Plus, Search, Mail, Star, Inbox as InboxIcon, ChevronRight, ChevronDown } from "lucide-react";
+import {
+  Plus,
+  Search,
+  Mail,
+  Star,
+  Inbox as InboxIcon,
+  ChevronRight,
+  ChevronDown,
+} from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 // Utility function to strip quoted email content
