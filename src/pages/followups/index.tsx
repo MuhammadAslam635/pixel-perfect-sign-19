@@ -123,19 +123,8 @@ const defaultFormValues: FollowupTemplateFormValues = {
 
 const limitOptions = ["5", "10", "20"];
 
-const inputFieldClasses =
-  "h-11 rounded-xl bg-transparent px-4 text-sm text-white placeholder:text-white/50 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08),0_25px_65px_rgba(3,7,18,0.65)] focus-visible:ring-2 focus-visible:ring-cyan-300/40 transition-all backdrop-blur border-0";
-
-const inputWrapperClasses =
-  "relative rounded-xl p-[1px] bg-gradient-to-r from-[#69B4B7] to-[#3E64B4]";
-
-const inputStyle = {
-  background: "transparent !important",
-  backgroundImage: "none !important",
-};
-
 const formLabelClasses =
-  "text-[11px] font-medium uppercase tracking-[0.08em] text-white/50";
+  "text-xs text-white/70";
 
 const getErrorMessage = (error: unknown, fallback: string) => {
   if (isAxiosError<{ message?: string }>(error)) {
@@ -1061,12 +1050,12 @@ const FollowupTemplatesPage = () => {
                       "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
                   }}
                 >
-                  <CardHeader className="pb-2 relative">
+                  <CardHeader className="pb-3 px-4 pt-4 relative">
                     <CardTitle className="text-xs uppercase tracking-wide text-white/70">
                       {stat.label}
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="relative">
+                  <CardContent className="px-4 pb-4 relative">
                     <p className="text-2xl sm:text-3xl font-semibold text-white">
                       {typeof stat.value === "number" ? stat.value : "--"}
                     </p>
@@ -1120,29 +1109,25 @@ const FollowupTemplatesPage = () => {
         </motion.section>
 
         <Dialog open={isFormOpen} onOpenChange={(open) => !open && closeForm()}>
-          <DialogContent className="group max-h-[92vh] max-w-[980px] border-none bg-transparent p-0 text-white shadow-none sm:rounded-[38px] [&>button]:right-8 [&>button]:top-8 [&>button]:text-white/60 [&>button:hover]:text-white">
-            <div className="relative isolate overflow-hidden rounded-[38px] border border-white/10 bg-[#05070f]/85 shadow-[0_35px_95px_rgba(0,0,0,0.85)]">
-              <div className="pointer-events-none absolute inset-0 opacity-70">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(91,157,255,0.35),_transparent_65%)]" />
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,_rgba(34,255,214,0.18),_transparent_60%)]" />
-              </div>
-              <div className="pointer-events-none absolute inset-[1px] rounded-[36px] border border-white/10" />
+          <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0 text-white border-0 overflow-hidden">
+            {/* Glassmorphism Background - pointer-events-none so they don't block clicks */}
+            <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-white/5 to-transparent backdrop-blur-xl rounded-lg pointer-events-none" />
+            <div className="absolute inset-0 bg-[#0b0f20]/80 backdrop-blur-md rounded-lg pointer-events-none" />
+            <div className="absolute inset-[1px] bg-gradient-to-br from-white/5 to-transparent rounded-lg pointer-events-none" />
+            <div className="absolute inset-0 border border-white/10 rounded-lg shadow-2xl shadow-black/50 pointer-events-none" />
 
-              <div className="relative z-10 max-h-[88vh] overflow-y-auto px-6 py-6 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:px-10 sm:py-10">
-                <DialogHeader className="mb-8 space-y-2 border-b border-white/10 pb-5 text-left">
-                  <DialogTitle className="text-2xl font-semibold text-white">
-                    {formMode === "edit" ? "Edit template" : "Create template"}
-                  </DialogTitle>
-                  <DialogDescription className="text-sm text-white/60">
-                    Add a new employee to your organization
-                  </DialogDescription>
-                </DialogHeader>
+            <div className="relative z-10 flex flex-col h-full min-h-0">
+              <DialogHeader className="px-6 pt-6 pb-4 flex-shrink-0 border-b border-white/10">
+                <DialogTitle className="text-xs sm:text-sm font-semibold text-white drop-shadow-lg -mb-1">{formMode === "edit" ? "Edit template" : "Create template"}</DialogTitle>
+                <DialogDescription className="text-xs text-white/70">
+                  {formMode === "edit" ? "Update the followup template details" : "Create a new followup template"}
+                </DialogDescription>
+              </DialogHeader>
 
-                <Form {...form}>
-                  <form
-                    onSubmit={form.handleSubmit(handleSubmitForm)}
-                    className="space-y-8"
-                  >
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(handleSubmitForm)} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+                  {/* Scrollable Content Area */}
+                  <div className="flex-1 overflow-y-auto px-6 space-y-4 scrollbar-hide py-4 min-h-0">
                     <div className="grid gap-5 md:grid-cols-2">
                       <FormField
                         control={form.control}
@@ -1153,14 +1138,12 @@ const FollowupTemplatesPage = () => {
                               Name
                             </FormLabel>
                             <FormControl>
-                              <div className={inputWrapperClasses}>
-                                <Input
-                                  {...field}
-                                  placeholder="Outbound nurture sequence"
-                                  className={inputFieldClasses}
-                                  style={inputStyle}
-                                />
-                              </div>
+                              <Input
+                                {...field}
+                                placeholder="Outbound nurture sequence"
+                                disabled={isCreating || isUpdating}
+                                className="bg-white/5 backdrop-blur-sm border-white/20 text-white text-xs placeholder:text-gray-400 focus:bg-white/10 focus:border-white/30 transition-all"
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -1175,24 +1158,30 @@ const FollowupTemplatesPage = () => {
                               Time
                             </FormLabel>
                             <FormControl>
-                              <div className={inputWrapperClasses}>
-                                <div
-                                  className="relative cursor-pointer"
-                                  onClick={openTimePicker}
+                              <div className="relative">
+                                <Input
+                                  {...field}
+                                  type="time"
+                                  step="60"
+                                  ref={(node) => {
+                                    field.ref(node);
+                                    timeInputRef.current = node;
+                                  }}
+                                  disabled={isCreating || isUpdating}
+                                  className="pl-10 bg-white/5 backdrop-blur-sm border-white/20 text-white text-xs placeholder:text-gray-400 focus:bg-white/10 focus:border-white/30 transition-all"
+                                />
+                                <svg
+                                  className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/80 pointer-events-none"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
                                 >
-                                  <Clock className="pointer-events-none absolute left-4 top-1/2 z-20 h-4 w-4 -translate-y-1/2 text-[#7ecbff]" />
-                                  <Input
-                                    {...field}
-                                    type="time"
-                                    step="60"
-                                    ref={(node) => {
-                                      field.ref(node);
-                                      timeInputRef.current = node;
-                                    }}
-                                    className={`${inputFieldClasses} pl-10 before:hidden`}
-                                    style={inputStyle}
-                                  />
-                                </div>
+                                  <circle cx="12" cy="12" r="10"></circle>
+                                  <polyline points="12,6 12,12 16,14"></polyline>
+                                </svg>
                               </div>
                             </FormControl>
                             <FormMessage />
@@ -1209,15 +1198,13 @@ const FollowupTemplatesPage = () => {
                               Days
                             </FormLabel>
                             <FormControl>
-                              <div className={inputWrapperClasses}>
-                                <Input
-                                  {...field}
-                                  type="number"
-                                  min={1}
-                                  className={inputFieldClasses}
-                                  style={inputStyle}
-                                />
-                              </div>
+                              <Input
+                                {...field}
+                                type="number"
+                                min={1}
+                                disabled={isCreating || isUpdating}
+                                className="bg-white/5 backdrop-blur-sm border-white/20 text-white text-xs placeholder:text-gray-400 focus:bg-white/10 focus:border-white/30 transition-all"
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -1233,15 +1220,13 @@ const FollowupTemplatesPage = () => {
                               Emails
                             </FormLabel>
                             <FormControl>
-                              <div className={inputWrapperClasses}>
-                                <Input
-                                  {...field}
-                                  type="number"
-                                  min={0}
-                                  className={inputFieldClasses}
-                                  style={inputStyle}
-                                />
-                              </div>
+                              <Input
+                                {...field}
+                                type="number"
+                                min={0}
+                                disabled={isCreating || isUpdating}
+                                className="bg-white/5 backdrop-blur-sm border-white/20 text-white text-xs placeholder:text-gray-400 focus:bg-white/10 focus:border-white/30 transition-all"
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -1257,15 +1242,13 @@ const FollowupTemplatesPage = () => {
                               Calls
                             </FormLabel>
                             <FormControl>
-                              <div className={inputWrapperClasses}>
-                                <Input
-                                  {...field}
-                                  type="number"
-                                  min={0}
-                                  className={inputFieldClasses}
-                                  style={inputStyle}
-                                />
-                              </div>
+                              <Input
+                                {...field}
+                                type="number"
+                                min={0}
+                                disabled={isCreating || isUpdating}
+                                className="bg-white/5 backdrop-blur-sm border-white/20 text-white text-xs placeholder:text-gray-400 focus:bg-white/10 focus:border-white/30 transition-all"
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -1281,15 +1264,13 @@ const FollowupTemplatesPage = () => {
                               WhatsApp
                             </FormLabel>
                             <FormControl>
-                              <div className={inputWrapperClasses}>
-                                <Input
-                                  {...field}
-                                  type="number"
-                                  min={0}
-                                  className={inputFieldClasses}
-                                  style={inputStyle}
-                                />
-                              </div>
+                              <Input
+                                {...field}
+                                type="number"
+                                min={0}
+                                disabled={isCreating || isUpdating}
+                                className="bg-white/5 backdrop-blur-sm border-white/20 text-white text-xs placeholder:text-gray-400 focus:bg-white/10 focus:border-white/30 transition-all"
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -1297,36 +1278,38 @@ const FollowupTemplatesPage = () => {
                       />
                     </div>
 
-                    <DialogFooter className="flex flex-col gap-3 border-t border-white/10 pt-5 sm:flex-row sm:items-center sm:justify-end sm:gap-4">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        className="h-11 rounded-full border border-white/20 bg-white/5 px-7 text-sm text-white/70 hover:bg-white/10 hover:text-white"
-                        onClick={closeForm}
-                      >
-                        Back
-                      </Button>
-                      <Button
-                        type="submit"
-                        className="h-11 rounded-full border-0 px-8 text-sm font-semibold text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] hover:bg-[#2F2F2F]/60 transition-all"
-                        style={{
-                          background:
-                            "radial-gradient(circle at left, rgba(64, 102, 179, 0.4) 0%, rgba(103, 176, 183, 0.3) 50%, transparent 70%)",
-                        }}
-                        disabled={isCreating || isUpdating}
-                      >
-                        {formMode === "edit"
-                          ? isUpdating
-                            ? "Saving..."
-                            : "Save changes"
-                          : isCreating
-                          ? "Creating..."
-                          : "Create template"}
-                      </Button>
-                    </DialogFooter>
-                  </form>
+                </div>
+
+                <DialogFooter className="px-6 py-4 flex-shrink-0 border-t border-white/10">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={closeForm}
+                    disabled={isCreating || isUpdating}
+                    className="bg-white/5 backdrop-blur-sm border-white/20 text-gray-300 hover:bg-white/10 hover:border-white/30 transition-all"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={isCreating || isUpdating}
+                    className="bg-white/5 backdrop-blur-sm border border-white/40 text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] hover:bg-[#2F2F2F]/60 transition-all"
+                    style={{
+                      background:
+                        "radial-gradient(circle at left, rgba(64, 102, 179, 0.4) 0%, rgba(103, 176, 183, 0.3) 50%, transparent 70%)",
+                    }}
+                  >
+                    {formMode === "edit"
+                      ? isUpdating
+                        ? "Saving..."
+                        : "Save changes"
+                      : isCreating
+                      ? "Creating..."
+                      : "Create template"}
+                  </Button>
+                </DialogFooter>
+              </form>
                 </Form>
-              </div>
             </div>
           </DialogContent>
         </Dialog>
