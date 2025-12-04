@@ -24,6 +24,7 @@ import {
   Grid3X3,
   List,
   LayoutGrid,
+  MessageCircle,
 } from "lucide-react";
 import { Lead } from "@/services/leads.service";
 import { Company, companiesService } from "@/services/companies.service";
@@ -37,6 +38,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 type ViewMode = "compact" | "detailed" | "card";
 
@@ -303,20 +309,46 @@ const LeadsList: FC<LeadsListProps> = ({
           onClick={() => navigate(`/leads/${lead._id}`)}
         >
           <div className="flex flex-col gap-1">
-            <h3 className="text-sm font-semibold text-white leading-tight truncate">
-              {lead.name}
-              {lead.position && (
-                <span className="text-white/60 font-normal">
-                  {" "}
-                  | {lead.position}
-                </span>
-              )}
+            <h3 className="text-sm font-semibold text-white leading-tight">
+              {(() => {
+                const name = lead.name || "";
+                const position = lead.position ? ` | ${lead.position}` : "";
+                const fullText = `${name}${position}`;
+                return (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span>
+                        {name.length > 20 ? `${name.slice(0, 20)}...` : name}
+                        {lead.position && (
+                          <span className="text-white/60 font-normal">
+                            {lead.position.length > 20
+                              ? ` | ${lead.position.slice(0, 20)}...`
+                              : ` | ${lead.position}`}
+                          </span>
+                        )}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{fullText}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                );
+              })()}
             </h3>
 
             <div className="flex items-center gap-1">
-              <Badge className="rounded-full bg-primary/20 text-primary border-primary/30 px-1.5 py-0.5 text-xs">
-                {lead.companyName || "Company"}
-              </Badge>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge className="rounded-full bg-primary/20 text-primary border-primary/30 px-1.5 py-0.5 text-xs">
+                    {(lead.companyName || "Company").length > 20
+                      ? `${(lead.companyName || "Company").slice(0, 20)}...`
+                      : lead.companyName || "Company"}
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{lead.companyName || "Company"}</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
           </div>
         </Card>
@@ -340,18 +372,43 @@ const LeadsList: FC<LeadsListProps> = ({
       >
         <div className="flex-1 w-full md:w-auto">
           <div className="flex flex-wrap items-center gap-2 text-white">
-            <h3 className="text-xs sm:text-base font-semibold">{lead.name}</h3>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <h3 className="text-xs sm:text-base font-semibold cursor-default">
+                  {lead.name.length > 20 ? `${lead.name.slice(0, 20)}...` : lead.name}
+                </h3>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{lead.name}</p>
+              </TooltipContent>
+            </Tooltip>
             {lead.companyName && (
-              <span className="text-xs text-white/70">
-                | {lead.companyName}
-              </span>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="text-xs text-white/70 cursor-default">
+                    | {lead.companyName.length > 20 ? `${lead.companyName.slice(0, 20)}...` : lead.companyName}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{lead.companyName}</p>
+                </TooltipContent>
+              </Tooltip>
             )}
           </div>
           {viewMode === "detailed" && (
             <>
-              <p className="text-[8px] sm:text-[9px] font-bold text-white/60 mt-0.5">
-                {lead.position || "Chief Executive Officer"}
-              </p>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <p className="text-[8px] sm:text-[9px] font-bold text-white/60 mt-0.5 cursor-default">
+                    {(lead.position || "Chief Executive Officer").length > 20
+                      ? `${(lead.position || "Chief Executive Officer").slice(0, 20)}...`
+                      : lead.position || "Chief Executive Officer"}
+                  </p>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{lead.position || "Chief Executive Officer"}</p>
+                </TooltipContent>
+              </Tooltip>
               <div className="mt-0.5 sm:mt-1 md:mt-2 flex flex-wrap items-center gap-1.5 sm:gap-2 md:gap-3 text-xs text-gray-300">
                 <div className="flex items-center gap-1.5">
                   <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center border border-white bg-white text-gray-900 flex-shrink-0">
@@ -376,95 +433,115 @@ const LeadsList: FC<LeadsListProps> = ({
         <div className="flex flex-col items-end gap-0.5 sm:gap-1 md:gap-2 w-full md:w-auto">
           {viewMode === "detailed" && (
             <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 flex-wrap justify-center">
-              <button
-                className={getIconButtonClasses(!hasPhone)}
-                onClick={() => {
-                  if (hasPhone) {
-                    onPhoneClick?.(lead, executiveFallback);
-                  }
-                }}
-                disabled={!hasPhone}
-                aria-disabled={!hasPhone}
-                title={!hasPhone ? "No phone available" : "Call lead"}
-              >
-                <Phone className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-              </button>
-              <button
-                className={getIconButtonClasses(!hasEmail)}
-                onClick={() => {
-                  if (hasEmail) {
-                    onEmailClick?.(lead);
-                  }
-                }}
-                disabled={!hasEmail}
-                aria-disabled={!hasEmail}
-                title={!hasEmail ? "No email available" : "Email lead"}
-              >
-                <Mail className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-              </button>
-              <button
-                className={getIconButtonClasses(!hasPhone)}
-                onClick={handleWhatsAppOpen}
-                disabled={!hasPhone}
-                aria-disabled={!hasPhone}
-                title={!hasPhone ? "No phone available" : "Open WhatsApp"}
-              >
-                <svg
-                  className="w-3 h-3 sm:w-3.5 sm:h-3.5"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.742.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"
-                    fill="currentColor"
-                  />
-                </svg>
-              </button>
-              <button
-                className={getIconButtonClasses(!hasLinkedin)}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (hasLinkedin) {
-                    onLinkedinClick(lead);
-                  }
-                }}
-                disabled={!hasLinkedin}
-                aria-disabled={!hasLinkedin}
-                title={
-                  !hasLinkedin ? "No LinkedIn available" : "Send LinkedIn DM"
-                }
-              >
-                <Send className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-              </button>
-              <button
-                className={`h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center border transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary/40 ${
-                  !canEnrich
-                    ? "bg-white/5 border-white/10 text-white/30 cursor-not-allowed"
-                    : isFilling
-                    ? "bg-white/15 border-white/20 text-white cursor-wait"
-                    : "bg-white/5 border-white/10 text-white/60 hover:bg-white/15 hover:text-white"
-                }`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (canEnrich) {
-                    handleFillLeadData(lead);
-                  }
-                }}
-                disabled={!canEnrich || isFilling}
-                aria-disabled={!canEnrich || isFilling}
-                title={
-                  canEnrich
-                    ? "Fill missing information"
-                    : "Missing IDs to enrich"
-                }
-              >
-                {isFilling ? (
-                  <Loader2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 animate-spin" />
-                ) : (
-                  <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                )}
-              </button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    className={getIconButtonClasses(!hasPhone)}
+                    onClick={() => {
+                      if (hasPhone) {
+                        onPhoneClick?.(lead, executiveFallback);
+                      }
+                    }}
+                    disabled={!hasPhone}
+                    aria-disabled={!hasPhone}
+                  >
+                    <Phone className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{!hasPhone ? "No phone available" : "Call lead"}</p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    className={getIconButtonClasses(!hasEmail)}
+                    onClick={() => {
+                      if (hasEmail) {
+                        onEmailClick?.(lead);
+                      }
+                    }}
+                    disabled={!hasEmail}
+                    aria-disabled={!hasEmail}
+                  >
+                    <Mail className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{!hasEmail ? "No email available" : "Email lead"}</p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    className={getIconButtonClasses(!hasPhone)}
+                    onClick={handleWhatsAppOpen}
+                    disabled={!hasPhone}
+                    aria-disabled={!hasPhone}
+                  >
+                    <MessageCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{!hasPhone ? "No phone available" : "Open WhatsApp"}</p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    className={getIconButtonClasses(!hasLinkedin)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (hasLinkedin) {
+                        onLinkedinClick(lead);
+                      }
+                    }}
+                    disabled={!hasLinkedin}
+                    aria-disabled={!hasLinkedin}
+                  >
+                    <Send className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>
+                    {!hasLinkedin ? "No LinkedIn available" : "Send LinkedIn DM"}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    className={`h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center border transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary/40 ${
+                      !canEnrich
+                        ? "bg-white/5 border-white/10 text-white/30 cursor-not-allowed"
+                        : isFilling
+                        ? "bg-white/15 border-white/20 text-white cursor-wait"
+                        : "bg-white/5 border-white/10 text-white/60 hover:bg-white/15 hover:text-white"
+                    }`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (canEnrich) {
+                        handleFillLeadData(lead);
+                      }
+                    }}
+                    disabled={!canEnrich || isFilling}
+                    aria-disabled={!canEnrich || isFilling}
+                  >
+                    {isFilling ? (
+                      <Loader2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 animate-spin" />
+                    ) : (
+                      <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                    )}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>
+                    {canEnrich
+                      ? "Fill missing information"
+                      : "Missing IDs to enrich"}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
             </div>
           )}
           <ActiveNavButton

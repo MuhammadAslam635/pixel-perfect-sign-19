@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 interface ActiveNavButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  icon: LucideIcon;
+  icon?: LucideIcon;
   text: string;
   showIndicator?: boolean;
   className?: string;
@@ -37,7 +37,9 @@ export const ActiveNavButton = React.forwardRef<
           WebkitFilter: "blur(20px)",
         }}
       ></div>
-      <Icon className="w-3.5 h-3.5 flex-shrink-0 text-white drop-shadow-[0_8px_18px_rgba(62,100,180,0.45)]" />
+      {Icon && (
+        <Icon className="w-3.5 h-3.5 flex-shrink-0 text-white drop-shadow-[0_8px_18px_rgba(62,100,180,0.45)]" />
+      )}
       <span className="whitespace-nowrap ml-1.5 opacity-100 scale-100 translate-x-0 max-w-[200px]">
         {text}
       </span>

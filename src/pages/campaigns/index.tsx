@@ -500,7 +500,7 @@ const CampaignsPage = () => {
   };
   return (
     <DashboardLayout>
-      <main className="relative px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] pt-24 sm:pt-28 lg:pt-32 pb-8 flex flex-col gap-6 text-white flex-1 overflow-y-auto">
+      <main className="relative px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] pt-24 sm:pt-28 lg:pt-32 pb-8 flex flex-col gap-6 text-white flex-1 overflow-y-auto animate-in fade-in duration-1000">
         {/* Top Stats Section */}
         <div className="flex flex-col lg:flex-row gap-3 lg:gap-4">
           {/* Facebook Ads Card */}
@@ -1187,20 +1187,20 @@ const CampaignsPage = () => {
             }
           }}
         >
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0 text-white border-0">
+          <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0 text-white border-0 overflow-hidden">
             {/* Glassmorphism Background - pointer-events-none so they don't block clicks */}
             <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-white/5 to-transparent backdrop-blur-xl rounded-lg pointer-events-none" />
             <div className="absolute inset-0 bg-[#0b0f20]/80 backdrop-blur-md rounded-lg pointer-events-none" />
             <div className="absolute inset-[1px] bg-gradient-to-br from-white/5 to-transparent rounded-lg pointer-events-none" />
             <div className="absolute inset-0 border border-white/10 rounded-lg shadow-2xl shadow-black/50 pointer-events-none" />
 
-            <div className="relative z-10 overflow-y-auto scrollbar-hide max-h-[90vh] p-9">
+            <div className="relative z-10 flex flex-col h-full min-h-0">
               {selectedCampaign && editedCampaign && (
                 <>
-                  <DialogHeader className="mb-6 pb-4 border-b border-white/10">
+                  <DialogHeader className="px-6 pt-6 pb-4 flex-shrink-0 border-b border-white/10">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <DialogTitle className="text-2xl font-bold break-words text-white drop-shadow-lg">
+                        <DialogTitle className="text-xs sm:text-sm font-semibold break-words text-white drop-shadow-lg">
                           {isEditing ? (
                             <Input
                               value={editedCampaign.name.replace(/\s/g, "")}
@@ -1210,18 +1210,18 @@ const CampaignsPage = () => {
                                   name: e.target.value.replace(/\s/g, ""),
                                 })
                               }
-                              className="text-2xl font-bold bg-white/5 backdrop-blur-sm border-white/20 text-white focus:bg-white/10 focus:border-white/30 transition-all"
+                              className="text-xs sm:text-sm font-semibold bg-white/5 backdrop-blur-sm border-white/20 text-white focus:bg-white/10 focus:border-white/30 transition-all"
                             />
                           ) : (
                             selectedCampaign.name
                           )}
                         </DialogTitle>
-                        <DialogDescription className="break-words text-gray-300/80 mt-2">
+                        <DialogDescription className="break-words text-xs text-white/70 mt-2">
                           Campaign details and progress
                         </DialogDescription>
                       </div>
                       {!isEditing ? (
-                        <div className="flex gap-2 ml-2">
+                        <div className="flex gap-2 ml-2 pr-3">
                           <Button
                             variant="outline"
                             size="sm"
@@ -1230,44 +1230,44 @@ const CampaignsPage = () => {
                               setRegenerateDialogOpen(true);
                             }}
                             disabled={isRegenerating}
-                            className="bg-white/5 backdrop-blur-sm border-white/20 text-gray-300 hover:bg-white/10 hover:border-white/30 transition-all"
+                            className="bg-white/5 backdrop-blur-sm border-white/20 text-gray-300 hover:bg-white/10 hover:border-white/30 transition-all text-xs h-7 px-3 py-1"
                           >
-                            <RefreshCw className="w-4 h-4 mr-2" />
+                            <RefreshCw className="w-3 h-3 mr-1.5" />
                             Regenerate Both
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => setIsEditing(true)}
-                            className="text-gray-300 hover:text-white hover:bg-white/10 backdrop-blur-sm transition-all"
+                            className="text-gray-300 hover:text-white hover:bg-white/10 backdrop-blur-sm transition-all text-xs h-7 px-3 py-1"
                           >
-                            <Edit2 className="w-4 h-4 mr-2" />
+                            <Edit2 className="w-3 h-3 mr-1.5" />
                             Edit
                           </Button>
                         </div>
                       ) : (
-                        <div className="flex gap-2 ml-2">
+                        <div className="flex gap-2 ml-2 pr-3">
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={handleCancelEdit}
                             disabled={isUpdating}
-                            className="text-gray-300 hover:text-white hover:bg-white/10 backdrop-blur-sm transition-all"
+                            className="text-gray-300 hover:text-white hover:bg-white/10 backdrop-blur-sm transition-all text-xs h-7 px-3 py-1"
                           >
-                            <X className="w-4 h-4 mr-2" />
+                            <X className="w-3 h-3 mr-1.5" />
                             Cancel
                           </Button>
                           <Button
                             size="sm"
                             onClick={handleSave}
                             disabled={isUpdating}
-                            className="bg-white/5 backdrop-blur-sm border border-white/40 text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] hover:bg-[#2F2F2F]/60 transition-all"
+                            className="bg-white/5 backdrop-blur-sm border border-white/40 text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] hover:bg-[#2F2F2F]/60 transition-all text-xs h-7 px-3 py-1"
                             style={{
                               background:
                                 "radial-gradient(circle at left, rgba(64, 102, 179, 0.4) 0%, rgba(103, 176, 183, 0.3) 50%, transparent 70%)",
                             }}
                           >
-                            <Save className="w-4 h-4 mr-2" />
+                            <Save className="w-3 h-3 mr-1.5" />
                             {isUpdating ? "Saving..." : "Save"}
                           </Button>
                         </div>
@@ -1275,12 +1275,12 @@ const CampaignsPage = () => {
                     </div>
                   </DialogHeader>
 
-                  <div className="space-y-6 mt-4 overflow-hidden">
+                  <div className="flex-1 overflow-y-auto px-6 space-y-4 scrollbar-hide py-4 min-h-0">
                     {/* Status Section */}
                     <div className="flex flex-wrap gap-4 items-center">
                       {isEditing ? (
                         <div className="flex items-center gap-2">
-                          <Label className="text-gray-300">Status:</Label>
+                          <Label className="text-xs text-white/70">Status:</Label>
                           <Select
                             value={editedCampaign.status}
                             onValueChange={(value) =>
@@ -1290,7 +1290,7 @@ const CampaignsPage = () => {
                               })
                             }
                           >
-                            <SelectTrigger className="w-[180px] bg-white/5 backdrop-blur-sm border-white/20 text-white focus:bg-white/10 focus:border-white/30 transition-all">
+                            <SelectTrigger className="w-[180px] bg-white/5 backdrop-blur-sm border-white/20 text-white text-xs focus:bg-white/10 focus:border-white/30 transition-all h-7">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent className="bg-white/10 backdrop-blur-xl border-white/20">
@@ -1315,7 +1315,7 @@ const CampaignsPage = () => {
                           {selectedCampaign.status}
                         </Badge>
                       )}
-                      <div className="flex items-center space-x-2 text-sm text-gray-400">
+                      <div className="flex items-center space-x-2 text-xs text-gray-400">
                         <Clock className="w-4 h-4 flex-shrink-0" />
                         <span className="break-words">
                           Last updated: {formatDate(selectedCampaign.updatedAt)}
@@ -1327,13 +1327,13 @@ const CampaignsPage = () => {
 
                     {/* User Requirements */}
                     <Card className="bg-white/5 backdrop-blur-sm border-white/10 shadow-lg">
-                      <CardHeader>
-                        <CardTitle className="text-lg flex items-center gap-2 text-white drop-shadow-md">
+                      <CardHeader className="px-4 py-3">
+                        <CardTitle className="text-xs flex items-center gap-2 text-white drop-shadow-md">
                           <FileText className="w-5 h-5" />
                           Requirements
                         </CardTitle>
                       </CardHeader>
-                      <CardContent>
+                      <CardContent className="px-4 pb-4">
                         {isEditing ? (
                           <Textarea
                             value={editedCampaign.userRequirements}
@@ -1344,10 +1344,10 @@ const CampaignsPage = () => {
                               })
                             }
                             rows={4}
-                            className="w-full bg-white/5 backdrop-blur-sm border-white/20 text-white placeholder:text-gray-400 focus:bg-white/10 focus:border-white/30 transition-all"
+                            className="w-full bg-white/5 backdrop-blur-sm border-white/20 text-white text-xs placeholder:text-gray-400 focus:bg-white/10 focus:border-white/30 transition-all"
                           />
                         ) : (
-                          <p className="text-sm text-gray-300/90 whitespace-pre-wrap break-words">
+                          <p className="text-xs text-gray-300/90 whitespace-pre-wrap break-words">
                             {renderTextWithLinks(
                               selectedCampaign.userRequirements
                             )}
@@ -1358,9 +1358,9 @@ const CampaignsPage = () => {
 
                     {/* Content */}
                     <Card className="bg-white/5 backdrop-blur-sm border-white/10 shadow-lg">
-                      <CardHeader>
+                      <CardHeader className="px-4 py-3">
                         <div className="flex items-center justify-between">
-                          <CardTitle className="text-lg flex items-center gap-2 text-white drop-shadow-md">
+                          <CardTitle className="text-xs flex items-center gap-2 text-white drop-shadow-md">
                             <FileText className="w-5 h-5" />
                             Content
                           </CardTitle>
@@ -1375,9 +1375,9 @@ const CampaignsPage = () => {
                                     setRegenerateDialogOpen(true);
                                   }}
                                   disabled={isRegenerating}
-                                  className="bg-white/5 backdrop-blur-sm border-white/20 text-gray-300 hover:bg-white/10 hover:border-white/30 transition-all"
+                                  className="bg-white/5 backdrop-blur-sm border-white/20 text-gray-300 hover:bg-white/10 hover:border-white/30 transition-all text-xs h-7 px-3 py-1"
                                 >
-                                  <RefreshCw className="w-4 h-4 mr-2" />
+                                  <RefreshCw className="w-3 h-3 mr-1.5" />
                                   Regenerate
                                 </Button>
                                 <Button
@@ -1385,9 +1385,9 @@ const CampaignsPage = () => {
                                   size="sm"
                                   onClick={handleResetContent}
                                   disabled={isResettingContent}
-                                  className="bg-white/5 backdrop-blur-sm border-white/20 text-gray-300 hover:bg-white/10 hover:border-white/30 transition-all"
+                                  className="bg-white/5 backdrop-blur-sm border-white/20 text-gray-300 hover:bg-white/10 hover:border-white/30 transition-all text-xs h-7 px-3 py-1"
                                 >
-                                  <RotateCcw className="w-4 h-4 mr-2" />
+                                  <RotateCcw className="w-3 h-3 mr-1.5" />
                                   Reset
                                 </Button>
                               </>
@@ -1395,7 +1395,7 @@ const CampaignsPage = () => {
                           </div>
                         </div>
                       </CardHeader>
-                      <CardContent>
+                      <CardContent className="px-4 pb-4">
                         {isEditing ? (
                           <Textarea
                             value={editedCampaign.content || ""}
@@ -1406,11 +1406,11 @@ const CampaignsPage = () => {
                               })
                             }
                             rows={6}
-                            className="w-full bg-white/5 backdrop-blur-sm border-white/20 text-white placeholder:text-gray-400 focus:bg-white/10 focus:border-white/30 transition-all"
+                            className="w-full bg-white/5 backdrop-blur-sm border-white/20 text-white text-xs placeholder:text-gray-400 focus:bg-white/10 focus:border-white/30 transition-all"
                             placeholder="Enter campaign content..."
                           />
                         ) : (
-                          <p className="text-sm text-gray-300/90 whitespace-pre-wrap break-words">
+                          <p className="text-xs text-gray-300/90 whitespace-pre-wrap break-words">
                             {renderTextWithLinks(
                               selectedCampaign.content || "No content yet"
                             )}
@@ -1421,9 +1421,9 @@ const CampaignsPage = () => {
 
                     {/* Media */}
                     <Card className="bg-white/5 backdrop-blur-sm border-white/10 shadow-lg">
-                      <CardHeader>
+                      <CardHeader className="px-4 py-3">
                         <div className="flex items-center justify-between">
-                          <CardTitle className="text-lg flex items-center gap-2 text-white drop-shadow-md">
+                          <CardTitle className="text-xs flex items-center gap-2 text-white drop-shadow-md">
                             <ImageIcon className="w-5 h-5" />
                             Media (
                             {isEditing
@@ -1442,9 +1442,9 @@ const CampaignsPage = () => {
                                     setRegenerateDialogOpen(true);
                                   }}
                                   disabled={isRegenerating}
-                                  className="bg-white/5 backdrop-blur-sm border-white/20 text-gray-300 hover:bg-white/10 hover:border-white/30 transition-all"
+                                  className="bg-white/5 backdrop-blur-sm border-white/20 text-gray-300 hover:bg-white/10 hover:border-white/30 transition-all text-xs h-7 px-3 py-1"
                                 >
-                                  <RefreshCw className="w-4 h-4 mr-2" />
+                                  <RefreshCw className="w-3 h-3 mr-1.5" />
                                   Regenerate
                                 </Button>
                                 <Button
@@ -1452,9 +1452,9 @@ const CampaignsPage = () => {
                                   size="sm"
                                   onClick={handleResetMedia}
                                   disabled={isResettingMedia}
-                                  className="bg-white/5 backdrop-blur-sm border-white/20 text-gray-300 hover:bg-white/10 hover:border-white/30 transition-all"
+                                  className="bg-white/5 backdrop-blur-sm border-white/20 text-gray-300 hover:bg-white/10 hover:border-white/30 transition-all text-xs h-7 px-3 py-1"
                                 >
-                                  <RotateCcw className="w-4 h-4 mr-2" />
+                                  <RotateCcw className="w-3 h-3 mr-1.5" />
                                   Reset
                                 </Button>
                               </>
@@ -1462,7 +1462,7 @@ const CampaignsPage = () => {
                           </div>
                         </div>
                       </CardHeader>
-                      <CardContent>
+                      <CardContent className="px-4 pb-4">
                         {isEditing ? (
                           editedCampaign.media.length > 0 ? (
                             <ImageCarousel
@@ -1482,7 +1482,7 @@ const CampaignsPage = () => {
                             <div className="text-center py-12 text-gray-400">
                               <ImageIcon className="w-12 h-12 mx-auto mb-4 opacity-50" />
                               <p>No media uploaded yet</p>
-                              <p className="text-sm mt-2">
+                              <p className="text-xs mt-2">
                                 Media will be generated automatically
                               </p>
                             </div>
@@ -1503,16 +1503,16 @@ const CampaignsPage = () => {
 
                     {/* Campaign Details */}
                     <Card className="bg-white/5 backdrop-blur-sm border-white/10 shadow-lg">
-                      <CardHeader>
-                        <CardTitle className="text-lg flex items-center gap-2 text-white drop-shadow-md">
+                      <CardHeader className="px-4 py-3">
+                        <CardTitle className="text-xs flex items-center gap-2 text-white drop-shadow-md">
                           <Calendar className="w-5 h-5" />
                           Campaign Details
                         </CardTitle>
                       </CardHeader>
-                      <CardContent className="space-y-3">
+                      <CardContent className="space-y-3 px-4 pb-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           <div className="flex flex-col gap-2">
-                            <span className="text-gray-300/80 flex-shrink-0 text-sm">
+                            <span className="text-gray-300/80 flex-shrink-0 text-xs">
                               Platform:
                             </span>
                             {isEditing ? (
@@ -1545,8 +1545,8 @@ const CampaignsPage = () => {
                                     editedCampaign.platform?.includes(
                                       "facebook"
                                     )
-                                      ? "bg-white/5 backdrop-blur-sm border border-white/40 text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] hover:bg-[#2F2F2F]/60 transition-all"
-                                      : "bg-white/5 backdrop-blur-sm border border-white/40 text-white/85 hover:bg-[#2F2F2F]/60 hover:text-white hover:shadow-[0_16px_28px_rgba(0,0,0,0.35)] transition-all"
+                                      ? "bg-white/5 backdrop-blur-sm border border-white/40 text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] hover:bg-[#2F2F2F]/60 transition-all text-xs h-7 px-3 py-1"
+                                      : "bg-white/5 backdrop-blur-sm border border-white/40 text-white/85 hover:bg-[#2F2F2F]/60 hover:text-white hover:shadow-[0_16px_28px_rgba(0,0,0,0.35)] transition-all text-xs h-7 px-3 py-1"
                                   }
                                   style={
                                     editedCampaign.platform?.includes(
@@ -1585,8 +1585,8 @@ const CampaignsPage = () => {
                                   }}
                                   className={
                                     editedCampaign.platform?.includes("google")
-                                      ? "bg-white/5 backdrop-blur-sm border border-white/40 text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] hover:bg-[#2F2F2F]/60 transition-all"
-                                      : "bg-white/5 backdrop-blur-sm border border-white/40 text-white/85 hover:bg-[#2F2F2F]/60 hover:text-white hover:shadow-[0_16px_28px_rgba(0,0,0,0.35)] transition-all"
+                                      ? "bg-white/5 backdrop-blur-sm border border-white/40 text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] hover:bg-[#2F2F2F]/60 transition-all text-xs h-7 px-3 py-1"
+                                      : "bg-white/5 backdrop-blur-sm border border-white/40 text-white/85 hover:bg-[#2F2F2F]/60 hover:text-white hover:shadow-[0_16px_28px_rgba(0,0,0,0.35)] transition-all text-xs h-7 px-3 py-1"
                                   }
                                   style={
                                     editedCampaign.platform?.includes("google")
@@ -1601,19 +1601,19 @@ const CampaignsPage = () => {
                                 </Button>
                               </div>
                             ) : (
-                              <span className="font-medium break-words uppercase text-white">
+                              <span className="font-medium break-words uppercase text-white text-xs">
                                 {selectedCampaign.platform?.join(", ") || "N/A"}
                               </span>
                             )}
                             {isEditing &&
                               (!editedCampaign.platform ||
                                 editedCampaign.platform.length === 0) && (
-                                <p className="text-sm text-red-400">
+                                <p className="text-xs text-red-400">
                                   At least one platform is required
                                 </p>
                               )}
                           </div>
-                          <div className="flex justify-between text-sm gap-2">
+                          <div className="flex justify-between text-xs gap-2">
                             <span className="text-gray-300/80 flex-shrink-0">
                               Location:
                             </span>
@@ -1621,7 +1621,7 @@ const CampaignsPage = () => {
                               {selectedCampaign.location || "N/A"}
                             </span>
                           </div>
-                          <div className="flex justify-between text-sm gap-2">
+                          <div className="flex justify-between text-xs gap-2">
                             <span className="text-gray-300/80 flex-shrink-0">
                               Target Audience:
                             </span>
@@ -1629,7 +1629,7 @@ const CampaignsPage = () => {
                               {selectedCampaign.targetAudience || "N/A"}
                             </span>
                           </div>
-                          <div className="flex justify-between text-sm gap-2">
+                          <div className="flex justify-between text-xs gap-2">
                             <span className="text-gray-300/80 flex-shrink-0">
                               Estimated Budget:
                             </span>
@@ -1639,7 +1639,7 @@ const CampaignsPage = () => {
                                 : "N/A"}
                             </span>
                           </div>
-                          <div className="flex justify-between text-sm gap-2">
+                          <div className="flex justify-between text-xs gap-2">
                             <span className="text-gray-300/80 flex-shrink-0">
                               Number of Days:
                             </span>
@@ -1649,7 +1649,7 @@ const CampaignsPage = () => {
                                 : "N/A"}
                             </span>
                           </div>
-                          <div className="flex justify-between text-sm gap-2">
+                          <div className="flex justify-between text-xs gap-2">
                             <span className="text-gray-300/80 flex-shrink-0">
                               Campaign Type:
                             </span>
@@ -1663,14 +1663,14 @@ const CampaignsPage = () => {
 
                     {/* Timeline */}
                     <Card className="bg-white/5 backdrop-blur-sm border-white/10 shadow-lg">
-                      <CardHeader>
-                        <CardTitle className="text-lg flex items-center gap-2 text-white drop-shadow-md">
+                      <CardHeader className="px-4 py-3">
+                        <CardTitle className="text-xs flex items-center gap-2 text-white drop-shadow-md">
                           <Calendar className="w-5 h-5" />
                           Timeline
                         </CardTitle>
                       </CardHeader>
-                      <CardContent className="space-y-2">
-                        <div className="flex justify-between text-sm gap-2">
+                      <CardContent className="space-y-2 px-4 pb-4">
+                        <div className="flex justify-between text-xs gap-2">
                           <span className="text-gray-300/80 flex-shrink-0">
                             Created At:
                           </span>
@@ -1678,7 +1678,7 @@ const CampaignsPage = () => {
                             {formatDate(selectedCampaign.createdAt)}
                           </span>
                         </div>
-                        <div className="flex justify-between text-sm gap-2">
+                        <div className="flex justify-between text-xs gap-2">
                           <span className="text-gray-300/80 flex-shrink-0">
                             Last Updated:
                           </span>
@@ -1686,7 +1686,7 @@ const CampaignsPage = () => {
                             {formatDate(selectedCampaign.updatedAt)}
                           </span>
                         </div>
-                        <div className="flex justify-between text-sm gap-2">
+                        <div className="flex justify-between text-xs gap-2">
                           <span className="text-gray-300/80 flex-shrink-0">
                             Campaign ID:
                           </span>
@@ -1717,10 +1717,10 @@ const CampaignsPage = () => {
 
             <div className="relative z-10 p-6">
               <DialogHeader className="mb-4 pb-4 border-b border-white/10">
-                <DialogTitle className="text-white drop-shadow-lg">
+                <DialogTitle className="text-xs sm:text-sm font-semibold text-white drop-shadow-lg ">
                   Regenerate Campaign {regenerateType}
                 </DialogTitle>
-                <DialogDescription className="text-gray-300/80 mt-2">
+                <DialogDescription className="text-xs text-white/70">
                   This will reset and regenerate the {regenerateType} for this
                   campaign. You can provide new guidelines or use the original
                   requirements.
@@ -1730,7 +1730,7 @@ const CampaignsPage = () => {
                 <div>
                   <Label
                     htmlFor="regenerate-guidelines"
-                    className="text-gray-300"
+                    className="text-xs text-white/70"
                   >
                     New Guidelines (Optional)
                   </Label>
@@ -1740,7 +1740,7 @@ const CampaignsPage = () => {
                     onChange={(e) => setRegenerateGuidelines(e.target.value)}
                     placeholder="Enter new guidelines or leave empty to use original requirements..."
                     rows={4}
-                    className="mt-1 bg-white/5 backdrop-blur-sm border-white/20 text-white placeholder:text-gray-400 focus:bg-white/10 focus:border-white/30 transition-all"
+                    className="mt-1 bg-white/5 backdrop-blur-sm border-white/20 text-white text-xs placeholder:text-gray-400 focus:bg-white/10 focus:border-white/30 transition-all"
                   />
                 </div>
                 <div className="flex justify-end gap-2 pt-4 border-t border-white/10">
@@ -1752,14 +1752,14 @@ const CampaignsPage = () => {
                       setRegenerateType(null);
                     }}
                     disabled={isRegenerating}
-                    className="bg-white/5 backdrop-blur-sm border-white/20 text-gray-300 hover:bg-white/10 hover:border-white/30 transition-all"
+                    className="bg-white/5 backdrop-blur-sm border-white/20 text-gray-300 hover:bg-white/10 hover:border-white/30 transition-all text-xs h-7 px-3 py-1"
                   >
                     Cancel
                   </Button>
                   <Button
                     onClick={handleRegenerate}
                     disabled={isRegenerating}
-                    className="bg-white/5 backdrop-blur-sm border border-white/40 text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] hover:bg-[#2F2F2F]/60 transition-all"
+                    className="bg-white/5 backdrop-blur-sm border border-white/40 text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] hover:bg-[#2F2F2F]/60 transition-all text-xs h-7 px-3 py-1"
                     style={{
                       background:
                         "radial-gradient(circle at left, rgba(64, 102, 179, 0.4) 0%, rgba(103, 176, 183, 0.3) 50%, transparent 70%)",

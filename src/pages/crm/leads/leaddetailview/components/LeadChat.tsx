@@ -1334,10 +1334,10 @@ const LeadChat = ({
             {messageToDelete && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
                 <div className="rounded-lg bg-[#1a1a1a] border border-white/20 p-6 max-w-md w-full mx-4">
-                  <h3 className="text-lg font-semibold text-white mb-2">
+                  <h3 className="text-xs sm:text-sm font-semibold text-white mb-2">
                     Delete Message
                   </h3>
-                  <p className="text-sm text-white/70 mb-6">
+                  <p className="text-xs text-white/70 mb-6">
                     Are you sure you want to delete this message? This action
                     cannot be undone.
                   </p>
@@ -1346,7 +1346,7 @@ const LeadChat = ({
                       type="button"
                       onClick={cancelDeleteMessage}
                       disabled={deleteMessageMutation.isPending}
-                      className="rounded-lg border border-white/30 px-4 py-2 text-sm text-white transition hover:bg-white/10 disabled:opacity-50"
+                      className="rounded-lg border border-white/30 px-4 py-2 text-xs text-white transition hover:bg-white/10 disabled:opacity-50"
                     >
                       Cancel
                     </button>
@@ -1354,7 +1354,7 @@ const LeadChat = ({
                       type="button"
                       onClick={confirmDeleteMessage}
                       disabled={deleteMessageMutation.isPending}
-                      className="rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-600 disabled:opacity-50 flex items-center gap-2"
+                      className="rounded-lg bg-red-500 px-4 py-2 text-xs font-semibold text-white transition hover:bg-red-600 disabled:opacity-50 flex items-center gap-2"
                     >
                       {deleteMessageMutation.isPending ? (
                         <>
@@ -1387,7 +1387,7 @@ const LeadChat = ({
                     }
                   }}
                   disabled={whatsappInputsDisabled}
-                  className="lead-chat-input flex-1 bg-transparent outline-none border-none text-sm text-white disabled:opacity-50 resize-none overflow-y-auto scrollbar-hide"
+                  className="lead-chat-input flex-1 bg-transparent outline-none border-none text-xs text-white disabled:opacity-50 resize-none overflow-y-auto scrollbar-hide"
                   placeholder={
                     whatsappUnavailableMessage
                       ? whatsappUnavailableMessage
@@ -1551,7 +1551,7 @@ const LeadChat = ({
                     }
                   }}
                   disabled={!emailAddress}
-                  className="lead-chat-input flex-1 bg-transparent outline-none border-none text-sm text-white disabled:opacity-50 resize-none overflow-y-auto scrollbar-hide"
+                  className="lead-chat-input flex-1 bg-transparent outline-none border-none text-xs text-white disabled:opacity-50 resize-none overflow-y-auto scrollbar-hide"
                   placeholder={
                     !emailAddress
                       ? "Add an email address to send emails"
@@ -1716,7 +1716,7 @@ const LeadChat = ({
                     }
                   }}
                   disabled={smsInputsDisabled}
-                  className="lead-chat-input flex-1 bg-transparent outline-none border-none text-sm text-white disabled:opacity-50 resize-none overflow-y-auto scrollbar-hide"
+                  className="lead-chat-input flex-1 bg-transparent outline-none border-none text-xs text-white disabled:opacity-50 resize-none overflow-y-auto scrollbar-hide"
                   placeholder={
                     smsUnavailableMessage
                       ? smsUnavailableMessage
@@ -1769,7 +1769,7 @@ const LeadChat = ({
             </div>
           </div>
         ) : activeTab === "Call" ? (
-          <div className="flex w-full flex-1 min-h-0 flex-col items-center text-lg font-medium text-white/70">
+          <div className="flex w-full flex-1 min-h-0 flex-col items-center text-xs sm:text-sm font-medium text-white/70">
             <CallView
               lead={lead}
               twilioReady={twilioReady}
@@ -1786,7 +1786,7 @@ const LeadChat = ({
             />
           </div>
         ) : activeTab === "AI Call" ? (
-          <div className="flex w-full flex-1 min-h-0 flex-col items-center text-lg font-medium text-white/70">
+          <div className="flex w-full flex-1 min-h-0 flex-col items-center text-xs sm:text-sm font-medium text-white/70">
             <CallView
               lead={lead}
               twilioReady={twilioReady}
@@ -1804,7 +1804,7 @@ const LeadChat = ({
             />
           </div>
         ) : (
-          <div className="flex w-full flex-1 items-center justify-center py-20 text-lg font-medium text-white/70">
+          <div className="flex w-full flex-1 items-center justify-center py-20 text-xs sm:text-sm font-medium text-white/70">
             In work
           </div>
         )}

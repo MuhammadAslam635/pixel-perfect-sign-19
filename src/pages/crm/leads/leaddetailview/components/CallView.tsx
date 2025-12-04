@@ -752,14 +752,15 @@ export const CallView = ({
   }, [autoStart, twilioReady, twilioStatusLoading, callPhase, handleCall]);
 
   return (
-    <div className="grid grid-cols-3 gap-6 flex-1 w-full h-full p-6 overflow-hidden">
+    <div className="grid grid-cols-3 gap-6 flex-1 w-full h-full px-0 pt-2 overflow-hidden">
       {/* Left Side: Call History - 2/3 width */}
       <div className="col-span-2 flex flex-col text-left space-y-3 overflow-y-auto scrollbar-hide">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <h2 className="text-xl font-semibold text-white leading-snug">
-              Call History
+            <h2 className="text-xs sm:text-sm font-semibold text-white leading-snug">
+              Call Logs
             </h2>
+            {/* <p className="text-xs text-white/60">Recent calls with transcription, success score and follow-up suggestions.</p> */}
           </div>
           <ActiveNavButton
             icon={RefreshCcw}
@@ -864,9 +865,9 @@ export const CallView = ({
                       {/* Left side: Icon + Call Type + Duration */}
                       <div className="flex items-center gap-3 flex-1">
                         {/* Phone Icon */}
-                        <div className={`w-10 h-10 rounded-full ${iconBgColor} flex items-center justify-center flex-shrink-0`}>
+                        <div className={`w-7 h-7 rounded-full ${iconBgColor} flex items-center justify-center flex-shrink-0`}>
                           <svg 
-                            className={`w-5 h-5 ${iconColor}`} 
+                            className={`w-4 h-4 ${iconColor}`} 
                             fill="currentColor" 
                             viewBox="0 0 24 24"
                           >
@@ -877,7 +878,7 @@ export const CallView = ({
                         {/* Call Type and Duration */}
                         <div className="flex flex-col gap-0.5">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium text-white">
+                            <span className="text-xs font-medium text-white">
                               {callTypeLabel}
                             </span>
                             {statusText && (
@@ -901,7 +902,7 @@ export const CallView = ({
                             onClick={() => {
                               void handleRecordingView(log);
                             }}
-                            className="w-10 h-10 rounded-full border-2 border-emerald-400/30 bg-emerald-500/10 flex items-center justify-center hover:bg-emerald-500/20 transition-colors flex-shrink-0"
+                            className="w-7 h-7 rounded-full border-2 border-emerald-400/30 bg-emerald-500/10 flex items-center justify-center hover:bg-emerald-500/20 transition-colors flex-shrink-0"
                           >
                             <svg 
                               className="w-4 h-4 text-emerald-400 ml-0.5" 
@@ -925,12 +926,12 @@ export const CallView = ({
                       (log.transcriptionStatus === "completed" && transcriptText) || 
                       (log.elevenlabsTranscript && transcriptText) ||
                       followupStatus === "completed") && (
-                      <div className="border-t border-white/5 px-4 py-3 bg-white/[0.01]">
+                      <div className="px-3 pb-3">
                         <div className="flex flex-wrap items-center gap-2">
                           {/* Success Score */}
                           {scoreStatus === "completed" && typeof log.leadSuccessScore === "number" && (
                             <div className="flex items-center gap-2">
-                              <span className="text-xs text-white/50">Score:</span>
+                              {/* <span className="text-xs text-white/50">Score:</span> */}
                               {(() => {
                                 const score = log.leadSuccessScore || 0;
                                 let colorClasses =
@@ -944,7 +945,7 @@ export const CallView = ({
                                 }
                                 return (
                                   <span
-                                    className={`inline-flex items-center px-2 py-1 rounded-full text-[0.65rem] font-medium ${colorClasses}`}
+                                    className={`inline-flex items-center px-2 py-1 h-5 rounded-full text-[0.65rem] font-medium ${colorClasses}`}
                                   >
                                     {score}/100
                                   </span>
@@ -960,7 +961,7 @@ export const CallView = ({
                               type="button"
                               variant="outline"
                               size="sm"
-                              className="h-7 px-3 py-1 rounded-full border-white/20 bg-white/5 text-[0.65rem] text-white hover:bg-white/10 hover:text-white"
+                              className="h-5 px-2 py-1 rounded-full border-white/20 bg-white/5 text-[0.65rem] text-white hover:bg-white/10 hover:text-white"
                               onClick={() =>
                                 setSelectedCallLogView({
                                   type: "transcription",
@@ -968,7 +969,7 @@ export const CallView = ({
                                 })
                               }
                             >
-                              📝 Transcript
+                              Transcript
                             </Button>
                           )}
 
@@ -978,7 +979,7 @@ export const CallView = ({
                               type="button"
                               variant="outline"
                               size="sm"
-                              className="h-7 px-3 py-1 rounded-full border-white/20 bg-white/5 text-[0.65rem] text-white hover:bg-white/10 hover:text-white"
+                              className="h-5 px-2 py-1 rounded-full border-white/20 bg-white/5 text-[0.65rem] text-white hover:bg-white/10 hover:text-white"
                               onClick={() =>
                                 setSelectedCallLogView({
                                   type: "followup",
@@ -986,7 +987,7 @@ export const CallView = ({
                                 })
                               }
                             >
-                              💡 Follow-up
+                              Follow-up
                             </Button>
                           )}
                         </div>
@@ -999,14 +1000,14 @@ export const CallView = ({
         </div>
 
         {callLogsError && (
-          <p className="text-sm text-red-300">{callLogsError}</p>
+          <p className="text-xs text-red-300">{callLogsError}</p>
         )}
       </div>
 
       {/* Right Side: Web Call - 1/3 width */}
       <div className="col-span-1 flex flex-col text-white/80 text-center gap-3 overflow-hidden">
-        <h2 className="text-xl font-semibold text-white leading-snug text-left">
-          Web Call
+        <h2 className="text-xs sm:text-sm font-semibold text-white leading-snug text-left">
+          Call Now
         </h2>
         
         {/* Card Container */}
@@ -1014,7 +1015,7 @@ export const CallView = ({
 
           {mode === "call" && (
             <div className="flex flex-col items-center gap-4">
-              <div className="flex items-center justify-center py-5">
+              <div className="flex items-center justify-center pt-5">
                 <div
                   className="flex items-center justify-center rounded-full transition-all"
                   style={{
@@ -1217,7 +1218,7 @@ export const CallView = ({
                       : undefined
                   }
                   disabled={primaryActionDisabled}
-                  className="px-6 py-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 text-sm font-semibold text-white shadow-lg shadow-blue-900/40 hover:opacity-90 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="px-6 py-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 text-xs sm:text-sm font-semibold text-white shadow-lg shadow-blue-900/40 hover:opacity-90 transition disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {callPhase === "connected"
                     ? "End call"
@@ -1230,14 +1231,12 @@ export const CallView = ({
               )}
 
               {mode === "ai" && lead?._id && (
-                <Button
-                  type="button"
+                <ActiveNavButton
+                  text={aiCallLoading ? "Initiating..." : "AI Call"}
                   onClick={handleAICall}
                   disabled={aiCallLoading}
-                  className="px-6 py-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-600 text-sm font-semibold text-white shadow-lg shadow-purple-900/40 hover:opacity-90 transition disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  {aiCallLoading ? "Initiating..." : "AI Call"}
-                </Button>
+                  className="h-8 text-xs"
+                />
               )}
             </div>
 

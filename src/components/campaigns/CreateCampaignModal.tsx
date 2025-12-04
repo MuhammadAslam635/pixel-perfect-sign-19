@@ -221,8 +221,8 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
         
         <div className="relative z-10 flex flex-col h-full min-h-0">
           <DialogHeader className="px-6 pt-6 pb-4 flex-shrink-0 border-b border-white/10">
-            <DialogTitle className="text-2xl font-bold text-white drop-shadow-lg">Create New Campaign</DialogTitle>
-            <DialogDescription className="text-gray-300/80">
+            <DialogTitle className="text-xs sm:text-sm font-semibold text-white drop-shadow-lg -mb-1">Create New Campaign</DialogTitle>
+            <DialogDescription className="text-xs text-white/70">
               Fill in the details to create a new marketing campaign
             </DialogDescription>
           </DialogHeader>
@@ -232,7 +232,7 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
             <div className="flex-1 overflow-y-auto px-6 space-y-4 scrollbar-hide py-4 min-h-0">
             {/* Campaign Name */}
             <div className="space-y-2">
-              <Label htmlFor="name" className="text-gray-300">
+              <Label htmlFor="name" className="text-xs text-white/70">
                 Campaign Name <span className="text-red-500">*</span>
               </Label>
               <Input
@@ -244,13 +244,13 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
                 placeholder="e.g., Summer-Sale-2024 (no spaces allowed)"
                 required
                 disabled={isPending}
-                className="bg-white/5 backdrop-blur-sm border-white/20 text-white placeholder:text-gray-400 focus:bg-white/10 focus:border-white/30 transition-all"
+                className="bg-white/5 backdrop-blur-sm border-white/20 text-white text-xs placeholder:text-gray-400 focus:bg-white/10 focus:border-white/30 transition-all"
               />
             </div>
 
             {/* User Requirements */}
             <div className="space-y-2">
-              <Label htmlFor="userRequirements" className="text-gray-300">
+              <Label htmlFor="userRequirements" className="text-xs text-white/70">
                 Requirements <span className="text-red-500">*</span>
               </Label>
               <Textarea
@@ -263,13 +263,13 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
                 rows={4}
                 required
                 disabled={isPending}
-                className="bg-white/5 backdrop-blur-sm border-white/20 text-white placeholder:text-gray-400 focus:bg-white/10 focus:border-white/30 transition-all"
+                className="bg-white/5 backdrop-blur-sm border-white/20 text-white text-xs placeholder:text-gray-400 focus:bg-white/10 focus:border-white/30 transition-all"
               />
             </div>
 
             {/* Campaign Type */}
             <div className="space-y-2">
-              <Label htmlFor="campaignType" className="text-gray-300">
+              <Label htmlFor="campaignType" className="text-xs text-white/70">
                 Campaign Type <span className="text-red-500">*</span>
               </Label>
               <Select
@@ -284,7 +284,7 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
               >
                 <SelectTrigger
                   id="campaignType"
-                  className="bg-white/5 backdrop-blur-sm border-white/20 text-white focus:bg-white/10 focus:border-white/30 transition-all"
+                  className="bg-white/5 backdrop-blur-sm border-white/20 text-white text-xs focus:bg-white/10 focus:border-white/30 transition-all"
                 >
                   <SelectValue placeholder="Select campaign type" />
                 </SelectTrigger>
@@ -301,7 +301,7 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
 
             {/* Platform */}
             <div className="space-y-2">
-              <Label className="text-gray-300">
+              <Label className="text-xs text-white/70">
                 Platform <span className="text-red-500">*</span>
               </Label>
               <div className="flex gap-2">
@@ -357,7 +357,7 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
 
             {/* Location */}
             <div className="space-y-2">
-              <Label htmlFor="location" className="text-gray-300">
+              <Label htmlFor="location" className="text-xs text-white/70">
                 Location <span className="text-red-500">*</span>
               </Label>
               <Input
@@ -367,13 +367,13 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
                 placeholder="e.g., South Asia, North America"
                 required
                 disabled={isPending}
-                className="bg-white/5 backdrop-blur-sm border-white/20 text-white placeholder:text-gray-400 focus:bg-white/10 focus:border-white/30 transition-all"
+                className="bg-white/5 backdrop-blur-sm border-white/20 text-white text-xs placeholder:text-gray-400 focus:bg-white/10 focus:border-white/30 transition-all"
               />
             </div>
 
             {/* Target Audience */}
             <div className="space-y-2">
-              <Label htmlFor="targetAudience" className="text-gray-300">
+              <Label htmlFor="targetAudience" className="text-xs text-white/70">
                 Target Audience <span className="text-red-500">*</span>
               </Label>
               <Select
@@ -388,7 +388,7 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
               >
                 <SelectTrigger
                   id="targetAudience"
-                  className="bg-white/5 backdrop-blur-sm border-white/20 text-white focus:bg-white/10 focus:border-white/30 transition-all"
+                  className="bg-white/5 backdrop-blur-sm border-white/20 text-white text-xs focus:bg-white/10 focus:border-white/30 transition-all"
                 >
                   <SelectValue placeholder="Select target audience" />
                 </SelectTrigger>
@@ -407,7 +407,7 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
             {/* Budget and Days */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="estimatedBudget" className="text-gray-300">
+                <Label htmlFor="estimatedBudget" className="text-xs text-white/70">
                   Estimated Budget ($) <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -425,11 +425,11 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
                   placeholder="0.00"
                   required
                   disabled={isPending}
-                  className="bg-white/5 backdrop-blur-sm border-white/20 text-white placeholder:text-gray-400 focus:bg-white/10 focus:border-white/30 transition-all"
+                  className="bg-white/5 backdrop-blur-sm border-white/20 text-white text-xs placeholder:text-gray-400 focus:bg-white/10 focus:border-white/30 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="numberOfDays" className="text-gray-300">
+                <Label htmlFor="numberOfDays" className="text-xs text-white/70">
                   Number of Days <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -446,14 +446,14 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
                   placeholder="e.g., 5"
                   required
                   disabled={isPending}
-                  className="bg-white/5 backdrop-blur-sm border-white/20 text-white placeholder:text-gray-400 focus:bg-white/10 focus:border-white/30 transition-all"
+                  className="bg-white/5 backdrop-blur-sm border-white/20 text-white text-xs placeholder:text-gray-400 focus:bg-white/10 focus:border-white/30 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
               </div>
             </div>
 
             {/* Status */}
             <div className="space-y-2">
-              <Label htmlFor="status" className="text-gray-300">
+              <Label htmlFor="status" className="text-xs text-white/70">
                 Status
               </Label>
               <Select
@@ -468,7 +468,7 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
               >
                 <SelectTrigger
                   id="status"
-                  className="bg-white/5 backdrop-blur-sm border-white/20 text-white focus:bg-white/10 focus:border-white/30 transition-all"
+                  className="bg-white/5 backdrop-blur-sm border-white/20 text-white text-xs focus:bg-white/10 focus:border-white/30 transition-all"
                 >
                   <SelectValue />
                 </SelectTrigger>
@@ -485,7 +485,7 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
             {/* Media Upload (Preview Only - Note: Backend doesn't accept media during creation) */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label className="text-gray-300">Media Preview (Optional)</Label>
+                <Label className="text-xs text-white/70">Media Preview (Optional)</Label>
                 <div>
                   <input
                     type="file"

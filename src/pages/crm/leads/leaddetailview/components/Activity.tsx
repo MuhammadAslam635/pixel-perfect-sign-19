@@ -35,6 +35,11 @@ import {
   RefreshCcw,
   Trash2,
 } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useFollowupTemplates } from "@/hooks/useFollowupTemplates";
 import {
   useCreateFollowupPlan,
@@ -1069,7 +1074,7 @@ const Activity: FC<ActivityProps> = ({
                         <div className="w-full space-y-4">
                           <div className="flex items-center justify-between mb-2">
                             <div>
-                              <h3 className="text-lg font-semibold text-white">
+                              <h3 className="text-xs sm:text-sm font-semibold text-white">
                                 Follow-up suggestions
                               </h3>
                               <p className="text-xs text-white/60 mt-1">
@@ -1104,10 +1109,10 @@ const Activity: FC<ActivityProps> = ({
                                 background: "rgba(255, 255, 255, 0.02)",
                               }}
                             >
-                              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/50 mb-1">
+                              <p className="text-xs font-medium uppercase  text-white/50 mb-1">
                                 Summary
                               </p>
-                              <p className="text-sm text-white/80">
+                              <p className="text-xs text-white/80">
                                 {selectedCallLogView.log
                                   .followupSuggestionSummary ||
                                   "No summary available for this call."}
@@ -1189,7 +1194,7 @@ const Activity: FC<ActivityProps> = ({
                         <div className="w-full space-y-4">
                           <div className="flex items-center justify-between mb-2">
                             <div>
-                              <h3 className="text-lg font-semibold text-white">
+                              <h3 className="text-xs sm:text-sm font-semibold text-white">
                                 Call transcription
                               </h3>
                               <p className="text-xs text-white/60 mt-1">
@@ -1217,14 +1222,14 @@ const Activity: FC<ActivityProps> = ({
                           </div>
 
                           <div
-                            className="rounded-lg p-4 max-h-[calc(100vh-500px)] overflow-y-auto"
+                            className="rounded-lg p-4 "
                             style={{
                               border: "1px solid rgba(255, 255, 255, 0.2)",
                               background: "rgba(255, 255, 255, 0.02)",
                             }}
                           >
                             {selectedCallLogView.log.transcriptionText ? (
-                              <p className="text-sm text-white/80 whitespace-pre-wrap leading-relaxed">
+                              <p className="text-xs text-white/80 whitespace-pre-wrap leading-relaxed">
                                 {selectedCallLogView.log.transcriptionText}
                               </p>
                             ) : (
@@ -1240,7 +1245,7 @@ const Activity: FC<ActivityProps> = ({
                         <div className="w-full space-y-4">
                           <div className="flex items-center justify-between mb-2">
                             <div>
-                              <h3 className="text-lg font-semibold text-white">
+                              <h3 className="text-xs sm:text-sm font-semibold text-white">
                                 Call recording
                               </h3>
                               <p className="text-xs text-white/60 mt-1">
@@ -2007,7 +2012,7 @@ const Activity: FC<ActivityProps> = ({
                                 value={template._id}
                               >
                                 <div className="flex flex-col gap-1">
-                                  <span className="text-sm font-medium">
+                                  <span className="text-xs font-medium">
                                     {template.title}
                                   </span>
                                   <span className="text-[11px] text-white/60">
@@ -2096,7 +2101,7 @@ const Activity: FC<ActivityProps> = ({
                                               className="border-white/40 data-[state=checked]:bg-white/90"
                                             />
                                             <div className="flex flex-col">
-                                              <span className="text-sm text-white">
+                                              <span className="text-xs text-white">
                                                 {leadItem.name ||
                                                   "Unnamed lead"}
                                               </span>
@@ -2134,21 +2139,36 @@ const Activity: FC<ActivityProps> = ({
                                 <Badge
                                   key={leadId}
                                   variant="secondary"
-                                  className="bg-white/10 text-white border border-white/20 text-xs flex items-center gap-1"
+                                  className="bg-white/10 text-white border border-white/20 text-xs flex items-center gap-1 w-full justify-between hover:bg-white/20"
                                 >
-                                  <Check className="w-3 h-3" />
-                                  <span className="text-xs font-medium">
-                                    {leadItem.name || "Lead"} ·{" "}
-                                    {leadItem.companyName ||
+                                  {/* <Check className="w-3 h-3 shrink-0" /> */}
+                                  {(() => {
+                                    const text = `${leadItem.name || "Lead"} · ${
+                                      leadItem.companyName ||
                                       leadItem.position ||
-                                      "Unknown"}
-                                  </span>
+                                      "Unknown"
+                                    }`;
+                                    return (
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <span className="text-[10px] font-medium cursor-default">
+                                            {text.length > 20
+                                              ? `${text.slice(0, 30)}...`
+                                              : text}
+                                          </span>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p>{text}</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    );
+                                  })()}
                                   <button
                                     type="button"
                                     onClick={() =>
                                       handleToggleLeadSelection(leadItem)
                                     }
-                                    className="ml-1"
+                                    className="ml-1 text-blue-400 hover:text-blue-300 transition-colors"
                                     aria-label="Remove lead"
                                   >
                                     x
