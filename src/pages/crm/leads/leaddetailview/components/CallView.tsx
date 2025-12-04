@@ -1004,13 +1004,13 @@ export const CallView = ({
       </div>
 
       {/* Right Side: Web Call - 1/3 width */}
-      <div className="col-span-1 flex flex-col text-white/80 text-center gap-3 overflow-y-auto scrollbar-hide">
+      <div className="col-span-1 flex flex-col text-white/80 text-center gap-3 overflow-hidden">
         <h2 className="text-xl font-semibold text-white leading-snug text-left">
           Web Call
         </h2>
         
         {/* Card Container */}
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden p-6 flex flex-col items-center gap-6">
+        <div className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-y-auto scrollbar-hide p-6 flex flex-col items-center gap-6 flex-1">
 
           {mode === "call" && (
             <div className="flex flex-col items-center gap-4">
@@ -1241,7 +1241,7 @@ export const CallView = ({
               )}
             </div>
 
-            <p className="text-sm text-white/70">{callStatus}</p>
+            <p className="text-xs text-white/70">{callStatus}</p>
 
             {callPhase === "incoming" && (
               <div className="flex items-center gap-3">
@@ -1257,12 +1257,12 @@ export const CallView = ({
             )}
 
             {error && (
-              <div className="text-sm text-red-300 bg-red-500/10 border border-red-500/20 px-4 py-2 rounded-full">
+              <div className="text-xs text-red-300 bg-red-500/10 border border-red-500/20 px-4 py-2 rounded-full">
                 {error}
               </div>
             )}
 
-            <p className="text-xs text-white/40">
+            <p className="text-xs  text-white/40">
               Calls are routed via Twilio Voice with mic data processed locally.
             </p>
           </div>
