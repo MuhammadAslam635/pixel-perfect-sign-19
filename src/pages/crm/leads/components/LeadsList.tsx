@@ -410,22 +410,26 @@ const LeadsList: FC<LeadsListProps> = ({
                 </TooltipContent>
               </Tooltip>
               <div className="mt-0.5 sm:mt-1 md:mt-2 flex flex-wrap items-center gap-1.5 sm:gap-2 md:gap-3 text-xs text-gray-300">
-                <div className="flex items-center gap-1.5">
-                  <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center border border-white bg-white text-gray-900 flex-shrink-0">
-                    <Linkedin className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                  </div>
-                  <span className="font-medium truncate max-w-[120px] sm:max-w-[200px]">
-                    {lead.linkedinUrl || "linkedin.com"}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center border border-white bg-white text-gray-900 flex-shrink-0">
-                    <Mail className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                  </div>
-                  <span className="font-medium truncate max-w-[120px] sm:max-w-[200px]">
-                    {displayEmail}
-                  </span>
-                </div>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center border border-white bg-white text-gray-900 flex-shrink-0 cursor-pointer">
+                      <Linkedin className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{lead.linkedinUrl || "No LinkedIn available"}</p>
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center border border-white bg-white text-gray-900 flex-shrink-0 cursor-pointer">
+                      <Mail className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{displayEmail}</p>
+                  </TooltipContent>
+                </Tooltip>
               </div>
             </>
           )}

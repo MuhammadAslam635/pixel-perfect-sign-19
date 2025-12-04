@@ -128,14 +128,24 @@ export interface EnhanceEmailContentInput {
   content: string;
   tone?: EmailTone;
   context?: string;
+  recipientEmail?: string; // Optional: if provided, will check for lead and generate personalized content
 }
 
 export interface EnhanceEmailContentData {
   originalContent: string;
   enhancedContent: string;
+  enhancedContentHtml?: string;
+  subject?: string;
   tone: string;
   characterCount: number;
   wordCount: number;
+  recipientInfo?: {
+    name: string;
+    email: string;
+    position?: string;
+    company?: string;
+    isLead: boolean;
+  };
 }
 
 export interface EnhanceEmailContentResponse {

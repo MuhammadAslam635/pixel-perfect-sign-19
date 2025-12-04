@@ -136,4 +136,45 @@ export const leadsService = {
       throw error;
     }
   },
+
+  /**
+   * Find a lead by email address
+   */
+  findLeadByEmail: async (
+    email: string
+  ): Promise<{
+    success: boolean;
+    message: string;
+    data: {
+      lead: {
+        _id: string;
+        name: string;
+        email: string;
+        phone?: string;
+        position?: string;
+        location?: string;
+        companyId: string;
+        companyName?: string;
+        companyIndustry?: string;
+        companyDescription?: string;
+      } | null;
+    };
+  }> => {
+    try {
+      const response = await API.get("/leads/find-by-email", {
+        params: { email },
+      });
+      return response.data;
+    } catch (error: any) {
+      // Return a structured response even on error
+      if (error.response?.status === 404) {
+        return {
+          success: false,
+          message: "No lead found with this email address",
+          data: { lead: null },
+        };
+      }
+      throw error;
+    }
+  },
 };

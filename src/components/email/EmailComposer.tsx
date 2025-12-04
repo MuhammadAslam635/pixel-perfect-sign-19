@@ -100,14 +100,11 @@ export const EmailComposer = ({
   };
 
   const handleEnhanceWithAI = async () => {
-    // Strip HTML tags to get plain text for AI enhancement
-    const plainText = body.replace(/<[^>]*>/g, "").trim();
-
-    if (!plainText) {
+    // Check if we have a recipient email
+    if (to.length === 0) {
       toast({
-        title: "No content to enhance",
-        description:
-          "Please write some content in the message box before using AI enhancement.",
+        title: "No recipient",
+        description: "Please add a recipient email address first.",
         variant: "destructive",
       });
       return;
@@ -115,25 +112,52 @@ export const EmailComposer = ({
 
     setIsEnhancing(true);
     try {
+      // Get the first recipient email
+      const recipientEmail = to[0];
+
+      // Strip HTML tags to get plain text for enhancement
+      const plainText = body.replace(/<[^>]*>/g, "").trim();
+
+      // Call enhance endpoint with recipient email
+      // Backend will automatically check if recipient is a lead and generate personalized content
       const response = await connectionMessagesService.enhanceEmailContent({
-        content: plainText,
+        content: plainText || "", // Allow empty content if recipient is a lead
         tone: "professional",
+        recipientEmail: recipientEmail,
       });
 
       if (response.success) {
-        // Convert the enhanced plain text back to HTML
-        const enhancedHtml = response.data.enhancedContent
-          .split("\n\n")
-          .map((paragraph) => paragraph.trim())
-          .filter((paragraph) => paragraph.length > 0)
-          .map((paragraph) => `<p>${paragraph.replace(/\n/g, "<br>")}</p>`)
-          .join("");
+        const data = response.data;
+
+        // Check if this was personalized for a lead
+        if (data.recipientInfo?.isLead) {
+          toast({
+            title: "Personalized email generated!",
+            description: `Created personalized email for ${data.recipientInfo.name} based on their profile and history.`,
+          });
+        } else {
+          toast({
+            title: "Content enhanced!",
+            description: "Your message has been improved with AI assistance.",
+          });
+        }
+
+        // Set subject if provided and current subject is empty
+        if (data.subject && !subject.trim()) {
+          setSubject(data.subject);
+        }
+
+        // Set body with HTML content if available, otherwise convert plain text to HTML
+        const enhancedHtml =
+          data.enhancedContentHtml ||
+          data.enhancedContent
+            .split("\n\n")
+            .map((paragraph) => paragraph.trim())
+            .filter((paragraph) => paragraph.length > 0)
+            .map((paragraph) => `<p>${paragraph.replace(/\n/g, "<br>")}</p>`)
+            .join("");
 
         setBody(enhancedHtml);
-        toast({
-          title: "Content enhanced!",
-          description: "Your message has been improved with AI assistance.",
-        });
       } else {
         throw new Error(response.message || "Failed to enhance content");
       }
@@ -356,8 +380,13 @@ export const EmailComposer = ({
                 icon={Sparkles}
                 text={isEnhancing ? "Generating..." : "Generate with AI"}
                 onClick={handleEnhanceWithAI}
-                disabled={isEnhancing}
+                disabled={isEnhancing || to.length === 0}
                 className="flex items-center gap-1"
+                title={
+                  to.length === 0
+                    ? "Add a recipient email first"
+                    : "Generate AI-powered email content"
+                }
               />
             </div>
             <RichTextEditor

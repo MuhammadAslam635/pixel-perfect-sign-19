@@ -57,7 +57,7 @@ const ComposePage = () => {
             <Button variant="ghost" size="icon" onClick={handleCancel}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <h1 className="text-3xl font-bold text-white">
+            <h1 className="text-xl font-bold text-white">
               {threadId ? "Reply" : "Compose Email"}
             </h1>
           </div>
