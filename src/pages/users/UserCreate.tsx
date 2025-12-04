@@ -572,60 +572,60 @@ const UserCreate = () => {
                   transition={{ duration: 0.5, delay: 0.6, ease: "easeOut" }}
                   className="space-y-3 border border-white/10 rounded-2xl p-4"
                 >
-                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
-                  <div>
-                    <h3 className="text-white text-base font-semibold">
-                      Twilio provisioning
-                    </h3>
-                    <p className="text-white/60 text-sm">
-                      Each employee gets a dedicated TwiML app and phone
-                      number. You can customize the preferred area code and
-                      capabilities.
-                    </p>
-                  </div>
-                  <span
-                    className={`text-xs font-medium ${
-                      twilioStatusLoading
-                        ? "text-white/60"
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                    <div>
+                      <h3 className="text-white text-base font-semibold">
+                        Twilio provisioning
+                      </h3>
+                      <p className="text-white/60 text-sm">
+                        Each employee gets a dedicated TwiML app and phone
+                        number. You can customize the preferred area code and
+                        capabilities.
+                      </p>
+                    </div>
+                    <span
+                      className={`text-xs font-medium ${
+                        twilioStatusLoading
+                          ? "text-white/60"
+                          : twilioCredentialStatus.hasAllCredentials
+                          ? "text-emerald-400"
+                          : "text-amber-300"
+                      }`}
+                    >
+                      {twilioStatusLoading
+                        ? "Checking credentials..."
                         : twilioCredentialStatus.hasAllCredentials
-                        ? "text-emerald-400"
-                        : "text-amber-300"
-                    }`}
-                  >
-                    {twilioStatusLoading
-                      ? "Checking credentials..."
-                      : twilioCredentialStatus.hasAllCredentials
-                      ? "Twilio credentials ready"
-                      : "Twilio credentials missing"}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-3 pt-1">
-                  <Switch
-                    id="twilioProvisionToggle"
-                    checked={shouldProvisionTwilio}
-                    onCheckedChange={(value) =>
-                      setShouldProvisionTwilio(Boolean(value))
-                    }
-                    disabled={twilioStatusLoading}
-                  />
-                  <Label
-                    htmlFor="twilioProvisionToggle"
-                    className="text-white/80 text-sm font-medium"
-                  >
-                    Provision Twilio assets for this employee
-                  </Label>
-                </div>
-
-                {isTwilioBlocked && (
-                  <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-amber-100 text-xs sm:text-sm">
-                    {twilioCredentialStatus.missingFields.length > 0
-                      ? `Missing credentials: ${twilioCredentialStatus.missingFields.join(
-                          ", "
-                        )}`
-                      : "Add your Twilio credentials in Settings → Integrations to provision phone numbers for new employees."}
+                        ? "Twilio credentials ready"
+                        : "Twilio credentials missing"}
+                    </span>
                   </div>
-                )}
+
+                  <div className="flex items-center gap-3 pt-1">
+                    <Switch
+                      id="twilioProvisionToggle"
+                      checked={shouldProvisionTwilio}
+                      onCheckedChange={(value) =>
+                        setShouldProvisionTwilio(Boolean(value))
+                      }
+                      disabled={twilioStatusLoading}
+                    />
+                    <Label
+                      htmlFor="twilioProvisionToggle"
+                      className="text-white/80 text-sm font-medium"
+                    >
+                      Provision Twilio assets for this employee
+                    </Label>
+                  </div>
+
+                  {isTwilioBlocked && (
+                    <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-amber-100 text-xs sm:text-sm">
+                      {twilioCredentialStatus.missingFields.length > 0
+                        ? `Missing credentials: ${twilioCredentialStatus.missingFields.join(
+                            ", "
+                          )}`
+                        : "Add your Twilio credentials in Settings → Integrations to provision phone numbers for new employees."}
+                    </div>
+                  )}
 
                   <div className="space-y-2">
                     <Label
@@ -788,27 +788,28 @@ const UserCreate = () => {
                 transition={{ duration: 0.5, delay: 0.8, ease: "easeOut" }}
               >
                 <CardFooter className="flex flex-col sm:flex-row justify-end border-t border-white/10 pt-4 sm:pt-6 gap-3 px-0">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full sm:w-auto rounded-lg border border-white/20 bg-white/5 hover:bg-white/10 text-white transition-colors"
-                  onClick={() => navigate("/users")}
-                  disabled={loading}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={loading || isTwilioBlocked}
-                  className="w-full sm:w-auto rounded-lg bg-gradient-to-r from-[#69B4B7] via-[#5486D0] to-[#3E64B3] text-white hover:brightness-110 transition-all"
-                >
-                  {loading ? "Creating..." : "Create Employee"}
-                </Button>
-                {isTwilioBlocked && (
-                  <p className="text-xs text-amber-300 text-center sm:text-right w-full">
-                    Add the required Twilio credentials in Settings → Integrations
-                    or disable Twilio provisioning for this employee.
-                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full sm:w-auto rounded-lg border border-white/20 bg-white/5 hover:bg-white/10 text-white transition-colors"
+                    onClick={() => navigate("/users")}
+                    disabled={loading}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={loading || isTwilioBlocked}
+                    className="w-full sm:w-auto rounded-lg bg-gradient-to-r from-[#69B4B7] via-[#5486D0] to-[#3E64B3] text-white hover:brightness-110 transition-all"
+                  >
+                    {loading ? "Creating..." : "Create Employee"}
+                  </Button>
+                  {isTwilioBlocked && (
+                    <p className="text-xs text-amber-300 text-center sm:text-right w-full">
+                      Add the required Twilio credentials in Settings →
+                      Integrations or disable Twilio provisioning for this
+                      employee.
+                    </p>
                   )}
                 </CardFooter>
               </motion.div>
