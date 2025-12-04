@@ -92,7 +92,25 @@ export const MobileNavigation = () => {
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.auth);
   const sessionUser = user || getUserData();
-  const userRole = sessionUser?.role;
+
+  // Get user's role name - prioritize roleId over legacy role
+  const getUserRoleName = (): string | null => {
+    if (!sessionUser) return null;
+
+    // PRIORITY 1: Check populated roleId (new RBAC system)
+    if (sessionUser.roleId && typeof sessionUser.roleId === "object") {
+      return (sessionUser.roleId as any).name;
+    }
+
+    // PRIORITY 2: Fallback to legacy role string
+    if (sessionUser.role && typeof sessionUser.role === "string") {
+      return sessionUser.role;
+    }
+
+    return null;
+  };
+
+  const userRole = getUserRoleName();
 
   const filteredNavLinks = navLinks.filter((link) => {
     if (!link.roles || link.roles.length === 0) {

@@ -13,9 +13,11 @@ export const usePermissions = () => {
   const { user } = useSelector((state: RootState) => state.auth);
   const permissionsState = useSelector((state: RootState) => state.permissions);
 
-  // Get user's role (new RBAC or legacy)
+  // Get user's role (prioritize new RBAC roleId over legacy role)
+  // PRIORITY 1: Extract roleId (new RBAC system) if it's a populated Role object
   const userRole: Role | null =
     user?.roleId && typeof user.roleId === "object" ? user.roleId : null;
+  // PRIORITY 2: Extract legacy role string for backward compatibility
   const legacyRole: string | null =
     user?.role && typeof user.role === "string" ? user.role : null;
 
@@ -33,6 +35,7 @@ export const usePermissions = () => {
     ): boolean => {
       if (!user) return false;
 
+      // Note: Admin role is intentionally kept as legacy system role (not roleId-based)
       // System Admin has all permissions
       if (legacyRole === "Admin" || isSystemAdmin(userRole)) {
         return true;
@@ -99,8 +102,10 @@ export const usePermissions = () => {
 
   /**
    * Check if user is Company Admin or higher
+   * Prioritizes roleId over legacy role
    */
   const isCompAdmin = (): boolean => {
+    // userRole || legacyRole prioritizes populated roleId, falls back to legacy role
     return legacyRole === "Admin" || isCompanyAdmin(userRole || legacyRole);
   };
 
