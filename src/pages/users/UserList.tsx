@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
+import { AnimatePresence, motion } from "framer-motion";
 import { RootState } from "@/store/store";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -420,10 +421,17 @@ const UserList = () => {
 
   return (
     <DashboardLayout>
-      <main className="relative px-4 sm:px-6 md:px-10 lg:px-14 xl:px-16 2xl:px-[96px] mt-20 lg:mt-24 xl:mt-28 mb-10 flex flex-col gap-8 text-white flex-1 overflow-y-auto">
-        <section
-          className="p-5 sm:p-8 lg:p-2
-         space-y-6 flex justify-between"
+      <motion.main
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="relative px-4 sm:px-6 md:px-10 lg:px-14 xl:px-16 2xl:px-[96px] mt-20 lg:mt-24 xl:mt-28 mb-10 flex flex-col gap-8 text-white flex-1 overflow-y-auto"
+      >
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+          className="p-5 sm:p-8 lg:p-2 space-y-6 flex justify-between"
         >
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-center gap-3 mt-2">
@@ -508,8 +516,8 @@ const UserList = () => {
               </Button>
               <Button
                 type="button"
-                  onClick={() => {
-                    navigate("/roles");
+                onClick={() => {
+                  navigate("/roles");
                 }}
                 className="relative h-9 px-4 rounded-full border-0 text-white text-xs hover:bg-[#2F2F2F]/60 transition-all w-full sm:w-auto lg:flex-shrink-0 overflow-hidden"
                 style={{
@@ -526,17 +534,19 @@ const UserList = () => {
                   }}
                 />
                 <Shield className="h-5 w-5 relative z-10" />
-                <span className="hidden sm:block relative z-10">
-                  Roles
-                </span>
+                <span className="hidden sm:block relative z-10">Roles</span>
               </Button>
             </div>
           </div>
-        </section>
+        </motion.section>
 
-        <section className="rounded-[32px] border border-white/10 bg-[linear-gradient(135deg,#0f1620,#1c2b37,#090f16)] shadow-[0_25px_60px_rgba(0,0,0,0.55)] overflow-hidden relative">
-          <div className="pointer-events-none absolute inset-0 opacity-80 bg-[radial-gradient(circle_at_8%_6%,rgba(67,173,189,0.7),transparent_18%)]" />
-          <div className="hidden lg:grid grid-cols-[1.2fr_1.5fr_0.8fr_0.8fr_1fr_140px] items-center gap-4 p-6 pt-12 bg-[linear-gradient(135deg,rgba(19,26,36,0.95),rgba(10,16,24,0.95))] border-b border-white/10 text-white/75 text-sm font-medium relative z-10">
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
+          className="relative pt-3 sm:pt-4 px-3 sm:px-6 rounded-xl sm:rounded-[30px] w-full border-0 sm:border sm:border-white/10 bg-transparent sm:bg-[linear-gradient(173.83deg,_rgba(255,255,255,0.08)_4.82%,_rgba(255,255,255,0)_38.08%,_rgba(255,255,255,0)_56.68%,_rgba(255,255,255,0.02)_95.1%)]"
+        >
+          <div className="hidden lg:grid grid-cols-[1.2fr_1.5fr_0.8fr_0.8fr_1fr_140px] items-center gap-4 p-6 bg-transparent border-b border-white/10 text-white/75 text-sm font-medium relative z-10">
             <span>Name</span>
             <span>Email</span>
             <span>Role</span>
@@ -547,31 +557,38 @@ const UserList = () => {
 
           <div className="min-h-[420px] relative z-10">
             {loading ? (
-              <div className="flex flex-col items-center justify-center py-16">
+              <div className="flex flex-col items-center justify-center py-16 px-4">
                 <div className="w-10 h-10 border-4 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin mb-4" />
                 <p className="text-white/60 text-sm">Loading employees...</p>
               </div>
             ) : users.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
-                <div className="w-20 h-20 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-5">
-                  <Search className="w-8 h-8 text-white/25" />
+              <div className="flex flex-col items-center justify-center py-16 px-4">
+                <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-4">
+                  <Search className="w-6 h-6 text-white/30" />
                 </div>
-                <p className="text-lg font-semibold text-white/80 mb-2">
-                  {searchTerm ? "No employees found" : "No employees yet"}
+                <p className="text-white/70 text-base font-medium mb-1">
+                  {searchTerm ? "No employees found" : "No employees available"}
                 </p>
-                <p className="text-sm text-white/60 max-w-lg">
+                <p className="text-white/50 text-sm text-center max-w-md">
                   {searchTerm
-                    ? "Try adjusting your search to discover the people you are looking for."
-                    : "Employees you add will appear here. Start building your team."}
+                    ? "Try adjusting your search terms or clear the filter to see all employees."
+                    : "Employees you add will appear here."}
                 </p>
               </div>
             ) : (
               <>
                 <div className="hidden lg:block">
                   {users.map((user, index) => (
-                    <div
+                    <motion.div
                       key={user._id}
-                      className={`grid grid-cols-[1.2fr_1.5fr_0.8fr_0.8fr_1fr_140px] items-center gap-4 px-6 py-5 text-sm border-b border-white/5 ${
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{
+                        duration: 0.4,
+                        delay: index * 0.05,
+                        ease: "easeOut",
+                      }}
+                      className={`grid grid-cols-[1.2fr_1.5fr_0.8fr_0.8fr_1fr_140px] items-center gap-4 px-6 py-4 text-sm border-b border-white/5 ${
                         index % 2 === 0 ? "bg-[#222B2C]" : "bg-[#1B1B1B]"
                       }`}
                     >
@@ -650,15 +667,22 @@ const UserList = () => {
                           </button>
                         )}
                       </div>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
 
-                <div className="lg:hidden space-y-4 p-4">
-                  {users.map((user) => (
-                    <div
+                <div className="lg:hidden space-y-3 p-2">
+                  {users.map((user, index) => (
+                    <motion.div
                       key={user._id}
-                      className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 space-y-4 shadow-[0_15px_35px_rgba(0,0,0,0.35)]"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{
+                        duration: 0.4,
+                        delay: index * 0.1,
+                        ease: "easeOut",
+                      }}
+                      className="rounded-[16px] sm:rounded-[20px] border border-white/10 bg-[#222B2C]/40 p-4 space-y-3"
                     >
                       <div className="flex items-start justify-between gap-4">
                         <div className="min-w-0">
@@ -742,67 +766,75 @@ const UserList = () => {
                           ? new Date(user.createdAt).toLocaleDateString()
                           : "N/A"}
                       </div>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               </>
             )}
           </div>
-        </section>
+        </motion.section>
 
         {totalPages > 1 && !loading && (
-          <Pagination className="mt-2">
-            <PaginationContent className="flex-wrap gap-2">
-              <PaginationItem>
-                <PaginationPrevious
-                  onClick={handlePrevious}
-                  className={
-                    page === 1
-                      ? "pointer-events-none opacity-40"
-                      : "cursor-pointer"
-                  }
-                />
-              </PaginationItem>
-              <div className="hidden sm:flex gap-2">
-                {paginationPages?.pages.map((pageNum) => (
-                  <PaginationItem key={pageNum}>
-                    <PaginationLink
-                      isActive={page === pageNum}
-                      onClick={() => handlePageChange(pageNum)}
-                    >
-                      {pageNum}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
+            className="bg-[#222B2C]/40 py-3 px-4 sm:px-6 border border-white/10 rounded-2xl"
+          >
+            <Pagination>
+              <PaginationContent className="gap-1">
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={handlePrevious}
+                    className={
+                      page === 1
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer hover:bg-white/10 transition-colors"
+                    }
+                  />
+                </PaginationItem>
+                <div className="hidden sm:flex gap-2">
+                  {paginationPages?.pages.map((pageNum) => (
+                    <PaginationItem key={pageNum}>
+                      <PaginationLink
+                        isActive={page === pageNum}
+                        onClick={() => handlePageChange(pageNum)}
+                        className="cursor-pointer hover:bg-white/10 transition-colors"
+                      >
+                        {pageNum}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+                </div>
+                <div className="sm:hidden">
+                  <PaginationItem>
+                    <PaginationLink isActive className="cursor-default">
+                      {page} / {totalPages}
                     </PaginationLink>
                   </PaginationItem>
-                ))}
-              </div>
-              <div className="sm:hidden">
+                </div>
+                {paginationPages &&
+                  page < paginationPages.endPage - 1 &&
+                  totalPages > paginationPages.endPage && (
+                    <PaginationItem className="hidden sm:block">
+                      <PaginationEllipsis />
+                    </PaginationItem>
+                  )}
                 <PaginationItem>
-                  <PaginationLink isActive className="cursor-default">
-                    {page} / {totalPages}
-                  </PaginationLink>
+                  <PaginationNext
+                    onClick={handleNext}
+                    className={
+                      page === totalPages
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer hover:bg-white/10 transition-colors"
+                    }
+                  />
                 </PaginationItem>
-              </div>
-              {paginationPages &&
-                page < paginationPages.endPage - 1 &&
-                totalPages > paginationPages.endPage && (
-                  <PaginationItem className="hidden sm:block">
-                    <PaginationEllipsis />
-                  </PaginationItem>
-                )}
-              <PaginationItem>
-                <PaginationNext
-                  onClick={handleNext}
-                  className={
-                    page === totalPages
-                      ? "pointer-events-none opacity-40"
-                      : "cursor-pointer"
-                  }
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
+              </PaginationContent>
+            </Pagination>
+          </motion.div>
         )}
-      </main>
+      </motion.main>
       <Dialog
         open={inviteDialogOpen}
         onOpenChange={(open) => {
