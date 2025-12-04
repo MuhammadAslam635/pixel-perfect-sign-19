@@ -28,7 +28,7 @@ const DetailsSidebar: FC<DetailsSidebarProps> = ({
       fixed
       z-30
       top-[280px] lg:top-[290px] xl:top-[300px] 2xl:top-[310px]
-      right-8 lg:right-12 xl:right-16 2xl:right-20
+      right-8 lg:right-12 xl:right-14 2xl:right-16 fhd:right-40 uhd:right-56
       transition-all
       duration-300
       ease-in-out
