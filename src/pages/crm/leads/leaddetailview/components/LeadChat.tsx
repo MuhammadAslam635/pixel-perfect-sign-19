@@ -2914,6 +2914,42 @@ const LeadChat = ({
     return "";
   };
 
+  // Get email body as HTML (preserving formatting like bold, italic, etc.)
+  const getEmailBodyHtml = (email: Email) => {
+    // Check if text field contains HTML
+    if (email.body?.text?.trim()) {
+      const textContent = email.body.text.trim();
+      // If text contains HTML tags, sanitize and return HTML
+      if (/<[^>]+>/.test(textContent)) {
+        // Remove dangerous tags but keep formatting tags
+        let sanitized = textContent;
+        // Remove script tags and their content
+        sanitized = sanitized.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "");
+        // Remove style tags and their content
+        sanitized = sanitized.replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, "");
+        // Remove event handlers
+        sanitized = sanitized.replace(/\son\w+\s*=\s*["'][^"']*["']/gi, "");
+        sanitized = sanitized.replace(/\son\w+\s*=\s*[^\s>]*/gi, "");
+        return sanitized;
+      }
+      // Otherwise, return as plain text wrapped in paragraph
+      return `<p>${stripQuotedEmailContent(textContent).replace(/\n/g, "<br>")}</p>`;
+    }
+    // Fallback to html field
+    if (email.body?.html) {
+      let sanitized = email.body.html;
+      // Remove script tags and their content
+      sanitized = sanitized.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "");
+      // Remove style tags and their content
+      sanitized = sanitized.replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, "");
+      // Remove event handlers
+      sanitized = sanitized.replace(/\son\w+\s*=\s*["'][^"']*["']/gi, "");
+      sanitized = sanitized.replace(/\son\w+\s*=\s*[^\s>]*/gi, "");
+      return sanitized;
+    }
+    return "";
+  };
+
   const formatEmailTimestamp = (dateString: string) => {
     try {
       return new Date(dateString).toLocaleString(undefined, {
@@ -3378,7 +3414,7 @@ const LeadChat = ({
                   const authorName = isOutbound
                     ? "You"
                     : email.from?.name || email.from?.email || displayName;
-                  const emailBody = getEmailBodyText(email);
+                  const emailBodyHtml = getEmailBodyHtml(email);
 
                   return (
                     <div
@@ -3433,10 +3469,11 @@ const LeadChat = ({
                           <p className="text-xs font-semibold mt-1">
                             {email.subject || "No subject"}
                           </p>
-                          {emailBody && (
-                            <p className="text-xs mt-1 whitespace-pre-wrap leading-relaxed">
-                              {emailBody}
-                            </p>
+                          {emailBodyHtml && (
+                            <div 
+                              className="text-xs mt-1 leading-relaxed [&_p]:mb-2 [&_p:last-child]:mb-0 [&_strong]:font-bold [&_em]:italic [&_u]:underline"
+                              dangerouslySetInnerHTML={{ __html: emailBodyHtml }}
+                            />
                           )}
                         </div>
                       </div>
