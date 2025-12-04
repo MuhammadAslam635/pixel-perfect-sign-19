@@ -1,6 +1,6 @@
 import { FC } from "react";
 import { Button } from "@/components/ui/button";
-import { Users, Linkedin, ArrowRight } from "lucide-react";
+import { Users, Linkedin } from "lucide-react";
 import { Company, CompanyPerson } from "@/services/companies.service";
 
 type CompanyExecutivesPanelProps = {
@@ -24,17 +24,6 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
           <h3 className="text-sm sm:text-base font-medium text-foreground">
             Executives
           </h3>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="link"
-            className="h-auto p-0 text-xs text-foreground/60 hover:text-foreground/80"
-            onClick={onViewAllLeads}
-          >
-            <span className="hidden sm:inline">View All</span>
-            <span className="sm:hidden">All</span>
-            <ArrowRight className="w-3 h-3 ml-1" />
-          </Button>
         </div>
       </div>
 
