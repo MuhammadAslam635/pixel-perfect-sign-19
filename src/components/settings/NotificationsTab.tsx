@@ -1,3 +1,4 @@
+import { motion } from "framer-motion";
 import {
   Card,
   CardContent,
@@ -24,14 +25,20 @@ export const NotificationsTab = () => {
     <form onSubmit={handleSave}>
       <Card className="border-white/10 bg-white/[0.04] backdrop-blur-xl text-white">
         <CardHeader className="border-b border-white/10 bg-white/[0.02]">
-          <CardTitle className="text-white text-lg font-semibold">
-            Notification Preferences
-          </CardTitle>
-          <CardDescription className="text-white/60">
-            Choose how you want to stay informed.
-          </CardDescription>
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+          >
+            <CardTitle className="text-white text-lg font-semibold">
+              Notification Preferences
+            </CardTitle>
+            <CardDescription className="text-white/60">
+              Choose how you want to stay informed.
+            </CardDescription>
+          </motion.div>
         </CardHeader>
-        <CardContent className="space-y-5 pt-6">
+        <CardContent className="space-y-5 pt-6 px-4 sm:px-6">
           <div className="flex items-center justify-between gap-4">
             <div className="space-y-1">
               <Label htmlFor="daily-digest" className="text-white/80">

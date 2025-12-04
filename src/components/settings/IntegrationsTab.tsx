@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { motion } from "framer-motion";
 import axios from "axios";
 import {
   Card,
@@ -1524,12 +1525,18 @@ export const IntegrationsTab = () => {
   return (
     <Card className="border-white/10 bg-white/[0.04] backdrop-blur-xl text-white">
       <CardHeader className="border-b border-white/10 bg-white/[0.02] px-4 sm:px-6">
-        <CardTitle className="text-white text-base sm:text-lg font-semibold">
-          Integrations
-        </CardTitle>
-        <CardDescription className="text-white/60 text-sm">
-          Connect with your favourite tools and platforms.
-        </CardDescription>
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+        >
+          <CardTitle className="text-white text-base sm:text-lg font-semibold">
+            Integrations
+          </CardTitle>
+          <CardDescription className="text-white/60 text-sm">
+            Connect with your favourite tools and platforms.
+          </CardDescription>
+        </motion.div>
       </CardHeader>
 
       <CardContent className="space-y-4 sm:space-y-6 pt-4 sm:pt-6 px-4 sm:px-6">
