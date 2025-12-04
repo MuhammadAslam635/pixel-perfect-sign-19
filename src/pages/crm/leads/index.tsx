@@ -18,7 +18,7 @@ import { PhoneCallModal } from "./components/PhoneCallModal";
 import { toast } from "sonner";
 import LeadsList from "./components/LeadsList";
 import { DetailsSidebar } from "../shared/components";
-import { useCompaniesData, useLeadsData } from "../shared/hooks";
+import { useCompaniesData, useCrmStatsData, useLeadsData } from "../shared/hooks";
 import { LeadsQueryParams } from "@/services/leads.service";
 import {
   connectionMessagesService,
@@ -506,11 +506,27 @@ const index = () => {
     { enabled: true }
   );
 
+  // Fetch shared CRM stats for top cards
+  const { stats: crmStats } = useCrmStatsData();
+
   const leadsLoading = leadsQuery.isLoading || leadsQuery.isFetching;
 
   const stats = useMemo(
-    () => buildStats(undefined, totalLeadsForStats),
-    [totalLeadsForStats]
+    () =>
+      buildStats({
+        totalLeads: totalLeadsForStats,
+        totalOutreach: crmStats?.totalOutreach,
+        totalResponse: crmStats?.totalResponse,
+        activeClients: crmStats?.activeClients,
+        messagesSent: crmStats?.messagesSent,
+      }),
+    [
+      totalLeadsForStats,
+      crmStats?.totalOutreach,
+      crmStats?.totalResponse,
+      crmStats?.activeClients,
+      crmStats?.messagesSent,
+    ]
   );
 
   useEffect(() => {

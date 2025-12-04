@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -355,24 +356,44 @@ const UserCreate = () => {
 
   return (
     <DashboardLayout>
-      <main className="relative px-4 sm:px-6 md:px-10 lg:px-14 xl:px-16 2xl:px-[96px] mt-20 lg:mt-24 xl:mt-28 mb-10 flex flex-col gap-8 text-white flex-1 overflow-y-auto">
-        <div className="space-y-4 sm:space-y-6">
+      <motion.main
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="relative px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12 2xl:px-16 pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-6 sm:pb-8 flex flex-col gap-4 sm:gap-6 text-white min-h-screen overflow-x-hidden"
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+          className="max-w-[1600px] mx-auto w-full space-y-4 sm:space-y-6"
+        >
           {/* Header */}
           <div>
-            <h1 className="text-2xl sm:text-3xl font-semibold text-white mb-2">
+            <h1 className="text-3xl md:text-[36px] font-semibold tracking-tight">
               Create Employee
             </h1>
-            <p className="text-white/60 text-xs sm:text-sm">
+            <p className="text-white/60 text-sm mt-2">
               Add a new employee to your organization
             </p>
           </div>
 
           {/* Form Card */}
-          <form onSubmit={handleSaveProfile}>
-            <Card className="rounded-2xl border border-white/10 bg-[linear-gradient(135deg,rgba(58,62,75,0.82),rgba(28,30,40,0.94))] shadow-[0_20px_34px_rgba(0,0,0,0.38)] backdrop-blur">
-              <CardContent className="space-y-4 sm:space-y-6 pt-4 sm:pt-6 px-4 sm:px-6">
+          <motion.form
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
+            onSubmit={handleSaveProfile}
+          >
+            <Card className="relative pt-3 sm:pt-4 px-3 sm:px-6 pb-4 sm:pb-6 rounded-xl sm:rounded-[30px] border-0 sm:border sm:border-white/10 bg-transparent sm:bg-[linear-gradient(173.83deg,_rgba(255,255,255,0.08)_4.82%,_rgba(255,255,255,0)_38.08%,_rgba(255,255,255,0)_56.68%,_rgba(255,255,255,0.02)_95.1%)]">
+              <CardContent className="space-y-4 sm:space-y-6 pt-4 sm:pt-6 px-0">
                 {/* Name Field */}
-                <div className="space-y-2">
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" }}
+                  className="space-y-2"
+                >
                   <Label
                     htmlFor="name"
                     className="text-white/90 text-sm font-medium"
@@ -384,16 +405,21 @@ const UserCreate = () => {
                     name="name"
                     value={user.name}
                     onChange={handleInputChange}
-                    className="rounded-full bg-black/35 border border-white/10 text-white placeholder:text-white/50 focus:ring-2 focus:ring-cyan-400/40"
+                    className="h-10 rounded-lg bg-[#222B2C]/40 border border-white/10 text-white placeholder:text-white/50 focus:ring-2 focus:ring-cyan-400/40 focus:border-cyan-400/40"
                     placeholder="Enter full name"
                   />
                   {errors.name && (
                     <p className="text-red-400 text-sm mt-1">{errors.name}</p>
                   )}
-                </div>
+                </motion.div>
 
                 {/* Email Field */}
-                <div className="space-y-2">
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
+                  className="space-y-2"
+                >
                   <Label
                     htmlFor="email"
                     className="text-white/90 text-sm font-medium"
@@ -406,16 +432,21 @@ const UserCreate = () => {
                     name="email"
                     value={user.email}
                     onChange={handleInputChange}
-                    className="rounded-full bg-black/35 border border-white/10 text-white placeholder:text-white/50 focus:ring-2 focus:ring-cyan-400/40"
+                    className="h-10 rounded-lg bg-[#222B2C]/40 border border-white/10 text-white placeholder:text-white/50 focus:ring-2 focus:ring-cyan-400/40 focus:border-cyan-400/40"
                     placeholder="Enter email address"
                   />
                   {errors.email && (
                     <p className="text-red-400 text-sm mt-1">{errors.email}</p>
                   )}
-                </div>
+                </motion.div>
 
                 {/* Password Field */}
-                <div className="space-y-2">
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
+                  className="space-y-2"
+                >
                   <Label
                     htmlFor="password"
                     className="text-white/90 text-sm font-medium"
@@ -428,7 +459,7 @@ const UserCreate = () => {
                     name="password"
                     value={user.password}
                     onChange={handleInputChange}
-                    className="rounded-full bg-black/35 border border-white/10 text-white placeholder:text-white/50 focus:ring-2 focus:ring-cyan-400/40"
+                    className="h-10 rounded-lg bg-[#222B2C]/40 border border-white/10 text-white placeholder:text-white/50 focus:ring-2 focus:ring-cyan-400/40 focus:border-cyan-400/40"
                     placeholder="Enter password"
                   />
                   {errors.password && (
@@ -436,10 +467,15 @@ const UserCreate = () => {
                       {errors.password}
                     </p>
                   )}
-                </div>
+                </motion.div>
 
                 {/* RBAC Role Selection */}
-                <div className="space-y-2">
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.4, ease: "easeOut" }}
+                  className="space-y-2"
+                >
                   <Label
                     htmlFor="roleId"
                     className="text-white/90 text-sm font-medium"
@@ -461,7 +497,7 @@ const UserCreate = () => {
                         }
                       />
                     </SelectTrigger>
-                    <SelectContent className="bg-[rgba(30,30,30,0.95)] border border-white/10 backdrop-blur max-h-[300px]">
+                    <SelectContent className="bg-[#1B1B1B] border border-white/10 backdrop-blur max-h-[300px]">
                       {availableRoles.map((role) => (
                         <SelectItem
                           key={role._id}
@@ -484,10 +520,15 @@ const UserCreate = () => {
                   <p className="text-white/50 text-xs">
                     Select a role with specific permissions for this user
                   </p>
-                </div>
+                </motion.div>
 
                 {/* Status Field */}
-                <div className="space-y-2">
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.5, ease: "easeOut" }}
+                  className="space-y-2"
+                >
                   <Label
                     htmlFor="status"
                     className="text-white/90 text-sm font-medium"
@@ -504,7 +545,7 @@ const UserCreate = () => {
                     <SelectTrigger className="rounded-full !bg-black/35 border border-white/10 text-white focus:ring-2 focus:ring-cyan-400/40 h-[41px] [&>span]:text-white">
                       <SelectValue placeholder="Select Status" />
                     </SelectTrigger>
-                    <SelectContent className="bg-[rgba(30,30,30,0.95)] border border-white/10 backdrop-blur">
+                    <SelectContent className="bg-[#1B1B1B] border border-white/10 backdrop-blur">
                       <SelectItem
                         value="active"
                         className="text-white hover:bg-white/10 focus:bg-white/10"
@@ -522,64 +563,69 @@ const UserCreate = () => {
                   {errors.status && (
                     <p className="text-red-400 text-sm mt-1">{errors.status}</p>
                   )}
-                </div>
+                </motion.div>
 
                 {/* Twilio Provisioning */}
-                <div className="space-y-3 border border-white/10 rounded-2xl p-4">
-                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
-                  <div>
-                    <h3 className="text-white text-base font-semibold">
-                      Twilio provisioning
-                    </h3>
-                    <p className="text-white/60 text-sm">
-                      Each employee gets a dedicated TwiML app and phone
-                      number. You can customize the preferred area code and
-                      capabilities.
-                    </p>
-                  </div>
-                  <span
-                    className={`text-xs font-medium ${
-                      twilioStatusLoading
-                        ? "text-white/60"
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.6, ease: "easeOut" }}
+                  className="space-y-3 border border-white/10 rounded-2xl p-4"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                    <div>
+                      <h3 className="text-white text-base font-semibold">
+                        Twilio provisioning
+                      </h3>
+                      <p className="text-white/60 text-sm">
+                        Each employee gets a dedicated TwiML app and phone
+                        number. You can customize the preferred area code and
+                        capabilities.
+                      </p>
+                    </div>
+                    <span
+                      className={`text-xs font-medium ${
+                        twilioStatusLoading
+                          ? "text-white/60"
+                          : twilioCredentialStatus.hasAllCredentials
+                          ? "text-emerald-400"
+                          : "text-amber-300"
+                      }`}
+                    >
+                      {twilioStatusLoading
+                        ? "Checking credentials..."
                         : twilioCredentialStatus.hasAllCredentials
-                        ? "text-emerald-400"
-                        : "text-amber-300"
-                    }`}
-                  >
-                    {twilioStatusLoading
-                      ? "Checking credentials..."
-                      : twilioCredentialStatus.hasAllCredentials
-                      ? "Twilio credentials ready"
-                      : "Twilio credentials missing"}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-3 pt-1">
-                  <Switch
-                    id="twilioProvisionToggle"
-                    checked={shouldProvisionTwilio}
-                    onCheckedChange={(value) =>
-                      setShouldProvisionTwilio(Boolean(value))
-                    }
-                    disabled={twilioStatusLoading}
-                  />
-                  <Label
-                    htmlFor="twilioProvisionToggle"
-                    className="text-white/80 text-sm font-medium"
-                  >
-                    Provision Twilio assets for this employee
-                  </Label>
-                </div>
-
-                {isTwilioBlocked && (
-                  <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-amber-100 text-xs sm:text-sm">
-                    {twilioCredentialStatus.missingFields.length > 0
-                      ? `Missing credentials: ${twilioCredentialStatus.missingFields.join(
-                          ", "
-                        )}`
-                      : "Add your Twilio credentials in Settings → Integrations to provision phone numbers for new employees."}
+                        ? "Twilio credentials ready"
+                        : "Twilio credentials missing"}
+                    </span>
                   </div>
-                )}
+
+                  <div className="flex items-center gap-3 pt-1">
+                    <Switch
+                      id="twilioProvisionToggle"
+                      checked={shouldProvisionTwilio}
+                      onCheckedChange={(value) =>
+                        setShouldProvisionTwilio(Boolean(value))
+                      }
+                      disabled={twilioStatusLoading}
+                    />
+                    <Label
+                      htmlFor="twilioProvisionToggle"
+                      className="text-white/80 text-sm font-medium"
+                    >
+                      Provision Twilio assets for this employee
+                    </Label>
+                  </div>
+
+                  {isTwilioBlocked && (
+                    <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-amber-100 text-xs sm:text-sm">
+                      {twilioCredentialStatus.missingFields.length > 0
+                        ? `Missing credentials: ${twilioCredentialStatus.missingFields.join(
+                            ", "
+                          )}`
+                        : "Add your Twilio credentials in Settings → Integrations to provision phone numbers for new employees."}
+                    </div>
+                  )}
 
                   <div className="space-y-2">
                     <Label
@@ -600,8 +646,8 @@ const UserCreate = () => {
                           .slice(0, 3);
                         setTwilioAreaCode(digitsOnly);
                       }}
-                      disabled={!shouldProvisionTwilio || isTwilioBlocked}
-                      className="rounded-full bg-black/35 border border-white/10 text-white placeholder:text-white/50 focus:ring-2 focus:ring-cyan-400/40 disabled:opacity-60 disabled:cursor-not-allowed"
+                      disabled={!shouldProvisionTwilio}
+                      className="h-10 rounded-lg bg-[#222B2C]/40 border border-white/10 text-white placeholder:text-white/50 focus:ring-2 focus:ring-cyan-400/40 focus:border-cyan-400/40"
                     />
                     <p className="text-white/50 text-xs">
                       Leave blank to use the global default area code.
@@ -654,11 +700,16 @@ const UserCreate = () => {
                       At least one capability must remain selected.
                     </p>
                   </div>
-                </div>
+                </motion.div>
 
                 {/* Mailgun Email Field */}
                 {mailgunDomain && (
-                  <div className="space-y-2">
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.5, delay: 0.7, ease: "easeOut" }}
+                    className="space-y-2"
+                  >
                     <Label
                       htmlFor="mailgunEmail"
                       className="text-white/90 text-sm font-medium"
@@ -683,7 +734,7 @@ const UserCreate = () => {
                             }));
                             setEmailUnique(null);
                           }}
-                          className="rounded-full bg-black/35 border border-white/10 text-white placeholder:text-white/50 focus:ring-2 focus:ring-cyan-400/40"
+                          className="h-10 rounded-lg bg-[#222B2C]/40 border border-white/10 text-white placeholder:text-white/50 focus:ring-2 focus:ring-cyan-400/40 focus:border-cyan-400/40"
                           placeholder={`Enter email (e.g., ${
                             suggestedEmail || `user@${mailgunDomain}`
                           })`}
@@ -727,42 +778,45 @@ const UserCreate = () => {
                         {errors.mailgunEmail}
                       </p>
                     )}
-                  </div>
+                  </motion.div>
                 )}
               </CardContent>
 
-              <CardFooter className="flex flex-col sm:flex-row justify-end border-t border-white/10 pt-4 sm:pt-6 gap-3 px-4 sm:px-6 pb-4 sm:pb-6">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full sm:w-auto rounded-full border border-white/10 bg-black/35 hover:bg-black/75 text-white"
-                  onClick={() => navigate("/users")}
-                  disabled={loading}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={loading || isTwilioBlocked}
-                  className="w-full sm:w-auto bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3]"
-                  style={{
-                    boxShadow:
-                      "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
-                  }}
-                >
-                  {loading ? "Creating..." : "Create Employee"}
-                </Button>
-                {isTwilioBlocked && (
-                  <p className="text-xs text-amber-300 text-center sm:text-right w-full">
-                    Add the required Twilio credentials in Settings → Integrations
-                    or disable Twilio provisioning for this employee.
-                  </p>
-                )}
-              </CardFooter>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.8, ease: "easeOut" }}
+              >
+                <CardFooter className="flex flex-col sm:flex-row justify-end border-t border-white/10 pt-4 sm:pt-6 gap-3 px-0">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full sm:w-auto rounded-lg border border-white/20 bg-white/5 hover:bg-white/10 text-white transition-colors"
+                    onClick={() => navigate("/users")}
+                    disabled={loading}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={loading || isTwilioBlocked}
+                    className="w-full sm:w-auto rounded-lg bg-gradient-to-r from-[#69B4B7] via-[#5486D0] to-[#3E64B3] text-white hover:brightness-110 transition-all"
+                  >
+                    {loading ? "Creating..." : "Create Employee"}
+                  </Button>
+                  {isTwilioBlocked && (
+                    <p className="text-xs text-amber-300 text-center sm:text-right w-full">
+                      Add the required Twilio credentials in Settings →
+                      Integrations or disable Twilio provisioning for this
+                      employee.
+                    </p>
+                  )}
+                </CardFooter>
+              </motion.div>
             </Card>
-          </form>
-        </div>
-      </main>
+          </motion.form>
+        </motion.div>
+      </motion.main>
     </DashboardLayout>
   );
 };

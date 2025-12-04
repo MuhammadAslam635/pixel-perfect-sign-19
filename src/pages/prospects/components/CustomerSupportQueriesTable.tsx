@@ -1,4 +1,6 @@
 import React, { useState, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import type { Variants } from "framer-motion";
 import { EyeIcon, RefreshCwIcon, MoreVertical, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -126,8 +128,48 @@ const CustomerSupportQueriesTable: React.FC = () => {
     );
   }
 
+  const containerVariants: Variants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.6,
+        ease: "easeOut",
+      },
+    },
+  };
+
+  const tableVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.08,
+        delayChildren: 0.2,
+      },
+    },
+  };
+
+  const rowVariants: Variants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.4,
+        ease: "easeOut",
+      },
+    },
+  };
+
   return (
-    <div className="w-full">
+    <motion.div
+      className="w-full"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
       <div
         className="border border-[#FFFFFF0D] p-6 rounded-xl"
         style={{
@@ -183,20 +225,40 @@ const CustomerSupportQueriesTable: React.FC = () => {
         </Card>
 
         {isLoading ? (
-          <div className="space-y-3 p-4">
+          <motion.div
+            className="space-y-3 p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
             {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="flex space-x-4">
+              <motion.div
+                key={i}
+                className="flex space-x-4"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{
+                  duration: 0.4,
+                  delay: i * 0.1,
+                  ease: "easeOut",
+                }}
+              >
                 <Skeleton className="h-4 flex-1 bg-white/10" />
                 <Skeleton className="h-4 flex-1 bg-white/10" />
                 <Skeleton className="h-4 w-24 bg-white/10" />
                 <Skeleton className="h-4 w-24 bg-white/10" />
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         ) : (
           <>
             {/* Header */}
-            <div className="mb-4 border border-[#FFFFFF1A] rounded-xl overflow-hidden">
+            <motion.div
+              className="mb-4 border border-[#FFFFFF1A] rounded-xl overflow-hidden"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+            >
               <div className="grid grid-cols-[1.2fr_1fr_1fr_0.8fr_0.8fr_0.8fr_80px] items-center gap-4 px-6 py-4 bg-[#FFFFFF05]">
                 <div className="text-sm text-gray-400">Name</div>
                 <div className="text-sm text-gray-400">Email</div>
@@ -208,92 +270,130 @@ const CustomerSupportQueriesTable: React.FC = () => {
                 </div>
                 <div className="text-sm text-gray-400 text-center">Actions</div>
               </div>
-            </div>
+            </motion.div>
 
             {/* Table Body */}
-            <div className="rounded-2xl overflow-hidden bg-[#FFFFFF03]">
-              {data?.data.docs.map((query) => {
-                // Parse personalContactInfo for queries view
-                let contactInfo = null;
-                if (query.personalContactInfo?.value) {
-                  try {
-                    contactInfo = JSON.parse(query.personalContactInfo.value);
-                  } catch (e) {
-                    console.error("Error parsing personalContactInfo:", e);
+            <motion.div
+              className="rounded-2xl overflow-hidden bg-[#FFFFFF03]"
+              variants={tableVariants}
+              initial="hidden"
+              animate="visible"
+            >
+              <AnimatePresence mode="popLayout">
+                {data?.data.docs.map((query, index) => {
+                  // Parse personalContactInfo for queries view
+                  let contactInfo = null;
+                  if (query.personalContactInfo?.value) {
+                    try {
+                      contactInfo = JSON.parse(query.personalContactInfo.value);
+                    } catch (e) {
+                      console.error("Error parsing personalContactInfo:", e);
+                    }
                   }
-                }
 
-                return (
-                  <div
-                    key={query._id}
-                    className="grid grid-cols-[1.2fr_1fr_1fr_0.8fr_0.8fr_0.8fr_80px] items-center gap-4 px-6 py-4 hover:bg-white/5 transition-colors border-b border-[#FFFFFF0D] last:border-b-0"
-                  >
-                    <div
-                      className="font-medium text-white truncate text-sm"
-                      title={contactInfo?.name || "N/A"}
+                  return (
+                    <motion.div
+                      key={query._id}
+                      variants={rowVariants}
+                      layout
+                      whileHover={{
+                        backgroundColor: "rgba(255, 255, 255, 0.05)",
+                        scale: 1.005,
+                        transition: { duration: 0.2 },
+                      }}
+                      className="grid grid-cols-[1.2fr_1fr_1fr_0.8fr_0.8fr_0.8fr_80px] items-center gap-4 px-6 py-4 border-b border-[#FFFFFF0D] last:border-b-0 cursor-pointer"
                     >
-                      {contactInfo?.name || "N/A"}
-                    </div>
-                    <div
-                      className="text-gray-300 text-sm truncate"
-                      title={contactInfo?.email || "N/A"}
-                    >
-                      {contactInfo?.email || "N/A"}
-                    </div>
-                    <div
-                      className="text-gray-300 text-sm truncate"
-                      title={contactInfo?.phone || "N/A"}
-                    >
-                      {contactInfo?.phone || "N/A"}
-                    </div>
-                    <div className="text-gray-300 text-sm">
-                      {formatDate(query.startTime)}
-                    </div>
-                    <div>
-                      <Badge
-                        className={`${getStatusColor(
-                          query.status
-                        )} rounded-full px-3`}
+                      <div
+                        className="font-medium text-white truncate text-sm"
+                        title={contactInfo?.name || "N/A"}
                       >
-                        {query.status}
-                      </Badge>
-                    </div>
-                    <div className="text-gray-300 text-sm text-center">
-                      {query.messagesTotal}
-                    </div>
-                    <div className="flex justify-center">
-                      <TooltipProvider>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button className="p-2 rounded-full hover:bg-white/10 text-gray-300 transition hover:scale-110">
-                              <MoreVertical className="h-5 w-5" />
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent
-                            align="end"
-                            className="bg-[#1a1a1a] border-[#2a2a2a] text-gray-200 shadow-lg rounded-lg w-40"
-                          >
-                            <DropdownMenuItem
-                              onClick={() => handleViewDetails(query)}
-                              className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-white/10"
+                        {contactInfo?.name || "N/A"}
+                      </div>
+                      <div
+                        className="text-gray-300 text-sm truncate"
+                        title={contactInfo?.email || "N/A"}
+                      >
+                        {contactInfo?.email || "N/A"}
+                      </div>
+                      <div
+                        className="text-gray-300 text-sm truncate"
+                        title={contactInfo?.phone || "N/A"}
+                      >
+                        {contactInfo?.phone || "N/A"}
+                      </div>
+                      <div className="text-gray-300 text-sm">
+                        {formatDate(query.startTime)}
+                      </div>
+                      <div>
+                        <Badge
+                          className={`${getStatusColor(
+                            query.status
+                          )} rounded-full px-3`}
+                        >
+                          {query.status}
+                        </Badge>
+                      </div>
+                      <div className="text-gray-300 text-sm text-center">
+                        {query.messagesTotal}
+                      </div>
+                      <div className="flex justify-center">
+                        <TooltipProvider>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <motion.button
+                                className="p-2 rounded-full text-gray-300"
+                                whileHover={{
+                                  backgroundColor: "rgba(255, 255, 255, 0.1)",
+                                  scale: 1.1,
+                                  rotate: 90,
+                                  transition: { duration: 0.2 },
+                                }}
+                                whileTap={{ scale: 0.95 }}
+                              >
+                                <MoreVertical className="h-5 w-5" />
+                              </motion.button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent
+                              align="end"
+                              className="bg-[#1a1a1a] border-[#2a2a2a] text-gray-200 shadow-lg rounded-lg w-40"
                             >
-                              <EyeIcon size={16} /> View Details
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TooltipProvider>
-                    </div>
-                  </div>
-                );
-              })}
-              {data && data.data.docs.length === 0 && (
-                <div className="text-center text-gray-400 py-8">
-                  {debouncedSearch
-                    ? `No queries found matching "${debouncedSearch}"`
-                    : "No queries found"}
-                </div>
-              )}
-            </div>
+                              <motion.div
+                                whileHover={{
+                                  backgroundColor: "rgba(255, 255, 255, 0.1)",
+                                  scale: 1.02,
+                                  transition: { duration: 0.15 },
+                                }}
+                                whileTap={{ scale: 0.98 }}
+                              >
+                                <DropdownMenuItem
+                                  onClick={() => handleViewDetails(query)}
+                                  className="flex items-center gap-2 px-3 py-2 cursor-pointer"
+                                >
+                                  <EyeIcon size={16} /> View Details
+                                </DropdownMenuItem>
+                              </motion.div>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TooltipProvider>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+                {data && data.data.docs.length === 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.3 }}
+                    className="text-center text-gray-400 py-8"
+                  >
+                    {debouncedSearch
+                      ? `No queries found matching "${debouncedSearch}"`
+                      : "No queries found"}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
 
             {/* Pagination */}
             {data && data.data.totalPages > 1 && (
@@ -413,7 +513,7 @@ const CustomerSupportQueriesTable: React.FC = () => {
         onClose={handleCloseModal}
         viewType="queries"
       />
-    </div>
+    </motion.div>
   );
 };
 

@@ -1,11 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -86,10 +82,7 @@ import { FollowupPlan } from "@/services/followupPlans.service";
 import { format, formatDistanceToNow } from "date-fns";
 import FollowupPlanSchedule from "@/components/dashboard/FollowupPlanSchedule";
 import { isAxiosError } from "axios";
-import {
-  convertLocalTimeToUTC,
-  convertUTCToLocalTime,
-} from "@/utils/timezone";
+import { convertLocalTimeToUTC, convertUTCToLocalTime } from "@/utils/timezone";
 
 const followupTemplateSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -254,10 +247,8 @@ const FollowupTemplatesPage = () => {
   const { mutate: deleteFollowupPlan, isPending: isDeletingPlan } =
     useDeleteFollowupPlan();
 
-  const {
-    data: planScheduleData,
-    isLoading: isPlanScheduleLoading,
-  } = useFollowupPlanSchedule(selectedPlanForSchedule?._id || "");
+  const { data: planScheduleData, isLoading: isPlanScheduleLoading } =
+    useFollowupPlanSchedule(selectedPlanForSchedule?._id || "");
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -279,9 +270,7 @@ const FollowupTemplatesPage = () => {
         numberOfEmails: selectedTemplate.numberOfEmails,
         numberOfCalls: selectedTemplate.numberOfCalls,
         numberOfWhatsappMessages: selectedTemplate.numberOfWhatsappMessages,
-        timeOfDayToRun: convertUTCToLocalTime(
-          selectedTemplate.timeOfDayToRun
-        ),
+        timeOfDayToRun: convertUTCToLocalTime(selectedTemplate.timeOfDayToRun),
       });
     } else if (formMode === "create") {
       form.reset(defaultFormValues);
@@ -517,7 +506,10 @@ const FollowupTemplatesPage = () => {
     return 0;
   };
 
-  const planStats = useMemo<{ avgDays: number | null; avgTouchpoints: number | null }>(() => {
+  const planStats = useMemo<{
+    avgDays: number | null;
+    avgTouchpoints: number | null;
+  }>(() => {
     if (!paginatedActivePlans.length) {
       return {
         avgDays: null,
@@ -605,26 +597,10 @@ const FollowupTemplatesPage = () => {
                   setFormMode("create");
                   setIsFormOpen(true);
                 }}
-                className="relative h-9 px-4 rounded-full border-0 text-white text-xs hover:bg-[#2F2F2F]/60 transition-all overflow-hidden"
-                style={{
-                  background: "#FFFFFF1A",
-                  boxShadow:
-                    "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
-                }}
+                className="h-9 px-4 rounded-full bg-primary hover:bg-primary/90 text-white text-xs transition-all"
               >
-                {/* radial element 150px 150px */}
-                <div
-                  className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[150px] h-[150px] rounded-full pointer-events-none"
-                  style={{
-                    background:
-                      "radial-gradient(circle, #66AFB7 0%, transparent 70%)",
-                    backdropFilter: "blur(50px)",
-                    WebkitBackdropFilter: "blur(50px)",
-                    zIndex: -1,
-                  }}
-                ></div>
-                <Plus className="w-4 h-4 mr-2 relative z-10" />
-                <span className="relative z-10">New Template</span>
+                <Plus className="w-4 h-4 mr-2" />
+                New Template
               </Button>
             </div>
           </TableCell>
@@ -632,14 +608,13 @@ const FollowupTemplatesPage = () => {
       );
     }
 
-    return templates.map((template) => (
-      <TableRow
+    return templates.map((template, index) => (
+      <motion.tr
         key={template._id}
-        className="border-[#FFFFFF0D] text-white hover:border-[#3a3a3a] transition-all duration-200"
-        style={{
-          background:
-            "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
-        }}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: index * 0.05 }}
+        className="border-white/10 text-white hover:bg-white/5 transition-all duration-200"
       >
         <TableCell>
           <div className="flex flex-col gap-1">
@@ -671,7 +646,8 @@ const FollowupTemplatesPage = () => {
           </div>
         </TableCell>
         <TableCell className="text-center text-gray-200">
-          {convertUTCToLocalTime(template.timeOfDayToRun)} ({template.timeOfDayToRun} UTC)
+          {convertUTCToLocalTime(template.timeOfDayToRun)} (
+          {template.timeOfDayToRun} UTC)
         </TableCell>
         <TableCell className="text-right">
           <div className="flex items-center justify-end gap-2">
@@ -679,7 +655,7 @@ const FollowupTemplatesPage = () => {
               type="button"
               variant="ghost"
               size="icon"
-              className="h-9 w-9 rounded-full text-gray-300 hover:text-[#66AFB7] hover:bg-[#66AFB7]/10 border border-transparent hover:border-[#66AFB7]/30 transition-all"
+              className="h-8 w-8 rounded-md text-gray-300 hover:text-white hover:bg-white/10 transition-all"
               onClick={() => {
                 setSelectedTemplate(template);
                 setFormMode("edit");
@@ -693,7 +669,7 @@ const FollowupTemplatesPage = () => {
               type="button"
               variant="ghost"
               size="icon"
-              className="h-9 w-9 rounded-full text-gray-300 hover:text-[#4285F4] hover:bg-[#4285F4]/10 border border-transparent hover:border-[#4285F4]/30 transition-all"
+              className="h-8 w-8 rounded-md text-gray-300 hover:text-white hover:bg-white/10 transition-all"
               onClick={() => handleDuplicate(template)}
               disabled={isDuplicating}
               aria-label="Duplicate template"
@@ -704,7 +680,7 @@ const FollowupTemplatesPage = () => {
               type="button"
               variant="ghost"
               size="icon"
-              className="h-9 w-9 rounded-full text-red-400 hover:text-red-300 hover:bg-red-500/10 border border-transparent hover:border-red-400/30 transition-all"
+              className="h-8 w-8 rounded-md text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all"
               onClick={() => setTemplateToDelete(template)}
               aria-label="Delete template"
             >
@@ -712,7 +688,7 @@ const FollowupTemplatesPage = () => {
             </Button>
           </div>
         </TableCell>
-      </TableRow>
+      </motion.tr>
     ));
   };
 
@@ -879,14 +855,13 @@ const FollowupTemplatesPage = () => {
       );
     }
 
-    return paginatedActivePlans.map((plan: FollowupPlan) => (
-      <TableRow
+    return paginatedActivePlans.map((plan: FollowupPlan, index: number) => (
+      <motion.tr
         key={plan._id}
-        className="border-[#FFFFFF0D] text-white hover:border-[#3a3a3a] transition-all duration-200"
-        style={{
-          background:
-            "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
-        }}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: index * 0.05 }}
+        className="border-white/10 text-white hover:bg-white/5 transition-all duration-200"
       >
         <TableCell>
           <div className="flex flex-col gap-1">
@@ -906,13 +881,14 @@ const FollowupTemplatesPage = () => {
               plan.status
             )} shadow-lg`}
             style={{
-              boxShadow: plan.status === "in_progress"
-                ? "0 0 10px rgba(59, 130, 246, 0.3)"
-                : plan.status === "scheduled"
-                ? "0 0 10px rgba(251, 191, 36, 0.3)"
-                : plan.status === "completed"
-                ? "0 0 10px rgba(34, 197, 94, 0.3)"
-                : "0 0 10px rgba(239, 68, 68, 0.3)"
+              boxShadow:
+                plan.status === "in_progress"
+                  ? "0 0 10px rgba(59, 130, 246, 0.3)"
+                  : plan.status === "scheduled"
+                  ? "0 0 10px rgba(251, 191, 36, 0.3)"
+                  : plan.status === "completed"
+                  ? "0 0 10px rgba(34, 197, 94, 0.3)"
+                  : "0 0 10px rgba(239, 68, 68, 0.3)",
             }}
           >
             {plan.status === "in_progress"
@@ -935,7 +911,11 @@ const FollowupTemplatesPage = () => {
                 <div
                   className="h-full bg-gradient-to-r from-[#66AFB7] to-[#4285F4] transition-all duration-300"
                   style={{
-                    width: `${(getCompletedTodosCount(plan) / getTotalTodosCount(plan)) * 100}%`
+                    width: `${
+                      (getCompletedTodosCount(plan) /
+                        getTotalTodosCount(plan)) *
+                      100
+                    }%`,
                   }}
                 />
               </div>
@@ -951,7 +931,7 @@ const FollowupTemplatesPage = () => {
               type="button"
               variant="ghost"
               size="icon"
-              className="h-9 w-9 rounded-full text-[#4285F4] hover:text-[#4285F4] hover:bg-[#4285F4]/10 border border-transparent hover:border-[#4285F4]/30 transition-all"
+              className="h-8 w-8 rounded-md text-gray-300 hover:text-white hover:bg-white/10 transition-all"
               onClick={() => handleViewPlanSchedule(plan)}
               aria-label="View schedule"
             >
@@ -961,7 +941,7 @@ const FollowupTemplatesPage = () => {
               type="button"
               variant="ghost"
               size="icon"
-              className="h-9 w-9 rounded-full text-red-400 hover:text-red-300 hover:bg-red-500/10 border border-transparent hover:border-red-400/30 transition-all"
+              className="h-8 w-8 rounded-md text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all"
               onClick={() => setPlanToDelete(plan)}
               aria-label="Delete plan"
             >
@@ -969,61 +949,46 @@ const FollowupTemplatesPage = () => {
             </Button>
           </div>
         </TableCell>
-      </TableRow>
+      </motion.tr>
     ));
   };
 
   return (
     <DashboardLayout>
-      <main className="relative px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] pt-24 sm:pt-28 lg:pt-32 pb-8 flex flex-col gap-6 text-white flex-1 overflow-y-auto">
-        <section className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <motion.main
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="relative px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12 2xl:px-16 pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-6 sm:pb-8 flex flex-col gap-4 sm:gap-6 text-white min-h-screen overflow-x-hidden"
+      >
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+          className="flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-center lg:justify-between mb-3 sm:mb-4"
+        >
           <div className="relative">
-            {/* Colorful background elements */}
-            <div className="absolute -top-4 -left-4 w-20 h-20 bg-gradient-to-br from-[#66AFB7]/20 to-[#4285F4]/10 rounded-full blur-xl opacity-60" />
-            <div className="absolute -top-2 -right-6 w-16 h-16 bg-gradient-to-br from-[#34A853]/15 to-[#1877F2]/10 rounded-full blur-lg opacity-50" />
-
             <div className="relative">
               <p className="text-sm uppercase tracking-wide text-white/60 flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-gradient-to-r from-[#66AFB7] to-[#4285F4]" />
                 Automations
               </p>
-              <h1 className="text-3xl font-semibold bg-gradient-to-r from-white via-white to-[#66AFB7] bg-clip-text text-transparent">
+              <h1 className="text-2xl sm:text-3xl font-semibold text-white">
                 Followup Templates
               </h1>
               <p className="text-sm text-white/60">
                 Centralize touchpoints for every prospect across emails, calls,
                 and WhatsApp.
               </p>
-
-              {/* Colorful stats inline */}
-              <div className="flex items-center gap-6 mt-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-[#66AFB7] shadow-lg shadow-[#66AFB7]/30" />
-                  <span className="text-sm text-white/80">{stats[0]?.value || 0} Templates</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-[#4285F4] shadow-lg shadow-[#4285F4]/30" />
-                  <span className="text-sm text-white/80">{activePlans.length} Active Plans</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-[#34A853] shadow-lg shadow-[#34A853]/30" />
-                  <span className="text-sm text-white/80">{stats[2]?.value || 0} Avg Touchpoints</span>
-                </div>
-              </div>
             </div>
           </div>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
             <div className="relative flex-1 sm:min-w-[200px] sm:max-w-[280px]">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 z-10" />
               <Input
                 placeholder="Search templates"
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
-                className="pl-10 w-full rounded-full bg-[#FFFFFF1A] border border-white/40 text-gray-300 placeholder:text-gray-500 focus:ring-0"
-                style={{
-                  boxShadow: '0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset',
-                  borderRadius: '9999px'
-                }}
+                className="pl-10 w-full rounded-full bg-white/5 border border-white/20 text-white placeholder:text-gray-500 focus:ring-1 focus:ring-white/30"
               />
             </div>
             <div className="flex items-center gap-2">
@@ -1031,10 +996,10 @@ const FollowupTemplatesPage = () => {
                 value={String(limit)}
                 onValueChange={(value) => setLimit(Number(value))}
               >
-                <SelectTrigger className="h-10 w-full rounded-full border border-[#4285F4]/30 bg-white/5 text-white sm:w-[140px] focus:ring-2 focus:ring-[#4285F4]/50">
+                <SelectTrigger className="h-9 w-full rounded-full border border-white/20 bg-white/5 text-white sm:w-[140px] focus:ring-1 focus:ring-white/30">
                   <SelectValue placeholder="Rows" />
                 </SelectTrigger>
-                <SelectContent className="border-[#4285F4]/30 bg-[#151822] text-white">
+                <SelectContent className="border-white/20 bg-[#1a1f1f] text-white">
                   {limitOptions.map((option) => (
                     <SelectItem key={option} value={option}>
                       {option} / page
@@ -1048,116 +1013,96 @@ const FollowupTemplatesPage = () => {
                   setFormMode("create");
                   setIsFormOpen(true);
                 }}
-                className="relative h-9 px-4 rounded-full border-0 text-white text-xs hover:bg-[#2F2F2F]/60 transition-all w-full sm:w-auto lg:flex-shrink-0 overflow-hidden"
-                style={{
-                  background: "#FFFFFF1A",
-                  boxShadow:
-                    "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
-                }}
+                className="h-9 px-4 rounded-full bg-primary hover:bg-primary/90 text-white text-xs transition-all w-full sm:w-auto"
               >
-                {/* radial element 150px 150px */}
-                <div
-                  className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[150px] h-[150px] rounded-full pointer-events-none"
-                  style={{
-                    background:
-                      "radial-gradient(circle, #66AFB7 0%, transparent 70%)",
-                    backdropFilter: "blur(50px)",
-                    WebkitBackdropFilter: "blur(50px)",
-                    zIndex: -1,
-                  }}
-                ></div>
-                <Plus className="w-4 h-4 mr-0 relative z-10" />
-                <span className="relative z-10">New Template</span>
+                <Plus className="w-4 h-4 mr-1" />
+                New Template
               </Button>
             </div>
           </div>
-        </section>
+        </motion.section>
 
-        {/* Colorful Stats Section */}
-        <section className="grid gap-4 md:grid-cols-3">
+        {/* Stats Section */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut", delay: 0.3 }}
+          className="grid gap-3 sm:gap-4 md:grid-cols-3 mb-4 sm:mb-6"
+        >
           {stats.map((stat, index) => {
-            const colors = [
-              { gradient: "from-[#66AFB7]/20 to-[#66AFB7]/5", border: "border-[#66AFB7]/30", accent: "#66AFB7" },
-              { gradient: "from-[#4285F4]/20 to-[#4285F4]/5", border: "border-[#4285F4]/30", accent: "#4285F4" },
-              { gradient: "from-[#34A853]/20 to-[#34A853]/5", border: "border-[#34A853]/30", accent: "#34A853" }
+            const gradients = [
+              "from-[#1877F2]/30 via-[#1877F2]/15 to-transparent",
+              "from-[#4285F4]/25 via-[#34A853]/20 to-transparent",
+              "from-[#66AFB7]/25 via-[#4285F4]/20 to-transparent",
             ];
-            const color = colors[index];
-
             return (
-              <Card
+              <motion.div
                 key={stat.id}
-                className={`relative overflow-hidden border text-white bg-gradient-to-br ${color.gradient} backdrop-blur-sm`}
-                style={{
-                  borderRadius: "16px",
-                  border: `1px solid rgba(255, 255, 255, 0.1)`,
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  duration: 0.5,
+                  ease: "easeOut",
+                  delay: 0.4 + index * 0.1,
                 }}
+                className="relative"
               >
-                <div className={`absolute top-0 right-0 w-20 h-20 bg-gradient-to-br ${color.gradient} rounded-full blur-xl opacity-30`} />
-                <CardHeader className="pb-2 relative">
-                  <CardTitle className="text-xs uppercase tracking-wide text-white/70 flex items-center gap-2">
-                    <div
-                      className="w-2 h-2 rounded-full shadow-lg"
-                      style={{ backgroundColor: color.accent, boxShadow: `0 0 10px ${color.accent}40` }}
-                    />
-                    {stat.label}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="relative">
-                  <p className="text-3xl font-semibold text-white">
-                    {typeof stat.value === "number" ? stat.value : "--"}
-                  </p>
-                  <p className="text-xs text-white/60">{stat.helper}</p>
-                </CardContent>
-              </Card>
+                {/* Gradient glow behind card */}
+                <div
+                  className={`absolute -inset-4 lg:-inset-8 bg-gradient-to-r ${gradients[index]} blur-3xl opacity-60`}
+                />
+                <Card
+                  className="relative border-[#FFFFFF4D] shadow-2xl"
+                  style={{
+                    borderRadius: "16px",
+                    opacity: 1,
+                    borderWidth: "1px",
+                    background:
+                      "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
+                  }}
+                >
+                  <CardHeader className="pb-2 relative">
+                    <CardTitle className="text-xs uppercase tracking-wide text-white/70">
+                      {stat.label}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="relative">
+                    <p className="text-2xl sm:text-3xl font-semibold text-white">
+                      {typeof stat.value === "number" ? stat.value : "--"}
+                    </p>
+                    <p className="text-xs text-white/60">{stat.helper}</p>
+                  </CardContent>
+                </Card>
+              </motion.div>
             );
           })}
-        </section>
+        </motion.section>
 
-        <section className="rounded-3xl border-[#FFFFFF4D] bg-gradient-to-br from-white/5 to-transparent shadow-2xl shadow-black/30"
-          style={{
-            background:
-              "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
-            borderRadius: "24px",
-          }}>
-          <div className="overflow-hidden rounded-3xl border-[#FFFFFF4D]">
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut", delay: 0.5 }}
+          className="rounded-xl sm:rounded-[30px] border border-white/10 bg-[linear-gradient(173.83deg,_rgba(255,255,255,0.08)_4.82%,_rgba(255,255,255,0)_38.08%,_rgba(255,255,255,0)_56.68%,_rgba(255,255,255,0.02)_95.1%)] pt-3 sm:pt-4 px-3 sm:px-6"
+        >
+          <div className="overflow-hidden">
             <Table>
-              <TableHeader className="bg-gradient-to-r from-[#FFFFFF0D] via-[#66AFB7]/5 to-[#4285F4]/5 text-xs uppercase tracking-wide text-white/60">
-                <TableRow className="border-[#FFFFFF0D]">
-                  <TableHead className="text-white/80 relative">
-                    <div className="flex items-center gap-2">
-                      <MessageSquare className="w-4 h-4 text-[#66AFB7]" />
-                      Template
-                    </div>
+              <TableHeader className="text-xs uppercase tracking-wide text-white/60">
+                <TableRow className="border-white/10">
+                  <TableHead className="text-white/80">Template</TableHead>
+                  <TableHead className="text-center text-white/80">
+                    Run Time
                   </TableHead>
                   <TableHead className="text-center text-white/80">
-                    <div className="flex items-center justify-center gap-1">
-                      <Clock className="w-4 h-4 text-[#4285F4]" />
-                      Run Time
-                    </div>
+                    Emails
                   </TableHead>
                   <TableHead className="text-center text-white/80">
-                    <div className="flex items-center justify-center gap-1">
-                      <Mail className="w-4 h-4 text-[#34A853]" />
-                      Emails
-                    </div>
+                    Calls
                   </TableHead>
                   <TableHead className="text-center text-white/80">
-                    <div className="flex items-center justify-center gap-1">
-                      <Phone className="w-4 h-4 text-[#66AFB7]" />
-                      Calls
-                    </div>
+                    WhatsApp
                   </TableHead>
                   <TableHead className="text-center text-white/80">
-                    <div className="flex items-center justify-center gap-1">
-                      <MessageSquare className="w-4 h-4 text-[#4285F4]" />
-                      WhatsApp
-                    </div>
-                  </TableHead>
-                  <TableHead className="text-center text-white/80">
-                    <div className="flex items-center justify-center gap-1">
-                      <Clock className="w-4 h-4 text-[#34A853]" />
-                      Time of Day
-                    </div>
+                    Time of Day
                   </TableHead>
                   <TableHead className="text-right text-white/80">
                     Actions
@@ -1168,16 +1113,14 @@ const FollowupTemplatesPage = () => {
             </Table>
           </div>
           {pagination && pagination.totalPages > 1 && (
-            <div className="flex justify-center border-t border-[#FFFFFF0D] py-6">
+            <div className="flex justify-center border-t border-white/10 py-4">
               {renderPagination()}
             </div>
           )}
-        </section>
+        </motion.section>
 
         <Dialog open={isFormOpen} onOpenChange={(open) => !open && closeForm()}>
-          <DialogContent
-            className="group max-h-[92vh] max-w-[980px] border-none bg-transparent p-0 text-white shadow-none sm:rounded-[38px] [&>button]:right-8 [&>button]:top-8 [&>button]:text-white/60 [&>button:hover]:text-white"
-          >
+          <DialogContent className="group max-h-[92vh] max-w-[980px] border-none bg-transparent p-0 text-white shadow-none sm:rounded-[38px] [&>button]:right-8 [&>button]:top-8 [&>button]:text-white/60 [&>button:hover]:text-white">
             <div className="relative isolate overflow-hidden rounded-[38px] border border-white/10 bg-[#05070f]/85 shadow-[0_35px_95px_rgba(0,0,0,0.85)]">
               <div className="pointer-events-none absolute inset-0 opacity-70">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(91,157,255,0.35),_transparent_65%)]" />
@@ -1388,32 +1331,31 @@ const FollowupTemplatesPage = () => {
           </DialogContent>
         </Dialog>
 
-        <section className="rounded-3xl border-[#FFFFFF4D] bg-gradient-to-br from-white/5 to-transparent shadow-2xl shadow-black/30"
-          style={{
-            background:
-              "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
-            borderRadius: "24px",
-          }}>
-          <div className="border-b border-[#FFFFFF4D] px-6 py-4 bg-gradient-to-r from-transparent via-[#66AFB7]/5 to-transparent">
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut", delay: 0.6 }}
+          className="rounded-xl sm:rounded-[30px] border border-white/10 bg-[linear-gradient(173.83deg,_rgba(255,255,255,0.08)_4.82%,_rgba(255,255,255,0)_38.08%,_rgba(255,255,255,0)_56.68%,_rgba(255,255,255,0.02)_95.1%)] pt-3 sm:pt-4 px-3 sm:px-6"
+        >
+          <div className="border-b border-white/10 pb-4 mb-4">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-[#66AFB7]" />
+                <h2 className="text-lg sm:text-xl font-semibold text-white flex items-center gap-2">
                   Active Followup Plans
                   {!isFollowupPlansLoading && (
-                    <span className="ml-2 text-base font-normal text-white/60 bg-[#66AFB7]/20 px-2 py-1 rounded-full">
+                    <span className="text-sm font-normal text-white/60 bg-white/10 px-2 py-1 rounded-full">
                       {activePlans.length}
                     </span>
                   )}
                 </h2>
-                <p className="text-sm text-white/60 mt-1">
+                <p className="text-xs sm:text-sm text-white/60 mt-1">
                   View and manage your active followup campaigns
                 </p>
               </div>
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-9 w-9 rounded-full text-white hover:bg-[#66AFB7]/10 border border-[#66AFB7]/20"
+                className="h-8 w-8 rounded-md text-white hover:bg-white/10"
                 onClick={() => refetchFollowupPlans()}
                 disabled={isFollowupPlansFetching}
                 aria-label="Refresh plans"
@@ -1426,37 +1368,17 @@ const FollowupTemplatesPage = () => {
               </Button>
             </div>
           </div>
-          <div className="overflow-hidden rounded-3xl border-[#FFFFFF4D]">
+          <div className="overflow-hidden">
             <Table>
-              <TableHeader className="bg-gradient-to-r from-[#FFFFFF0D] via-[#4285F4]/5 to-[#34A853]/5 text-xs uppercase tracking-wide text-white/60">
-                <TableRow className="border-[#FFFFFF0D]">
-                  <TableHead className="text-white/80">
-                    <div className="flex items-center gap-2">
-                      <MessageSquare className="w-4 h-4 text-[#4285F4]" />
-                      Plan
-                    </div>
-                  </TableHead>
-                  <TableHead className="text-white/80">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-[#34A853] shadow-lg shadow-[#34A853]/30" />
-                      Status
-                    </div>
-                  </TableHead>
-                  <TableHead className="text-white/80">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-[#66AFB7]" />
-                      Start Date
-                    </div>
-                  </TableHead>
+              <TableHeader className="text-xs uppercase tracking-wide text-white/60">
+                <TableRow className="border-white/10">
+                  <TableHead className="text-white/80">Plan</TableHead>
+                  <TableHead className="text-white/80">Status</TableHead>
+                  <TableHead className="text-white/80">Start Date</TableHead>
                   <TableHead className="text-center text-white/80">
                     Progress
                   </TableHead>
-                  <TableHead className="text-white/80">
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-[#4285F4]" />
-                      Created
-                    </div>
-                  </TableHead>
+                  <TableHead className="text-white/80">Created</TableHead>
                   <TableHead className="text-right text-white/80">
                     Actions
                   </TableHead>
@@ -1466,11 +1388,11 @@ const FollowupTemplatesPage = () => {
             </Table>
           </div>
           {activePlansTotalPages > 1 && (
-            <div className="flex justify-center border-t border-[#FFFFFF0D] py-6">
+            <div className="flex justify-center border-t border-white/10 py-4">
               {renderPlansPagination()}
             </div>
           )}
-        </section>
+        </motion.section>
 
         <ConfirmDialog
           open={!!templateToDelete}
@@ -1497,7 +1419,10 @@ const FollowupTemplatesPage = () => {
         />
 
         {/* Schedule View Modal */}
-        <Dialog open={!!selectedPlanForSchedule} onOpenChange={(open) => !open && handleCloseScheduleView()}>
+        <Dialog
+          open={!!selectedPlanForSchedule}
+          onOpenChange={(open) => !open && handleCloseScheduleView()}
+        >
           <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Follow-up Plan Schedule</DialogTitle>
@@ -1511,10 +1436,9 @@ const FollowupTemplatesPage = () => {
             )}
           </DialogContent>
         </Dialog>
-      </main>
+      </motion.main>
     </DashboardLayout>
   );
 };
 
 export default FollowupTemplatesPage;
-

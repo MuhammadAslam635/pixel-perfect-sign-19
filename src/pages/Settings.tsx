@@ -180,17 +180,20 @@ const SettingsPage = () => {
                     </motion.div>
                   </TabsContent>
 
-              {canAccessIntegrations && (
-                <TabsContent value="integrations" className="mt-0 space-y-6">
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.3, delay: 0.1 }}
-                  >
-                    <IntegrationsTab />
-                  </motion.div>
-                </TabsContent>
-              )}
+                  {canAccessIntegrations && (
+                    <TabsContent
+                      value="integrations"
+                      className="mt-0 space-y-6"
+                    >
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.3, delay: 0.1 }}
+                      >
+                        <IntegrationsTab />
+                      </motion.div>
+                    </TabsContent>
+                  )}
 
                   <TabsContent value="notifications" className="mt-0 space-y-6">
                     <motion.div

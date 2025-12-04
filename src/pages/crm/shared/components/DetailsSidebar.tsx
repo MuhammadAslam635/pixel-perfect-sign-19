@@ -26,30 +26,38 @@ const DetailsSidebar: FC<DetailsSidebarProps> = ({
     className={`
       hidden lg:block
       fixed
-      z-40
-      top-[120px]           /* adjust if your header is taller/shorter */
-      right-4 xl:right-8 2xl:right-16
+      z-30
+      top-[280px] lg:top-[290px] xl:top-[300px] 2xl:top-[310px]
+      right-8 lg:right-12 xl:right-14 2xl:right-16 fhd:right-40 uhd:right-56
       transition-all
       duration-300
       ease-in-out
-      ${isOpen ? "opacity-100 translate-x-0 pointer-events-auto" : "opacity-0 translate-x-4 pointer-events-none"}
+      ${
+        isOpen
+          ? "opacity-100 translate-x-0 pointer-events-auto"
+          : "opacity-0 translate-x-full pointer-events-none"
+      }
     `}
   >
     <Card
       className="
-        w-[320px] xl:w-[360px] 2xl:w-[380px]
-        bg-[#222B2C]
+        w-[280px] lg:w-[320px] xl:w-[360px] 2xl:w-[400px]
+        max-h-[calc(100vh-320px)] lg:max-h-[calc(100vh-340px)] xl:max-h-[calc(100vh-360px)] 2xl:max-h-[calc(100vh-380px)]
+        bg-[#222B2C]/95
+        backdrop-blur-sm
         border-[#3A3A3A]
-        p-3 sm:p-4 md:p-5
-        max-h-[calc(100vh-140px)]
+        border
+        p-4 lg:p-5 xl:p-6
         overflow-y-auto
         scrollbar-hide
+        shadow-[0_8px_32px_rgba(0,0,0,0.4)]
+        rounded-2xl
       "
     >
       {activeTab === "companies" ? (
         <CompanyExecutivesPanel
           company={selectedCompany}
-          onViewAllLeads={onSwitchToLeads || (() => { })}
+          onViewAllLeads={onSwitchToLeads || (() => {})}
           onExecutiveSelect={onExecutiveSelect}
         />
       ) : (

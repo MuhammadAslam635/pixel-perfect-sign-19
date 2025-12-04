@@ -20,7 +20,7 @@ const AgentCard = ({ image, name, description }: AgentCardProps) => {
       whileHover={{
         y: -8,
         scale: 1.02,
-        transition: { duration: 0.3, ease: "easeOut" }
+        transition: { duration: 0.3, ease: "easeOut" },
       }}
       whileTap={{ scale: 0.98 }}
       className="h-full"
@@ -30,12 +30,12 @@ const AgentCard = ({ image, name, description }: AgentCardProps) => {
           className="pointer-events-none absolute left-1/2 -translate-x-1/2 bottom-[-120px] w-[248px] h-[248px] rounded-full opacity-90 blur-[24px] bg-[radial-gradient(50%_50%_at_50%_50%,rgba(255,255,255,0.35)_0%,rgba(34,43,44,0)_70%)]"
           animate={{
             scale: [1, 1.1, 1],
-            opacity: [0.9, 1, 0.9]
+            opacity: [0.9, 1, 0.9],
           }}
           transition={{
             duration: 4,
             repeat: Infinity,
-            ease: "easeInOut"
+            ease: "easeInOut",
           }}
         />
         <div
