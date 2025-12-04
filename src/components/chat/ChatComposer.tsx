@@ -57,17 +57,14 @@ const ChatComposer = ({
   };
 
   const sendButtonVariants = {
-    idle: { scale: 1 },
+    idle: {},
     hover: {
-      scale: 1.05,
       transition: { duration: 0.2, ease: "easeOut" }
     },
     tap: {
-      scale: 0.95,
       transition: { duration: 0.1 }
     },
     sending: {
-      scale: [1, 1.1, 1],
       transition: {
         duration: 0.6,
         repeat: Infinity,
