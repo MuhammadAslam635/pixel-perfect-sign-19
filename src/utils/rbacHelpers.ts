@@ -164,15 +164,15 @@ export const canAccessModule = (
 ): boolean => {
   if (!user) return false;
 
-  // System Admin has access to everything
+  // Note: Admin role is intentionally kept as legacy system role (not roleId-based)
   if (user.role === "Admin") return true;
 
-  // New RBAC system
+  // PRIORITY 1: Check roleId for new RBAC system
   if (user.roleId && typeof user.roleId === "object") {
     return hasPermission(user.roleId, moduleName, requiredActions);
   }
 
-  // Legacy role system
+  // PRIORITY 2: Fallback to legacy role system for backward compatibility
   if (user.role && typeof user.role === "string") {
     return hasLegacyPermission(user.role, moduleName);
   }

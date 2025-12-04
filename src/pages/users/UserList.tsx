@@ -60,7 +60,26 @@ import { Role } from "@/types/rbac.types";
 const UserList = () => {
   const navigate = useNavigate();
   const authState = useSelector((state: RootState) => state.auth);
-  const userRole = authState.user?.roleId;
+
+  // Get user's role name - prioritize roleId over legacy role
+  const getUserRoleName = (): string | null => {
+    const user = authState.user;
+    if (!user) return null;
+
+    // PRIORITY 1: Check populated roleId (new RBAC system)
+    if (user.roleId && typeof user.roleId === "object") {
+      return (user.roleId as Role).name;
+    }
+
+    // PRIORITY 2: Fallback to legacy role string
+    if (user.role && typeof user.role === "string") {
+      return user.role;
+    }
+
+    return null;
+  };
+
+  const userRoleName = getUserRoleName();
   const [users, setUsers] = useState<User[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -107,7 +126,7 @@ const UserList = () => {
   const fetchUsers = useCallback(
     async (resetPage = false) => {
       // Don't fetch if user is CompanyUser
-      if (userRole === "CompanyUser") {
+      if (userRoleName === "CompanyUser") {
         return;
       }
       setLoading(true);
@@ -135,22 +154,22 @@ const UserList = () => {
         setLoading(false);
       }
     },
-    [page, searchTerm, trashed, limit, userRole]
+    [page, searchTerm, trashed, limit, userRoleName]
   );
 
   // Redirect CompanyUser away from this page
   useEffect(() => {
-    if (userRole === "CompanyUser") {
+    if (userRoleName === "CompanyUser") {
       navigate("/dashboard", { replace: true });
     }
-  }, [userRole, navigate]);
+  }, [userRoleName, navigate]);
 
   useEffect(() => {
     // Only fetch users if user is not CompanyUser
-    if (userRole !== "CompanyUser") {
+    if (userRoleName !== "CompanyUser") {
       fetchUsers();
     }
-  }, [fetchUsers, userRole]);
+  }, [fetchUsers, userRoleName]);
 
   useEffect(() => {
     const fetchRoles = async () => {
@@ -319,7 +338,7 @@ const UserList = () => {
   }, [page, totalPages]);
 
   // Don't render the page if user is CompanyUser
-  if (userRole === "CompanyUser") {
+  if (userRoleName === "CompanyUser") {
     return null;
   }
 
