@@ -22,6 +22,7 @@ import {
 } from "@/services/whatsapp.service";
 import { connectionMessagesService } from "@/services/connectionMessages.service";
 import { SelectedCallLogView } from "../index";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 
 type LeadChatProps = {
   lead?: Lead;
@@ -131,6 +132,7 @@ const LeadChat = ({
   const [isGeneratingEmailMessage, setIsGeneratingEmailMessage] =
     useState(false);
   const [isGeneratingSmsMessage, setIsGeneratingSmsMessage] = useState(false);
+  const [isEmailEditorExpanded, setIsEmailEditorExpanded] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [messageToDelete, setMessageToDelete] = useState<string | null>(null);
   const [openMessageMenu, setOpenMessageMenu] = useState<string | null>(null);
@@ -155,6 +157,7 @@ const LeadChat = ({
   const whatsappTextareaRef = useRef<HTMLTextAreaElement>(null);
   const emailTextareaRef = useRef<HTMLTextAreaElement>(null);
   const smsTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const emailComposerRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = (ref: RefObject<HTMLDivElement>) => {
     const container = ref.current;
@@ -833,6 +836,7 @@ const LeadChat = ({
     }
 
     setIsGeneratingEmailMessage(true);
+    setIsEmailEditorExpanded(true); // Expand editor when generating
     setEmailSendError(null);
     try {
       const response = await connectionMessagesService.generateEmailMessage({
@@ -843,9 +847,20 @@ const LeadChat = ({
 
       const generatedSubject =
         response.data?.email?.subject?.trim() || DEFAULT_EMAIL_SUBJECT;
-      const generatedBody =
-        response.data?.email?.body?.trim() ||
-        response.data?.email?.bodyHtml?.trim();
+      
+      // Prefer HTML body, fallback to plain text converted to HTML
+      let generatedBody = response.data?.email?.bodyHtml?.trim();
+      
+      if (!generatedBody && response.data?.email?.body?.trim()) {
+        // Convert plain text to HTML paragraphs
+        const plainText = response.data.email.body.trim();
+        generatedBody = plainText
+          .split('\n\n')
+          .map(paragraph => paragraph.trim())
+          .filter(paragraph => paragraph.length > 0)
+          .map(paragraph => `<p>${paragraph.replace(/\n/g, '<br>')}</p>`)
+          .join('');
+      }
 
       if (generatedBody) {
         setEmailInput(generatedBody);
@@ -1053,6 +1068,26 @@ const LeadChat = ({
   useEffect(() => {
     autoResizeTextarea(smsTextareaRef.current);
   }, [smsInput]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        emailComposerRef.current &&
+        !emailComposerRef.current.contains(event.target as Node)
+      ) {
+        if (isEmailEditorExpanded) {
+           setIsEmailEditorExpanded(false);
+        }
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isEmailEditorExpanded]);
+
+
 
   const handleComposeEmail = () => {
     window.location.href = `${import.meta.env.VITE_APP_API_URL}/emails/compose`;
@@ -1538,61 +1573,71 @@ const LeadChat = ({
             )}
 
             {/* Fixed input at bottom */}
-            <div className="sticky bottom-0 left-0 right-0 pt-4">
-              <div className="flex items-center gap-2 rounded-full bg-white/10 px-4 py-3 mx-1 mb-1">
-                <textarea
-                  ref={emailTextareaRef}
-                  value={emailInput}
-                  onChange={(event) => setEmailInput(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" && event.ctrlKey) {
-                      event.preventDefault();
-                      handleSendEmail();
+            <div className="sticky bottom-0 left-0 right-0 pt-4" ref={emailComposerRef}>
+              <div
+                className={`flex gap-2 bg-white/10 px-4 py-3 mx-1 mb-1 transition-all duration-200 ${
+                  isEmailEditorExpanded ? "rounded-2xl items-end" : "rounded-2xl items-center"
+                }`}
+              >
+                {/* Rich Text Editor */}
+                <div className="flex-1 relative">
+                  <RichTextEditor
+                    value={emailInput}
+                    onChange={setEmailInput}
+                    placeholder={
+                      !emailAddress
+                        ? "Add an email address to send emails"
+                        : "Write your email message..."
                     }
-                  }}
-                  disabled={!emailAddress}
-                  className="lead-chat-input flex-1 bg-transparent outline-none border-none text-xs text-white disabled:opacity-50 resize-none overflow-y-auto scrollbar-hide"
-                  placeholder={
-                    !emailAddress
-                      ? "Add an email address to send emails"
-                      : "Write your email message (Ctrl+Enter to send)"
-                  }
-                  rows={1}
-                  style={{ minHeight: '20px', maxHeight: '60px' }}
-                />
-                <button
-                  className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-white/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
-                  onClick={handleGenerateEmailMessage}
-                  disabled={
-                    isGeneratingEmailMessage || !lead?.companyId || !lead?._id
-                  }
-                  title={
-                    !lead?.companyId || !lead?._id
-                      ? "Lead information is required to generate suggestions"
-                      : "Generate with AI"
-                  }
-                >
-                  {isGeneratingEmailMessage ? (
-                    <Loader2 className="h-4 w-4 animate-spin text-white" />
-                  ) : (
-                    <Sparkles className="h-4 w-4 text-white" />
-                  )}
-                </button>
-                <button
-                  className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
-                  onClick={handleSendEmail}
-                  disabled={
-                    !emailAddress ||
-                    !emailInput.trim() ||
-                    emailMutation.isPending
-                  }
-                >
-                  {emailMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin text-white" />
-                  ) : (
-                    <Send size={14} className="text-white" />
-                  )}
-                </button>
+                    height={isEmailEditorExpanded ? "80px" : "20px"}
+                    toolbar={true}
+                    onFocus={() => setIsEmailEditorExpanded(true)}
+                    className={`text-xs w-full transition-all duration-200 ${
+                      !isEmailEditorExpanded
+                        ? "[&_.ql-toolbar]:hidden [&_.ql-container]:border-none [&_.ql-editor]:!p-0 [&_.ql-editor]:!min-h-0 [&_.ql-editor]:!pb-0"
+                        : ""
+                    }`}
+                  />
+                </div>
+                
+                {/* Action Buttons */}
+                <div className="flex items-center justify-end gap-2 relative z-10">
+                  <button
+                    type="button"
+                    className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-white/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0 cursor-pointer"
+                    onClick={handleGenerateEmailMessage}
+                    disabled={
+                      isGeneratingEmailMessage || !lead?.companyId || !lead?._id
+                    }
+                    title={
+                      !lead?.companyId || !lead?._id
+                        ? "Lead information is required to generate suggestions"
+                        : "Generate with AI"
+                    }
+                  >
+                    {isGeneratingEmailMessage ? (
+                      <Loader2 className="h-4 w-4 animate-spin text-white" />
+                    ) : (
+                      <Sparkles className="h-4 w-4 text-white" />
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0 cursor-pointer"
+                    onClick={handleSendEmail}
+                    disabled={
+                      !emailAddress ||
+                      !emailInput.trim() ||
+                      emailMutation.isPending
+                    }
+                  >
+                    {emailMutation.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin text-white" />
+                    ) : (
+                      <Send size={14} className="text-white" />
+                    )}
+                  </button>
+                </div>
               </div>
               {emailSendError && (
                 <p className="mt-2 text-xs text-red-300 mx-1 mb-1">

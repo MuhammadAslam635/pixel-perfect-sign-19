@@ -11,6 +11,7 @@ interface RichTextEditorProps {
   height?: string;
   toolbar?: boolean;
   readOnly?: boolean;
+  onFocus?: () => void;
 }
 
 export const RichTextEditor: React.FC<RichTextEditorProps> = ({
@@ -21,6 +22,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   height = "120px",
   toolbar = true,
   readOnly = false,
+  onFocus,
 }) => {
   const quillRef = useRef<ReactQuill>(null);
 
@@ -53,6 +55,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       "bullet",
       "color",
       "background",
+      "header",
     ],
     []
   );
@@ -89,6 +92,15 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           border-bottom: none !important;
           border-left: none !important;
           border-right: none !important;
+        }
+        /* Hide scrollbars */
+        .ql-editor {
+          scrollbar-width: none; /* Firefox */
+          -ms-overflow-style: none; /* IE and Edge */
+          padding-bottom: 40px !important; /* Prevent text cutoff at bottom */
+        }
+        .ql-editor::-webkit-scrollbar {
+          display: none; /* Chrome, Safari, Opera */
         }
       `;
       document.head.appendChild(placeholderStyle);
@@ -140,6 +152,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           color: cyan !important;
           stroke: cyan !important;
           fill: cyan !important;
+          background-color: transparent !important;
         }
         .ql-toolbar .ql-formats button:hover .ql-stroke,
         .ql-toolbar .ql-picker:hover .ql-stroke {
@@ -154,11 +167,57 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           stroke: cyan !important;
           fill: cyan !important;
         }
-        .ql-toolbar .ql-active .ql-stroke {
-          stroke: cyan !important;
-        }
         .ql-toolbar .ql-active .ql-fill {
           fill: cyan !important;
+          stroke: transparent !important;
+        }
+        
+        /* Dropdown Styling */
+        .ql-picker-options {
+          background-color: #1a1a1a !important;
+          border: 1px solid rgba(255, 255, 255, 0.1) !important;
+          border-radius: 8px !important;
+          padding: 8px !important;
+          max-height: 200px !important;
+          overflow-y: auto !important;
+          scrollbar-width: thin;
+          scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+          z-index: 1000 !important;
+        }
+        
+        .ql-picker-item {
+          color: rgba(255, 255, 255, 0.7) !important;
+          padding: 4px 8px !important;
+          border-radius: 4px !important;
+        }
+        
+        .ql-picker-item:hover {
+          background-color: rgba(255, 255, 255, 0.1) !important;
+          color: white !important;
+        }
+        
+        .ql-picker-item.ql-selected {
+          color: cyan !important;
+          font-weight: bold !important;
+        }
+        
+        /* Scrollbar for dropdown */
+        .ql-picker-options::-webkit-scrollbar {
+          width: 6px;
+        }
+        .ql-picker-options::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .ql-picker-options::-webkit-scrollbar-thumb {
+          background-color: rgba(255, 255, 255, 0.2);
+          border-radius: 3px;
+        }
+
+        /* Editor Height and Scrolling */
+        .ql-editor {
+          height: var(--editor-height) !important;
+          overflow-y: auto !important;
+          max-height: var(--editor-height) !important;
         }
       `;
       document.head.appendChild(hoverStyle);
@@ -168,9 +227,10 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   return (
     <div
       className={cn(
-        "rich-text-editor bg-[#0f0f0f] border border-white/10 rounded-lg",
+        "rich-text-editor bg-transparent border-none rounded-lg",
         className
       )}
+      style={{ "--editor-height": height } as React.CSSProperties}
     >
       <ReactQuill
         ref={quillRef}
@@ -181,8 +241,8 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         modules={modules}
         formats={formats}
         readOnly={readOnly}
+        onFocus={onFocus}
         style={{
-          height: height,
           backgroundColor: "transparent",
           border: "none",
           color: "white",
