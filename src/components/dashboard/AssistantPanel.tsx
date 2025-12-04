@@ -132,7 +132,6 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
           borderRadius: "25px",
           width: "90%",
         }}
-        className="animate-in fade-in slide-in-from-top-4 duration-500 delay-200"
       >
         <div
           className="assistant-tools flex gap-2"
