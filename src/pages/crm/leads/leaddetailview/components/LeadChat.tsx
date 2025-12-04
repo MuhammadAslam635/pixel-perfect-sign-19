@@ -2881,12 +2881,35 @@ const LeadChat = ({
   };
 
   const getEmailBodyText = (email: Email) => {
+    // Check if text field contains HTML
     if (email.body?.text?.trim()) {
-      return stripQuotedEmailContent(email.body.text.trim());
+      const textContent = email.body.text.trim();
+      // If text contains HTML tags, strip them
+      if (/<[^>]+>/.test(textContent)) {
+        // Replace closing p tags with double newlines to preserve paragraphs
+        let stripped = textContent.replace(/<\/p>/gi, "\n\n");
+        // Replace br tags with newlines
+        stripped = stripped.replace(/<br\s*\/?>/gi, "\n");
+        // Remove all other HTML tags
+        stripped = stripped.replace(/<[^>]+>/g, "");
+        // Clean up excessive whitespace but preserve newlines
+        stripped = stripped.replace(/ +/g, " ").trim();
+        return stripQuotedEmailContent(stripped);
+      }
+      // Otherwise, return as plain text
+      return stripQuotedEmailContent(textContent);
     }
+    // Fallback to html field
     if (email.body?.html) {
-      const stripped = email.body.html.replace(/<[^>]+>/g, " ");
-      return stripQuotedEmailContent(stripped.replace(/\s+/g, " ").trim());
+      // Replace closing p tags with double newlines to preserve paragraphs
+      let stripped = email.body.html.replace(/<\/p>/gi, "\n\n");
+      // Replace br tags with newlines
+      stripped = stripped.replace(/<br\s*\/?>/gi, "\n");
+      // Remove all other HTML tags
+      stripped = stripped.replace(/<[^>]+>/g, "");
+      // Clean up excessive whitespace but preserve newlines
+      stripped = stripped.replace(/ +/g, " ").trim();
+      return stripQuotedEmailContent(stripped);
     }
     return "";
   };
