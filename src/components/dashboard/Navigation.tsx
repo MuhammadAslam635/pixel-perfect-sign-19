@@ -9,6 +9,7 @@ import {
   CalendarDays,
   Home,
   Mail,
+  Megaphone,
   PhoneCall,
   Target,
   UserCheck,
@@ -81,7 +82,7 @@ const navLinks: NavLink[] = [
   {
     id: "campaigns",
     label: "Campaigns",
-    icon: Target,
+    icon: Megaphone,
     path: "/campaigns",
     match: (pathname: string) => pathname.startsWith("/campaigns"),
   },
