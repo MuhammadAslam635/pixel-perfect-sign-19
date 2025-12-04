@@ -545,7 +545,7 @@ const InboxPage = () => {
       <Sheet open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
         <SheetContent
           side="right"
-          className="w-full sm:max-w-2xl lg:max-w-3xl overflow-y-auto"
+          className="w-full sm:max-w-2xl lg:max-w-3xl overflow-y-auto scrollbar-hide"
         >
           <SheetHeader>
             <SheetTitle>Email Details</SheetTitle>
