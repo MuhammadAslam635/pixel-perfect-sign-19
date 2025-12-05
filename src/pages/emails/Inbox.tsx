@@ -315,12 +315,12 @@ const InboxPage = () => {
                   </div>
                 </Button>
                 {showCategories && (
-                  <div className="space-y-1 overflow-hidden animate-in slide-in-from-top-2 duration-200">
+                  <div className="space-y-1 overflow-hidden animate-in slide-in-from-top-2 duration-200  px-1">
                     <Button
                       variant={
                         filter === "Client Communication" ? "default" : "ghost"
                       }
-                      className={`w-full justify-start rounded-full ml-6 text-sm ${
+                      className={`w-[calc(100%-24px)] ml-6 rounded-full pl-3 pr-2 text-xs text-left whitespace-normal h-auto py-1.5 ${
                         filter === "Client Communication"
                           ? "bg-white/15 text-white border border-white/20"
                           : "text-white/60 hover:text-white hover:bg-white/10"
@@ -330,8 +330,8 @@ const InboxPage = () => {
                         setPage(1);
                       }}
                     >
-                      <div className="h-1 w-1 rounded-full bg-current mr-2" />
-                      Client Communication
+                      <div className="h-1 w-1 rounded-full bg-current mr-2 flex-shrink-0" />
+                      <span className="flex-1">Client Communication</span>
                     </Button>
                     <Button
                       variant={
@@ -339,7 +339,7 @@ const InboxPage = () => {
                           ? "default"
                           : "ghost"
                       }
-                      className={`w-full justify-start rounded-full ml-6 text-sm ${
+                      className={`w-[calc(100%-24px)] ml-6 rounded-full pl-3 pr-2 text-xs text-left whitespace-normal h-auto py-1.5 ${
                         filter === "Marketing & Promotions"
                           ? "bg-white/15 text-white border border-white/20"
                           : "text-white/60 hover:text-white hover:bg-white/10"
@@ -349,8 +349,8 @@ const InboxPage = () => {
                         setPage(1);
                       }}
                     >
-                      <div className="h-1 w-1 rounded-full bg-current mr-2" />
-                      Marketing & Promotions
+                      <div className="h-1 w-1 rounded-full bg-current mr-2 flex-shrink-0" />
+                      <span className="flex-1">Marketing & Promotions</span>
                     </Button>
                     <Button
                       variant={
@@ -358,7 +358,7 @@ const InboxPage = () => {
                           ? "default"
                           : "ghost"
                       }
-                      className={`w-full justify-start rounded-full ml-6 text-sm ${
+                      className={`w-[calc(100%-24px)] ml-6 rounded-full pl-3 pr-2 text-xs text-left whitespace-normal h-auto py-1.5 ${
                         filter === "Internal Communication"
                           ? "bg-white/15 text-white border border-white/20"
                           : "text-white/60 hover:text-white hover:bg-white/10"
@@ -368,8 +368,8 @@ const InboxPage = () => {
                         setPage(1);
                       }}
                     >
-                      <div className="h-1 w-1 rounded-full bg-current mr-2" />
-                      Internal Communication
+                      <div className="h-1 w-1 rounded-full bg-current mr-2 flex-shrink-0" />
+                      <span className="flex-1">Internal Communication</span>
                     </Button>
                   </div>
                 )}
@@ -494,7 +494,7 @@ const InboxPage = () => {
                     "Internal Communication"}
                 </h2>
               </div>
-              <div className="space-y-1.5 pb-4 overflow-y-auto">
+              <div className="space-y-1.5 pb-4 overflow-y-auto scrollbar-hide">
                 {isLoading ? (
                   <div className="space-y-1.5">
                     {[...Array(8)].map((_, i) => (
