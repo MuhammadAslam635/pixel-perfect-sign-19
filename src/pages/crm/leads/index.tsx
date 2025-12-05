@@ -21,7 +21,7 @@ import LeadsList from "./components/LeadsList";
 import { DetailsSidebar } from "../shared/components";
 import {
   useCompaniesData,
-  useCrmStatsData,
+  useCompanyCrmStatsData,
   useLeadsData,
 } from "../shared/hooks";
 import { LeadsQueryParams } from "@/services/leads.service";
@@ -512,14 +512,15 @@ const index = () => {
     { enabled: true }
   );
 
-  // Fetch shared CRM stats for top cards
-  const { stats: crmStats } = useCrmStatsData();
+  // Fetch shared CRM stats for top cards (including companies and leads counts)
+  const { stats: crmStats } = useCompanyCrmStatsData({});
 
   const leadsLoading = leadsQuery.isLoading || leadsQuery.isFetching;
 
   const stats = useMemo(
     () =>
       buildStats({
+        totalCompanies: crmStats?.totalCompanies ?? 0,
         totalLeads: totalLeadsForStats,
         totalOutreach: crmStats?.totalOutreach,
         totalResponse: crmStats?.totalResponse,
@@ -527,6 +528,7 @@ const index = () => {
         messagesSent: crmStats?.messagesSent,
       }),
     [
+      crmStats?.totalCompanies,
       totalLeadsForStats,
       crmStats?.totalOutreach,
       crmStats?.totalResponse,
