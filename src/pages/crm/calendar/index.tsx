@@ -95,72 +95,17 @@ const CalendarPage: FC = () => {
   } = useQuery({
     queryKey: ["calendar-all-meetings", calendarMonthKey],
     queryFn: async () => {
-      // MOCK DATA - Comment this out and uncomment below for real API
-      return {
-        data: [
-          {
-            _id: "1",
-            subject: "Product Demo with Tech Corp",
-            startDateTime: new Date(currentDate.getFullYear(), currentDate.getMonth(), 15, 10, 0).toISOString(),
-            endDateTime: new Date(currentDate.getFullYear(), currentDate.getMonth(), 15, 11, 0).toISOString(),
-            status: "scheduled",
-            body: "Discuss new product features and integration possibilities with the Tech Corp team.",
-            webLink: "https://teams.microsoft.com/meeting/123",
-            personId: "John Smith",
-          },
-          {
-            _id: "2",
-            subject: "Follow-up Call - Marketing Agency",
-            startDateTime: new Date(currentDate.getFullYear(), currentDate.getMonth(), 18, 14, 30).toISOString(),
-            endDateTime: new Date(currentDate.getFullYear(), currentDate.getMonth(), 18, 15, 30).toISOString(),
-            status: "scheduled",
-            body: "Review campaign performance and discuss next quarter strategy.",
-            webLink: "https://zoom.us/meeting/456",
-            personId: "Sarah Johnson",
-          },
-          {
-            _id: "3",
-            subject: "Sales Presentation - Enterprise Client",
-            startDateTime: new Date(currentDate.getFullYear(), currentDate.getMonth(), 8, 9, 0).toISOString(),
-            endDateTime: new Date(currentDate.getFullYear(), currentDate.getMonth(), 8, 10, 30).toISOString(),
-            status: "completed",
-            body: "Present our enterprise solution to the decision-making team.",
-            personId: "Michael Chen",
-          },
-          {
-            _id: "4",
-            subject: "Partnership Discussion",
-            startDateTime: new Date(currentDate.getFullYear(), currentDate.getMonth(), 22, 16, 0).toISOString(),
-            endDateTime: new Date(currentDate.getFullYear(), currentDate.getMonth(), 22, 17, 0).toISOString(),
-            status: "scheduled",
-            body: "Explore potential partnership opportunities and collaboration models.",
-            webLink: "https://meet.google.com/abc-defg-hij",
-            personId: "Emily Rodriguez",
-          },
-          {
-            _id: "5",
-            subject: "Quarterly Review Meeting",
-            startDateTime: new Date(currentDate.getFullYear(), currentDate.getMonth(), 5, 13, 0).toISOString(),
-            endDateTime: new Date(currentDate.getFullYear(), currentDate.getMonth(), 5, 14, 0).toISOString(),
-            status: "cancelled",
-            body: "Review Q4 performance metrics and set goals for next quarter.",
-            personId: "David Park",
-          },
-        ],
-      };
-      
-      // REAL API CALL - Uncomment this for production
-      // return calendarService.getLeadMeetings({
-      //   startDate: calendarRangeStartIso,
-      //   endDate: calendarRangeEndIso,
-      //   sort: "asc",
-      //   limit: 500,
-      // });
+      return calendarService.getLeadMeetings({
+        startDate: calendarRangeStartIso,
+        endDate: calendarRangeEndIso,
+        sort: "asc",
+        limit: 500,
+      });
     },
     staleTime: 60 * 1000,
   });
 
-  // Fetch available slots - COMMENTED FOR UI DEVELOPMENT
+  // Fetch available slots
   const {
     data: availableSlotsResponse,
     isLoading: isAvailabilityLoading,
@@ -169,34 +114,15 @@ const CalendarPage: FC = () => {
   } = useQuery({
     queryKey: ["calendar-available-slots", calendarMonthKey, userTimeZone],
     queryFn: async () => {
-      // MOCK DATA - Comment this out and uncomment below for real API
-      return {
-        data: [
-          {
-            start: new Date(currentDate.getFullYear(), currentDate.getMonth(), 10, 9, 0).toISOString(),
-            end: new Date(currentDate.getFullYear(), currentDate.getMonth(), 10, 9, 30).toISOString(),
-          },
-          {
-            start: new Date(currentDate.getFullYear(), currentDate.getMonth(), 12, 14, 0).toISOString(),
-            end: new Date(currentDate.getFullYear(), currentDate.getMonth(), 12, 14, 30).toISOString(),
-          },
-          {
-            start: new Date(currentDate.getFullYear(), currentDate.getMonth(), 20, 11, 0).toISOString(),
-            end: new Date(currentDate.getFullYear(), currentDate.getMonth(), 20, 11, 30).toISOString(),
-          },
-        ],
-      };
-      
-      // REAL API CALL - Uncomment this for production
-      // return calendarService.getAvailableSlots({
-      //   startDate: calendarRangeStartIso,
-      //   endDate: calendarRangeEndIso,
-      //   durationMinutes: 30,
-      //   intervalMinutes: 30,
-      //   workingHours: "9,17",
-      //   weekdaysOnly: "true",
-      //   workingHoursTimeZone: userTimeZone,
-      // });
+      return calendarService.getAvailableSlots({
+        startDate: calendarRangeStartIso,
+        endDate: calendarRangeEndIso,
+        durationMinutes: 30,
+        intervalMinutes: 30,
+        workingHours: "9,17",
+        weekdaysOnly: "true",
+        workingHoursTimeZone: userTimeZone,
+      });
     },
     staleTime: 60 * 1000,
   });
@@ -284,7 +210,7 @@ const CalendarPage: FC = () => {
   const meetingDayMap = useMemo(() => {
     const map = new Map<number, LeadMeetingRecord[]>();
     leadMeetings.forEach((meeting) => {
-      const startDate = new Date(meeting.startDateTime);
+      const startDate = new Date(meeting.start);
       if (
         startDate.getMonth() === currentDate.getMonth() &&
         startDate.getFullYear() === currentDate.getFullYear()
@@ -317,16 +243,34 @@ const CalendarPage: FC = () => {
     return map;
   }, [availableSlots, currentDate]);
 
-  // Sort meetings by date
-  const sortedMeetings = useMemo(
-    () =>
-      [...leadMeetings].sort(
-        (a, b) =>
-          new Date(a.startDateTime).getTime() -
-          new Date(b.startDateTime).getTime()
-      ),
-    [leadMeetings]
-  );
+  // Sort and filter meetings based on selected date
+  const sortedMeetings = useMemo(() => {
+    let filtered = leadMeetings;
+    
+    // If a date is selected, filter to show only that date's meetings
+    if (selectedDate !== null) {
+      filtered = leadMeetings.filter((meeting) => {
+        const meetingDate = new Date(meeting.start);
+        return (
+          meetingDate.getDate() === selectedDate &&
+          meetingDate.getMonth() === currentDate.getMonth() &&
+          meetingDate.getFullYear() === currentDate.getFullYear()
+        );
+      });
+    } else {
+      // Show only future meetings by default
+      filtered = leadMeetings.filter((meeting) => {
+        const meetingStart = new Date(meeting.start);
+        return meetingStart.getTime() >= nowTimestamp;
+      });
+    }
+
+    return filtered.sort((a, b) => {
+      const aStart = new Date(a.start).getTime();
+      const bStart = new Date(b.start).getTime();
+      return aStart - bStart;
+    });
+  }, [leadMeetings, selectedDate, currentDate, nowTimestamp]);
 
   const monthNames = [
     "Jan",
@@ -389,10 +333,10 @@ const CalendarPage: FC = () => {
   };
 
   const handleConfirmDeleteMeeting = () => {
-    if (!meetingPendingDelete?._id) {
+    if (!meetingPendingDelete?.id) {
       return;
     }
-    deleteMeetingMutation.mutate(meetingPendingDelete._id);
+    deleteMeetingMutation.mutate(meetingPendingDelete.id);
   };
 
   const leadMeetingsErrorMessage = leadMeetingsError
@@ -549,32 +493,36 @@ const CalendarPage: FC = () => {
 
                     const dayMeetings = meetingDayMap.get(day) || [];
                     const dayAvailability = availabilityDayMap.get(day) || [];
+                    
+                    // Check for different meeting statuses
                     const hasUpcomingMeeting = dayMeetings.some(
                       (meeting) =>
-                        new Date(meeting.startDateTime).getTime() >= nowTimestamp
+                        meeting.status === "scheduled" &&
+                        new Date(meeting.start).getTime() >= nowTimestamp
                     );
                     const hasCompletedMeeting = dayMeetings.some(
-                      (meeting) =>
-                        new Date(meeting.endDateTime).getTime() < nowTimestamp
+                      (meeting) => meeting.status === "completed"
+                    );
+                    const hasCancelledMeeting = dayMeetings.some(
+                      (meeting) => meeting.status === "cancelled"
                     );
                     const hasAvailability = dayAvailability.length > 0;
                     const isToday =
                       day === todayRef.getDate() &&
                       currentDate.getMonth() === todayRef.getMonth() &&
                       currentDate.getFullYear() === todayRef.getFullYear();
-
+                    
+                    // Priority order: Upcoming > Cancelled > Completed
                     const highlightClass = hasUpcomingMeeting
                       ? "bg-indigo-500/30 border border-indigo-400/70"
+                      : hasCancelledMeeting
+                      ? "bg-red-500/30 border border-red-400/70"
                       : hasCompletedMeeting
                       ? "bg-teal-500/25 border border-teal-400/60"
-                      : hasAvailability
-                      ? "bg-blue-500/20 border border-blue-400/60"
                       : "";
 
                     const textClass =
-                      hasUpcomingMeeting ||
-                      hasCompletedMeeting ||
-                      hasAvailability
+                      hasUpcomingMeeting || hasCompletedMeeting || hasCancelledMeeting
                         ? "text-white font-medium"
                         : "text-white/70";
 
@@ -603,7 +551,7 @@ const CalendarPage: FC = () => {
                     return (
                       <div key={index} className="flex items-center justify-center py-0.5">
                         <button
-                          onClick={() => setSelectedDate(day)}
+                          onClick={() => setSelectedDate(selectedDate === day ? null : day)}
                           className="w-7 h-7 flex items-center justify-center relative rounded-full hover:bg-white/10 transition-colors cursor-pointer"
                           aria-label={ariaLabel}
                           title={ariaLabel}
@@ -616,7 +564,7 @@ const CalendarPage: FC = () => {
                           )}
                           {!isSelected && !isToday && (hasUpcomingMeeting ||
                             hasCompletedMeeting ||
-                            hasAvailability) && (
+                            hasCancelledMeeting) && (
                             <div
                               className={`absolute inset-0 rounded-full ${highlightClass}`}
                             />
@@ -645,6 +593,10 @@ const CalendarPage: FC = () => {
                     <span>Completed</span>
                   </div>
                   <div className="flex items-center gap-1.5">
+                    <div className="w-2.5 h-2.5 rounded-sm border border-red-400/70 bg-red-500/30" />
+                    <span>Cancelled</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
                     <div className="w-2.5 h-2.5 rounded-sm border border-blue-400/60 bg-blue-500/20" />
                     <span>Available</span>
                   </div>
@@ -661,8 +613,18 @@ const CalendarPage: FC = () => {
               >
                 <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                   <h3 className="text-white font-semibold text-base">
-                    Scheduled Meetings
+                    {selectedDate !== null
+                      ? `Meetings on ${monthNames[currentDate.getMonth()]} ${selectedDate}, ${currentDate.getFullYear()}`
+                      : "All Future Meetings"}
                   </h3>
+                  {selectedDate !== null && (
+                    <button
+                      onClick={() => setSelectedDate(null)}
+                      className="text-xs text-white/60 hover:text-white transition-colors"
+                    >
+                      Clear filter
+                    </button>
+                  )}
                 </div>
                 
                 <div className="flex-1 overflow-y-auto scrollbar-hide max-h-[calc(100vh-20rem)]">
@@ -674,30 +636,27 @@ const CalendarPage: FC = () => {
                   ) : sortedMeetings.length > 0 ? (
                     <div className="space-y-3 pr-2">
                       {sortedMeetings.map((meeting) => {
-                        const meetingEnd = new Date(meeting.endDateTime);
+                        const meetingEnd = new Date(meeting.end);
                         const meetingCompleted = meetingEnd.getTime() < nowTimestamp;
                         return (
                           <div
-                            key={meeting._id}
+                            key={meeting.id}
                             className="rounded-lg p-4 border border-white/10 bg-white/5"
                           >
                             <div className="flex flex-wrap items-center justify-between gap-3">
                               <div className="flex-1 min-w-0">
                                 <p className="text-white font-semibold text-sm">
-                                  {meeting.subject || "Meeting"}
+                                  {meeting.title || "Meeting"}
                                 </p>
                                 <p className="text-xs text-white/60">
                                   {formatDateTimeRange(
-                                    meeting.startDateTime,
-                                    meeting.endDateTime
+                                    meeting.start,
+                                    meeting.end
                                   )}
                                 </p>
-                                {meeting.personId && (
+                                {meeting.linkedPerson && (
                                   <p className="text-xs text-white/50 mt-1">
-                                    {typeof meeting.personId === "string"
-                                      ? meeting.personId
-                                      : (meeting.personId as any)?.name ||
-                                        "Unknown"}
+                                    {meeting.linkedPerson.name} {meeting.linkedPerson.companyName ? `— ${meeting.linkedPerson.companyName}` : ""}
                                   </p>
                                 )}
                               </div>
@@ -736,12 +695,12 @@ const CalendarPage: FC = () => {
                                   : meeting.body}
                               </p>
                             )}
-                            {meeting.webLink && (
+                            {meeting.joinLink && (
                               <a
-                                href={meeting.webLink}
+                                href={meeting.joinLink}
                                 target="_blank"
-                                rel="noreferrer"
-                                className="text-xs text-sky-300 hover:text-sky-200 mt-2 inline-block"
+                                rel="noopener noreferrer"
+                                className="text-xs text-indigo-300 hover:text-indigo-200 mt-2 inline-block"
                               >
                                 Open calendar event →
                               </a>
@@ -769,19 +728,19 @@ const CalendarPage: FC = () => {
       </motion.main>
 
       {/* Delete Meeting Confirmation Dialog */}
-            <ConfirmDialog
-              open={!!meetingPendingDelete}
-              title="Delete Meeting"
-              description={`Are you sure you want to delete "${
-                meetingPendingDelete?.subject || "this meeting"
-              }"? This action cannot be undone.`}
-              confirmText="Delete"
-              cancelText="Cancel"
-              onConfirm={handleConfirmDeleteMeeting}
-              onCancel={() => setMeetingPendingDelete(null)}
-              confirmVariant="destructive"
-              isPending={deleteMeetingMutation.isPending}
-            />
+      <ConfirmDialog
+        open={!!meetingPendingDelete}
+        title="Delete Meeting"
+        description={`Are you sure you want to delete "${
+          meetingPendingDelete?.title || "this meeting"
+        }"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={handleConfirmDeleteMeeting}
+        onCancel={() => setMeetingPendingDelete(null)}
+        confirmVariant="destructive"
+        isPending={deleteMeetingMutation.isPending}
+      />
     </DashboardLayout>
   );
 };
