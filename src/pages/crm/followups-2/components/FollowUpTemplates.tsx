@@ -12,6 +12,7 @@ import {
   MoreVertical,
 } from "lucide-react";
 import { SearchInput } from "../../shared/components";
+import ActiveFollowUpPlans from "./ActiveFollowUpPlans";
 
 // Mock data for demo purposes
 const mockCampaigns = Array(9)
@@ -109,95 +110,100 @@ const FollowUpTemplates = () => {
           </div>
         </div>
 
-        {/* Campaign Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {mockCampaigns.map((campaign, index) => (
-            <Card
-              key={campaign.id}
-              className="bg-white/5 border-white/10 hover:border-white/20 transition-all duration-300 hover:shadow-lg hover:shadow-white/5"
-            >
-              <CardContent className="p-4 space-y-3">
-                {/* Card Header */}
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h4 className="text-white font-medium text-sm mb-1">
-                      {campaign.name}
-                    </h4>
-                    <p className="text-white/50 text-xs">
-                      Update {campaign.updatedAt}
-                    </p>
+        {/* Conditional Content Based on Active Tab */}
+        {activeTab === "templates" ? (
+          /* Campaign Cards Grid */
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {mockCampaigns.map((campaign, index) => (
+              <Card
+                key={campaign.id}
+                className="bg-white/5 border-white/10 hover:border-white/20 transition-all duration-300 hover:shadow-lg hover:shadow-white/5"
+              >
+                <CardContent className="p-4 space-y-3">
+                  {/* Card Header */}
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h4 className="text-white font-medium text-sm mb-1">
+                        {campaign.name}
+                      </h4>
+                      <p className="text-white/50 text-xs">
+                        Update {campaign.updatedAt}
+                      </p>
+                    </div>
+                    <button className="text-white/40 hover:text-white/60 transition-colors">
+                      <MoreVertical className="w-4 h-4" />
+                    </button>
                   </div>
-                  <button className="text-white/40 hover:text-white/60 transition-colors">
-                    <MoreVertical className="w-4 h-4" />
-                  </button>
-                </div>
 
-                {/* Stats Row 1: Run Time and Date */}
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-1.5 text-xs">
-                    <div className="w-6 h-6 rounded-full bg-cyan-500/20 flex items-center justify-center">
-                      <Clock className="w-3.5 h-3.5 text-cyan-400" />
+                  {/* Stats Row 1: Run Time and Date */}
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-1.5 text-xs">
+                      <div className="w-6 h-6 rounded-full bg-cyan-500/20 flex items-center justify-center">
+                        <Clock className="w-3.5 h-3.5 text-cyan-400" />
+                      </div>
+                      <span className="text-white/70">
+                        Run Time: {campaign.runTime}
+                      </span>
                     </div>
-                    <span className="text-white/70">
-                      Run Time: {campaign.runTime}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-xs">
-                    <div className="w-6 h-6 rounded-full bg-cyan-500/20 flex items-center justify-center">
-                      <Calendar className="w-3.5 h-3.5 text-cyan-400" />
+                    <div className="flex items-center gap-1.5 text-xs">
+                      <div className="w-6 h-6 rounded-full bg-cyan-500/20 flex items-center justify-center">
+                        <Calendar className="w-3.5 h-3.5 text-cyan-400" />
+                      </div>
+                      <span className="text-white/70">{campaign.dateRange}</span>
                     </div>
-                    <span className="text-white/70">{campaign.dateRange}</span>
                   </div>
-                </div>
 
-                {/* Stats Row 2: Communication Channels */}
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-1.5 text-xs">
-                    <div className="w-6 h-6 rounded-full bg-cyan-500/20 flex items-center justify-center">
-                      <Mail className="w-3.5 h-3.5 text-cyan-400" />
+                  {/* Stats Row 2: Communication Channels */}
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-1.5 text-xs">
+                      <div className="w-6 h-6 rounded-full bg-cyan-500/20 flex items-center justify-center">
+                        <Mail className="w-3.5 h-3.5 text-cyan-400" />
+                      </div>
+                      <span className="text-white/70">
+                        {campaign.emails.toString().padStart(2, "0")} Emails
+                      </span>
                     </div>
-                    <span className="text-white/70">
-                      {campaign.emails.toString().padStart(2, "0")} Emails
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-xs">
-                    <div className="w-6 h-6 rounded-full bg-cyan-500/20 flex items-center justify-center">
-                      <MessageSquare className="w-3.5 h-3.5 text-cyan-400" />
+                    <div className="flex items-center gap-1.5 text-xs">
+                      <div className="w-6 h-6 rounded-full bg-cyan-500/20 flex items-center justify-center">
+                        <MessageSquare className="w-3.5 h-3.5 text-cyan-400" />
+                      </div>
+                      <span className="text-white/70">
+                        {campaign.messages.toString().padStart(2, "0")} Message
+                      </span>
                     </div>
-                    <span className="text-white/70">
-                      {campaign.messages.toString().padStart(2, "0")} Message
-                    </span>
                   </div>
-                </div>
 
-                {/* Stats Row 3: Calls */}
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-1.5 text-xs">
-                    <div className="w-6 h-6 rounded-full bg-cyan-500/20 flex items-center justify-center">
-                      <Phone className="w-3.5 h-3.5 text-cyan-400" />
+                  {/* Stats Row 3: Calls */}
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-1.5 text-xs">
+                      <div className="w-6 h-6 rounded-full bg-cyan-500/20 flex items-center justify-center">
+                        <Phone className="w-3.5 h-3.5 text-cyan-400" />
+                      </div>
+                      <span className="text-white/70">
+                        {campaign.calls.toString().padStart(2, "0")} Calls
+                      </span>
                     </div>
-                    <span className="text-white/70">
-                      {campaign.calls.toString().padStart(2, "0")} Calls
-                    </span>
                   </div>
-                </div>
 
-                {/* Footer: Day Time and Run Button */}
-                <div className="flex items-center justify-between pt-2 border-t border-white/10">
-                  <span className="text-xs text-white/50">
-                    Day time: 14:00 (8:00 UTC)
-                  </span>
-                  <Button
-                    size="sm"
-                    className="bg-gradient-to-r from-[#69B4B7] via-[#5486D0] to-[#3E64B3] text-white hover:brightness-110 transition-all h-8 px-4 text-xs"
-                  >
-                    Run Templates
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                  {/* Footer: Day Time and Run Button */}
+                  <div className="flex items-center justify-between pt-2 border-t border-white/10">
+                    <span className="text-xs text-white/50">
+                      Day time: 14:00 (8:00 UTC)
+                    </span>
+                    <Button
+                      size="sm"
+                      className="bg-gradient-to-r from-[#69B4B7] via-[#5486D0] to-[#3E64B3] text-white hover:brightness-110 transition-all h-8 px-4 text-xs"
+                    >
+                      Run Templates
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <ActiveFollowUpPlans />
+        )}
       </div>
     </div>
   );
