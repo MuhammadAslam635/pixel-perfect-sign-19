@@ -9,12 +9,13 @@ interface ActiveNavButtonProps
   text: string;
   showIndicator?: boolean;
   className?: string;
+  iconClassName?: string;
 }
 
 export const ActiveNavButton = React.forwardRef<
   HTMLButtonElement,
   ActiveNavButtonProps
->(({ icon: Icon, text, showIndicator = false, className, ...props }, ref) => {
+>(({ icon: Icon, text, showIndicator = false, className, iconClassName, ...props }, ref) => {
   return (
     <Button
       ref={ref}
@@ -38,7 +39,7 @@ export const ActiveNavButton = React.forwardRef<
         }}
       ></div>
       {Icon && (
-        <Icon className="w-3.5 h-3.5 flex-shrink-0 text-white drop-shadow-[0_8px_18px_rgba(62,100,180,0.45)]" />
+        <Icon className={cn("w-3.5 h-3.5 flex-shrink-0 text-white drop-shadow-[0_8px_18px_rgba(62,100,180,0.45)]", iconClassName)} />
       )}
       <span className="whitespace-nowrap ml-1.5 opacity-100 scale-100 translate-x-0 max-w-[200px]">
         {text}

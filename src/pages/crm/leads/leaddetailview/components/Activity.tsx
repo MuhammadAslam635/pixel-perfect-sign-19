@@ -1502,12 +1502,19 @@ const Activity: FC<ActivityProps> = ({
                               : "No meetings scheduled this month"}
                           </span>
                           <div className="flex items-center justify-center gap-2 w-full">
-                            {(isCalendarDataBusy ||
-                              syncMeetingsMutation.isPending) && (
-                              <Loader2 className="w-4 h-4 animate-spin text-white/70" />
-                            )}
                             <ActiveNavButton
-                              icon={RefreshCcw}
+                              icon={
+                                isCalendarDataBusy ||
+                                syncMeetingsMutation.isPending
+                                  ? Loader2
+                                  : RefreshCcw
+                              }
+                              iconClassName={
+                                isCalendarDataBusy ||
+                                syncMeetingsMutation.isPending
+                                  ? "animate-spin"
+                                  : ""
+                              }
                               text={
                                 syncMeetingsMutation.isPending
                                   ? "Syncing..."
