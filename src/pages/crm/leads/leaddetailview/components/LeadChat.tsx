@@ -106,6 +106,7 @@ const LeadChat = ({
   const displayName = lead?.name || fallbackLeadInfo.name;
   const position = lead?.position || fallbackLeadInfo.position;
   const phoneNumber = lead?.phone;
+  const whatsappNumber = lead?.whatsapp;
   const emailAddress = lead?.email;
   const avatarSrc = lead?.pictureUrl;
   const avatarLetter = displayName?.charAt(0).toUpperCase() || "?";
@@ -114,6 +115,10 @@ const LeadChat = ({
   const normalizedLeadPhone = useMemo(
     () => normalizePhoneNumber(phoneNumber),
     [phoneNumber]
+  );
+  const normalizedLeadWhatsapp = useMemo(
+    () => normalizePhoneNumber(whatsappNumber),
+    [whatsappNumber]
   );
 
   const [smsInput, setSmsInput] = useState("");
@@ -152,7 +157,7 @@ const LeadChat = ({
   const emailScrollRef = useRef<HTMLDivElement | null>(null);
   const smsScrollRef = useRef<HTMLDivElement | null>(null);
   const markedReadCacheRef = useRef<Set<string>>(new Set());
-  
+
   // Refs for auto-expanding textareas
   const whatsappTextareaRef = useRef<HTMLTextAreaElement>(null);
   const emailTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -168,15 +173,15 @@ const LeadChat = ({
   // Auto-resize textarea to fit content (max 3 lines)
   const autoResizeTextarea = (textarea: HTMLTextAreaElement | null) => {
     if (!textarea) return;
-    
+
     // Reset height to calculate new height
-    textarea.style.height = 'auto';
-    
+    textarea.style.height = "auto";
+
     // Calculate max height for 3 lines (approximately 20px per line + padding)
     const lineHeight = 20;
     const maxLines = 3;
     const maxHeight = lineHeight * maxLines;
-    
+
     // Set height based on content, capped at max
     const newHeight = Math.min(textarea.scrollHeight, maxHeight);
     textarea.style.height = `${newHeight}px`;
@@ -209,30 +214,31 @@ const LeadChat = ({
   const twilioStatusLoading = twilioConnection.loading;
   const whatsappStatusLoading = isWhatsAppConnectionLoading;
 
-  const whatsappUnavailableMessage = !phoneNumber
-    ? "Add a phone number for this lead to start WhatsApp chats."
+  const whatsappUnavailableMessage = !whatsappNumber
+    ? "Add a WhatsApp number for this lead to start WhatsApp chats."
     : whatsappConnectionErrorMessage
     ? whatsappConnectionErrorMessage
     : !whatsappReady
     ? "Connect a WhatsApp number in Settings → Integrations."
-    : !normalizedLeadPhone
-    ? "Lead phone number must include the country code."
+    : !normalizedLeadWhatsapp
+    ? "Lead WhatsApp number must include the country code."
     : null;
 
   const whatsappInputsDisabled =
     whatsappStatusLoading ||
     Boolean(whatsappUnavailableMessage) ||
     !whatsappReady ||
-    !normalizedLeadPhone ||
+    !normalizedLeadWhatsapp ||
     !whatsappPhoneNumberId;
   const canGenerateWhatsAppMessage = Boolean(lead?.companyId && lead?._id);
 
   const channelTabs = useMemo(() => {
     const hasPhone = Boolean(phoneNumber);
+    const hasWhatsapp = Boolean(whatsappNumber);
     const hasEmail = Boolean(emailAddress);
 
-    const whatsappStatus = !hasPhone
-      ? "Add phone"
+    const whatsappStatus = !hasWhatsapp
+      ? "Add WhatsApp number"
       : isWhatsAppConnectionLoading
       ? "Checking..."
       : whatsappConnectionErrorMessage
@@ -252,7 +258,7 @@ const LeadChat = ({
     const emailStatus = hasEmail ? "Connected" : "Unavailable";
 
     const whatsappAvailable =
-      hasPhone && (whatsappReady || isWhatsAppConnectionLoading);
+      hasWhatsapp && (whatsappReady || isWhatsAppConnectionLoading);
     const smsAvailable = hasPhone && (twilioReady || twilioStatusLoading);
     const aiCallAvailable = hasPhone;
 
@@ -322,14 +328,14 @@ const LeadChat = ({
   const whatsappConversationQueryKey = [
     "whatsapp-conversation",
     leadId,
-    normalizedLeadPhone,
+    normalizedLeadWhatsapp,
     whatsappPhoneNumberId,
   ];
 
   const whatsappConversationEnabled =
     activeTab === "WhatsApp" &&
     Boolean(
-      leadId && normalizedLeadPhone && whatsappReady && whatsappPhoneNumberId
+      leadId && normalizedLeadWhatsapp && whatsappReady && whatsappPhoneNumberId
     );
 
   const shouldPollWhatsApp =
@@ -346,7 +352,7 @@ const LeadChat = ({
     queryKey: whatsappConversationQueryKey,
     queryFn: () =>
       whatsappService.getConversation({
-        contact: normalizedLeadPhone as string,
+        contact: normalizedLeadWhatsapp as string,
         phoneNumberId: whatsappPhoneNumberId || undefined,
         limit: 100,
       }),
@@ -583,7 +589,7 @@ const LeadChat = ({
     mutationFn: (payload: { body: string }) =>
       whatsappService.sendTextMessage({
         phoneNumberId: whatsappPhoneNumberId as string,
-        to: normalizedLeadPhone as string,
+        to: normalizedLeadWhatsapp as string,
         body: payload.body,
       }),
     onSuccess: () => {
@@ -622,7 +628,7 @@ const LeadChat = ({
   const deleteConversationMutation = useMutation({
     mutationFn: () =>
       whatsappService.deleteConversation({
-        contact: normalizedLeadPhone as string,
+        contact: normalizedLeadWhatsapp as string,
         phoneNumberId: whatsappPhoneNumberId || undefined,
       }),
     onSuccess: () => {
@@ -757,7 +763,7 @@ const LeadChat = ({
   const handleSendWhatsappMessage = () => {
     if (
       !leadId ||
-      !normalizedLeadPhone ||
+      !normalizedLeadWhatsapp ||
       !whatsappPhoneNumberId ||
       !whatsappInput.trim() ||
       whatsappMutation.isPending ||
@@ -847,19 +853,19 @@ const LeadChat = ({
 
       const generatedSubject =
         response.data?.email?.subject?.trim() || DEFAULT_EMAIL_SUBJECT;
-      
+
       // Prefer HTML body, fallback to plain text converted to HTML
       let generatedBody = response.data?.email?.bodyHtml?.trim();
-      
+
       if (!generatedBody && response.data?.email?.body?.trim()) {
         // Convert plain text to HTML paragraphs
         const plainText = response.data.email.body.trim();
         generatedBody = plainText
-          .split('\n\n')
-          .map(paragraph => paragraph.trim())
-          .filter(paragraph => paragraph.length > 0)
-          .map(paragraph => `<p>${paragraph.replace(/\n/g, '<br>')}</p>`)
-          .join('');
+          .split("\n\n")
+          .map((paragraph) => paragraph.trim())
+          .filter((paragraph) => paragraph.length > 0)
+          .map((paragraph) => `<p>${paragraph.replace(/\n/g, "<br>")}</p>`)
+          .join("");
       }
 
       if (generatedBody) {
@@ -920,7 +926,7 @@ const LeadChat = ({
     if (
       deleteConversationMutation.isPending ||
       !whatsappConversationEnabled ||
-      !normalizedLeadPhone
+      !normalizedLeadWhatsapp
     ) {
       return;
     }
@@ -931,7 +937,7 @@ const LeadChat = ({
     if (
       deleteConversationMutation.isPending ||
       !whatsappConversationEnabled ||
-      !normalizedLeadPhone
+      !normalizedLeadWhatsapp
     ) {
       return;
     }
@@ -1073,24 +1079,39 @@ const LeadChat = ({
         // Remove dangerous tags but keep formatting tags
         let sanitized = textContent;
         // Remove script tags and their content
-        sanitized = sanitized.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "");
+        sanitized = sanitized.replace(
+          /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+          ""
+        );
         // Remove style tags and their content
-        sanitized = sanitized.replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, "");
+        sanitized = sanitized.replace(
+          /<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi,
+          ""
+        );
         // Remove event handlers
         sanitized = sanitized.replace(/\son\w+\s*=\s*["'][^"']*["']/gi, "");
         sanitized = sanitized.replace(/\son\w+\s*=\s*[^\s>]*/gi, "");
         return sanitized;
       }
       // Otherwise, return as plain text wrapped in paragraph
-      return `<p>${stripQuotedEmailContent(textContent).replace(/\n/g, "<br>")}</p>`;
+      return `<p>${stripQuotedEmailContent(textContent).replace(
+        /\n/g,
+        "<br>"
+      )}</p>`;
     }
     // Fallback to html field
     if (email.body?.html) {
       let sanitized = email.body.html;
       // Remove script tags and their content
-      sanitized = sanitized.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "");
+      sanitized = sanitized.replace(
+        /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+        ""
+      );
       // Remove style tags and their content
-      sanitized = sanitized.replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, "");
+      sanitized = sanitized.replace(
+        /<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi,
+        ""
+      );
       // Remove event handlers
       sanitized = sanitized.replace(/\son\w+\s*=\s*["'][^"']*["']/gi, "");
       sanitized = sanitized.replace(/\son\w+\s*=\s*[^\s>]*/gi, "");
@@ -1113,7 +1134,11 @@ const LeadChat = ({
   };
 
   const headerContactValue =
-    activeTab === "Email" ? emailAddress || "" : phoneNumber || "";
+    activeTab === "Email"
+      ? emailAddress || ""
+      : activeTab === "WhatsApp"
+      ? whatsappNumber || ""
+      : phoneNumber || "";
 
   // Auto-resize textareas when content changes
   useEffect(() => {
@@ -1135,7 +1160,7 @@ const LeadChat = ({
         !emailComposerRef.current.contains(event.target as Node)
       ) {
         if (isEmailEditorExpanded) {
-           setIsEmailEditorExpanded(false);
+          setIsEmailEditorExpanded(false);
         }
       }
     };
@@ -1145,8 +1170,6 @@ const LeadChat = ({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isEmailEditorExpanded]);
-
-
 
   const handleComposeEmail = () => {
     window.location.href = `${import.meta.env.VITE_APP_API_URL}/emails/compose`;
@@ -1488,7 +1511,7 @@ const LeadChat = ({
                       : "Type WhatsApp message"
                   }
                   rows={1}
-                  style={{ minHeight: '20px', maxHeight: '60px' }}
+                  style={{ minHeight: "20px", maxHeight: "60px" }}
                 />
                 <button
                   className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-white/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
@@ -1619,9 +1642,11 @@ const LeadChat = ({
                             {email.subject || "No subject"}
                           </p>
                           {emailBodyHtml && (
-                            <div 
+                            <div
                               className="text-xs mt-1 leading-relaxed [&_p]:mb-2 [&_p:last-child]:mb-0 [&_strong]:font-bold [&_em]:italic [&_u]:underline"
-                              dangerouslySetInnerHTML={{ __html: emailBodyHtml }}
+                              dangerouslySetInnerHTML={{
+                                __html: emailBodyHtml,
+                              }}
                             />
                           )}
                         </div>
@@ -1633,10 +1658,15 @@ const LeadChat = ({
             )}
 
             {/* Fixed input at bottom */}
-            <div className="sticky bottom-0 left-0 right-0 pt-4" ref={emailComposerRef}>
+            <div
+              className="sticky bottom-0 left-0 right-0 pt-4"
+              ref={emailComposerRef}
+            >
               <div
                 className={`flex gap-2 bg-white/10 px-4 py-3 mx-1 mb-1 transition-all duration-200 ${
-                  isEmailEditorExpanded ? "rounded-2xl items-end" : "rounded-2xl items-center"
+                  isEmailEditorExpanded
+                    ? "rounded-2xl items-end"
+                    : "rounded-2xl items-center"
                 }`}
               >
                 {/* Rich Text Editor */}
@@ -1659,7 +1689,7 @@ const LeadChat = ({
                     }`}
                   />
                 </div>
-                
+
                 {/* Action Buttons */}
                 <div className="flex items-center justify-end gap-2 relative z-10">
                   <button
@@ -1830,7 +1860,7 @@ const LeadChat = ({
                       : "Add a phone number to send SMS"
                   }
                   rows={1}
-                  style={{ minHeight: '20px', maxHeight: '60px' }}
+                  style={{ minHeight: "20px", maxHeight: "60px" }}
                 />
                 <button
                   className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-white/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
