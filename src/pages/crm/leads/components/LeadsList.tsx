@@ -222,11 +222,11 @@ const LeadsList: FC<LeadsListProps> = ({
           <div className="flex flex-col gap-2">
             {/* Skeleton content */}
             <div className="flex items-center gap-2">
-              <div className="h-3 bg-white/10 rounded animate-pulse w-20"></div>
-              <div className="h-3 bg-white/5 rounded animate-pulse w-16"></div>
+              <div className={`h-3 bg-white/10 rounded animate-pulse ${viewMode === 'card' ? 'w-3/4' : 'w-20'}`}></div>
+              <div className={`h-3 bg-white/5 rounded animate-pulse ${viewMode === 'card' ? 'w-1/2' : 'w-16'}`}></div>
             </div>
             <div className="flex items-center gap-2">
-              <div className="h-4 bg-white/10 rounded animate-pulse w-24"></div>
+              <div className={`h-4 bg-white/10 rounded animate-pulse ${viewMode === 'card' ? 'w-full' : 'w-24'}`}></div>
             </div>
             {viewMode === "detailed" && (
               <>
