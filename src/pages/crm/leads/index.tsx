@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -9,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Layers, Grid3X3, List, LayoutGrid } from "lucide-react";
+import { Layers, Grid3X3, List, LayoutGrid, Building2 } from "lucide-react";
 import { CompanyPerson } from "@/services/companies.service";
 import { Lead } from "@/services/leads.service";
 import { EmailDraftModal } from "./components/EmailDraftModal";
@@ -18,7 +19,11 @@ import { PhoneCallModal } from "./components/PhoneCallModal";
 import { toast } from "sonner";
 import LeadsList from "./components/LeadsList";
 import { DetailsSidebar } from "../shared/components";
-import { useCompaniesData, useCrmStatsData, useLeadsData } from "../shared/hooks";
+import {
+  useCompaniesData,
+  useCrmStatsData,
+  useLeadsData,
+} from "../shared/hooks";
 import { LeadsQueryParams } from "@/services/leads.service";
 import {
   connectionMessagesService,
@@ -37,22 +42,23 @@ import {
 } from "../shared/components";
 import { buildStats } from "../shared/hooks";
 
-type ViewMode = 'compact' | 'detailed' | 'card';
+type ViewMode = "compact" | "detailed" | "card";
 
 const index = () => {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   // Selected lead state
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>('detailed');
+  const [viewMode, setViewMode] = useState<ViewMode>("detailed");
 
   // Leads filters and pagination
   const [leadsPage, setLeadsPage] = useState(1);
   const [leadsSearch, setLeadsSearch] = useState("");
-  const [leadsLimit, setLeadsLimit] = useState(viewMode === 'card' ? 25 : 10);
+  const [leadsLimit, setLeadsLimit] = useState(viewMode === "card" ? 25 : 10);
 
   // Update limit when view mode changes
   useEffect(() => {
-    setLeadsLimit(viewMode === 'card' ? 25 : 10);
+    setLeadsLimit(viewMode === "card" ? 25 : 10);
     // Reset to page 1 when changing view mode
     setLeadsPage(1);
   }, [viewMode]);
@@ -617,163 +623,189 @@ const index = () => {
           transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
           className="max-w-[1600px] mx-auto w-full min-h-0"
         >
-          {/* Filters Bar */}
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut", delay: 0.4 }}
-            className="flex flex-col sm:flex-row justify-end items-stretch sm:items-center gap-1.5 sm:gap-2 md:gap-3 mb-3 sm:mb-4 md:mb-5"
-          >
-            {/* Controls Container */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2 md:gap-3 order-1 lg:order-2">
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2 flex-1">
-                <div className="flex w-full flex-wrap items-center justify-end gap-1.5 sm:gap-2">
-                  {/* Search Input */}
-                  <SearchInput
-                    placeholder="Search leads..."
-                    value={leadsSearch}
-                    onChange={setLeadsSearch}
-                  />
+          {/* Wrapper with space-between */}
+          <div className="flex items-center justify-between mb-4">
+            {/* Page Header with Companies Button */}
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: "easeOut", delay: 0.4 }}
+            >
+              {/* <h1 className="text-2xl font-bold text-white">Leads</h1> */}
+              <Button
+                onClick={() => navigate("/companies")}
+                className="bg-gradient-to-r from-[#30cfd0] via-[#2a9cb3] to-[#1f6f86] hover:from-[#2a9cb3] hover:via-[#1f6f86] hover:to-[#156f7a] text-white shadow-lg flex items-center gap-2 px-4 py-2"
+                style={{
+                  boxShadow:
+                    "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset, 0 16px 28px rgba(0,0,0,0.35)",
+                }}
+              >
+                <Building2 className="w-4 h-4" />
+                Companies
+              </Button>
+            </motion.div>
 
-                  {/* Company Filter Dropdown */}
-                  <div className="relative w-full sm:w-auto sm:min-w-[140px]">
-                    <Select
-                      value={leadsCompanyFilter || "all"}
-                      onValueChange={(value) =>
-                        setLeadsCompanyFilter(value === "all" ? null : value)
-                      }
-                    >
-                      <SelectTrigger
-                        className="h-9 pl-10 pr-4 rounded-lg sm:rounded-full border border-gray-600 sm:border-0 text-gray-300 text-xs w-full sm:w-auto bg-gray-800/50 sm:bg-[#FFFFFF1A] mobile-select-trigger"
-                        style={{
-                          boxShadow: "none",
-                        }}
+            {/* Filters Bar */}
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: "easeOut", delay: 0.4 }}
+              className="flex flex-col sm:flex-row justify-end items-stretch sm:items-center gap-1.5 sm:gap-2 md:gap-3"
+            >
+              {/* Controls Container */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2 md:gap-3 order-1 lg:order-2">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2 flex-1">
+                  <div className="flex w-full flex-wrap items-center justify-end gap-1.5 sm:gap-2">
+                    {/* Search Input */}
+                    <SearchInput
+                      placeholder="Search leads..."
+                      value={leadsSearch}
+                      onChange={setLeadsSearch}
+                    />
+
+                    {/* Company Filter Dropdown */}
+                    <div className="relative w-full sm:w-auto sm:min-w-[140px]">
+                      <Select
+                        value={leadsCompanyFilter || "all"}
+                        onValueChange={(value) =>
+                          setLeadsCompanyFilter(value === "all" ? null : value)
+                        }
                       >
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                          <Layers className="w-4 h-4 text-gray-400" />
-                        </div>
-                        <SelectValue placeholder="All Companies" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a] rounded-xl">
-                        <SelectItem
-                          value="all"
-                          className="text-gray-300 focus:text-white focus:bg-white/10"
+                        <SelectTrigger
+                          className="h-9 pl-10 pr-4 rounded-lg sm:rounded-full border border-gray-600 sm:border-0 text-gray-300 text-xs w-full sm:w-auto bg-gray-800/50 sm:bg-[#FFFFFF1A] mobile-select-trigger"
+                          style={{
+                            boxShadow: "none",
+                          }}
                         >
-                          <div className="flex items-center justify-between w-full">
-                            <span>All Companies</span>
-                            {totalLeadsForStats !== undefined && (
-                              <span className="ml-2 text-xs text-gray-500">
-                                ({totalLeadsForStats}{" "}
-                                {totalLeadsForStats === 1 ? "lead" : "leads"})
-                              </span>
-                            )}
+                          <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                            <Layers className="w-4 h-4 text-gray-400" />
                           </div>
-                        </SelectItem>
-                        {allCompaniesForFilter.map((company) => {
-                          // Count leads for this company from all leads (not just current page)
-                          const companyLeadsCount = allLeadsForCount.filter(
-                            (lead) => lead.companyId === company._id
-                          ).length;
-
-                          return (
-                            <SelectItem
-                              key={company._id}
-                              value={company._id}
-                              disabled={companyLeadsCount === 0}
-                              className={`text-gray-300 focus:text-white focus:bg-white/10 ${
-                                companyLeadsCount === 0
-                                  ? "opacity-50 cursor-not-allowed"
-                                  : "cursor-pointer"
-                              }`}
-                            >
-                              <div className="flex items-center justify-between w-full">
-                                <span className="truncate flex-1">
-                                  {company.name}
-                                </span>
-                                <span className="ml-2 text-xs text-gray-500 whitespace-nowrap">
-                                  ({companyLeadsCount}{" "}
-                                  {companyLeadsCount === 1 ? "lead" : "leads"})
-                                </span>
-                              </div>
-                            </SelectItem>
-                          );
-                        })}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <AnimatePresence mode="wait">
-                      {!leadFiltersOpen ? (
-                        <motion.div
-                          key="filter-button"
-                          initial={{ opacity: 0, scale: 0.95 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.95 }}
-                          transition={{ duration: 0.15 }}
-                        >
-                          <FilterButton
-                            hasFilters={hasLeadAdvancedFilters}
-                            onClick={() => setLeadFiltersOpen(true)}
-                          />
-                        </motion.div>
-                      ) : (
-                        <motion.div
-                          key="filters-inline"
-                          initial={{ opacity: 0, y: -10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          transition={{ duration: 0.2, ease: "easeOut" }}
-                          className="flex items-center gap-2"
-                        >
-                          <LeadsFiltersInline
-                            locationFilter={leadsLocationFilter}
-                            onLocationFilterChange={setLeadsLocationFilter}
-                            positionFilter={leadsPositionFilter}
-                            onPositionFilterChange={setLeadsPositionFilter}
-                            hasEmailFilter={leadsHasEmailFilter}
-                            onHasEmailFilterChange={setLeadsHasEmailFilter}
-                            hasPhoneFilter={leadsHasPhoneFilter}
-                            onHasPhoneFilterChange={setLeadsHasPhoneFilter}
-                            hasLinkedinFilter={leadsHasLinkedinFilter}
-                            onHasLinkedinFilterChange={setLeadsHasLinkedinFilter}
-                            hasFilters={hasLeadAdvancedFilters}
-                            onResetFilters={resetLeadAdvancedFilters}
-                          />
-                          <motion.div
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: 0.1, duration: 0.15 }}
+                          <SelectValue placeholder="All Companies" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a] rounded-xl">
+                          <SelectItem
+                            value="all"
+                            className="text-gray-300 focus:text-white focus:bg-white/10"
                           >
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-8 w-8 p-0 text-gray-400 hover:text-white hover:bg-white/10 rounded-full flex items-center justify-center"
-                              onClick={() => setLeadFiltersOpen(false)}
-                            >
-                              <svg
-                                className="w-4 h-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
+                            <div className="flex items-center justify-between w-full">
+                              <span>All Companies</span>
+                              {totalLeadsForStats !== undefined && (
+                                <span className="ml-2 text-xs text-gray-500">
+                                  ({totalLeadsForStats}{" "}
+                                  {totalLeadsForStats === 1 ? "lead" : "leads"})
+                                </span>
+                              )}
+                            </div>
+                          </SelectItem>
+                          {allCompaniesForFilter.map((company) => {
+                            // Count leads for this company from all leads (not just current page)
+                            const companyLeadsCount = allLeadsForCount.filter(
+                              (lead) => lead.companyId === company._id
+                            ).length;
+
+                            return (
+                              <SelectItem
+                                key={company._id}
+                                value={company._id}
+                                disabled={companyLeadsCount === 0}
+                                className={`text-gray-300 focus:text-white focus:bg-white/10 ${
+                                  companyLeadsCount === 0
+                                    ? "opacity-50 cursor-not-allowed"
+                                    : "cursor-pointer"
+                                }`}
                               >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M6 18L18 6M6 6l12 12"
-                                />
-                              </svg>
-                            </Button>
+                                <div className="flex items-center justify-between w-full">
+                                  <span className="truncate flex-1">
+                                    {company.name}
+                                  </span>
+                                  <span className="ml-2 text-xs text-gray-500 whitespace-nowrap">
+                                    ({companyLeadsCount}{" "}
+                                    {companyLeadsCount === 1 ? "lead" : "leads"}
+                                    )
+                                  </span>
+                                </div>
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <AnimatePresence mode="wait">
+                        {!leadFiltersOpen ? (
+                          <motion.div
+                            key="filter-button"
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            transition={{ duration: 0.15 }}
+                          >
+                            <FilterButton
+                              hasFilters={hasLeadAdvancedFilters}
+                              onClick={() => setLeadFiltersOpen(true)}
+                            />
                           </motion.div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                        ) : (
+                          <motion.div
+                            key="filters-inline"
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            transition={{ duration: 0.2, ease: "easeOut" }}
+                            className="flex items-center gap-2"
+                          >
+                            <LeadsFiltersInline
+                              locationFilter={leadsLocationFilter}
+                              onLocationFilterChange={setLeadsLocationFilter}
+                              positionFilter={leadsPositionFilter}
+                              onPositionFilterChange={setLeadsPositionFilter}
+                              hasEmailFilter={leadsHasEmailFilter}
+                              onHasEmailFilterChange={setLeadsHasEmailFilter}
+                              hasPhoneFilter={leadsHasPhoneFilter}
+                              onHasPhoneFilterChange={setLeadsHasPhoneFilter}
+                              hasLinkedinFilter={leadsHasLinkedinFilter}
+                              onHasLinkedinFilterChange={
+                                setLeadsHasLinkedinFilter
+                              }
+                              hasFilters={hasLeadAdvancedFilters}
+                              onResetFilters={resetLeadAdvancedFilters}
+                            />
+                            <motion.div
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ delay: 0.1, duration: 0.15 }}
+                            >
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-8 w-8 p-0 text-gray-400 hover:text-white hover:bg-white/10 rounded-full flex items-center justify-center"
+                                onClick={() => setLeadFiltersOpen(false)}
+                              >
+                                <svg
+                                  className="w-4 h-4"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M6 18L18 6M6 6l12 12"
+                                  />
+                                </svg>
+                              </Button>
+                            </motion.div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          </div>
 
           {/* Stats Cards */}
           <StatsCards stats={stats} />
