@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import { Layers, Grid3X3, List, LayoutGrid, Building2 } from "lucide-react";
 import { CompanyPerson } from "@/services/companies.service";
+import { CrmNavigation } from "@/components/crm/CrmNavigation";
 import { Lead } from "@/services/leads.service";
 import { EmailDraftModal } from "./components/EmailDraftModal";
 import { LinkedinMessageModal } from "./components/LinkedinMessageModal";
@@ -634,17 +635,7 @@ const index = () => {
               transition={{ duration: 0.6, ease: "easeOut", delay: 0.4 }}
             >
               {/* <h1 className="text-2xl font-bold text-white">Leads</h1> */}
-              <Button
-                onClick={() => navigate("/companies")}
-                className="bg-gradient-to-r from-[#30cfd0] via-[#2a9cb3] to-[#1f6f86] hover:from-[#2a9cb3] hover:via-[#1f6f86] hover:to-[#156f7a] text-white shadow-lg flex items-center gap-2 px-4 py-2"
-                style={{
-                  boxShadow:
-                    "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset, 0 16px 28px rgba(0,0,0,0.35)",
-                }}
-              >
-                <Building2 className="w-4 h-4" />
-                Companies
-              </Button>
+              <CrmNavigation />
             </motion.div>
 
             {/* Filters Bar */}

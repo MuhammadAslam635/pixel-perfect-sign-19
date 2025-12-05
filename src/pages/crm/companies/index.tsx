@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Building2, Users } from "lucide-react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
+import { CrmNavigation } from "@/components/crm/CrmNavigation";
 import { Company, CompanyPerson } from "@/services/companies.service";
 import { toast } from "sonner";
 import CompaniesList from "./components/CompaniesList";
@@ -249,18 +250,7 @@ const index = () => {
               transition={{ duration: 0.6, ease: "easeOut", delay: 0.4 }}
             >
               {/* <h1 className="text-2xl font-bold text-white">Companies</h1> */}
-              <Button
-                onClick={() => navigate("/leads")}
-                className="bg-gra
-                dient-to-r from-[#30cfd0] via-[#2a9cb3] to-[#1f6f86] hover:from-[#2a9cb3] hover:via-[#1f6f86] hover:to-[#156f7a] text-white shadow-lg flex items-center gap-2 px-4 py-2"
-                style={{
-                  boxShadow:
-                    "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset, 0 16px 28px rgba(0,0,0,0.35)",
-                }}
-              >
-                <Users className="w-4 h-4" />
-                Leads
-              </Button>
+              <CrmNavigation />
             </motion.div>
 
             {/* Filters Bar */}
