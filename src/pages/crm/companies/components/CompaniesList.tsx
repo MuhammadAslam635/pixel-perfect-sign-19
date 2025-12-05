@@ -292,10 +292,8 @@ const CompaniesList: FC<CompaniesListProps> = ({
           key={company._id}
           className={`relative flex flex-col gap-2 overflow-hidden border-0 rounded-lg p-3 transition-all duration-300 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] cursor-pointer ${
             selectedCompanyId ? "aspect-[3/1]" : "aspect-[4/1]"
-          } before:absolute before:content-[''] before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[50%] before:w-[3px] before:rounded-full ${
-            isActive
-              ? "ring-2 ring-primary before:bg-primary"
-              : "before:bg-white/75"
+          } before:absolute before:content-[''] before:-left-1 before:top-1/2 before:-translate-y-1/2 before:h-[55%] sm:before:h-[60%] before:w-0 md:before:w-[3px] lg:before:w-[4px] xl:before:w-[6px] before:rounded-full backdrop-blur-[22.6px] ${
+            isActive ? "md:before:bg-primary" : "md:before:bg-white/75"
           }`}
           style={{
             background: `linear-gradient(180deg, rgba(104, 177, 184, 0.1) 0%, rgba(104, 177, 184, 0.08) 100%), radial-gradient(50% 100% at 50% 0%, rgba(104, 177, 184, 0.1) 0%, rgba(104, 177, 184, 0) 100%)`,

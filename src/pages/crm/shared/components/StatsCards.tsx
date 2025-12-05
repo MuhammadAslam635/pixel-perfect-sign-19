@@ -1,6 +1,14 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Building2, Users, Send, MessageSquare, UserCheck, MessageCircle } from "lucide-react";
+import {
+  ArrowRight,
+  Building2,
+  Users,
+  Send,
+  MessageSquare,
+  UserCheck,
+  MessageCircle,
+} from "lucide-react";
 
 interface StatCard {
   title: string;
