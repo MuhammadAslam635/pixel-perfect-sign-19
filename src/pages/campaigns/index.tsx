@@ -386,7 +386,7 @@ const CampaignsPage = () => {
       }
 
       // Process the URL
-      let url = match[0];
+      const url = match[0];
       let href = url;
 
       // Add protocol if missing
@@ -1077,7 +1077,7 @@ const CampaignsPage = () => {
                       1,
                       currentPage - Math.floor(maxVisible / 2)
                     );
-                    let endPage = Math.min(
+                    const endPage = Math.min(
                       totalPages,
                       startPage + maxVisible - 1
                     );

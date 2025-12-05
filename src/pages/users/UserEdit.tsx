@@ -166,7 +166,7 @@ const UserEdit = () => {
     };
 
     generateSuggestedEmail();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [user.name, user.email, mailgunDomain]);
 
   const handleInputChange = (

@@ -51,8 +51,11 @@ interface IntegrationResponse {
       metadata?: {
         developerToken?: string;
         googleCustomerId?: string;
+        tenantId?: string;
       };
       providerUserEmail?: string;
+      providerUserName?: string;
+      expiryDate?: string;
     };
   };
 }
@@ -1616,7 +1619,7 @@ export const IntegrationsTab = () => {
           </div>
 
           {microsoftConnected && microsoftIntegration?.connectionData && (
-            <div className="space-y-3 rounded-2xl sm:rounded-3xl border border-white/5 bg-white/[0.03] p-4 text-xs sm:text-sm text-white/80">
+            <div className="space-y-3 pt-4 border-t border-white/10 text-xs sm:text-sm text-white/80">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <p className="font-semibold text-white">Account</p>
                 <p>
@@ -1709,7 +1712,7 @@ export const IntegrationsTab = () => {
           </div>
 
           {googleConnected && (
-            <div className="space-y-4 rounded-2xl sm:rounded-3xl border border-white/5 bg-white/[0.03] p-4">
+            <div className="space-y-4 pt-4 border-t border-white/10">
               <div className="space-y-2">
                 <Label
                   htmlFor="googleAdsToken"
@@ -1835,7 +1838,7 @@ export const IntegrationsTab = () => {
           </div>
 
           {twilioDetails && (
-            <div className="space-y-3 rounded-2xl sm:rounded-3xl border border-white/5 bg-white/[0.03] p-4 text-xs sm:text-sm text-white/80">
+            <div className="space-y-3 pt-4 border-t border-white/10 text-xs sm:text-sm text-white/80">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <p className="font-semibold text-white">Account SID</p>
                 <p>{twilioDetails.accountSid || "Hidden"}</p>
@@ -1917,7 +1920,7 @@ export const IntegrationsTab = () => {
           {facebookConnected &&
             facebookIntegration?.pages &&
             facebookIntegration.pages.length > 0 && (
-              <div className="space-y-3 rounded-2xl sm:rounded-3xl border border-white/5 bg-white/[0.03] p-4">
+              <div className="space-y-3 pt-4 border-t border-white/10">
                 <div className="flex items-center justify-between gap-2">
                   <Label className="text-white/80 text-sm">
                     Select Facebook Page
@@ -2025,60 +2028,58 @@ export const IntegrationsTab = () => {
           )}
 
           {whatsappConnections.length > 0 && (
-            <div className="space-y-3">
+            <div className="space-y-4 pt-4 border-t border-white/10">
               {whatsappConnections.map((connection) => (
                 <div
                   key={connection.phoneNumberId}
-                  className="rounded-2xl sm:rounded-3xl border border-white/10 bg-white/[0.03] p-4"
+                  className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"
                 >
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                    <div className="space-y-1 text-xs sm:text-sm text-white/80 min-w-0 flex-1">
-                      <p className="text-sm sm:text-base font-semibold text-white break-words">
-                        {connection.phoneNumber}
-                      </p>
+                  <div className="space-y-1 text-xs sm:text-sm text-white/80 min-w-0 flex-1">
+                    <p className="text-sm sm:text-base font-semibold text-white break-words">
+                      {connection.phoneNumber}
+                    </p>
+                    <p className="break-all">
+                      Phone Number ID: {connection.phoneNumberId}
+                    </p>
+                    <p className="break-all">
+                      Business Account ID: {connection.businessAccountId}
+                    </p>
+                    {connection.tokens?.accessToken && (
                       <p className="break-all">
-                        Phone Number ID: {connection.phoneNumberId}
+                        Access Token: {connection.tokens.accessToken}
                       </p>
+                    )}
+                    {connection.tokens?.verifyToken && (
                       <p className="break-all">
-                        Business Account ID: {connection.businessAccountId}
+                        Verify Token: {connection.tokens.verifyToken}
                       </p>
-                      {connection.tokens?.accessToken && (
-                        <p className="break-all">
-                          Access Token: {connection.tokens.accessToken}
-                        </p>
-                      )}
-                      {connection.tokens?.verifyToken && (
-                        <p className="break-all">
-                          Verify Token: {connection.tokens.verifyToken}
-                        </p>
-                      )}
-                      {connection.tokens?.appSecret && (
-                        <p className="break-all">
-                          App Secret: {connection.tokens.appSecret}
-                        </p>
-                      )}
-                    </div>
-
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="w-full sm:w-auto border-rose-400/50 text-rose-300 hover:bg-rose-500/10 disabled:opacity-60 disabled:cursor-not-allowed text-xs sm:text-sm flex-shrink-0"
-                      onClick={() =>
-                        requestWhatsAppDisconnect(connection.phoneNumberId)
-                      }
-                      disabled={!canManageWhatsApp}
-                    >
-                      Disconnect
-                    </Button>
+                    )}
+                    {connection.tokens?.appSecret && (
+                      <p className="break-all">
+                        App Secret: {connection.tokens.appSecret}
+                      </p>
+                    )}
                   </div>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-full sm:w-auto border-rose-400/50 text-rose-300 hover:bg-rose-500/10 disabled:opacity-60 disabled:cursor-not-allowed text-xs sm:text-sm flex-shrink-0"
+                    onClick={() =>
+                      requestWhatsAppDisconnect(connection.phoneNumberId)
+                    }
+                    disabled={!canManageWhatsApp}
+                  >
+                    Disconnect
+                  </Button>
                 </div>
               ))}
             </div>
           )}
 
           {showWhatsAppForm && (
-            <div className="space-y-4 rounded-2xl sm:rounded-3xl border border-white/10 bg-white/[0.03] p-4">
+            <div className="space-y-4 pt-4 border-t border-white/10">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2 sm:col-span-1">
                   <Label className="text-white/80 text-sm">
@@ -2283,7 +2284,7 @@ export const IntegrationsTab = () => {
           )}
 
           {showMailgunForm && (
-            <div className="space-y-4 rounded-2xl sm:rounded-3xl border border-white/10 bg-white/[0.03] p-4">
+            <div className="space-y-4 pt-4 border-t border-white/10">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2 sm:col-span-1">
                   <Label className="text-white/80 text-sm">
@@ -2537,7 +2538,7 @@ export const IntegrationsTab = () => {
           )}
 
           {showDeepgramForm && (
-            <div className="space-y-4 rounded-2xl sm:rounded-3xl border border-white/10 bg-white/[0.03] p-4">
+            <div className="space-y-4 pt-4 border-t border-white/10">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2 sm:col-span-2">
                   <Label className="text-white/80 text-sm">
