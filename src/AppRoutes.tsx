@@ -20,7 +20,7 @@ import UserList from "@/pages/users/UserList";
 import UserCreate from "@/pages/users/UserCreate";
 import UserEdit from "@/pages/users/UserEdit";
 import ContactNow from "@/pages/twilio-calling/ContactNow";
-import FollowupTemplatesPage from "@/pages/followups";
+import FollowupTemplatesPage from "@/pages/crm/followups";
 import LeadDetailView, { SelectedCallLogView } from "@/pages/crm/leads/leaddetailview";
 import RoleList from "@/pages/roles/RoleList";
 import RoleForm from "@/pages/roles/RoleForm";

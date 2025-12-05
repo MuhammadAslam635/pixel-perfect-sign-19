@@ -1,9 +1,11 @@
-import CompaniesIcon from "@/components/icons/CompaniesIcon";
-import LeadsIcon from "@/components/icons/LeadsIcon";
-import OutreachIcon from "@/components/icons/OutreachIcon";
-import ResponseIcon from "@/components/icons/ResponseIcon";
-import { ClientsIcon } from "@/components/icons/ClientsIcon";
-import ChatIcon from "@/components/icons/ChatIcon";
+import {
+  Building2,
+  Users,
+  Send,
+  MessageSquare,
+  UserCheck,
+  MessageCircle,
+} from "lucide-react";
 
 export interface StatCard {
   title: string;
@@ -25,14 +27,19 @@ export const defaultStatsCards: StatCard[] = [
   {
     title: "Total Companies",
     value: "0",
-    icon: CompaniesIcon,
+    icon: Building2,
     link: "View All",
   },
-  { title: "Total leads", value: "0", icon: LeadsIcon, link: "View All" },
-  { title: "Total Outreach", value: "0", icon: OutreachIcon, link: "View All" },
-  { title: "Total Response", value: "0", icon: ResponseIcon, link: "View All" },
-  { title: "Active Clients", value: "0", icon: ClientsIcon, link: "View All" },
-  { title: "Messages Sent", value: "0", icon: ChatIcon, link: "View All" },
+  { title: "Total leads", value: "0", icon: Users, link: "View All" },
+  { title: "Total Outreach", value: "0", icon: Send, link: "View All" },
+  {
+    title: "Total Response",
+    value: "0",
+    icon: MessageSquare,
+    link: "View All",
+  },
+  { title: "Active Clients", value: "0", icon: UserCheck, link: "View All" },
+  { title: "Messages Sent", value: "0", icon: MessageCircle, link: "View All" },
 ];
 
 const parseStatValue = (value: number | undefined, fallback: string) =>
@@ -40,30 +47,92 @@ const parseStatValue = (value: number | undefined, fallback: string) =>
 
 export const buildStats = (
   overrides: CrmStatsValues = {},
+  context: "companies" | "leads" | "followups" = "companies",
   baseCards = defaultStatsCards
-): StatCard[] => [
-  {
-    ...baseCards[0],
-    value: parseStatValue(overrides.totalCompanies, baseCards[0].value),
-  },
-  {
-    ...baseCards[1],
-    value: parseStatValue(overrides.totalLeads, baseCards[1].value),
-  },
-  {
-    ...baseCards[2],
-    value: parseStatValue(overrides.totalOutreach, baseCards[2].value),
-  },
-  {
-    ...baseCards[3],
-    value: parseStatValue(overrides.totalResponse, baseCards[3].value),
-  },
-  {
-    ...baseCards[4],
-    value: parseStatValue(overrides.activeClients, baseCards[4].value),
-  },
-  {
-    ...baseCards[5],
-    value: parseStatValue(overrides.messagesSent, baseCards[5].value),
-  },
-];
+): StatCard[] => {
+  const parseStatValue = (
+    value: number | string | undefined,
+    fallback: string
+  ) => (value === undefined || value === null ? fallback : value.toString());
+
+  if (context === "companies") {
+    return [
+      {
+        ...baseCards[0],
+        value: parseStatValue(overrides.totalCompanies, baseCards[0].value),
+      },
+      {
+        ...baseCards[1],
+        value: parseStatValue(overrides.totalLeads, baseCards[1].value),
+      },
+      {
+        title: "With People",
+        value: parseStatValue(overrides.totalOutreach, "0"),
+        icon: Users,
+        link: "View All",
+      },
+      {
+        title: "With Website",
+        value: parseStatValue(overrides.totalResponse, "0"),
+        icon: Building2,
+        link: "View All",
+      },
+      {
+        title: "Active Clients",
+        value: parseStatValue(overrides.activeClients, baseCards[4].value),
+        icon: UserCheck,
+        link: "View All",
+      },
+      {
+        title: "Messages Sent",
+        value: parseStatValue(overrides.messagesSent, baseCards[5].value),
+        icon: MessageCircle,
+        link: "View All",
+      },
+    ];
+  } else if (context === "leads") {
+    return [
+      {
+        title: "Total Leads",
+        value: parseStatValue(overrides.totalLeads, "0"),
+        icon: Users,
+        link: "View All",
+      },
+      {
+        title: "Total Companies",
+        value: parseStatValue(overrides.totalCompanies, baseCards[0].value),
+        icon: Building2,
+        link: "View All",
+      },
+      {
+        title: "Total Outreach",
+        value: parseStatValue(overrides.totalOutreach, baseCards[2].value),
+        icon: Send,
+        link: "View All",
+      },
+      {
+        title: "Total Response",
+        value: parseStatValue(overrides.totalResponse, baseCards[3].value),
+        icon: MessageSquare,
+        link: "View All",
+      },
+      {
+        title: "Active Clients",
+        value: parseStatValue(overrides.activeClients, baseCards[4].value),
+        icon: UserCheck,
+        link: "View All",
+      },
+      {
+        title: "Messages Sent",
+        value: parseStatValue(overrides.messagesSent, baseCards[5].value),
+        icon: MessageCircle,
+        link: "View All",
+      },
+    ];
+  } else if (context === "followups") {
+    // This will be handled separately in the followups page
+    return [];
+  }
+
+  return baseCards;
+};
