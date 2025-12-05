@@ -32,8 +32,9 @@ const StatsCard = () => {
     fetchCampaignsStats();
   }, []);
   return (
-    <section className="stats-card relative w-full overflow-hidden rounded-[36px] border border-white/10 px-6 py-6 sm:px-8 sm:py-8 min-h-[200px] sm:min-h-[250px] transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-white/5 hover:scale-[1.01]">
-      <div className="relative z-10 flex h-full flex-col sm:flex-row sm:items-start gap-6">
+    <div className="p-2">
+      <section className="stats-card relative w-full overflow-hidden rounded-[36px] border border-white/10 px-6 py-6 sm:px-8 sm:py-8 min-h-[200px] sm:min-h-[250px] transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-white/5 hover:scale-[1.01]">
+        <div className="relative z-10 flex h-full flex-col sm:flex-row sm:items-start gap-6">
         {/* Left Section - Text Metrics - Takes less width on desktop to give more space to chart */}
         <div className="flex flex-col gap-3 sm:gap-4 sm:w-2/5 sm:flex-shrink-0">
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
@@ -81,11 +82,12 @@ const StatsCard = () => {
         </div>
       </div>
 
-      {/* Chart - Absolutely positioned to touch bottom and right borders */}
-      <div className="absolute bottom-0 right-0 sm:left-[40%] left-0 h-full hidden sm:block z-0">
-        <CampaignsChart />
-      </div>
-    </section>
+        {/* Chart - Absolutely positioned to touch bottom and right borders */}
+        <div className="absolute bottom-0 right-0 sm:left-[40%] left-0 h-full hidden sm:block z-0">
+          <CampaignsChart />
+        </div>
+      </section>
+    </div>
   );
 };
 

@@ -1,5 +1,5 @@
 import { List, Pencil, Plus } from "lucide-react";
-import { FC, useState, useEffect } from "react";
+import { FC, useState, useEffect, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchChatList, deleteChatById } from "@/services/chat.service";
 import { ChatMessage, ChatSummary } from "@/types/chat.types";
@@ -21,6 +21,9 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
   const [localMessages, setLocalMessages] = useState<ChatMessage[]>([]);
   const [chatHistory, setChatHistory] = useState<ChatSummary[]>([]);
   const [deletingChatId, setDeletingChatId] = useState<string | null>(null);
+  const [isScrolling, setIsScrolling] = useState(false);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const panelRef = useRef<HTMLElement>(null);
   const queryClient = useQueryClient();
 
   // Load chat history from localStorage on mount
@@ -120,17 +123,79 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
 
   const hasActiveChat = currentChatId || localMessages.length > 0;
 
+  // Handle scroll detection for blur effect
+  useEffect(() => {
+    if (!panelRef.current) return;
+
+    const handleScroll = () => {
+      setIsScrolling(true);
+      
+      // Clear existing timeout
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+      
+      // Set blur to false after scrolling stops
+      scrollTimeoutRef.current = setTimeout(() => {
+        setIsScrolling(false);
+      }, 150);
+    };
+
+    // Find scrollable elements within the panel
+    const findScrollableElements = () => {
+      const scrollableElements: HTMLElement[] = [];
+      
+      if (!panelRef.current) return scrollableElements;
+      
+      // Find all elements with overflow-y-auto class
+      const allScrollable = panelRef.current.querySelectorAll('[class*="overflow-y-auto"]');
+      
+      allScrollable.forEach((element) => {
+        const htmlElement = element as HTMLElement;
+        // Only add if element is actually scrollable (has scrollable content)
+        if (htmlElement.scrollHeight > htmlElement.clientHeight) {
+          scrollableElements.push(htmlElement);
+        }
+      });
+      
+      return scrollableElements;
+    };
+
+    let scrollableElements: HTMLElement[] = [];
+
+    // Attach scroll listeners with a slight delay to ensure elements are rendered
+    const timeoutId = setTimeout(() => {
+      scrollableElements = findScrollableElements();
+      scrollableElements.forEach((element) => {
+        element.addEventListener('scroll', handleScroll, { passive: true });
+      });
+    }, 100);
+
+    return () => {
+      clearTimeout(timeoutId);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+      // Clean up event listeners
+      scrollableElements.forEach((element) => {
+        element.removeEventListener('scroll', handleScroll);
+      });
+    };
+  }, [showChatList, currentChatId, localMessages]);
+
   return (
-    <section className="hidden assistant-panel mx-auto w-full h-full lg:flex flex-col overflow-hidden relative sm:order-1 animate-in fade-in duration-700">
+    <section 
+      ref={panelRef}
+      className="hidden assistant-panel mx-auto w-full h-full lg:flex flex-col overflow-hidden relative sm:order-1 animate-in fade-in duration-700"
+    >
       <div
         style={{
           position: "absolute",
           top: "15px",
           left: "28px",
-          background: "#202020",
-          padding: "12px",
-          borderRadius: "25px",
-          width: "90%",
+          zIndex: 10,
+          transition: "filter 0.3s ease-in-out",
+          filter: isScrolling ? "blur(8px)" : "blur(0px)",
         }}
       >
         <div
@@ -141,6 +206,8 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
             top: "0",
             left: "0",
             width: "fit-content",
+            padding: "12px",
+            borderRadius: "25px",
           }}
         >
           <div

@@ -207,4 +207,32 @@ export const dashboardService = {
       throw error;
     }
   },
+
+  /**
+   * Get count of leads filtered by activity type
+   */
+  getLeadsCountByActivity: async (
+    activityType: string
+  ): Promise<DashboardResponse<{ count: number; activityType: string }>> => {
+    try {
+      const response = await API.get("/dashboard/leads-count-by-activity", {
+        params: { activityType },
+      });
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  /**
+   * Get total count of all leads from all companies
+   */
+  getTotalLeadsCount: async (): Promise<DashboardResponse<{ count: number }>> => {
+    try {
+      const response = await API.get("/dashboard/total-leads-count");
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
 };
