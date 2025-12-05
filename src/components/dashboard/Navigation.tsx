@@ -46,7 +46,7 @@ const navLinks: NavLink[] = [
     icon: BarChart3,
     path: "/companies",
     match: (pathname: string) =>
-      pathname.startsWith("/companies") || pathname.startsWith("/leads"),
+      pathname.startsWith("/companies") || pathname.startsWith("/leads") || pathname.startsWith("/calendar") || pathname.startsWith("/followups"),
   },
   {
     id: "prospects",
@@ -79,13 +79,6 @@ const navLinks: NavLink[] = [
     icon: Megaphone,
     path: "/campaigns",
     match: (pathname: string) => pathname.startsWith("/campaigns"),
-  },
-  {
-    id: "followup-templates",
-    label: "FollowUp",
-    icon: CalendarDays,
-    path: "/followups",
-    match: (pathname: string) => pathname.startsWith("/followups"),
   },
   {
     id: "contact-now",

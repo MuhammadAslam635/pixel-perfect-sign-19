@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
+import { CrmNavigation } from "@/components/crm/CrmNavigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -123,8 +124,7 @@ const defaultFormValues: FollowupTemplateFormValues = {
 
 const limitOptions = ["5", "10", "20"];
 
-const formLabelClasses =
-  "text-xs text-white/70";
+const formLabelClasses = "text-xs text-white/70";
 
 const getErrorMessage = (error: unknown, fallback: string) => {
   if (isAxiosError<{ message?: string }>(error)) {
@@ -950,27 +950,24 @@ const FollowupTemplatesPage = () => {
         transition={{ duration: 0.6, ease: "easeOut" }}
         className="relative px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12 2xl:px-16 pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-6 sm:pb-8 flex flex-col gap-4 sm:gap-6 text-white min-h-screen overflow-x-hidden"
       >
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
-          className="flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-center lg:justify-between mb-3 sm:mb-4"
-        >
-          <div className="relative">
-            <div className="relative">
-              <p className="text-sm uppercase tracking-wide text-white/60 flex items-center gap-2">
-                Automations
-              </p>
-              <h1 className="text-2xl sm:text-3xl font-semibold text-white">
-                Followup Templates
-              </h1>
-              <p className="text-sm text-white/60">
-                Centralize touchpoints for every prospect across emails, calls,
-                and WhatsApp.
-              </p>
-            </div>
-          </div>
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
+        {/* Wrapper with space-between */}
+        <div className="flex items-center justify-between mb-4">
+          {/* Page Header with CRM Navigation */}
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: "easeOut", delay: 0.4 }}
+          >
+            <CrmNavigation />
+          </motion.div>
+
+          {/* Filters Bar */}
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: "easeOut", delay: 0.4 }}
+            className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end"
+          >
             <div className="relative flex-1 sm:min-w-[200px] sm:max-w-[280px]">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 z-10" />
               <Input
@@ -1008,8 +1005,8 @@ const FollowupTemplatesPage = () => {
                 New Template
               </Button>
             </div>
-          </div>
-        </motion.section>
+          </motion.div>
+        </div>
 
         {/* Stats Section */}
         <motion.section
@@ -1118,14 +1115,21 @@ const FollowupTemplatesPage = () => {
 
             <div className="relative z-10 flex flex-col h-full min-h-0">
               <DialogHeader className="px-6 pt-6 pb-4 flex-shrink-0 border-b border-white/10">
-                <DialogTitle className="text-xs sm:text-sm font-semibold text-white drop-shadow-lg -mb-1">{formMode === "edit" ? "Edit template" : "Create template"}</DialogTitle>
+                <DialogTitle className="text-xs sm:text-sm font-semibold text-white drop-shadow-lg -mb-1">
+                  {formMode === "edit" ? "Edit template" : "Create template"}
+                </DialogTitle>
                 <DialogDescription className="text-xs text-white/70">
-                  {formMode === "edit" ? "Update the followup template details" : "Create a new followup template"}
+                  {formMode === "edit"
+                    ? "Update the followup template details"
+                    : "Create a new followup template"}
                 </DialogDescription>
               </DialogHeader>
 
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(handleSubmitForm)} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+                <form
+                  onSubmit={form.handleSubmit(handleSubmitForm)}
+                  className="flex flex-col flex-1 min-h-0 overflow-hidden"
+                >
                   {/* Scrollable Content Area */}
                   <div className="flex-1 overflow-y-auto px-6 space-y-4 scrollbar-hide py-4 min-h-0">
                     <div className="grid gap-5 md:grid-cols-2">
@@ -1277,39 +1281,38 @@ const FollowupTemplatesPage = () => {
                         )}
                       />
                     </div>
+                  </div>
 
-                </div>
-
-                <DialogFooter className="px-6 py-4 flex-shrink-0 border-t border-white/10">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={closeForm}
-                    disabled={isCreating || isUpdating}
-                    className="bg-white/5 backdrop-blur-sm border-white/20 text-gray-300 hover:bg-white/10 hover:border-white/30 transition-all"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={isCreating || isUpdating}
-                    className="bg-white/5 backdrop-blur-sm border border-white/40 text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] hover:bg-[#2F2F2F]/60 transition-all"
-                    style={{
-                      background:
-                        "radial-gradient(circle at left, rgba(64, 102, 179, 0.4) 0%, rgba(103, 176, 183, 0.3) 50%, transparent 70%)",
-                    }}
-                  >
-                    {formMode === "edit"
-                      ? isUpdating
-                        ? "Saving..."
-                        : "Save changes"
-                      : isCreating
-                      ? "Creating..."
-                      : "Create template"}
-                  </Button>
-                </DialogFooter>
-              </form>
-                </Form>
+                  <DialogFooter className="px-6 py-4 flex-shrink-0 border-t border-white/10">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={closeForm}
+                      disabled={isCreating || isUpdating}
+                      className="bg-white/5 backdrop-blur-sm border-white/20 text-gray-300 hover:bg-white/10 hover:border-white/30 transition-all"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={isCreating || isUpdating}
+                      className="bg-white/5 backdrop-blur-sm border border-white/40 text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] hover:bg-[#2F2F2F]/60 transition-all"
+                      style={{
+                        background:
+                          "radial-gradient(circle at left, rgba(64, 102, 179, 0.4) 0%, rgba(103, 176, 183, 0.3) 50%, transparent 70%)",
+                      }}
+                    >
+                      {formMode === "edit"
+                        ? isUpdating
+                          ? "Saving..."
+                          : "Save changes"
+                        : isCreating
+                        ? "Creating..."
+                        : "Create template"}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </Form>
             </div>
           </DialogContent>
         </Dialog>
