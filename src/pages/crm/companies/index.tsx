@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Building2, Users } from "lucide-react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
-import { CrmNavigation } from "@/components/crm/CrmNavigation";
+import { CrmNavigation } from "../shared/components/CrmNavigation";
 import { Company, CompanyPerson } from "@/services/companies.service";
 import { toast } from "sonner";
 import CompaniesList from "./components/CompaniesList";
@@ -174,14 +174,17 @@ const index = () => {
 
   const stats = useMemo(
     () =>
-      buildStats({
-        totalCompanies: effectiveTotalCompanies,
-        totalLeads: companyCrmStats?.totalLeads ?? 0,
-        totalOutreach: companyCrmStats?.totalOutreach,
-        totalResponse: companyCrmStats?.totalResponse,
-        activeClients: companyCrmStats?.activeClients,
-        messagesSent: companyCrmStats?.messagesSent,
-      }),
+      buildStats(
+        {
+          totalCompanies: effectiveTotalCompanies,
+          totalLeads: companyCrmStats?.totalLeads ?? 0,
+          totalOutreach: companyCrmStats?.totalOutreach,
+          totalResponse: companyCrmStats?.totalResponse,
+          activeClients: companyCrmStats?.activeClients,
+          messagesSent: companyCrmStats?.messagesSent,
+        },
+        "companies"
+      ),
     [
       effectiveTotalCompanies,
       companyCrmStats?.totalLeads,

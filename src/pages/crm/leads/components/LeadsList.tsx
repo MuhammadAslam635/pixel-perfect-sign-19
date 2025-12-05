@@ -222,11 +222,23 @@ const LeadsList: FC<LeadsListProps> = ({
           <div className="flex flex-col gap-2">
             {/* Skeleton content */}
             <div className="flex items-center gap-2">
-              <div className={`h-3 bg-white/10 rounded animate-pulse ${viewMode === 'card' ? 'w-3/4' : 'w-20'}`}></div>
-              <div className={`h-3 bg-white/5 rounded animate-pulse ${viewMode === 'card' ? 'w-1/2' : 'w-16'}`}></div>
+              <div
+                className={`h-3 bg-white/10 rounded animate-pulse ${
+                  viewMode === "card" ? "w-3/4" : "w-20"
+                }`}
+              ></div>
+              <div
+                className={`h-3 bg-white/5 rounded animate-pulse ${
+                  viewMode === "card" ? "w-1/2" : "w-16"
+                }`}
+              ></div>
             </div>
             <div className="flex items-center gap-2">
-              <div className={`h-4 bg-white/10 rounded animate-pulse ${viewMode === 'card' ? 'w-full' : 'w-24'}`}></div>
+              <div
+                className={`h-4 bg-white/10 rounded animate-pulse ${
+                  viewMode === "card" ? "w-full" : "w-24"
+                }`}
+              ></div>
             </div>
             {viewMode === "detailed" && (
               <>
@@ -298,10 +310,8 @@ const LeadsList: FC<LeadsListProps> = ({
       return (
         <Card
           key={lead._id}
-          className={`relative flex flex-col gap-2 overflow-hidden border-0 rounded-lg p-3 transition-all duration-300 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] cursor-pointer aspect-[3/1] before:absolute before:content-[''] before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[50%] before:w-[3px] before:rounded-full ${
-            isActive
-              ? "ring-2 ring-primary before:bg-primary"
-              : "before:bg-white/75"
+          className={`relative flex flex-col gap-2 overflow-hidden border-0 rounded-lg p-3 transition-all duration-300 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] cursor-pointer aspect-[3/1] before:absolute before:content-[''] before:-left-1 before:top-1/2 before:-translate-y-1/2 before:h-[55%] sm:before:h-[60%] before:w-0 md:before:w-[3px] lg:before:w-[4px] xl:before:w-[6px] before:rounded-full backdrop-blur-[22.6px] ${
+            isActive ? "md:before:bg-primary" : "md:before:bg-white/75"
           }`}
           style={{
             background: `linear-gradient(180deg, rgba(104, 177, 184, 0.1) 0%, rgba(104, 177, 184, 0.08) 100%), radial-gradient(50% 100% at 50% 0%, rgba(104, 177, 184, 0.1) 0%, rgba(104, 177, 184, 0) 100%)`,
@@ -359,10 +369,10 @@ const LeadsList: FC<LeadsListProps> = ({
     return (
       <Card
         key={lead._id}
-        className={`relative flex flex-col md:flex-row items-start md:items-center justify-between gap-1 sm:gap-1.5 md:gap-2 border-0 rounded-[16px] sm:rounded-[20px] md:rounded-[26px] px-3 sm:px-4 md:px-5 lg:px-7 py-1.5 sm:py-2 pl-3 sm:pl-4 md:pl-5 lg:pl-7 transition-all duration-300 hover:shadow-[0_18px_40px_rgba(0,0,0,0.3)] ${
+        className={`relative flex flex-col md:flex-row items-start md:items-center justify-between gap-1 sm:gap-1.5 md:gap-2 border-0 rounded-[16px] sm:rounded-[20px] md:rounded-[26px] px-3 sm:px-4 md:px-5 py-1.5 sm:py-2 overflow-hidden transition-all duration-300 hover:shadow-[0_18px_40px_rgba(0,0,0,0.3)] ${
           viewMode !== "compact"
-            ? `before:absolute before:content-[''] before:-left-1 before:top-1/2 before:-translate-y-1/2 before:h-[60%] sm:before:h-[65%] before:w-[3px] sm:before:w-[4px] md:before:w-[6px] before:rounded-full backdrop-blur-[22.6px] ${
-                isActive ? "before:bg-primary" : "before:bg-white/75"
+            ? `before:absolute before:content-[''] before:-left-1 before:top-1/2 before:-translate-y-1/2 before:h-[55%] sm:before:h-[60%] before:w-0 md:before:w-[3px] lg:before:w-[4px] xl:before:w-[6px] before:rounded-full backdrop-blur-[22.6px] ${
+                isActive ? "md:before:bg-primary" : "md:before:bg-white/75"
               }`
             : ""
         }`}

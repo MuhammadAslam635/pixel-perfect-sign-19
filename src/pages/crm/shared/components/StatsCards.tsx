@@ -1,6 +1,14 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import {
+  ArrowRight,
+  Building2,
+  Users,
+  Send,
+  MessageSquare,
+  UserCheck,
+  MessageCircle,
+} from "lucide-react";
 
 interface StatCard {
   title: string;
@@ -28,25 +36,20 @@ export const StatsCards = ({ stats }: StatsCardsProps) => {
                 "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0) 38.08%, rgba(255, 255, 255, 0) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
             }}
           >
-            <CardContent className="p-2 sm:p-3 lg:p-4 h-full flex flex-col justify-between min-h-[80px] gap-1">
-              <div className="flex items-center justify-between mb-1">
-                <p className="text-[10px] sm:text-[11px] text-gray-300 font-medium tracking-tight">
-                  {stat.title}
-                </p>
-                {/* View All link - Hidden */}
-                {/* <Button
-                  variant="link"
-                  className="h-auto p-0 text-[10px] text-gray-400 hover:text-white transition-colors underline-offset-4 hover:underline"
-                >
-                  <span className="hidden sm:inline">{stat.link}</span>
-                  <ArrowRight className="w-2.5 h-2.5 sm:ml-1" />
-                </Button> */}
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center flex-shrink-0">
+            <CardContent className="p-2 sm:p-3 lg:p-4 h-full flex flex-col justify-center min-h-[80px] sm:min-h-[85px] gap-1.5">
+              {/* First row: Icon and Title (left-aligned) */}
+              <div className="flex items-center gap-2 justify-start">
+                <div className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center flex-shrink-0">
                   <stat.icon className="w-full h-full text-[#66AFB7]" />
                 </div>
-                <p className="text-lg sm:text-xl font-bold text-white">
+                <p className="text-xs sm:text-sm text-gray-300 font-medium tracking-tight leading-tight">
+                  {stat.title}
+                </p>
+              </div>
+
+              {/* Second row: Value (centered) */}
+              <div className="flex items-center justify-center">
+                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-white leading-none">
                   {stat.value}
                 </p>
               </div>

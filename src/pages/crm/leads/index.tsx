@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/select";
 import { Layers, Grid3X3, List, LayoutGrid, Building2 } from "lucide-react";
 import { CompanyPerson } from "@/services/companies.service";
-import { CrmNavigation } from "@/components/crm/CrmNavigation";
+import { CrmNavigation } from "../shared/components/CrmNavigation";
 import { Lead } from "@/services/leads.service";
 import { EmailDraftModal } from "./components/EmailDraftModal";
 import { LinkedinMessageModal } from "./components/LinkedinMessageModal";
@@ -520,14 +520,17 @@ const index = () => {
 
   const stats = useMemo(
     () =>
-      buildStats({
-        totalCompanies: crmStats?.totalCompanies ?? 0,
-        totalLeads: totalLeadsForStats,
-        totalOutreach: crmStats?.totalOutreach,
-        totalResponse: crmStats?.totalResponse,
-        activeClients: crmStats?.activeClients,
-        messagesSent: crmStats?.messagesSent,
-      }),
+      buildStats(
+        {
+          totalCompanies: crmStats?.totalCompanies ?? 0,
+          totalLeads: totalLeadsForStats,
+          totalOutreach: crmStats?.totalOutreach,
+          totalResponse: crmStats?.totalResponse,
+          activeClients: crmStats?.activeClients,
+          messagesSent: crmStats?.messagesSent,
+        },
+        "leads"
+      ),
     [
       crmStats?.totalCompanies,
       totalLeadsForStats,
