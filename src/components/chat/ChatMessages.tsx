@@ -317,7 +317,7 @@ const ChatMessages = ({
                     rehypePlugins={[rehypeRaw, rehypeSanitize]}
                     components={{
                       table: ({ node, ...props }) => (
-                        <div className="my-4 max-w-[600px] overflow-x-auto rounded-lg border border-white/20">
+                        <div className="my-4 max-w-[600px] overflow-x-auto rounded-lg border border-white/20 scrollbar-hide">
                           <table
                             className="w-full table-auto border-collapse"
                             {...props}
