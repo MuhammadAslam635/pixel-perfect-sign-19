@@ -95,6 +95,7 @@ const FollowUpTemplates = () => {
               className="sm:min-w-[320px] lg:min-w-[320px]"
             />
             <Button
+              variant="ghost"
               size="sm"
               className="relative h-9 px-4 rounded-full border-0 text-white text-xs hover:bg-[#2F2F2F]/60 transition-all w-full sm:w-auto lg:flex-shrink-0 overflow-hidden"
               style={{
@@ -138,86 +139,118 @@ const FollowUpTemplates = () => {
             {mockCampaigns.map((campaign, index) => (
               <Card
                 key={campaign.id}
-                className="bg-white/5 border-white/10 hover:border-white/20 transition-all duration-300 hover:shadow-lg hover:shadow-white/5"
+                className="relative border-0 hover:bg-[#2F2F2F] transition-all duration-300 rounded-2xl overflow-hidden"
+                style={{
+                  background: "#2A2A2A",
+                }}
               >
-                <CardContent className="p-4 space-y-3">
+                {/* Gradient overlay from top to bottom */}
+                <div
+                  className="absolute top-0 left-0 right-0 pointer-events-none rounded-sm"
+                  style={{
+                    height: "calc(100% - 190px)",
+                    background:
+                      "linear-gradient(173.83deg, rgba(255, 255, 255, 0.16) 4.82%, rgba(255, 255, 255, 4e-05) 38.08%, rgba(255, 255, 255, 4e-05) 56.68%, rgba(255, 255, 255, 0.04) 95.1%)",
+                    zIndex: 1,
+                  }}
+                ></div>
+                <CardContent className="relative p-5 space-y-4 z-10">
                   {/* Card Header */}
-                  <div className="flex items-start justify-between">
+                  <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
-                      <h4 className="text-white font-medium text-sm mb-1">
+                      <h4 className="text-white font-medium text-base mb-1.5">
                         {campaign.name}
                       </h4>
-                      <p className="text-white/50 text-xs">
+                      <p className="text-white/40 text-xs">
                         Update {campaign.updatedAt}
                       </p>
                     </div>
                     <button className="text-white/40 hover:text-white/60 transition-colors">
-                      <MoreVertical className="w-4 h-4" />
+                      <MoreVertical className="w-5 h-5" />
                     </button>
                   </div>
-
-                  {/* Stats Row 1: Run Time and Date */}
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-1.5 text-xs">
-                      <div className="w-6 h-6 rounded-full bg-cyan-500/20 flex items-center justify-center">
-                        <Clock className="w-3.5 h-3.5 text-cyan-400" />
+                  <div className="border-b border-white/30"></div>
+                  {/* Stats Grid - Horizontal Layout */}
+                  <div className="flex items-start gap-3 flex-wrap">
+                    {/* Run Time */}
+                    <div className="flex items-center gap-2 text-sm">
+                      <div className="w-9 h-9 rounded-full bg-[#4A6B6D]/30 flex items-center justify-center flex-shrink-0">
+                        <Clock className="w-4 h-4 text-[#6B9FA1]" />
                       </div>
-                      <span className="text-white/70">
+                      <span className="text-white/80 text-sm">
                         Run Time: {campaign.runTime}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-xs">
-                      <div className="w-6 h-6 rounded-full bg-cyan-500/20 flex items-center justify-center">
-                        <Calendar className="w-3.5 h-3.5 text-cyan-400" />
+
+                    {/* Calendar */}
+                    <div className="flex items-center gap-2 text-sm ml-auto">
+                      <div className="w-9 h-9 rounded-full bg-[#4A6B6D]/30 flex items-center justify-center flex-shrink-0">
+                        <Calendar className="w-4 h-4 text-[#6B9FA1]" />
                       </div>
-                      <span className="text-white/70">
+                      <span className="text-white/80 text-sm">
                         {campaign.dateRange}
                       </span>
                     </div>
                   </div>
 
-                  {/* Stats Row 2: Communication Channels */}
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-1.5 text-xs">
-                      <div className="w-6 h-6 rounded-full bg-cyan-500/20 flex items-center justify-center">
-                        <Mail className="w-3.5 h-3.5 text-cyan-400" />
+                  {/* Communication Channels Row */}
+                  <div className="flex items-center gap-6">
+                    {/* Emails */}
+                    <div className="flex items-center gap-2 text-sm">
+                      <div className="w-9 h-9 rounded-full bg-[#4A6B6D]/30 flex items-center justify-center flex-shrink-0">
+                        <Mail className="w-4 h-4 text-[#6B9FA1]" />
                       </div>
-                      <span className="text-white/70">
+                      <span className="text-white/80 text-sm">
                         {campaign.emails.toString().padStart(2, "0")} Emails
                       </span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-xs">
-                      <div className="w-6 h-6 rounded-full bg-cyan-500/20 flex items-center justify-center">
-                        <MessageSquare className="w-3.5 h-3.5 text-cyan-400" />
+
+                    {/* Messages */}
+                    <div className="flex items-center gap-2 text-sm">
+                      <div className="w-9 h-9 rounded-full bg-[#4A6B6D]/30 flex items-center justify-center flex-shrink-0">
+                        <MessageSquare className="w-4 h-4 text-[#6B9FA1]" />
                       </div>
-                      <span className="text-white/70">
+                      <span className="text-white/80 text-sm">
                         {campaign.messages.toString().padStart(2, "0")} Message
                       </span>
                     </div>
-                  </div>
 
-                  {/* Stats Row 3: Calls */}
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-1.5 text-xs">
-                      <div className="w-6 h-6 rounded-full bg-cyan-500/20 flex items-center justify-center">
-                        <Phone className="w-3.5 h-3.5 text-cyan-400" />
+                    {/* Calls */}
+                    <div className="flex items-center gap-2 text-sm">
+                      <div className="w-9 h-9 rounded-full bg-[#4A6B6D]/30 flex items-center justify-center flex-shrink-0">
+                        <Phone className="w-4 h-4 text-[#6B9FA1]" />
                       </div>
-                      <span className="text-white/70">
+                      <span className="text-white/80 text-sm">
                         {campaign.calls.toString().padStart(2, "0")} Calls
                       </span>
                     </div>
                   </div>
 
                   {/* Footer: Day Time and Run Button */}
-                  <div className="flex items-center justify-between pt-2 border-t border-white/10">
-                    <span className="text-xs text-white/50">
-                      Day time: 14:00 (8:00 UTC)
+                  <div className="flex items-center justify-between pt-3">
+                    <span className="text-sm text-white/50">
+                      Day time: 14:00 (9:00 UTC)
                     </span>
                     <Button
+                      variant="ghost"
                       size="sm"
-                      className="bg-gradient-to-r from-[#69B4B7] via-[#5486D0] to-[#3E64B3] text-white hover:brightness-110 transition-all h-8 px-4 text-xs"
+                      className="relative h-9 px-4 rounded-full border-0 text-white text-xs hover:bg-[#2F2F2F]/60 transition-all overflow-hidden"
+                      style={{
+                        background: "#FFFFFF1A",
+                        boxShadow:
+                          "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                      }}
                     >
-                      Run Templates
+                      {/* gradient element left to right */}
+                      <div
+                        className="absolute left-0 top-0 bottom-0 right-0 pointer-events-none rounded-full"
+                        style={{
+                          background:
+                            "linear-gradient(to right, #66AFB7 0%, transparent 60%)",
+                          zIndex: 0,
+                        }}
+                      ></div>
+                      <span className="relative z-10">Run Templates</span>
                     </Button>
                   </div>
                 </CardContent>
