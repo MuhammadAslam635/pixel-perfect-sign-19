@@ -7,6 +7,13 @@ import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
@@ -52,6 +59,7 @@ import {
   Download,
   MailPlus,
   Shield,
+  MoreHorizontal,
 } from "lucide-react";
 import { userService, User } from "@/services/user.service";
 import { toast } from "sonner";
@@ -195,6 +203,41 @@ const UserList = () => {
     });
     return map;
   }, [availableRoles]);
+
+  // Group users by their resolved role names
+  const groupedUsers = useMemo(() => {
+    const groups: Record<string, User[]> = {};
+
+    users.forEach((user) => {
+      // Resolve role name using the same logic as renderRoleBadge
+      let roleName = "No Role";
+
+      // Prefer RBAC roleId when available
+      const roleObject =
+        typeof user.roleId === "object"
+          ? (user.roleId as Role)
+          : user.roleId
+          ? roleMap[user.roleId as string]
+          : null;
+
+      if (roleObject) {
+        roleName = roleObject.displayName;
+      } else if (user.role === "CompanyAdmin") {
+        roleName = "Company Admin";
+      } else if (user.role === "CompanyUser") {
+        roleName = "Company User";
+      } else if (user.role) {
+        roleName = user.role;
+      }
+
+      if (!groups[roleName]) {
+        groups[roleName] = [];
+      }
+      groups[roleName].push(user);
+    });
+
+    return groups;
+  }, [users, roleMap]);
 
   const resetInviteForm = () => {
     setInviteForm(defaultInviteForm);
@@ -439,9 +482,7 @@ const UserList = () => {
                 <h1 className="text-3xl md:text-[36px] font-semibold tracking-tight">
                   Team
                 </h1>
-                <p className="text-white/60 text-sm mt-2">
-                  Manage your team.
-                </p>
+                <p className="text-white/60 text-sm mt-2">Manage your team.</p>
               </div>
             </div>
           </div>
@@ -544,17 +585,8 @@ const UserList = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
-          className="relative pt-3 sm:pt-4 px-3 sm:px-6 rounded-xl sm:rounded-[30px] w-full border-0 sm:border sm:border-white/10 bg-transparent sm:bg-[linear-gradient(173.83deg,_rgba(255,255,255,0.08)_4.82%,_rgba(255,255,255,0)_38.08%,_rgba(255,255,255,0)_56.68%,_rgba(255,255,255,0.02)_95.1%)]"
+          className="relative pt-3 sm:pt-4 px-3 sm:px-6"
         >
-          <div className="hidden lg:grid grid-cols-[1.2fr_1.5fr_0.8fr_0.8fr_1fr_140px] items-center gap-4 p-6 bg-transparent border-b border-white/10 text-white/75 text-sm font-medium relative z-10">
-            <span>Name</span>
-            <span>Email</span>
-            <span>Role</span>
-            <span>Status</span>
-            <span>Created at</span>
-            <span className="text-center">Actions</span>
-          </div>
-
           <div className="min-h-[420px] relative z-10">
             {loading ? (
               <div className="flex flex-col items-center justify-center py-16 px-4">
@@ -567,7 +599,9 @@ const UserList = () => {
                   <Search className="w-6 h-6 text-white/30" />
                 </div>
                 <p className="text-white/70 text-base font-medium mb-1">
-                  {searchTerm ? "No team members found" : "No team members available"}
+                  {searchTerm
+                    ? "No team members found"
+                    : "No team members available"}
                 </p>
                 <p className="text-white/50 text-sm text-center max-w-md">
                   {searchTerm
@@ -576,200 +610,155 @@ const UserList = () => {
                 </p>
               </div>
             ) : (
-              <>
-                <div className="hidden lg:block">
-                  {users.map((user, index) => (
+              <div className="space-y-8">
+                {Object.entries(groupedUsers).map(
+                  ([roleName, roleUsers], roleIndex) => (
                     <motion.div
-                      key={user._id}
+                      key={roleName}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{
-                        duration: 0.4,
-                        delay: index * 0.05,
+                        duration: 0.6,
+                        delay: roleIndex * 0.1,
                         ease: "easeOut",
                       }}
-                      className={`grid grid-cols-[1.2fr_1.5fr_0.8fr_0.8fr_1fr_140px] items-center gap-4 px-6 py-4 text-sm border-b border-white/5 ${
-                        index % 2 === 0 ? "bg-[#222B2C]" : "bg-[#1B1B1B]"
-                      }`}
+                      className="relative flex-1 w-full"
                     >
-                      <div className="font-medium text-white truncate">
-                        {resolveUserDisplayName(user)}
-                      </div>
-                      <div className="text-white/70 truncate">{user.email}</div>
-                      <div>{renderRoleBadge(user)}</div>
-                      <div>
-                        {user.status === "active" && (
-                          <Badge className="rounded-full bg-[#3AC143D6] text-[#FFFFFF99] border border-emerald-400/40 px-4 py-1 text-xs">
-                            Active
-                          </Badge>
-                        )}
-                        {user.status === "inactive" && (
-                          <Badge className="rounded-full bg-[#F72E2E80] text-[#FFFFFF99] border border-[#FF6B6B]/40 px-4 py-1 text-xs">
-                            Inactive
-                          </Badge>
-                        )}
-                        {!user.status && (
-                          <Badge className="rounded-full bg-white/15 text-white/60 border border-white/25 px-4 py-1 text-xs">
-                            N/A
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="text-white/60">
-                        {user.createdAt
-                          ? new Date(user.createdAt).toLocaleDateString()
-                          : "N/A"}
-                      </div>
-                      <div className="flex justify-center items-center gap-3">
-                        {!trashed ? (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                navigate(`/users/${user._id}/edit`)
-                              }
-                              className="text-[#3AC143D6] p-2 hover:bg-emerald-500/20 transition"
-                              title="Download profile"
-                            >
-                              <Download className="h-4 w-4" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                navigate(`/users/${user._id}/edit`)
-                              }
-                              className="text-white p-2 hover:bg-white/10 transition"
-                              title="View employee"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleDelete(
-                                  user._id,
-                                  resolveUserDisplayName(user)
-                                )
-                              }
-                              className=" text-[#F72E2E80] p-2 hover:bg-red-500/20 transition"
-                              title="Delete employee"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => handleRestore(user._id)}
-                            className="rounded-full border border-cyan-400/40 bg-cyan-500/10 text-cyan-300 p-2 hover:bg-cyan-500/20 transition"
-                            title="Restore employee"
-                          >
-                            <RotateCcw className="h-4 w-4" />
-                          </button>
-                        )}
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
+                      {/* Gradient glow behind entire role card */}
+                      <div className="absolute -inset-3 lg:-inset-5 bg-gradient-to-r from-cyan-500/20 via-blue-500/15 to-transparent blur-2xl opacity-50" />
+                      <Card className="relative rounded-3xl border bg-card text-card-foreground border-[#FFFFFF33] shadow-xl w-full">
+                        <CardContent className="p-4 sm:p-6 space-y-4">
+                          {/* Role Header */}
+                          <div className="flex items-center gap-3">
+                            <h3 className="text-xl font-semibold text-white">
+                              {roleName}
+                            </h3>
+                          </div>
 
-                <div className="lg:hidden space-y-3 p-2">
-                  {users.map((user, index) => (
-                    <motion.div
-                      key={user._id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{
-                        duration: 0.4,
-                        delay: index * 0.1,
-                        ease: "easeOut",
-                      }}
-                      className="rounded-[16px] sm:rounded-[20px] border border-white/10 bg-[#222B2C]/40 p-4 space-y-3"
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="min-w-0">
-                          <p className="text-lg font-semibold truncate">
-                            {resolveUserDisplayName(user)}
-                          </p>
-                          <p className="text-white/60 text-sm truncate">
-                            {user.email}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {!trashed ? (
-                            <>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  navigate(`/users/${user._id}/edit`)
-                                }
-                                className="rounded-full border border-emerald-500/40 bg-emerald-500/10 text-emerald-300 p-2"
-                                title="Download profile"
+                          {/* Users Grid */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
+                            {roleUsers.map((user, userIndex) => (
+                              <motion.div
+                                key={user._id}
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{
+                                  duration: 0.4,
+                                  delay: roleIndex * 0.1 + userIndex * 0.05,
+                                  ease: "easeOut",
+                                }}
+                                className="relative flex-1 w-full"
                               >
-                                <Download className="h-4 w-4" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  navigate(`/users/${user._id}/edit`)
-                                }
-                                className="rounded-full border border-white/25 bg-white/5 text-white/80 p-2"
-                                title="View employee"
-                              >
-                                <Eye className="h-4 w-4" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  handleDelete(
-                                    user._id,
-                                    resolveUserDisplayName(user)
-                                  )
-                                }
-                                className="rounded-full border border-red-500/40 bg-red-500/10 text-red-400 p-2"
-                                title="Delete employee"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </button>
-                            </>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => handleRestore(user._id)}
-                              className="rounded-full border border-cyan-400/40 bg-cyan-500/10 text-cyan-300 p-2"
-                              title="Restore employee"
-                            >
-                              <RotateCcw className="h-4 w-4" />
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {renderRoleBadge(user)}
-                        {user.status === "active" && (
-                          <Badge className="rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 px-4 py-1 text-xs">
-                            Active
-                          </Badge>
-                        )}
-                        {user.status === "inactive" && (
-                          <Badge className="rounded-full bg-[#5A1212]/80 text-[#FF6B6B] border border-[#FF6B6B]/40 px-4 py-1 text-xs">
-                            Inactive
-                          </Badge>
-                        )}
-                        {!user.status && (
-                          <Badge className="rounded-full bg-white/15 text-white/60 border border-white/25 px-4 py-1 text-xs">
-                            N/A
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="text-xs text-white/60 border-t border-white/10 pt-3">
-                        Created at:{" "}
-                        {user.createdAt
-                          ? new Date(user.createdAt).toLocaleDateString()
-                          : "N/A"}
-                      </div>
+                                {/* Gradient glow behind card */}
+                                <div className="absolute -inset-2 lg:-inset-3 bg-gradient-to-r from-cyan-500/20 via-blue-500/15 to-transparent blur-xl opacity-50" />
+                                <Card className="relative rounded-3xl border bg-card text-card-foreground border-[#FFFFFF33] shadow-xl w-full">
+                                  <CardContent className="p-3 sm:p-4 h-full flex flex-col min-h-[140px] gap-4 relative">
+                                    {/* Centered Image with Three dots on right */}
+                                    <div className="flex items-center justify-center relative">
+                                      {/* Profile Image - Centered */}
+                                      <div className="flex-shrink-0">
+                                        {user.profileImage ? (
+                                          <img
+                                            src={user.profileImage}
+                                            alt={resolveUserDisplayName(user)}
+                                            className="w-16 h-16 rounded-full object-cover border-2 border-white/20"
+                                          />
+                                        ) : (
+                                          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#67B0B7] to-[#4066B3] flex items-center justify-center border-2 border-white/20">
+                                            <span className="text-white font-semibold text-lg">
+                                              {resolveUserDisplayName(user)
+                                                .charAt(0)
+                                                .toUpperCase()}
+                                            </span>
+                                          </div>
+                                        )}
+                                      </div>
+
+                                      {/* Three dots dropdown - Right side */}
+                                      <div className="absolute top-0 right-0">
+                                        <DropdownMenu>
+                                          <DropdownMenuTrigger asChild>
+                                            <button
+                                              type="button"
+                                              className="text-white/60 hover:text-white p-1.5 rounded-full hover:bg-white/10 transition-colors"
+                                              title="More actions"
+                                            >
+                                              <MoreHorizontal className="h-4 w-4" />
+                                            </button>
+                                          </DropdownMenuTrigger>
+                                          <DropdownMenuContent
+                                            align="end"
+                                            className="bg-[rgba(30,30,30,0.95)] border border-white/10 text-white shadow-lg rounded-lg w-44 backdrop-blur"
+                                          >
+                                            {!trashed ? (
+                                              <>
+                                                <DropdownMenuItem
+                                                  onClick={() =>
+                                                    navigate(
+                                                      `/users/${user._id}/edit`
+                                                    )
+                                                  }
+                                                  className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-white/10"
+                                                >
+                                                  <Eye className="h-4 w-4" />
+                                                  View Profile
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem
+                                                  onClick={() =>
+                                                    handleDelete(
+                                                      user._id,
+                                                      resolveUserDisplayName(
+                                                        user
+                                                      )
+                                                    )
+                                                  }
+                                                  className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-red-500/20 text-red-400"
+                                                >
+                                                  <Trash2 className="h-4 w-4" />
+                                                  Delete User
+                                                </DropdownMenuItem>
+                                              </>
+                                            ) : (
+                                              <DropdownMenuItem
+                                                onClick={() =>
+                                                  handleRestore(user._id)
+                                                }
+                                                className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-cyan-500/20 text-cyan-300"
+                                              >
+                                                <RotateCcw className="h-4 w-4" />
+                                                Restore User
+                                              </DropdownMenuItem>
+                                            )}
+                                          </DropdownMenuContent>
+                                        </DropdownMenu>
+                                      </div>
+                                    </div>
+
+                                    {/* User Info - Stacked vertically */}
+                                    <div className="flex-1 space-y-2 text-center">
+                                      <h4 className="text-white font-medium text-sm">
+                                        {resolveUserDisplayName(user)}
+                                      </h4>
+                                      <p className="text-white/70 text-xs">
+                                        {user.email}
+                                      </p>
+                                      {user.phone && (
+                                        <p className="text-white/50 text-xs">
+                                          {user.phone}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              </motion.div>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
                     </motion.div>
-                  ))}
-                </div>
-              </>
+                  )
+                )}
+              </div>
             )}
           </div>
         </motion.section>
