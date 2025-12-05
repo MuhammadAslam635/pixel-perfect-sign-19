@@ -40,7 +40,7 @@ const FollowUpTemplates = () => {
 
       {/* Active Followup Plan Section with Tabs and Search */}
       <div>
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-4">
             {/* Tab Buttons */}
             <div className="flex items-center gap-1 rounded-lg p-0.5">
@@ -49,8 +49,8 @@ const FollowUpTemplates = () => {
                   onClick={() => setActiveTab("templates")}
                   className={`px-3 py-1.5 rounded-md text-2xl font-medium transition-all ${
                     activeTab === "templates"
-                    // ? "bg-[#5B9FA5] text-white"
-                    // : "text-white/60 hover:text-white/80"
+                    //   ? "bg-[#5B9FA5] text-white"
+                    //   : "text-white/60 hover:text-white/80"
                   }`}
                 >
                   Follow-up Templates
@@ -76,6 +76,7 @@ const FollowUpTemplates = () => {
                 </p>
               </div>
             </div>
+            <div className="border-b border-white border-3 "></div>
           </div>
           <div className="flex items-center gap-3">
             <SearchInput
@@ -109,6 +110,7 @@ const FollowUpTemplates = () => {
             </Button>
           </div>
         </div>
+        <div className="border-b border-white/20 mb-4"></div>
 
         {/* Conditional Content Based on Active Tab */}
         {activeTab === "templates" ? (
