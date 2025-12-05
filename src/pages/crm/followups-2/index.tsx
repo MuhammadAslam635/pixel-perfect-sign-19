@@ -1,11 +1,14 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { CrmNavigation } from "../shared/components/CrmNavigation";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import FollowUpTemplates from "./components/FollowUpTemplates";
 import ActiveFollowUpPlans from "./components/ActiveFollowUpPlans";
 
 const FollowUp2Page = () => {
+  const [activeTab, setActiveTab] = useState("templates");
+
   return (
     <DashboardLayout>
       <motion.main
@@ -26,9 +29,37 @@ const FollowUp2Page = () => {
           </motion.div>
         </div>
 
-        <FollowUpTemplates />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut", delay: 0.5 }}
+          className="rounded-xl sm:rounded-[30px] border border-white/10 bg-[linear-gradient(173.83deg,_rgba(255,255,255,0.08)_4.82%,_rgba(255,255,255,0)_38.08%,_rgba(255,255,255,0)_56.68%,_rgba(255,255,255,0.02)_95.1%)] p-6"
+        >
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 bg-white/5 p-1 rounded-lg mb-6">
+              <TabsTrigger
+                value="templates"
+                className="rounded-md text-white/70 data-[state=active]:bg-[#5B9FA5] data-[state=active]:text-white transition-all"
+              >
+                Follow-up Templates
+              </TabsTrigger>
+              <TabsTrigger
+                value="plans"
+                className="rounded-md text-white/70 data-[state=active]:bg-[#5B9FA5] data-[state=active]:text-white transition-all"
+              >
+                Active Followup Plans
+              </TabsTrigger>
+            </TabsList>
 
-        <ActiveFollowUpPlans />
+            <TabsContent value="templates" className="mt-0">
+              <FollowUpTemplates />
+            </TabsContent>
+
+            <TabsContent value="plans" className="mt-0">
+              <ActiveFollowUpPlans />
+            </TabsContent>
+          </Tabs>
+        </motion.div>
       </motion.main>
     </DashboardLayout>
   );
