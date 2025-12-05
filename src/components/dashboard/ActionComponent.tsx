@@ -208,7 +208,7 @@ export const ActionComponent = () => {
                     No notifications
                   </div>
                 ) : (
-                  <div className="max-h-[300px] overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent hover:scrollbar-thumb-white/30">
+                  <div className="max-h-[300px] overflow-y-auto scrollbar-hide">
                     <ul>
                       {notifications.map((item) => {
                         const isUnread = item.is_read === "No";
@@ -222,7 +222,7 @@ export const ActionComponent = () => {
                           >
                             <div className="flex items-start justify-between gap-2">
                               <div className="flex-1">
-                                <span className="dropdown-item__title">
+                                <span className="dropdown-item__title break-words whitespace-pre-wrap">
                                   {item.message}
                                 </span>
                                 {/* <span className="dropdown-item__meta">
