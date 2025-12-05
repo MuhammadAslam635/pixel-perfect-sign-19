@@ -111,7 +111,7 @@ const UserList = () => {
     () => [
       { icon: LayoutDashboard, label: "Home", path: "/dashboard" },
       { icon: LineChart, label: "Analytics" },
-      { icon: Users2, label: "Employees" },
+      { icon: Users2, label: "Team" },
       { icon: CalendarDays, label: "Calendar" },
       { icon: Building2, label: "Companies" },
       { icon: Briefcase, label: "Projects" },
@@ -437,10 +437,10 @@ const UserList = () => {
             <div className="flex items-center gap-3 mt-2">
               <div>
                 <h1 className="text-3xl md:text-[36px] font-semibold tracking-tight">
-                  Employees
+                  Team
                 </h1>
                 <p className="text-white/60 text-sm mt-2">
-                  Manage your employees.
+                  Manage your team.
                 </p>
               </div>
             </div>
@@ -450,7 +450,7 @@ const UserList = () => {
             <div className="relative w-full">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/60 z-20" />
               <Input
-                placeholder="Search employees"
+                placeholder="Search team members"
                 value={searchTerm}
                 onChange={(e) => {
                   setSearchTerm(e.target.value);
@@ -484,7 +484,7 @@ const UserList = () => {
                 />
                 <Plus className="h-5 w-5 relative z-10" />
                 <span className="hidden sm:block relative z-10">
-                  Create Employees
+                  Create Team Member
                 </span>
                 <span className="sm:hidden relative z-10">Create</span>
               </Button>
@@ -559,7 +559,7 @@ const UserList = () => {
             {loading ? (
               <div className="flex flex-col items-center justify-center py-16 px-4">
                 <div className="w-10 h-10 border-4 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin mb-4" />
-                <p className="text-white/60 text-sm">Loading employees...</p>
+                <p className="text-white/60 text-sm">Loading team members...</p>
               </div>
             ) : users.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 px-4">
@@ -567,12 +567,12 @@ const UserList = () => {
                   <Search className="w-6 h-6 text-white/30" />
                 </div>
                 <p className="text-white/70 text-base font-medium mb-1">
-                  {searchTerm ? "No employees found" : "No employees available"}
+                  {searchTerm ? "No team members found" : "No team members available"}
                 </p>
                 <p className="text-white/50 text-sm text-center max-w-md">
                   {searchTerm
-                    ? "Try adjusting your search terms or clear the filter to see all employees."
-                    : "Employees you add will appear here."}
+                    ? "Try adjusting your search terms or clear the filter to see all team members."
+                    : "Team members you add will appear here."}
                 </p>
               </div>
             ) : (

@@ -293,7 +293,7 @@ const UserCreate = () => {
 
     if (isTwilioBlocked) {
       toast.error(
-        "Connect your Twilio account in Settings → Integrations before creating employees."
+        "Connect your Twilio account in Settings → Integrations before creating team members."
       );
       setLoading(false);
       return;
@@ -371,10 +371,10 @@ const UserCreate = () => {
           {/* Header */}
           <div>
             <h1 className="text-3xl md:text-[36px] font-semibold tracking-tight">
-              Create Employee
+              Create Team Member
             </h1>
             <p className="text-white/60 text-sm mt-2">
-              Add a new employee to your organization
+              Add a new team member to your organization
             </p>
           </div>
 
@@ -578,7 +578,7 @@ const UserCreate = () => {
                         Twilio provisioning
                       </h3>
                       <p className="text-white/60 text-sm">
-                        Each employee gets a dedicated TwiML app and phone
+                        Each team member gets a dedicated TwiML app and phone
                         number. You can customize the preferred area code and
                         capabilities.
                       </p>
@@ -613,7 +613,7 @@ const UserCreate = () => {
                       htmlFor="twilioProvisionToggle"
                       className="text-white/80 text-sm font-medium"
                     >
-                      Provision Twilio assets for this employee
+                      Provision Twilio assets for this team member
                     </Label>
                   </div>
 
@@ -623,7 +623,7 @@ const UserCreate = () => {
                         ? `Missing credentials: ${twilioCredentialStatus.missingFields.join(
                             ", "
                           )}`
-                        : "Add your Twilio credentials in Settings → Integrations to provision phone numbers for new employees."}
+                        : "Add your Twilio credentials in Settings → Integrations to provision phone numbers for new team members."}
                     </div>
                   )}
 
@@ -802,13 +802,13 @@ const UserCreate = () => {
                     disabled={loading || isTwilioBlocked}
                     className="w-full sm:w-auto rounded-lg bg-gradient-to-r from-[#69B4B7] via-[#5486D0] to-[#3E64B3] text-white hover:brightness-110 transition-all"
                   >
-                    {loading ? "Creating..." : "Create Employee"}
+                    {loading ? "Creating..." : "Create Team Member"}
                   </Button>
                   {isTwilioBlocked && (
                     <p className="text-xs text-amber-300 text-center sm:text-right w-full">
                       Add the required Twilio credentials in Settings →
                       Integrations or disable Twilio provisioning for this
-                      employee.
+                      team member.
                     </p>
                   )}
                 </CardFooter>
