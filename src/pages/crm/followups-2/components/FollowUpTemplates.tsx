@@ -40,43 +40,52 @@ const FollowUpTemplates = () => {
 
       {/* Active Followup Plan Section with Tabs and Search */}
       <div>
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-0">
           <div className="flex items-center gap-4">
             {/* Tab Buttons */}
             <div className="flex items-center gap-1 rounded-lg p-0.5">
-              <div>
+              <div className="relative pb-3">
                 <button
                   onClick={() => setActiveTab("templates")}
                   className={`px-3 py-1.5 rounded-md text-2xl font-medium transition-all ${
                     activeTab === "templates"
-                    //   ? "bg-[#5B9FA5] text-white"
-                    //   : "text-white/60 hover:text-white/80"
+                      ? "text-white"
+                      : "text-[#FFFFFF4D] hover:text-white/80"
                   }`}
                 >
                   Follow-up Templates
                 </button>
-                <p className="px-3 py-0.5 rounded-md text-[10px] font-light transition-all">
+                <p
+                  className={`px-3 py-0.5 rounded-md text-[10px] font-light transition-all ${
+                    activeTab === "templates"
+                      ? "text-white/70"
+                      : "text-[#FFFFFF4D]"
+                  }`}
+                >
                   Centralize touchpoints for every prospect across emails,
                   calls, and whatsapp
                 </p>
               </div>
-              <div>
+              <div className="relative pb-3">
                 <button
                   onClick={() => setActiveTab("plans")}
                   className={`px-3 py-1 rounded-md text-2xl font-medium transition-all ${
                     activeTab === "plans"
-                    // ? "bg-[#5B9FA5] text-white"
-                    // : "text-white/60 hover:text-white/80"
+                      ? "text-white"
+                      : "text-[#FFFFFF4D] hover:text-white/80"
                   }`}
                 >
                   Active Followup Plans
                 </button>
-                <p className="px-3 py-0.5 rounded-md text-[10px] font-light transition-all">
+                <p
+                  className={`px-3 py-0.5 rounded-md text-[10px] font-light transition-all ${
+                    activeTab === "plans" ? "text-white/70" : "text-[#FFFFFF4D]"
+                  }`}
+                >
                   View and manage your active followup campaigns
                 </p>
               </div>
             </div>
-            <div className="border-b border-white border-3 "></div>
           </div>
           <div className="flex items-center gap-3">
             <SearchInput
@@ -110,7 +119,17 @@ const FollowUpTemplates = () => {
             </Button>
           </div>
         </div>
-        <div className="border-b border-white/20 mb-4"></div>
+
+        {/* Bottom Border with Active Tab Indicator */}
+        <div className="relative border-b border-white/20 mb-4">
+          <div
+            className={`absolute bottom-0 h-[2px] bg-white transition-all duration-300 ${
+              activeTab === "templates"
+                ? "left-0 w-[380px]"
+                : "left-[420px] w-[300px]"
+            }`}
+          />
+        </div>
 
         {/* Conditional Content Based on Active Tab */}
         {activeTab === "templates" ? (
@@ -151,7 +170,9 @@ const FollowUpTemplates = () => {
                       <div className="w-6 h-6 rounded-full bg-cyan-500/20 flex items-center justify-center">
                         <Calendar className="w-3.5 h-3.5 text-cyan-400" />
                       </div>
-                      <span className="text-white/70">{campaign.dateRange}</span>
+                      <span className="text-white/70">
+                        {campaign.dateRange}
+                      </span>
                     </div>
                   </div>
 
