@@ -132,18 +132,18 @@ const CompanyKnowledgePage = () => {
         <Card className="border border-white/10 bg-transparent text-center text-white/75">
           <CardContent className="flex flex-col items-center gap-4 py-16">
             <FileText className="h-16 w-16 text-white/40" />
-            <h3 className="text-2xl font-semibold text-white">
+            <h3 className="text-sm font-semibold text-white">
               No files uploaded yet
             </h3>
-            <p className="max-w-sm text-sm text-white/70">
+            <p className="max-w-sm text-[10px] text-white/70">
               Drop in your brand guidelines, playbooks, call scripts, and more.
               These become the context your AI agents rely on.
             </p>
             <Button
-              className="mt-4 bg-white/10 text-white hover:bg-white/20"
+              className="mt-3 text-[10px] h-8 bg-white/10 text-white hover:bg-white/20"
               onClick={() => setUploadOpen(true)}
             >
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="mr-1.5 h-3 w-3" />
               Upload Files
             </Button>
           </CardContent>
@@ -250,19 +250,19 @@ const CompanyKnowledgePage = () => {
       <div className="flex flex-col gap-6 text-white">
         <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
           <div>
-            <h2 className="text-2xl font-semibold text-white">
+            <h2 className="text-xs sm:text-sm md:text-base font-semibold text-white mb-1">
               Company Knowledge Base
             </h2>
-            <p className="text-sm text-white/60">
+            <p className="text-[10px] text-white/60">
               Upload documents to calibrate messaging, tone, and operational
               workflows for your AI agents.
             </p>
           </div>
           <Button
-            className="mt-4 bg-white/10 text-white hover:bg-white/20"
+            className="mt-3 text-[10px] h-8 bg-white/10 text-white hover:bg-white/20"
             onClick={() => setUploadOpen(true)}
           >
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus className="mr-1.5 h-3 w-3" />
             Upload Files
           </Button>
         </div>

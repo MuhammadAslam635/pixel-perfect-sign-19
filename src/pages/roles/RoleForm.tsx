@@ -263,7 +263,9 @@ const RoleForm = () => {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Basic Info Card */}
-            <Card className="rounded-2xl border border-white/10 bg-[linear-gradient(135deg,rgba(58,62,75,0.82),rgba(28,30,40,0.94))] shadow-[0_20px_34px_rgba(0,0,0,0.38)] backdrop-blur">
+            <Card className="rounded-2xl border border-white/10 shadow-[0_20px_34px_rgba(0,0,0,0.38)] backdrop-blur" style={{
+              background: "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0) 38.08%, rgba(255, 255, 255, 0) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)"
+            }}>
               <CardContent className="p-6 space-y-4">
                 <div className="flex items-center gap-2 mb-4">
                   <Shield className="h-5 w-5 text-cyan-400" />
@@ -327,7 +329,9 @@ const RoleForm = () => {
             </Card>
 
             {/* Permissions Card */}
-            <Card className="rounded-2xl border border-white/10 bg-[linear-gradient(135deg,rgba(58,62,75,0.82),rgba(28,30,40,0.94))] shadow-[0_20px_34px_rgba(0,0,0,0.38)] backdrop-blur">
+            <Card className="rounded-2xl border border-white/10 shadow-[0_20px_34px_rgba(0,0,0,0.38)] backdrop-blur" style={{
+              background: "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0) 38.08%, rgba(255, 255, 255, 0) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)"
+            }}>
               <CardContent className="p-6">
                 <h3 className="text-lg font-medium text-white mb-4">
                   Module Permissions

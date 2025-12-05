@@ -212,9 +212,12 @@ const RoleList = () => {
           </div>
         </section>
 
-        <section className="rounded-[32px] border border-white/10 bg-[linear-gradient(135deg,#0f1620,#1c2b37,#090f16)] shadow-[0_25px_60px_rgba(0,0,0,0.55)] overflow-hidden relative">
-          <div className="pointer-events-none absolute inset-0 opacity-80 bg-[radial-gradient(circle_at_8%_6%,rgba(67,173,189,0.7),transparent_18%)]" />
-          <div className="hidden lg:grid grid-cols-[1.5fr_1fr_1fr_1.4fr_0.6fr] items-center gap-4 p-6 pt-12 bg-[linear-gradient(135deg,rgba(19,26,36,0.95),rgba(10,16,24,0.95))] border-b border-white/10 text-white/75 text-sm font-medium relative z-10">
+        <section className="rounded-[32px] border border-white/10 shadow-[0_25px_60px_rgba(0,0,0,0.55)] overflow-hidden relative" style={{
+          background: "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0) 38.08%, rgba(255, 255, 255, 0) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)"
+        }}>
+          <div className="hidden lg:grid grid-cols-[1.5fr_1fr_1fr_1.4fr_0.6fr] items-center gap-4 p-6 pt-12 border-b border-white/10 text-white/75 text-sm font-medium relative z-10" style={{
+            background: "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0) 38.08%, rgba(255, 255, 255, 0) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)"
+          }}>
             <span>Role</span>
             <span>Type</span>
             <span>Status</span>
@@ -257,9 +260,7 @@ const RoleList = () => {
                   {filteredRoles.map((role, index) => (
                     <div
                       key={role._id}
-                      className={`grid grid-cols-[1.5fr_1fr_1fr_1.4fr_0.6fr] items-center gap-4 px-6 py-5 text-sm border-b border-white/5 ${
-                        index % 2 === 0 ? "bg-[#222B2C]" : "bg-[#1B1B1B]"
-                      }`}
+                      className="grid grid-cols-[1.5fr_1fr_1fr_1.4fr_0.6fr] items-center gap-4 px-6 py-5 text-sm border-b border-white/5"
                     >
                       <div>
                         <div className="font-medium text-white">
@@ -269,28 +270,28 @@ const RoleList = () => {
                       </div>
                       <div className="flex flex-wrap gap-1">
                         {role.type === "system" && (
-                          <Badge className="bg-blue-600/20 text-blue-400 border border-blue-600/30 rounded-full px-3 py-1 text-xs">
+                          <Badge className="bg-white/10 text-white/70 border border-white/20 rounded-full px-3 py-1 text-xs">
                             System
                           </Badge>
                         )}
                         {role.type === "default" && (
-                          <Badge className="bg-purple-600/20 text-purple-400 border border-purple-600/30 rounded-full px-3 py-1 text-xs">
+                          <Badge className="bg-white/10 text-white/70 border border-white/20 rounded-full px-3 py-1 text-xs">
                             Default
                           </Badge>
                         )}
                         {role.type === "custom" && (
-                          <Badge className="bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded-full px-3 py-1 text-xs">
+                          <Badge className="bg-white/10 text-white/70 border border-white/20 rounded-full px-3 py-1 text-xs">
                             Custom
                           </Badge>
                         )}
                       </div>
                       <div>
                         {role.isActive ? (
-                          <Badge className="rounded-full bg-[#3AC143D6] text-[#FFFFFF99] border border-emerald-400/40 px-4 py-1 text-xs">
+                          <Badge className="bg-white/10 text-white/70 border border-white/20 rounded-full px-4 py-1 text-xs">
                             Active
                           </Badge>
                         ) : (
-                          <Badge className="rounded-full bg-[#F72E2E80] text-[#FFFFFF99] border border-[#FF6B6B]/40 px-4 py-1 text-xs">
+                          <Badge className="bg-white/10 text-white/70 border border-white/20 rounded-full px-4 py-1 text-xs">
                             Inactive
                           </Badge>
                         )}
@@ -383,26 +384,26 @@ const RoleList = () => {
                       </div>
                       <div className="flex flex-wrap gap-2">
                         {role.type === "system" && (
-                          <Badge className="bg-blue-600/20 text-blue-400 border border-blue-600/30 rounded-full px-3 py-1 text-xs">
+                          <Badge className="bg-white/10 text-white/70 border border-white/20 rounded-full px-3 py-1 text-xs">
                             System
                           </Badge>
                         )}
                         {role.type === "default" && (
-                          <Badge className="bg-purple-600/20 text-purple-400 border border-purple-600/30 rounded-full px-3 py-1 text-xs">
+                          <Badge className="bg-white/10 text-white/70 border border-white/20 rounded-full px-3 py-1 text-xs">
                             Default
                           </Badge>
                         )}
                         {role.type === "custom" && (
-                          <Badge className="bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded-full px-3 py-1 text-xs">
+                          <Badge className="bg-white/10 text-white/70 border border-white/20 rounded-full px-3 py-1 text-xs">
                             Custom
                           </Badge>
                         )}
                         {role.isActive ? (
-                          <Badge className="rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 px-4 py-1 text-xs">
+                          <Badge className="bg-white/10 text-white/70 border border-white/20 rounded-full px-4 py-1 text-xs">
                             Active
                           </Badge>
                         ) : (
-                          <Badge className="rounded-full bg-[#5A1212]/80 text-[#FF6B6B] border border-[#FF6B6B]/40 px-4 py-1 text-xs">
+                          <Badge className="bg-white/10 text-white/70 border border-white/20 rounded-full px-4 py-1 text-xs">
                             Inactive
                           </Badge>
                         )}
