@@ -210,7 +210,7 @@ const CalendarPage: FC = () => {
   const meetingDayMap = useMemo(() => {
     const map = new Map<number, LeadMeetingRecord[]>();
     leadMeetings.forEach((meeting) => {
-      const startDate = new Date(meeting.start);
+      const startDate = new Date(meeting.startDateTime);
       if (
         startDate.getMonth() === currentDate.getMonth() &&
         startDate.getFullYear() === currentDate.getFullYear()
@@ -250,7 +250,7 @@ const CalendarPage: FC = () => {
     // If a date is selected, filter to show only that date's meetings
     if (selectedDate !== null) {
       filtered = leadMeetings.filter((meeting) => {
-        const meetingDate = new Date(meeting.start);
+        const meetingDate = new Date(meeting.startDateTime);
         return (
           meetingDate.getDate() === selectedDate &&
           meetingDate.getMonth() === currentDate.getMonth() &&
@@ -260,14 +260,14 @@ const CalendarPage: FC = () => {
     } else {
       // Show only future meetings by default
       filtered = leadMeetings.filter((meeting) => {
-        const meetingStart = new Date(meeting.start);
+        const meetingStart = new Date(meeting.startDateTime);
         return meetingStart.getTime() >= nowTimestamp;
       });
     }
 
     return filtered.sort((a, b) => {
-      const aStart = new Date(a.start).getTime();
-      const bStart = new Date(b.start).getTime();
+      const aStart = new Date(a.startDateTime).getTime();
+      const bStart = new Date(b.startDateTime).getTime();
       return aStart - bStart;
     });
   }, [leadMeetings, selectedDate, currentDate, nowTimestamp]);
@@ -333,10 +333,10 @@ const CalendarPage: FC = () => {
   };
 
   const handleConfirmDeleteMeeting = () => {
-    if (!meetingPendingDelete?.id) {
+    if (!meetingPendingDelete?._id) {
       return;
     }
-    deleteMeetingMutation.mutate(meetingPendingDelete.id);
+    deleteMeetingMutation.mutate(meetingPendingDelete._id);
   };
 
   const leadMeetingsErrorMessage = leadMeetingsError
@@ -498,7 +498,7 @@ const CalendarPage: FC = () => {
                     const hasUpcomingMeeting = dayMeetings.some(
                       (meeting) =>
                         meeting.status === "scheduled" &&
-                        new Date(meeting.start).getTime() >= nowTimestamp
+                        new Date(meeting.startDateTime).getTime() >= nowTimestamp
                     );
                     const hasCompletedMeeting = dayMeetings.some(
                       (meeting) => meeting.status === "completed"
@@ -636,27 +636,27 @@ const CalendarPage: FC = () => {
                   ) : sortedMeetings.length > 0 ? (
                     <div className="space-y-3 pr-2">
                       {sortedMeetings.map((meeting) => {
-                        const meetingEnd = new Date(meeting.end);
+                        const meetingEnd = new Date(meeting.endDateTime);
                         const meetingCompleted = meetingEnd.getTime() < nowTimestamp;
                         return (
                           <div
-                            key={meeting.id}
+                            key={meeting._id}
                             className="rounded-lg p-4 border border-white/10 bg-white/5"
                           >
                             <div className="flex flex-wrap items-center justify-between gap-3">
                               <div className="flex-1 min-w-0">
                                 <p className="text-white font-semibold text-sm">
-                                  {meeting.title || "Meeting"}
+                                  {meeting.subject || "Meeting"}
                                 </p>
                                 <p className="text-xs text-white/60">
                                   {formatDateTimeRange(
-                                    meeting.start,
-                                    meeting.end
+                                    meeting.startDateTime,
+                                    meeting.endDateTime
                                   )}
                                 </p>
-                                {meeting.linkedPerson && (
+                                {meeting.personId && (
                                   <p className="text-xs text-white/50 mt-1">
-                                    {meeting.linkedPerson.name} {meeting.linkedPerson.companyName ? `— ${meeting.linkedPerson.companyName}` : ""}
+                                    Person ID: {meeting.personId}
                                   </p>
                                 )}
                               </div>
@@ -732,7 +732,7 @@ const CalendarPage: FC = () => {
         open={!!meetingPendingDelete}
         title="Delete Meeting"
         description={`Are you sure you want to delete "${
-          meetingPendingDelete?.title || "this meeting"
+          meetingPendingDelete?.subject || "this meeting"
         }"? This action cannot be undone.`}
         confirmText="Delete"
         cancelText="Cancel"

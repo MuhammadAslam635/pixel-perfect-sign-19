@@ -37,36 +37,34 @@ export interface MicrosoftConnectionStatusResponse {
 }
 
 export interface LeadMeetingRecord {
-  source: "lead_meeting" | "microsoft_graph";
+  _id: string;
+  personId: string;
+  companyId: string;
+  scheduledByUserId?: string | null;
   provider: string;
-  id: string;
   eventId: string;
-  title: string;
+  subject: string;
   body?: string;
-  start: string;
-  end: string;
-  allDay: boolean;
-  timezone: string;
   location?: string;
-  attendees?: Array<{
-    email: string;
-    name: string;
-    status: string;
-  }>;
-  status: "scheduled" | "completed" | "cancelled";
+  startDateTime: string;
+  endDateTime: string;
+  durationMinutes?: number | null;
+  timezone?: string;
   joinLink?: string | null;
   webLink?: string | null;
-  linkedPerson?: {
-    id: string;
-    name: string;
+  attendees?: Array<{
     email: string;
-    companyName?: string;
-  } | null;
-  leadMeetingId?: string;
+    name?: string | null;
+    status?: string | null;
+    responseTime?: string | null;
+    _id?: string;
+  }>;
+  status: "scheduled" | "completed" | "cancelled";
   autoSelectedSlot?: boolean;
   metadata?: Record<string, unknown>;
-  rawEvent?: Record<string, unknown>;
-  rawDoc?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+  __v?: number;
 }
 
 export interface LeadMeetingsQuery {
