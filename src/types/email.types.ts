@@ -86,6 +86,11 @@ export interface SendEmailRequest {
   text?: string;
   html?: string;
   threadId?: string;
+  generateContent?: boolean;
+  enhanceExistingContent?: boolean;
+  tone?: "professional" | "casual" | "friendly";
+  emailType?: "introduction" | "follow_up" | "value_proposition" | "partnership" | "general";
+  customInstructions?: string;
 }
 
 export interface SendEmailResponse {
