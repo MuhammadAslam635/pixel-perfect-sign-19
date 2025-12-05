@@ -36,6 +36,7 @@ import {
 import LeadChat from "@/pages/crm/leads/leaddetailview/components/LeadChat";
 import MembersPermissions from "@/pages/admin/MembersPermissions";
 import LeadsPage from "@/pages/crm/leads";
+import CalendarPage from "@/pages/crm/calendar";
 
 const AppRoutes = () => {
   return (
@@ -320,6 +321,14 @@ const AppRoutes = () => {
         }
       />
 
+      <Route
+        path="/calendar"
+        element={
+          <ProtectedRoute>
+            <CalendarPage />
+          </ProtectedRoute>
+        }
+      />
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
     </Routes>
