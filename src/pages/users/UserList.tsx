@@ -468,7 +468,11 @@ const UserList = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className="relative px-4 sm:px-6 md:px-10 lg:px-14 xl:px-16 2xl:px-[96px] mt-20 lg:mt-24 xl:mt-28 mb-10 flex flex-col gap-8 text-white flex-1 overflow-y-auto"
+        className="relative px-4 sm:px-6 md:px-10 lg:px-14 xl:px-16 2xl:px-[96px] mt-20 lg:mt-24 xl:mt-28 mb-10 flex flex-col gap-8 text-white flex-1 overflow-y-auto scrollbar-hide"
+        style={{
+          scrollbarWidth: "none",
+          msOverflowStyle: "none",
+        }}
       >
         <motion.section
           initial={{ opacity: 0, y: 20 }}
@@ -626,7 +630,13 @@ const UserList = () => {
                     >
                       {/* Gradient glow behind entire role card */}
                       <div className="absolute -inset-3 lg:-inset-5 bg-gradient-to-r from-cyan-500/20 via-blue-500/15 to-transparent blur-2xl opacity-50" />
-                      <Card className="relative rounded-3xl border bg-card text-card-foreground border-[#FFFFFF33] shadow-xl w-full">
+                      <Card
+                        className="relative rounded-2xl border-[#FFFFFF0D] hover:border-[#3a3a3a] transition-all duration-200 w-full overflow-hidden"
+                        style={{
+                          background:
+                            "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
+                        }}
+                      >
                         <CardContent className="p-4 sm:p-6 space-y-4">
                           {/* Role Header */}
                           <div className="flex items-center gap-3">
@@ -636,7 +646,7 @@ const UserList = () => {
                           </div>
 
                           {/* Users Grid */}
-                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
                             {roleUsers.map((user, userIndex) => (
                               <motion.div
                                 key={user._id}
@@ -649,23 +659,80 @@ const UserList = () => {
                                 }}
                                 className="relative flex-1 w-full"
                               >
-                                {/* Gradient glow behind card */}
-                                <div className="absolute -inset-2 lg:-inset-3 bg-gradient-to-r from-cyan-500/20 via-blue-500/15 to-transparent blur-xl opacity-50" />
-                                <Card className="relative rounded-3xl border bg-card text-card-foreground border-[#FFFFFF33] shadow-xl w-full">
-                                  <CardContent className="p-3 sm:p-4 h-full flex flex-col min-h-[140px] gap-4 relative">
-                                    {/* Centered Image with Three dots on right */}
+                                <div
+                                  className="relative rounded-2xl border-[#FFFFFF0D] hover:border-[#3a3a3a] transition-all duration-200 w-full overflow-hidden"
+                                  style={{
+                                    background:
+                                      "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
+                                  }}
+                                >
+                                  <CardContent className="p-3 sm:p-4 h-full flex flex-row items-center min-h-[110px] gap-4 relative">
+                                    <div className="absolute top-0 right-3">
+                                      <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                          <button
+                                            type="button"
+                                            className="text-white/60 hover:text-white p-1.5 rounded-full hover:bg-white/10 transition-colors"
+                                            title="More actions"
+                                          >
+                                            <MoreHorizontal className="h-4 w-4" />
+                                          </button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent
+                                          align="end"
+                                          className="bg-[rgba(30,30,30,0.95)] border border-white/10 text-white shadow-lg rounded-lg w-44 backdrop-blur"
+                                        >
+                                          {!trashed ? (
+                                            <>
+                                              <DropdownMenuItem
+                                                onClick={() =>
+                                                  navigate(
+                                                    `/users/${user._id}/edit`
+                                                  )
+                                                }
+                                                className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-white/10"
+                                              >
+                                                <Eye className="h-4 w-4" />
+                                                View Profile
+                                              </DropdownMenuItem>
+                                              <DropdownMenuItem
+                                                onClick={() =>
+                                                  handleDelete(
+                                                    user._id,
+                                                    resolveUserDisplayName(user)
+                                                  )
+                                                }
+                                                className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-red-500/20 text-red-400"
+                                              >
+                                                <Trash2 className="h-4 w-4" />
+                                                Delete User
+                                              </DropdownMenuItem>
+                                            </>
+                                          ) : (
+                                            <DropdownMenuItem
+                                              onClick={() =>
+                                                handleRestore(user._id)
+                                              }
+                                              className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-cyan-500/20 text-cyan-300"
+                                            >
+                                              <RotateCcw className="h-4 w-4" />
+                                              Restore User
+                                            </DropdownMenuItem>
+                                          )}
+                                        </DropdownMenuContent>
+                                      </DropdownMenu>
+                                    </div>
                                     <div className="flex items-center justify-center relative">
-                                      {/* Profile Image - Centered */}
                                       <div className="flex-shrink-0">
                                         {user.profileImage ? (
                                           <img
                                             src={user.profileImage}
                                             alt={resolveUserDisplayName(user)}
-                                            className="w-16 h-16 rounded-full object-cover border-2 border-white/20"
+                                            className="w-14 h-14 rounded-full object-cover border-2 border-white/20"
                                           />
                                         ) : (
                                           <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#67B0B7] to-[#4066B3] flex items-center justify-center border-2 border-white/20">
-                                            <span className="text-white font-semibold text-lg">
+                                            <span className="text-white font-semibold text-sm">
                                               {resolveUserDisplayName(user)
                                                 .charAt(0)
                                                 .toUpperCase()}
@@ -673,83 +740,22 @@ const UserList = () => {
                                           </div>
                                         )}
                                       </div>
-
-                                      {/* Three dots dropdown - Right side */}
-                                      <div className="absolute top-0 right-0">
-                                        <DropdownMenu>
-                                          <DropdownMenuTrigger asChild>
-                                            <button
-                                              type="button"
-                                              className="text-white/60 hover:text-white p-1.5 rounded-full hover:bg-white/10 transition-colors"
-                                              title="More actions"
-                                            >
-                                              <MoreHorizontal className="h-4 w-4" />
-                                            </button>
-                                          </DropdownMenuTrigger>
-                                          <DropdownMenuContent
-                                            align="end"
-                                            className="bg-[rgba(30,30,30,0.95)] border border-white/10 text-white shadow-lg rounded-lg w-44 backdrop-blur"
-                                          >
-                                            {!trashed ? (
-                                              <>
-                                                <DropdownMenuItem
-                                                  onClick={() =>
-                                                    navigate(
-                                                      `/users/${user._id}/edit`
-                                                    )
-                                                  }
-                                                  className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-white/10"
-                                                >
-                                                  <Eye className="h-4 w-4" />
-                                                  View Profile
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem
-                                                  onClick={() =>
-                                                    handleDelete(
-                                                      user._id,
-                                                      resolveUserDisplayName(
-                                                        user
-                                                      )
-                                                    )
-                                                  }
-                                                  className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-red-500/20 text-red-400"
-                                                >
-                                                  <Trash2 className="h-4 w-4" />
-                                                  Delete User
-                                                </DropdownMenuItem>
-                                              </>
-                                            ) : (
-                                              <DropdownMenuItem
-                                                onClick={() =>
-                                                  handleRestore(user._id)
-                                                }
-                                                className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-cyan-500/20 text-cyan-300"
-                                              >
-                                                <RotateCcw className="h-4 w-4" />
-                                                Restore User
-                                              </DropdownMenuItem>
-                                            )}
-                                          </DropdownMenuContent>
-                                        </DropdownMenu>
-                                      </div>
                                     </div>
-
-                                    {/* User Info - Stacked vertically */}
                                     <div className="flex-1 space-y-2 text-center">
                                       <h4 className="text-white font-medium text-sm">
                                         {resolveUserDisplayName(user)}
                                       </h4>
-                                      <p className="text-white/70 text-xs">
+                                      <p className="text-white/70 text-sm">
                                         {user.email}
                                       </p>
                                       {user.phone && (
-                                        <p className="text-white/50 text-xs">
+                                        <p className="text-white/50 text-sm">
                                           {user.phone}
                                         </p>
                                       )}
                                     </div>
                                   </CardContent>
-                                </Card>
+                                </div>
                               </motion.div>
                             ))}
                           </div>
