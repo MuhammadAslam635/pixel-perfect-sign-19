@@ -17,6 +17,7 @@ export const FilterButton = React.forwardRef<
       icon={Filter}
       text="Filters"
       showIndicator={hasFilters}
+      className="h-9"
       onClick={onClick}
     />
   );
