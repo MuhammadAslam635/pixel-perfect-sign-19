@@ -384,7 +384,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
   const hasActiveChat = currentChatId || localMessages.length > 0;
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col overflow-hidden w-full h-full">
+    <div className="flex-1 min-h-0 flex flex-col overflow-hidden w-[calc(100%-2rem)] h-full">
       {/* Greeting or Chat Messages */}
       {!hasActiveChat ? (
         <div className="assistant-greeting flex-1 flex flex-col justify-center">
@@ -412,7 +412,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
               >
                 <div
                   className={cn(
-                    "max-w-[80%] rounded-3xl px-5 py-4 text-sm leading-relaxed shadow-lg",
+                    "rounded-2xl px-3 py-2 text-sm leading-relaxed shadow-lg",
                     isAssistant
                       ? "rounded-bl-md bg-white/5 text-white"
                       : "rounded-br-md bg-[linear-gradient(226.23deg,_#3E65B4_0%,_#68B3B7_100%)] text-white"
@@ -478,7 +478,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
                           ),
                         p: ({ node, ...props }) => (
                           <p
-                            className="mb-2 max-w-[600px] break-words text-left"
+                            className="break-words text-left"
                             style={{ overflowWrap: "anywhere" }}
                             {...props}
                           />

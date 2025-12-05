@@ -754,10 +754,10 @@ body {
   left: 50%;
   bottom: 50px;
   transform: translateX(-50%);
-  width: min(557px, 90%);
+  width: 88%;
   height: 85px;
   border-radius: 28px;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgb(32, 32, 32);
   box-shadow: inset 0 -3.4px 3.4px rgba(255, 255, 255, 0.16),
     inset 0 3.4px 3.4px rgba(255, 255, 255, 0.16);
   display: flex;
