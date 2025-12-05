@@ -29,8 +29,8 @@ const crmNavLinks: CrmNavLink[] = [
     id: "calendar",
     label: "Calendar",
     icon: CalendarDays,
-    path: "/dashboard/calendar",
-    match: (pathname: string) => pathname.startsWith("/dashboard/calendar"),
+    path: "/calendar",
+    match: (pathname: string) => pathname.startsWith("/calendar"),
   },
   {
     id: "followup",
