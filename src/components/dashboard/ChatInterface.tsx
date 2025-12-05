@@ -1,8 +1,10 @@
 import { Sparkles, Mic, Send, Loader2 } from "lucide-react";
 import { FC, useState, useEffect, useRef } from "react";
+import { motion } from "framer-motion";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
+import { cn } from "@/lib/utils";
 import { AxiosError } from "axios";
 import {
   sendChatMessage,
@@ -11,7 +13,6 @@ import {
 } from "@/services/chat.service";
 import { deepgramTranscription } from "@/services/deepgram.service";
 import { ChatMessage } from "@/types/chat.types";
-import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
@@ -25,6 +26,60 @@ const getTimeBasedGreeting = () => {
   if (hour < 12) return "Good Morning";
   if (hour < 17) return "Good Afternoon";
   return "Good Evening";
+};
+
+// Animation variants for typing indicator
+const typingVariants = {
+  hidden: {
+    opacity: 0,
+    scale: 0.8,
+    y: 10,
+  },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: {
+      duration: 0.3,
+      ease: "easeOut" as const,
+    },
+  },
+};
+
+// Bouncing dots animation for typing indicator
+const dotVariants = {
+  animate: {
+    y: [0, -8, 0],
+    transition: {
+      duration: 0.8,
+      repeat: Infinity as number,
+      ease: "easeInOut" as const,
+    },
+  },
+};
+
+const dotVariants2 = {
+  animate: {
+    y: [0, -8, 0],
+    transition: {
+      duration: 0.8,
+      repeat: Infinity as number,
+      ease: "easeInOut" as const,
+      delay: 0.2,
+    },
+  },
+};
+
+const dotVariants3 = {
+  animate: {
+    y: [0, -8, 0],
+    transition: {
+      duration: 0.8,
+      repeat: Infinity as number,
+      ease: "easeInOut" as const,
+      delay: 0.4,
+    },
+  },
 };
 
 type ChatInterfaceProps = {
@@ -474,12 +529,35 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
             );
           })}
           {isSendingMessage && (
-            <div className="flex justify-start">
-              <div className="flex items-center gap-2 rounded-3xl bg-white/5 px-4 py-2 text-xs text-white/80">
-                <Loader2 className="size-4 animate-spin" />
-                Thinking…
+            <motion.div
+              key="typing-indicator"
+              initial="hidden"
+              animate="visible"
+              exit="hidden"
+              variants={typingVariants}
+              className="flex justify-start"
+            >
+              <div className="flex items-center gap-3 rounded-3xl bg-white/5 px-4 py-3 text-xs text-white/80">
+                <div className="flex items-center gap-1">
+                  <motion.div
+                    animate="animate"
+                    variants={dotVariants}
+                    className="w-2 h-2 bg-white/60 rounded-full"
+                  />
+                  <motion.div
+                    animate="animate"
+                    variants={dotVariants2}
+                    className="w-2 h-2 bg-white/60 rounded-full"
+                  />
+                  <motion.div
+                    animate="animate"
+                    variants={dotVariants3}
+                    className="w-2 h-2 bg-white/60 rounded-full"
+                  />
+                </div>
+                <span className="text-white/70">Thinking…</span>
               </div>
-            </div>
+            </motion.div>
           )}
         </div>
       )}
