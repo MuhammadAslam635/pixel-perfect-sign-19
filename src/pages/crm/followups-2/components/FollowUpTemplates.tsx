@@ -1,11 +1,9 @@
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
   Plus,
-  Search,
   Calendar,
   Clock,
   Mail,
@@ -13,6 +11,7 @@ import {
   Phone,
   MoreVertical,
 } from "lucide-react";
+import { SearchInput } from "../../shared/components";
 
 // Mock data for demo purposes
 const mockCampaigns = Array(9)
@@ -43,49 +42,69 @@ const FollowUpTemplates = () => {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
             {/* Tab Buttons */}
-            <div className="flex items-center gap-1 bg-white/5 rounded-lg p-0.5">
-              <button
-                onClick={() => setActiveTab("templates")}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                  activeTab === "templates"
-                    ? "bg-[#5B9FA5] text-white"
-                    : "text-white/60 hover:text-white/80"
-                }`}
-              >
-                Follow-up Templates
-              </button>
-              <button
-                onClick={() => setActiveTab("plans")}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                  activeTab === "plans"
-                    ? "bg-[#5B9FA5] text-white"
-                    : "text-white/60 hover:text-white/80"
-                }`}
-              >
-                Active Followup Plans
-              </button>
+            <div className="flex items-center gap-1 rounded-lg p-0.5">
+              <div>
+                <button
+                  onClick={() => setActiveTab("templates")}
+                  className={`px-3 py-1.5 rounded-md text-2xl font-medium transition-all ${
+                    activeTab === "templates"
+                    // ? "bg-[#5B9FA5] text-white"
+                    // : "text-white/60 hover:text-white/80"
+                  }`}
+                >
+                  Follow-up Templates
+                </button>
+                <p className="px-3 py-0.5 rounded-md text-[10px] font-light transition-all">
+                  Centralize touchpoints for every prospect across emails,
+                  calls, and whatsapp
+                </p>
+              </div>
+              <div>
+                <button
+                  onClick={() => setActiveTab("plans")}
+                  className={`px-3 py-1 rounded-md text-2xl font-medium transition-all ${
+                    activeTab === "plans"
+                    // ? "bg-[#5B9FA5] text-white"
+                    // : "text-white/60 hover:text-white/80"
+                  }`}
+                >
+                  Active Followup Plans
+                </button>
+                <p className="px-3 py-0.5 rounded-md text-[10px] font-light transition-all">
+                  View and manage your active followup campaigns
+                </p>
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="relative w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-              <Input
-                type="text"
-                placeholder="Search Template"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/40 h-9 text-sm rounded-lg"
-              />
-            </div>
+            <SearchInput
+              placeholder="Search templates..."
+              value={searchQuery}
+              onChange={setSearchQuery}
+              className="sm:min-w-[320px] lg:min-w-[320px]"
+            />
             <Button
-              className="bg-white/5 backdrop-blur-sm border border-white/40 text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] hover:bg-[#2F2F2F]/60 transition-all h-9 px-4 text-sm"
+              size="sm"
+              className="relative h-9 px-4 rounded-full border-0 text-white text-xs hover:bg-[#2F2F2F]/60 transition-all w-full sm:w-auto lg:flex-shrink-0 overflow-hidden"
               style={{
-                background:
-                  "radial-gradient(circle at left, rgba(64, 102, 179, 0.4) 0%, rgba(103, 176, 183, 0.3) 50%, transparent 70%)",
+                background: "#FFFFFF1A",
+                boxShadow:
+                  "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
               }}
             >
-              <Plus className="w-4 h-4 mr-2" />
-              New Template
+              {/* radial element 150px 150px */}
+              <div
+                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[150px] h-[150px] rounded-full pointer-events-none"
+                style={{
+                  background:
+                    "radial-gradient(circle, #66AFB7 0%, transparent 70%)",
+                  backdropFilter: "blur(50px)",
+                  WebkitBackdropFilter: "blur(50px)",
+                  zIndex: -1,
+                }}
+              ></div>
+              <Plus className="w-4 h-4 mr-0 relative z-10" />
+              <span className="relative z-10">New Template</span>
             </Button>
           </div>
         </div>

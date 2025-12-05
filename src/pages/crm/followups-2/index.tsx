@@ -15,7 +15,7 @@ const FollowUp2Page = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut", delay: 0.5 }}
-          className="rounded-xl sm:rounded-[30px] border border-white/10 bg-[linear-gradient(173.83deg,_rgba(255,255,255,0.08)_4.82%,_rgba(255,255,255,0)_38.08%,_rgba(255,255,255,0)_56.68%,_rgba(255,255,255,0.02)_95.1%)] p-6"
+          className="rounded-xl sm:rounded-[30px] p-6"
         >
           <FollowUpTemplates />
         </motion.div>
