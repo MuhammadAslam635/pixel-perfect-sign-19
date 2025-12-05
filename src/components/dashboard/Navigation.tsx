@@ -45,7 +45,8 @@ const navLinks: NavLink[] = [
     label: "CRM",
     icon: BarChart3,
     path: "/companies",
-    match: (pathname: string) => pathname.startsWith("/companies"),
+    match: (pathname: string) =>
+      pathname.startsWith("/companies") || pathname.startsWith("/leads"),
   },
   {
     id: "prospects",
