@@ -21,6 +21,7 @@ import UserCreate from "@/pages/users/UserCreate";
 import UserEdit from "@/pages/users/UserEdit";
 import ContactNow from "@/pages/twilio-calling/ContactNow";
 import FollowupTemplatesPage from "@/pages/crm/followups";
+import FollowUp2Page from "@/pages/crm/followups-2";
 import LeadDetailView, { SelectedCallLogView } from "@/pages/crm/leads/leaddetailview";
 import RoleList from "@/pages/roles/RoleList";
 import RoleForm from "@/pages/roles/RoleForm";
@@ -186,6 +187,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute moduleName="followup-templates">
             <FollowupTemplatesPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/followups-2"
+        element={
+          <ProtectedRoute moduleName="followup-templates">
+            <FollowUp2Page />
           </ProtectedRoute>
         }
       />
