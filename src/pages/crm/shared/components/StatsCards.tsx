@@ -28,10 +28,10 @@ export const StatsCards = ({ stats }: StatsCardsProps) => {
                 "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0) 38.08%, rgba(255, 255, 255, 0) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
             }}
           >
-            <CardContent className="p-3 sm:p-4 lg:p-5 h-full flex flex-col justify-center min-h-[100px] sm:min-h-[110px] gap-2">
+            <CardContent className="p-2 sm:p-3 lg:p-4 h-full flex flex-col justify-center min-h-[80px] sm:min-h-[85px] gap-1.5">
               {/* First row: Icon and Title (left-aligned) */}
-              <div className="flex items-center gap-2 sm:gap-3 justify-start">
-                <div className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 flex items-center justify-center flex-shrink-0">
+              <div className="flex items-center gap-2 justify-start">
+                <div className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center flex-shrink-0">
                   <stat.icon className="w-full h-full text-[#66AFB7]" />
                 </div>
                 <p className="text-xs sm:text-sm text-gray-300 font-medium tracking-tight leading-tight">
@@ -41,7 +41,7 @@ export const StatsCards = ({ stats }: StatsCardsProps) => {
 
               {/* Second row: Value (centered) */}
               <div className="flex items-center justify-center">
-                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-white leading-none">
+                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-white leading-none">
                   {stat.value}
                 </p>
               </div>
