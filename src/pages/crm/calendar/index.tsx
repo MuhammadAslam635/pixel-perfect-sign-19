@@ -15,7 +15,7 @@ import {
 } from "@/services/calendar.service";
 import { format } from "date-fns";
 import ConfirmDialog from "@/components/ui/confirm-dialog";
-import { CrmNavigation } from "@/components/crm/CrmNavigation";
+import { CrmNavigation } from "@/pages/crm/shared/components/CrmNavigation";
 
 const formatDateTimeRange = (start?: string, end?: string) => {
   if (!start || !end) {
