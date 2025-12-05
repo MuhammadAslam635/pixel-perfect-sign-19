@@ -9,7 +9,7 @@ import {
   Mail,
   MessageSquare,
   Phone,
-  MoreVertical,
+  MoreHorizontal,
 } from "lucide-react";
 import { SearchInput } from "../../shared/components";
 import ActiveFollowUpPlans from "./ActiveFollowUpPlans";
@@ -148,7 +148,7 @@ const FollowUpTemplates = () => {
                 <div
                   className="absolute top-0 left-0 right-0 pointer-events-none rounded-sm"
                   style={{
-                    height: "calc(100% - 190px)",
+                    height: "calc(100% - 155px)",
                     background:
                       "linear-gradient(173.83deg, rgba(255, 255, 255, 0.16) 4.82%, rgba(255, 255, 255, 4e-05) 38.08%, rgba(255, 255, 255, 4e-05) 56.68%, rgba(255, 255, 255, 0.04) 95.1%)",
                     zIndex: 1,
@@ -166,7 +166,7 @@ const FollowUpTemplates = () => {
                       </p>
                     </div>
                     <button className="text-white/40 hover:text-white/60 transition-colors">
-                      <MoreVertical className="w-5 h-5" />
+                      <MoreHorizontal className="w-5 h-5" />
                     </button>
                   </div>
                   <div className="border-b border-white/30"></div>
@@ -174,9 +174,10 @@ const FollowUpTemplates = () => {
                   <div className="flex items-start gap-3 flex-wrap">
                     {/* Run Time */}
                     <div className="flex items-center gap-2 text-sm">
-                      <div className="w-9 h-9 rounded-full bg-[#4A6B6D]/30 flex items-center justify-center flex-shrink-0">
-                        <Clock className="w-4 h-4 text-[#6B9FA1]" />
-                      </div>
+                      <Clock
+                        className="w-5 h-5 text-[#5A9EA1]"
+                        strokeWidth={2}
+                      />
                       <span className="text-white/80 text-sm">
                         Run Time: {campaign.runTime}
                       </span>
@@ -184,9 +185,10 @@ const FollowUpTemplates = () => {
 
                     {/* Calendar */}
                     <div className="flex items-center gap-2 text-sm ml-auto">
-                      <div className="w-9 h-9 rounded-full bg-[#4A6B6D]/30 flex items-center justify-center flex-shrink-0">
-                        <Calendar className="w-4 h-4 text-[#6B9FA1]" />
-                      </div>
+                      <Calendar
+                        className="w-5 h-5 text-[#5A9EA1]"
+                        strokeWidth={2}
+                      />
                       <span className="text-white/80 text-sm">
                         {campaign.dateRange}
                       </span>
@@ -197,9 +199,10 @@ const FollowUpTemplates = () => {
                   <div className="flex items-center gap-6">
                     {/* Emails */}
                     <div className="flex items-center gap-2 text-sm">
-                      <div className="w-9 h-9 rounded-full bg-[#4A6B6D]/30 flex items-center justify-center flex-shrink-0">
-                        <Mail className="w-4 h-4 text-[#6B9FA1]" />
-                      </div>
+                      <Mail
+                        className="w-5 h-5 text-[#5A9EA1]"
+                        strokeWidth={2}
+                      />
                       <span className="text-white/80 text-sm">
                         {campaign.emails.toString().padStart(2, "0")} Emails
                       </span>
@@ -207,9 +210,10 @@ const FollowUpTemplates = () => {
 
                     {/* Messages */}
                     <div className="flex items-center gap-2 text-sm">
-                      <div className="w-9 h-9 rounded-full bg-[#4A6B6D]/30 flex items-center justify-center flex-shrink-0">
-                        <MessageSquare className="w-4 h-4 text-[#6B9FA1]" />
-                      </div>
+                      <MessageSquare
+                        className="w-5 h-5 text-[#5A9EA1]"
+                        strokeWidth={2}
+                      />
                       <span className="text-white/80 text-sm">
                         {campaign.messages.toString().padStart(2, "0")} Message
                       </span>
@@ -217,9 +221,10 @@ const FollowUpTemplates = () => {
 
                     {/* Calls */}
                     <div className="flex items-center gap-2 text-sm">
-                      <div className="w-9 h-9 rounded-full bg-[#4A6B6D]/30 flex items-center justify-center flex-shrink-0">
-                        <Phone className="w-4 h-4 text-[#6B9FA1]" />
-                      </div>
+                      <Phone
+                        className="w-5 h-5 text-[#5A9EA1]"
+                        strokeWidth={2}
+                      />
                       <span className="text-white/80 text-sm">
                         {campaign.calls.toString().padStart(2, "0")} Calls
                       </span>
