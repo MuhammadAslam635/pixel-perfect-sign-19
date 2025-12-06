@@ -24,7 +24,11 @@ import { SearchInput } from "../../shared/components";
 import ActiveFollowUpPlans from "./ActiveFollowUpPlans";
 import TemplateFormModal from "./TemplateFormModal";
 import ConfirmDialog from "@/components/ui/confirm-dialog";
-import { useFollowupTemplates, useDeleteFollowupTemplate, useDuplicateFollowupTemplate } from "@/hooks/useFollowupTemplates";
+import {
+  useFollowupTemplates,
+  useDeleteFollowupTemplate,
+  useDuplicateFollowupTemplate,
+} from "@/hooks/useFollowupTemplates";
 import { FollowupTemplate } from "@/services/followupTemplates.service";
 import { useToast } from "@/hooks/use-toast";
 import { isAxiosError } from "axios";
@@ -246,9 +250,12 @@ const FollowUpTemplates = () => {
                 // Format updated date
                 const updatedDate = new Date(template.updatedAt);
                 const now = new Date();
-                const diffTime = Math.abs(now.getTime() - updatedDate.getTime());
+                const diffTime = Math.abs(
+                  now.getTime() - updatedDate.getTime()
+                );
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                const updatedAt = diffDays <= 1 ? "today" : `${diffDays} days ago`;
+                const updatedAt =
+                  diffDays <= 1 ? "today" : `${diffDays} days ago`;
 
                 return (
                   <Card
@@ -360,11 +367,13 @@ const FollowUpTemplates = () => {
                               color: "#FFFFFF99",
                             }}
                           >
-                            {new Date().toLocaleDateString('en-GB', {
-                              day: '2-digit',
-                              month: 'short',
-                              year: 'numeric'
-                            }).replace(/ /g, ' - ')}
+                            {new Date()
+                              .toLocaleDateString("en-GB", {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                              })
+                              .replace(/ /g, " - ")}
                           </span>
                         </div>
                       </div>
@@ -387,7 +396,10 @@ const FollowUpTemplates = () => {
                               color: "#FFFFFF99",
                             }}
                           >
-                            {template.numberOfEmails.toString().padStart(2, "0")} Emails
+                            {template.numberOfEmails
+                              .toString()
+                              .padStart(2, "0")}{" "}
+                            Emails
                           </span>
                         </div>
 
@@ -407,7 +419,10 @@ const FollowUpTemplates = () => {
                               color: "#FFFFFF99",
                             }}
                           >
-                            {template.numberOfWhatsappMessages.toString().padStart(2, "0")} Message
+                            {template.numberOfWhatsappMessages
+                              .toString()
+                              .padStart(2, "0")}{" "}
+                            Message
                           </span>
                         </div>
 
@@ -427,7 +442,8 @@ const FollowUpTemplates = () => {
                               color: "#FFFFFF99",
                             }}
                           >
-                            {template.numberOfCalls.toString().padStart(2, "0")} Calls
+                            {template.numberOfCalls.toString().padStart(2, "0")}{" "}
+                            Calls
                           </span>
                         </div>
                       </div>
