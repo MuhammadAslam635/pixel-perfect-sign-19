@@ -654,11 +654,11 @@ const CalendarPage: FC = () => {
                                     meeting.endDateTime
                                   )}
                                 </p>
-                                {meeting.personId && (
+                                {/* {meeting.personId && (
                                   <p className="text-xs text-white/50 mt-1">
                                     Person ID: {meeting.personId}
                                   </p>
-                                )}
+                                )} */}
                               </div>
                               <div className="flex items-center gap-2">
                                 <Badge

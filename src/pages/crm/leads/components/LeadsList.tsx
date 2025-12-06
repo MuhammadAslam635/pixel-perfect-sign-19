@@ -310,7 +310,7 @@ const LeadsList: FC<LeadsListProps> = ({
       return (
         <Card
           key={lead._id}
-          className={`relative flex flex-col gap-2 overflow-hidden border-0 rounded-lg p-3 transition-all duration-300 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] cursor-pointer aspect-[3/1] before:absolute before:content-[''] before:-left-1 before:top-1/2 before:-translate-y-1/2 before:h-[55%] sm:before:h-[60%] before:w-0 md:before:w-[3px] lg:before:w-[4px] xl:before:w-[6px] before:rounded-full backdrop-blur-[22.6px] ${
+          className={`relative flex flex-col gap-2 overflow-hidden border-0 rounded-lg p-3 transition-all duration-300 hover:bg-white/5 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] cursor-pointer aspect-[3/1] before:absolute before:content-[''] before:-left-1 before:top-1/2 before:-translate-y-1/2 before:h-[55%] sm:before:h-[60%] before:w-0 md:before:w-[3px] lg:before:w-[4px] xl:before:w-[6px] before:rounded-full backdrop-blur-[22.6px] ${
             isActive ? "md:before:bg-primary" : "md:before:bg-white/75"
           }`}
           style={{
@@ -369,7 +369,7 @@ const LeadsList: FC<LeadsListProps> = ({
     return (
       <Card
         key={lead._id}
-        className={`relative flex flex-col md:flex-row items-start md:items-center justify-between gap-1 sm:gap-1.5 md:gap-2 border-0 rounded-[16px] sm:rounded-[20px] md:rounded-[26px] px-3 sm:px-4 md:px-5 py-1.5 sm:py-2 overflow-hidden transition-all duration-300 hover:shadow-[0_18px_40px_rgba(0,0,0,0.3)] ${
+        className={`relative flex flex-col md:flex-row items-start md:items-center justify-between gap-1 sm:gap-1.5 md:gap-2 border-0 rounded-[16px] sm:rounded-[20px] md:rounded-[26px] px-3 sm:px-4 md:px-5 py-1.5 sm:py-2 overflow-hidden transition-all duration-300 hover:bg-white/5 hover:shadow-[0_18px_40px_rgba(0,0,0,0.3)] ${
           viewMode !== "compact"
             ? `before:absolute before:content-[''] before:-left-1 before:top-1/2 before:-translate-y-1/2 before:h-[55%] sm:before:h-[60%] before:w-0 md:before:w-[3px] lg:before:w-[4px] xl:before:w-[6px] before:rounded-full backdrop-blur-[22.6px] ${
                 isActive ? "md:before:bg-primary" : "md:before:bg-white/75"
@@ -805,11 +805,6 @@ const LeadsList: FC<LeadsListProps> = ({
                       ease: "easeOut",
                       delay: index * 0.03,
                     }}
-                    whileHover={{
-                      scale: 1.02,
-                      transition: { duration: 0.2 },
-                    }}
-                    whileTap={{ scale: 0.98 }}
                   >
                     {renderLeadCard(lead)}
                   </motion.div>

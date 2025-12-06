@@ -290,7 +290,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
       return (
         <Card
           key={company._id}
-          className={`relative flex flex-col gap-2 overflow-hidden border-0 rounded-lg p-3 transition-all duration-300 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] cursor-pointer ${
+          className={`relative flex flex-col gap-2 overflow-hidden border-0 rounded-lg p-3 transition-all duration-300 hover:bg-white/5 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] cursor-pointer ${
             selectedCompanyId ? "aspect-[3/1]" : "aspect-[4/1]"
           } before:absolute before:content-[''] before:-left-1 before:top-1/2 before:-translate-y-1/2 before:h-[55%] sm:before:h-[60%] before:w-0 md:before:w-[3px] lg:before:w-[4px] xl:before:w-[6px] before:rounded-full backdrop-blur-[22.6px] ${
             isActive ? "md:before:bg-primary" : "md:before:bg-white/75"
@@ -357,7 +357,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
     return (
       <Card
         key={company._id}
-        className={`relative flex flex-col gap-0.5 sm:gap-1 md:flex-row md:items-center md:justify-between overflow-hidden border-0 mb-1.5 sm:mb-2 rounded-[16px] sm:rounded-[20px] md:rounded-[30px] px-3 sm:px-4 md:px-5 py-1.5 sm:py-2 transition-all duration-300 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] ${
+        className={`relative flex flex-col gap-0.5 sm:gap-1 md:flex-row md:items-center md:justify-between overflow-hidden border-0 mb-1.5 sm:mb-2 rounded-[16px] sm:rounded-[20px] md:rounded-[30px] px-3 sm:px-4 md:px-5 py-1.5 sm:py-2 transition-all duration-300 hover:bg-white/5 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] ${
           viewMode !== "compact"
             ? `before:absolute before:content-[''] before:-left-1 before:top-1/2 before:-translate-y-1/2 before:h-[55%] sm:before:h-[60%] before:w-0 md:before:w-[3px] lg:before:w-[4px] xl:before:w-[6px] before:rounded-full backdrop-blur-[22.6px] ${
                 isActive ? "md:before:bg-primary" : "md:before:bg-white/75"
@@ -803,11 +803,6 @@ const CompaniesList: FC<CompaniesListProps> = ({
                       ease: "easeOut",
                       delay: index * 0.03,
                     }}
-                    whileHover={{
-                      scale: 1.02,
-                      transition: { duration: 0.2 },
-                    }}
-                    whileTap={{ scale: 0.98 }}
                   >
                     {renderCompanyCard(company)}
                     {/* Executives panel below the company card should not appear on desktop */}
