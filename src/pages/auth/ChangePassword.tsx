@@ -5,9 +5,11 @@ import { AuthInput } from "@/components/ui/auth-input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { loginSuccess } from "@/store/slices/authSlice";
 import AuthLayout from "@/components/AuthLayout";
 import { authService } from "@/services/auth.service";
-import { getUserData } from "@/utils/authHelpers";
+import { getUserData, clearAuthData } from "@/utils/authHelpers";
 
 const ChangePassword = () => {
   const [password, setPassword] = useState("");
@@ -20,6 +22,7 @@ const ChangePassword = () => {
     confirm: "",
   });
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -72,14 +75,26 @@ const ChangePassword = () => {
       });
 
       if (response.success) {
-        // Update user data in localStorage to clear requiresPasswordChange flag
+        // Update user data to clear requiresPasswordChange flag
         const userData = getUserData();
         if (userData) {
-          userData.requiresPasswordChange = false;
-          localStorage.setItem('userData', JSON.stringify(userData));
+          const updatedUserData = {
+            ...userData,
+            requiresPasswordChange: false,
+          };
+          localStorage.setItem("userData", JSON.stringify(updatedUserData));
+
+          // Update Redux store as well
+          dispatch(
+            loginSuccess({
+              email: updatedUserData.email,
+              name: updatedUserData.company || updatedUserData.email,
+              ...updatedUserData,
+            })
+          );
         }
 
-        toast.success("Password changed successfully! You can now access your account.");
+        toast.success("Password changed successfully!");
         setPassword("");
         setConfirm("");
 
