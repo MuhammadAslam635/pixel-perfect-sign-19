@@ -741,7 +741,7 @@ const UserList = () => {
                                         )}
                                       </div>
                                     </div>
-                                    <div className="flex-1 space-y-2 text-center">
+                                    <div className="flex-1 space-y-2 text-left">
                                       <h4 className="text-white font-medium text-sm">
                                         {resolveUserDisplayName(user)}
                                       </h4>
