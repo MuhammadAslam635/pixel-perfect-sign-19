@@ -1503,15 +1503,27 @@ const LeadChat = ({
                       handleSendWhatsappMessage();
                     }
                   }}
+                  onFocus={() => {
+                    // Auto-expand on focus if content is longer than 1 line
+                    if (whatsappTextareaRef.current) {
+                      autoResizeTextarea(whatsappTextareaRef.current);
+                    }
+                  }}
+                  onBlur={() => {
+                    // Shrink back to 1 line when clicking outside
+                    if (whatsappTextareaRef.current) {
+                      whatsappTextareaRef.current.style.height = '24px';
+                    }
+                  }}
                   disabled={whatsappInputsDisabled}
-                  className="lead-chat-input flex-1 bg-transparent outline-none border-none text-xs text-white disabled:opacity-50 resize-none overflow-y-auto scrollbar-hide"
+                  className="lead-chat-input flex-1 bg-transparent outline-none border-none text-xs text-white disabled:opacity-50 resize-none overflow-y-auto scrollbar-hide leading-5"
                   placeholder={
                     whatsappUnavailableMessage
                       ? whatsappUnavailableMessage
                       : "Type WhatsApp message"
                   }
                   rows={1}
-                  style={{ minHeight: "20px", maxHeight: "60px" }}
+                  style={{ minHeight: "24px", maxHeight: "60px", paddingTop: "2px", paddingBottom: "2px" }}
                 />
                 <button
                   className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-white/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
@@ -1850,8 +1862,20 @@ const LeadChat = ({
                       handleSendSms();
                     }
                   }}
+                  onFocus={() => {
+                    // Auto-expand on focus if content is longer than 1 line
+                    if (smsTextareaRef.current) {
+                      autoResizeTextarea(smsTextareaRef.current);
+                    }
+                  }}
+                  onBlur={() => {
+                    // Shrink back to 1 line when clicking outside
+                    if (smsTextareaRef.current) {
+                      smsTextareaRef.current.style.height = '24px';
+                    }
+                  }}
                   disabled={smsInputsDisabled}
-                  className="lead-chat-input flex-1 bg-transparent outline-none border-none text-xs text-white disabled:opacity-50 resize-none overflow-y-auto scrollbar-hide"
+                  className="lead-chat-input flex-1 bg-transparent outline-none border-none text-xs text-white disabled:opacity-50 resize-none overflow-y-auto scrollbar-hide leading-5"
                   placeholder={
                     smsUnavailableMessage
                       ? smsUnavailableMessage
@@ -1860,7 +1884,7 @@ const LeadChat = ({
                       : "Add a phone number to send SMS"
                   }
                   rows={1}
-                  style={{ minHeight: "20px", maxHeight: "60px" }}
+                  style={{ minHeight: "24px", maxHeight: "60px", paddingTop: "2px", paddingBottom: "2px" }}
                 />
                 <button
                   className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-white/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"

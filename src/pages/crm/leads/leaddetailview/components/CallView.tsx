@@ -107,6 +107,7 @@ export const CallView = ({
         limit: 10,
       });
       setCallLogs(response.data || []);
+
     } catch (loadError: any) {
       console.error("Failed to load call logs", loadError);
       setCallLogsError(
@@ -1019,11 +1020,12 @@ export const CallView = ({
                 <div
                   className="flex items-center justify-center rounded-full transition-all"
                   style={{
-                    width: "100px",
-                    height: "100px",
+                    width: "130px",
+                    height: "130px",
                     position: "relative",
                     transform: `scale(${circleScale})`,
                     transition: "transform 120ms ease-out",
+                    overflow: "hidden",
                   }}
                 >
                   {/* Sphere with gradient edges to transparent center */}
@@ -1080,8 +1082,8 @@ export const CallView = ({
                         : "cursor-not-allowed"
                     }`}
                     style={{
-                      width: "100px",
-                      height: "100px",
+                      width: "130px",
+                      height: "130px",
                       background: `
                       radial-gradient(circle at center, 
                         transparent 0%, 
@@ -1127,17 +1129,16 @@ export const CallView = ({
                     <div
                       className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 pointer-events-none"
                       style={{
-                        width: "380px",
-                        height: "200px",
+                        width: "130px",
+                        height: "130px",
                         zIndex: 30,
                       }}
                     >
                       <svg
                         width="100%"
                         height="100%"
-                        viewBox="0 0 380 200"
+                        viewBox="0 0 90 90"
                         preserveAspectRatio="none"
-                        style={{ overflow: "visible" }}
                       >
                         <defs>
                           <linearGradient
@@ -1163,11 +1164,11 @@ export const CallView = ({
                         <path
                           d={(() => {
                             if (waveformData.length < 2) return "";
-                            const centerY = 100;
-                            const amplitude = 155;
+                            const centerY = 45;
+                            const amplitude = 35;
                             const points = waveformData.map((value, index) => {
                               const x =
-                                (index / (waveformData.length - 1)) * 380;
+                                (index / (waveformData.length - 1)) * 130;
                               const y = centerY - value * amplitude;
                               return { x, y };
                             });
@@ -1190,7 +1191,7 @@ export const CallView = ({
                           })()}
                           fill="none"
                           stroke="rgba(66, 247, 255, 0.9)"
-                          strokeWidth="2.5"
+                          strokeWidth="1.5"
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           mask="url(#waveformMask)"

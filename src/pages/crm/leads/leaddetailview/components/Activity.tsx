@@ -425,6 +425,7 @@ const Activity: FC<ActivityProps> = ({
       const blob = response.data as Blob;
       const url = URL.createObjectURL(blob);
       setRecordingAudioUrl(url);
+
     } catch (err: any) {
       console.error("Failed to load call recording", err);
       setRecordingError(
@@ -1195,7 +1196,7 @@ const Activity: FC<ActivityProps> = ({
                             </Button>
                           </div>
 
-                          <div className="space-y-4 max-h-[calc(100vh-500px)] overflow-y-auto pr-1">
+                          <div className="space-y-4 max-h-[calc(100vh-500px)] overflow-y-auto scrollbar-hide pr-1">
                             <div
                               className="rounded-lg p-4"
                               style={{
@@ -1337,10 +1338,10 @@ const Activity: FC<ActivityProps> = ({
 
                       {selectedCallLogView.type === "recording" && (
                         <div className="w-full space-y-4">
-                          <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center justify-between mb-3">
                             <div>
-                              <h3 className="text-xs sm:text-sm font-semibold text-white">
-                                Call recording
+                              <h3 className="text-sm font-semibold text-white">
+                                Call Recording
                               </h3>
                               <p className="text-xs text-white/60 mt-1">
                                 {selectedCallLogView.log.leadName ||
@@ -1359,51 +1360,72 @@ const Activity: FC<ActivityProps> = ({
                               type="button"
                               variant="ghost"
                               size="sm"
-                              className="text-white/60 hover:text-white"
+                              className="text-white/60 hover:text-white hover:bg-white/10 h-8 w-8 p-0 rounded-full"
                               onClick={() => setSelectedCallLogView(null)}
                             >
                               ✕
                             </Button>
                           </div>
 
-                          <div
-                            className="rounded-lg p-4"
-                            style={{
-                              border: "1px solid rgba(255, 255, 255, 0.2)",
-                              background: "rgba(255, 255, 255, 0.02)",
-                            }}
-                          >
+                          <div className="rounded-2xl p-6 border border-white/10 bg-white/[0.03] backdrop-blur-xl">
                             {recordingLoading && (
-                              <p className="text-sm text-white/70">
-                                Loading recording...
-                              </p>
+                              <div className="flex items-center justify-center py-8">
+                                <div className="flex flex-col items-center gap-3">
+                                  <div className="w-8 h-8 border-2 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin"></div>
+                                  <p className="text-sm text-white/70">
+                                    Loading recording...
+                                  </p>
+                                </div>
+                              </div>
                             )}
                             {!recordingLoading && recordingError && (
-                              <p className="text-sm text-red-300">
-                                {recordingError}
-                              </p>
+                              <div className="flex items-center justify-center py-8">
+                                <div className="flex flex-col items-center gap-2 text-center">
+                                  <div className="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+                                    <svg className="w-6 h-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
+                                  </div>
+                                  <p className="text-sm text-red-300 max-w-xs">
+                                    {recordingError}
+                                  </p>
+                                </div>
+                              </div>
                             )}
                             {!recordingLoading &&
                               !recordingError &&
                               recordingAudioUrl && (
-                                <audio
-                                  controls
-                                  className="w-full"
-                                  src={recordingAudioUrl}
-                                />
+                                <div className="space-y-4">
+                                  <div className="rounded-xl overflow-hidden border border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.02] p-4">
+                                    <audio
+                                      controls
+                                      className="w-full h-12"
+                                      src={recordingAudioUrl}
+                                      style={{
+                                        filter: 'invert(0.9) hue-rotate(180deg)',
+                                        borderRadius: '8px',
+                                      }}
+                                    />
+                                  </div>
+                                  <div className="flex items-start gap-2 px-2">
+                                    <svg className="w-4 h-4 text-cyan-400/60 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                                    </svg>
+                                    <p className="text-[0.7rem] text-white/40 leading-relaxed">
+                                      Playback is streamed securely from EmpaTech servers. Seeking is supported by your browser's audio player.
+                                    </p>
+                                  </div>
+                                </div>
                               )}
                             {!recordingLoading &&
                               !recordingError &&
                               !recordingAudioUrl && (
-                                <p className="text-sm text-white/60">
-                                  Recording not available for this call.
-                                </p>
+                                <div className="flex items-center justify-center py-8">
+                                  <p className="text-sm text-white/60">
+                                    Recording not available for this call.
+                                  </p>
+                                </div>
                               )}
-                            <p className="mt-2 text-[0.7rem] text-white/40">
-                              Playback is streamed securely from EmpaTech
-                              servers. Seeking is supported by your browser's
-                              audio player.
-                            </p>
                           </div>
                         </div>
                       )}
