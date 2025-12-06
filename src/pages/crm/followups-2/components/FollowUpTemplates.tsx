@@ -174,7 +174,7 @@ const FollowUpTemplates = () => {
                         Update {campaign.updatedAt}
                       </p>
                     </div>
-                    <button className="text-white/40 hover:text-white/60 transition-colors">
+                    <button className="text-white/80 hover:text-white/100 transition-colors">
                       <MoreHorizontal className="w-5 h-5" />
                     </button>
                   </div>
