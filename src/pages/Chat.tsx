@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { AxiosError } from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import ChatList from "@/components/chat/ChatList";
@@ -26,6 +26,7 @@ const ChatPage = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
 
   // Animation variants for page transitions
   const pageVariants = {
@@ -222,6 +223,21 @@ const ChatPage = () => {
       return updated;
     });
   }, [selectedChatId, selectedChat?.messages]);
+
+  // Focus input when navigating from widget
+  useEffect(() => {
+    if (location.state?.focusInput) {
+      // Small delay to ensure component is fully rendered
+      const timer = setTimeout(() => {
+        const textarea = document.querySelector('textarea[placeholder="Type Message"]') as HTMLTextAreaElement;
+        if (textarea) {
+          textarea.focus();
+        }
+      }, 100);
+
+      return () => clearTimeout(timer);
+    }
+  }, [location.state]);
 
   const selectChatFromList = (chatId: string) => {
     setIsCreatingNewChat(false);

@@ -2,20 +2,31 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Send } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { useEffect, useRef } from "react";
 
 const SkylarFloatingWidget = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
   // Hide widget on dashboard and chat pages
-  const isHiddenPage = location.pathname === "/dashboard" || location.pathname === "/chat" || location.pathname === "/login" || location.pathname === "/signup" || location.pathname === "/forgot-password" || location.pathname === "/reset-password" || location.pathname === "/verify-email" || location.pathname === "/resend-email" || location.pathname === "/" || location.pathname === "/change-password" ;
+  const isHiddenPage =
+    location.pathname === "/dashboard" ||
+    location.pathname === "/chat" ||
+    location.pathname === "/login" ||
+    location.pathname === "/signup" ||
+    location.pathname === "/forgot-password" ||
+    location.pathname === "/reset-password" ||
+    location.pathname === "/verify-email" ||
+    location.pathname === "/resend-email" ||
+    location.pathname === "/" ||
+    location.pathname === "/change-password";
 
   if (isHiddenPage) {
     return null;
   }
 
   const handleClick = () => {
-    navigate("/chat");
+    navigate("/chat", { state: { focusInput: true } });
   };
 
   // Animation variants
@@ -23,11 +34,11 @@ const SkylarFloatingWidget = () => {
     idle: { scale: 1 },
     hover: {
       scale: 1.05,
-      transition: { duration: 0.2 }
+      transition: { duration: 0.2 },
     },
     tap: {
       scale: 0.95,
-      transition: { duration: 0.1 }
+      transition: { duration: 0.1 },
     },
   };
 
@@ -37,7 +48,7 @@ const SkylarFloatingWidget = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: "easeOut", delay: 0.5 }}
       className="fixed bottom-6 z-50"
-      style={{ left: '45%', transform: 'translateX(-50%)' }}
+      style={{ left: "45%", transform: "translateX(-50%)" }}
     >
       <motion.div
         variants={buttonHoverVariants}
@@ -54,12 +65,15 @@ const SkylarFloatingWidget = () => {
         aria-label="Open Skylar Chat"
       >
         <div className="flex items-center justify-center gap-3 px-6 py-3">
-          <span className="text-sm text-white font-medium whitespace-nowrap">Ask Skylar</span>
+          <span className="text-sm text-white font-medium whitespace-nowrap">
+            Ask Skylar
+          </span>
           <Button
             size="icon"
             className="size-8 shrink-0 rounded-full text-white transition"
             style={{
-              background: "linear-gradient(226.23deg, #3F68B4 0%, #66B0B7 100%)",
+              background:
+                "linear-gradient(226.23deg, #3F68B4 0%, #66B0B7 100%)",
               boxShadow:
                 "0px 3.47px 3.47px 0px #FFFFFF40 inset, 0px -3.47px 3.47px 0px #FFFFFF40 inset",
             }}
