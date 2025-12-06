@@ -208,9 +208,9 @@ const FollowUpTemplates = forwardRef<FollowUpTemplatesRef, FollowUpTemplatesProp
         <div className="relative border-b border-white/20 mb-4">
           <div
             className={`absolute bottom-0 h-[2px] bg-white transition-all duration-300 ${
-              activeTab === "templates"
-                ? "left-0 w-[380px]"
-                : "left-[420px] w-[300px]"
+              activeTab === "plans"
+                ? "left-0 w-[280px]"
+                : "left-[300px] w-[260px]"
             }`}
           />
         </div>
