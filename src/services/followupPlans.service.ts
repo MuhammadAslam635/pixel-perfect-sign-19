@@ -112,6 +112,22 @@ export interface DeleteFollowupPlanResponse {
   };
 }
 
+export interface FollowupPlanStats {
+  totalPlans: number;
+  activePlans: number;
+  completedPlans: number;
+  failedPlans: number;
+  totalTouchpoints: number;
+  avgDaysPerPlan: number | null;
+  avgTouchpointsPerPlan: number | null;
+}
+
+export interface FollowupPlanStatsResponse {
+  success: boolean;
+  message: string;
+  data: FollowupPlanStats;
+}
+
 export interface FollowupPlanSchedulePayload {
   enabled?: boolean;
   timezone?: string;
@@ -156,11 +172,17 @@ export const followupPlansService = {
     return response.data;
   },
 
-  getPlanSchedule: async (id: string): Promise<FollowupPlanScheduleResponse> => {
+  getPlanSchedule: async (
+    id: string
+  ): Promise<FollowupPlanScheduleResponse> => {
     const response = await API.get(`/followup/plans/${id}/schedule`);
+    return response.data;
+  },
+
+  getPlanStats: async (): Promise<FollowupPlanStatsResponse> => {
+    const response = await API.get("/followup/plans/stats");
     return response.data;
   },
 };
 
 export default followupPlansService;
-

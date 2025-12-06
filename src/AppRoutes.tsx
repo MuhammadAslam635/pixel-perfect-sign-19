@@ -199,16 +199,16 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
-      <Route
+      {/* <Route
         path="/followups"
         element={
           <ProtectedRoute moduleName="followup-templates">
             <FollowupTemplatesPage />
           </ProtectedRoute>
         }
-      />
+      /> */}
       <Route
-        path="/followups-2"
+        path="/followups"
         element={
           <ProtectedRoute moduleName="followup-templates">
             <FollowUp2Page />

@@ -19,7 +19,6 @@ export const useFollowupPlans = (params: FollowupPlansQueryParams = {}) => {
   return useQuery({
     queryKey: followupPlanKeys.list(params),
     queryFn: () => followupPlansService.getPlans(params),
-    keepPreviousData: true,
   });
 };
 
@@ -68,3 +67,13 @@ export const useFollowupPlanSchedule = (id: string) => {
   });
 };
 
+export const followupPlanStatsKeys = {
+  all: ["followup-plan-stats"] as const,
+};
+
+export const useFollowupPlanStats = () => {
+  return useQuery({
+    queryKey: followupPlanStatsKeys.all,
+    queryFn: () => followupPlansService.getPlanStats(),
+  });
+};
