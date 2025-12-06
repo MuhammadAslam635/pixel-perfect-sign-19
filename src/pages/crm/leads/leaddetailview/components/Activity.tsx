@@ -474,7 +474,7 @@ const Activity: FC<ActivityProps> = ({
     const prevWeek = new Date(currentWeekStart);
     prevWeek.setDate(prevWeek.getDate() - 7);
     setCurrentWeekStart(prevWeek);
-    
+
     // Update selected date to same day previous week
     const newSelected = new Date(selectedWeekDate);
     newSelected.setDate(newSelected.getDate() - 7);
@@ -485,7 +485,7 @@ const Activity: FC<ActivityProps> = ({
     const nextWeek = new Date(currentWeekStart);
     nextWeek.setDate(nextWeek.getDate() + 7);
     setCurrentWeekStart(nextWeek);
-    
+
     // Update selected date to same day next week
     const newSelected = new Date(selectedWeekDate);
     newSelected.setDate(newSelected.getDate() + 7);
@@ -559,19 +559,59 @@ const Activity: FC<ActivityProps> = ({
     return docs ?? [];
   }, [followupTemplatesData]);
 
-  const leadsQueryParams = useMemo(
-    () => ({
+  const leadsQueryParams = useMemo(() => {
+    const params = {
       limit: 100,
       search: leadsSearch || undefined,
-    }),
-    [leadsSearch]
-  );
+      companyId: lead?.companyId || undefined, // Filter by the current lead's company
+    };
+    console.log("🔍 Leads Query Params:", params);
+    console.log("📋 Current Lead:", {
+      id: lead?._id,
+      name: lead?.name,
+      companyId: lead?.companyId,
+      companyName: lead?.companyName,
+    });
+    return params;
+  }, [leadsSearch, lead?.companyId, lead?._id, lead?.name, lead?.companyName]);
   const { query: leadsQuery, leads: fetchedLeads } = useLeadsData(
     leadsQueryParams,
     { enabled: leadSelectorOpen }
   );
   const isLeadsLoading = leadsQuery.isLoading || leadsQuery.isFetching;
   const leadsError = leadsQuery.error as Error | null;
+
+  // Filter leads by exact company name match (since multiple companies can share the same companyId)
+  const filteredLeads = useMemo(() => {
+    if (!lead?.companyName || !fetchedLeads || fetchedLeads.length === 0) {
+      return fetchedLeads || [];
+    }
+    // Filter to only include leads with the exact same company name
+    return fetchedLeads.filter((l) => l.companyName === lead.companyName);
+  }, [fetchedLeads, lead?.companyName]);
+
+  // Debug logging for fetched leads
+  useEffect(() => {
+    if (fetchedLeads && fetchedLeads.length > 0) {
+      console.log(
+        "📦 Fetched Leads:",
+        fetchedLeads.map((l) => ({
+          id: l._id,
+          name: l.name,
+          companyId: l.companyId,
+          companyName: l.companyName,
+        }))
+      );
+      console.log(
+        "✅ Filtered Leads:",
+        filteredLeads.map((l) => ({
+          id: l._id,
+          name: l.name,
+          companyName: l.companyName,
+        }))
+      );
+    }
+  }, [fetchedLeads, filteredLeads]);
 
   const { mutate: createFollowupPlan, isPending: isCreatingFollowupPlan } =
     useCreateFollowupPlan();
@@ -1438,7 +1478,9 @@ const Activity: FC<ActivityProps> = ({
                         }}
                       >
                         <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
-                          <h3 className="text-white text-xs sm:text-sm font-semibold">AI Summary</h3>
+                          <h3 className="text-white text-xs sm:text-sm font-semibold">
+                            AI Summary
+                          </h3>
                           <button
                             onClick={handleRefreshLeadSummary}
                             disabled={
@@ -1506,9 +1548,10 @@ const Activity: FC<ActivityProps> = ({
                           >
                             <ChevronLeft className="w-4 h-4" />
                           </button>
-                          
+
                           <div className="text-xs font-medium text-white">
-                            {monthNames[currentWeekStart.getMonth()]} {currentWeekStart.getFullYear()}
+                            {monthNames[currentWeekStart.getMonth()]}{" "}
+                            {currentWeekStart.getFullYear()}
                           </div>
 
                           <button
@@ -1523,12 +1566,24 @@ const Activity: FC<ActivityProps> = ({
                         {/* Week dates selector */}
                         <div className="flex items-center justify-center gap-1.5 mb-4">
                           {weekDates.map((date, index) => {
-                            const isSelected = date.toDateString() === selectedWeekDate.toDateString();
-                            const isToday = date.toDateString() === new Date().toDateString();
+                            const isSelected =
+                              date.toDateString() ===
+                              selectedWeekDate.toDateString();
+                            const isToday =
+                              date.toDateString() === new Date().toDateString();
                             // Map day index (0=Sunday, 1=Monday, etc.) to our week array (0=Monday, 6=Sunday)
                             const dayIndex = date.getDay();
-                            const weekDayIndex = dayIndex === 0 ? 6 : dayIndex - 1;
-                            const dayNames = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
+                            const weekDayIndex =
+                              dayIndex === 0 ? 6 : dayIndex - 1;
+                            const dayNames = [
+                              "Mo",
+                              "Tu",
+                              "We",
+                              "Th",
+                              "Fr",
+                              "Sa",
+                              "Su",
+                            ];
                             const dayName = dayNames[weekDayIndex];
                             const dayNumber = date.getDate();
 
@@ -1547,12 +1602,22 @@ const Activity: FC<ActivityProps> = ({
                                     : `linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%)`,
                                 }}
                               >
-                                <span className={`text-[8px] font-medium ${isSelected ? "text-primary" : "text-white/50"}`}>
+                                <span
+                                  className={`text-[8px] font-medium ${
+                                    isSelected
+                                      ? "text-primary"
+                                      : "text-white/50"
+                                  }`}
+                                >
                                   {dayName}
                                 </span>
                                 <span
                                   className={`text-xs font-semibold ${
-                                    isSelected ? "text-white" : isToday ? "text-primary" : "text-white/80"
+                                    isSelected
+                                      ? "text-white"
+                                      : isToday
+                                      ? "text-primary"
+                                      : "text-white/80"
                                   }`}
                                 >
                                   {dayNumber}
@@ -1567,8 +1632,12 @@ const Activity: FC<ActivityProps> = ({
                             {sortedMeetings.length > 0
                               ? `${sortedMeetings.length} meeting${
                                   sortedMeetings.length === 1 ? "" : "s"
-                                } on ${monthNames[selectedWeekDate.getMonth()]} ${selectedWeekDate.getDate()}`
-                              : `No meetings on ${monthNames[selectedWeekDate.getMonth()]} ${selectedWeekDate.getDate()}`}
+                                } on ${
+                                  monthNames[selectedWeekDate.getMonth()]
+                                } ${selectedWeekDate.getDate()}`
+                              : `No meetings on ${
+                                  monthNames[selectedWeekDate.getMonth()]
+                                } ${selectedWeekDate.getDate()}`}
                           </span>
                           <div className="flex items-center justify-center gap-2">
                             <ActiveNavButton
@@ -1598,7 +1667,6 @@ const Activity: FC<ActivityProps> = ({
                             />
                           </div>
                         </div>
-
                       </div>
 
                       {/* Data Sections */}
@@ -1802,20 +1870,17 @@ const Activity: FC<ActivityProps> = ({
                           Existing followups
                         </p>
                         <button
-                        onClick={() => refetchFollowupPlans()}
-                        disabled={isFollowupPlansFetching}
-                        className="h-8 w-8 p-0 flex items-center justify-center text-white/70 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed ml-auto"
-                      >
-                        <RefreshCcw className="w-3.5 h-3.5" />
-                      </button>
-
-                        
+                          onClick={() => refetchFollowupPlans()}
+                          disabled={isFollowupPlansFetching}
+                          className="h-8 w-8 p-0 flex items-center justify-center text-white/70 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed ml-auto"
+                        >
+                          <RefreshCcw className="w-3.5 h-3.5" />
+                        </button>
                       </div>
-                        <p className="text-xs text-white/60">
-                          Plans that already include this lead will show here so
-                          you can track status.
-                        </p>
-                      
+                      <p className="text-xs text-white/60">
+                        Plans that already include this lead will show here so
+                        you can track status.
+                      </p>
                     </div>
 
                     {isFollowupPlansLoading ? (
@@ -2027,7 +2092,7 @@ const Activity: FC<ActivityProps> = ({
                                       No leads found.
                                     </CommandEmpty>
                                     <CommandGroup className="max-h-64 overflow-y-auto">
-                                      {fetchedLeads.map((leadItem) => {
+                                      {filteredLeads.map((leadItem) => {
                                         const leadId =
                                           leadItem?._id ||
                                           (leadItem as any)?.id;
@@ -2099,7 +2164,9 @@ const Activity: FC<ActivityProps> = ({
                                 >
                                   {/* <Check className="w-3 h-3 shrink-0" /> */}
                                   {(() => {
-                                    const text = `${leadItem.name || "Lead"} · ${
+                                    const text = `${
+                                      leadItem.name || "Lead"
+                                    } · ${
                                       leadItem.companyName ||
                                       leadItem.position ||
                                       "Unknown"
