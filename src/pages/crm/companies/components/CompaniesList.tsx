@@ -31,6 +31,7 @@ import {
 import { ActiveNavButton } from "@/components/ui/primary-btn";
 import { Company } from "@/services/companies.service";
 import CompanyExecutivesPanel from "./CompanyExecutivesPanel";
+import { CompanyLogoFallback } from "@/components/ui/company-logo-fallback";
 
 type ViewMode = "compact" | "detailed" | "card";
 
@@ -286,11 +287,12 @@ const CompaniesList: FC<CompaniesListProps> = ({
       primaryExecutive?.email || primaryExecutive?.emails?.[0] || null;
     const primaryLinkedIn = primaryExecutive?.linkedin || null;
 
+
     if (viewMode === "card") {
       return (
         <Card
           key={company._id}
-          className={`relative flex flex-col gap-2 overflow-hidden border-0 rounded-lg p-3 transition-all duration-300 hover:bg-white/5 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] cursor-pointer ${
+          className={`relative flex items-center gap-2.5 overflow-hidden border-0 rounded-lg p-2.5 transition-all duration-300 hover:bg-white/5 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] cursor-pointer ${
             selectedCompanyId ? "aspect-[3/1]" : "aspect-[4/1]"
           } before:absolute before:content-[''] before:-left-1 before:top-1/2 before:-translate-y-1/2 before:h-[55%] sm:before:h-[60%] before:w-0 md:before:w-[3px] lg:before:w-[4px] xl:before:w-[6px] before:rounded-full backdrop-blur-[22.6px] ${
             isActive ? "md:before:bg-primary" : "md:before:bg-white/75"
@@ -308,46 +310,43 @@ const CompaniesList: FC<CompaniesListProps> = ({
             }
           }}
         >
-          <div className="flex flex-col gap-1">
-            <h3 className="text-sm font-semibold text-white leading-tight truncate">
+          {/* Company Logo */}
+          <CompanyLogoFallback
+            name={company.name}
+            logo={company.logo}
+            size="md"
+          />
+
+          {/* Content */}
+          <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+            {/* First Row: Company Name and Industry */}
+            <h3 className="text-xs sm:text-sm font-semibold text-white leading-tight overflow-hidden text-ellipsis whitespace-nowrap">
               {company.name}
               {company.industry && (
                 <span className="text-white/60 font-normal">
-                  {" "}
-                  | {company.industry}
+                  {" | "}
+                  {company.industry}
                 </span>
               )}
             </h3>
 
-            <div className="flex flex-col gap-1">
-              {primaryEmail && (
-                <div className="flex items-center gap-1">
-                  <div className="w-2.5 h-2.5 rounded-full bg-white/20 flex items-center justify-center">
-                    <span className="text-[6px] text-white/80">@</span>
-                  </div>
-                  <span className="text-xs text-white/70 truncate">
-                    {primaryEmail}
-                  </span>
+            {/* Second Row: Website */}
+            {company.website && (
+              <div className="flex items-center gap-1 min-w-0">
+                <div className="w-2.5 h-2.5 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                  <span className="text-[6px] text-white/80">🌐</span>
                 </div>
-              )}
-
-              {company.website && (
-                <div className="flex items-center gap-1">
-                  <div className="w-2.5 h-2.5 rounded-full bg-white/20 flex items-center justify-center">
-                    <span className="text-[6px] text-white/80">🌐</span>
-                  </div>
-                  <a
-                    href={getFullUrl(company.website)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="text-xs text-white/70 truncate hover:text-white hover:underline"
-                  >
-                    {formatWebsiteUrl(company.website)}
-                  </a>
-                </div>
-              )}
-            </div>
+                <a
+                  href={getFullUrl(company.website)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-[10px] sm:text-xs text-white/70 overflow-hidden text-ellipsis whitespace-nowrap hover:text-white hover:underline"
+                >
+                  {formatWebsiteUrl(company.website)}
+                </a>
+              </div>
+            )}
           </div>
         </Card>
       );

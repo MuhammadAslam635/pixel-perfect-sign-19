@@ -43,6 +43,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { AvatarFallback } from "@/components/ui/avatar-fallback";
 
 type ViewMode = "compact" | "detailed" | "card";
 
@@ -310,7 +311,7 @@ const LeadsList: FC<LeadsListProps> = ({
       return (
         <Card
           key={lead._id}
-          className={`relative flex flex-col gap-2 overflow-hidden border-0 rounded-lg p-3 transition-all duration-300 hover:bg-white/5 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] cursor-pointer aspect-[3/1] before:absolute before:content-[''] before:-left-1 before:top-1/2 before:-translate-y-1/2 before:h-[55%] sm:before:h-[60%] before:w-0 md:before:w-[3px] lg:before:w-[4px] xl:before:w-[6px] before:rounded-full backdrop-blur-[22.6px] ${
+          className={`relative flex items-center gap-2.5 overflow-hidden border-0 rounded-lg p-2.5 transition-all duration-300 hover:bg-white/5 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] cursor-pointer aspect-[3/1] before:absolute before:content-[''] before:-left-1 before:top-1/2 before:-translate-y-1/2 before:h-[55%] sm:before:h-[60%] before:w-0 md:before:w-[3px] lg:before:w-[4px] xl:before:w-[6px] before:rounded-full backdrop-blur-[22.6px] ${
             isActive ? "md:before:bg-primary" : "md:before:bg-white/75"
           }`}
           style={{
@@ -318,41 +319,32 @@ const LeadsList: FC<LeadsListProps> = ({
           }}
           onClick={() => navigate(`/leads/${lead._id}`)}
         >
-          <div className="flex flex-col gap-1">
-            <h3 className="text-sm font-semibold text-white leading-tight">
-              {(() => {
-                const name = lead.name || "";
-                const position = lead.position ? ` | ${lead.position}` : "";
-                const fullText = `${name}${position}`;
-                return (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span>
-                        {name.length > 20 ? `${name.slice(0, 20)}...` : name}
-                        {lead.position && (
-                          <span className="text-white/60 font-normal">
-                            {lead.position.length > 20
-                              ? ` | ${lead.position.slice(0, 20)}...`
-                              : ` | ${lead.position}`}
-                          </span>
-                        )}
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{fullText}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                );
-              })()}
-            </h3>
+          {/* Avatar */}
+          <AvatarFallback
+            name={lead.name}
+            pictureUrl={lead.pictureUrl}
+            size="md"
+          />
 
-            <div className="flex items-center gap-1">
+          {/* Content */}
+          <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+            {/* First Row: Name and Company Badge */}
+            <div className="flex items-center justify-between gap-2 min-w-0">
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Badge className="rounded-full bg-primary/20 text-primary border-primary/30 px-1.5 py-0.5 text-xs">
-                    {(lead.companyName || "Company").length > 20
-                      ? `${(lead.companyName || "Company").slice(0, 20)}...`
-                      : lead.companyName || "Company"}
+                  <h3 className="text-xs sm:text-sm font-semibold text-white leading-tight overflow-hidden text-ellipsis whitespace-nowrap">
+                    {lead.name}
+                  </h3>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{lead.name}</p>
+                </TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge className="rounded-full bg-primary/20 text-primary border-primary/30 px-1.5 py-0.5 text-[10px] sm:text-xs overflow-hidden text-ellipsis whitespace-nowrap flex-shrink-0">
+                    {lead.companyName || "Company"}
                   </Badge>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -360,6 +352,20 @@ const LeadsList: FC<LeadsListProps> = ({
                 </TooltipContent>
               </Tooltip>
             </div>
+
+            {/* Second Row: Position/Role */}
+            {lead.position && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <p className="text-[10px] sm:text-xs text-white/60 leading-tight overflow-hidden text-ellipsis whitespace-nowrap">
+                    {lead.position}
+                  </p>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{lead.position}</p>
+                </TooltipContent>
+              </Tooltip>
+            )}
           </div>
         </Card>
       );
