@@ -1,9 +1,22 @@
 import { motion } from "framer-motion";
+import { useState, useRef } from "react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
-import FollowUpTemplates from "./components/FollowUpTemplates";
+import FollowUpTemplates, {
+  FollowUpTemplatesRef,
+} from "./components/FollowUpTemplates";
 import { CrmNavigation } from "../shared/components/CrmNavigation";
+import { Button } from "@/components/ui/button";
+import { SearchInput } from "../shared/components";
+import { Plus } from "lucide-react";
 
 const FollowUp2Page = () => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const templatesRef = useRef<FollowUpTemplatesRef>(null);
+
+  const handleCreateTemplate = () => {
+    templatesRef.current?.createTemplate();
+  };
+
   return (
     <DashboardLayout>
       <motion.main
@@ -28,6 +41,52 @@ const FollowUp2Page = () => {
             >
               <CrmNavigation />
             </motion.div>
+
+            {/* Filters Bar */}
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: "easeOut", delay: 0.4 }}
+              className="flex flex-col justify-end sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2 md:gap-3"
+            >
+              {/* Controls Container */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2 md:gap-3 order-1 lg:order-2">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2 flex-1">
+                  <div className="flex w-full flex-wrap items-center justify-end gap-1.5 sm:gap-2">
+                    <SearchInput
+                      placeholder="Search templates..."
+                      value={searchQuery}
+                      onChange={setSearchQuery}
+                    />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleCreateTemplate}
+                      className="relative h-9 px-4 rounded-full border-0 text-white text-xs hover:bg-[#2F2F2F]/60 transition-all w-full sm:w-auto lg:flex-shrink-0 overflow-hidden"
+                      style={{
+                        background: "#FFFFFF1A",
+                        boxShadow:
+                          "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                      }}
+                    >
+                      {/* radial element 150px 150px */}
+                      <div
+                        className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[150px] h-[150px] rounded-full pointer-events-none"
+                        style={{
+                          background:
+                            "radial-gradient(circle, #66AFB7 0%, transparent 70%)",
+                          backdropFilter: "blur(50px)",
+                          WebkitBackdropFilter: "blur(50px)",
+                          zIndex: -1,
+                        }}
+                      ></div>
+                      <Plus className="w-4 h-4 mr-2 relative z-10" />
+                      <span className="relative z-10">New Template</span>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
           </div>
 
           {/* Main Content */}
@@ -37,7 +96,11 @@ const FollowUp2Page = () => {
             transition={{ duration: 0.6, ease: "easeOut", delay: 0.5 }}
             className="rounded-xl sm:rounded-[30px] p-6"
           >
-            <FollowUpTemplates />
+            <FollowUpTemplates
+              ref={templatesRef}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+            />
           </motion.div>
         </motion.div>
       </motion.main>

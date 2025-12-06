@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, forwardRef, useImperativeHandle } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -43,10 +43,21 @@ const getErrorMessage = (error: unknown, fallback: string) => {
   return fallback;
 };
 
-const FollowUpTemplates = () => {
-  const [searchQuery, setSearchQuery] = useState("");
+interface FollowUpTemplatesProps {
+  searchQuery?: string;
+  onSearchChange?: (query: string) => void;
+}
+
+export interface FollowUpTemplatesRef {
+  createTemplate: () => void;
+}
+
+const FollowUpTemplates = forwardRef<FollowUpTemplatesRef, FollowUpTemplatesProps>(({
+  searchQuery = "",
+  onSearchChange
+}, ref) => {
   const [activeTab, setActiveTab] = useState<"templates" | "plans">(
-    "templates"
+    "plans"
   );
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [formMode, setFormMode] = useState<"create" | "edit">("create");
@@ -84,6 +95,16 @@ const FollowUpTemplates = () => {
     setFormMode("edit");
     setIsFormOpen(true);
   };
+
+  const handleCreate = () => {
+    setFormMode("create");
+    setSelectedTemplate(null);
+    setIsFormOpen(true);
+  };
+
+  useImperativeHandle(ref, () => ({
+    createTemplate: handleCreate
+  }), []);
 
   const handleDuplicate = (template: FollowupTemplate) => {
     duplicateTemplate(template._id, {
@@ -138,6 +159,27 @@ const FollowUpTemplates = () => {
             <div className="flex items-center gap-1 rounded-lg p-0.5">
               <div className="relative pb-3">
                 <button
+                  onClick={() => setActiveTab("plans")}
+                  className={`px-3 py-1 rounded-md text-2xl font-medium transition-all ${
+                    activeTab === "plans"
+                      ? "text-white"
+                      : "text-[#FFFFFF4D] hover:text-white/80"
+                  }`}
+                >
+                  Active Followup Plans
+                </button>
+                <p
+                  className={`px-3 py-0.5 rounded-md text-[10px] font-light transition-all ${
+                    activeTab === "plans"
+                      ? "text-white/70"
+                      : "text-[#FFFFFF4D]"
+                  }`}
+                >
+                  View and manage your active followup campaigns
+                </p>
+              </div>
+              <div className="relative pb-3">
+                <button
                   onClick={() => setActiveTab("templates")}
                   className={`px-3 py-1.5 rounded-md text-2xl font-medium transition-all ${
                     activeTab === "templates"
@@ -158,63 +200,7 @@ const FollowUpTemplates = () => {
                   calls, and whatsapp
                 </p>
               </div>
-              <div className="relative pb-3">
-                <button
-                  onClick={() => setActiveTab("plans")}
-                  className={`px-3 py-1 rounded-md text-2xl font-medium transition-all ${
-                    activeTab === "plans"
-                      ? "text-white"
-                      : "text-[#FFFFFF4D] hover:text-white/80"
-                  }`}
-                >
-                  Active Followup Plans
-                </button>
-                <p
-                  className={`px-3 py-0.5 rounded-md text-[10px] font-light transition-all ${
-                    activeTab === "plans" ? "text-white/70" : "text-[#FFFFFF4D]"
-                  }`}
-                >
-                  View and manage your active followup campaigns
-                </p>
-              </div>
             </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <SearchInput
-              placeholder="Search Template"
-              value={searchQuery}
-              onChange={setSearchQuery}
-              className="sm:min-w-[320px] lg:min-w-[320px]"
-            />
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setFormMode("create");
-                setSelectedTemplate(null);
-                setIsFormOpen(true);
-              }}
-              className="relative h-9 px-4 rounded-full border-0 text-white text-xs hover:bg-[#2F2F2F]/60 transition-all w-full sm:w-auto lg:flex-shrink-0 overflow-hidden"
-              style={{
-                background: "#FFFFFF1A",
-                boxShadow:
-                  "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
-              }}
-            >
-              {/* radial element 150px 150px */}
-              <div
-                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[150px] h-[150px] rounded-full pointer-events-none"
-                style={{
-                  background:
-                    "radial-gradient(circle, #66AFB7 0%, transparent 70%)",
-                  backdropFilter: "blur(50px)",
-                  WebkitBackdropFilter: "blur(50px)",
-                  zIndex: -1,
-                }}
-              ></div>
-              <Plus className="w-4 h-4 mr-0 relative z-10" />
-              <span className="relative z-10">New Template</span>
-            </Button>
           </div>
         </div>
 
@@ -528,6 +514,8 @@ const FollowUpTemplates = () => {
       />
     </div>
   );
-};
+});
+
+FollowUpTemplates.displayName = "FollowUpTemplates";
 
 export default FollowUpTemplates;
