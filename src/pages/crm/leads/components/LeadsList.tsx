@@ -767,9 +767,10 @@ const LeadsList: FC<LeadsListProps> = ({
   };
 
   return (
-    <div className={`flex flex-col pb-4 ${viewMode === "card" ? "px-2" : ""}`}>
+    <div className={`flex flex-col h-full ${viewMode === "card" ? "px-2" : ""}`}>
       {renderPageSizeSelector("top")}
-      <AnimatePresence mode="wait">
+      <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hide pb-4">
+        <AnimatePresence mode="wait">
         <motion.div
           key={viewMode}
           className={
@@ -812,6 +813,7 @@ const LeadsList: FC<LeadsListProps> = ({
           </AnimatePresence>
         </motion.div>
       </AnimatePresence>
+      </div>
 
       {/* Fixed pagination at bottom */}
       {!loading && leads.length > 0 && (

@@ -1723,7 +1723,8 @@ const Activity: FC<ActivityProps> = ({
                             </div>
                           )}
                         </div>
-                        <div
+                        {/* Available Slots Section - Commented Out */}
+                        {/* <div
                           className="rounded-lg p-6"
                           style={{
                             background: "rgba(255, 255, 255, 0.03)",
@@ -1780,7 +1781,7 @@ const Activity: FC<ActivityProps> = ({
                               {availabilityErrorMessage}
                             </div>
                           )}
-                        </div>
+                        </div> */}
                       </div>
                     </div>
                   )}

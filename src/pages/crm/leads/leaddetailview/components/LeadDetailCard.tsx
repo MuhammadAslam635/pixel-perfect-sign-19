@@ -900,15 +900,29 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
           }
         }}
       >
-        <DialogContent className="max-w-lg bg-[#0b0f20] text-white border border-white/10">
-          <DialogHeader>
-            <DialogTitle className="text-xs sm:text-sm font-semibold">Schedule Meeting</DialogTitle>
+        <DialogContent 
+        className="max-w-2xl max-h-[90vh] flex flex-col p-0 text-white border border-white/10 overflow-hidden rounded-[32px] shadow-[0_25px_60px_rgba(0,0,0,0.55)]"
+        style={{
+          background: "#0a0a0a"
+        }}
+      >
+        {/* Gradient overlay */}
+        <div 
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0) 38.08%, rgba(255, 255, 255, 0) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)"
+          }}
+        />
+        
+        <div className="relative z-10 flex flex-col h-full min-h-0">
+          <DialogHeader className="px-6 pt-6 pb-4 flex-shrink-0 border-b border-white/10">
+            <DialogTitle className="text-xs sm:text-sm font-semibold text-white drop-shadow-lg -mb-1">Schedule Meeting</DialogTitle>
             <DialogDescription className="text-xs text-white/70">
               Create a Microsoft Calendar event with {lead.name || "this lead"}.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 max-h-[70vh] overflow-y-auto scrollbar-hide px-1">
+          <div className="flex-1 overflow-y-auto px-6 space-y-4 scrollbar-hide py-4 min-h-0">
             {checkingMicrosoft && (
               <Alert className="bg-white/5 border-white/10 text-white">
                 <Loader2 className="h-4 w-4 animate-spin text-white" />
@@ -1108,7 +1122,7 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
             )}
           </div>
 
-          <DialogFooter className="gap-2">
+          <DialogFooter className="px-6 py-4 flex-shrink-0 border-t border-white/10 gap-2">
             <Button
               type="button"
               variant="ghost"
@@ -1141,7 +1155,8 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
               )}
             </Button>
           </DialogFooter>
-        </DialogContent>
+        </div>
+      </DialogContent>
       </Dialog>
     </>
   );

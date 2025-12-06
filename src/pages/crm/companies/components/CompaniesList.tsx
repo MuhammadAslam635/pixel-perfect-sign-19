@@ -765,9 +765,10 @@ const CompaniesList: FC<CompaniesListProps> = ({
   }
 
   return (
-    <div className={`flex flex-col pb-4 ${viewMode === "card" ? "px-2" : ""}`}>
+    <div className={`flex flex-col h-full ${viewMode === "card" ? "px-2" : ""}`}>
       {renderPageSizeSelector("top")}
-      <AnimatePresence mode="wait">
+      <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hide pb-4">
+        <AnimatePresence mode="wait">
         <motion.div
           key={viewMode}
           className={
@@ -823,6 +824,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
           </AnimatePresence>
         </motion.div>
       </AnimatePresence>
+      </div>
 
       {isMobile && companies.length > 2 && (
         <div className="flex flex-col items-center gap-2 pb-4">
