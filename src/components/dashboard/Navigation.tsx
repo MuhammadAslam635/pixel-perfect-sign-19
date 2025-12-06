@@ -65,13 +65,6 @@ const navLinks: NavLink[] = [
       pathname.startsWith("/admin/members/permissions"),
     roles: superAdminRoles,
   },
-  {
-    id: "emails",
-    label: "Emails",
-    icon: Mail,
-    path: "/emails/inbox",
-    match: (pathname: string) => pathname.startsWith("/emails"),
-  },
   { id: "agents", label: "Agents", icon: Bot, path: "/agents" },
   {
     id: "campaigns",

@@ -1,6 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { motion } from "framer-motion";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
+import { CrmNavigation } from "../shared/components/CrmNavigation";
 import { EmailComposer } from "@/components/email/EmailComposer";
 import { useToast } from "@/components/ui/use-toast";
 import { emailService } from "@/services/email.service";
@@ -51,7 +53,31 @@ const ComposePage = () => {
 
   return (
     <DashboardLayout>
-      <main className="relative px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] mt-20 lg:mt-24 xl:mt-28 mb-10 flex flex-col gap-6 text-white h-full">
+      <motion.main
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="relative px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12 2xl:px-16 pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-6 sm:pb-8 flex flex-col gap-4 sm:gap-6 text-white min-h-screen overflow-x-hidden"
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+          className="max-w-[1600px] mx-auto w-full min-h-0"
+        >
+          {/* Wrapper with space-between */}
+          <div className="flex items-center justify-between mb-4">
+            {/* Page Header with Navigation */}
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: "easeOut", delay: 0.4 }}
+            >
+              <CrmNavigation />
+            </motion.div>
+          </div>
+
+          <main className="relative px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] mt-0 mb-10 flex flex-col gap-6 text-white h-full">
         <div className="flex w-full flex-1 min-h-0 flex-col gap-6 overflow-hidden max-w-5xl mx-auto">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" onClick={handleCancel}>
@@ -73,7 +99,9 @@ const ComposePage = () => {
             />
           </div>
         </div>
-      </main>
+          </main>
+        </motion.div>
+      </motion.main>
     </DashboardLayout>
   );
 };

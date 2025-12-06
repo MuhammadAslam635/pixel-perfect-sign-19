@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import FollowUpTemplates from "./components/FollowUpTemplates";
+import { CrmNavigation } from "../shared/components/CrmNavigation";
 
 const FollowUp2Page = () => {
   return (
@@ -14,10 +15,30 @@ const FollowUp2Page = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: "easeOut", delay: 0.5 }}
-          className="rounded-xl sm:rounded-[30px] p-6"
+          transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+          className="max-w-[1600px] mx-auto w-full min-h-0"
         >
-          <FollowUpTemplates />
+          {/* Wrapper with space-between */}
+          <div className="flex items-center justify-between mb-4">
+            {/* Page Header with Navigation */}
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: "easeOut", delay: 0.4 }}
+            >
+              <CrmNavigation />
+            </motion.div>
+          </div>
+
+          {/* Main Content */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: "easeOut", delay: 0.5 }}
+            className="rounded-xl sm:rounded-[30px] p-6"
+          >
+            <FollowUpTemplates />
+          </motion.div>
         </motion.div>
       </motion.main>
     </DashboardLayout>

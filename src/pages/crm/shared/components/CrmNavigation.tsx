@@ -1,4 +1,4 @@
-import { Building2, Users, CalendarDays, Clock } from "lucide-react";
+import { Building2, Users, CalendarDays, Clock, Mail } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -38,6 +38,13 @@ const crmNavLinks: CrmNavLink[] = [
     icon: Clock,
     path: "/followups",
     match: (pathname: string) => pathname.startsWith("/followups"),
+  },
+  {
+    id: "emails",
+    label: "Emails",
+    icon: Mail,
+    path: "/emails/inbox",
+    match: (pathname: string) => pathname.startsWith("/emails"),
   },
 ];
 
