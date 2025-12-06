@@ -52,7 +52,7 @@ const index = () => {
     setCompaniesPage(1);
   }, [viewMode]);
   const [companiesIndustryFilter, setCompaniesIndustryFilter] =
-    useState<string>("all");
+    useState<string[]>([]);
   const [companiesEmployeeRange, setCompaniesEmployeeRange] =
     useState<string>("all");
   const [companiesLocationFilter, setCompaniesLocationFilter] =
@@ -64,7 +64,7 @@ const index = () => {
 
   const [companyFiltersOpen, setCompanyFiltersOpen] = useState(false);
   const resetCompanyAdvancedFilters = useCallback(() => {
-    setCompaniesIndustryFilter("all");
+    setCompaniesIndustryFilter([]);
     setCompaniesEmployeeRange("all");
     setCompaniesLocationFilter("");
     setCompaniesHasPeopleFilter(false);
@@ -81,8 +81,8 @@ const index = () => {
       sortOrder: -1,
     };
 
-    if (companiesIndustryFilter !== "all") {
-      params.industry = companiesIndustryFilter;
+    if (companiesIndustryFilter.length > 0) {
+      params.industry = companiesIndustryFilter.join(",");
     }
 
     if (companiesEmployeeRange !== "all") {
@@ -156,7 +156,7 @@ const index = () => {
 
   const hasCompanyAdvancedFilters = useMemo(
     () =>
-      companiesIndustryFilter !== "all" ||
+      companiesIndustryFilter.length > 0 ||
       companiesEmployeeRange !== "all" ||
       companiesLocationFilter.trim() !== "" ||
       companiesHasPeopleFilter ||

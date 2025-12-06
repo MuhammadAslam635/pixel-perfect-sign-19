@@ -3,13 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { MultiSelect } from "@/components/ui/multi-select";
 import { Layers, Grid3X3, List, LayoutGrid, Building2 } from "lucide-react";
 import { CompanyPerson } from "@/services/companies.service";
 import { CrmNavigation } from "../shared/components/CrmNavigation";
@@ -63,11 +57,9 @@ const index = () => {
     // Reset to page 1 when changing view mode
     setLeadsPage(1);
   }, [viewMode]);
-  const [leadsCompanyFilter, setLeadsCompanyFilter] = useState<string | null>(
-    null
-  );
+  const [leadsCompanyFilter, setLeadsCompanyFilter] = useState<string[]>([]);
   const [leadsLocationFilter, setLeadsLocationFilter] = useState<string>("");
-  const [leadsPositionFilter, setLeadsPositionFilter] = useState<string>("");
+  const [leadsPositionFilter, setLeadsPositionFilter] = useState<string[]>([]);
   const [leadsHasEmailFilter, setLeadsHasEmailFilter] = useState(false);
   const [leadsHasPhoneFilter, setLeadsHasPhoneFilter] = useState(false);
   const [leadsHasLinkedinFilter, setLeadsHasLinkedinFilter] = useState(false);
@@ -109,7 +101,8 @@ const index = () => {
 
   const resetLeadAdvancedFilters = useCallback(() => {
     setLeadsLocationFilter("");
-    setLeadsPositionFilter("");
+    setLeadsPositionFilter([]);
+    setLeadsCompanyFilter([]);
     setLeadsHasEmailFilter(false);
     setLeadsHasPhoneFilter(false);
     setLeadsHasLinkedinFilter(false);
@@ -442,13 +435,15 @@ const index = () => {
   const hasLeadAdvancedFilters = useMemo(
     () =>
       leadsLocationFilter.trim() !== "" ||
-      leadsPositionFilter.trim() !== "" ||
+      leadsPositionFilter.length > 0 ||
+      leadsCompanyFilter.length > 0 ||
       leadsHasEmailFilter ||
       leadsHasPhoneFilter ||
       leadsHasLinkedinFilter,
     [
       leadsLocationFilter,
       leadsPositionFilter,
+      leadsCompanyFilter,
       leadsHasEmailFilter,
       leadsHasPhoneFilter,
       leadsHasLinkedinFilter,
@@ -460,7 +455,10 @@ const index = () => {
       page: leadsPage,
       limit: leadsLimit,
       search: leadsSearch || undefined,
-      companyId: leadsCompanyFilter || undefined,
+      companyId:
+        leadsCompanyFilter.length > 0
+          ? leadsCompanyFilter.join(",")
+          : undefined,
       sortBy: "createdAt",
       sortOrder: -1,
     };
@@ -469,8 +467,8 @@ const index = () => {
       params.location = leadsLocationFilter.trim();
     }
 
-    if (leadsPositionFilter.trim()) {
-      params.position = leadsPositionFilter.trim();
+    if (leadsPositionFilter.length > 0) {
+      params.position = leadsPositionFilter.join(",");
     }
 
     if (leadsHasEmailFilter) {
@@ -660,71 +658,31 @@ const index = () => {
                     />
 
                     {/* Company Filter Dropdown */}
-                    <div className="relative w-full sm:w-auto sm:min-w-[140px]">
-                      <Select
-                        value={leadsCompanyFilter || "all"}
-                        onValueChange={(value) =>
-                          setLeadsCompanyFilter(value === "all" ? null : value)
-                        }
-                      >
-                        <SelectTrigger
-                          className="h-9 pl-10 pr-4 rounded-lg sm:rounded-full border border-gray-600 sm:border-0 text-gray-300 text-xs w-full sm:w-auto bg-gray-800/50 sm:bg-[#FFFFFF1A] mobile-select-trigger"
-                          style={{
-                            boxShadow: "none",
-                          }}
-                        >
-                          <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                            <Layers className="w-4 h-4 text-gray-400" />
-                          </div>
-                          <SelectValue placeholder="All Companies" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a] rounded-xl">
-                          <SelectItem
-                            value="all"
-                            className="text-gray-300 focus:text-white focus:bg-white/10"
-                          >
-                            <div className="flex items-center justify-between w-full">
-                              <span>All Companies</span>
-                              {totalLeadsForStats !== undefined && (
-                                <span className="ml-2 text-xs text-gray-500">
-                                  ({totalLeadsForStats}{" "}
-                                  {totalLeadsForStats === 1 ? "lead" : "leads"})
-                                </span>
-                              )}
-                            </div>
-                          </SelectItem>
-                          {allCompaniesForFilter.map((company) => {
-                            // Count leads for this company from all leads (not just current page)
-                            const companyLeadsCount = allLeadsForCount.filter(
-                              (lead) => lead.companyId === company._id
-                            ).length;
+                    <div className="relative w-full sm:w-auto sm:min-w-[240px]">
+                      <div className="absolute left-3 top-1/2 -translate-y-1/2 z-10">
+                        <Layers className="w-4 h-4 text-gray-400" />
+                      </div>
+                      <MultiSelect
+                        options={allCompaniesForFilter.map((company) => {
+                          const companyLeadsCount = allLeadsForCount.filter(
+                            (lead) => lead.companyId === company._id
+                          ).length;
 
-                            return (
-                              <SelectItem
-                                key={company._id}
-                                value={company._id}
-                                disabled={companyLeadsCount === 0}
-                                className={`text-gray-300 focus:text-white focus:bg-white/10 ${
-                                  companyLeadsCount === 0
-                                    ? "opacity-50 cursor-not-allowed"
-                                    : "cursor-pointer"
-                                }`}
-                              >
-                                <div className="flex items-center justify-between w-full">
-                                  <span className="truncate flex-1">
-                                    {company.name}
-                                  </span>
-                                  <span className="ml-2 text-xs text-gray-500 whitespace-nowrap">
-                                    ({companyLeadsCount}{" "}
-                                    {companyLeadsCount === 1 ? "lead" : "leads"}
-                                    )
-                                  </span>
-                                </div>
-                              </SelectItem>
-                            );
-                          })}
-                        </SelectContent>
-                      </Select>
+                          return {
+                            value: company._id,
+                            label: `${company.name} (${companyLeadsCount} ${
+                              companyLeadsCount === 1 ? "lead" : "leads"
+                            })`,
+                          };
+                        })}
+                        value={leadsCompanyFilter}
+                        onChange={setLeadsCompanyFilter}
+                        placeholder="All Companies"
+                        searchPlaceholder="Search companies..."
+                        emptyMessage="No companies found."
+                        className="pl-10 h-9 text-xs"
+                        maxDisplayItems={3}
+                      />
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -756,6 +714,7 @@ const index = () => {
                               onLocationFilterChange={setLeadsLocationFilter}
                               positionFilter={leadsPositionFilter}
                               onPositionFilterChange={setLeadsPositionFilter}
+                              leads={leads}
                               hasEmailFilter={leadsHasEmailFilter}
                               onHasEmailFilterChange={setLeadsHasEmailFilter}
                               hasPhoneFilter={leadsHasPhoneFilter}
@@ -825,7 +784,6 @@ const index = () => {
                 search={leadsSearch}
                 onSearchChange={setLeadsSearch}
                 companyFilter={leadsCompanyFilter}
-                onCompanyFilterChange={setLeadsCompanyFilter}
                 companies={allCompaniesForFilter}
                 page={leadsPage}
                 totalPages={leadsPagination?.totalPages || 1}

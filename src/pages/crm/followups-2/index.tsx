@@ -94,7 +94,7 @@ const FollowUp2Page = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: "easeOut", delay: 0.5 }}
-            className="rounded-xl sm:rounded-[30px] p-6"
+            className="rounded-xl sm:rounded-[30px]"
           >
             <FollowUpTemplates
               ref={templatesRef}

@@ -57,8 +57,7 @@ type LeadsListProps = {
   onLinkedinClick: (lead: Lead) => void;
   search?: string;
   onSearchChange?: (search: string) => void;
-  companyFilter?: string | null;
-  onCompanyFilterChange?: (companyId: string | null) => void;
+  companyFilter?: string[] | null;
   companies?: Company[];
   page?: number;
   totalPages?: number;
@@ -264,10 +263,12 @@ const LeadsList: FC<LeadsListProps> = ({
         <Search className="w-6 h-6 text-white/30" />
       </div>
       <p className="text-white/70 text-base font-medium mb-1">
-        {search || companyFilter ? "No leads found" : "No leads available"}
+        {search || (companyFilter && companyFilter.length > 0)
+          ? "No leads found"
+          : "No leads available"}
       </p>
       <p className="text-white/50 text-sm text-center max-w-md">
-        {search || companyFilter
+        {search || (companyFilter && companyFilter.length > 0)
           ? "Try adjusting your filters or clear them to see all leads."
           : "There are no leads in the database yet."}
       </p>
@@ -773,52 +774,54 @@ const LeadsList: FC<LeadsListProps> = ({
   };
 
   return (
-    <div className={`flex flex-col h-full ${viewMode === "card" ? "px-2" : ""}`}>
+    <div
+      className={`flex flex-col h-full ${viewMode === "card" ? "px-2" : ""}`}
+    >
       {renderPageSizeSelector("top")}
       <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hide pb-4">
         <AnimatePresence mode="wait">
-        <motion.div
-          key={viewMode}
-          className={
-            viewMode === "card"
-              ? "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"
-              : "space-y-2"
-          }
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.95 }}
-          transition={{
-            duration: 0.3,
-            ease: "easeInOut",
-            staggerChildren: 0.05,
-            delayChildren: 0.1,
-          }}
-          layout
-        >
-          <AnimatePresence mode="popLayout">
-            {loading
-              ? renderLoading()
-              : leads.length === 0
-              ? renderEmpty()
-              : leads.map((lead, index) => (
-                  <motion.div
-                    key={lead._id}
-                    layout
-                    initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                    transition={{
-                      duration: 0.4,
-                      ease: "easeOut",
-                      delay: index * 0.03,
-                    }}
-                  >
-                    {renderLeadCard(lead)}
-                  </motion.div>
-                ))}
-          </AnimatePresence>
-        </motion.div>
-      </AnimatePresence>
+          <motion.div
+            key={viewMode}
+            className={
+              viewMode === "card"
+                ? "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"
+                : "space-y-2"
+            }
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{
+              duration: 0.3,
+              ease: "easeInOut",
+              staggerChildren: 0.05,
+              delayChildren: 0.1,
+            }}
+            layout
+          >
+            <AnimatePresence mode="popLayout">
+              {loading
+                ? renderLoading()
+                : leads.length === 0
+                ? renderEmpty()
+                : leads.map((lead, index) => (
+                    <motion.div
+                      key={lead._id}
+                      layout
+                      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                      transition={{
+                        duration: 0.4,
+                        ease: "easeOut",
+                        delay: index * 0.03,
+                      }}
+                    >
+                      {renderLeadCard(lead)}
+                    </motion.div>
+                  ))}
+            </AnimatePresence>
+          </motion.div>
+        </AnimatePresence>
       </div>
 
       {/* Fixed pagination at bottom */}

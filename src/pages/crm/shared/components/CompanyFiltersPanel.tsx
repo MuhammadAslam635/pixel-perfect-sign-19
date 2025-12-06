@@ -8,12 +8,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  MultiSelect,
+  type MultiSelectOption,
+} from "@/components/ui/multi-select";
 
 interface CompanyFiltersInlineProps {
   // Industry filter
   industries: string[];
-  industryFilter: string;
-  onIndustryFilterChange: (value: string) => void;
+  industryFilter: string[];
+  onIndustryFilterChange: (value: string[]) => void;
 
   // Employee range filter
   employeeRanges: Array<{ value: string; label: string }>;
@@ -51,6 +55,11 @@ export const CompanyFiltersInline = ({
   hasFilters,
   onResetFilters,
 }: CompanyFiltersInlineProps) => {
+  const industryOptions: MultiSelectOption[] = industries.map((industry) => ({
+    value: industry,
+    label: industry,
+  }));
+
   return (
     <div className="flex items-center gap-3 flex-wrap">
       {/* Industry Filter */}
@@ -58,28 +67,17 @@ export const CompanyFiltersInline = ({
         <label className="text-[11px] uppercase tracking-[0.08em] text-gray-400 whitespace-nowrap">
           Industry:
         </label>
-        <Select value={industryFilter} onValueChange={onIndustryFilterChange}>
-          <SelectTrigger className="h-8 w-32 rounded-lg border border-white/15 bg-transparent text-white text-xs">
-            <SelectValue placeholder="All" />
-          </SelectTrigger>
-          <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a] rounded-xl max-h-40">
-            <SelectItem
-              value="all"
-              className="text-gray-300 focus:text-white focus:bg-white/10"
-            >
-              All
-            </SelectItem>
-            {industries.map((industry) => (
-              <SelectItem
-                key={industry}
-                value={industry}
-                className="text-gray-300 focus:text-white focus:bg-white/10"
-              >
-                {industry}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="w-48">
+          <MultiSelect
+            options={industryOptions}
+            value={industryFilter}
+            onChange={onIndustryFilterChange}
+            placeholder="All industries"
+            searchPlaceholder="Search industries..."
+            emptyMessage="No industries found."
+            className="h-8 text-xs"
+          />
+        </div>
       </div>
 
       {/* Company Size Filter */}
@@ -162,8 +160,8 @@ export const CompanyFiltersInline = ({
 interface CompanyFiltersPanelProps {
   // Industry filter
   industries: string[];
-  industryFilter: string;
-  onIndustryFilterChange: (value: string) => void;
+  industryFilter: string[];
+  onIndustryFilterChange: (value: string[]) => void;
 
   // Employee range filter
   employeeRanges: Array<{ value: string; label: string }>;
@@ -203,34 +201,25 @@ export const CompanyFiltersPanel = ({
   onResetFilters,
   onClose,
 }: CompanyFiltersPanelProps) => {
+  const industryOptions: MultiSelectOption[] = industries.map((industry) => ({
+    value: industry,
+    label: industry,
+  }));
+
   return (
     <div className="flex flex-col gap-3 text-gray-100 text-xs">
       <div>
         <p className="text-[11px] uppercase tracking-[0.08em] text-gray-400 mb-2">
           Industry
         </p>
-        <Select value={industryFilter} onValueChange={onIndustryFilterChange}>
-          <SelectTrigger className="h-9 w-full rounded-lg border border-white/15 bg-transparent text-white text-xs">
-            <SelectValue placeholder="All industries" />
-          </SelectTrigger>
-          <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a] rounded-xl max-h-60">
-            <SelectItem
-              value="all"
-              className="text-gray-300 focus:text-white focus:bg-white/10"
-            >
-              All industries
-            </SelectItem>
-            {industries.map((industry) => (
-              <SelectItem
-                key={industry}
-                value={industry}
-                className="text-gray-300 focus:text-white focus:bg-white/10"
-              >
-                {industry}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <MultiSelect
+          options={industryOptions}
+          value={industryFilter}
+          onChange={onIndustryFilterChange}
+          placeholder="All industries"
+          searchPlaceholder="Search industries..."
+          emptyMessage="No industries found."
+        />
       </div>
       <div>
         <p className="text-[11px] uppercase tracking-[0.08em] text-gray-400 mb-2">
