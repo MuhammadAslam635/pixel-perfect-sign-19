@@ -89,7 +89,7 @@ const FollowUpTemplates = () => {
           </div>
           <div className="flex items-center gap-3">
             <SearchInput
-              placeholder="Search templates..."
+              placeholder="Search Template"
               value={searchQuery}
               onChange={setSearchQuery}
               className="sm:min-w-[320px] lg:min-w-[320px]"
@@ -135,7 +135,7 @@ const FollowUpTemplates = () => {
         {/* Conditional Content Based on Active Tab */}
         {activeTab === "templates" ? (
           /* Campaign Cards Grid */
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-10">
             {mockCampaigns.map((campaign, index) => (
               <Card
                 key={campaign.id}
@@ -148,17 +148,26 @@ const FollowUpTemplates = () => {
                 <div
                   className="absolute top-0 left-0 right-0 pointer-events-none rounded-sm"
                   style={{
-                    height: "calc(100% - 155px)",
+                    height: "calc(100% - 120px)",
                     background:
                       "linear-gradient(173.83deg, rgba(255, 255, 255, 0.16) 4.82%, rgba(255, 255, 255, 4e-05) 38.08%, rgba(255, 255, 255, 4e-05) 56.68%, rgba(255, 255, 255, 0.04) 95.1%)",
                     zIndex: 1,
                   }}
                 ></div>
-                <CardContent className="relative p-5 space-y-4 z-10">
+                <CardContent className="relative p-4 space-y-2 z-10">
                   {/* Card Header */}
-                  <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-start justify-between mb-2">
                     <div className="flex-1">
-                      <h4 className="text-white font-medium text-base mb-1.5">
+                      <h4
+                        className="mb-1"
+                        style={{
+                          fontFamily: "Poppins",
+                          fontWeight: 500,
+                          fontStyle: "Medium",
+                          fontSize: "14px",
+                          // background: "#FFFFFF",
+                        }}
+                      >
                         {campaign.name}
                       </h4>
                       <p className="text-white/40 text-xs">
@@ -178,7 +187,16 @@ const FollowUpTemplates = () => {
                         className="w-5 h-5 text-[#5A9EA1]"
                         strokeWidth={2}
                       />
-                      <span className="text-white/80 text-sm">
+                      <span
+                        className="text-sm"
+                        style={{
+                          fontFamily: "Inter",
+                          fontWeight: 400,
+                          fontStyle: "Regular",
+                          fontSize: "12px",
+                          color: "#FFFFFF99",
+                        }}
+                      >
                         Run Time: {campaign.runTime}
                       </span>
                     </div>
@@ -189,21 +207,39 @@ const FollowUpTemplates = () => {
                         className="w-5 h-5 text-[#5A9EA1]"
                         strokeWidth={2}
                       />
-                      <span className="text-white/80 text-sm">
+                      <span
+                        className="text-sm"
+                        style={{
+                          fontFamily: "Inter",
+                          fontWeight: 400,
+                          fontStyle: "Regular",
+                          fontSize: "12px",
+                          color: "#FFFFFF99",
+                        }}
+                      >
                         {campaign.dateRange}
                       </span>
                     </div>
                   </div>
 
                   {/* Communication Channels Row */}
-                  <div className="flex items-center gap-6">
+                  <div className="flex items-center justify-between gap-6">
                     {/* Emails */}
                     <div className="flex items-center gap-2 text-sm">
                       <Mail
                         className="w-5 h-5 text-[#5A9EA1]"
                         strokeWidth={2}
                       />
-                      <span className="text-white/80 text-sm">
+                      <span
+                        className="text-sm"
+                        style={{
+                          fontFamily: "Inter",
+                          fontWeight: 400,
+                          fontStyle: "Regular",
+                          fontSize: "12px",
+                          color: "#FFFFFF99",
+                        }}
+                      >
                         {campaign.emails.toString().padStart(2, "0")} Emails
                       </span>
                     </div>
@@ -214,7 +250,16 @@ const FollowUpTemplates = () => {
                         className="w-5 h-5 text-[#5A9EA1]"
                         strokeWidth={2}
                       />
-                      <span className="text-white/80 text-sm">
+                      <span
+                        className="text-sm"
+                        style={{
+                          fontFamily: "Inter",
+                          fontWeight: 400,
+                          fontStyle: "Regular",
+                          fontSize: "12px",
+                          color: "#FFFFFF99",
+                        }}
+                      >
                         {campaign.messages.toString().padStart(2, "0")} Message
                       </span>
                     </div>
@@ -225,21 +270,39 @@ const FollowUpTemplates = () => {
                         className="w-5 h-5 text-[#5A9EA1]"
                         strokeWidth={2}
                       />
-                      <span className="text-white/80 text-sm">
+                      <span
+                        className="text-sm"
+                        style={{
+                          fontFamily: "Inter",
+                          fontWeight: 400,
+                          fontStyle: "Regular",
+                          fontSize: "12px",
+                          color: "#FFFFFF99",
+                        }}
+                      >
                         {campaign.calls.toString().padStart(2, "0")} Calls
                       </span>
                     </div>
                   </div>
 
                   {/* Footer: Day Time and Run Button */}
-                  <div className="flex items-center justify-between pt-3">
-                    <span className="text-sm text-white/50">
+                  <div className="flex items-center justify-between pt-2">
+                    <span
+                      style={{
+                        fontFamily: "Inter",
+                        fontWeight: 400,
+                        fontStyle: "Regular",
+                        fontSize: "10px",
+                        textAlign: "center",
+                        color: "#FFFFFF80",
+                      }}
+                    >
                       Day time: 14:00 (9:00 UTC)
                     </span>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="relative h-9 px-4 rounded-full border-0 text-white text-xs hover:bg-[#2F2F2F]/60 transition-all overflow-hidden"
+                      className="relative h-8 px-4 rounded-full border-0 text-white text-xs hover:bg-[#2F2F2F]/60 transition-all overflow-hidden"
                       style={{
                         background: "#FFFFFF1A",
                         boxShadow:
@@ -255,7 +318,18 @@ const FollowUpTemplates = () => {
                           zIndex: 0,
                         }}
                       ></div>
-                      <span className="relative z-10">Run Templates</span>
+                      <span
+                        className="relative z-10"
+                        style={{
+                          fontFamily: "Poppins",
+                          fontWeight: 400,
+                          fontStyle: "Regular",
+                          fontSize: "10px",
+                          color: "#FFFFFF",
+                        }}
+                      >
+                        Run Templates
+                      </span>
                     </Button>
                   </div>
                 </CardContent>
