@@ -8,7 +8,7 @@ const SkylarFloatingWidget = () => {
   const location = useLocation();
 
   // Hide widget on dashboard and chat pages
-  const isHiddenPage = location.pathname === "/dashboard" || location.pathname === "/chat" || location.pathname === "/login" || location.pathname === "/signup" || location.pathname === "/forgot-password" || location.pathname === "/reset-password" || location.pathname === "/verify-email" || location.pathname === "/resend-email" || location.pathname === "/";
+  const isHiddenPage = location.pathname === "/dashboard" || location.pathname === "/chat" || location.pathname === "/login" || location.pathname === "/signup" || location.pathname === "/forgot-password" || location.pathname === "/reset-password" || location.pathname === "/verify-email" || location.pathname === "/resend-email" || location.pathname === "/" || location.pathname === "/change-password" ;
 
   if (isHiddenPage) {
     return null;

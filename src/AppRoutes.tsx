@@ -5,6 +5,7 @@ import Index from "@/pages/auth/Index";
 import SignUpPage from "@/pages/auth/SignUpPage";
 import ForgotPassword from "@/pages/auth/ForgotPassword";
 import ResetPassword from "@/pages/auth/ResetPassword";
+import ChangePassword from "@/pages/auth/ChangePassword";
 import VerifyEmail from "@/pages/auth/VerifyEmail";
 import ResendEmail from "@/pages/auth/ResendEmail";
 import Dashboard from "@/pages/Dashboard";
@@ -22,7 +23,9 @@ import UserEdit from "@/pages/users/UserEdit";
 import ContactNow from "@/pages/twilio-calling/ContactNow";
 import FollowupTemplatesPage from "@/pages/crm/followups";
 import FollowUp2Page from "@/pages/crm/followups-2";
-import LeadDetailView, { SelectedCallLogView } from "@/pages/crm/leads/leaddetailview";
+import LeadDetailView, {
+  SelectedCallLogView,
+} from "@/pages/crm/leads/leaddetailview";
 import RoleList from "@/pages/roles/RoleList";
 import RoleForm from "@/pages/roles/RoleForm";
 import ModuleList from "@/pages/modules/ModuleList";
@@ -81,6 +84,14 @@ const AppRoutes = () => {
           <PublicRoute>
             <ResetPassword />
           </PublicRoute>
+        }
+      />
+      <Route
+        path="/change-password"
+        element={
+          <ProtectedRoute>
+            <ChangePassword />
+          </ProtectedRoute>
         }
       />
       <Route
@@ -161,9 +172,14 @@ const AppRoutes = () => {
         path="/leadchattest"
         element={
           <ProtectedRoute>
-            <LeadChat selectedCallLogView={null} setSelectedCallLogView={function (value: SelectedCallLogView | null): void {
-              throw new Error("Function not implemented.");
-            } } />
+            <LeadChat
+              selectedCallLogView={null}
+              setSelectedCallLogView={function (
+                value: SelectedCallLogView | null
+              ): void {
+                throw new Error("Function not implemented.");
+              }}
+            />
           </ProtectedRoute>
         }
       />

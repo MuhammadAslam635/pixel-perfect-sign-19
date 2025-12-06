@@ -31,7 +31,6 @@ const UserCreate = () => {
   const [errors, setErrors] = useState({
     email: "",
     name: "",
-    password: "",
     roleId: "",
     status: "",
     mailgunEmail: "",
@@ -42,7 +41,6 @@ const UserCreate = () => {
   >({
     name: "",
     email: "",
-    password: "",
     status: "",
     mailgunEmail: "",
     roleId: "",
@@ -251,7 +249,6 @@ const UserCreate = () => {
     setErrors({
       email: "",
       name: "",
-      password: "",
       roleId: "",
       status: "",
       mailgunEmail: "",
@@ -439,33 +436,49 @@ const UserCreate = () => {
                   </div>
                 </motion.div>
 
-                {/* Row 2: Password and Role */}
+                {/* Row 2: Status and Role */}
                 <motion.div
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
                   className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6"
                 >
-                  {/* Password Field */}
+                  {/* Status Field */}
                   <div className="space-y-2">
                     <Label
-                      htmlFor="password"
+                      htmlFor="status"
                       className="text-white/90 text-sm font-medium"
                     >
-                      Password
+                      Status
                     </Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      name="password"
-                      value={user.password}
-                      onChange={handleInputChange}
-                      className="h-10 rounded-lg bg-[#222B2C]/40 border border-white/10 text-white placeholder:text-white/50 focus:ring-2 focus:ring-cyan-400/40 focus:border-cyan-400/40"
-                      placeholder="Enter password"
-                    />
-                    {errors.password && (
+                    <Select
+                      value={user.status}
+                      onValueChange={(value) => {
+                        setUser((prev) => ({ ...prev, status: value }));
+                        setErrors((prev) => ({ ...prev, status: "" }));
+                      }}
+                    >
+                      <SelectTrigger className="rounded-full !bg-black/35 border border-white/10 text-white focus:ring-2 focus:ring-cyan-400/40 h-[41px] [&>span]:text-white">
+                        <SelectValue placeholder="Select Status" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#1B1B1B] border border-white/10 backdrop-blur">
+                        <SelectItem
+                          value="active"
+                          className="text-white hover:bg-white/10 focus:bg-white/10"
+                        >
+                          Active
+                        </SelectItem>
+                        <SelectItem
+                          value="inactive"
+                          className="text-white hover:bg-white/10 focus:bg-white/10"
+                        >
+                          Inactive
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {errors.status && (
                       <p className="text-red-400 text-sm mt-1">
-                        {errors.password}
+                        {errors.status}
                       </p>
                     )}
                   </div>
@@ -516,58 +529,19 @@ const UserCreate = () => {
                       </p>
                     )}
                     <p className="text-white/50 text-xs">
-                      Select a role with specific permissions for this user
+                      Select a role with specific permissions for this user. A
+                      temporary password will be generated and sent via email.
                     </p>
                   </div>
                 </motion.div>
 
-                {/* Status and Mailgun Email Row */}
+                {/* Mailgun Email Row */}
                 <motion.div
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
                   className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6"
                 >
-                  {/* Status Field */}
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="status"
-                      className="text-white/90 text-sm font-medium"
-                    >
-                      Status
-                    </Label>
-                    <Select
-                      value={user.status}
-                      onValueChange={(value) => {
-                        setUser((prev) => ({ ...prev, status: value }));
-                        setErrors((prev) => ({ ...prev, status: "" }));
-                      }}
-                    >
-                      <SelectTrigger className="rounded-full !bg-black/35 border border-white/10 text-white focus:ring-2 focus:ring-cyan-400/40 h-[41px] [&>span]:text-white">
-                        <SelectValue placeholder="Select Status" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-[#1B1B1B] border border-white/10 backdrop-blur">
-                        <SelectItem
-                          value="active"
-                          className="text-white hover:bg-white/10 focus:bg-white/10"
-                        >
-                          Active
-                        </SelectItem>
-                        <SelectItem
-                          value="inactive"
-                          className="text-white hover:bg-white/10 focus:bg-white/10"
-                        >
-                          Inactive
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {errors.status && (
-                      <p className="text-red-400 text-sm mt-1">
-                        {errors.status}
-                      </p>
-                    )}
-                  </div>
-
                   {/* Mailgun Email Field */}
                   {mailgunDomain && (
                     <div className="space-y-2">

@@ -34,6 +34,11 @@ const ProtectedRoute = ({
 
   const sessionUser = user || getUserData();
 
+  // Check if user needs to change password (unless they're already on the change-password page)
+  if (sessionUser?.requiresPasswordChange && window.location.pathname !== '/change-password') {
+    return <Navigate to="/change-password" replace />;
+  }
+
   // New RBAC check - takes precedence
   if (moduleName) {
     if (!permissionsReady && !isSysAdmin()) {

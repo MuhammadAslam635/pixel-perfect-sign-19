@@ -25,6 +25,11 @@ export interface ResetPasswordData {
   confirm_password: string;
 }
 
+export interface UpdatePasswordData {
+  newPassword: string;
+  confirmPassword: string;
+}
+
 export interface AuthResponse {
   success: boolean;
   message: string;
@@ -106,6 +111,21 @@ export const authService = {
   resetPassword: async (data: ResetPasswordData): Promise<AuthResponse> => {
     try {
       const response = await API.post("/reset-password", data);
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  /**
+   * Update current user's password (for temporary password change)
+   */
+  updatePassword: async (data: UpdatePasswordData): Promise<AuthResponse> => {
+    try {
+      const response = await API.post("/password-update", {
+        new_password: data.newPassword,
+        confirm_password: data.confirmPassword,
+      });
       return response.data;
     } catch (error: any) {
       throw error;

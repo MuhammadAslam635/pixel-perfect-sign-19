@@ -60,7 +60,7 @@ export interface InviteUserResponse {
 export interface CreateUserData {
   name: string;
   email: string;
-  password: string;
+  password?: string; // Optional - will be auto-generated if not provided
   status: string;
   twilio?: {
     shouldProvision?: boolean;

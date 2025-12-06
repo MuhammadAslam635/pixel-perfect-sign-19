@@ -69,6 +69,13 @@ const SignIn = () => {
         );
         dispatch(fetchUserPermissions());
 
+        // Check if user needs to change password
+        if (response.user.requiresPasswordChange) {
+          toast.info("Please change your temporary password to continue.");
+          navigate("/change-password");
+          return;
+        }
+
         // After successful login, immediately fetch leads once
         // and log the response so we can inspect it during development.
         try {
