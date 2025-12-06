@@ -70,7 +70,7 @@ const KnowledgeLayout = ({
                     <TabsTrigger
                       key={tab.id}
                       value={tab.id}
-                      className="group flex w-full items-center gap-2 rounded-2xl border border-white/0 bg-white/5 px-2 py-2.5 text-left text-xs font-medium text-white/70 transition hover:border-white/20 hover:bg-white/10 data-[state=active]:border-white/20 data-[state=active]:bg-[#5B9FA5] data-[state=active]:text-white"
+                      className="group flex w-full items-center gap-2 rounded-2xl border border-white/0 bg-white/5 px-2 py-2.5 text-left text-xs font-medium text-white/70 transition hover:border-white/20 hover:bg-white/10 data-[state=active]:border-cyan-500/30 data-[state=active]:bg-gradient-to-br data-[state=active]:from-cyan-700/80 data-[state=active]:to-cyan-600/60 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-cyan-500/20"
                     >
                       <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/5 text-white/60 transition group-data-[state=active]:bg-white/20 group-data-[state=active]:text-white">
                         <Icon className="h-3.5 w-3.5" />

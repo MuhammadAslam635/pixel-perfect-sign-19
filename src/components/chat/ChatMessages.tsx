@@ -317,9 +317,11 @@ const ChatMessages = ({
                     rehypePlugins={[rehypeRaw, rehypeSanitize]}
                     components={{
                       table: ({ node, ...props }) => (
-                        <div className="my-4 max-w-[600px] overflow-x-auto rounded-lg border border-white/20">
+                        <div className="my-4 max-w-[600px] overflow-x-auto rounded-lg border border-white/20 scrollbar-hide">
                           <table
-                            className="w-full table-auto border-collapse"
+                            // let table grow to the width of its content
+                            style={{ tableLayout: "auto", width: "max-content" }}
+                            className="border-collapse text-sm"
                             {...props}
                           />
                         </div>
@@ -338,13 +340,13 @@ const ChatMessages = ({
                       ),
                       th: ({ node, ...props }) => (
                         <th
-                          className="max-w-[200px] break-words border border-white/20 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-white"
+                          className="border border-white/20 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-white whitespace-nowrap align-top"
                           {...props}
                         />
                       ),
                       td: ({ node, ...props }) => (
                         <td
-                          className="max-w-[200px] break-words border border-white/20 px-4 py-3 text-sm text-white/90"
+                          className="border border-white/20 px-4 py-3 text-sm text-white/90 whitespace-nowrap align-top"
                           {...props}
                         />
                       ),

@@ -1,42 +1,100 @@
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import AgentCard from "./components/AgentCard";
-import { motion } from "framer-motion";
-import kaiSales from "@/assets/kaisales.jpg";
-import auraContentCreator from "@/assets/auracontentcr.jpg";
-import lexOutreach from "@/assets/lexoutreach.jpg";
-import sageFinancial from "@/assets/sagefinancial.jpg";
-import zuriManager from "@/assets/zurimanager.jpg";
 
 const agents = [
   {
-    image: kaiSales,
-    name: "Kai – The Sales Navigator Agent",
+    image: "https://aiassist.bg/wp-content/uploads/2025/01/Kai.jpg",
+    name: "Kai",
+    title: "The Sales Navigator Agent",
     description:
-      "Scouting high-potential leads and opportunities to keep your sales pipeline full and optimized.",
+      "Scouting high-potential leads and opportunities, Kai ensures your sales pipeline is always full and optimized.",
   },
   {
-    image: auraContentCreator,
-    name: "Aura – The Content Creator Agent",
+    image: "https://aiassist.bg/wp-content/uploads/2025/01/Aura.jpg",
+    name: "Aura",
+    title: "The Content Creator Agent",
     description:
-      "Crafting compelling, on-brand content across channels so your voice stays consistent everywhere.",
+      "Crafting compelling content tailored to your brand voice, Aura turns ideas into impactful communication.",
   },
   {
-    image: lexOutreach,
-    name: "Lex – The Outreach Agent",
+    image: "https://aiassist.bg/wp-content/uploads/2025/01/AxeL.jpg",
+    name: "AxeL",
+    title: "The Customer Support Agent",
     description:
-      "Connecting with the right prospects at the right time to build pipelines that convert.",
+      "Providing 24/7 responsive customer support, AxeL ensures every interaction leaves customers delighted.",
   },
   {
-    image: sageFinancial,
-    name: "Sage – The Financial Advisor Agent",
+    image: "https://aiassist.bg/wp-content/uploads/2025/01/Sage.jpg",
+    name: "Sage",
+    title: "The Financial Insights Agent",
     description:
-      "Delivering clear financial insights and guidance to keep your business healthy and growing.",
+      "Delivering actionable financial intelligence, Sage ensures smart financial decisions backed by data.",
   },
   {
-    image: zuriManager,
-    name: "Zuri – The Manager Agent",
-    description:
-      "Coordinating teams and workflows so operations stay smooth while your business scales.",
+    image: "https://aiassist.bg/wp-content/uploads/2025/01/Lex.jpg",
+    name: "Lex",
+    title: "The Sale Outreach Agent",
+    description: "Lex is your AI-powered Outreach Specialist",
+  },
+  {
+    image: "https://aiassist.bg/wp-content/uploads/2025/01/Nova.jpg",
+    name: "Nova",
+    title: "The Sales Conversion Agent",
+    description: "Nova is your AI-powered Sales Conversion Strategist",
+  },
+  {
+    image: "https://aiassist.bg/wp-content/uploads/2025/01/Remy.jpg",
+    name: "Remy",
+    title: "The Follow-Up Agent",
+    description: "Remy is your AI-powered Relationship Nurturing Specialist",
+  },
+  {
+    image: "https://aiassist.bg/wp-content/uploads/2025/01/Echo.jpg",
+    name: "Echo",
+    title: "The Inbound Voice AI Sales Agent",
+    description: "Echo is your AI-powered Inbound Sales Specialist",
+  },
+  {
+    image: "https://aiassist.bg/wp-content/uploads/2025/01/Apex.jpg",
+    name: "Apex",
+    title: "The Ad Optimization Agent",
+    description: "Apex is your AI-powered Ad Campaign Strategist",
+  },
+  {
+    image: "https://aiassist.bg/wp-content/uploads/2025/01/Syra.jpg",
+    name: "Syra",
+    title: "The Audience Segmentation Agent",
+    description: "Syra is your AI-powered Audience Intelligence Specialist",
+  },
+  {
+    image: "https://aiassist.bg/wp-content/uploads/2025/01/Zuri.jpg",
+    name: "Zuri",
+    title: "The Campaign Manager Agent",
+    description: "Zuri is your AI-powered Campaign Orchestration Specialist",
+  },
+  {
+    image: "https://aiassist.bg/wp-content/uploads/2025/01/Lume.jpg",
+    name: "Lume",
+    title: "The Autonomous AI Influencer",
+    description: "Lume is your AI-powered Digital Brand Ambassador",
+  },
+  {
+    image: "https://aiassist.bg/wp-content/uploads/2025/01/Lyra.jpg",
+    name: "Lyra",
+    title: "The Customer Sentiment Agent",
+    description: "Lyra bridges the emotional gap between customers and brands",
+  },
+  {
+    image: "https://aiassist.bg/wp-content/uploads/2025/01/Vox.jpg",
+    name: "Vox",
+    title: "The Voice AI Customer Support Agent",
+    description: "Vox is your AI-powered Voice Support Specialist",
+  },
+  {
+    image: "https://aiassist.bg/wp-content/uploads/2025/01/Flux.jpg",
+    name: "Flux",
+    title: "The Workflow Automation Agent",
+    description: "Flux is your AI-powered Operations Efficiency Specialist",
   },
 ];
 
@@ -47,7 +105,6 @@ const containerVariants = {
     opacity: 1,
     transition: {
       duration: 0.6,
-      ease: "easeOut",
       staggerChildren: 0.1,
     },
   },
@@ -60,7 +117,6 @@ const headerVariants = {
     y: 0,
     transition: {
       duration: 0.8,
-      ease: "easeOut",
     },
   },
 };
@@ -85,7 +141,6 @@ const cardVariants = {
     scale: 1,
     transition: {
       duration: 0.6,
-      ease: "easeOut",
     },
   },
 };
@@ -93,51 +148,22 @@ const cardVariants = {
 const AgentsPage = () => {
   return (
     <DashboardLayout>
-      <motion.main
-        className="relative flex-1 px-6 pb-12 pt-28 sm:px-10 md:px-14 lg:px-20"
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-      >
+      <main className="relative flex-1 px-6 pb-6 pt-28 sm:px-10 md:px-14 lg:px-20">
         <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-[#0F172A] via-transparent to-[#05060A] opacity-70"></div>
-        <motion.header
-          className="flex flex-col gap-4 mb-12"
-          variants={headerVariants}
-        >
-          <motion.span
-            className="font-poppins font-medium text-4xl text-white"
-            variants={headerVariants}
-          >
+        <header className="flex flex-col gap-4 mb-4">
+          <span className="font-poppins font-medium text-3xl text-white">
             AI Agents
-          </motion.span>
-          <motion.h1
-            className="font-poppins font-light text-xl text-white"
-            variants={headerVariants}
-          >
+          </span>
+          <h2 className="font-poppins font-light text-xl text-white">
             Meet the specialists powering your autonomous growth{" "}
-          </motion.h1>
-        </motion.header>
-        <motion.div
-          className="rounded-3xl p-6"
-          style={{
-            background:
-              "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 2e-05) 38.08%, rgba(255, 255, 255, 2e-05) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
-            border: "1px solid #FFFFFF4D",
-          }}
-          variants={cardsContainerVariants}
-        >
-          <motion.section
-            className="grid gap-6 p-6 sm:grid-cols-3 xl:grid-cols-3"
-            variants={cardsContainerVariants}
-          >
-            {agents.map((agent, index) => (
-              <motion.div key={agent.name} variants={cardVariants}>
-                <AgentCard {...agent} />
-              </motion.div>
-            ))}
-          </motion.section>
-        </motion.div>
-      </motion.main>
+          </h2>
+        </header>
+        <div className="grid gap-6 p-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 rounded-2xl">
+          {agents.map((agent, index) => (
+            <AgentCard {...agent} />
+          ))}
+        </div>
+      </main>
     </DashboardLayout>
   );
 };

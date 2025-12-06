@@ -57,12 +57,14 @@ export interface LeadMeetingRecord {
     name?: string | null;
     status?: string | null;
     responseTime?: string | null;
+    _id?: string;
   }>;
   status: "scheduled" | "completed" | "cancelled";
   autoSelectedSlot?: boolean;
   metadata?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
+  __v?: number;
 }
 
 export interface LeadMeetingsQuery {

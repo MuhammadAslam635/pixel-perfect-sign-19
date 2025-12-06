@@ -424,9 +424,10 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
                       rehypePlugins={[rehypeRaw, rehypeSanitize]}
                       components={{
                         table: ({ node, ...props }) => (
-                          <div className="my-4 max-w-[600px] overflow-x-auto rounded-lg border border-white/20 text-left">
+                          <div className="my-4 w-full max-w-none scrollbar-hide overflow-x-auto rounded-lg border border-white/20 text-left">
                             <table
-                              className="w-full table-auto border-collapse text-left"
+                              className="w-full table-fixed border-collapse text-left"
+                              style={{ tableLayout: 'fixed' }}
                               {...props}
                             />
                           </div>
@@ -448,13 +449,23 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
                         ),
                         th: ({ node, ...props }) => (
                           <th
-                            className="max-w-[200px] break-words border border-white/20 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-white"
+                            className="break-words border border-white/20 px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-white overflow-hidden"
+                            style={{
+                              wordBreak: 'break-word',
+                              overflowWrap: 'break-word',
+                              whiteSpace: 'normal'
+                            }}
                             {...props}
                           />
                         ),
                         td: ({ node, ...props }) => (
                           <td
-                            className="max-w-[200px] break-words border border-white/20 px-4 py-3 text-left text-sm text-white/90"
+                            className="break-words border border-white/20 px-3 py-2 text-left text-sm text-white/90 overflow-hidden"
+                            style={{
+                              wordBreak: 'break-word',
+                              overflowWrap: 'break-word',
+                              whiteSpace: 'normal'
+                            }}
                             {...props}
                           />
                         ),

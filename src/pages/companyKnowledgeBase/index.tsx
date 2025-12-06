@@ -181,7 +181,7 @@ const CompanyKnowledgePage = () => {
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </CardHeader>
-              <CardContent className="space-y-3 text-sm text-white/70">
+              <CardContent className="px-6 pb-6 space-y-3 text-sm text-white/70">
                 <div className="flex justify-between">
                   <span>Size</span>
                   <span>{formatFileSize(file.fileSize)}</span>

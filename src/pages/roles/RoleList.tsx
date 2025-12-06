@@ -21,6 +21,7 @@ import {
   Shield,
   Table,
   Network,
+  Users,
 } from "lucide-react";
 import { rbacService } from "@/services/rbac.service";
 import { Role, Module } from "@/types/rbac.types";
@@ -159,32 +160,73 @@ const RoleList = () => {
                 <Button
                   type="button"
                   onClick={() => setViewMode("table")}
-                  variant={viewMode === "table" ? "default" : "outline"}
                   size="sm"
-                  className={`flex-1 sm:flex-none flex h-9 items-center justify-center rounded-full text-xs font-medium tracking-wide ${
-                    viewMode === "table"
-                      ? "bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3]"
-                      : "bg-white/5 border-white/10 text-white hover:bg-white/10"
-                  }`}
+                  className="relative h-9 px-4 rounded-full border-0 text-white text-xs hover:bg-[#2F2F2F]/60 transition-all flex-1 sm:flex-none flex items-center justify-center overflow-hidden"
+                  style={{
+                    background: viewMode === "table" ? "#FFFFFF1A" : "#FFFFFF0D",
+                    boxShadow:
+                      "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                  }}
                 >
-                  <Table className="h-4 w-4 mr-2" />
-                  Table
+                  {viewMode === "table" && (
+                    <span
+                      className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[120px] h-[120px] rounded-full pointer-events-none opacity-60 blur-[26px]"
+                      style={{
+                        background:
+                          "linear-gradient(180deg, #67B0B7 0%, #4066B3 100%)",
+                      }}
+                    />
+                  )}
+                  <Table className="h-4 w-4 mr-2 relative z-10" />
+                  <span className="relative z-10">Table</span>
                 </Button>
                 <Button
                   type="button"
                   onClick={() => setViewMode("chart")}
-                  variant={viewMode === "chart" ? "default" : "outline"}
                   size="sm"
-                  className={`flex-1 sm:flex-none flex h-9 items-center justify-center rounded-full text-xs font-medium tracking-wide ${
-                    viewMode === "chart"
-                      ? "bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3]"
-                      : "bg-white/5 border-white/10 text-white hover:bg-white/10"
-                  }`}
+                  className="relative h-9 px-4 rounded-full border-0 text-white text-xs hover:bg-[#2F2F2F]/60 transition-all flex-1 sm:flex-none flex items-center justify-center overflow-hidden"
+                  style={{
+                    background: viewMode === "chart" ? "#FFFFFF1A" : "#FFFFFF0D",
+                    boxShadow:
+                      "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                  }}
                 >
-                  <Network className="h-4 w-4 mr-2" />
-                  Chart
+                  {viewMode === "chart" && (
+                    <span
+                      className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[120px] h-[120px] rounded-full pointer-events-none opacity-60 blur-[26px]"
+                      style={{
+                        background:
+                          "linear-gradient(180deg, #67B0B7 0%, #4066B3 100%)",
+                      }}
+                    />
+                  )}
+                  <Network className="h-4 w-4 mr-2 relative z-10" />
+                  <span className="relative z-10">Chart</span>
                 </Button>
               </div>
+              <Button
+                type="button"
+                onClick={() => navigate("/users")}
+                className="relative h-9 px-4 rounded-full border-0 text-white text-xs hover:bg-[#2F2F2F]/60 transition-all w-full sm:w-auto lg:flex-shrink-0 overflow-hidden"
+                style={{
+                  background: "#FFFFFF1A",
+                  boxShadow:
+                    "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                }}
+              >
+                <span
+                  className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[120px] h-[120px] rounded-full pointer-events-none opacity-60 blur-[26px]"
+                  style={{
+                    background:
+                      "linear-gradient(180deg, #67B0B7 0%, #4066B3 100%)",
+                  }}
+                />
+                <Users className="h-5 w-5 relative z-10" />
+                <span className="hidden sm:block relative z-10">
+                  Team
+                </span>
+                <span className="sm:hidden relative z-10">Team</span>
+              </Button>
               <Button
                 type="button"
                 onClick={() => navigate("/roles/create")}

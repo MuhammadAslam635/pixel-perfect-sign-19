@@ -9,7 +9,7 @@ import {
   Mail,
   MessageSquare,
   Phone,
-  MoreVertical,
+  MoreHorizontal,
 } from "lucide-react";
 import { SearchInput } from "../../shared/components";
 import ActiveFollowUpPlans from "./ActiveFollowUpPlans";
@@ -40,38 +40,48 @@ const FollowUpTemplates = () => {
 
       {/* Active Followup Plan Section with Tabs and Search */}
       <div>
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-0">
           <div className="flex items-center gap-4">
             {/* Tab Buttons */}
             <div className="flex items-center gap-1 rounded-lg p-0.5">
-              <div>
+              <div className="relative pb-3">
                 <button
                   onClick={() => setActiveTab("templates")}
                   className={`px-3 py-1.5 rounded-md text-2xl font-medium transition-all ${
                     activeTab === "templates"
-                    // ? "bg-[#5B9FA5] text-white"
-                    // : "text-white/60 hover:text-white/80"
+                      ? "text-white"
+                      : "text-[#FFFFFF4D] hover:text-white/80"
                   }`}
                 >
                   Follow-up Templates
                 </button>
-                <p className="px-3 py-0.5 rounded-md text-[10px] font-light transition-all">
+                <p
+                  className={`px-3 py-0.5 rounded-md text-[10px] font-light transition-all ${
+                    activeTab === "templates"
+                      ? "text-white/70"
+                      : "text-[#FFFFFF4D]"
+                  }`}
+                >
                   Centralize touchpoints for every prospect across emails,
                   calls, and whatsapp
                 </p>
               </div>
-              <div>
+              <div className="relative pb-3">
                 <button
                   onClick={() => setActiveTab("plans")}
                   className={`px-3 py-1 rounded-md text-2xl font-medium transition-all ${
                     activeTab === "plans"
-                    // ? "bg-[#5B9FA5] text-white"
-                    // : "text-white/60 hover:text-white/80"
+                      ? "text-white"
+                      : "text-[#FFFFFF4D] hover:text-white/80"
                   }`}
                 >
                   Active Followup Plans
                 </button>
-                <p className="px-3 py-0.5 rounded-md text-[10px] font-light transition-all">
+                <p
+                  className={`px-3 py-0.5 rounded-md text-[10px] font-light transition-all ${
+                    activeTab === "plans" ? "text-white/70" : "text-[#FFFFFF4D]"
+                  }`}
+                >
                   View and manage your active followup campaigns
                 </p>
               </div>
@@ -79,12 +89,13 @@ const FollowUpTemplates = () => {
           </div>
           <div className="flex items-center gap-3">
             <SearchInput
-              placeholder="Search templates..."
+              placeholder="Search Template"
               value={searchQuery}
               onChange={setSearchQuery}
               className="sm:min-w-[320px] lg:min-w-[320px]"
             />
             <Button
+              variant="ghost"
               size="sm"
               className="relative h-9 px-4 rounded-full border-0 text-white text-xs hover:bg-[#2F2F2F]/60 transition-all w-full sm:w-auto lg:flex-shrink-0 overflow-hidden"
               style={{
@@ -110,91 +121,215 @@ const FollowUpTemplates = () => {
           </div>
         </div>
 
+        {/* Bottom Border with Active Tab Indicator */}
+        <div className="relative border-b border-white/20 mb-4">
+          <div
+            className={`absolute bottom-0 h-[2px] bg-white transition-all duration-300 ${
+              activeTab === "templates"
+                ? "left-0 w-[380px]"
+                : "left-[420px] w-[300px]"
+            }`}
+          />
+        </div>
+
         {/* Conditional Content Based on Active Tab */}
         {activeTab === "templates" ? (
           /* Campaign Cards Grid */
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-10">
             {mockCampaigns.map((campaign, index) => (
               <Card
                 key={campaign.id}
-                className="bg-white/5 border-white/10 hover:border-white/20 transition-all duration-300 hover:shadow-lg hover:shadow-white/5"
+                className="relative border-0 hover:bg-[#2F2F2F] transition-all duration-300 rounded-2xl overflow-hidden"
+                style={{
+                  background: "#2A2A2A",
+                }}
               >
-                <CardContent className="p-4 space-y-3">
+                {/* Gradient overlay from top to bottom */}
+                <div
+                  className="absolute top-0 left-0 right-0 pointer-events-none rounded-sm"
+                  style={{
+                    height: "calc(100% - 120px)",
+                    background:
+                      "linear-gradient(173.83deg, rgba(255, 255, 255, 0.16) 4.82%, rgba(255, 255, 255, 4e-05) 38.08%, rgba(255, 255, 255, 4e-05) 56.68%, rgba(255, 255, 255, 0.04) 95.1%)",
+                    zIndex: 1,
+                  }}
+                ></div>
+                <CardContent className="relative p-4 space-y-2 z-10">
                   {/* Card Header */}
-                  <div className="flex items-start justify-between">
+                  <div className="flex items-start justify-between mb-2">
                     <div className="flex-1">
-                      <h4 className="text-white font-medium text-sm mb-1">
+                      <h4
+                        className="mb-1"
+                        style={{
+                          fontFamily: "Poppins",
+                          fontWeight: 500,
+                          fontStyle: "Medium",
+                          fontSize: "14px",
+                          // background: "#FFFFFF",
+                        }}
+                      >
                         {campaign.name}
                       </h4>
-                      <p className="text-white/50 text-xs">
+                      <p className="text-white/40 text-xs">
                         Update {campaign.updatedAt}
                       </p>
                     </div>
-                    <button className="text-white/40 hover:text-white/60 transition-colors">
-                      <MoreVertical className="w-4 h-4" />
+                    <button className="text-white/80 hover:text-white/100 transition-colors">
+                      <MoreHorizontal className="w-5 h-5" />
                     </button>
                   </div>
-
-                  {/* Stats Row 1: Run Time and Date */}
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-1.5 text-xs">
-                      <div className="w-6 h-6 rounded-full bg-cyan-500/20 flex items-center justify-center">
-                        <Clock className="w-3.5 h-3.5 text-cyan-400" />
-                      </div>
-                      <span className="text-white/70">
+                  <div className="border-b border-white/30"></div>
+                  {/* Stats Grid - Horizontal Layout */}
+                  <div className="flex items-start gap-3 flex-wrap">
+                    {/* Run Time */}
+                    <div className="flex items-center gap-2 text-sm">
+                      <Clock
+                        className="w-5 h-5 text-[#5A9EA1]"
+                        strokeWidth={2}
+                      />
+                      <span
+                        className="text-sm"
+                        style={{
+                          fontFamily: "Inter",
+                          fontWeight: 400,
+                          fontStyle: "Regular",
+                          fontSize: "12px",
+                          color: "#FFFFFF99",
+                        }}
+                      >
                         Run Time: {campaign.runTime}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-xs">
-                      <div className="w-6 h-6 rounded-full bg-cyan-500/20 flex items-center justify-center">
-                        <Calendar className="w-3.5 h-3.5 text-cyan-400" />
-                      </div>
-                      <span className="text-white/70">{campaign.dateRange}</span>
+
+                    {/* Calendar */}
+                    <div className="flex items-center gap-2 text-sm ml-auto">
+                      <Calendar
+                        className="w-5 h-5 text-[#5A9EA1]"
+                        strokeWidth={2}
+                      />
+                      <span
+                        className="text-sm"
+                        style={{
+                          fontFamily: "Inter",
+                          fontWeight: 400,
+                          fontStyle: "Regular",
+                          fontSize: "12px",
+                          color: "#FFFFFF99",
+                        }}
+                      >
+                        {campaign.dateRange}
+                      </span>
                     </div>
                   </div>
 
-                  {/* Stats Row 2: Communication Channels */}
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-1.5 text-xs">
-                      <div className="w-6 h-6 rounded-full bg-cyan-500/20 flex items-center justify-center">
-                        <Mail className="w-3.5 h-3.5 text-cyan-400" />
-                      </div>
-                      <span className="text-white/70">
+                  {/* Communication Channels Row */}
+                  <div className="flex items-center justify-between gap-6">
+                    {/* Emails */}
+                    <div className="flex items-center gap-2 text-sm">
+                      <Mail
+                        className="w-5 h-5 text-[#5A9EA1]"
+                        strokeWidth={2}
+                      />
+                      <span
+                        className="text-sm"
+                        style={{
+                          fontFamily: "Inter",
+                          fontWeight: 400,
+                          fontStyle: "Regular",
+                          fontSize: "12px",
+                          color: "#FFFFFF99",
+                        }}
+                      >
                         {campaign.emails.toString().padStart(2, "0")} Emails
                       </span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-xs">
-                      <div className="w-6 h-6 rounded-full bg-cyan-500/20 flex items-center justify-center">
-                        <MessageSquare className="w-3.5 h-3.5 text-cyan-400" />
-                      </div>
-                      <span className="text-white/70">
+
+                    {/* Messages */}
+                    <div className="flex items-center gap-2 text-sm">
+                      <MessageSquare
+                        className="w-5 h-5 text-[#5A9EA1]"
+                        strokeWidth={2}
+                      />
+                      <span
+                        className="text-sm"
+                        style={{
+                          fontFamily: "Inter",
+                          fontWeight: 400,
+                          fontStyle: "Regular",
+                          fontSize: "12px",
+                          color: "#FFFFFF99",
+                        }}
+                      >
                         {campaign.messages.toString().padStart(2, "0")} Message
                       </span>
                     </div>
-                  </div>
 
-                  {/* Stats Row 3: Calls */}
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-1.5 text-xs">
-                      <div className="w-6 h-6 rounded-full bg-cyan-500/20 flex items-center justify-center">
-                        <Phone className="w-3.5 h-3.5 text-cyan-400" />
-                      </div>
-                      <span className="text-white/70">
+                    {/* Calls */}
+                    <div className="flex items-center gap-2 text-sm">
+                      <Phone
+                        className="w-5 h-5 text-[#5A9EA1]"
+                        strokeWidth={2}
+                      />
+                      <span
+                        className="text-sm"
+                        style={{
+                          fontFamily: "Inter",
+                          fontWeight: 400,
+                          fontStyle: "Regular",
+                          fontSize: "12px",
+                          color: "#FFFFFF99",
+                        }}
+                      >
                         {campaign.calls.toString().padStart(2, "0")} Calls
                       </span>
                     </div>
                   </div>
 
                   {/* Footer: Day Time and Run Button */}
-                  <div className="flex items-center justify-between pt-2 border-t border-white/10">
-                    <span className="text-xs text-white/50">
-                      Day time: 14:00 (8:00 UTC)
+                  <div className="flex items-center justify-between pt-2">
+                    <span
+                      style={{
+                        fontFamily: "Inter",
+                        fontWeight: 400,
+                        fontStyle: "Regular",
+                        fontSize: "10px",
+                        textAlign: "center",
+                        color: "#FFFFFF80",
+                      }}
+                    >
+                      Day time: 14:00 (9:00 UTC)
                     </span>
                     <Button
+                      variant="ghost"
                       size="sm"
-                      className="bg-gradient-to-r from-[#69B4B7] via-[#5486D0] to-[#3E64B3] text-white hover:brightness-110 transition-all h-8 px-4 text-xs"
+                      className="relative h-8 px-4 rounded-full border-0 text-white text-xs hover:bg-[#2F2F2F]/60 transition-all overflow-hidden"
+                      style={{
+                        background: "#FFFFFF1A",
+                        boxShadow:
+                          "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                      }}
                     >
-                      Run Templates
+                      {/* gradient element left to right */}
+                      <div
+                        className="absolute left-0 top-0 bottom-0 right-0 pointer-events-none rounded-full"
+                        style={{
+                          background:
+                            "linear-gradient(to right, #66AFB7 0%, transparent 60%)",
+                          zIndex: 0,
+                        }}
+                      ></div>
+                      <span
+                        className="relative z-10"
+                        style={{
+                          fontFamily: "Poppins",
+                          fontWeight: 400,
+                          fontStyle: "Regular",
+                          fontSize: "10px",
+                          color: "#FFFFFF",
+                        }}
+                      >
+                        Run Templates
+                      </span>
                     </Button>
                   </div>
                 </CardContent>

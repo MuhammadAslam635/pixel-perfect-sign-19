@@ -327,8 +327,8 @@ const OrgChart: React.FC<OrgChartProps> = ({
 
       {focusedRoleId ? (
         /* Focused layout - centered and contained */
-        <div className="fixed inset-0 z-30 flex items-center justify-center p-6">
-          <div className="max-h-full overflow-y-auto w-full max-w-7xl p-4">
+        <div className="fixed inset-x-0 top-20 lg:top-24 xl:top-28 bottom-0 z-30 flex items-center justify-center p-6">
+          <div className="max-h-full overflow-y-auto w-full max-w-7xl p-4 scrollbar-hide">
             {roles
               .filter((role) => role._id === focusedRoleId)
               .map((role) => (
