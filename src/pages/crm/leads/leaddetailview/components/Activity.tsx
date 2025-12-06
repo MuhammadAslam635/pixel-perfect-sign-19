@@ -29,6 +29,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Loader2,
   MoveRight,
+  ChevronLeft,
   ChevronRight,
   Check,
   Info,
@@ -171,6 +172,17 @@ const Activity: FC<ActivityProps> = ({
     useState<FollowupPlan | null>(null);
   const [meetingPendingDelete, setMeetingPendingDelete] =
     useState<LeadMeetingRecord | null>(null);
+  const [currentWeekStart, setCurrentWeekStart] = useState<Date>(() => {
+    const today = new Date();
+    const currentDay = today.getDay();
+    const monday = new Date(today);
+    const daysFromMonday = currentDay === 0 ? 6 : currentDay - 1;
+    monday.setDate(today.getDate() - daysFromMonday);
+    monday.setHours(0, 0, 0, 0);
+    return monday;
+  });
+  const [selectedWeekDate, setSelectedWeekDate] = useState<Date>(new Date());
+  const [weekDates, setWeekDates] = useState<Date[]>([]);
   const { toast } = useToast();
   const leadId = lead?._id;
   const isCalendarTabActive = activeTab === "calendar";
@@ -447,6 +459,39 @@ const Activity: FC<ActivityProps> = ({
     }
   }, [selectedCallLogView, recordingAudioUrl]);
 
+  // Initialize week dates based on currentWeekStart
+  useEffect(() => {
+    const dates: Date[] = [];
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(currentWeekStart);
+      date.setDate(currentWeekStart.getDate() + i);
+      dates.push(date);
+    }
+    setWeekDates(dates);
+  }, [currentWeekStart]);
+
+  const handlePrevWeek = () => {
+    const prevWeek = new Date(currentWeekStart);
+    prevWeek.setDate(prevWeek.getDate() - 7);
+    setCurrentWeekStart(prevWeek);
+    
+    // Update selected date to same day previous week
+    const newSelected = new Date(selectedWeekDate);
+    newSelected.setDate(newSelected.getDate() - 7);
+    setSelectedWeekDate(newSelected);
+  };
+
+  const handleNextWeek = () => {
+    const nextWeek = new Date(currentWeekStart);
+    nextWeek.setDate(nextWeek.getDate() + 7);
+    setCurrentWeekStart(nextWeek);
+    
+    // Update selected date to same day next week
+    const newSelected = new Date(selectedWeekDate);
+    newSelected.setDate(newSelected.getDate() + 7);
+    setSelectedWeekDate(newSelected);
+  };
+
   const monthNames = [
     "Jan",
     "Feb",
@@ -687,12 +732,21 @@ const Activity: FC<ActivityProps> = ({
     if (!leadMeetings.length) {
       return [];
     }
-    return [...leadMeetings].sort(
+    // Filter meetings for the selected week date
+    const filtered = leadMeetings.filter((meeting) => {
+      const meetingDate = new Date(meeting.startDateTime);
+      return (
+        meetingDate.getDate() === selectedWeekDate.getDate() &&
+        meetingDate.getMonth() === selectedWeekDate.getMonth() &&
+        meetingDate.getFullYear() === selectedWeekDate.getFullYear()
+      );
+    });
+    return filtered.sort(
       (a, b) =>
         new Date(a.startDateTime).getTime() -
         new Date(b.startDateTime).getTime()
     );
-  }, [leadMeetings]);
+  }, [leadMeetings, selectedWeekDate]);
 
   const nextAvailableSlots = useMemo<HydratedSlot[]>(() => {
     if (!availableSlots.length) {
@@ -1443,65 +1497,80 @@ const Activity: FC<ActivityProps> = ({
                           border: "1px solid rgba(255, 255, 255, 0.1)",
                         }}
                       >
-                        {/* Month Navigation */}
+                        {/* Week Navigation Header */}
                         <div className="flex items-center justify-between mb-3">
                           <button
-                            onClick={handlePrevMonth}
-                            className="text-white/70 hover:text-white transition-colors p-1"
-                            aria-label="Previous month"
+                            onClick={handlePrevWeek}
+                            className="p-1 rounded-full hover:bg-white/10 text-white/70 hover:text-white transition-colors"
+                            aria-label="Previous week"
                           >
-                            <svg
-                              width="20"
-                              height="20"
-                              viewBox="0 0 20 20"
-                              fill="none"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <path
-                                d="M12.5 15L7.5 10L12.5 5"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
+                            <ChevronLeft className="w-4 h-4" />
                           </button>
-                          <h3 className="text-white font-semibold text-xs sm:text-sm">
-                            {monthNames[currentDate.getMonth()]}{" "}
-                            {currentDate.getFullYear()}
-                          </h3>
+                          
+                          <div className="text-xs font-medium text-white">
+                            {monthNames[currentWeekStart.getMonth()]} {currentWeekStart.getFullYear()}
+                          </div>
+
                           <button
-                            onClick={handleNextMonth}
-                            className="text-white/70 hover:text-white transition-colors p-1"
-                            aria-label="Next month"
+                            onClick={handleNextWeek}
+                            className="p-1 rounded-full hover:bg-white/10 text-white/70 hover:text-white transition-colors"
+                            aria-label="Next week"
                           >
-                            <svg
-                              width="20"
-                              height="20"
-                              viewBox="0 0 20 20"
-                              fill="none"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <path
-                                d="M7.5 15L12.5 10L7.5 5"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
+                            <ChevronRight className="w-4 h-4" />
                           </button>
+                        </div>
+
+                        {/* Week dates selector */}
+                        <div className="flex items-center justify-center gap-1.5 mb-4">
+                          {weekDates.map((date, index) => {
+                            const isSelected = date.toDateString() === selectedWeekDate.toDateString();
+                            const isToday = date.toDateString() === new Date().toDateString();
+                            // Map day index (0=Sunday, 1=Monday, etc.) to our week array (0=Monday, 6=Sunday)
+                            const dayIndex = date.getDay();
+                            const weekDayIndex = dayIndex === 0 ? 6 : dayIndex - 1;
+                            const dayNames = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
+                            const dayName = dayNames[weekDayIndex];
+                            const dayNumber = date.getDate();
+
+                            return (
+                              <button
+                                key={index}
+                                onClick={() => setSelectedWeekDate(date)}
+                                className={`flex flex-col items-center justify-center w-9 h-9 rounded-lg transition-all duration-200 relative overflow-hidden ${
+                                  isSelected
+                                    ? "border-2 border-primary"
+                                    : "border border-white/10 hover:border-white/20"
+                                }`}
+                                style={{
+                                  background: isSelected
+                                    ? `linear-gradient(180deg, rgba(104, 177, 184, 0.25) 0%, rgba(104, 177, 184, 0.1) 100%)`
+                                    : `linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%)`,
+                                }}
+                              >
+                                <span className={`text-[8px] font-medium ${isSelected ? "text-primary" : "text-white/50"}`}>
+                                  {dayName}
+                                </span>
+                                <span
+                                  className={`text-xs font-semibold ${
+                                    isSelected ? "text-white" : isToday ? "text-primary" : "text-white/80"
+                                  }`}
+                                >
+                                  {dayNumber}
+                                </span>
+                              </button>
+                            );
+                          })}
                         </div>
 
                         <div className="flex flex-wrap items-center justify-between gap-2 mb-2 text-xs text-white/70">
                           <span>
-                            {leadMeetings.length > 0
-                              ? `${leadMeetings.length} meeting${
-                                  leadMeetings.length === 1 ? "" : "s"
-                                } scheduled this month`
-                              : "No meetings scheduled this month"}
+                            {sortedMeetings.length > 0
+                              ? `${sortedMeetings.length} meeting${
+                                  sortedMeetings.length === 1 ? "" : "s"
+                                } on ${monthNames[selectedWeekDate.getMonth()]} ${selectedWeekDate.getDate()}`
+                              : `No meetings on ${monthNames[selectedWeekDate.getMonth()]} ${selectedWeekDate.getDate()}`}
                           </span>
-                          <div className="flex items-center justify-center gap-2 w-full">
+                          <div className="flex items-center justify-center gap-2">
                             <ActiveNavButton
                               icon={
                                 isCalendarDataBusy ||
@@ -1530,127 +1599,6 @@ const Activity: FC<ActivityProps> = ({
                           </div>
                         </div>
 
-                        {/* Days of Week */}
-                        <div className="grid grid-cols-7 gap-1 mb-1">
-                          {[
-                            "MON",
-                            "TUE",
-                            "WED",
-                            "THU",
-                            "FRI",
-                            "SAT",
-                            "SUN",
-                          ].map((day) => (
-                            <div
-                              key={day}
-                              className="text-center text-white/50 text-xs font-medium py-1"
-                            >
-                              {day}
-                            </div>
-                          ))}
-                        </div>
-
-                        {/* Calendar Grid */}
-                        <div className="grid grid-cols-7 gap-1">
-                          {getCalendarDays().map((day, index) => {
-                            if (day === null) {
-                              return (
-                                <div key={index} className="aspect-square" />
-                              );
-                            }
-
-                            const dayMeetings = meetingDayMap.get(day) || [];
-                            const dayAvailability =
-                              availabilityDayMap.get(day) || [];
-                            const hasUpcomingMeeting = dayMeetings.some(
-                              (meeting) =>
-                                new Date(meeting.startDateTime).getTime() >=
-                                nowTimestamp
-                            );
-                            const hasCompletedMeeting = dayMeetings.some(
-                              (meeting) =>
-                                new Date(meeting.endDateTime).getTime() <
-                                nowTimestamp
-                            );
-                            const hasAvailability = dayAvailability.length > 0;
-                            const isToday =
-                              day === todayRef.getDate() &&
-                              currentDate.getMonth() === todayRef.getMonth() &&
-                              currentDate.getFullYear() ===
-                                todayRef.getFullYear();
-                            const highlightClass = hasUpcomingMeeting
-                              ? "bg-indigo-500/30 border border-indigo-400/70"
-                              : hasCompletedMeeting
-                              ? "bg-teal-500/25 border border-teal-400/60"
-                              : hasAvailability
-                              ? "bg-blue-500/20 border border-blue-400/60"
-                              : "";
-                            const textClass =
-                              hasUpcomingMeeting ||
-                              hasCompletedMeeting ||
-                              hasAvailability
-                                ? "text-white font-medium"
-                                : "text-white/70";
-                            const labelParts = [];
-                            if (dayMeetings.length) {
-                              labelParts.push(
-                                `${dayMeetings.length} meeting${
-                                  dayMeetings.length === 1 ? "" : "s"
-                                }`
-                              );
-                            }
-                            if (dayAvailability.length) {
-                              labelParts.push(
-                                `${dayAvailability.length} slot${
-                                  dayAvailability.length === 1 ? "" : "s"
-                                } available`
-                              );
-                            }
-                            const ariaLabel =
-                              labelParts.length > 0
-                                ? `Day ${day}: ${labelParts.join(", ")}`
-                                : `Day ${day}`;
-
-                            return (
-                              <div
-                                key={index}
-                                className="aspect-square flex items-center justify-center relative"
-                                aria-label={ariaLabel}
-                                title={ariaLabel}
-                              >
-                                {(hasUpcomingMeeting ||
-                                  hasCompletedMeeting ||
-                                  hasAvailability) && (
-                                  <div
-                                    className={`absolute inset-0 rounded-full ${highlightClass}`}
-                                  />
-                                )}
-                                {isToday && (
-                                  <div className="absolute inset-0 rounded-full border border-white/40 pointer-events-none" />
-                                )}
-                                <span className={`relative z-10 ${textClass}`}>
-                                  {day}
-                                </span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-
-                      {/* Calendar Legend */}
-                      <div className="flex flex-wrap items-center gap-6 text-xs text-white/70">
-                        <div className="flex items-center gap-2">
-                          <div className="w-4 h-4 rounded-full border border-indigo-400/70 bg-indigo-500/30" />
-                          <span>Upcoming meeting</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="w-4 h-4 rounded-full border border-teal-400/60 bg-teal-500/25" />
-                          <span>Completed meeting</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="w-4 h-4 rounded-full border border-blue-400/60 bg-blue-500/20" />
-                          <span>Available slot</span>
-                        </div>
                       </div>
 
                       {/* Data Sections */}
