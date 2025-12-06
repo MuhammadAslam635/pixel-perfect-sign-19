@@ -223,9 +223,9 @@ const RoleList = () => {
                 />
                 <Users className="h-5 w-5 relative z-10" />
                 <span className="hidden sm:block relative z-10">
-                  Users
+                  Team
                 </span>
-                <span className="sm:hidden relative z-10">Users</span>
+                <span className="sm:hidden relative z-10">Team</span>
               </Button>
               <Button
                 type="button"
