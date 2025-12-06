@@ -48,8 +48,8 @@ export const StatsCards = ({ stats }: StatsCardsProps) => {
               </div>
 
               {/* Second row: Value (centered) */}
-              <div className="flex items-center justify-center">
-                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-white leading-none">
+              <div className="flex items-center justify-end">
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-white leading-none">
                   {stat.value}
                 </p>
               </div>
