@@ -36,7 +36,7 @@ import {
   EmailDetailPage,
   ThreadDetailPage,
   StatsPage,
-} from "@/pages/emails";
+} from "@/pages/crm/emails";
 import LeadChat from "@/pages/crm/leads/leaddetailview/components/LeadChat";
 import MembersPermissions from "@/pages/admin/MembersPermissions";
 import LeadsPage from "@/pages/crm/leads";
