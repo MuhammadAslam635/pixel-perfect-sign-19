@@ -9,6 +9,7 @@ import { SecurityTab } from "@/components/settings/SecurityTab";
 import { IntegrationsTab } from "@/components/settings/IntegrationsTab";
 import { NotificationsTab } from "@/components/settings/NotificationsTab";
 import { AdminGlobalIntegrationsTab } from "@/components/admin/integrations/AdminGlobalIntegrationsTab";
+import { AdminCompanyMailgunTab } from "@/components/admin/integrations/AdminCompanyMailgunTab";
 import { RootState } from "@/store/store";
 import {
   Lock,
@@ -53,6 +54,12 @@ const AdminSettings = () => {
         value: "integrations",
         label: "Integrations",
         icon: Plug,
+        hidden: !canAccessIntegrations,
+      },
+      {
+        value: "company-mailgun",
+        label: "Company Mailgun",
+        icon: Database,
         hidden: !canAccessIntegrations,
       },
     ];
@@ -278,6 +285,21 @@ const AdminSettings = () => {
                       <AdminGlobalIntegrationsTab />
                     </motion.div>
                   </TabsContent>
+
+                  {canAccessIntegrations && (
+                    <TabsContent
+                      value="company-mailgun"
+                      className="mt-0 space-y-6"
+                    >
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.2, ease: "easeOut" }}
+                      >
+                        <AdminCompanyMailgunTab />
+                      </motion.div>
+                    </TabsContent>
+                  )}
                 </motion.div>
               </AnimatePresence>
             </div>

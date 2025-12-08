@@ -1973,300 +1973,305 @@ export const IntegrationsTab = () => {
           )}
         </div>
 
-        <div className="space-y-4 sm:space-y-6 rounded-2xl sm:rounded-3xl border border-white/10 bg-white/[0.02] p-4 sm:p-5">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-3 sm:gap-4">
-              <div className="flex-shrink-0 w-[30px] h-[30px] flex items-center justify-center overflow-hidden">
-                <img
-                  src={mailgunLogo}
-                  alt="Mailgun logo"
-                  className="w-[30px] h-[30px] object-cover"
-                />
+        {/* Mailgun Integration - Hidden: Now managed by Admin in Members & Permissions */}
+        {false && (
+          <div className="space-y-4 sm:space-y-6 rounded-2xl sm:rounded-3xl border border-white/10 bg-white/[0.02] p-4 sm:p-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="flex-shrink-0 w-[30px] h-[30px] flex items-center justify-center overflow-hidden">
+                  <img
+                    src={mailgunLogo}
+                    alt="Mailgun logo"
+                    className="w-[30px] h-[30px] object-cover"
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-white text-sm sm:text-base">
+                    Mailgun
+                  </p>
+                  <p className="text-xs sm:text-sm text-white/60 break-words">
+                    {isLoadingMailgun
+                      ? "Checking configuration..."
+                      : mailgunConfigured
+                      ? "Configured"
+                      : "Configure Mailgun API settings for email functionality."}
+                  </p>
+                </div>
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="font-medium text-white text-sm sm:text-base">
-                  Mailgun
-                </p>
-                <p className="text-xs sm:text-sm text-white/60 break-words">
-                  {isLoadingMailgun
-                    ? "Checking configuration..."
-                    : mailgunConfigured
-                    ? "Configured"
-                    : "Configure Mailgun API settings for email functionality."}
-                </p>
-              </div>
-            </div>
 
-            <div className="flex items-center gap-3 flex-shrink-0">
-              {mailgunConfigured && (
-                <span className="flex items-center gap-1 text-xs sm:text-sm text-emerald-400">
-                  <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                  <span className="hidden sm:inline">Configured</span>
-                </span>
-              )}
-              <Button
-                type="button"
-                size="sm"
-                onClick={handleToggleMailgunForm}
-                className="w-full sm:w-auto bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3] text-xs sm:text-sm"
-                style={{
-                  boxShadow:
-                    "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
-                }}
-                disabled={!canManageMailgun}
-              >
-                {!canManageMailgun
-                  ? "Restricted"
-                  : showMailgunForm
-                  ? "Close"
-                  : mailgunConfigured
-                  ? "Edit Configuration"
-                  : "Configure"}
-              </Button>
-            </div>
-          </div>
-
-          {!canManageMailgun && (
-            <p className="text-xs text-amber-300 break-words">
-              Only company owners can configure Mailgun settings.
-            </p>
-          )}
-
-          {/* Environment Credentials Status */}
-          {mailgunEnvCredentials?.configured && (
-            <div className="rounded-lg border border-white/10 p-3 bg-white/[0.03] mb-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs sm:text-sm text-white/80 font-medium">
-                  Environment Credentials
-                </span>
-                {mailgunEnvValidation?.valid ? (
+              <div className="flex items-center gap-3 flex-shrink-0">
+                {mailgunConfigured && (
                   <span className="flex items-center gap-1 text-xs sm:text-sm text-emerald-400">
                     <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                    Valid
+                    <span className="hidden sm:inline">Configured</span>
                   </span>
-                ) : mailgunEnvValidation ? (
-                  <span className="flex items-center gap-1 text-xs sm:text-sm text-amber-400">
-                    <span className="h-2 w-2 rounded-full bg-amber-400" />
-                    Invalid
-                  </span>
-                ) : null}
-              </div>
-              {mailgunEnvValidation?.message && (
-                <p className="text-xs text-white/60 mb-2">
-                  {mailgunEnvValidation.message}
-                </p>
-              )}
-              <Button
-                onClick={handleValidateMailgunEnvCredentials}
-                disabled={isValidatingMailgunEnv}
-                variant="outline"
-                size="sm"
-                className="w-full sm:w-auto border-cyan-400/50 text-cyan-300 hover:bg-cyan-500/10 text-xs"
-              >
-                {isValidatingMailgunEnv ? (
-                  <>
-                    <RefreshCw className="h-3 w-3 animate-spin mr-1" />
-                    Validating...
-                  </>
-                ) : (
-                  "Validate Env Credentials"
                 )}
-              </Button>
-            </div>
-          )}
-
-          {showMailgunForm && (
-            <div className="space-y-4 pt-4 border-t border-white/10">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2 sm:col-span-1">
-                  <Label className="text-white/80 text-sm">
-                    MAILGUN_API_KEY <span className="text-red-400">*</span>
-                  </Label>
-                  <Input
-                    type="password"
-                    value={mailgunConfig.apiKey}
-                    onChange={(event) =>
-                      handleMailgunInputChange("apiKey", event.target.value)
-                    }
-                    placeholder="Enter your Mailgun API key"
-                    className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 text-sm sm:text-base"
-                  />
-                </div>
-                <div className="space-y-2 sm:col-span-1">
-                  <Label className="text-white/80 text-sm">
-                    MAILGUN_DOMAIN <span className="text-red-400">*</span>
-                  </Label>
-                  <Input
-                    value={mailgunConfig.domain}
-                    onChange={(event) =>
-                      handleMailgunInputChange("domain", event.target.value)
-                    }
-                    placeholder="e.g., mg.yourdomain.com"
-                    className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 text-sm sm:text-base"
-                  />
-                </div>
-                <div className="space-y-2 sm:col-span-1">
-                  <Label className="text-white/80 text-sm">
-                    MAILGUN_API_URL <span className="text-red-400">*</span>
-                  </Label>
-                  <Input
-                    value={mailgunConfig.apiUrl}
-                    onChange={(event) =>
-                      handleMailgunInputChange("apiUrl", event.target.value)
-                    }
-                    placeholder="e.g., https://api.mailgun.net"
-                    className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 text-sm sm:text-base"
-                  />
-                </div>
-                <div className="space-y-2 sm:col-span-1">
-                  <Label className="text-white/80 text-sm">
-                    MAILGUN_WEBHOOK_SIGNING_KEY{" "}
-                    <span className="text-red-400">*</span>
-                  </Label>
-                  <Input
-                    type="password"
-                    value={mailgunConfig.webhookSigningKey}
-                    onChange={(event) =>
-                      handleMailgunInputChange(
-                        "webhookSigningKey",
-                        event.target.value
-                      )
-                    }
-                    placeholder="Enter webhook signing key"
-                    className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 text-sm sm:text-base"
-                  />
-                </div>
-              </div>
-              {existingEmail && !mailgunValidated && (
-                <div className="space-y-2">
-                  <Label className="text-white/80 text-sm">
-                    Current Mailgun Email
-                  </Label>
-                  <div className="rounded-lg bg-blue-500/10 border border-blue-500/30 p-3">
-                    <p className="text-blue-400 text-sm font-medium">
-                      {existingEmail}
-                    </p>
-                    <p className="text-xs text-blue-300/70 mt-1">
-                      Enter a new prefix below to generate a new email address
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {mailgunValidated && (
-                <div className="space-y-3">
-                  <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/30 p-3">
-                    <p className="text-emerald-400 text-sm font-medium flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                      Configuration validated successfully
-                    </p>
-                  </div>
-
-                  {existingEmail && (
-                    <div className="space-y-2">
-                      <Label className="text-white/80 text-sm">
-                        Current Mailgun Email
-                      </Label>
-                      <div className="rounded-lg bg-blue-500/10 border border-blue-500/30 p-3">
-                        <p className="text-blue-400 text-sm font-medium">
-                          {existingEmail}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="space-y-2">
-                    <Label className="text-white/80 text-sm">
-                      Email Prefix{" "}
-                      <span className="text-white/50 text-xs">(optional)</span>
-                    </Label>
-                    <Input
-                      value={emailPrefix}
-                      onChange={(event) =>
-                        handleEmailPrefixChange(event.target.value)
-                      }
-                      placeholder="e.g., support, sales, info"
-                      className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 text-sm sm:text-base"
-                    />
-                    <p className="text-xs text-white/50">
-                      Enter a prefix (word) to generate a new unique email
-                      address. Leave empty to use your company email as base.
-                    </p>
-                  </div>
-
-                  {isSuggestingEmail ? (
-                    <div className="rounded-lg bg-blue-500/10 border border-blue-500/30 p-3">
-                      <p className="text-blue-400 text-sm flex items-center gap-2">
-                        <RefreshCw className="h-4 w-4 animate-spin" />
-                        Generating unique email address...
-                      </p>
-                    </div>
-                  ) : suggestedEmail ? (
-                    <div className="space-y-2">
-                      <Label className="text-white/80 text-sm">
-                        Mailgun Email Address{" "}
-                        <span className="text-red-400">*</span>
-                      </Label>
-                      <Input
-                        value={suggestedEmail}
-                        onChange={(event) =>
-                          setSuggestedEmail(event.target.value)
-                        }
-                        placeholder="e.g., company@mg.yourdomain.com"
-                        className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 text-sm sm:text-base"
-                      />
-                      <p className="text-xs text-emerald-400">
-                        ✓ Unique email address suggested. You can modify it if
-                        needed.
-                      </p>
-                    </div>
-                  ) : null}
-                </div>
-              )}
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
                 <Button
                   type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setShowMailgunForm(false);
-                    setMailgunValidated(false);
-                    fetchMailgunConfig();
+                  size="sm"
+                  onClick={handleToggleMailgunForm}
+                  className="w-full sm:w-auto bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3] text-xs sm:text-sm"
+                  style={{
+                    boxShadow:
+                      "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
                   }}
-                  className="w-full sm:w-auto border-white/20 text-white/70 hover:bg-white/10 text-sm"
+                  disabled={!canManageMailgun}
                 >
-                  Cancel
+                  {!canManageMailgun
+                    ? "Restricted"
+                    : showMailgunForm
+                    ? "Close"
+                    : mailgunConfigured
+                    ? "Edit Configuration"
+                    : "Configure"}
                 </Button>
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    onClick={handleValidateMailgunConfig}
-                    disabled={isValidatingMailgun || isSavingMailgun}
-                    variant="outline"
-                    className="w-full sm:w-auto border-cyan-400/50 text-cyan-300 hover:bg-cyan-500/10 text-sm"
-                  >
-                    {isValidatingMailgun
-                      ? "Validating..."
-                      : "Check Configuration"}
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={handleSaveMailgunConfig}
-                    disabled={
-                      isSavingMailgun || !mailgunValidated || !suggestedEmail
-                    }
-                    className="w-full sm:w-auto bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3] text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={{
-                      boxShadow:
-                        "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
-                    }}
-                  >
-                    {isSavingMailgun ? "Saving..." : "Save Configuration"}
-                  </Button>
-                </div>
               </div>
             </div>
-          )}
-        </div>
+
+            {!canManageMailgun && (
+              <p className="text-xs text-amber-300 break-words">
+                Only company owners can configure Mailgun settings.
+              </p>
+            )}
+
+            {/* Environment Credentials Status */}
+            {mailgunEnvCredentials?.configured && (
+              <div className="rounded-lg border border-white/10 p-3 bg-white/[0.03] mb-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs sm:text-sm text-white/80 font-medium">
+                    Environment Credentials
+                  </span>
+                  {mailgunEnvValidation?.valid ? (
+                    <span className="flex items-center gap-1 text-xs sm:text-sm text-emerald-400">
+                      <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                      Valid
+                    </span>
+                  ) : mailgunEnvValidation ? (
+                    <span className="flex items-center gap-1 text-xs sm:text-sm text-amber-400">
+                      <span className="h-2 w-2 rounded-full bg-amber-400" />
+                      Invalid
+                    </span>
+                  ) : null}
+                </div>
+                {mailgunEnvValidation?.message && (
+                  <p className="text-xs text-white/60 mb-2">
+                    {mailgunEnvValidation.message}
+                  </p>
+                )}
+                <Button
+                  onClick={handleValidateMailgunEnvCredentials}
+                  disabled={isValidatingMailgunEnv}
+                  variant="outline"
+                  size="sm"
+                  className="w-full sm:w-auto border-cyan-400/50 text-cyan-300 hover:bg-cyan-500/10 text-xs"
+                >
+                  {isValidatingMailgunEnv ? (
+                    <>
+                      <RefreshCw className="h-3 w-3 animate-spin mr-1" />
+                      Validating...
+                    </>
+                  ) : (
+                    "Validate Env Credentials"
+                  )}
+                </Button>
+              </div>
+            )}
+
+            {showMailgunForm && (
+              <div className="space-y-4 pt-4 border-t border-white/10">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2 sm:col-span-1">
+                    <Label className="text-white/80 text-sm">
+                      MAILGUN_API_KEY <span className="text-red-400">*</span>
+                    </Label>
+                    <Input
+                      type="password"
+                      value={mailgunConfig.apiKey}
+                      onChange={(event) =>
+                        handleMailgunInputChange("apiKey", event.target.value)
+                      }
+                      placeholder="Enter your Mailgun API key"
+                      className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 text-sm sm:text-base"
+                    />
+                  </div>
+                  <div className="space-y-2 sm:col-span-1">
+                    <Label className="text-white/80 text-sm">
+                      MAILGUN_DOMAIN <span className="text-red-400">*</span>
+                    </Label>
+                    <Input
+                      value={mailgunConfig.domain}
+                      onChange={(event) =>
+                        handleMailgunInputChange("domain", event.target.value)
+                      }
+                      placeholder="e.g., mg.yourdomain.com"
+                      className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 text-sm sm:text-base"
+                    />
+                  </div>
+                  <div className="space-y-2 sm:col-span-1">
+                    <Label className="text-white/80 text-sm">
+                      MAILGUN_API_URL <span className="text-red-400">*</span>
+                    </Label>
+                    <Input
+                      value={mailgunConfig.apiUrl}
+                      onChange={(event) =>
+                        handleMailgunInputChange("apiUrl", event.target.value)
+                      }
+                      placeholder="e.g., https://api.mailgun.net"
+                      className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 text-sm sm:text-base"
+                    />
+                  </div>
+                  <div className="space-y-2 sm:col-span-1">
+                    <Label className="text-white/80 text-sm">
+                      MAILGUN_WEBHOOK_SIGNING_KEY{" "}
+                      <span className="text-red-400">*</span>
+                    </Label>
+                    <Input
+                      type="password"
+                      value={mailgunConfig.webhookSigningKey}
+                      onChange={(event) =>
+                        handleMailgunInputChange(
+                          "webhookSigningKey",
+                          event.target.value
+                        )
+                      }
+                      placeholder="Enter webhook signing key"
+                      className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 text-sm sm:text-base"
+                    />
+                  </div>
+                </div>
+                {existingEmail && !mailgunValidated && (
+                  <div className="space-y-2">
+                    <Label className="text-white/80 text-sm">
+                      Current Mailgun Email
+                    </Label>
+                    <div className="rounded-lg bg-blue-500/10 border border-blue-500/30 p-3">
+                      <p className="text-blue-400 text-sm font-medium">
+                        {existingEmail}
+                      </p>
+                      <p className="text-xs text-blue-300/70 mt-1">
+                        Enter a new prefix below to generate a new email address
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {mailgunValidated && (
+                  <div className="space-y-3">
+                    <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/30 p-3">
+                      <p className="text-emerald-400 text-sm font-medium flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                        Configuration validated successfully
+                      </p>
+                    </div>
+
+                    {existingEmail && (
+                      <div className="space-y-2">
+                        <Label className="text-white/80 text-sm">
+                          Current Mailgun Email
+                        </Label>
+                        <div className="rounded-lg bg-blue-500/10 border border-blue-500/30 p-3">
+                          <p className="text-blue-400 text-sm font-medium">
+                            {existingEmail}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <Label className="text-white/80 text-sm">
+                        Email Prefix{" "}
+                        <span className="text-white/50 text-xs">
+                          (optional)
+                        </span>
+                      </Label>
+                      <Input
+                        value={emailPrefix}
+                        onChange={(event) =>
+                          handleEmailPrefixChange(event.target.value)
+                        }
+                        placeholder="e.g., support, sales, info"
+                        className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 text-sm sm:text-base"
+                      />
+                      <p className="text-xs text-white/50">
+                        Enter a prefix (word) to generate a new unique email
+                        address. Leave empty to use your company email as base.
+                      </p>
+                    </div>
+
+                    {isSuggestingEmail ? (
+                      <div className="rounded-lg bg-blue-500/10 border border-blue-500/30 p-3">
+                        <p className="text-blue-400 text-sm flex items-center gap-2">
+                          <RefreshCw className="h-4 w-4 animate-spin" />
+                          Generating unique email address...
+                        </p>
+                      </div>
+                    ) : suggestedEmail ? (
+                      <div className="space-y-2">
+                        <Label className="text-white/80 text-sm">
+                          Mailgun Email Address{" "}
+                          <span className="text-red-400">*</span>
+                        </Label>
+                        <Input
+                          value={suggestedEmail}
+                          onChange={(event) =>
+                            setSuggestedEmail(event.target.value)
+                          }
+                          placeholder="e.g., company@mg.yourdomain.com"
+                          className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 text-sm sm:text-base"
+                        />
+                        <p className="text-xs text-emerald-400">
+                          ✓ Unique email address suggested. You can modify it if
+                          needed.
+                        </p>
+                      </div>
+                    ) : null}
+                  </div>
+                )}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setShowMailgunForm(false);
+                      setMailgunValidated(false);
+                      fetchMailgunConfig();
+                    }}
+                    className="w-full sm:w-auto border-white/20 text-white/70 hover:bg-white/10 text-sm"
+                  >
+                    Cancel
+                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      onClick={handleValidateMailgunConfig}
+                      disabled={isValidatingMailgun || isSavingMailgun}
+                      variant="outline"
+                      className="w-full sm:w-auto border-cyan-400/50 text-cyan-300 hover:bg-cyan-500/10 text-sm"
+                    >
+                      {isValidatingMailgun
+                        ? "Validating..."
+                        : "Check Configuration"}
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={handleSaveMailgunConfig}
+                      disabled={
+                        isSavingMailgun || !mailgunValidated || !suggestedEmail
+                      }
+                      className="w-full sm:w-auto bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3] text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{
+                        boxShadow:
+                          "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                      }}
+                    >
+                      {isSavingMailgun ? "Saving..." : "Save Configuration"}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </CardContent>
 
       <ConfirmDialog

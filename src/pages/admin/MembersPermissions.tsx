@@ -50,15 +50,25 @@ const MembersPermissions = () => {
   const userRoleName = getUserRoleName();
 
   const [companies, setCompanies] = useState<Company[]>([]);
-  const [expandedCompanies, setExpandedCompanies] = useState<Set<string>>(new Set());
-  const [companyAdmins, setCompanyAdmins] = useState<Record<string, CompanyAdmin[]>>({});
+  const [expandedCompanies, setExpandedCompanies] = useState<Set<string>>(
+    new Set()
+  );
+  const [companyAdmins, setCompanyAdmins] = useState<
+    Record<string, CompanyAdmin[]>
+  >({});
   const [loadingCompanies, setLoadingCompanies] = useState(false);
-  const [loadingAdmins, setLoadingAdmins] = useState<Record<string, boolean>>({});
-  const [companyStatusUpdating, setCompanyStatusUpdating] = useState<Record<string, boolean>>({});
+  const [loadingAdmins, setLoadingAdmins] = useState<Record<string, boolean>>(
+    {}
+  );
+  const [companyStatusUpdating, setCompanyStatusUpdating] = useState<
+    Record<string, boolean>
+  >({});
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "active" | "inactive"
+  >("all");
   const limit = 10;
 
   // Check if user is Admin
@@ -92,7 +102,9 @@ const MembersPermissions = () => {
       } catch (error: any) {
         console.error("Error fetching companies:", error);
         setCompanies([]);
-        toast.error(error?.response?.data?.message || "Failed to fetch companies");
+        toast.error(
+          error?.response?.data?.message || "Failed to fetch companies"
+        );
       } finally {
         setLoadingCompanies(false);
       }
@@ -122,7 +134,9 @@ const MembersPermissions = () => {
         }
       } catch (error: any) {
         console.error("Error fetching company admins:", error);
-        toast.error(error?.response?.data?.message || "Failed to fetch company admins");
+        toast.error(
+          error?.response?.data?.message || "Failed to fetch company admins"
+        );
         setCompanyAdmins((prev) => ({ ...prev, [companyId]: [] }));
       } finally {
         setLoadingAdmins((prev) => ({ ...prev, [companyId]: false }));
@@ -159,7 +173,7 @@ const MembersPermissions = () => {
     if (userRoleName !== "Admin") return;
 
     const newStatus = currentStatus === "active" ? "inactive" : "active";
-    
+
     try {
       // Get the user data first to preserve other fields
       const user = companyAdmins[companyId]?.find((u) => u._id === userId);
@@ -169,22 +183,26 @@ const MembersPermissions = () => {
       }
 
       await adminService.updateCompanyUserStatus(companyId, userId, {
-        name: user.name || `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+        name:
+          user.name || `${user.firstName || ""} ${user.lastName || ""}`.trim(),
         email: user.email,
         role: user.role,
         status: newStatus,
       });
 
       toast.success(
-        `Company admin status updated to ${newStatus === "active" ? "Active" : "Inactive"}`
+        `Company admin status updated to ${
+          newStatus === "active" ? "Active" : "Inactive"
+        }`
       );
 
       // Update local state
       setCompanyAdmins((prev) => ({
         ...prev,
-        [companyId]: prev[companyId]?.map((u) =>
-          u._id === userId ? { ...u, status: newStatus } : u
-        ) || [],
+        [companyId]:
+          prev[companyId]?.map((u) =>
+            u._id === userId ? { ...u, status: newStatus } : u
+          ) || [],
       }));
     } catch (error: any) {
       console.error("Error updating status:", error);
@@ -221,7 +239,9 @@ const MembersPermissions = () => {
 
       setCompanies((prev) =>
         prev.map((company) =>
-          company._id === companyId ? { ...company, status: newStatus } : company
+          company._id === companyId
+            ? { ...company, status: newStatus }
+            : company
         )
       );
 
@@ -232,7 +252,9 @@ const MembersPermissions = () => {
       );
     } catch (error: any) {
       console.error("Error updating company status:", error);
-      toast.error(error?.response?.data?.message || "Failed to update company status");
+      toast.error(
+        error?.response?.data?.message || "Failed to update company status"
+      );
     } finally {
       setCompanyStatusUpdating((prev) => ({ ...prev, [companyId]: false }));
     }
@@ -241,7 +263,7 @@ const MembersPermissions = () => {
   const filteredAdmins = useMemo(() => {
     return Object.entries(companyAdmins).reduce((acc, [companyId, admins]) => {
       let filtered = admins;
-      
+
       if (statusFilter === "active") {
         filtered = admins.filter((a) => a.status === "active");
       } else if (statusFilter === "inactive") {
@@ -296,8 +318,12 @@ const MembersPermissions = () => {
         <main className="relative px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] mt-20 sm:mt-20 lg:mt-24 xl:mt-28 mb-0 flex flex-col gap-6 text-white flex-1 overflow-y-auto">
           <div className="flex flex-col items-center justify-center py-16">
             <XCircle className="w-16 h-16 text-red-400 mb-4" />
-            <p className="text-white/70 text-lg font-medium mb-2">Access Denied</p>
-            <p className="text-white/50 text-sm">Admin access required to view this page.</p>
+            <p className="text-white/70 text-lg font-medium mb-2">
+              Access Denied
+            </p>
+            <p className="text-white/50 text-sm">
+              Admin access required to view this page.
+            </p>
           </div>
         </main>
       </AdminLayout>
@@ -407,7 +433,10 @@ const MembersPermissions = () => {
                   const isLoading = loadingAdmins[company._id];
 
                   return (
-                    <div key={company._id} className="hover:bg-white/5 transition-colors">
+                    <div
+                      key={company._id}
+                      className="hover:bg-white/5 transition-colors"
+                    >
                       {/* Company Header */}
                       <div
                         className="flex items-center justify-between p-4 sm:p-6 cursor-pointer"
@@ -422,9 +451,13 @@ const MembersPermissions = () => {
                           <Building2 className="h-5 w-5 text-cyan-400 flex-shrink-0" />
                           <div className="flex-1 min-w-0">
                             <h3 className="font-medium text-white truncate">
-                              {company.company || company.name || "Unnamed Company"}
+                              {company.company ||
+                                company.name ||
+                                "Unnamed Company"}
                             </h3>
-                            <p className="text-white/60 text-sm truncate">{company.email}</p>
+                            <p className="text-white/60 text-sm truncate">
+                              {company.email}
+                            </p>
                           </div>
                         </div>
                         <div className="flex items-center gap-3 flex-shrink-0">
@@ -435,7 +468,9 @@ const MembersPermissions = () => {
                                 : "bg-red-600/20 text-red-300 border border-red-600/30"
                             } rounded-full px-3 py-1 text-xs`}
                           >
-                            {company.status === "active" ? "Active" : "Inactive"}
+                            {company.status === "active"
+                              ? "Active"
+                              : "Inactive"}
                           </Badge>
                           {company.isVerified && (
                             <Badge className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-full px-3 py-1 text-xs">
@@ -444,7 +479,9 @@ const MembersPermissions = () => {
                           )}
                           <Badge className="bg-white/10 text-white/70 border border-white/20 rounded-full px-3 py-1 text-xs">
                             {companyAdmins[company._id]?.length || 0} Admin
-                            {companyAdmins[company._id]?.length !== 1 ? "s" : ""}
+                            {companyAdmins[company._id]?.length !== 1
+                              ? "s"
+                              : ""}
                           </Badge>
                           {company.status !== "active" && (
                             <Button
@@ -453,10 +490,15 @@ const MembersPermissions = () => {
                               disabled={companyStatusUpdating[company._id]}
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleCompanyStatusUpdate(company._id, "active");
+                                handleCompanyStatusUpdate(
+                                  company._id,
+                                  "active"
+                                );
                               }}
                             >
-                              {companyStatusUpdating[company._id] ? "Activating..." : "Activate"}
+                              {companyStatusUpdating[company._id]
+                                ? "Activating..."
+                                : "Activate"}
                             </Button>
                           )}
                         </div>
@@ -486,7 +528,9 @@ const MembersPermissions = () => {
                                     <div className="flex-1 min-w-0">
                                       <h4 className="font-medium text-white mb-1">
                                         {admin.name ||
-                                          `${admin.firstName || ""} ${admin.lastName || ""}`.trim() ||
+                                          `${admin.firstName || ""} ${
+                                            admin.lastName || ""
+                                          }`.trim() ||
                                           admin.email.split("@")[0]}
                                       </h4>
                                       <p className="text-white/60 text-sm truncate">
@@ -494,7 +538,10 @@ const MembersPermissions = () => {
                                       </p>
                                       {admin.createdAt && (
                                         <p className="text-white/40 text-xs mt-1">
-                                          Created: {new Date(admin.createdAt).toLocaleDateString()}
+                                          Created:{" "}
+                                          {new Date(
+                                            admin.createdAt
+                                          ).toLocaleDateString()}
                                         </p>
                                       )}
                                     </div>
@@ -611,4 +658,3 @@ const MembersPermissions = () => {
 };
 
 export default MembersPermissions;
-

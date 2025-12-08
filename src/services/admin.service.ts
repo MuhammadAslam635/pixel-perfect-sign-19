@@ -60,13 +60,15 @@ export const adminService = {
   /**
    * Get all companies (Admin only)
    */
-  getCompanies: async (params: {
-    page?: number;
-    limit?: number;
-    search?: string;
-    trashed?: boolean;
-    isVerified?: boolean;
-  } = {}): Promise<CompaniesResponse> => {
+  getCompanies: async (
+    params: {
+      page?: number;
+      limit?: number;
+      search?: string;
+      trashed?: boolean;
+      isVerified?: boolean;
+    } = {}
+  ): Promise<CompaniesResponse> => {
     try {
       const queryParams = new URLSearchParams();
       if (params.page) queryParams.append("page", params.page.toString());
@@ -76,7 +78,9 @@ export const adminService = {
       if (params.isVerified !== undefined)
         queryParams.append("isVerified", params.isVerified.toString());
 
-      const response = await API.get(`/admin/companies?${queryParams.toString()}`);
+      const response = await API.get(
+        `/admin/companies?${queryParams.toString()}`
+      );
       return response.data;
     } catch (error: any) {
       throw error;
@@ -86,7 +90,9 @@ export const adminService = {
   /**
    * Get company by ID (Admin only)
    */
-  getCompanyById: async (id: string): Promise<{ success: boolean; data: Company }> => {
+  getCompanyById: async (
+    id: string
+  ): Promise<{ success: boolean; data: Company }> => {
     try {
       const response = await API.get(`/admin/companies/${id}`);
       return response.data;
@@ -135,7 +141,10 @@ export const adminService = {
     data: UpdateUserStatusData
   ): Promise<{ success: boolean; message: string }> => {
     try {
-      const response = await API.post(`/admin/companies/${companyId}/user/${userId}`, data);
+      const response = await API.post(
+        `/admin/companies/${companyId}/user/${userId}`,
+        data
+      );
       return response.data;
     } catch (error: any) {
       throw error;
@@ -156,5 +165,66 @@ export const adminService = {
       throw error;
     }
   },
-};
 
+  /**
+   * Save Mailgun configuration for a company (Admin only)
+   */
+  saveCompanyMailgunConfig: async (
+    companyId: string,
+    config: {
+      apiKey: string;
+      domain: string;
+      apiUrl: string;
+      webhookSigningKey: string;
+      mailgunEmail?: string;
+    }
+  ): Promise<{
+    success: boolean;
+    message: string;
+    data?: {
+      integration: {
+        providerName: string;
+        isConnected: boolean;
+        status: string;
+      };
+      mailgunEmail: string | null;
+      companyId: string;
+      companyName: string;
+    };
+  }> => {
+    try {
+      const response = await API.post(
+        `/admin/companies/${companyId}/mailgun/save`,
+        config
+      );
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  /**
+   * Get Mailgun status for a company (Admin only)
+   */
+  getCompanyMailgunStatus: async (
+    companyId: string
+  ): Promise<{
+    success: boolean;
+    data?: {
+      hasMailgun: boolean;
+      isConnected: boolean;
+      status: string;
+      mailgunEmail: string | null;
+      mailgunConfig: any;
+    };
+  }> => {
+    try {
+      const response = await API.get(
+        `/admin/companies/${companyId}/mailgun/status`
+      );
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+};
