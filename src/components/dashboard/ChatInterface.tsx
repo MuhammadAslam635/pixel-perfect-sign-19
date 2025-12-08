@@ -223,7 +223,8 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
     useMutation<
       Awaited<ReturnType<typeof sendChatMessage>>,
       AxiosError<{ message?: string }>,
-      SendChatMessagePayload
+      SendChatMessagePayload,
+      { tempMessage: ChatMessage }
     >({
       mutationFn: sendChatMessage,
       onMutate: (variables) => {
@@ -413,7 +414,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
               >
                 <div
                   className={cn(
-                    "rounded-2xl px-3 py-2 text-sm leading-relaxed shadow-lg",
+                    "max-w-[78%] rounded-2xl px-3 py-2 text-sm leading-relaxed shadow-lg sm:max-w-[75%]",
                     isAssistant
                       ? "rounded-bl-md bg-white/5 text-white"
                       : "rounded-br-md bg-[linear-gradient(226.23deg,_#3E65B4_0%,_#68B3B7_100%)] text-white"
@@ -425,10 +426,11 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
                       rehypePlugins={[rehypeRaw, rehypeSanitize]}
                       components={{
                         table: ({ node, ...props }) => (
-                          <div className="my-4 w-full max-w-none scrollbar-hide overflow-x-auto rounded-lg border border-white/20 text-left">
+                          <div className="my-4 max-w-full overflow-x-auto rounded-lg border border-white/20 scrollbar-hide">
                             <table
-                              className="w-full border-collapse text-left"
-                              style={{ tableLayout: 'auto' }}
+                              // let table grow to the width of its content
+                              style={{ tableLayout: "auto", width: "max-content" }}
+                              className="border-collapse text-sm"
                               {...props}
                             />
                           </div>

@@ -21,8 +21,6 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
   const [localMessages, setLocalMessages] = useState<ChatMessage[]>([]);
   const [chatHistory, setChatHistory] = useState<ChatSummary[]>([]);
   const [deletingChatId, setDeletingChatId] = useState<string | null>(null);
-  const [isScrolling, setIsScrolling] = useState(false);
-  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const panelRef = useRef<HTMLElement>(null);
   const queryClient = useQueryClient();
 
@@ -123,65 +121,6 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
 
   const hasActiveChat = currentChatId || localMessages.length > 0;
 
-  // Handle scroll detection for blur effect
-  useEffect(() => {
-    if (!panelRef.current) return;
-
-    const handleScroll = () => {
-      setIsScrolling(true);
-      
-      // Clear existing timeout
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
-      
-      // Set blur to false after scrolling stops
-      scrollTimeoutRef.current = setTimeout(() => {
-        setIsScrolling(false);
-      }, 150);
-    };
-
-    // Find scrollable elements within the panel
-    const findScrollableElements = () => {
-      const scrollableElements: HTMLElement[] = [];
-      
-      if (!panelRef.current) return scrollableElements;
-      
-      // Find all elements with overflow-y-auto class
-      const allScrollable = panelRef.current.querySelectorAll('[class*="overflow-y-auto"]');
-      
-      allScrollable.forEach((element) => {
-        const htmlElement = element as HTMLElement;
-        // Only add if element is actually scrollable (has scrollable content)
-        if (htmlElement.scrollHeight > htmlElement.clientHeight) {
-          scrollableElements.push(htmlElement);
-        }
-      });
-      
-      return scrollableElements;
-    };
-
-    let scrollableElements: HTMLElement[] = [];
-
-    // Attach scroll listeners with a slight delay to ensure elements are rendered
-    const timeoutId = setTimeout(() => {
-      scrollableElements = findScrollableElements();
-      scrollableElements.forEach((element) => {
-        element.addEventListener('scroll', handleScroll, { passive: true });
-      });
-    }, 100);
-
-    return () => {
-      clearTimeout(timeoutId);
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
-      // Clean up event listeners
-      scrollableElements.forEach((element) => {
-        element.removeEventListener('scroll', handleScroll);
-      });
-    };
-  }, [showChatList, currentChatId, localMessages]);
 
   return (
     <section 
@@ -194,8 +133,6 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
           top: "15px",
           left: "28px",
           zIndex: 10,
-          transition: "filter 0.3s ease-in-out",
-          filter: isScrolling ? "blur(8px)" : "blur(0px)",
         }}
       >
         <div
