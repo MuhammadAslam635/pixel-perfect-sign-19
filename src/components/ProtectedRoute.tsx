@@ -4,6 +4,7 @@ import { RootState } from "@/store/store";
 import { isAuthenticated, getUserData } from "@/utils/authHelpers";
 import { PermissionAction } from "@/types/rbac.types";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useOnboardingStatus } from "@/hooks/useOnboardingStatus";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -11,6 +12,7 @@ interface ProtectedRouteProps {
   moduleName?: string; // New RBAC: module name
   requiredActions?: PermissionAction[]; // New RBAC: required actions
   requireAllActions?: boolean; // New RBAC: require all actions or just one
+  skipOnboardingCheck?: boolean; // Skip onboarding redirect for onboarding page itself
 }
 
 const ProtectedRoute = ({
@@ -19,6 +21,7 @@ const ProtectedRoute = ({
   moduleName,
   requiredActions = ["view"],
   requireAllActions = false,
+  skipOnboardingCheck = false,
 }: ProtectedRouteProps) => {
   const { isAuthenticated: isAuthenticatedRedux, user } = useSelector(
     (state: RootState) => state.auth
@@ -28,15 +31,37 @@ const ProtectedRoute = ({
   // Check both Redux state and localStorage
   const isAuth = isAuthenticatedRedux || isAuthenticated();
 
+  const sessionUser = user || getUserData();
+
+  // Check onboarding status for Company/CompanyAdmin users
+  const { requiresOnboarding, loading: onboardingLoading } = useOnboardingStatus(
+    sessionUser?.role,
+    isAuth && !skipOnboardingCheck
+  );
+
   if (!isAuth) {
     return <Navigate to="/" replace />;
   }
 
-  const sessionUser = user || getUserData();
-
   // Check if user needs to change password (unless they're already on the change-password page)
   if (sessionUser?.requiresPasswordChange && window.location.pathname !== '/change-password') {
     return <Navigate to="/change-password" replace />;
+  }
+
+  // Check if user needs to complete onboarding (Company/CompanyAdmin roles only)
+  // Skip if already on onboarding page or if skipOnboardingCheck is true
+  if (!skipOnboardingCheck && window.location.pathname !== '/onboarding') {
+    if (onboardingLoading && (sessionUser?.role === 'Company' || sessionUser?.role === 'CompanyAdmin')) {
+      return (
+        <div className="flex min-h-screen items-center justify-center text-white/60">
+          Checking onboarding status...
+        </div>
+      );
+    }
+
+    if (requiresOnboarding) {
+      return <Navigate to="/onboarding" replace />;
+    }
   }
 
   // New RBAC check - takes precedence
@@ -73,3 +98,4 @@ const ProtectedRoute = ({
 };
 
 export default ProtectedRoute;
+

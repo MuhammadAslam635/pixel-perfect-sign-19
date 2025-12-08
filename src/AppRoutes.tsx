@@ -41,6 +41,7 @@ import LeadChat from "@/pages/crm/leads/leaddetailview/components/LeadChat";
 import MembersPermissions from "@/pages/admin/MembersPermissions";
 import LeadsPage from "@/pages/crm/leads";
 import CalendarPage from "@/pages/crm/calendar";
+import OnboardingPage from "@/pages/onboarding";
 
 const AppRoutes = () => {
   return (
@@ -112,6 +113,14 @@ const AppRoutes = () => {
       />
 
       {/* Protected Routes - Only accessible when logged in */}
+      <Route
+        path="/onboarding"
+        element={
+          <ProtectedRoute skipOnboardingCheck>
+            <OnboardingPage />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/dashboard"
         element={
