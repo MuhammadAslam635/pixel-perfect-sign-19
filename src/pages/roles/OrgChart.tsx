@@ -283,9 +283,9 @@ const TreeNode: React.FC<TreeNodeProps> = ({
             return (
               <div key={module._id} className="flex flex-col items-center">
                 {/* Horizontal connection line for multiple modules */}
-                {index > 0 && (
+                {/* {index > 0 && (
                   <div className="absolute h-px bg-gradient-to-r from-transparent via-white/20 to-transparent w-full -translate-y-4" />
-                )}
+                )} */}
                 <ModuleNode
                   module={module}
                   actions={permission.actions}
