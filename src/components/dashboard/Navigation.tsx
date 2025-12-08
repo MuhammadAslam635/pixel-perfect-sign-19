@@ -49,6 +49,7 @@ const navLinks: NavLink[] = [
       pathname.startsWith("/companies") ||
       pathname.startsWith("/leads") ||
       pathname.startsWith("/calendar") ||
+      pathname.startsWith("/emails/") ||
       pathname.startsWith("/followups"),
   },
   {
