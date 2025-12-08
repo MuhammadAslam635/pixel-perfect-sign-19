@@ -51,11 +51,12 @@ const index = () => {
     // Reset to page 1 when changing view mode
     setCompaniesPage(1);
   }, [viewMode]);
-  const [companiesIndustryFilter, setCompaniesIndustryFilter] =
-    useState<string[]>([]);
+  const [companiesIndustryFilter, setCompaniesIndustryFilter] = useState<
+    string[]
+  >([]);
   const [companiesEmployeeRange, setCompaniesEmployeeRange] =
     useState<string>("all");
-  const [companiesLocationFilter, setCompaniesLocationFilter] =
+  const [companiesCountryFilter, setCompaniesCountryFilter] =
     useState<string>("");
   const [companiesHasPeopleFilter, setCompaniesHasPeopleFilter] =
     useState(false);
@@ -66,7 +67,7 @@ const index = () => {
   const resetCompanyAdvancedFilters = useCallback(() => {
     setCompaniesIndustryFilter([]);
     setCompaniesEmployeeRange("all");
-    setCompaniesLocationFilter("");
+    setCompaniesCountryFilter("");
     setCompaniesHasPeopleFilter(false);
     setCompaniesHasWebsiteFilter(false);
     setCompanyFiltersOpen(false);
@@ -107,8 +108,8 @@ const index = () => {
       params.hasWebsite = true;
     }
 
-    if (companiesLocationFilter.trim()) {
-      params.location = companiesLocationFilter.trim();
+    if (companiesCountryFilter.trim()) {
+      params.country = companiesCountryFilter.trim();
     }
 
     return params;
@@ -118,9 +119,9 @@ const index = () => {
     companiesSearch,
     companiesIndustryFilter,
     companiesEmployeeRange,
+    companiesCountryFilter,
     companiesHasPeopleFilter,
     companiesHasWebsiteFilter,
-    companiesLocationFilter,
   ]);
 
   const {
@@ -158,13 +159,13 @@ const index = () => {
     () =>
       companiesIndustryFilter.length > 0 ||
       companiesEmployeeRange !== "all" ||
-      companiesLocationFilter.trim() !== "" ||
+      companiesCountryFilter.trim() !== "" ||
       companiesHasPeopleFilter ||
       companiesHasWebsiteFilter,
     [
       companiesIndustryFilter,
       companiesEmployeeRange,
-      companiesLocationFilter,
+      companiesCountryFilter,
       companiesHasPeopleFilter,
       companiesHasWebsiteFilter,
     ]
@@ -216,7 +217,7 @@ const index = () => {
     companiesLimit,
     companiesIndustryFilter,
     companiesEmployeeRange,
-    companiesLocationFilter,
+    companiesCountryFilter,
     companiesHasPeopleFilter,
     companiesHasWebsiteFilter,
   ]);
@@ -246,13 +247,12 @@ const index = () => {
         >
           {/* Wrapper with space-between */}
           <div className="flex items-center justify-between mb-4">
-            {/* Page Header with Leads Button */}
+            {/* Page Header with Navigation */}
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, ease: "easeOut", delay: 0.4 }}
             >
-              {/* <h1 className="text-2xl font-bold text-white">Companies</h1> */}
               <CrmNavigation />
             </motion.div>
 
@@ -261,17 +261,19 @@ const index = () => {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, ease: "easeOut", delay: 0.4 }}
-              className="flex flex-col justify-end sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2 md:gap-3"
+              className="flex flex-col sm:flex-row justify-end items-stretch sm:items-center gap-1.5 sm:gap-2 md:gap-3 w-16"
             >
               {/* Controls Container */}
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2 md:gap-3 order-1 lg:order-2">
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2 flex-1">
                   <div className="flex w-full flex-wrap items-center justify-end gap-1.5 sm:gap-2">
+                    {/* Search Input */}
                     <SearchInput
                       placeholder="Search companies..."
                       value={companiesSearch}
                       onChange={setCompaniesSearch}
                     />
+
                     <div className="flex items-center gap-2">
                       <AnimatePresence mode="wait">
                         {!companyFiltersOpen ? (
@@ -305,9 +307,9 @@ const index = () => {
                               employeeRanges={COMPANY_EMPLOYEE_RANGES}
                               employeeRange={companiesEmployeeRange}
                               onEmployeeRangeChange={setCompaniesEmployeeRange}
-                              locationFilter={companiesLocationFilter}
+                              locationFilter={companiesCountryFilter}
                               onLocationFilterChange={
-                                setCompaniesLocationFilter
+                                setCompaniesCountryFilter
                               }
                               hasPeopleFilter={companiesHasPeopleFilter}
                               onHasPeopleFilterChange={
@@ -328,7 +330,7 @@ const index = () => {
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                className="h-8 w-8 p-0 text-gray-400 hover:text-white hover:bg-white/10 rounded-full flex items-center justify-center"
+                                className="h-8 w-8 p-0 bg-accent text-white hover:bg-accent/80 rounded-full flex items-center justify-center"
                                 onClick={() => setCompanyFiltersOpen(false)}
                               >
                                 <svg

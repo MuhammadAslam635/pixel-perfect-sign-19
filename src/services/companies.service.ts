@@ -61,6 +61,7 @@ export interface CompaniesQueryParams {
   hasPeople?: boolean;
   hasWebsite?: boolean;
   location?: string;
+  country?: string;
 }
 
 export const companiesService = {

@@ -12,6 +12,7 @@ import {
   MultiSelect,
   type MultiSelectOption,
 } from "@/components/ui/multi-select";
+import { CountrySelect } from "@/components/ui/country-select";
 
 interface CompanyFiltersInlineProps {
   // Industry filter
@@ -61,13 +62,13 @@ export const CompanyFiltersInline = ({
   }));
 
   return (
-    <div className="flex items-center gap-3 flex-wrap">
+    <div className="flex items-center gap-1.5">
       {/* Industry Filter */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
         <label className="text-[11px] uppercase tracking-[0.08em] text-gray-400 whitespace-nowrap">
           Industry:
         </label>
-        <div className="w-48">
+        <div className="w-36">
           <MultiSelect
             options={industryOptions}
             value={industryFilter}
@@ -76,17 +77,18 @@ export const CompanyFiltersInline = ({
             searchPlaceholder="Search industries..."
             emptyMessage="No industries found."
             className="h-8 text-xs"
+            maxDisplayItems={1}
           />
         </div>
       </div>
 
       {/* Company Size Filter */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
         <label className="text-[11px] uppercase tracking-[0.08em] text-gray-400 whitespace-nowrap">
           Size:
         </label>
         <Select value={employeeRange} onValueChange={onEmployeeRangeChange}>
-          <SelectTrigger className="h-8 w-28 rounded-lg border border-white/15 bg-transparent text-white text-xs">
+          <SelectTrigger className="h-8 w-24 rounded-lg border border-white/15 bg-transparent text-white text-xs">
             <SelectValue placeholder="Any" />
           </SelectTrigger>
           <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a] rounded-xl">
@@ -103,23 +105,22 @@ export const CompanyFiltersInline = ({
         </Select>
       </div>
 
-      {/* Location Filter */}
-      <div className="flex items-center gap-2">
+      {/* Country Filter */}
+      <div className="flex items-center gap-1">
         <label className="text-[11px] uppercase tracking-[0.08em] text-gray-400 whitespace-nowrap">
-          Location:
+          Country:
         </label>
-        <Input
-          type="text"
-          placeholder="City, state..."
+        <CountrySelect
           value={locationFilter}
-          onChange={(e) => onLocationFilterChange(e.target.value)}
-          className="h-8 w-32 rounded-lg border border-white/15 bg-transparent text-white placeholder:text-gray-500 text-xs"
+          onChange={onLocationFilterChange}
+          placeholder="All countries"
+          className="h-8 w-40 text-xs"
         />
       </div>
 
       {/* Checkboxes */}
-      <div className="flex items-center gap-3">
-        <label className="flex items-center gap-1.5 cursor-pointer">
+      <div className="flex items-center gap-1.5 ml-1">
+        <label className="flex items-center gap-1 cursor-pointer">
           <Checkbox
             checked={hasPeopleFilter}
             onCheckedChange={(checked) =>
@@ -130,7 +131,7 @@ export const CompanyFiltersInline = ({
           <span className="text-xs text-gray-300">Contacts</span>
         </label>
 
-        <label className="flex items-center gap-1.5 cursor-pointer">
+        <label className="flex items-center gap-1 cursor-pointer">
           <Checkbox
             checked={hasWebsiteFilter}
             onCheckedChange={(checked) =>
@@ -147,7 +148,7 @@ export const CompanyFiltersInline = ({
         <Button
           size="sm"
           variant="ghost"
-          className="text-gray-300 hover:text-white px-2 py-1 h-8 text-xs"
+          className="bg-accent text-white hover:bg-accent/80 px-2 py-1 h-8 text-xs whitespace-nowrap ml-1"
           onClick={onResetFilters}
         >
           Clear
