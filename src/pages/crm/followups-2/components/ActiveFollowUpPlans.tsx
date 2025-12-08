@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -9,8 +9,23 @@ import {
   MessageSquare,
   MessageCircle,
 } from "lucide-react";
-import { useFollowupPlans } from "@/hooks/useFollowupPlans";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  useFollowupPlans,
+  useFollowupPlanSchedule,
+} from "@/hooks/useFollowupPlans";
 import { FollowupPlan } from "@/services/followupPlans.service";
+import FollowupPlanSchedule from "@/components/dashboard/FollowupPlanSchedule";
 
 // Transform API plan data to component format
 const transformPlanData = (plan: FollowupPlan) => {
@@ -80,10 +95,14 @@ const transformPlanData = (plan: FollowupPlan) => {
     progress: Math.max(1, currentDay),
     totalDays,
     cumulativeCounts,
+    originalPlan: plan, // Keep reference to original plan for modal
   };
 };
 
 const ActiveFollowUpPlans = () => {
+  const [selectedPlanForSchedule, setSelectedPlanForSchedule] =
+    useState<FollowupPlan | null>(null);
+
   // Fetch followup plans from API
   const {
     data: plansData,
@@ -92,6 +111,10 @@ const ActiveFollowUpPlans = () => {
   } = useFollowupPlans({
     limit: 100, // Get all active plans
   });
+
+  // Fetch schedule data for selected plan
+  const { data: planScheduleData, isLoading: isPlanScheduleLoading } =
+    useFollowupPlanSchedule(selectedPlanForSchedule?._id || "");
 
   // Transform API data
   const activePlans = useMemo(() => {
@@ -146,13 +169,23 @@ const ActiveFollowUpPlans = () => {
     );
   }
 
+  const handleViewPlanSchedule = (plan: FollowupPlan) => {
+    setSelectedPlanForSchedule(plan);
+  };
+
+  const handleCloseScheduleView = () => {
+    setSelectedPlanForSchedule(null);
+  };
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {activePlans.map((plan) => (
-        <Card
-          key={plan.id}
-          className="bg-white/5 border-white/10 hover:border-white/20 transition-all duration-300 hover:shadow-lg hover:shadow-white/5 rounded-3xl"
-        >
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {activePlans.map((plan) => (
+          <Card
+            key={plan.id}
+            onClick={() => handleViewPlanSchedule(plan.originalPlan)}
+            className="bg-white/5 border-white/10 hover:border-white/20 transition-all duration-300 hover:shadow-lg hover:shadow-white/5 rounded-3xl cursor-pointer"
+          >
           <CardContent className="p-4 space-y-4">
             {/* Card Header */}
             <div className="flex items-center justify-between gap-3">
@@ -166,7 +199,13 @@ const ActiveFollowUpPlans = () => {
                 >
                   {plan.status}
                 </Badge>
-                <button className="text-white/40 hover:text-white/60 transition-colors">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // TODO: Add menu functionality
+                  }}
+                  className="text-white/40 hover:text-white/60 transition-colors"
+                >
                   <MoreVertical className="w-4 h-4" />
                 </button>
               </div>
@@ -238,7 +277,7 @@ const ActiveFollowUpPlans = () => {
             </div>
 
             {/* 7-Day Timeline */}
-            <div className="relative py-12">
+            <div className="relative py-12 px-4">
               {/* Status Bar */}
               <div className="w-full h-2 bg-white/10 rounded-full" />
 
@@ -248,58 +287,57 @@ const ActiveFollowUpPlans = () => {
                 const isCompleted = dayNumber <= plan.progress;
                 const isFuture = dayNumber > plan.progress;
 
-                // Calculate position (evenly spaced)
-                const positionPercent = (dayIndex / (plan.totalDays - 1)) * 100;
+                // Calculate position (evenly spaced within the padded area)
+                // First circle at 1rem, last circle at calc(100% - 1rem)
+                const positionRatio = plan.totalDays > 1 ? dayIndex / (plan.totalDays - 1) : 0;
 
                 return (
-                  <div
-                    key={dayNumber}
-                    className="absolute group z-10 flex flex-col items-center"
-                    style={{
-                      left: `${positionPercent}%`,
-                      top: "52px", // top-12 (48px) + half of h-2 (4px) = 52px (center of status bar)
-                      transform: "translateX(-50%)",
-                    }}
-                  >
-                    {/* Circular Marker */}
-                    <div
-                      className={`w-4 h-4 rounded-full transition-all -mt-2 ${
-                        isCompleted
-                          ? "bg-cyan-400 border-2 border-cyan-400"
-                          : "bg-white border-2 border-white/20"
-                      }`}
-                    />
+                  <Tooltip key={dayNumber}>
+                    <TooltipTrigger asChild>
+                      <div
+                        className="absolute z-10 flex flex-col items-center cursor-pointer"
+                        style={{
+                          left: `calc(1rem + ${positionRatio * 100}% - ${positionRatio * 2}rem)`,
+                          top: "52px", // top-12 (48px) + half of h-2 (4px) = 52px (center of status bar)
+                          transform: "translateX(-50%)",
+                        }}
+                      >
+                        {/* Circular Marker */}
+                        <div
+                          className={`w-4 h-4 rounded-full transition-all -mt-2 ${
+                            isCompleted
+                              ? "bg-cyan-400 border-2 border-cyan-400"
+                              : "bg-white border-2 border-white/20"
+                          }`}
+                        />
 
-                    {/* Day Label */}
-                    <span
-                      className={`text-[10px] mt-2 whitespace-nowrap ${
-                        isCompleted ? "text-cyan-300" : "text-white/40"
-                      }`}
-                    >
-                      Day {dayNumber}
-                    </span>
-
-                    {/* Tooltip on Hover */}
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-8 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
-                      <div className="bg-white/90 text-black text-xs px-2 py-1 rounded whitespace-nowrap">
-                        {plan.progress}/
-                        {plan.totalDays.toString().padStart(2, "0")}
+                        {/* Day Label */}
+                        <span
+                          className={`text-[10px] mt-2 whitespace-nowrap ${
+                            isCompleted ? "text-cyan-300" : "text-white/40"
+                          }`}
+                        >
+                          Day {dayNumber}
+                        </span>
                       </div>
-                      {/* Tooltip Arrow */}
-                      <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-white/90" />
-                    </div>
-                  </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>
+                        {plan.progress}/{plan.totalDays.toString().padStart(2, "0")}
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
                 );
               })}
 
               {/* Progress Bar - Snaps to last completed circle */}
               {plan.progress > 0 && (
                 <div
-                  className="absolute top-12 left-0 h-2 bg-cyan-400/50 rounded-full transition-all"
+                  className="absolute top-12 left-4 h-2 bg-cyan-400/50 rounded-full transition-all"
                   style={{
-                    width: `${
-                      ((plan.progress - 1) / (plan.totalDays - 1)) * 100
-                    }%`,
+                    width: plan.totalDays > 1
+                      ? `calc(${((plan.progress - 1) / (plan.totalDays - 1)) * 100}% - ${((plan.progress - 1) / (plan.totalDays - 1)) * 2}rem)`
+                      : "0",
                   }}
                 />
               )}
@@ -307,7 +345,27 @@ const ActiveFollowUpPlans = () => {
           </CardContent>
         </Card>
       ))}
-    </div>
+      </div>
+
+      {/* Schedule View Modal */}
+      <Dialog
+        open={!!selectedPlanForSchedule}
+        onOpenChange={(open) => !open && handleCloseScheduleView()}
+      >
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto scrollbar-hide">
+          <DialogHeader>
+            <DialogTitle>Follow-up Plan Schedule</DialogTitle>
+          </DialogHeader>
+          {selectedPlanForSchedule && planScheduleData?.data && (
+            <FollowupPlanSchedule
+              plan={planScheduleData.data}
+              onClose={handleCloseScheduleView}
+              isLoading={isPlanScheduleLoading}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 
