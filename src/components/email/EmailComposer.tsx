@@ -228,7 +228,7 @@ export const EmailComposer = ({
                     setToInput("");
                   }
                 }}
-                className="flex-1 min-w-[200px] bg-[#0b0f1c] border-white/10 text-white placeholder:text-white/40 focus:border-white/30 focus:ring-1 focus:ring-white/20 rounded-lg"
+                className="flex-1 min-w-[200px]  border-white/10 text-white placeholder:text-white/40 focus:border-white/30 focus:ring-1 focus:ring-white/20 rounded-lg"
               />
             </div>
           </div>
@@ -363,7 +363,7 @@ export const EmailComposer = ({
               placeholder="Email subject"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
-              className="bg-[#0b0f1c] border-white/10 text-white placeholder:text-white/40 focus:border-white/30 focus:ring-1 focus:ring-white/20 rounded-lg"
+              className="border-white/10 text-white placeholder:text-white/40 focus:border-white/30 focus:ring-1 focus:ring-white/20 rounded-lg"
             />
           </div>
 
