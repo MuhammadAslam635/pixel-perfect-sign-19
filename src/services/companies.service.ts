@@ -113,5 +113,4 @@ export const companiesService = {
       throw error;
     }
   },
-
 };

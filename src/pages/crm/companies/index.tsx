@@ -308,9 +308,7 @@ const index = () => {
                               employeeRange={companiesEmployeeRange}
                               onEmployeeRangeChange={setCompaniesEmployeeRange}
                               locationFilter={companiesCountryFilter}
-                              onLocationFilterChange={
-                                setCompaniesCountryFilter
-                              }
+                              onLocationFilterChange={setCompaniesCountryFilter}
                               hasPeopleFilter={companiesHasPeopleFilter}
                               onHasPeopleFilterChange={
                                 setCompaniesHasPeopleFilter
