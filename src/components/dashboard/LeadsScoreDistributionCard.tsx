@@ -360,7 +360,7 @@ const LeadsScoreDistributionCard = () => {
           <Users className="w-4 h-4 text-white/70" />
           <h3 className="text-white text-sm font-medium">Total Leads</h3>
         </div>
-        <div className="flex-1 flex items-center justify-center">
+        <div className="flex-1 flex items-center ">
           {totalLeadsLoading ? (
             <Loader2 className="w-4 h-4 animate-spin text-white/70" />
           ) : (
