@@ -159,7 +159,7 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
             onClick={handleStartNewChat}
             style={{
               background:
-                !showChatList && !hasActiveChat ? "#5D5D5D" : "transparent",
+                !showChatList ? "#5D5D5D" : "transparent",
             }}
           >
             <Plus size={14} />
