@@ -484,17 +484,28 @@ const ChatPage = () => {
         return false;
       }
 
-      // If this is a temp message, check if there's a recent server message with same content+role
+      // If this is a temp message, check if it should be replaced by a server message
       if (message._id.startsWith("temp-")) {
-        const signature = `${message.role}-${message.content}`;
+        const tempTimestamp = parseInt(message._id.split('-')[1]);
+        const now = Date.now();
+        const tempAge = now - tempTimestamp;
 
-        // Look for a server message with matching role and content
-        const matchingServerMessage = apiMessages.find((serverMsg) => {
-          return `${serverMsg.role}-${serverMsg.content}` === signature;
-        });
+        // For user messages, check if there's a server user message that should replace this temp
+        if (message.role === "user") {
+          // Look for server user messages with the same content
+          const matchingUserMessages = apiMessages.filter((serverMsg) =>
+            serverMsg.role === "user" && serverMsg.content === message.content
+          );
 
-        // If we found a matching server message, filter out the temp message
-        return !matchingServerMessage;
+          // If we found matching server messages and the temp message is older than 2 seconds,
+          // assume it has been replaced by the server message
+          if (matchingUserMessages.length > 0 && tempAge > 2000) {
+            return false;
+          }
+        }
+
+        // Keep temp messages for up to 30 seconds, then remove them (in case of errors)
+        return tempAge < 30000;
       }
 
       // For non-temp messages, keep them if ID doesn't match
