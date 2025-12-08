@@ -42,6 +42,12 @@ import MembersPermissions from "@/pages/admin/MembersPermissions";
 import LeadsPage from "@/pages/crm/leads";
 import CalendarPage from "@/pages/crm/calendar";
 import OnboardingPage from "@/pages/onboarding";
+import AdminDashboard from "@/pages/admin/Dashboard";
+import AdminSystemOverview from "@/pages/admin/SystemOverview";
+import AdminCompanies from "@/pages/admin/Companies";
+import AdminMembers from "@/pages/admin/Members";
+import AdminSettings from "@/pages/admin/Settings";
+import AdminAnalytics from "@/pages/admin/Analytics";
 
 const AppRoutes = () => {
   return (
@@ -363,6 +369,57 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
+
+      {/* Admin Routes - Only accessible by Admin role */}
+      <Route
+        path="/admin/dashboard"
+        element={
+          <ProtectedRoute allowedRoles={["Admin"]}>
+            <AdminDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/system-overview"
+        element={
+          <ProtectedRoute allowedRoles={["Admin"]}>
+            <AdminSystemOverview />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/companies"
+        element={
+          <ProtectedRoute allowedRoles={["Admin"]}>
+            <AdminCompanies />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/members"
+        element={
+          <ProtectedRoute allowedRoles={["Admin"]}>
+            <AdminMembers />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/settings"
+        element={
+          <ProtectedRoute allowedRoles={["Admin"]}>
+            <AdminSettings />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/analytics"
+        element={
+          <ProtectedRoute allowedRoles={["Admin"]}>
+            <AdminAnalytics />
+          </ProtectedRoute>
+        }
+      />
+
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
     </Routes>

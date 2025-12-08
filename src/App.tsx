@@ -6,6 +6,7 @@ import { BrowserRouter } from "react-router-dom";
 import { Provider } from "react-redux";
 import { store } from "./store/store";
 import AppRoutes from "./AppRoutes";
+import { AdminLayout } from "./components/dashboard/DashboardLayout";
 import SkylarFloatingWidget from "@/components/SkylarFloatingWidget";
 import "./App.css";
 
