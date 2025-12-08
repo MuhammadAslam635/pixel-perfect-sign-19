@@ -33,7 +33,9 @@ function Greeting() {
       <h1 className="text-[2.5rem] font-semibold mb-2 text-foreground leading-tight">
         {greeting}, {userName}!
       </h1>
-      <p className="text-xl text-muted-foreground/80 font-normal">How can I assist You?</p>
+      <p className="text-xl text-muted-foreground/80 font-normal">
+        How can I assist You?
+      </p>
     </div>
   );
 }

@@ -24,7 +24,9 @@ const OnboardingPage = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [completing, setCompleting] = useState(false);
-  const [onboardingData, setOnboardingData] = useState<OnboardingData | null>(null);
+  const [onboardingData, setOnboardingData] = useState<OnboardingData | null>(
+    null
+  );
   const [formData, setFormData] = useState<OnboardingQuestions>({});
 
   // Fetch existing onboarding data on mount
@@ -36,10 +38,13 @@ const OnboardingPage = () => {
         if (response.success && response.data) {
           setOnboardingData(response.data);
           setFormData(response.data.questions || {});
-          
+
           // If already completed, redirect to dashboard
-          if (response.data.status === 'completed' || response.data.status === 'approved') {
-            navigate('/dashboard', { replace: true });
+          if (
+            response.data.status === "completed" ||
+            response.data.status === "approved"
+          ) {
+            navigate("/dashboard", { replace: true });
             return;
           }
         }
@@ -62,38 +67,45 @@ const OnboardingPage = () => {
   const dispatch = useDispatch();
 
   // Auto-save when navigating between steps
-  const saveProgress = async (newStatus?: 'draft' | 'in_progress'): Promise<boolean> => {
+  const saveProgress = async (
+    newStatus?: "draft" | "in_progress"
+  ): Promise<boolean> => {
     try {
       setSaving(true);
       await onboardingService.updateOnboarding({
         questions: formData,
-        status: newStatus || 'in_progress',
+        status: newStatus || "in_progress",
       });
 
       // Update local storage user data if company name changed
       if (formData.companyName) {
         try {
-          const userStr = localStorage.getItem('user');
+          const userStr = localStorage.getItem("user");
           if (userStr) {
             const user = JSON.parse(userStr);
             if (user.company !== formData.companyName) {
               user.company = formData.companyName;
               // Also update display name to keep greeting in sync
               user.name = formData.companyName;
-              localStorage.setItem('user', JSON.stringify(user));
+              localStorage.setItem("user", JSON.stringify(user));
               // Update redux auth slice so current session reflects changes immediately
               try {
-                dispatch(updateUser({ company: formData.companyName, name: formData.companyName }));
+                dispatch(
+                  updateUser({
+                    company: formData.companyName,
+                    name: formData.companyName,
+                  })
+                );
               } catch (e) {
                 // Ignore dispatch errors but log for debugging
-                console.error('Error dispatching updateUser:', e);
+                console.error("Error dispatching updateUser:", e);
               }
               // Trigger a storage event for other tabs/components
-              window.dispatchEvent(new Event('storage'));
+              window.dispatchEvent(new Event("storage"));
             }
           }
         } catch (e) {
-          console.error('Error updating local user data:', e);
+          console.error("Error updating local user data:", e);
         }
       }
       return true;
@@ -107,7 +119,7 @@ const OnboardingPage = () => {
   };
 
   const handleNext = async () => {
-    await saveProgress('in_progress');
+    await saveProgress("in_progress");
     if (currentStep < ONBOARDING_STEPS.length) {
       setCurrentStep(currentStep + 1);
     }
@@ -121,17 +133,17 @@ const OnboardingPage = () => {
 
   const handleSkip = async () => {
     // Try to save but don't block navigation if it fails
-    await saveProgress('draft');
+    await saveProgress("draft");
     // Store skip preference in sessionStorage so we don't redirect back immediately
-    sessionStorage.setItem('onboarding_skipped', 'true');
+    sessionStorage.setItem("onboarding_skipped", "true");
     toast.info("You can complete onboarding later from Settings");
-    navigate('/dashboard', { replace: true });
+    navigate("/dashboard", { replace: true });
   };
 
   const handleComplete = async () => {
     try {
       setCompleting(true);
-      await saveProgress('in_progress');
+      await saveProgress("in_progress");
       const response = await onboardingService.completeOnboarding();
       if (response.success) {
         // Refresh canonical user data from server and sync localStorage + redux
@@ -141,15 +153,17 @@ const OnboardingPage = () => {
             dispatch(updateUser(synced));
           }
         } catch (e) {
-          console.error('Error syncing user after onboarding:', e);
+          console.error("Error syncing user after onboarding:", e);
         }
 
         toast.success("Onboarding completed successfully!");
-        navigate('/dashboard', { replace: true });
+        navigate("/dashboard", { replace: true });
       }
     } catch (error: any) {
       console.error("Error completing onboarding:", error);
-      toast.error(error?.response?.data?.message || "Failed to complete onboarding");
+      toast.error(
+        error?.response?.data?.message || "Failed to complete onboarding"
+      );
     } finally {
       setCompleting(false);
     }
@@ -162,11 +176,20 @@ const OnboardingPage = () => {
   const renderStep = () => {
     switch (currentStep) {
       case 1:
-        return <CompanyOverviewStep formData={formData} updateFormData={updateFormData} />;
+        return (
+          <CompanyOverviewStep
+            formData={formData}
+            updateFormData={updateFormData}
+          />
+        );
       case 2:
-        return <OperationsStep formData={formData} updateFormData={updateFormData} />;
+        return (
+          <OperationsStep formData={formData} updateFormData={updateFormData} />
+        );
       case 3:
-        return <SystemsStep formData={formData} updateFormData={updateFormData} />;
+        return (
+          <SystemsStep formData={formData} updateFormData={updateFormData} />
+        );
       case 4:
         return (
           <StrategyStep
@@ -207,7 +230,8 @@ const OnboardingPage = () => {
             Welcome to EmpaTech OS
           </h1>
           <p className="text-white/60 text-sm sm:text-base">
-            Let's get to know your business so we can personalize your experience
+            Let's get to know your business so we can personalize your
+            experience
           </p>
         </div>
 
@@ -215,18 +239,19 @@ const OnboardingPage = () => {
         <StepIndicator currentStep={currentStep} steps={ONBOARDING_STEPS} />
 
         {/* Form Container - matching TemplateFormModal card style */}
-        <div 
+        <div
           className="mt-8 rounded-[32px] border border-white/10 p-6 sm:p-8 relative overflow-hidden shadow-[0_25px_60px_rgba(0,0,0,0.55)]"
           style={{ background: "#0a0a0a" }}
         >
           {/* Gradient overlay - matching TemplateFormModal */}
-          <div 
+          <div
             className="absolute inset-0 pointer-events-none"
             style={{
-              background: "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0) 38.08%, rgba(255, 255, 255, 0) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)"
+              background:
+                "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0) 38.08%, rgba(255, 255, 255, 0) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
             }}
           />
-          
+
           <div className="relative z-10">
             {/* Step Title */}
             <div className="mb-6">
@@ -234,7 +259,7 @@ const OnboardingPage = () => {
                 {ONBOARDING_STEPS[currentStep - 1].title}
               </h2>
               <p className="text-sm text-white/60 mt-1">
-              {ONBOARDING_STEPS[currentStep - 1].description}
+                {ONBOARDING_STEPS[currentStep - 1].description}
               </p>
             </div>
 
