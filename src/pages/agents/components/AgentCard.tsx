@@ -34,9 +34,8 @@ const AgentCard = ({ image, name, title, description }: AgentCardProps) => {
                 <img
                   src={image}
                   alt={name}
-                  className="h-full w-full object-cover transition-all duration-500 elementor-animation-float"
+                  className="h-full w-full object-cover transition-all duration-500 elementor-animation-float group-hover:brightness-100 group-hover:contrast-100 group-hover:saturate-100 group-hover:blur-none group-hover:hue-rotate-[290deg]"
                 />
-                <div className="absolute inset-0 bg-[#099946] opacity-0 transition-opacity duration-500 group-hover:opacity-60" />
               </div>
             </div>
           </motion.div>
