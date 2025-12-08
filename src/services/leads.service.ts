@@ -58,7 +58,8 @@ export interface LeadsQueryParams {
   sortBy?: string;
   sortOrder?: "asc" | "desc" | 1 | -1;
   position?: string;
-  location?: string;
+  location?: string; // Deprecated - use country instead
+  country?: string;
   hasEmail?: boolean;
   hasPhone?: boolean;
   hasLinkedin?: boolean;

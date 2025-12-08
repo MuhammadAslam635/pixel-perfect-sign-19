@@ -99,7 +99,9 @@ export function MultiSelect({
                     variant="secondary"
                     className="bg-white/10 text-white border border-white/20 text-xs px-2 py-0 h-5 flex items-center gap-1 flex-shrink-0"
                   >
-                    <span className="truncate max-w-24 sm:max-w-32 md:max-w-40 lg:max-w-48">{option.label}</span>
+                    <span className="truncate max-w-24 sm:max-w-32 md:max-w-40 lg:max-w-48">
+                      {option.label}
+                    </span>
                     <button
                       className="ml-1 hover:bg-white/20 rounded-sm flex-shrink-0 p-0.5"
                       onClick={(e) => {
@@ -127,7 +129,7 @@ export function MultiSelect({
           <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50 ml-1" />
         </Button>
       </PopoverTrigger>
-          <PopoverContent className="w-[--radix-popover-trigger-width] p-0 bg-[#1a1a1a] border-[#2a2a2a] rounded-xl">
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0 bg-[#1a1a1a] border-[#2a2a2a] rounded-xl">
         <Command>
           <CommandInput
             placeholder={searchPlaceholder}

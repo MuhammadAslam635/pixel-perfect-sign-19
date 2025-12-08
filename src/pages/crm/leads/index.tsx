@@ -58,7 +58,7 @@ const index = () => {
     setLeadsPage(1);
   }, [viewMode]);
   const [leadsCompanyFilter, setLeadsCompanyFilter] = useState<string[]>([]);
-  const [leadsLocationFilter, setLeadsLocationFilter] = useState<string>("");
+  const [leadsCountryFilter, setLeadsCountryFilter] = useState<string>("");
   const [leadsPositionFilter, setLeadsPositionFilter] = useState<string[]>([]);
   const [leadsHasEmailFilter, setLeadsHasEmailFilter] = useState(false);
   const [leadsHasPhoneFilter, setLeadsHasPhoneFilter] = useState(false);
@@ -100,7 +100,7 @@ const index = () => {
   const [leadFiltersOpen, setLeadFiltersOpen] = useState(false);
 
   const resetLeadAdvancedFilters = useCallback(() => {
-    setLeadsLocationFilter("");
+    setLeadsCountryFilter("");
     setLeadsPositionFilter([]);
     setLeadsCompanyFilter([]);
     setLeadsHasEmailFilter(false);
@@ -434,14 +434,14 @@ const index = () => {
 
   const hasLeadAdvancedFilters = useMemo(
     () =>
-      leadsLocationFilter.trim() !== "" ||
+      leadsCountryFilter.trim() !== "" ||
       leadsPositionFilter.length > 0 ||
       leadsCompanyFilter.length > 0 ||
       leadsHasEmailFilter ||
       leadsHasPhoneFilter ||
       leadsHasLinkedinFilter,
     [
-      leadsLocationFilter,
+      leadsCountryFilter,
       leadsPositionFilter,
       leadsCompanyFilter,
       leadsHasEmailFilter,
@@ -463,8 +463,8 @@ const index = () => {
       sortOrder: -1,
     };
 
-    if (leadsLocationFilter.trim()) {
-      params.location = leadsLocationFilter.trim();
+    if (leadsCountryFilter.trim()) {
+      params.country = leadsCountryFilter.trim();
     }
 
     if (leadsPositionFilter.length > 0) {
@@ -489,7 +489,7 @@ const index = () => {
     leadsLimit,
     leadsSearch,
     leadsCompanyFilter,
-    leadsLocationFilter,
+    leadsCountryFilter,
     leadsPositionFilter,
     leadsHasEmailFilter,
     leadsHasPhoneFilter,
@@ -571,7 +571,7 @@ const index = () => {
     leadsSearch,
     leadsCompanyFilter,
     leadsLimit,
-    leadsLocationFilter,
+    leadsCountryFilter,
     leadsPositionFilter,
     leadsHasEmailFilter,
     leadsHasPhoneFilter,
@@ -710,8 +710,8 @@ const index = () => {
                             className="flex items-center gap-2"
                           >
                             <LeadsFiltersInline
-                              locationFilter={leadsLocationFilter}
-                              onLocationFilterChange={setLeadsLocationFilter}
+                              countryFilter={leadsCountryFilter}
+                              onCountryFilterChange={setLeadsCountryFilter}
                               positionFilter={leadsPositionFilter}
                               onPositionFilterChange={setLeadsPositionFilter}
                               leads={leads}

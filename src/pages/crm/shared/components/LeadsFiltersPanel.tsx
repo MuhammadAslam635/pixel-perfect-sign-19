@@ -5,6 +5,7 @@ import {
   MultiSelect,
   type MultiSelectOption,
 } from "@/components/ui/multi-select";
+import { CountrySelect } from "@/components/ui/country-select";
 
 // Extract unique job titles from leads data
 const extractJobTitles = (leads?: any[]): MultiSelectOption[] => {
@@ -27,9 +28,9 @@ const extractJobTitles = (leads?: any[]): MultiSelectOption[] => {
 };
 
 interface LeadsFiltersInlineProps {
-  // Location filter
-  locationFilter: string;
-  onLocationFilterChange: (value: string) => void;
+  // Country filter
+  countryFilter: string;
+  onCountryFilterChange: (value: string) => void;
 
   // Position filter
   positionFilter: string[];
@@ -50,8 +51,8 @@ interface LeadsFiltersInlineProps {
 }
 
 export const LeadsFiltersInline = ({
-  locationFilter,
-  onLocationFilterChange,
+  countryFilter,
+  onCountryFilterChange,
   positionFilter,
   onPositionFilterChange,
   leads,
@@ -66,27 +67,24 @@ export const LeadsFiltersInline = ({
 }: LeadsFiltersInlineProps) => {
   const positionOptions = extractJobTitles(leads);
   return (
-    <div className="flex items-center gap-3 flex-wrap">
-      {/* Location Filter */}
-      <div className="flex items-center gap-2">
+    <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-1">
         <label className="text-[11px] uppercase tracking-[0.08em] text-gray-400 whitespace-nowrap">
-          Location:
+          Country:
         </label>
-        <Input
-          type="text"
-          placeholder="City, state..."
-          value={locationFilter}
-          onChange={(e) => onLocationFilterChange(e.target.value)}
-          className="h-8 w-32 rounded-lg border border-white/15 bg-transparent text-white placeholder:text-gray-500 text-xs"
+        <CountrySelect
+          value={countryFilter}
+          onChange={onCountryFilterChange}
+          placeholder="All countries"
+          className="h-8 w-40 text-xs"
         />
       </div>
 
-      {/* Position Filter */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
         <label className="text-[11px] uppercase tracking-[0.08em] text-gray-400 whitespace-nowrap">
           Title:
         </label>
-        <div className="w-56">
+        <div className="w-36">
           <MultiSelect
             options={positionOptions}
             value={positionFilter}
@@ -95,14 +93,14 @@ export const LeadsFiltersInline = ({
             searchPlaceholder="Search titles..."
             emptyMessage="No titles found."
             className="h-8 text-xs"
-            maxDisplayItems={3}
+            maxDisplayItems={1}
           />
         </div>
       </div>
 
       {/* Checkboxes */}
-      <div className="flex items-center gap-3">
-        <label className="flex items-center gap-1.5 cursor-pointer">
+      <div className="flex items-center gap-1.5 ml-1">
+        <label className="flex items-center gap-1 cursor-pointer">
           <Checkbox
             checked={hasEmailFilter}
             onCheckedChange={(checked) =>
@@ -113,7 +111,7 @@ export const LeadsFiltersInline = ({
           <span className="text-xs text-gray-300">Email</span>
         </label>
 
-        <label className="flex items-center gap-1.5 cursor-pointer">
+        <label className="flex items-center gap-1 cursor-pointer">
           <Checkbox
             checked={hasPhoneFilter}
             onCheckedChange={(checked) =>
@@ -124,7 +122,7 @@ export const LeadsFiltersInline = ({
           <span className="text-xs text-gray-300">Phone</span>
         </label>
 
-        <label className="flex items-center gap-1.5 cursor-pointer">
+        <label className="flex items-center gap-1 cursor-pointer">
           <Checkbox
             checked={hasLinkedinFilter}
             onCheckedChange={(checked) =>
@@ -141,7 +139,7 @@ export const LeadsFiltersInline = ({
         <Button
           size="sm"
           variant="ghost"
-          className="bg-accent text-white hover:bg-accent/80 px-2 py-1 h-8 text-xs"
+          className="bg-accent text-white hover:bg-accent/80 px-2 py-1 h-8 text-xs whitespace-nowrap ml-1"
           onClick={onResetFilters}
         >
           Clear
@@ -152,9 +150,9 @@ export const LeadsFiltersInline = ({
 };
 
 interface LeadsFiltersPanelProps {
-  // Location filter
-  locationFilter: string;
-  onLocationFilterChange: (value: string) => void;
+  // Country filter
+  countryFilter: string;
+  onCountryFilterChange: (value: string) => void;
 
   // Position filter
   positionFilter: string[];
@@ -176,8 +174,8 @@ interface LeadsFiltersPanelProps {
 }
 
 export const LeadsFiltersPanel = ({
-  locationFilter,
-  onLocationFilterChange,
+  countryFilter,
+  onCountryFilterChange,
   positionFilter,
   onPositionFilterChange,
   leads,
@@ -196,14 +194,13 @@ export const LeadsFiltersPanel = ({
     <div className="flex flex-col gap-3 text-gray-100 text-xs">
       <div>
         <p className="text-[11px] uppercase tracking-[0.08em] text-gray-400 mb-2">
-          Location
+          Country
         </p>
-        <Input
-          type="text"
-          placeholder="City, state, or region"
-          value={locationFilter}
-          onChange={(e) => onLocationFilterChange(e.target.value)}
-          className="h-9 rounded-lg border border-white/15 bg-transparent text-white placeholder:text-gray-500 text-xs"
+        <CountrySelect
+          value={countryFilter}
+          onChange={onCountryFilterChange}
+          placeholder="Select country"
+          className="h-9 w-full text-xs"
         />
       </div>
       <div>
