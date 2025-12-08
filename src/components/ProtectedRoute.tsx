@@ -44,7 +44,10 @@ const ProtectedRoute = ({
   }
 
   // Check if user needs to change password (unless they're already on the change-password page)
-  if (sessionUser?.requiresPasswordChange && window.location.pathname !== '/change-password') {
+  if (
+    sessionUser?.requiresPasswordChange &&
+    window.location.pathname !== "/change-password"
+  ) {
     return <Navigate to="/change-password" replace />;
   }
 
@@ -62,6 +65,13 @@ const ProtectedRoute = ({
     if (requiresOnboarding) {
       return <Navigate to="/onboarding" replace />;
     }
+  }
+  // Admin users can only access admin routes
+  if (
+    sessionUser?.role === "Admin" &&
+    !window.location.pathname.startsWith("/admin/")
+  ) {
+    return <Navigate to="/admin/dashboard" replace />;
   }
 
   // New RBAC check - takes precedence
@@ -82,7 +92,10 @@ const ProtectedRoute = ({
 
     if (!hasAccess) {
       // User doesn't have permission to access this module
-      return <Navigate to="/dashboard" replace />;
+      const userRole = sessionUser?.role;
+      const dashboardPath =
+        userRole === "Admin" ? "/admin/dashboard" : "/dashboard";
+      return <Navigate to={dashboardPath} replace />;
     }
   }
   // Legacy role-based check (for backward compatibility)
@@ -90,7 +103,10 @@ const ProtectedRoute = ({
     const userRole = sessionUser?.role;
 
     if (!userRole || !allowedRoles.includes(userRole)) {
-      return <Navigate to="/dashboard" replace />;
+      // Redirect to appropriate dashboard based on user role
+      const dashboardPath =
+        userRole === "Admin" ? "/admin/dashboard" : "/dashboard";
+      return <Navigate to={dashboardPath} replace />;
     }
   }
 

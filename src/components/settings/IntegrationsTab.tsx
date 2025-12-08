@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Settings } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { getUserData } from "@/utils/authHelpers";
 import {
@@ -35,10 +35,10 @@ import {
   useFacebookStatus,
 } from "@/components/settings/services/facebook.api";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { AdminGlobalIntegrationsTab } from "@/components/admin/integrations/AdminGlobalIntegrationsTab";
 import facebookLogo from "@/assets/facebook-icon.svg";
 import whatsappLogo from "@/assets/whatsappIcon.png";
 import mailgunLogo from "@/assets/mailgun-icon.png";
-import deepgramLogo from "@/assets/deepgram-icon.png";
 
 interface IntegrationResponse {
   success: boolean;
@@ -92,18 +92,6 @@ export const IntegrationsTab = () => {
     phoneNumberId: string | null;
   }>({ open: false, phoneNumberId: null });
   const [isDisconnectingWhatsApp, setIsDisconnectingWhatsApp] = useState(false);
-  const [isTwilioStatusLoading, setIsTwilioStatusLoading] = useState(false);
-  const [twilioConnected, setTwilioConnected] = useState(false);
-  const [twilioDetails, setTwilioDetails] = useState<{
-    accountSid?: string | null;
-    apiKeySid?: string | null;
-    apiKeySecret?: string | null;
-    authToken?: string | null;
-    callerId?: string | null;
-    lastConnectedAt?: string | null;
-    hasAllEnvVars?: boolean;
-    missingFields?: string[];
-  } | null>(null);
   const [mailgunConfig, setMailgunConfig] = useState({
     apiKey: "",
     domain: "",
@@ -129,14 +117,12 @@ export const IntegrationsTab = () => {
   const [microsoftIntegration, setMicrosoftIntegration] = useState<
     IntegrationResponse["integration"] | null
   >(null);
-  const [deepgramConfig, setDeepgramConfig] = useState({
-    apiKey: "",
-  });
-  const [isLoadingDeepgram, setIsLoadingDeepgram] = useState(false);
-  const [isSavingDeepgram, setIsSavingDeepgram] = useState(false);
-  const [isValidatingDeepgram, setIsValidatingDeepgram] = useState(false);
-  const [showDeepgramForm, setShowDeepgramForm] = useState(false);
-  const [deepgramValidated, setDeepgramValidated] = useState(false);
+  const [mailgunEnvCredentials, setMailgunEnvCredentials] = useState<any>(null);
+  const [mailgunEnvValidation, setMailgunEnvValidation] = useState<{
+    valid: boolean;
+    message: string;
+  } | null>(null);
+  const [isValidatingMailgunEnv, setIsValidatingMailgunEnv] = useState(false);
 
   const {
     mutateAsync: fetchFacebookRedirectUrl,
@@ -161,11 +147,16 @@ export const IntegrationsTab = () => {
     useFacebookRefreshPages();
 
   const user = getUserData();
+  const isAdmin = user?.role === "Admin";
   const canManageWhatsApp =
     user?.role === "Company" || user?.role === "CompanyAdmin";
   const canManageMailgun = user?.role === "Company";
   const canManageMicrosoft =
     user?.role === "Company" || user?.role === "CompanyAdmin";
+
+  // Global integrations that are managed separately for admins
+  const globalIntegrations = ["deepgram", "openai", "twilio", "elevenlabs"];
+  const canManageGlobalIntegrations = user?.role === "Admin";
 
   const facebookConnected = facebookStatus?.connected ?? false;
   const facebookIntegration = facebookStatus?.integration;
@@ -203,51 +194,8 @@ export const IntegrationsTab = () => {
     }
   };
 
-  const fetchTwilioStatus = async () => {
-    if (!user?.token) {
-      setTwilioConnected(false);
-      setTwilioDetails(null);
-      return;
-    }
-
-    setIsTwilioStatusLoading(true);
-    try {
-      const response = await axios.get(
-        `${APP_BACKEND_URL}/twilio/connection-check`,
-        {
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-            "ngrok-skip-browser-warning": "true",
-          },
-        }
-      );
-
-      if (response.data?.success) {
-        const statusData = response.data.data || null;
-        const ready =
-          Boolean(response.data.connected) &&
-          Boolean(statusData?.hasAllEnvVars);
-        setTwilioConnected(ready);
-        setTwilioDetails(statusData);
-      } else {
-        setTwilioConnected(false);
-        setTwilioDetails(null);
-      }
-    } catch (_error) {
-      setTwilioConnected(false);
-      setTwilioDetails(null);
-    } finally {
-      setIsTwilioStatusLoading(false);
-    }
-  };
-
   useEffect(() => {
     fetchWhatsAppConnections();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.token]);
-
-  useEffect(() => {
-    fetchTwilioStatus();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.token]);
 
@@ -289,53 +237,6 @@ export const IntegrationsTab = () => {
     fetchMicrosoftStatus();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.token]);
-
-  const fetchDeepgramConfig = async () => {
-    if (!user?.token || !canManageWhatsApp) return;
-
-    setIsLoadingDeepgram(true);
-    try {
-      const response = await axios.get(
-        `${APP_BACKEND_URL}/integration/deepgram`,
-        {
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-            "ngrok-skip-browser-warning": "true",
-          },
-        }
-      );
-
-      if (
-        response.data?.success &&
-        response.data?.integration?.connectionData?.metadata
-      ) {
-        const config = response.data.integration.connectionData.metadata;
-        setDeepgramConfig({
-          apiKey: config.apiKey || "",
-        });
-        setDeepgramValidated(response.data.integration.isConnected || false);
-      }
-    } catch (error: any) {
-      // If 404, integration doesn't exist yet - that's okay
-      if (error?.response?.status !== 404) {
-        console.error("Error loading Deepgram config:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load Deepgram configuration.",
-          variant: "destructive",
-        });
-      }
-    } finally {
-      setIsLoadingDeepgram(false);
-    }
-  };
-
-  useEffect(() => {
-    if (canManageWhatsApp) {
-      fetchDeepgramConfig();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.token, canManageWhatsApp]);
 
   const primaryWhatsAppConnection = whatsappConnections[0] || null;
 
@@ -535,7 +436,7 @@ export const IntegrationsTab = () => {
       );
       return response.data;
     },
-    enabled: !!user,
+    enabled: !!user && !globalIntegrations.includes("google"),
     staleTime: 0,
   });
 
@@ -1034,10 +935,80 @@ export const IntegrationsTab = () => {
 
   useEffect(() => {
     if (canManageMailgun) {
+      checkMailgunEnvCredentials();
       fetchMailgunConfig();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.token, canManageMailgun]);
+
+  const checkMailgunEnvCredentials = async () => {
+    if (!user?.token || !canManageMailgun) return;
+
+    try {
+      const response = await mailgunService.checkEnvCredentials();
+      if (response.success && response.envCredentials?.mailgun) {
+        setMailgunEnvCredentials(response.envCredentials.mailgun);
+
+        // If env credentials are configured, validate them
+        if (response.envCredentials.mailgun.configured) {
+          try {
+            const validationResponse =
+              await mailgunService.validateEnvCredentials();
+            if (validationResponse.success) {
+              setMailgunEnvValidation(validationResponse.validation);
+              // If valid, don't show form initially
+              if (validationResponse.validation.valid) {
+                setShowMailgunForm(false);
+              }
+            }
+          } catch (error) {
+            console.error("Error validating Mailgun env credentials:", error);
+          }
+        }
+      }
+    } catch (error: any) {
+      console.error("Error checking Mailgun env credentials:", error);
+      // If check fails, show form as fallback
+    }
+  };
+
+  const handleValidateMailgunEnvCredentials = async () => {
+    if (!user?.token || !canManageMailgun) return;
+
+    try {
+      setIsValidatingMailgunEnv(true);
+      const response = await mailgunService.validateEnvCredentials();
+
+      if (response.success) {
+        setMailgunEnvValidation(response.validation);
+
+        if (response.validation.valid) {
+          toast({
+            title: "Success",
+            description: response.validation.message,
+          });
+          setShowMailgunForm(false);
+        } else {
+          toast({
+            title: "Validation Failed",
+            description: response.validation.message,
+            variant: "destructive",
+          });
+          setShowMailgunForm(true);
+        }
+      }
+    } catch (error: any) {
+      console.error("Error validating Mailgun env credentials:", error);
+      toast({
+        title: "Error",
+        description:
+          error.message || "Failed to validate Mailgun env credentials.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsValidatingMailgunEnv(false);
+    }
+  };
 
   const handleMailgunInputChange = (
     field: keyof typeof mailgunConfig,
@@ -1334,168 +1305,6 @@ export const IntegrationsTab = () => {
     }
   };
 
-  const handleValidateDeepgramConfig = async () => {
-    if (!canManageWhatsApp) {
-      toast({
-        title: "Access restricted",
-        description:
-          "Only company owners or company admins can manage Deepgram settings.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!deepgramConfig.apiKey) {
-      toast({
-        title: "Missing information",
-        description: "Please enter your Deepgram API key.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!user?.token) {
-      toast({
-        title: "Error",
-        description: "User not authenticated. Please login again.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsValidatingDeepgram(true);
-    try {
-      const response = await axios.post(
-        `${APP_BACKEND_URL}/integration/deepgram/validate`,
-        {
-          apiKey: deepgramConfig.apiKey.trim(),
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-            "ngrok-skip-browser-warning": "true",
-          },
-        }
-      );
-
-      if (response.data?.success) {
-        setDeepgramValidated(true);
-        toast({
-          title: "Configuration Validated",
-          description:
-            response.data.message ||
-            "Deepgram configuration validated successfully!",
-        });
-      }
-    } catch (error: any) {
-      console.error("Error validating Deepgram config:", error);
-      setDeepgramValidated(false);
-      toast({
-        title: "Validation Failed",
-        description:
-          error?.response?.data?.message ||
-          "Failed to validate Deepgram configuration. Please check your API key.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsValidatingDeepgram(false);
-    }
-  };
-
-  const handleSaveDeepgramConfig = async () => {
-    if (!canManageWhatsApp) {
-      toast({
-        title: "Access restricted",
-        description:
-          "Only company owners or company admins can manage Deepgram settings.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!deepgramValidated) {
-      toast({
-        title: "Validation Required",
-        description: "Please validate your configuration before saving.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!deepgramConfig.apiKey) {
-      toast({
-        title: "Missing information",
-        description: "Please enter your Deepgram API key.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!user?.token) {
-      toast({
-        title: "Error",
-        description: "User not authenticated. Please login again.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsSavingDeepgram(true);
-    try {
-      const response = await axios.post(
-        `${APP_BACKEND_URL}/integration/deepgram/save`,
-        {
-          apiKey: deepgramConfig.apiKey.trim(),
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-            "ngrok-skip-browser-warning": "true",
-          },
-        }
-      );
-
-      if (response.data?.success) {
-        toast({
-          title: "Deepgram configured",
-          description:
-            response.data.message ||
-            "Deepgram configuration saved successfully.",
-        });
-        setShowDeepgramForm(false);
-        fetchDeepgramConfig();
-      }
-    } catch (error: any) {
-      console.error("Error saving Deepgram config:", error);
-      toast({
-        title: "Error",
-        description:
-          error?.response?.data?.message ||
-          "Failed to save Deepgram configuration. Please verify your API key.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSavingDeepgram(false);
-    }
-  };
-
-  const handleToggleDeepgramForm = () => {
-    if (!canManageWhatsApp) {
-      toast({
-        title: "Access restricted",
-        description:
-          "Only company owners or company admins can manage Deepgram settings.",
-        variant: "destructive",
-      });
-      return;
-    }
-    setShowDeepgramForm((prev) => !prev);
-    if (showDeepgramForm) {
-      // Reset validation when closing form
-      setDeepgramValidated(false);
-    }
-  };
-
   // Handle prefix change and auto-suggest email
   const handleEmailPrefixChange = async (prefix: string) => {
     setEmailPrefix(prefix);
@@ -1524,6 +1333,11 @@ export const IntegrationsTab = () => {
     mailgunConfig.domain &&
     mailgunConfig.apiUrl &&
     mailgunConfig.webhookSigningKey;
+
+  // For admin users, show global integrations instead of regular integrations
+  if (isAdmin) {
+    return <AdminGlobalIntegrationsTab />;
+  }
 
   return (
     <Card className="border-white/10 bg-white/[0.04] backdrop-blur-xl text-white">
@@ -1788,71 +1602,6 @@ export const IntegrationsTab = () => {
                   </Select>
                 </div>
               )}
-            </div>
-          )}
-        </div>
-
-        <div className="space-y-4 sm:space-y-6 rounded-2xl sm:rounded-3xl border border-white/10 bg-white/[0.02] p-4 sm:p-5">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-3 sm:gap-4">
-              <div className="flex-shrink-0 w-[30px] h-[30px] flex items-center justify-center overflow-hidden">
-                <div className="w-[30px] h-[30px] rounded-full bg-rose-500/30 border border-rose-400/40 text-rose-200 text-xs font-semibold flex items-center justify-center">
-                  TW
-                </div>
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="font-medium text-white text-sm sm:text-base">
-                  Twilio
-                </p>
-                <p className="text-xs sm:text-sm text-white/60 break-words">
-                  {isTwilioStatusLoading
-                    ? "Checking configuration..."
-                    : twilioConnected
-                    ? "Twilio is globally configured for all companies."
-                    : "Twilio is not fully configured. Please contact your administrator."}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 flex-shrink-0">
-              {twilioConnected && (
-                <span className="flex items-center gap-1 text-xs sm:text-sm text-emerald-400">
-                  <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                  <span className="hidden sm:inline">Configured</span>
-                </span>
-              )}
-              <Button
-                type="button"
-                size="sm"
-                onClick={fetchTwilioStatus}
-                disabled={isTwilioStatusLoading}
-                className="w-full sm:w-auto bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3] text-xs sm:text-sm disabled:opacity-60 disabled:cursor-not-allowed"
-                style={{
-                  boxShadow:
-                    "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
-                }}
-              >
-                {isTwilioStatusLoading ? "Refreshing..." : "Refresh status"}
-              </Button>
-            </div>
-          </div>
-
-          {twilioDetails && (
-            <div className="space-y-3 pt-4 border-t border-white/10 text-xs sm:text-sm text-white/80">
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <p className="font-semibold text-white">Account SID</p>
-                <p>{twilioDetails.accountSid || "Hidden"}</p>
-              </div>
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <p className="font-semibold text-white">API Key SID</p>
-                <p>{twilioDetails.apiKeySid || "Hidden"}</p>
-              </div>
-              {twilioDetails.missingFields &&
-                twilioDetails.missingFields.length > 0 && (
-                  <p className="text-amber-200">
-                    Missing env vars: {twilioDetails.missingFields.join(", ")}
-                  </p>
-                )}
             </div>
           )}
         </div>
@@ -2283,6 +2032,49 @@ export const IntegrationsTab = () => {
             </p>
           )}
 
+          {/* Environment Credentials Status */}
+          {mailgunEnvCredentials?.configured && (
+            <div className="rounded-lg border border-white/10 p-3 bg-white/[0.03] mb-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs sm:text-sm text-white/80 font-medium">
+                  Environment Credentials
+                </span>
+                {mailgunEnvValidation?.valid ? (
+                  <span className="flex items-center gap-1 text-xs sm:text-sm text-emerald-400">
+                    <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                    Valid
+                  </span>
+                ) : mailgunEnvValidation ? (
+                  <span className="flex items-center gap-1 text-xs sm:text-sm text-amber-400">
+                    <span className="h-2 w-2 rounded-full bg-amber-400" />
+                    Invalid
+                  </span>
+                ) : null}
+              </div>
+              {mailgunEnvValidation?.message && (
+                <p className="text-xs text-white/60 mb-2">
+                  {mailgunEnvValidation.message}
+                </p>
+              )}
+              <Button
+                onClick={handleValidateMailgunEnvCredentials}
+                disabled={isValidatingMailgunEnv}
+                variant="outline"
+                size="sm"
+                className="w-full sm:w-auto border-cyan-400/50 text-cyan-300 hover:bg-cyan-500/10 text-xs"
+              >
+                {isValidatingMailgunEnv ? (
+                  <>
+                    <RefreshCw className="h-3 w-3 animate-spin mr-1" />
+                    Validating...
+                  </>
+                ) : (
+                  "Validate Env Credentials"
+                )}
+              </Button>
+            </div>
+          )}
+
           {showMailgunForm && (
             <div className="space-y-4 pt-4 border-t border-white/10">
               <div className="grid gap-4 sm:grid-cols-2">
@@ -2469,156 +2261,6 @@ export const IntegrationsTab = () => {
                     }}
                   >
                     {isSavingMailgun ? "Saving..." : "Save Configuration"}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="space-y-4 sm:space-y-6 rounded-2xl sm:rounded-3xl border border-white/10 bg-white/[0.02] p-4 sm:p-5">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-3 sm:gap-4">
-              <div className="flex-shrink-0 w-[30px] h-[30px] flex items-center justify-center overflow-hidden">
-                <div className="w-[30px] h-[30px] rounded-lg bg-purple-500/30 border border-purple-400/40 text-purple-200 text-xs font-semibold flex items-center justify-center">
-                  <img
-                    src={deepgramLogo}
-                    alt="Deepgram logo"
-                    className="w-[30px] h-[30px] object-cover"
-                  />
-                </div>
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="font-medium text-white text-sm sm:text-base">
-                  Deepgram
-                </p>
-                <p className="text-xs sm:text-sm text-white/60 break-words">
-                  {isLoadingDeepgram
-                    ? "Checking configuration..."
-                    : deepgramValidated
-                    ? "Configured for real-time speech-to-text transcription."
-                    : "Configure Deepgram API for real-time speech-to-text transcription."}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 flex-shrink-0">
-              {deepgramValidated && (
-                <span className="flex items-center gap-1 text-xs sm:text-sm text-emerald-400">
-                  <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                  <span className="hidden sm:inline">Configured</span>
-                </span>
-              )}
-              <Button
-                type="button"
-                size="sm"
-                onClick={handleToggleDeepgramForm}
-                className="w-full sm:w-auto bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3] text-xs sm:text-sm"
-                style={{
-                  boxShadow:
-                    "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
-                }}
-                disabled={!canManageWhatsApp}
-              >
-                {!canManageWhatsApp
-                  ? "Restricted"
-                  : showDeepgramForm
-                  ? "Close"
-                  : deepgramValidated
-                  ? "Edit Configuration"
-                  : "Configure"}
-              </Button>
-            </div>
-          </div>
-
-          {!canManageWhatsApp && (
-            <p className="text-xs text-amber-300 break-words">
-              Only company owners or admins can configure Deepgram settings.
-            </p>
-          )}
-
-          {showDeepgramForm && (
-            <div className="space-y-4 pt-4 border-t border-white/10">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2 sm:col-span-2">
-                  <Label className="text-white/80 text-sm">
-                    DEEPGRAM_API_KEY <span className="text-red-400">*</span>
-                  </Label>
-                  <Input
-                    type="password"
-                    value={deepgramConfig.apiKey}
-                    onChange={(event) =>
-                      setDeepgramConfig((prev) => ({
-                        ...prev,
-                        apiKey: event.target.value,
-                      }))
-                    }
-                    placeholder="Enter your Deepgram API key"
-                    className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 text-sm sm:text-base"
-                  />
-                  <p className="text-xs text-white/50">
-                    Get your API key from{" "}
-                    <a
-                      href="https://console.deepgram.com/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-cyan-400 hover:text-cyan-300"
-                    >
-                      Deepgram Console
-                    </a>
-                  </p>
-                </div>
-              </div>
-
-              {deepgramValidated && (
-                <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/30 p-3">
-                  <p className="text-emerald-400 text-sm font-medium flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                    Configuration validated successfully
-                  </p>
-                </div>
-              )}
-
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setShowDeepgramForm(false);
-                    setDeepgramValidated(false);
-                    fetchDeepgramConfig();
-                  }}
-                  className="w-full sm:w-auto border-white/20 text-white/70 hover:bg-white/10 text-sm"
-                >
-                  Cancel
-                </Button>
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    onClick={handleValidateDeepgramConfig}
-                    disabled={isValidatingDeepgram || isSavingDeepgram}
-                    variant="outline"
-                    className="w-full sm:w-auto border-cyan-400/50 text-cyan-300 hover:bg-cyan-500/10 text-sm"
-                  >
-                    {isValidatingDeepgram
-                      ? "Validating..."
-                      : "Check Configuration"}
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={handleSaveDeepgramConfig}
-                    disabled={
-                      isSavingDeepgram ||
-                      !deepgramValidated ||
-                      !deepgramConfig.apiKey
-                    }
-                    className="w-full sm:w-auto bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3] text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={{
-                      boxShadow:
-                        "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
-                    }}
-                  >
-                    {isSavingDeepgram ? "Saving..." : "Save Configuration"}
                   </Button>
                 </div>
               </div>

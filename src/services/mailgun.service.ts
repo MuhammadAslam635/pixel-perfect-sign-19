@@ -79,6 +79,28 @@ class MailgunService {
       throw error;
     }
   }
+
+  /**
+   * Check environment credentials status for company integrations
+   */
+  async checkEnvCredentials(): Promise<{
+    success: boolean;
+    envCredentials: Record<string, any>;
+  }> {
+    const response = await API.get("/integration/env/check");
+    return response.data;
+  }
+
+  /**
+   * Validate Mailgun environment credentials
+   */
+  async validateEnvCredentials(): Promise<{
+    success: boolean;
+    validation: { valid: boolean; message: string };
+  }> {
+    const response = await API.get("/integration/mailgun/env/validate");
+    return response.data;
+  }
 }
 
 export const mailgunService = new MailgunService();

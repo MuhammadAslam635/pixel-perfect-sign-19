@@ -111,7 +111,7 @@ export const ActionComponent = () => {
 
   const profileMenu = [
     {
-      title: "Team", 
+      title: "Team",
       meta: "View and manage team members",
       route: "/users",
     },
@@ -120,11 +120,22 @@ export const ActionComponent = () => {
       meta: "View your company knowledge base",
       route: "/company-knowledge",
     },
-    { title: "Settings", meta: "Manage preferences", route: "/settings" },
+    {
+      title: "Settings",
+      meta: "Manage preferences",
+      route: userRoleName === "Admin" ? "/admin/settings" : "/settings",
+    },
     { title: "Sign out", meta: "Log out of EmpaTech OS", route: null },
   ].filter((item) => {
-    // Hide "Team" for CompanyUser
-    if (item.title === "Team" && userRoleName === "CompanyUser") {
+    // Hide "Team" for CompanyUser and Admin
+    if (
+      item.title === "Team" &&
+      (userRoleName === "CompanyUser" || userRoleName === "Admin")
+    ) {
+      return false;
+    }
+    // Hide "Knowledge Base" for Admin
+    if (item.title === "Knowledge Base" && userRoleName === "Admin") {
       return false;
     }
     return true;

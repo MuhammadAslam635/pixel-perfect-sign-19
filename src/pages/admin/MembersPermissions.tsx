@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
-import DashboardLayout from "@/components/dashboard/DashboardLayout";
+import { AdminLayout } from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -292,7 +292,7 @@ const MembersPermissions = () => {
 
   if (userRoleName !== "Admin") {
     return (
-      <DashboardLayout>
+      <AdminLayout>
         <main className="relative px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] mt-20 sm:mt-20 lg:mt-24 xl:mt-28 mb-0 flex flex-col gap-6 text-white flex-1 overflow-y-auto">
           <div className="flex flex-col items-center justify-center py-16">
             <XCircle className="w-16 h-16 text-red-400 mb-4" />
@@ -300,12 +300,12 @@ const MembersPermissions = () => {
             <p className="text-white/50 text-sm">Admin access required to view this page.</p>
           </div>
         </main>
-      </DashboardLayout>
+      </AdminLayout>
     );
   }
 
   return (
-    <DashboardLayout>
+    <AdminLayout>
       <main className="relative px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] mt-20 sm:mt-20 lg:mt-24 xl:mt-28 mb-0 flex flex-col gap-6 text-white flex-1 overflow-y-auto">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -606,7 +606,7 @@ const MembersPermissions = () => {
           </Pagination>
         )}
       </main>
-    </DashboardLayout>
+    </AdminLayout>
   );
 };
 
