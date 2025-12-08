@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useDispatch } from "react-redux";
+import { updateUser } from "@/store/slices/authSlice";
 import { ChevronRight, ChevronLeft, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { onboardingService } from "@/services/onboarding.service";
+import { fetchAndSyncUser } from "@/utils/authSync";
 import {
   OnboardingData,
   OnboardingQuestions,
@@ -56,6 +59,8 @@ const OnboardingPage = () => {
     fetchOnboarding();
   }, [navigate]);
 
+  const dispatch = useDispatch();
+
   // Auto-save when navigating between steps
   const saveProgress = async (newStatus?: 'draft' | 'in_progress'): Promise<boolean> => {
     try {
@@ -73,7 +78,16 @@ const OnboardingPage = () => {
             const user = JSON.parse(userStr);
             if (user.company !== formData.companyName) {
               user.company = formData.companyName;
+              // Also update display name to keep greeting in sync
+              user.name = formData.companyName;
               localStorage.setItem('user', JSON.stringify(user));
+              // Update redux auth slice so current session reflects changes immediately
+              try {
+                dispatch(updateUser({ company: formData.companyName, name: formData.companyName }));
+              } catch (e) {
+                // Ignore dispatch errors but log for debugging
+                console.error('Error dispatching updateUser:', e);
+              }
               // Trigger a storage event for other tabs/components
               window.dispatchEvent(new Event('storage'));
             }
@@ -120,6 +134,16 @@ const OnboardingPage = () => {
       await saveProgress('in_progress');
       const response = await onboardingService.completeOnboarding();
       if (response.success) {
+        // Refresh canonical user data from server and sync localStorage + redux
+        try {
+          const synced = await fetchAndSyncUser();
+          if (synced) {
+            dispatch(updateUser(synced));
+          }
+        } catch (e) {
+          console.error('Error syncing user after onboarding:', e);
+        }
+
         toast.success("Onboarding completed successfully!");
         navigate('/dashboard', { replace: true });
       }

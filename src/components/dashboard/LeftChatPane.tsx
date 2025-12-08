@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Mic, Sparkles, List, Edit } from "lucide-react";
 import { RefObject } from "react";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 
 type Props = {
   leftCardRef: RefObject<HTMLDivElement>;
@@ -13,6 +15,28 @@ type Props = {
   editMode: boolean;
   setEditMode: (m: boolean) => void;
 };
+
+const getTimeBasedGreeting = () => {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good Morning";
+  if (hour < 17) return "Good Afternoon";
+  return "Good Evening";
+};
+
+function Greeting() {
+  const user = useSelector((state: RootState) => state.auth.user);
+  const userName = user?.name || user?.email?.split("@")[0] || "User";
+  const greeting = getTimeBasedGreeting();
+
+  return (
+    <div className="relative z-10 text-center">
+      <h1 className="text-[2.5rem] font-semibold mb-2 text-foreground leading-tight">
+        {greeting}, {userName}!
+      </h1>
+      <p className="text-xl text-muted-foreground/80 font-normal">How can I assist You?</p>
+    </div>
+  );
+}
 
 export default function LeftChatPane({
   leftCardRef,
@@ -68,14 +92,7 @@ export default function LeftChatPane({
         </div>
       </div>
 
-      <div className="relative z-10 text-center">
-        <h1 className="text-[2.5rem] font-semibold mb-2 text-foreground leading-tight">
-          Good Morning, Zubair!
-        </h1>
-        <p className="text-xl text-muted-foreground/80 font-normal">
-          How can I assist You?
-        </p>
-      </div>
+      <Greeting />
 
       {/* AI Assistant Input */}
       <div className="absolute bottom-4 left-4 right-4 md:bottom-6 md:left-6 md:right-6">

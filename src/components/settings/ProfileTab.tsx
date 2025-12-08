@@ -17,6 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import API from "@/utils/api";
+import { getUserData } from "@/utils/authHelpers";
 import { RootState } from "@/store/store";
 import { logout, updateUser } from "@/store/slices/authSlice";
 
@@ -87,6 +88,7 @@ export const ProfileTab = () => {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setErrors({ name: "", email: "", company: "" });
+    console.log("user.token", user.token);
 
     if (!user?.token) {
       handleUnauthorized();
@@ -97,9 +99,11 @@ export const ProfileTab = () => {
       const response = await API.post("/company-profile-update", formState);
 
       if (response.status === 200 && response.data.success) {
+        const existing = getUserData();
+        const token = user?.token || existing?.token;
         const updatedUser = {
           ...response.data.user,
-          token: user.token,
+          token,
         };
 
         localStorage.setItem("user", JSON.stringify(updatedUser));
