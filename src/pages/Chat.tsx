@@ -262,7 +262,7 @@ const ChatPage = () => {
         const trimmedMessage = variables.message.trim();
         const chatKey = variables.chatId ?? NEW_CHAT_KEY;
         const tempMessage: ChatMessage = {
-          _id: `temp-${Date.now()}`,
+          _id: `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           chatId: variables.chatId ?? "temp",
           role: "user",
           content: trimmedMessage,

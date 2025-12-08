@@ -102,6 +102,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
   const [interimTranscript, setInterimTranscript] = useState("");
   const scrollAreaRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const isSendingRef = useRef(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -226,9 +227,15 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
     >({
       mutationFn: sendChatMessage,
       onMutate: (variables) => {
+        // Prevent multiple simultaneous sends
+        if (isSendingRef.current) {
+          throw new Error("Already sending a message");
+        }
+        isSendingRef.current = true;
+
         const trimmedMessage = variables.message.trim();
         const tempMessage: ChatMessage = {
-          _id: `temp-${Date.now()}`,
+          _id: `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           chatId: currentChatId ?? "temp",
           role: "user",
           content: trimmedMessage,
@@ -238,6 +245,14 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
         setMessage("");
         // Use functional update to ensure we have the latest state
         setLocalMessages((prev) => {
+          // Check if this exact message is already in the list to prevent duplicates
+          const messageExists = prev.some(
+            msg => msg.role === "user" && msg.content === trimmedMessage && !msg._id.startsWith("temp-")
+          );
+          if (messageExists) {
+            return prev; // Don't add duplicate
+          }
+
           const updated = [...prev, tempMessage];
           onMessagesChange(updated);
           return updated;
@@ -246,6 +261,8 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
         return { tempMessage };
       },
       onSuccess: async (response) => {
+        isSendingRef.current = false;
+
         const newChatId = response.data.chatId;
         const newMessages = response.data.messages || [];
 
@@ -270,62 +287,40 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
             });
 
             if (chatDetail?.messages && chatDetail.messages.length > 0) {
-              // Use functional update to merge with any pending optimistic messages
-              setLocalMessages((prev) => {
-                // Check if we have a temp message that's not in the server response
-                const tempMessages = prev.filter(
-                  (msg) => msg._id.startsWith("temp-") && msg.role === "user"
-                );
-
-                // If server messages include all our messages, use server data
-                // Otherwise, merge temp messages with server messages
-                if (tempMessages.length === 0) {
-                  const updated = chatDetail.messages;
-                  onMessagesChange(updated);
-                  return updated;
-                }
-
-                // Merge: server messages + any temp messages not yet in server response
-                const serverMessageIds = new Set(
-                  chatDetail.messages.map((m) => m._id)
-                );
-                const pendingTempMessages = tempMessages.filter(
-                  (tm) => !serverMessageIds.has(tm._id)
-                );
-
-                const updated = [
-                  ...chatDetail.messages,
-                  ...pendingTempMessages,
-                ];
-                onMessagesChange(updated);
-                return updated;
-              });
+              // Use functional update to replace all messages with server data
+              // Remove any temp messages as server should have the real messages now
+              setLocalMessages(chatDetail.messages);
+              onMessagesChange(chatDetail.messages);
             } else if (newMessages.length > 0) {
               // Fallback to response messages if refetch doesn't return messages yet
-              setLocalMessages((prev) => {
-                onMessagesChange(newMessages);
-                return newMessages;
-              });
+              setLocalMessages(newMessages);
+              onMessagesChange(newMessages);
             }
           } catch (error) {
             // If refetch fails, use messages from response
             if (newMessages.length > 0) {
-              setLocalMessages((prev) => {
-                onMessagesChange(newMessages);
-                return newMessages;
-              });
+              setLocalMessages(newMessages);
+              onMessagesChange(newMessages);
             }
           }
         }
       },
       onError: (error, variables, context) => {
-        // Remove the last user message on error
-        setLocalMessages((prev) => {
-          const updated = prev.slice(0, -1);
-          onMessagesChange(updated);
-          return updated;
-        });
-        setMessage(variables.message);
+        isSendingRef.current = false;
+
+        // Remove only the temp message that failed, not all messages
+        if (context?.tempMessage) {
+          setLocalMessages((prev) => {
+            const updated = prev.filter(msg => msg._id !== context.tempMessage._id);
+            onMessagesChange(updated);
+            return updated;
+          });
+        }
+
+        // Only restore the message if it's not already restored and user hasn't typed something new
+        if (message.trim() === "") {
+          setMessage(variables.message);
+        }
 
         toast({
           title: "Unable to send message",
@@ -337,11 +332,18 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
       },
     });
 
+  // Cleanup sending ref when mutation state changes
+  useEffect(() => {
+    if (!isSendingMessage) {
+      isSendingRef.current = false;
+    }
+  }, [isSendingMessage]);
+
   // Sync local messages with parent and chat detail
   // Skip syncing when sending a message to preserve optimistic updates
   useEffect(() => {
     // Don't sync if we're currently sending a message (to preserve optimistic updates)
-    if (isSendingMessage) {
+    if (isSendingRef.current) {
       return;
     }
 
@@ -363,11 +365,10 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
     chatDetail?.messages,
     initialMessages,
     onMessagesChange,
-    isSendingMessage,
   ]);
 
   const handleSendMessage = () => {
-    if (message.trim() && !isSendingMessage && !isListening) {
+    if (message.trim() && !isSendingRef.current && !isListening) {
       mutateSendMessage({
         message: message.trim(),
         chatId: currentChatId,
