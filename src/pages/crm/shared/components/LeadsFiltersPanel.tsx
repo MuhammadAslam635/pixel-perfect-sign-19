@@ -141,7 +141,7 @@ export const LeadsFiltersInline = ({
         <Button
           size="sm"
           variant="ghost"
-          className="text-gray-300 hover:text-white px-2 py-1 h-8 text-xs"
+          className="bg-accent text-white hover:bg-accent/80 px-2 py-1 h-8 text-xs"
           onClick={onResetFilters}
         >
           Clear

@@ -734,7 +734,7 @@ const index = () => {
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                className="h-8 w-8 p-0 text-gray-400 hover:text-white hover:bg-white/10 rounded-full flex items-center justify-center"
+                                className="h-8 w-8 p-0 bg-accent text-white hover:bg-accent/80 rounded-full flex items-center justify-center"
                                 onClick={() => setLeadFiltersOpen(false)}
                               >
                                 <svg
