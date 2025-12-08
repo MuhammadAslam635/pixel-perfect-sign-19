@@ -286,6 +286,19 @@ const ChatPage = () => {
             setSelectedChatId(newChatId);
           }
 
+          // Set the query data directly from the response when messages are available
+          // This ensures immediate cache update and proper deduplication
+          if (response.data.messages) {
+            queryClient.setQueryData(["chatDetail", newChatId], {
+              _id: newChatId,
+              title: response.data.title || "New Conversation",
+              messages: response.data.messages,
+              createdAt: response.data.createdAt || new Date().toISOString(),
+              updatedAt: response.data.updatedAt || new Date().toISOString(),
+            });
+          }
+
+          // Move optimistic messages from NEW_CHAT_KEY to the actual chat ID for new chats
           setOptimisticMessagesByChat((prev) => {
             if (variables.chatId) {
               return prev;
@@ -305,6 +318,7 @@ const ChatPage = () => {
             return updated;
           });
 
+          // Invalidate to ensure fresh data
           queryClient.invalidateQueries({
             queryKey: ["chatDetail", newChatId],
           });
@@ -472,22 +486,14 @@ const ChatPage = () => {
 
       // If this is a temp message, check if there's a recent server message with same content+role
       if (message._id.startsWith("temp-")) {
-        // Extract timestamp from temp ID (format: temp-1234567890)
-        const tempTimestamp = parseInt(message._id.replace("temp-", ""));
         const signature = `${message.role}-${message.content}`;
 
-        // Only match with server messages created within 30 seconds after the temp message
+        // Look for a server message with matching role and content
         const matchingServerMessage = apiMessages.find((serverMsg) => {
-          if (`${serverMsg.role}-${serverMsg.content}` !== signature) {
-            return false;
-          }
-          const serverTimestamp = new Date(serverMsg.createdAt).getTime();
-          const timeDiff = serverTimestamp - tempTimestamp;
-          // Server message should be created after temp message, within 30 seconds
-          return timeDiff >= 0 && timeDiff <= 30000;
+          return `${serverMsg.role}-${serverMsg.content}` === signature;
         });
 
-        // If we found a matching recent server message, filter out the temp message
+        // If we found a matching server message, filter out the temp message
         return !matchingServerMessage;
       }
 
