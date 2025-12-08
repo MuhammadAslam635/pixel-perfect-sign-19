@@ -427,8 +427,8 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
                         table: ({ node, ...props }) => (
                           <div className="my-4 w-full max-w-none scrollbar-hide overflow-x-auto rounded-lg border border-white/20 text-left">
                             <table
-                              className="w-full table-fixed border-collapse text-left"
-                              style={{ tableLayout: 'fixed' }}
+                              className="w-full border-collapse text-left"
+                              style={{ tableLayout: 'auto' }}
                               {...props}
                             />
                           </div>
@@ -454,7 +454,8 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
                             style={{
                               wordBreak: 'break-word',
                               overflowWrap: 'break-word',
-                              whiteSpace: 'normal'
+                              whiteSpace: 'normal',
+                              maxWidth: '400px'
                             }}
                             {...props}
                           />
@@ -465,7 +466,8 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
                             style={{
                               wordBreak: 'break-word',
                               overflowWrap: 'break-word',
-                              whiteSpace: 'normal'
+                              whiteSpace: 'normal',
+                              maxWidth: '400px'
                             }}
                             {...props}
                           />

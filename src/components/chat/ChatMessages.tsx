@@ -340,13 +340,25 @@ const ChatMessages = ({
                       ),
                       th: ({ node, ...props }) => (
                         <th
-                          className="border border-white/20 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-white whitespace-nowrap align-top"
+                          className="break-words border border-white/20 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-white align-top"
+                          style={{
+                            wordBreak: 'break-word',
+                            overflowWrap: 'break-word',
+                            whiteSpace: 'normal',
+                            maxWidth: '400px'
+                          }}
                           {...props}
                         />
                       ),
                       td: ({ node, ...props }) => (
                         <td
-                          className="border border-white/20 px-4 py-3 text-sm text-white/90 whitespace-nowrap align-top"
+                          className="break-words border border-white/20 px-4 py-3 text-sm text-white/90 align-top"
+                          style={{
+                            wordBreak: 'break-word',
+                            overflowWrap: 'break-word',
+                            whiteSpace: 'normal',
+                            maxWidth: '400px'
+                          }}
                           {...props}
                         />
                       ),
