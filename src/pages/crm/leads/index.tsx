@@ -57,12 +57,24 @@ const index = () => {
     // Reset to page 1 when changing view mode
     setLeadsPage(1);
   }, [viewMode]);
-  const [leadsCompanyFilter, setLeadsCompanyFilter] = useState<string[]>([]);
-  const [leadsCountryFilter, setLeadsCountryFilter] = useState<string>("");
+
+  const [leadsCountryFilter, setLeadsCountryFilter] = useState<string[]>([]);
   const [leadsPositionFilter, setLeadsPositionFilter] = useState<string[]>([]);
+  const [leadsCompanyFilter, setLeadsCompanyFilter] = useState<string[]>([]);
   const [leadsHasEmailFilter, setLeadsHasEmailFilter] = useState(false);
   const [leadsHasPhoneFilter, setLeadsHasPhoneFilter] = useState(false);
   const [leadsHasLinkedinFilter, setLeadsHasLinkedinFilter] = useState(false);
+  
+  // Reset filters
+  const resetLeadAdvancedFilters = () => {
+    setLeadsCountryFilter([]);
+    setLeadsPositionFilter([]);
+    setLeadsHasEmailFilter(false);
+    setLeadsHasPhoneFilter(false);
+    setLeadsHasLinkedinFilter(false);
+  };
+
+
   const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [selectedExecutiveFallback, setSelectedExecutiveFallback] =
@@ -99,15 +111,7 @@ const index = () => {
   const [phoneMessageId, setPhoneMessageId] = useState<string | null>(null);
   const [leadFiltersOpen, setLeadFiltersOpen] = useState(false);
 
-  const resetLeadAdvancedFilters = useCallback(() => {
-    setLeadsCountryFilter("");
-    setLeadsPositionFilter([]);
-    setLeadsCompanyFilter([]);
-    setLeadsHasEmailFilter(false);
-    setLeadsHasPhoneFilter(false);
-    setLeadsHasLinkedinFilter(false);
-    setLeadFiltersOpen(false);
-  }, []);
+
   const resolveErrorMessage = useCallback(
     (error: unknown, fallback: string) => {
       const err = error as any;
@@ -420,6 +424,9 @@ const index = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  // Leads filters and pagination
+
+
   // Fetch all companies for the leads filter dropdown (limit to 500 for dropdown)
   const { companies: allCompaniesForFilter } = useCompaniesData({
     page: 1,
@@ -434,7 +441,7 @@ const index = () => {
 
   const hasLeadAdvancedFilters = useMemo(
     () =>
-      leadsCountryFilter.trim() !== "" ||
+      leadsCountryFilter.length > 0 ||
       leadsPositionFilter.length > 0 ||
       leadsCompanyFilter.length > 0 ||
       leadsHasEmailFilter ||
@@ -450,43 +457,65 @@ const index = () => {
     ]
   );
 
-  const leadsParams = useMemo(() => {
-    const params: LeadsQueryParams = {
-      page: leadsPage,
-      limit: leadsLimit,
-      search: leadsSearch || undefined,
-      companyId:
-        leadsCompanyFilter.length > 0
-          ? leadsCompanyFilter.join(",")
-          : undefined,
-      sortBy: "createdAt",
-      sortOrder: -1,
-    };
+  // Client-side filtering logic setup using allLeadsForCount
+  const filteredLeads = useMemo(() => {
+    let result = [...(allLeadsForCount || [])];
 
-    if (leadsCountryFilter.trim()) {
-      params.country = leadsCountryFilter.trim();
+    // Text search (name or email)
+    if (leadsSearch) {
+      const searchLower = leadsSearch.toLowerCase();
+      result = result.filter(
+        (lead) =>
+          lead.name?.toLowerCase().includes(searchLower) ||
+          lead.email?.toLowerCase().includes(searchLower) ||
+          lead.companyName?.toLowerCase().includes(searchLower)
+      );
     }
 
+    // Company filter (multi-select)
+    if (leadsCompanyFilter.length > 0) {
+      result = result.filter((lead) =>
+        leadsCompanyFilter.includes(lead.companyId)
+      );
+    }
+
+    // Country filter (multi-select)
+    if (leadsCountryFilter.length > 0) {
+      // Assuming lead.location stores the country name or we match against it
+      result = result.filter(
+        (lead) =>
+          lead.location &&
+          leadsCountryFilter.some((country) =>
+            lead.location?.toLowerCase().includes(country.toLowerCase())
+          )
+      );
+    }
+
+    // Position/Title filter (multi-select)
     if (leadsPositionFilter.length > 0) {
-      params.position = leadsPositionFilter.join(",");
+      result = result.filter(
+        (lead) =>
+          lead.position &&
+          leadsPositionFilter.some((pos) =>
+            lead.position?.toLowerCase().includes(pos.toLowerCase())
+          )
+      );
     }
 
+    // Boolean filters
     if (leadsHasEmailFilter) {
-      params.hasEmail = true;
+      result = result.filter((lead) => lead.email);
     }
-
     if (leadsHasPhoneFilter) {
-      params.hasPhone = true;
+      result = result.filter((lead) => lead.phone || lead.whatsapp);
     }
-
     if (leadsHasLinkedinFilter) {
-      params.hasLinkedin = true;
+      result = result.filter((lead) => lead.linkedinUrl);
     }
 
-    return params;
+    return result;
   }, [
-    leadsPage,
-    leadsLimit,
+    allLeadsForCount,
     leadsSearch,
     leadsCompanyFilter,
     leadsCountryFilter,
@@ -496,14 +525,37 @@ const index = () => {
     leadsHasLinkedinFilter,
   ]);
 
-  const {
-    query: leadsQuery,
-    leads,
-    totalLeads: filteredTotalLeads,
-    pagination: leadsPagination,
-  } = useLeadsData(leadsParams, {
-    enabled: true,
-  });
+  // Client-side pagination
+  const { paginatedLeads, totalFilteredLeads, totalPages } = useMemo(() => {
+    const total = filteredLeads.length;
+    const pages = Math.ceil(total / leadsLimit);
+    const start = (leadsPage - 1) * leadsLimit;
+    const end = start + leadsLimit;
+    const sliced = filteredLeads.slice(start, end);
+
+    return {
+      paginatedLeads: sliced,
+      totalFilteredLeads: total,
+      totalPages: pages,
+    };
+  }, [filteredLeads, leadsPage, leadsLimit]);
+
+  // Use local data instead of server query for the list
+  const leadsLoading = !allLeadsForCount; // Simplistic loading check
+  
+  // Create pagination object matching the expected interface
+  const clientPagination = {
+    page: leadsPage,
+    totalPages: totalPages,
+    totalDocs: totalFilteredLeads,
+    limit: leadsLimit,
+    hasNextPage: leadsPage < totalPages,
+    hasPrevPage: leadsPage > 1,
+    nextPage: leadsPage < totalPages ? leadsPage + 1 : null,
+    prevPage: leadsPage > 1 ? leadsPage - 1 : null,
+    offset: (leadsPage - 1) * leadsLimit,
+    pagingCounter: (leadsPage - 1) * leadsLimit + 1,
+  };
 
   // Fetch total leads count without search/filter for stats
   const { totalLeads: totalLeadsForStats } = useLeadsData(
@@ -513,8 +565,6 @@ const index = () => {
 
   // Fetch shared CRM stats for top cards (including companies and leads counts)
   const { stats: crmStats } = useCompanyCrmStatsData({});
-
-  const leadsLoading = leadsQuery.isLoading || leadsQuery.isFetching;
 
   const stats = useMemo(
     () =>
@@ -539,31 +589,6 @@ const index = () => {
     ]
   );
 
-  useEffect(() => {
-    if (leadsQuery.error) {
-      const error = leadsQuery.error as any;
-      toast.error(error?.response?.data?.message || "Failed to fetch leads");
-    }
-  }, [leadsQuery.error]);
-
-  useEffect(() => {
-    if (!pendingLeadIdentifier) return;
-
-    const { email, name } = pendingLeadIdentifier;
-
-    const matchedLead =
-      (email && leads.find((lead) => lead.email?.toLowerCase() === email)) ||
-      (name && leads.find((lead) => lead.name?.toLowerCase() === name));
-
-    if (matchedLead) {
-      setSelectedLeadId(matchedLead._id);
-      setSelectedExecutiveFallback(null);
-      setPendingLeadIdentifier(null);
-    } else if (!leadsLoading) {
-      setPendingLeadIdentifier(null);
-    }
-  }, [pendingLeadIdentifier, leads, leadsLoading]);
-
   // Reset pagination when filters change
   useEffect(() => {
     setLeadsPage(1);
@@ -577,6 +602,24 @@ const index = () => {
     leadsHasPhoneFilter,
     leadsHasLinkedinFilter,
   ]);
+
+  useEffect(() => {
+    if (!pendingLeadIdentifier || !allLeadsForCount) return;
+
+    const { email, name } = pendingLeadIdentifier;
+
+    const matchedLead =
+      (email && allLeadsForCount.find((lead) => lead.email?.toLowerCase() === email)) ||
+      (name && allLeadsForCount.find((lead) => lead.name?.toLowerCase() === name));
+
+    if (matchedLead) {
+      setSelectedLeadId(matchedLead._id);
+      setSelectedExecutiveFallback(null);
+      setPendingLeadIdentifier(null);
+    } else if (!leadsLoading) {
+      setPendingLeadIdentifier(null);
+    }
+  }, [pendingLeadIdentifier, allLeadsForCount, leadsLoading]);
 
   const handleLeadClick = (leadId: string) => {
     setSelectedLeadId((prev) => (prev === leadId ? null : leadId));
@@ -593,10 +636,10 @@ const index = () => {
     setSelectedExecutiveFallback(executive);
     setPendingLeadIdentifier({ email, name });
 
-    if (leads.length > 0) {
+    if (allLeadsForCount && allLeadsForCount.length > 0) {
       const matchedLead =
-        (email && leads.find((lead) => lead.email?.toLowerCase() === email)) ||
-        (name && leads.find((lead) => lead.name?.toLowerCase() === name));
+        (email && allLeadsForCount.find((lead) => lead.email?.toLowerCase() === email)) ||
+        (name && allLeadsForCount.find((lead) => lead.name?.toLowerCase() === name));
 
       if (matchedLead) {
         setSelectedLeadId(matchedLead._id);
@@ -608,7 +651,7 @@ const index = () => {
 
   const isSidebarOpen =
     selectedLeadId !== null || selectedExecutiveFallback !== null;
-  const selectedLeadDetails: Lead | undefined = leads.find(
+  const selectedLeadDetails: Lead | undefined = allLeadsForCount?.find(
     (lead) => lead._id === selectedLeadId
   );
 
@@ -658,7 +701,7 @@ const index = () => {
                     />
 
                     {/* Company Filter Dropdown */}
-                    <div className="relative w-full sm:w-auto sm:min-w-[240px]">
+                    <div className="relative w-56">
                       <div className="absolute left-3 top-1/2 -translate-y-1/2 z-10">
                         <Layers className="w-4 h-4 text-gray-400" />
                       </div>
@@ -681,7 +724,8 @@ const index = () => {
                         searchPlaceholder="Search companies..."
                         emptyMessage="No companies found."
                         className="pl-10 h-9 text-xs"
-                        maxDisplayItems={3}
+                        maxDisplayItems={1}
+                        popoverWidth="w-[320px]"
                       />
                     </div>
 
@@ -714,7 +758,7 @@ const index = () => {
                               onCountryFilterChange={setLeadsCountryFilter}
                               positionFilter={leadsPositionFilter}
                               onPositionFilterChange={setLeadsPositionFilter}
-                              leads={leads}
+                              leads={allLeadsForCount}
                               hasEmailFilter={leadsHasEmailFilter}
                               onHasEmailFilterChange={setLeadsHasEmailFilter}
                               hasPhoneFilter={leadsHasPhoneFilter}
@@ -774,7 +818,7 @@ const index = () => {
             {/* Left: Companies/Leads List */}
             <div className="relative pt-3 sm:pt-4 px-3 sm:px-6 rounded-xl sm:rounded-[30px] w-full h-full border-0 sm:border sm:border-white/10 bg-transparent sm:bg-[linear-gradient(173.83deg,_rgba(255,255,255,0.08)_4.82%,_rgba(255,255,255,0)_38.08%,_rgba(255,255,255,0)_56.68%,_rgba(255,255,255,0.02)_95.1%)]">
               <LeadsList
-                leads={leads}
+                leads={paginatedLeads}
                 loading={leadsLoading}
                 selectedLeadId={selectedLeadId}
                 onSelectLead={handleLeadClick}
@@ -786,9 +830,9 @@ const index = () => {
                 companyFilter={leadsCompanyFilter}
                 companies={allCompaniesForFilter}
                 page={leadsPage}
-                totalPages={leadsPagination?.totalPages || 1}
+                totalPages={totalPages}
                 onPageChange={setLeadsPage}
-                totalLeads={filteredTotalLeads}
+                totalLeads={totalFilteredLeads}
                 showFilters={false}
                 selectedLead={selectedLeadDetails}
                 executiveFallback={selectedExecutiveFallback}

@@ -798,7 +798,7 @@ const LeadsList: FC<LeadsListProps> = ({
             }}
             layout
           >
-            <AnimatePresence mode="popLayout">
+            <AnimatePresence mode="wait">
               {loading
                 ? renderLoading()
                 : leads.length === 0
@@ -825,12 +825,11 @@ const LeadsList: FC<LeadsListProps> = ({
       </div>
 
       {/* Fixed pagination at bottom */}
-      {/* {!loading && leads.length > 0 && (
-        <>
+      {!loading && leads.length > 0 && (
+        <div className="mt-0 pb-4">
           {renderPagination()}
-          {renderPageSizeSelector("bottom")}
-        </>
-      )} */}
+        </div>
+      )}
     </div>
   );
 };

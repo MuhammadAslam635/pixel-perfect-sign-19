@@ -212,12 +212,16 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0 text-white border-0 overflow-hidden">
+      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0 text-white border border-white/10 overflow-hidden rounded-[32px] shadow-[0_25px_60px_rgba(0,0,0,0.55)] "
+        style={{
+          background: "#0a0a0a"
+        }}>
         {/* Glassmorphism Background - pointer-events-none so they don't block clicks */}
-        <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-white/5 to-transparent backdrop-blur-xl rounded-lg pointer-events-none" />
-        <div className="absolute inset-0 bg-[#0b0f20]/80 backdrop-blur-md rounded-lg pointer-events-none" />
-        <div className="absolute inset-[1px] bg-gradient-to-br from-white/5 to-transparent rounded-lg pointer-events-none" />
-        <div className="absolute inset-0 border border-white/10 rounded-lg shadow-2xl shadow-black/50 pointer-events-none" />
+        <div className="absolute inset-0 pointer-events-none"
+          style={{
+            background: "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0) 38.08%, rgba(255, 255, 255, 0) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)"
+          }} />
+
         
         <div className="relative z-10 flex flex-col h-full min-h-0">
           <DialogHeader className="px-6 pt-6 pb-4 flex-shrink-0 border-b border-white/10">

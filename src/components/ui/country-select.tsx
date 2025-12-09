@@ -82,7 +82,7 @@ export function CountrySelect({
             <CommandEmpty className="py-6 text-center text-sm text-white/60">
               No country found.
             </CommandEmpty>
-            <CommandGroup className="max-h-[300px] overflow-y-auto">
+            <CommandGroup className="max-h-[300px] overflow-y-auto scrollbar-hide">
               {countries.map((country) => (
                 <CommandItem
                   key={country.value}

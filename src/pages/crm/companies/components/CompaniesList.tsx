@@ -786,7 +786,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
           }}
           layout
         >
-          <AnimatePresence mode="popLayout">
+          <AnimatePresence mode="wait">
             {loading
               ? renderLoading()
               : companies.length === 0
@@ -843,12 +843,12 @@ const CompaniesList: FC<CompaniesListProps> = ({
       )}
 
       {/* Fixed pagination at bottom */}
-      {/* {!loading && companies.length > 0 && (
-        <>
+      {/* Fixed pagination at bottom */}
+      {!loading && companies.length > 0 && (
+        <div className="mt-4">
           {renderPagination()}
-          {renderPageSizeSelector("bottom")}
-        </>
-      )} */}
+        </div>
+      )}
     </div>
   );
 };

@@ -54,12 +54,12 @@ export interface LeadsQueryParams {
   page?: number;
   limit?: number;
   search?: string;
-  companyId?: string;
+  companyId?: string | string[];
   sortBy?: string;
   sortOrder?: "asc" | "desc" | 1 | -1;
-  position?: string;
+  position?: string | string[];
   location?: string; // Deprecated - use country instead
-  country?: string;
+  country?: string | string[];
   hasEmail?: boolean;
   hasPhone?: boolean;
   hasLinkedin?: boolean;

@@ -62,13 +62,13 @@ export const CompanyFiltersInline = ({
   }));
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
+    <div className="flex items-center gap-1.5">
       {/* Industry Filter */}
       <div className="flex items-center gap-1">
         <label className="text-[11px] uppercase tracking-[0.08em] text-gray-400 whitespace-nowrap">
           Industry:
         </label>
-        <div className="w-36">
+        <div className="w-40">
           <MultiSelect
             options={industryOptions}
             value={industryFilter}
@@ -78,6 +78,7 @@ export const CompanyFiltersInline = ({
             emptyMessage="No industries found."
             className="h-8 text-xs"
             maxDisplayItems={1}
+            popoverWidth="w-[280px]"
           />
         </div>
       </div>
@@ -88,8 +89,8 @@ export const CompanyFiltersInline = ({
           Size:
         </label>
         <Select value={employeeRange} onValueChange={onEmployeeRangeChange}>
-          <SelectTrigger className="h-8 w-24 rounded-lg border border-white/15 bg-transparent text-white text-xs">
-            <SelectValue placeholder="Any" />
+          <SelectTrigger className="h-8 w-40 rounded-lg border border-white/15 bg-transparent text-white text-xs">
+            <SelectValue placeholder="All sizes" />
           </SelectTrigger>
           <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a] rounded-xl">
             {employeeRanges.map((option) => (
@@ -119,25 +120,25 @@ export const CompanyFiltersInline = ({
       </div>
 
       {/* Checkboxes */}
-      <div className="flex items-center gap-1.5 ml-1">
-        <label className="flex items-center gap-1 cursor-pointer">
+      <div className="flex items-center gap-3 ml-2">
+        <label className="flex items-center gap-1.5 cursor-pointer">
           <Checkbox
             checked={hasPeopleFilter}
             onCheckedChange={(checked) =>
               onHasPeopleFilterChange(Boolean(checked))
             }
-            className="border-white/40 data-[state=checked]:bg-white data-[state=checked]:text-gray-900"
+            className="border-white/40 data-[state=checked]:bg-white data-[state=checked]:text-gray-900 w-3.5 h-3.5"
           />
           <span className="text-xs text-gray-300">Contacts</span>
         </label>
 
-        <label className="flex items-center gap-1 cursor-pointer">
+        <label className="flex items-center gap-1.5 cursor-pointer">
           <Checkbox
             checked={hasWebsiteFilter}
             onCheckedChange={(checked) =>
               onHasWebsiteFilterChange(Boolean(checked))
             }
-            className="border-white/40 data-[state=checked]:bg-white data-[state=checked]:text-gray-900"
+            className="border-white/40 data-[state=checked]:bg-white data-[state=checked]:text-gray-900 w-3.5 h-3.5"
           />
           <span className="text-xs text-gray-300">Website</span>
         </label>

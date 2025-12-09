@@ -44,7 +44,8 @@ export function MultiSelect({
   className,
   disabled = false,
   maxDisplayItems = 3,
-}: MultiSelectProps) {
+  popoverWidth,
+}: MultiSelectProps & { popoverWidth?: string }) {
   const [open, setOpen] = React.useState(false);
   const [internalValue, setInternalValue] = React.useState<string[]>(value);
 
@@ -90,14 +91,14 @@ export function MultiSelect({
           )}
           disabled={disabled}
         >
-          <div className="flex flex-1 flex-wrap gap-1 overflow-hidden items-center">
+          <div className="flex flex-1 flex-nowrap gap-1 overflow-hidden items-center">
             {displayItems.length > 0 ? (
               <>
                 {displayItems.map((option) => (
                   <Badge
                     key={option.value}
                     variant="secondary"
-                    className="bg-white/10 text-white border border-white/20 text-xs px-2 py-0 h-5 flex items-center gap-1 flex-shrink-0"
+                    className="bg-white/10 text-white border border-white/20 text-xs px-2 py-0 h-5 flex items-center gap-1 flex-shrink-0 pb-0"
                   >
                     <span className="truncate max-w-24 sm:max-w-32 md:max-w-40 lg:max-w-48">
                       {option.label}
@@ -116,7 +117,7 @@ export function MultiSelect({
                 {remainingCount > 0 && (
                   <Badge
                     variant="secondary"
-                    className="bg-white/10 text-white border border-white/20 text-xs px-1.5 py-0 h-5 flex-shrink-0"
+                    className="bg-white/10 text-white border border-white/20 text-xs px-1.5 py-0 h-5 flex-shrink-0 pb-0"
                   >
                     +{remainingCount}
                   </Badge>
@@ -129,7 +130,7 @@ export function MultiSelect({
           <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50 ml-1" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[--radix-popover-trigger-width] p-0 bg-[#1a1a1a] border-[#2a2a2a] rounded-xl">
+      <PopoverContent className={cn("p-0 bg-[#1a1a1a] border-[#2a2a2a] rounded-xl", popoverWidth || "w-[--radix-popover-trigger-width]")}>
         <Command>
           <CommandInput
             placeholder={searchPlaceholder}
