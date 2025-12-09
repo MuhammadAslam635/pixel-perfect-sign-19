@@ -13,10 +13,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
-import API from "@/utils/api";
 import { getUserData } from "@/utils/authHelpers";
 import { RootState } from "@/store/store";
 import { logout, updateUser } from "@/store/slices/authSlice";
+import { userService } from "@/services/user.service";
 
 interface AdminProfileForm {
   id: string;
@@ -77,19 +77,18 @@ export const AdminProfileTab = () => {
     event.preventDefault();
     setErrors({ name: "", email: "" });
 
-    if (!user?.token) {
-      handleUnauthorized();
-      return;
-    }
-
     try {
-      const response = await API.post("/admin/profile-update", formState);
+      const response = await userService.updateAdminProfile({
+        id: formState.id,
+        name: formState.name,
+        email: formState.email,
+      });
 
-      if (response.status === 200 && response.data.success) {
+      if (response.success) {
         const existing = getUserData();
         const token = user?.token || existing?.token;
         const updatedUser = {
-          ...response.data.user,
+          ...response.user,
           token,
         };
         localStorage.setItem("user", JSON.stringify(updatedUser));
@@ -97,13 +96,13 @@ export const AdminProfileTab = () => {
 
         toast({
           title: "Profile updated",
-          description: response.data.message ?? "Changes saved successfully.",
+          description: response.message ?? "Changes saved successfully.",
         });
       } else {
         toast({
           title: "Update failed",
           description:
-            response.data.message ??
+            response.message ??
             "Profile settings update failed. Please try again.",
           variant: "destructive",
         });

@@ -224,4 +224,38 @@ export const userService = {
       throw error;
     }
   },
+
+  /**
+   * Update company profile (for company users)
+   */
+  updateCompanyProfile: async (data: {
+    id: string;
+    name?: string;
+    email?: string;
+    company?: string;
+    bio?: string;
+  }): Promise<{ success: boolean; message: string; user: User }> => {
+    try {
+      const response = await API.post("/company-profile-update", data);
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  /**
+   * Update admin profile
+   */
+  updateAdminProfile: async (data: {
+    id: string;
+    name?: string;
+    email?: string;
+  }): Promise<{ success: boolean; message: string; user: User }> => {
+    try {
+      const response = await API.post("/admin/profile-update", data);
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
 };

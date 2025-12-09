@@ -16,10 +16,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
-import API from "@/utils/api";
 import { getUserData } from "@/utils/authHelpers";
 import { RootState } from "@/store/store";
 import { logout, updateUser } from "@/store/slices/authSlice";
+import { userService } from "@/services/user.service";
 
 interface ProfileErrors {
   name: string;
@@ -88,21 +88,21 @@ export const ProfileTab = () => {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setErrors({ name: "", email: "", company: "" });
-    console.log("user.token", user.token);
-
-    if (!user?.token) {
-      handleUnauthorized();
-      return;
-    }
 
     try {
-      const response = await API.post("/company-profile-update", formState);
+      const response = await userService.updateCompanyProfile({
+        id: formState.id,
+        name: formState.name,
+        email: formState.email,
+        company: formState.company,
+        bio: formState.bio,
+      });
 
-      if (response.status === 200 && response.data.success) {
+      if (response.success) {
         const existing = getUserData();
         const token = user?.token || existing?.token;
         const updatedUser = {
-          ...response.data.user,
+          ...response.user,
           token,
         };
 
@@ -111,13 +111,13 @@ export const ProfileTab = () => {
 
         toast({
           title: "Profile updated",
-          description: response.data.message ?? "Changes saved successfully.",
+          description: response.message ?? "Changes saved successfully.",
         });
       } else {
         toast({
           title: "Update failed",
           description:
-            response.data.message ??
+            response.message ??
             "Profile settings update failed. Please try again.",
           variant: "destructive",
         });
