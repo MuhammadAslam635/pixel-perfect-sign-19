@@ -111,6 +111,12 @@ export interface GetInboxEmailsParams {
     | "All Emails";
 }
 
+export interface GetSentEmailsParams {
+  page?: number;
+  limit?: number;
+  starred?: boolean;
+}
+
 export interface GetEmailThreadsParams {
   page?: number;
   limit?: number;

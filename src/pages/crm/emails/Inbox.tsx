@@ -25,6 +25,7 @@ import {
   Mail,
   Star,
   Inbox as InboxIcon,
+  Send,
   ChevronRight,
   ChevronDown,
 } from "lucide-react";
@@ -90,6 +91,7 @@ const InboxPage = () => {
     | "all"
     | "unread"
     | "starred"
+    | "sent"
     | "Client Communication"
     | "Marketing & Promotions"
     | "Internal Communication"
@@ -102,19 +104,27 @@ const InboxPage = () => {
 
   const { data: inboxData, isLoading } = useQuery({
     queryKey: ["inbox", filter, showCategories, page],
-    queryFn: () =>
-      emailService.getInboxEmails({
+    queryFn: () => {
+      if (filter === "sent") {
+        return emailService.getSentEmails({
+          page,
+          limit,
+          starred: false,
+        });
+      }
+      return emailService.getInboxEmails({
         page,
         limit,
         unread: filter === "unread" ? true : undefined,
         starred: filter === "starred" ? true : undefined,
-        category: ["all", "unread", "starred"].includes(filter)
+        category: ["all", "unread", "starred", "sent"].includes(filter)
           ? undefined
           : (filter as
               | "Client Communication"
               | "Marketing & Promotions"
               | "Internal Communication"),
-      }),
+      });
+    },
   });
 
   const { data: statsData } = useQuery({
@@ -326,13 +336,8 @@ const InboxPage = () => {
                   }}
                 >
                   <InboxIcon className="h-4 w-4 mr-2" />
-                  All Emails
+                  Inbox
                   <div className="ml-auto flex items-center gap-1">
-                    {inboxData?.data?.pagination?.total ? (
-                      <Badge className="bg-white/15 text-white border-white/20">
-                        {inboxData.data.pagination.total}
-                      </Badge>
-                    ) : null}
                     {showCategories ? (
                       <ChevronDown className="h-3.5 w-3.5" />
                     ) : (
@@ -399,6 +404,22 @@ const InboxPage = () => {
                     </Button>
                   </div>
                 )}
+                <Button
+                  variant={filter === "sent" ? "default" : "ghost"}
+                  className={`w-full justify-start rounded-full ${
+                    filter === "sent"
+                      ? "bg-white/15 text-white border border-white/20"
+                      : "text-white/70 hover:text-white hover:bg-white/10"
+                  }`}
+                  onClick={() => {
+                    setFilter("sent");
+                    setShowCategories(false);
+                    setPage(1);
+                  }}
+                >
+                  <Send className="h-4 w-4 mr-2" />
+                  Sent
+                </Button>
                 <Button
                   variant={filter === "unread" ? "default" : "ghost"}
                   className={`w-full justify-start rounded-full ${
@@ -510,7 +531,8 @@ const InboxPage = () => {
             >
               <div className="mb-2 px-2">
                 <h2 className="text-sm font-semibold text-white">
-                  {filter === "all" && "All Emails"}
+                  {filter === "all" && "Inbox"}
+                  {filter === "sent" && "Sent Emails"}
                   {filter === "unread" && "Unread Emails"}
                   {filter === "starred" && "Starred Emails"}
                   {filter === "Client Communication" && "Client Communication"}

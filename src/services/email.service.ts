@@ -4,6 +4,7 @@ import {
   SendEmailResponse,
   GetInboxEmailsParams,
   GetInboxEmailsResponse,
+  GetSentEmailsParams,
   GetEmailThreadsParams,
   GetEmailThreadsResponse,
   GetThreadResponse,
@@ -34,6 +35,20 @@ export const emailService = {
   ): Promise<GetInboxEmailsResponse> => {
     try {
       const response = await API.get("/emails/inbox", { params });
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  /**
+   * Get sent emails with pagination and filters
+   */
+  getSentEmails: async (
+    params?: GetSentEmailsParams
+  ): Promise<GetInboxEmailsResponse> => {
+    try {
+      const response = await API.get("/emails/sent", { params });
       return response.data;
     } catch (error: any) {
       throw error;
