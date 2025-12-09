@@ -409,8 +409,8 @@ const ChatMessages = ({
               variants={typingVariants}
               className="flex justify-start"
             >
-              <div className="flex items-start gap-3 rounded-3xl bg-white/5 px-4 pt-6 pb-4 text-sm text-white/80">
-                <div className="flex items-center gap-1">
+              <div className="flex items-start gap-3 rounded-2xl bg-white/5 px-4 pt-4 pb-4 text-sm text-white/80">
+                <div className="flex items-center gap-1 pt-2">
                   <motion.div
                     animate="animate"
                     variants={dotVariants}
