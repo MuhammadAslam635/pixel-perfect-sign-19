@@ -226,7 +226,7 @@ const SignUp = () => {
 
     try {
       const response = await authService.register({
-        company: companyName,
+        name: companyName,
         industry: industry || "",
         email,
         password,

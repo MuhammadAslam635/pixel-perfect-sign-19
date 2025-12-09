@@ -24,14 +24,12 @@ import { userService } from "@/services/user.service";
 interface ProfileErrors {
   name: string;
   email: string;
-  company: string;
 }
 
 interface ProfileFormState {
   id: string;
   name: string;
   email: string;
-  company: string;
   bio: string;
   token: string;
 }
@@ -43,14 +41,12 @@ export const ProfileTab = () => {
   const [errors, setErrors] = useState<ProfileErrors>({
     name: "",
     email: "",
-    company: "",
   });
 
   const [formState, setFormState] = useState<ProfileFormState>({
     id: "",
     name: "",
     email: "",
-    company: "",
     bio: "",
     token: "",
   });
@@ -61,7 +57,6 @@ export const ProfileTab = () => {
         id: user._id ?? "",
         name: user.name ?? "",
         email: user.email ?? "",
-        company: user.company ?? "",
         bio: user.bio ?? "",
         token: user.token ?? "",
       });
@@ -87,14 +82,13 @@ export const ProfileTab = () => {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setErrors({ name: "", email: "", company: "" });
+    setErrors({ name: "", email: "" });
 
     try {
       const response = await userService.updateCompanyProfile({
         id: formState.id,
         name: formState.name,
         email: formState.email,
-        company: formState.company,
         bio: formState.bio,
       });
 
@@ -135,7 +129,6 @@ export const ProfileTab = () => {
           const validationErrors: ProfileErrors = {
             name: "",
             email: "",
-            company: "",
           };
           (
             (
@@ -187,18 +180,18 @@ export const ProfileTab = () => {
         </CardHeader>
         <CardContent className="space-y-4 pt-6 px-4 sm:px-6">
           <div className="space-y-2">
-            <Label htmlFor="company" className="text-white/80">
+            <Label htmlFor="name" className="text-white/80">
               Company Name
             </Label>
             <Input
-              id="company"
-              name="company"
-              value={formState.company}
+              id="name"
+              name="name"
+              value={formState.name}
               onChange={handleInputChange}
               className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40"
             />
-            {errors.company ? (
-              <p className="text-sm text-rose-400">{errors.company}</p>
+            {errors.name ? (
+              <p className="text-sm text-rose-400">{errors.name}</p>
             ) : null}
           </div>
 

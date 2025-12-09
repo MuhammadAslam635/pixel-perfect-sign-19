@@ -2,8 +2,7 @@ import API from "@/utils/api";
 
 export interface Company {
   _id: string;
-  company: string;
-  name?: string;
+  name: string;
   email: string;
   role: string;
   status?: string;

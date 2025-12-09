@@ -232,7 +232,6 @@ export const userService = {
     id: string;
     name?: string;
     email?: string;
-    company?: string;
     bio?: string;
   }): Promise<{ success: boolean; message: string; user: User }> => {
     try {

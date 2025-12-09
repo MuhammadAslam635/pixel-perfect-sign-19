@@ -24,7 +24,7 @@ const initialState: AuthState = {
   user: userData
     ? {
         email: userData.email,
-        name: userData.company || userData.email,
+        name: userData.name || userData.email,
         ...userData,
       }
     : null,

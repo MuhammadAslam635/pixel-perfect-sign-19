@@ -63,7 +63,7 @@ const SignIn = () => {
         dispatch(
           loginSuccess({
             email: response.user.email,
-            name: response.user.company || response.user.email,
+            name: response.user.name || response.user.email,
             ...response.user,
           })
         );

@@ -756,7 +756,7 @@ const LeadsList: FC<LeadsListProps> = ({
               value={String(pageSize)}
               onValueChange={(value) => onPageSizeChange?.(Number(value))}
             >
-              <SelectTrigger className="h-7 w-[100px] rounded-full border border-white/20 bg-transparent text-white text-xs">
+              <SelectTrigger className="h-7 w-[115px] rounded-full border border-white/20 bg-transparent text-white text-xs">
                 <SelectValue placeholder={`${pageSize}`} />
               </SelectTrigger>
               <SelectContent className="bg-[#1a1f1f] border border-white/10 text-white">
@@ -775,10 +775,10 @@ const LeadsList: FC<LeadsListProps> = ({
 
   return (
     <div
-      className={`flex flex-col h-full ${viewMode === "card" ? "px-2" : ""}`}
+      className={`flex flex-col ${viewMode === "card" ? "px-2" : ""}`}
     >
       {renderPageSizeSelector("top")}
-      <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hide pb-4">
+      <div className="w-full pb-4">
         <AnimatePresence mode="wait">
           <motion.div
             key={viewMode}
@@ -825,12 +825,12 @@ const LeadsList: FC<LeadsListProps> = ({
       </div>
 
       {/* Fixed pagination at bottom */}
-      {!loading && leads.length > 0 && (
+      {/* {!loading && leads.length > 0 && (
         <>
           {renderPagination()}
           {renderPageSizeSelector("bottom")}
         </>
-      )}
+      )} */}
     </div>
   );
 };

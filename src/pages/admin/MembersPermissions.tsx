@@ -223,7 +223,6 @@ const MembersPermissions = () => {
     }
 
     const companyName =
-      targetCompany.company ||
       targetCompany.name ||
       targetCompany.email?.split("@")[0] ||
       "Unnamed Company";
@@ -231,7 +230,7 @@ const MembersPermissions = () => {
     setCompanyStatusUpdating((prev) => ({ ...prev, [companyId]: true }));
     try {
       await adminService.updateCompanyStatus(companyId, {
-        company: companyName,
+        name: companyName,
         email: targetCompany.email,
         status: newStatus,
         isVerified: targetCompany.isVerified,
@@ -451,8 +450,7 @@ const MembersPermissions = () => {
                           <Building2 className="h-5 w-5 text-cyan-400 flex-shrink-0" />
                           <div className="flex-1 min-w-0">
                             <h3 className="font-medium text-white truncate">
-                              {company.company ||
-                                company.name ||
+                              {company.name ||
                                 "Unnamed Company"}
                             </h3>
                             <p className="text-white/60 text-sm truncate">

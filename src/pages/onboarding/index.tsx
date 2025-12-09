@@ -83,16 +83,14 @@ const OnboardingPage = () => {
           const userStr = localStorage.getItem("user");
           if (userStr) {
             const user = JSON.parse(userStr);
-            if (user.company !== formData.companyName) {
-              user.company = formData.companyName;
-              // Also update display name to keep greeting in sync
+            if (user.name !== formData.companyName) {
+              // Update display name to keep greeting in sync
               user.name = formData.companyName;
               localStorage.setItem("user", JSON.stringify(user));
               // Update redux auth slice so current session reflects changes immediately
               try {
                 dispatch(
                   updateUser({
-                    company: formData.companyName,
                     name: formData.companyName,
                   })
                 );
@@ -118,7 +116,42 @@ const OnboardingPage = () => {
     }
   };
 
+  const validateStep = (stepId: number): boolean => {
+    const stepConfig = ONBOARDING_STEPS.find((s) => s.id === stepId);
+    if (!stepConfig) return true;
+
+    const missingFields: string[] = [];
+
+    stepConfig.fields.forEach((field) => {
+      const value = formData[field as keyof OnboardingQuestions];
+      
+      // Special handling for array fields (like coreOfferings)
+      if (Array.isArray(value)) {
+        if (value.length === 0) {
+          missingFields.push(field);
+        }
+      } else if (
+        value === undefined ||
+        value === null ||
+        (typeof value === "string" && value.trim() === "")
+      ) {
+        missingFields.push(field);
+      }
+    });
+
+    if (missingFields.length > 0) {
+      toast.error("Please fill in all required fields to proceed.");
+      return false;
+    }
+
+    return true;
+  };
+
   const handleNext = async () => {
+    if (!validateStep(currentStep)) {
+      return;
+    }
+
     await saveProgress("in_progress");
     if (currentStep < ONBOARDING_STEPS.length) {
       setCurrentStep(currentStep + 1);

@@ -67,7 +67,7 @@ export const LeadsFiltersInline = ({
 }: LeadsFiltersInlineProps) => {
   const positionOptions = extractJobTitles(leads);
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex flex-wrap items-center gap-1.5">
       <div className="flex items-center gap-1">
         <label className="text-[11px] uppercase tracking-[0.08em] text-gray-400 whitespace-nowrap">
           Country:
