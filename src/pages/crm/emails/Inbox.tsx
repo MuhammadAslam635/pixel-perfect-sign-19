@@ -261,332 +261,341 @@ const InboxPage = () => {
           </div>
 
           <main className="relative px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] pt-0 pb-8 flex flex-col gap-6 text-white flex-1 overflow-hidden max-w-[1600px] mx-auto w-full">
-        {/* Header */}
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white">Inbox</h1>
-            <p className="text-white/60 text-sm mt-1">
-              {statsData?.data?.unreadEmails || 0} unread of{" "}
-              {statsData?.data?.totalEmails || 0} total
-            </p>
-          </div>
-          <div className="flex gap-3">
-            <Button
-              size="sm"
-              onClick={handleCompose}
-              className="relative h-10 px-5 rounded-full border-0 text-white text-sm hover:bg-[#2F2F2F]/60 transition-all overflow-hidden"
-              style={{
-                background: "#FFFFFF1A",
-                boxShadow:
-                  "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
-              }}
-            >
-              {/* radial element 150px 150px */}
-              <div
-                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[150px] h-[150px] rounded-full pointer-events-none"
-                style={{
-                  background:
-                    "radial-gradient(circle, #66AFB7 0%, transparent 70%)",
-                  backdropFilter: "blur(50px)",
-                  WebkitBackdropFilter: "blur(50px)",
-                  zIndex: -1,
-                }}
-              ></div>
-              <Plus className="w-4 h-4 mr-2 relative z-10" />
-              <span className="relative z-10">Compose</span>
-            </Button>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-300px)] min-h-0">
-          {/* Sidebar Filters */}
-          <div className="lg:col-span-1 space-y-4">
-            <Card
-              className="border-[#FFFFFF4D] h-full"
-              style={{
-                borderRadius: "30px",
-                borderWidth: "1px",
-                background:
-                  "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
-              }}
-            >
-              <CardHeader>
-                <CardTitle className="text-lg text-white">Filters</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 overflow-y-auto">
-                <Button
-                  variant={
-                    filter === "all" && !showCategories ? "default" : "ghost"
-                  }
-                  className={`w-full justify-start rounded-full ${
-                    filter === "all" && !showCategories
-                      ? "bg-white/15 text-white border border-white/20"
-                      : "text-white/70 hover:text-white hover:bg-white/10"
-                  }`}
-                  onClick={() => {
-                    if (showCategories) {
-                      // If categories are shown, hide them and go to all emails
-                      setShowCategories(false);
-                      setFilter("all");
-                    } else {
-                      // If categories are hidden, show them
-                      setShowCategories(true);
-                    }
-                    setPage(1);
-                  }}
-                >
-                  <InboxIcon className="h-4 w-4 mr-2" />
+            {/* Header */}
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-white">
                   Inbox
-                  <div className="ml-auto flex items-center gap-1">
-                    {showCategories ? (
-                      <ChevronDown className="h-3.5 w-3.5" />
-                    ) : (
-                      <ChevronRight className="h-3.5 w-3.5" />
-                    )}
-                  </div>
-                </Button>
-                {showCategories && (
-                  <div className="space-y-1 overflow-hidden animate-in slide-in-from-top-2 duration-200  px-1">
-                    <Button
-                      variant={
-                        filter === "Client Communication" ? "default" : "ghost"
-                      }
-                      className={`w-[calc(100%-24px)] ml-6 rounded-full pl-3 pr-2 text-xs text-left whitespace-normal h-auto py-1.5 ${
-                        filter === "Client Communication"
-                          ? "bg-white/15 text-white border border-white/20"
-                          : "text-white/60 hover:text-white hover:bg-white/10"
-                      }`}
-                      onClick={() => {
-                        setFilter("Client Communication");
-                        setPage(1);
-                      }}
-                    >
-                      <div className="h-1 w-1 rounded-full bg-current mr-2 flex-shrink-0" />
-                      <span className="flex-1">Client Communication</span>
-                    </Button>
-                    <Button
-                      variant={
-                        filter === "Marketing & Promotions"
-                          ? "default"
-                          : "ghost"
-                      }
-                      className={`w-[calc(100%-24px)] ml-6 rounded-full pl-3 pr-2 text-xs text-left whitespace-normal h-auto py-1.5 ${
-                        filter === "Marketing & Promotions"
-                          ? "bg-white/15 text-white border border-white/20"
-                          : "text-white/60 hover:text-white hover:bg-white/10"
-                      }`}
-                      onClick={() => {
-                        setFilter("Marketing & Promotions");
-                        setPage(1);
-                      }}
-                    >
-                      <div className="h-1 w-1 rounded-full bg-current mr-2 flex-shrink-0" />
-                      <span className="flex-1">Marketing & Promotions</span>
-                    </Button>
-                    <Button
-                      variant={
-                        filter === "Internal Communication"
-                          ? "default"
-                          : "ghost"
-                      }
-                      className={`w-[calc(100%-24px)] ml-6 rounded-full pl-3 pr-2 text-xs text-left whitespace-normal h-auto py-1.5 ${
-                        filter === "Internal Communication"
-                          ? "bg-white/15 text-white border border-white/20"
-                          : "text-white/60 hover:text-white hover:bg-white/10"
-                      }`}
-                      onClick={() => {
-                        setFilter("Internal Communication");
-                        setPage(1);
-                      }}
-                    >
-                      <div className="h-1 w-1 rounded-full bg-current mr-2 flex-shrink-0" />
-                      <span className="flex-1">Internal Communication</span>
-                    </Button>
-                  </div>
-                )}
+                </h1>
+                <p className="text-white/60 text-sm mt-1">
+                  {statsData?.data?.unreadEmails || 0} unread of{" "}
+                  {statsData?.data?.totalEmails || 0} total
+                </p>
+              </div>
+              <div className="flex gap-3">
                 <Button
-                  variant={filter === "sent" ? "default" : "ghost"}
-                  className={`w-full justify-start rounded-full ${
-                    filter === "sent"
-                      ? "bg-white/15 text-white border border-white/20"
-                      : "text-white/70 hover:text-white hover:bg-white/10"
-                  }`}
-                  onClick={() => {
-                    setFilter("sent");
-                    setShowCategories(false);
-                    setPage(1);
-                  }}
-                >
-                  <Send className="h-4 w-4 mr-2" />
-                  Sent
-                </Button>
-                <Button
-                  variant={filter === "unread" ? "default" : "ghost"}
-                  className={`w-full justify-start rounded-full ${
-                    filter === "unread"
-                      ? "bg-white/15 text-white border border-white/20"
-                      : "text-white/70 hover:text-white hover:bg-white/10"
-                  }`}
-                  onClick={() => {
-                    setFilter("unread");
-                    setPage(1);
-                  }}
-                >
-                  <Mail className="h-4 w-4 mr-2" />
-                  Unread
-                  {statsData?.data?.unreadEmails ? (
-                    <Badge className="ml-auto bg-white/15 text-white border-white/20">
-                      {statsData.data.unreadEmails}
-                    </Badge>
-                  ) : null}
-                </Button>
-                <Button
-                  variant={filter === "starred" ? "default" : "ghost"}
-                  className={`w-full justify-start rounded-full ${
-                    filter === "starred"
-                      ? "bg-white/15 text-white border border-white/20"
-                      : "text-white/70 hover:text-white hover:bg-white/10"
-                  }`}
-                  onClick={() => {
-                    setFilter("starred");
-                    setPage(1);
-                  }}
-                >
-                  <Star className="h-4 w-4 mr-2" />
-                  Starred
-                  {statsData?.data?.starredEmails ? (
-                    <Badge className="ml-auto bg-white/15 text-white border-white/20">
-                      {statsData.data.starredEmails}
-                    </Badge>
-                  ) : null}
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Main Content */}
-          <div className="lg:col-span-3 flex flex-col gap-4 min-h-0">
-            {/* Search and Pagination Row */}
-            <div className="flex gap-4 items-center">
-              {/* Search - 75% Width */}
-              <div className="relative flex-[3]">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none z-10" />
-                <Input
-                  placeholder="Search emails..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 h-9 rounded-full border-0 text-gray-300 placeholder:text-gray-500 text-xs w-full"
+                  size="sm"
+                  onClick={handleCompose}
+                  className="relative h-10 px-5 rounded-full border-0 text-white text-sm hover:bg-[#2F2F2F]/60 transition-all overflow-hidden"
                   style={{
                     background: "#FFFFFF1A",
                     boxShadow:
                       "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
-                    borderRadius: "9999px",
                   }}
-                />
+                >
+                  {/* radial element 150px 150px */}
+                  <div
+                    className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[150px] h-[150px] rounded-full pointer-events-none"
+                    style={{
+                      background:
+                        "radial-gradient(circle, #66AFB7 0%, transparent 70%)",
+                      backdropFilter: "blur(50px)",
+                      WebkitBackdropFilter: "blur(50px)",
+                      zIndex: -1,
+                    }}
+                  ></div>
+                  <Plus className="w-4 h-4 mr-2 relative z-10" />
+                  <span className="relative z-10">Compose</span>
+                </Button>
               </div>
-
-              {/* Pagination - 25% Width */}
-              {inboxData?.data?.pagination &&
-                inboxData.data.pagination.pages > 1 && (
-                  <div className="flex items-center justify-between gap-2 flex-[1]">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setPage((p) => Math.max(1, p - 1))}
-                      disabled={page === 1}
-                      className="rounded-full bg-white/10 text-white border-white/20 hover:bg-white/20 disabled:opacity-50 px-4"
-                    >
-                      Previous
-                    </Button>
-                    <span className="text-sm text-white/70 whitespace-nowrap">
-                      Page {page} of {inboxData.data.pagination.pages}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        setPage((p) =>
-                          Math.min(inboxData.data.pagination.pages, p + 1)
-                        )
-                      }
-                      disabled={page === inboxData.data.pagination.pages}
-                      className="rounded-full bg-white/10 text-white border-white/20 hover:bg-white/20 disabled:opacity-50 px-4"
-                    >
-                      Next
-                    </Button>
-                  </div>
-                )}
             </div>
 
-            {/* Email List */}
-            <div
-              className="relative pt-3 sm:pt-4 px-3 sm:px-6 rounded-xl sm:rounded-2xl h-full overflow-y-auto scrollbar-hide"
-              style={{
-                borderRadius: "30px",
-                borderWidth: "1px",
-                borderColor: "rgba(255, 255, 255, 0.08)",
-                background:
-                  "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
-              }}
-            >
-              <div className="mb-2 px-2">
-                <h2 className="text-sm font-semibold text-white">
-                  {filter === "all" && "Inbox"}
-                  {filter === "sent" && "Sent Emails"}
-                  {filter === "unread" && "Unread Emails"}
-                  {filter === "starred" && "Starred Emails"}
-                  {filter === "Client Communication" && "Client Communication"}
-                  {filter === "Marketing & Promotions" &&
-                    "Marketing & Promotions"}
-                  {filter === "Internal Communication" &&
-                    "Internal Communication"}
-                </h2>
-              </div>
-              <div className="space-y-1.5 pb-4 overflow-y-auto scrollbar-hide">
-                {isLoading ? (
-                  <div className="space-y-1.5">
-                    {[...Array(8)].map((_, i) => (
-                      <Skeleton
-                        key={i}
-                        className="h-12 w-full rounded-[12px]"
-                      />
-                    ))}
-                  </div>
-                ) : filteredEmails.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-full text-center py-12">
-                    <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-4">
-                      <Mail className="w-6 h-6 text-white/30" />
-                    </div>
-                    <p className="text-white/70 text-base font-medium mb-1">
-                      No emails found
-                    </p>
-                    <p className="text-white/50 text-sm text-center max-w-md">
-                      {searchTerm
-                        ? "Try adjusting your search terms or clear the filter to see all emails."
-                        : "Your inbox is empty."}
-                    </p>
-                  </div>
-                ) : (
-                  filteredEmails.map((email, index) => (
-                    <div
-                      key={email._id}
-                      className="animate-in fade-in slide-in-from-bottom-2"
-                      style={{
-                        animationDelay: `${index * 30}ms`,
-                        animationFillMode: "backwards",
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-300px)] min-h-0">
+              {/* Sidebar Filters */}
+              <div className="lg:col-span-1 space-y-4">
+                <Card
+                  className="border-[#FFFFFF4D] h-full"
+                  style={{
+                    borderRadius: "30px",
+                    borderWidth: "1px",
+                    background:
+                      "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
+                  }}
+                >
+                  <CardHeader>
+                    <CardTitle className="text-lg text-white">
+                      Filters
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2 overflow-y-auto">
+                    <Button
+                      variant={
+                        filter === "all" && !showCategories
+                          ? "default"
+                          : "ghost"
+                      }
+                      className={`w-full justify-start rounded-full ${
+                        filter === "all" && !showCategories
+                          ? "bg-white/15 text-white border border-white/20"
+                          : "text-white/70 hover:text-white hover:bg-white/10"
+                      }`}
+                      onClick={() => {
+                        if (showCategories) {
+                          // If categories are shown, hide them and go to all emails
+                          setShowCategories(false);
+                          setFilter("all");
+                        } else {
+                          // If categories are hidden, show them
+                          setShowCategories(true);
+                        }
+                        setPage(1);
                       }}
                     >
-                      <EmailListItem
-                        email={email}
-                        onClick={() => handleEmailClick(email)}
-                      />
-                    </div>
-                  ))
-                )}
+                      <InboxIcon className="h-4 w-4 mr-2" />
+                      Inbox
+                      <div className="ml-auto flex items-center gap-1">
+                        {showCategories ? (
+                          <ChevronDown className="h-3.5 w-3.5" />
+                        ) : (
+                          <ChevronRight className="h-3.5 w-3.5" />
+                        )}
+                      </div>
+                    </Button>
+                    {showCategories && (
+                      <div className="space-y-1 overflow-hidden animate-in slide-in-from-top-2 duration-200  px-1">
+                        <Button
+                          variant={
+                            filter === "Client Communication"
+                              ? "default"
+                              : "ghost"
+                          }
+                          className={`w-[calc(100%-24px)] ml-6 rounded-full pl-3 pr-2 text-xs text-left whitespace-normal h-auto py-1.5 ${
+                            filter === "Client Communication"
+                              ? "bg-white/15 text-white border border-white/20"
+                              : "text-white/60 hover:text-white hover:bg-white/10"
+                          }`}
+                          onClick={() => {
+                            setFilter("Client Communication");
+                            setPage(1);
+                          }}
+                        >
+                          <div className="h-1 w-1 rounded-full bg-current mr-2 flex-shrink-0" />
+                          <span className="flex-1">Client Communication</span>
+                        </Button>
+                        <Button
+                          variant={
+                            filter === "Marketing & Promotions"
+                              ? "default"
+                              : "ghost"
+                          }
+                          className={`w-[calc(100%-24px)] ml-6 rounded-full pl-3 pr-2 text-xs text-left whitespace-normal h-auto py-1.5 ${
+                            filter === "Marketing & Promotions"
+                              ? "bg-white/15 text-white border border-white/20"
+                              : "text-white/60 hover:text-white hover:bg-white/10"
+                          }`}
+                          onClick={() => {
+                            setFilter("Marketing & Promotions");
+                            setPage(1);
+                          }}
+                        >
+                          <div className="h-1 w-1 rounded-full bg-current mr-2 flex-shrink-0" />
+                          <span className="flex-1">Marketing & Promotions</span>
+                        </Button>
+                        <Button
+                          variant={
+                            filter === "Internal Communication"
+                              ? "default"
+                              : "ghost"
+                          }
+                          className={`w-[calc(100%-24px)] ml-6 rounded-full pl-3 pr-2 text-xs text-left whitespace-normal h-auto py-1.5 ${
+                            filter === "Internal Communication"
+                              ? "bg-white/15 text-white border border-white/20"
+                              : "text-white/60 hover:text-white hover:bg-white/10"
+                          }`}
+                          onClick={() => {
+                            setFilter("Internal Communication");
+                            setPage(1);
+                          }}
+                        >
+                          <div className="h-1 w-1 rounded-full bg-current mr-2 flex-shrink-0" />
+                          <span className="flex-1">Internal Communication</span>
+                        </Button>
+                      </div>
+                    )}
+                    <Button
+                      variant={filter === "sent" ? "default" : "ghost"}
+                      className={`w-full justify-start rounded-full ${
+                        filter === "sent"
+                          ? "bg-white/15 text-white border border-white/20"
+                          : "text-white/70 hover:text-white hover:bg-white/10"
+                      }`}
+                      onClick={() => {
+                        setFilter("sent");
+                        setShowCategories(false);
+                        setPage(1);
+                      }}
+                    >
+                      <Send className="h-4 w-4 mr-2" />
+                      Sent
+                    </Button>
+                    <Button
+                      variant={filter === "unread" ? "default" : "ghost"}
+                      className={`w-full justify-start rounded-full ${
+                        filter === "unread"
+                          ? "bg-white/15 text-white border border-white/20"
+                          : "text-white/70 hover:text-white hover:bg-white/10"
+                      }`}
+                      onClick={() => {
+                        setFilter("unread");
+                        setPage(1);
+                      }}
+                    >
+                      <Mail className="h-4 w-4 mr-2" />
+                      Unread
+                      {statsData?.data?.unreadEmails ? (
+                        <Badge className="ml-auto bg-white/15 text-white border-white/20">
+                          {statsData.data.unreadEmails}
+                        </Badge>
+                      ) : null}
+                    </Button>
+                    <Button
+                      variant={filter === "starred" ? "default" : "ghost"}
+                      className={`w-full justify-start rounded-full ${
+                        filter === "starred"
+                          ? "bg-white/15 text-white border border-white/20"
+                          : "text-white/70 hover:text-white hover:bg-white/10"
+                      }`}
+                      onClick={() => {
+                        setFilter("starred");
+                        setPage(1);
+                      }}
+                    >
+                      <Star className="h-4 w-4 mr-2" />
+                      Starred
+                      {statsData?.data?.starredEmails ? (
+                        <Badge className="ml-auto bg-white/15 text-white border-white/20">
+                          {statsData.data.starredEmails}
+                        </Badge>
+                      ) : null}
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Main Content */}
+              <div className="lg:col-span-3 flex flex-col gap-4 min-h-0">
+                {/* Search and Pagination Row */}
+                <div className="flex gap-4 items-center">
+                  {/* Search - 75% Width */}
+                  <div className="relative flex-[3]">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none z-10" />
+                    <Input
+                      placeholder="Search emails..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10 h-9 rounded-full border-0 text-gray-300 placeholder:text-gray-500 text-xs w-full"
+                      style={{
+                        background: "#FFFFFF1A",
+                        boxShadow:
+                          "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                        borderRadius: "9999px",
+                      }}
+                    />
+                  </div>
+
+                  {/* Pagination - 25% Width */}
+                  {inboxData?.data?.pagination &&
+                    inboxData.data.pagination.pages > 1 && (
+                      <div className="flex items-center justify-between gap-2 flex-[1]">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setPage((p) => Math.max(1, p - 1))}
+                          disabled={page === 1}
+                          className="rounded-full bg-white/10 text-white border-white/20 hover:bg-white/20 disabled:opacity-50 px-4"
+                        >
+                          Previous
+                        </Button>
+                        <span className="text-sm text-white/70 whitespace-nowrap">
+                          Page {page} of {inboxData.data.pagination.pages}
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            setPage((p) =>
+                              Math.min(inboxData.data.pagination.pages, p + 1)
+                            )
+                          }
+                          disabled={page === inboxData.data.pagination.pages}
+                          className="rounded-full bg-white/10 text-white border-white/20 hover:bg-white/20 disabled:opacity-50 px-4"
+                        >
+                          Next
+                        </Button>
+                      </div>
+                    )}
+                </div>
+
+                {/* Email List */}
+                <div
+                  className="relative pt-3 sm:pt-4 px-3 sm:px-6 rounded-xl sm:rounded-2xl h-full overflow-y-auto scrollbar-hide"
+                  style={{
+                    borderRadius: "30px",
+                    borderWidth: "1px",
+                    borderColor: "rgba(255, 255, 255, 0.08)",
+                    background:
+                      "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
+                  }}
+                >
+                  <div className="mb-2 px-2">
+                    <h2 className="text-sm font-semibold text-white">
+                      {filter === "all" && "Inbox"}
+                      {filter === "sent" && "Sent Emails"}
+                      {filter === "unread" && "Unread Emails"}
+                      {filter === "starred" && "Starred Emails"}
+                      {filter === "Client Communication" &&
+                        "Client Communication"}
+                      {filter === "Marketing & Promotions" &&
+                        "Marketing & Promotions"}
+                      {filter === "Internal Communication" &&
+                        "Internal Communication"}
+                    </h2>
+                  </div>
+                  <div className="space-y-1.5 pb-4 overflow-y-auto scrollbar-hide">
+                    {isLoading ? (
+                      <div className="space-y-1.5">
+                        {[...Array(8)].map((_, i) => (
+                          <Skeleton
+                            key={i}
+                            className="h-12 w-full rounded-[12px]"
+                          />
+                        ))}
+                      </div>
+                    ) : filteredEmails.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center h-full text-center py-12">
+                        <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-4">
+                          <Mail className="w-6 h-6 text-white/30" />
+                        </div>
+                        <p className="text-white/70 text-base font-medium mb-1">
+                          No emails found
+                        </p>
+                        <p className="text-white/50 text-sm text-center max-w-md">
+                          {searchTerm
+                            ? "Try adjusting your search terms or clear the filter to see all emails."
+                            : "Your inbox is empty."}
+                        </p>
+                      </div>
+                    ) : (
+                      filteredEmails.map((email, index) => (
+                        <div
+                          key={email._id}
+                          className="animate-in fade-in slide-in-from-bottom-2"
+                          style={{
+                            animationDelay: `${index * 30}ms`,
+                            animationFillMode: "backwards",
+                          }}
+                        >
+                          <EmailListItem
+                            email={email}
+                            onClick={() => handleEmailClick(email)}
+                          />
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
           </main>
         </motion.div>
       </motion.main>

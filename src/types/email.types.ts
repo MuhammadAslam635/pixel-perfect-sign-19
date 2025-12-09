@@ -89,7 +89,12 @@ export interface SendEmailRequest {
   generateContent?: boolean;
   enhanceExistingContent?: boolean;
   tone?: "professional" | "casual" | "friendly";
-  emailType?: "introduction" | "follow_up" | "value_proposition" | "partnership" | "general";
+  emailType?:
+    | "introduction"
+    | "follow_up"
+    | "value_proposition"
+    | "partnership"
+    | "general";
   customInstructions?: string;
 }
 
