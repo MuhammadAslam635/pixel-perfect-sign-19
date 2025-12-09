@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { Download, Loader2, Menu, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChatMessage } from "@/types/chat.types";
+import { StreamEvent } from "@/services/chat.service";
 import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -15,6 +16,8 @@ type ChatMessagesProps = {
   isSending: boolean;
   hasSelection: boolean;
   onOpenChatList?: () => void;
+  streamingEvents?: StreamEvent[];
+  isStreaming?: boolean;
 };
 
 const ChatMessages = ({
@@ -24,6 +27,8 @@ const ChatMessages = ({
   isSending,
   hasSelection,
   onOpenChatList,
+  streamingEvents = [],
+  isStreaming = false,
 }: ChatMessagesProps) => {
   const conversation = useMemo(() => messages ?? [], [messages]);
   const scrollAreaRef = useRef<HTMLDivElement | null>(null);
@@ -268,9 +273,9 @@ const ChatMessages = ({
             <h2 className="text-base font-semibold leading-tight text-white sm:text-lg">
               {chatTitle ?? "A Simple Hello"}
             </h2>
-            <p className="text-xs text-muted-foreground/70">
+            {/* <p className="text-xs text-muted-foreground/70">
               The Sales Outreach Agent
-            </p>
+            </p> */}
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -404,7 +409,7 @@ const ChatMessages = ({
               variants={typingVariants}
               className="flex justify-start"
             >
-              <div className="flex items-center gap-3 rounded-3xl bg-white/5 px-4 py-3 text-xs text-white/80">
+              <div className="flex items-start gap-3 rounded-3xl bg-white/5 px-4 pt-6 pb-4 text-sm text-white/80">
                 <div className="flex items-center gap-1">
                   <motion.div
                     animate="animate"
@@ -422,7 +427,21 @@ const ChatMessages = ({
                     className="w-2 h-2 bg-white/60 rounded-full"
                   />
                 </div>
-                <span className="text-white/70">Thinking…</span>
+                <div className="flex flex-col gap-1">
+                  <span className="text-white/70">Thinking…</span>
+                  {isStreaming && streamingEvents.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-xs text-gray-400 italic flex items-center gap-2"
+                    >
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      <span>
+                        {streamingEvents[streamingEvents.length - 1]?.step?.replace(/^[^\w\s]+/, '').trim() || 'Processing...'}
+                      </span>
+                    </motion.div>
+                  )}
+                </div>
               </div>
             </motion.div>
           )}

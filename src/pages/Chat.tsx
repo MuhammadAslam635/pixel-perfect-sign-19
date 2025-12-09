@@ -19,6 +19,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { StreamEvent, sendStreamingChatMessage } from "@/services/chat.service";
 
 const NEW_CHAT_KEY = "__new_chat__";
 
@@ -77,6 +78,9 @@ const ChatPage = () => {
   const [optimisticMessagesByChat, setOptimisticMessagesByChat] = useState<
     Record<string, ChatMessage[]>
   >({});
+  const [streamingEvents, setStreamingEvents] = useState<StreamEvent[]>([]);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [useStreaming, setUseStreaming] = useState(true); // Default to streaming mode
 
   const {
     data: chatList = [],
@@ -374,7 +378,7 @@ const ChatPage = () => {
     });
 
   const handleSendMessage = () => {
-    if (isSendingMessage) {
+    if (isSendingMessage || isStreaming) {
       return;
     }
 
@@ -383,11 +387,142 @@ const ChatPage = () => {
       return;
     }
 
-    mutateSendMessage({
-      message: trimmedMessage,
-      chatId: selectedChatId,
-      file: pendingFile ?? undefined,
-    });
+    if (useStreaming) {
+      handleSendStreamingMessage();
+    } else {
+      mutateSendMessage({
+        message: trimmedMessage,
+        chatId: selectedChatId,
+        file: pendingFile ?? undefined,
+      });
+    }
+  };
+
+  const handleSendStreamingMessage = async () => {
+    if (isSendingMessage || isStreaming) {
+      return;
+    }
+
+    const trimmedMessage = composerValue.trim();
+    if (!trimmedMessage) {
+      return;
+    }
+
+    setIsStreaming(true);
+    setStreamingEvents([]);
+
+    const tempMessage: ChatMessage = {
+      _id: `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      chatId: selectedChatId ?? "temp",
+      role: "user",
+      content: trimmedMessage,
+      createdAt: new Date().toISOString(),
+    };
+
+    setComposerValue("");
+    setPendingFile(null);
+    setOptimisticMessagesByChat((prev) => ({
+      ...prev,
+      [selectedChatId ?? NEW_CHAT_KEY]: [...(prev[selectedChatId ?? NEW_CHAT_KEY] ?? []), tempMessage],
+    }));
+
+    try {
+      const result = await sendStreamingChatMessage(
+        {
+          message: trimmedMessage,
+          chatId: selectedChatId,
+          file: pendingFile ?? undefined,
+        },
+        (event: StreamEvent) => {
+          setStreamingEvents(prev => [...prev, event]);
+        }
+      );
+
+      const newChatId = result.data.chatId;
+
+      if (newChatId) {
+        if (!selectedChatId) {
+          setSelectedChatId(newChatId);
+        }
+
+        if (result.data.messages) {
+          queryClient.setQueryData(["chatDetail", newChatId], {
+            _id: newChatId,
+            title: result.data.title || "New Conversation",
+            messages: result.data.messages,
+            createdAt: result.data.createdAt || new Date().toISOString(),
+            updatedAt: result.data.updatedAt || new Date().toISOString(),
+          });
+        }
+
+        // Move optimistic messages from NEW_CHAT_KEY to the actual chat ID for new chats
+        setOptimisticMessagesByChat((prev) => {
+          if (selectedChatId) {
+            return prev;
+          }
+
+          const pendingNewMessages = prev[NEW_CHAT_KEY];
+          if (!pendingNewMessages?.length) {
+            return prev;
+          }
+
+          const updated = { ...prev };
+          delete updated[NEW_CHAT_KEY];
+          updated[newChatId] = pendingNewMessages.map((message) => ({
+            ...message,
+            chatId: newChatId,
+          }));
+          return updated;
+        });
+
+        queryClient.invalidateQueries({
+          queryKey: ["chatDetail", newChatId],
+        });
+      } else if (selectedChatId) {
+        queryClient.invalidateQueries({
+          queryKey: ["chatDetail", selectedChatId],
+        });
+      }
+
+      queryClient.invalidateQueries({ queryKey: ["chatList"] });
+    } catch (error: any) {
+      console.error("Streaming error:", error);
+      setOptimisticMessagesByChat((prev) => {
+        const chatKey = selectedChatId ?? NEW_CHAT_KEY;
+        const pendingMessages = prev[chatKey];
+        if (!pendingMessages?.length) {
+          return prev;
+        }
+
+        const filtered = pendingMessages.filter(
+          (message) => message._id !== tempMessage._id
+        );
+
+        if (filtered.length === pendingMessages.length) {
+          return prev;
+        }
+
+        const updated = { ...prev };
+        if (filtered.length > 0) {
+          updated[chatKey] = filtered;
+        } else {
+          delete updated[chatKey];
+        }
+        return updated;
+      });
+
+      setComposerValue(trimmedMessage);
+      setPendingFile(pendingFile);
+
+      toast({
+        title: "Unable to send message",
+        description: error?.message || "We could not deliver your message. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsStreaming(false);
+      setStreamingEvents([]);
+    }
   };
 
   const handleStartNewChat = () => {
@@ -557,10 +692,13 @@ const ChatPage = () => {
                   chatTitle={resolvedChatTitle}
                   hasSelection={hasActiveConversation}
                   isLoading={isConversationLoading}
-                  isSending={isSendingMessage}
+                  isSending={isSendingMessage || isStreaming}
                   messages={selectedMessages}
                   onOpenChatList={() => setIsMobileListOpen(true)}
+                  streamingEvents={streamingEvents}
+                  isStreaming={isStreaming}
                 />
+
 
                 <AnimatePresence mode="wait">
                   <motion.div
