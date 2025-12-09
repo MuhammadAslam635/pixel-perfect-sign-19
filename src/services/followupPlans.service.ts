@@ -147,6 +147,19 @@ export interface CreateFollowupPlanPayload {
   schedule?: FollowupPlanSchedulePayload;
 }
 
+export interface UpdateFollowupPlanPayload {
+  todo?: Array<{
+    _id?: string;
+    type: "email" | "call" | "whatsapp_message";
+    personId: string;
+    day?: number;
+    scheduledFor?: string | null;
+    notes?: string;
+    metadata?: Record<string, unknown>;
+    isComplete?: boolean;
+  }>;
+}
+
 export const followupPlansService = {
   getPlans: async (
     params: FollowupPlansQueryParams = {}
@@ -164,6 +177,14 @@ export const followupPlansService = {
     payload: CreateFollowupPlanPayload
   ): Promise<FollowupPlanResponse> => {
     const response = await API.post("/followup/plans", payload);
+    return response.data;
+  },
+
+  updatePlan: async (
+    id: string,
+    payload: UpdateFollowupPlanPayload
+  ): Promise<FollowupPlanResponse> => {
+    const response = await API.put(`/followup/plans/${id}`, payload);
     return response.data;
   },
 
