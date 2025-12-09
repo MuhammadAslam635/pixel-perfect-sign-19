@@ -25,7 +25,7 @@ const AgentCard = ({ image, name, title, description }: AgentCardProps) => {
         >
           {/* Profile Image Section */}
           <motion.div
-            className="relative flex justify-center items-center h-48 overflow-hidden mb-4 elementor-element elementor-element-7608a29 elementor-widget elementor-widget-image group"
+            className="relative flex justify-center items-center overflow-hidden mb-4 elementor-element elementor-element-7608a29 elementor-widget elementor-widget-image group"
             whileHover={{ scale: 1.05 }}
             transition={{ duration: 0.3 }}
           >
