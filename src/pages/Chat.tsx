@@ -81,6 +81,9 @@ const ChatPage = () => {
   const [streamingEvents, setStreamingEvents] = useState<StreamEvent[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [useStreaming, setUseStreaming] = useState(true); // Default to streaming mode
+  const [composerValuesByChat, setComposerValuesByChat] = useState<
+    Record<string, string>
+  >({});
 
   const {
     data: chatList = [],
@@ -166,67 +169,12 @@ const ChatPage = () => {
     setSearchParams(nextParams);
   }, [searchParams, setSearchParams]);
 
+  // Restore composer value when selected chat changes
   useEffect(() => {
-    if (!selectedChatId || !selectedChat?.messages?.length) {
-      return;
-    }
+    const chatKey = selectedChatId ?? NEW_CHAT_KEY;
+    setComposerValue(composerValuesByChat[chatKey] ?? "");
+  }, [selectedChatId, composerValuesByChat]);
 
-    const serverMessageIds = new Set(
-      selectedChat.messages.map((message) => message._id)
-    );
-
-    setOptimisticMessagesByChat((prev) => {
-      const currentPending = prev[selectedChatId];
-      if (!currentPending?.length) {
-        return prev;
-      }
-
-      const filtered = currentPending.filter((message) => {
-        // If message ID exists in server messages, filter it out
-        if (serverMessageIds.has(message._id)) {
-          return false;
-        }
-
-        // If this is a temp message, check if there's a recent server message with same content+role
-        if (message._id.startsWith("temp-")) {
-          // Extract timestamp from temp ID (format: temp-1234567890)
-          const tempTimestamp = parseInt(message._id.replace("temp-", ""));
-          const signature = `${message.role}-${message.content}`;
-
-          // Only match with server messages created within 30 seconds after the temp message
-          const matchingServerMessage = selectedChat.messages.find(
-            (serverMsg) => {
-              if (`${serverMsg.role}-${serverMsg.content}` !== signature) {
-                return false;
-              }
-              const serverTimestamp = new Date(serverMsg.createdAt).getTime();
-              const timeDiff = serverTimestamp - tempTimestamp;
-              // Server message should be created after temp message, within 30 seconds
-              return timeDiff >= 0 && timeDiff <= 30000;
-            }
-          );
-
-          // If we found a matching recent server message, filter out the temp message
-          return !matchingServerMessage;
-        }
-
-        // For non-temp messages, keep them if ID doesn't match
-        return true;
-      });
-
-      if (filtered.length === currentPending.length) {
-        return prev;
-      }
-
-      const updated = { ...prev };
-      if (filtered.length > 0) {
-        updated[selectedChatId] = filtered;
-      } else {
-        delete updated[selectedChatId];
-      }
-      return updated;
-    });
-  }, [selectedChatId, selectedChat?.messages]);
 
   // Focus input when navigating from widget
   useEffect(() => {
@@ -244,9 +192,23 @@ const ChatPage = () => {
   }, [location.state]);
 
   const selectChatFromList = (chatId: string) => {
+    // Save current composer value before switching
+    const currentChatKey = selectedChatId ?? NEW_CHAT_KEY;
+    setComposerValuesByChat(prev => ({
+      ...prev,
+      [currentChatKey]: composerValue
+    }));
+
     setIsCreatingNewChat(false);
     setSelectedChatId(chatId);
     setIsMobileListOpen(false);
+
+    // Restore composer value for the selected chat
+    const newChatKey = chatId;
+    setComposerValue(composerValuesByChat[newChatKey] ?? "");
+
+    // Also restore pending file if it exists for this chat
+    // Note: We don't have file persistence per chat yet, but this could be added later
   };
 
   type SendMessageContext = {
@@ -273,6 +235,11 @@ const ChatPage = () => {
           createdAt: new Date().toISOString(),
         };
 
+        // Clear composer value for this specific chat
+        setComposerValuesByChat(prev => ({
+          ...prev,
+          [chatKey]: ""
+        }));
         setComposerValue("");
         setPendingFile(null);
         setOptimisticMessagesByChat((prev) => ({
@@ -411,6 +378,7 @@ const ChatPage = () => {
     setIsStreaming(true);
     setStreamingEvents([]);
 
+    const chatKey = selectedChatId ?? NEW_CHAT_KEY;
     const tempMessage: ChatMessage = {
       _id: `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       chatId: selectedChatId ?? "temp",
@@ -419,11 +387,16 @@ const ChatPage = () => {
       createdAt: new Date().toISOString(),
     };
 
+    // Clear composer value for this specific chat
+    setComposerValuesByChat(prev => ({
+      ...prev,
+      [chatKey]: ""
+    }));
     setComposerValue("");
     setPendingFile(null);
     setOptimisticMessagesByChat((prev) => ({
       ...prev,
-      [selectedChatId ?? NEW_CHAT_KEY]: [...(prev[selectedChatId ?? NEW_CHAT_KEY] ?? []), tempMessage],
+      [chatKey]: [...(prev[chatKey] ?? []), tempMessage],
     }));
 
     try {
@@ -526,6 +499,13 @@ const ChatPage = () => {
   };
 
   const handleStartNewChat = () => {
+    // Save current composer value before starting new chat
+    const currentChatKey = selectedChatId ?? NEW_CHAT_KEY;
+    setComposerValuesByChat(prev => ({
+      ...prev,
+      [currentChatKey]: composerValue
+    }));
+
     setIsCreatingNewChat(true);
     setSelectedChatId(null);
     setComposerValue("");
@@ -560,6 +540,15 @@ const ChatPage = () => {
       }
 
       setOptimisticMessagesByChat((prev) => {
+        if (!prev[chatId]) {
+          return prev;
+        }
+        const updated = { ...prev };
+        delete updated[chatId];
+        return updated;
+      });
+
+      setComposerValuesByChat((prev) => {
         if (!prev[chatId]) {
           return prev;
         }
@@ -621,25 +610,29 @@ const ChatPage = () => {
 
       // If this is a temp message, check if it should be replaced by a server message
       if (message._id.startsWith("temp-")) {
-        const tempTimestamp = parseInt(message._id.split('-')[1]);
-        const now = Date.now();
-        const tempAge = now - tempTimestamp;
+        const tempTimestamp = parseInt(message._id.replace("temp-", ""));
+        const signature = `${message.role}-${message.content}`;
 
-        // For user messages, check if there's a server user message that should replace this temp
-        if (message.role === "user") {
-          // Look for server user messages with the same content
-          const matchingUserMessages = apiMessages.filter((serverMsg) =>
-            serverMsg.role === "user" && serverMsg.content === message.content
-          );
-
-          // If we found matching server messages and the temp message is older than 2 seconds,
-          // assume it has been replaced by the server message
-          if (matchingUserMessages.length > 0 && tempAge > 2000) {
-            return false;
+        // Only match with server messages created within 30 seconds after the temp message
+        const matchingServerMessage = apiMessages.find(
+          (serverMsg) => {
+            if (`${serverMsg.role}-${serverMsg.content}` !== signature) {
+              return false;
+            }
+            const serverTimestamp = new Date(serverMsg.createdAt).getTime();
+            const timeDiff = serverTimestamp - tempTimestamp;
+            // Server message should be created after temp message, within 30 seconds
+            return timeDiff >= 0 && timeDiff <= 30000;
           }
+        );
+
+        // If we found a matching recent server message, filter out the temp message
+        if (matchingServerMessage) {
+          return false;
         }
 
         // Keep temp messages for up to 30 seconds, then remove them (in case of errors)
+        const tempAge = Date.now() - tempTimestamp;
         return tempAge < 30000;
       }
 
@@ -657,6 +650,23 @@ const ChatPage = () => {
     Boolean(selectedChatId) &&
     (isChatDetailLoading || isChatDetailFetching) &&
     optimisticMessages.length === 0;
+
+  // Make sending state chat-specific - only show thinking indicator for the chat that's currently processing
+  const isCurrentChatSending = useMemo(() => {
+    if (isSendingMessage || isStreaming) {
+      // If we're sending a message, check if it's for the current chat
+      const hasOptimisticMessages = optimisticMessages.length > 0;
+      // If current chat has optimistic messages, it's the one being processed
+      if (hasOptimisticMessages) {
+        return true;
+      }
+      // If no optimistic messages but we're in NEW_CHAT_KEY state, it's a new chat being created
+      if (currentChatKey === NEW_CHAT_KEY && (isSendingMessage || isStreaming)) {
+        return true;
+      }
+    }
+    return false;
+  }, [isSendingMessage, isStreaming, optimisticMessages.length, currentChatKey]);
 
   return (
     <DashboardLayout>
@@ -692,11 +702,11 @@ const ChatPage = () => {
                   chatTitle={resolvedChatTitle}
                   hasSelection={hasActiveConversation}
                   isLoading={isConversationLoading}
-                  isSending={isSendingMessage || isStreaming}
+                  isSending={isCurrentChatSending}
                   messages={selectedMessages}
                   onOpenChatList={() => setIsMobileListOpen(true)}
                   streamingEvents={streamingEvents}
-                  isStreaming={isStreaming}
+                  isStreaming={isStreaming && isCurrentChatSending}
                 />
 
 
