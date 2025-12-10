@@ -62,6 +62,12 @@ export interface LeadMeetingRecord {
   status: "scheduled" | "completed" | "cancelled";
   autoSelectedSlot?: boolean;
   metadata?: Record<string, unknown>;
+  recall?: {
+    status?: "scheduled" | "starting" | "active" | "ended" | "failed" | null;
+    sessionId?: string | null;
+    webhookUrl?: string | null;
+    lastError?: string | null;
+  };
   createdAt: string;
   updatedAt: string;
   __v?: number;

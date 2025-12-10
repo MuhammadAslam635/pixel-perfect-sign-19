@@ -1771,22 +1771,55 @@ const Activity: FC<ActivityProps> = ({
                                           )}
                                         </p>
                                       </div>
-                                      <div className="flex items-center gap-2">
-                                        <Badge
-                                          className={
-                                            meeting.status === "completed"
-                                              ? "bg-teal-500/20 text-teal-200 border border-teal-400/40"
+                                      <div className="flex items-center gap-2 flex-wrap justify-end">
+                                        <div className="flex items-center gap-2">
+                                          <Badge
+                                            className={
+                                              meeting.status === "completed"
+                                                ? "bg-teal-500/20 text-teal-200 border border-teal-400/40"
+                                                : meeting.status === "cancelled"
+                                                ? "bg-red-500/20 text-red-200 border border-red-400/40"
+                                                : "bg-indigo-500/20 text-indigo-200 border border-indigo-400/40"
+                                            }
+                                          >
+                                            {meeting.status === "completed"
+                                              ? "Completed"
                                               : meeting.status === "cancelled"
-                                              ? "bg-red-500/20 text-red-200 border border-red-400/40"
-                                              : "bg-indigo-500/20 text-indigo-200 border border-indigo-400/40"
-                                          }
-                                        >
-                                          {meeting.status === "completed"
-                                            ? "Completed"
-                                            : meeting.status === "cancelled"
-                                            ? "Cancelled"
-                                            : "Scheduled"}
-                                        </Badge>
+                                              ? "Cancelled"
+                                              : "Scheduled"}
+                                          </Badge>
+                                          {meeting.recall?.status && (
+                                            <Badge
+                                              className={
+                                                meeting.recall.status ===
+                                                "active"
+                                                  ? "bg-emerald-500/20 text-emerald-100 border border-emerald-400/50"
+                                                  : meeting.recall.status ===
+                                                      "starting" ||
+                                                    meeting.recall.status ===
+                                                      "scheduled"
+                                                  ? "bg-sky-500/15 text-sky-100 border border-sky-400/40"
+                                                  : meeting.recall.status ===
+                                                    "failed"
+                                                  ? "bg-red-500/20 text-red-100 border border-red-400/40"
+                                                  : "bg-slate-500/20 text-slate-100 border border-slate-400/40"
+                                              }
+                                            >
+                                              {meeting.recall.status ===
+                                              "active"
+                                                ? "Recall active"
+                                                : meeting.recall.status ===
+                                                    "starting" ||
+                                                  meeting.recall.status ===
+                                                    "scheduled"
+                                                ? "Recall pending"
+                                                : meeting.recall.status ===
+                                                  "failed"
+                                                ? "Recall failed"
+                                                : "Recall ended"}
+                                            </Badge>
+                                          )}
+                                        </div>
                                         <Button
                                           type="button"
                                           variant="ghost"
