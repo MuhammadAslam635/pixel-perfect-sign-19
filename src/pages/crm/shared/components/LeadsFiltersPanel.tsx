@@ -89,6 +89,7 @@ export const LeadsFiltersInline = ({
             className="h-8 text-xs"
             maxDisplayItems={1}
             popoverWidth="w-[280px]"
+            showCount={true}
           />
         </div>
       </div>
@@ -108,6 +109,7 @@ export const LeadsFiltersInline = ({
             className="h-8 text-xs"
             maxDisplayItems={1}
             popoverWidth="w-[280px]"
+            showCount={true}
           />
         </div>
       </div>

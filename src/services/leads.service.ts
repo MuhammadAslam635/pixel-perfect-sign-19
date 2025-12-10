@@ -27,6 +27,7 @@ export interface Lead {
   language?: string;
   companyName?: string | null;
   companyLocation?: string | null;
+  country?: string | null;
   createdAt: string;
   updatedAt: string;
   company?: LeadCompanyInfo | null;

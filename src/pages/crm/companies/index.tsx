@@ -55,9 +55,9 @@ const index = () => {
     string[]
   >([]);
   const [companiesEmployeeRange, setCompaniesEmployeeRange] =
-    useState<string>("all");
+    useState<string[]>([]);
   const [companiesCountryFilter, setCompaniesCountryFilter] =
-    useState<string>("");
+    useState<string[]>([]);
   const [companiesHasPeopleFilter, setCompaniesHasPeopleFilter] =
     useState(false);
   const [companiesHasWebsiteFilter, setCompaniesHasWebsiteFilter] =
@@ -66,8 +66,8 @@ const index = () => {
   const [companyFiltersOpen, setCompanyFiltersOpen] = useState(false);
   const resetCompanyAdvancedFilters = useCallback(() => {
     setCompaniesIndustryFilter([]);
-    setCompaniesEmployeeRange("all");
-    setCompaniesCountryFilter("");
+    setCompaniesEmployeeRange([]);
+    setCompaniesCountryFilter([]);
     setCompaniesHasPeopleFilter(false);
     setCompaniesHasWebsiteFilter(false);
     setCompanyFiltersOpen(false);
@@ -86,18 +86,9 @@ const index = () => {
       params.industry = companiesIndustryFilter.join(",");
     }
 
-    if (companiesEmployeeRange !== "all") {
-      const range = COMPANY_EMPLOYEE_RANGES.find(
-        (option) => option.value === companiesEmployeeRange
-      );
-      if (range) {
-        if (typeof range.min === "number") {
-          params.minEmployees = range.min;
-        }
-        if (typeof range.max === "number") {
-          params.maxEmployees = range.max;
-        }
-      }
+    if (companiesEmployeeRange.length > 0) {
+      // Send as comma-separated employee ranges
+      params.employeeRanges = companiesEmployeeRange.join(",");
     }
 
     if (companiesHasPeopleFilter) {
@@ -108,8 +99,8 @@ const index = () => {
       params.hasWebsite = true;
     }
 
-    if (companiesCountryFilter.trim()) {
-      params.country = companiesCountryFilter.trim();
+    if (companiesCountryFilter.length > 0) {
+      params.country = companiesCountryFilter.join(",");
     }
 
     return params;
@@ -158,8 +149,8 @@ const index = () => {
   const hasCompanyAdvancedFilters = useMemo(
     () =>
       companiesIndustryFilter.length > 0 ||
-      companiesEmployeeRange !== "all" ||
-      companiesCountryFilter.trim() !== "" ||
+      companiesEmployeeRange.length > 0 ||
+      companiesCountryFilter.length > 0 ||
       companiesHasPeopleFilter ||
       companiesHasWebsiteFilter,
     [

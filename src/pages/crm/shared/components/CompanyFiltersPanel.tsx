@@ -13,6 +13,7 @@ import {
   type MultiSelectOption,
 } from "@/components/ui/multi-select";
 import { CountrySelect } from "@/components/ui/country-select";
+import countryList from "react-select-country-list";
 
 interface CompanyFiltersInlineProps {
   // Industry filter
@@ -22,12 +23,12 @@ interface CompanyFiltersInlineProps {
 
   // Employee range filter
   employeeRanges: Array<{ value: string; label: string }>;
-  employeeRange: string;
-  onEmployeeRangeChange: (value: string) => void;
+  employeeRange: string[];
+  onEmployeeRangeChange: (value: string[]) => void;
 
   // Location filter
-  locationFilter: string;
-  onLocationFilterChange: (value: string) => void;
+  locationFilter: string[];
+  onLocationFilterChange: (value: string[]) => void;
 
   // Checkbox filters
   hasPeopleFilter: boolean;
@@ -79,6 +80,7 @@ export const CompanyFiltersInline = ({
             className="h-8 text-xs"
             maxDisplayItems={1}
             popoverWidth="w-[280px]"
+            showCount={true}
           />
         </div>
       </div>
@@ -88,22 +90,20 @@ export const CompanyFiltersInline = ({
         <label className="text-[11px] uppercase tracking-[0.08em] text-gray-400 whitespace-nowrap">
           Size:
         </label>
-        <Select value={employeeRange} onValueChange={onEmployeeRangeChange}>
-          <SelectTrigger className="h-8 w-40 rounded-lg border border-white/15 bg-transparent text-white text-xs">
-            <SelectValue placeholder="All sizes" />
-          </SelectTrigger>
-          <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a] rounded-xl">
-            {employeeRanges.map((option) => (
-              <SelectItem
-                key={option.value}
-                value={option.value}
-                className="text-gray-300 focus:text-white focus:bg-white/10"
-              >
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="w-40">
+          <MultiSelect
+            options={employeeRanges.filter(r => r.value !== "all").map(r => ({ value: r.value, label: r.label }))}
+            value={employeeRange}
+            onChange={onEmployeeRangeChange}
+            placeholder="All sizes"
+            searchPlaceholder="Search sizes..."
+            emptyMessage="No sizes found."
+            className="h-8 text-xs"
+            maxDisplayItems={1}
+            popoverWidth="w-[280px]"
+            showCount={true}
+          />
+        </div>
       </div>
 
       {/* Country Filter */}
@@ -111,12 +111,20 @@ export const CompanyFiltersInline = ({
         <label className="text-[11px] uppercase tracking-[0.08em] text-gray-400 whitespace-nowrap">
           Country:
         </label>
-        <CountrySelect
-          value={locationFilter}
-          onChange={onLocationFilterChange}
-          placeholder="All countries"
-          className="h-8 w-40 text-xs"
-        />
+        <div className="w-40">
+          <MultiSelect
+            options={countryList().getData().map((c) => ({ value: c.label, label: c.label }))}
+            value={locationFilter}
+            onChange={onLocationFilterChange}
+            placeholder="All countries"
+            searchPlaceholder="Search countries..."
+            emptyMessage="No countries found."
+            className="h-8 text-xs"
+            maxDisplayItems={1}
+            popoverWidth="w-[280px]"
+            showCount={true}
+          />
+        </div>
       </div>
 
       {/* Checkboxes */}
@@ -167,12 +175,12 @@ interface CompanyFiltersPanelProps {
 
   // Employee range filter
   employeeRanges: Array<{ value: string; label: string }>;
-  employeeRange: string;
-  onEmployeeRangeChange: (value: string) => void;
+  employeeRange: string[];
+  onEmployeeRangeChange: (value: string[]) => void;
 
   // Location filter
-  locationFilter: string;
-  onLocationFilterChange: (value: string) => void;
+  locationFilter: string[];
+  onLocationFilterChange: (value: string[]) => void;
 
   // Checkbox filters
   hasPeopleFilter: boolean;
@@ -227,33 +235,28 @@ export const CompanyFiltersPanel = ({
         <p className="text-[11px] uppercase tracking-[0.08em] text-gray-400 mb-2">
           Company size
         </p>
-        <Select value={employeeRange} onValueChange={onEmployeeRangeChange}>
-          <SelectTrigger className="h-9 w-full rounded-lg border border-white/15 bg-transparent text-white text-xs">
-            <SelectValue placeholder="Company size" />
-          </SelectTrigger>
-          <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a] rounded-xl">
-            {employeeRanges.map((option) => (
-              <SelectItem
-                key={option.value}
-                value={option.value}
-                className="text-gray-300 focus:text-white focus:bg-white/10"
-              >
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <MultiSelect
+          options={employeeRanges.filter(r => r.value !== "all").map(r => ({ value: r.value, label: r.label }))}
+          value={employeeRange}
+          onChange={onEmployeeRangeChange}
+          placeholder="All sizes"
+          searchPlaceholder="Search sizes..."
+          emptyMessage="No sizes found."
+          className="h-9 text-xs"
+        />
       </div>
       <div>
         <p className="text-[11px] uppercase tracking-[0.08em] text-gray-400 mb-2">
-          Location
+          Country
         </p>
-        <Input
-          type="text"
-          placeholder="City, state, or region"
+        <MultiSelect
+          options={countryList().getData().map((c) => ({ value: c.label, label: c.label }))}
           value={locationFilter}
-          onChange={(e) => onLocationFilterChange(e.target.value)}
-          className="h-9 rounded-lg border border-white/15 bg-transparent text-white placeholder:text-gray-500 text-xs"
+          onChange={onLocationFilterChange}
+          placeholder="All countries"
+          searchPlaceholder="Search countries..."
+          emptyMessage="No countries found."
+          className="h-9 text-xs"
         />
       </div>
       <div className="flex flex-col gap-3">

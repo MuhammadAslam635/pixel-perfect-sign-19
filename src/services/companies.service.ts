@@ -19,6 +19,7 @@ export interface Company {
   _id: string;
   name: string;
   address: string | null;
+  country: string | null;
   website: string | null;
   description: string | null;
   about: string | null;
@@ -58,6 +59,7 @@ export interface CompaniesQueryParams {
   industry?: string;
   minEmployees?: number;
   maxEmployees?: number;
+  employeeRanges?: string; // Comma-separated employee range values
   hasPeople?: boolean;
   hasWebsite?: boolean;
   location?: string;

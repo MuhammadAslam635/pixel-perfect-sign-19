@@ -32,6 +32,7 @@ interface MultiSelectProps {
   className?: string;
   disabled?: boolean;
   maxDisplayItems?: number;
+  showCount?: boolean; // Show only count instead of badges
 }
 
 export function MultiSelect({
@@ -45,9 +46,11 @@ export function MultiSelect({
   disabled = false,
   maxDisplayItems = 3,
   popoverWidth,
+  showCount = false,
 }: MultiSelectProps & { popoverWidth?: string }) {
   const [open, setOpen] = React.useState(false);
   const [internalValue, setInternalValue] = React.useState<string[]>(value);
+  const [searchValue, setSearchValue] = React.useState("");
 
   // Sync internal value with prop
   React.useEffect(() => {
@@ -67,6 +70,8 @@ export function MultiSelect({
 
     setInternalValue(newValue);
     onChange?.(newValue);
+    // Clear search after selection
+    setSearchValue("");
   };
 
   const handleRemove = (optionValue: string) => {
@@ -94,33 +99,43 @@ export function MultiSelect({
           <div className="flex flex-1 flex-nowrap gap-1 overflow-hidden items-center">
             {displayItems.length > 0 ? (
               <>
-                {displayItems.map((option) => (
-                  <Badge
-                    key={option.value}
-                    variant="secondary"
-                    className="bg-white/10 text-white border border-white/20 text-xs px-2 py-0 h-5 flex items-center gap-1 flex-shrink-0 pb-0"
-                  >
-                    <span className="truncate max-w-24 sm:max-w-32 md:max-w-40 lg:max-w-48">
-                      {option.label}
-                    </span>
-                    <button
-                      className="ml-1 hover:bg-white/20 rounded-sm flex-shrink-0 p-0.5"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRemove(option.value);
-                      }}
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </Badge>
-                ))}
-                {remainingCount > 0 && (
-                  <Badge
-                    variant="secondary"
-                    className="bg-white/10 text-white border border-white/20 text-xs px-1.5 py-0 h-5 flex-shrink-0 pb-0"
-                  >
-                    +{remainingCount}
-                  </Badge>
+                {showCount ? (
+                  // Show only count
+                  <span className="text-white text-xs">
+                    {selectedOptions.length} selected
+                  </span>
+                ) : (
+                  // Show badges
+                  <>
+                    {displayItems.map((option) => (
+                      <Badge
+                        key={option.value}
+                        variant="secondary"
+                        className="bg-white/10 text-white border border-white/20 text-xs px-2 py-0 h-5 flex items-center gap-1 flex-shrink-0 pb-0"
+                      >
+                        <span className="truncate max-w-24 sm:max-w-32 md:max-w-40 lg:max-w-48">
+                          {option.label}
+                        </span>
+                        <button
+                          className="ml-1 hover:bg-white/20 rounded-sm flex-shrink-0 p-0.5"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemove(option.value);
+                          }}
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                    {remainingCount > 0 && (
+                      <Badge
+                        variant="secondary"
+                        className="bg-white/10 text-white border border-white/20 text-xs px-1.5 py-0 h-5 flex-shrink-0 pb-0"
+                      >
+                        +{remainingCount}
+                      </Badge>
+                    )}
+                  </>
                 )}
               </>
             ) : (
@@ -135,6 +150,8 @@ export function MultiSelect({
           <CommandInput
             placeholder={searchPlaceholder}
             className="text-white placeholder:text-gray-400 h-9"
+            value={searchValue}
+            onValueChange={setSearchValue}
           />
           <CommandList className="scrollbar-hide">
             <CommandEmpty className="p-4 text-sm text-gray-400">

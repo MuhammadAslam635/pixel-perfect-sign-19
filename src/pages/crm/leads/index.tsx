@@ -481,13 +481,8 @@ const index = () => {
 
     // Country filter (multi-select)
     if (leadsCountryFilter.length > 0) {
-      // Assuming lead.location stores the country name or we match against it
-      result = result.filter(
-        (lead) =>
-          lead.location &&
-          leadsCountryFilter.some((country) =>
-            lead.location?.toLowerCase().includes(country.toLowerCase())
-          )
+      result = result.filter((lead) =>
+        lead.country && leadsCountryFilter.includes(lead.country)
       );
     }
 
@@ -726,6 +721,7 @@ const index = () => {
                         className="pl-10 h-9 text-xs"
                         maxDisplayItems={1}
                         popoverWidth="w-[320px]"
+                        showCount={true}
                       />
                     </div>
 
