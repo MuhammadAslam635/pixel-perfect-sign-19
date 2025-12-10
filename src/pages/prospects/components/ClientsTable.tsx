@@ -431,107 +431,107 @@ const ClientsTable: React.FC<ClientsTableProps> = ({
                     }}
                     className="grid grid-cols-[1.5fr_1fr_0.8fr_0.8fr_0.8fr_0.6fr_80px] items-center gap-4 px-6 py-4 border-b border-[#FFFFFF0D] last:border-b-0 cursor-pointer relative overflow-hidden"
                   >
-                  <motion.div
-                    className="font-medium text-white truncate font-mono text-sm"
-                    title={client.sessionId}
-                    whileHover={{
-                      scale: 1.02,
-                      color: "#ffffff",
-                      transition: { duration: 0.2 },
-                    }}
-                  >
-                    {client.sessionId}
-                  </motion.div>
-                  <motion.div
-                    className="text-gray-300 text-sm"
-                    whileHover={{
-                      scale: 1.02,
-                      color: "#ffffff",
-                      transition: { duration: 0.2 },
-                    }}
-                  >
-                    {formatDate(client.startTime)}
-                  </motion.div>
-                  <motion.div
-                    className="text-gray-300 text-sm"
-                    whileHover={{
-                      scale: 1.02,
-                      color: "#ffffff",
-                      transition: { duration: 0.2 },
-                    }}
-                  >
-                    {formatDuration(client.duration)}
-                  </motion.div>
-                  <div>
-                    <Badge
-                      className={`${getStatusColor(
-                        client.status
-                      )} rounded-full px-3`}
+                    <motion.div
+                      className="font-medium text-white truncate font-mono text-sm"
+                      title={client.sessionId}
+                      whileHover={{
+                        scale: 1.02,
+                        color: "#ffffff",
+                        transition: { duration: 0.2 },
+                      }}
                     >
-                      {client.status}
-                    </Badge>
-                  </div>
-                  <motion.div
-                    className="text-gray-300 text-sm text-center"
-                    whileHover={{
-                      scale: 1.02,
-                      color: "#ffffff",
-                      transition: { duration: 0.2 },
-                    }}
-                  >
-                    {client.messagesTotal}
-                  </motion.div>
-                  <motion.div
-                    className="text-gray-300 text-sm"
-                    whileHover={{
-                      scale: 1.02,
-                      color: "#ffffff",
-                      transition: { duration: 0.2 },
-                    }}
-                  >
-                    {client.averageResponse}ms
-                  </motion.div>
-                  <div className="flex justify-center">
-                        <TooltipProvider>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <motion.button
-                                className="p-2 rounded-full text-gray-300"
-                                whileHover={{
-                                  backgroundColor: "rgba(255, 255, 255, 0.1)",
-                                  scale: 1.1,
-                                  rotate: 90,
-                                  transition: { duration: 0.2 },
-                                }}
-                                whileTap={{ scale: 0.95 }}
-                              >
-                                <MoreVertical className="h-5 w-5" />
-                              </motion.button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent
-                          align="end"
-                              className="bg-[#1a1a1a] border-[#2a2a2a] text-gray-200 shadow-lg rounded-lg w-40"
+                      {client.sessionId}
+                    </motion.div>
+                    <motion.div
+                      className="text-gray-300 text-sm"
+                      whileHover={{
+                        scale: 1.02,
+                        color: "#ffffff",
+                        transition: { duration: 0.2 },
+                      }}
+                    >
+                      {formatDate(client.startTime)}
+                    </motion.div>
+                    <motion.div
+                      className="text-gray-300 text-sm"
+                      whileHover={{
+                        scale: 1.02,
+                        color: "#ffffff",
+                        transition: { duration: 0.2 },
+                      }}
+                    >
+                      {formatDuration(client.duration)}
+                    </motion.div>
+                    <div>
+                      <Badge
+                        className={`${getStatusColor(
+                          client.status
+                        )} rounded-full px-3`}
+                      >
+                        {client.status}
+                      </Badge>
+                    </div>
+                    <motion.div
+                      className="text-gray-300 text-sm text-center"
+                      whileHover={{
+                        scale: 1.02,
+                        color: "#ffffff",
+                        transition: { duration: 0.2 },
+                      }}
+                    >
+                      {client.messagesTotal}
+                    </motion.div>
+                    <motion.div
+                      className="text-gray-300 text-sm"
+                      whileHover={{
+                        scale: 1.02,
+                        color: "#ffffff",
+                        transition: { duration: 0.2 },
+                      }}
+                    >
+                      {client.averageResponse}ms
+                    </motion.div>
+                    <div className="flex justify-center">
+                      <TooltipProvider>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <motion.button
+                              className="p-2 rounded-full text-gray-300"
+                              whileHover={{
+                                backgroundColor: "rgba(255, 255, 255, 0.1)",
+                                scale: 1.1,
+                                rotate: 90,
+                                transition: { duration: 0.2 },
+                              }}
+                              whileTap={{ scale: 0.95 }}
                             >
-                              <motion.div
-                                whileHover={{
-                                  backgroundColor: "rgba(255, 255, 255, 0.1)",
-                                  scale: 1.02,
-                                  transition: { duration: 0.15 },
-                                }}
-                                whileTap={{ scale: 0.98 }}
+                              <MoreVertical className="h-5 w-5" />
+                            </motion.button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent
+                            align="end"
+                            className="bg-[#1a1a1a] border-[#2a2a2a] text-gray-200 shadow-lg rounded-lg w-40"
+                          >
+                            <motion.div
+                              whileHover={{
+                                backgroundColor: "rgba(255, 255, 255, 0.1)",
+                                scale: 1.02,
+                                transition: { duration: 0.15 },
+                              }}
+                              whileTap={{ scale: 0.98 }}
+                            >
+                              <DropdownMenuItem
+                                onClick={() => handleViewDetails(client)}
+                                className="flex items-center gap-2 px-3 py-2 cursor-pointer"
                               >
-                                <DropdownMenuItem
-                                  onClick={() => handleViewDetails(client)}
-                                  className="flex items-center gap-2 px-3 py-2 cursor-pointer"
-                                >
-                                  <EyeIcon size={16} /> View Details
-                                </DropdownMenuItem>
-                              </motion.div>
-                            </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TooltipProvider>
-                  </div>
-                </motion.div>
+                                <EyeIcon size={16} /> View Details
+                              </DropdownMenuItem>
+                            </motion.div>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TooltipProvider>
+                    </div>
+                  </motion.div>
                 ))}
                 {data && data.data.docs.length === 0 && (
                   <motion.div
