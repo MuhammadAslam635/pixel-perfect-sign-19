@@ -11,7 +11,7 @@ const pageVariants = {
   hidden: {
     opacity: 0,
     y: 30,
-    scale: 0.98
+    scale: 0.98,
   },
   visible: {
     opacity: 1,
@@ -21,9 +21,9 @@ const pageVariants = {
       duration: 0.8,
       ease: [0.25, 0.46, 0.45, 0.94],
       staggerChildren: 0.1,
-      delayChildren: 0.1
-    }
-  }
+      delayChildren: 0.1,
+    },
+  },
 };
 
 const containerVariants = {
@@ -35,9 +35,9 @@ const containerVariants = {
       duration: 0.6,
       ease: [0.25, 0.46, 0.45, 0.94],
       staggerChildren: 0.08,
-      delayChildren: 0.2
-    }
-  }
+      delayChildren: 0.2,
+    },
+  },
 };
 
 const titleVariants = {
@@ -48,9 +48,9 @@ const titleVariants = {
     scale: 1,
     transition: {
       duration: 0.7,
-      ease: [0.25, 0.46, 0.45, 0.94]
-    }
-  }
+      ease: [0.25, 0.46, 0.45, 0.94],
+    },
+  },
 };
 
 const tabContainerVariants = {
@@ -62,9 +62,9 @@ const tabContainerVariants = {
     transition: {
       duration: 0.6,
       ease: [0.25, 0.46, 0.45, 0.94],
-      delay: 0.3
-    }
-  }
+      delay: 0.3,
+    },
+  },
 };
 
 const tabContentVariants = {
@@ -72,7 +72,7 @@ const tabContentVariants = {
     opacity: 0,
     x: 40,
     scale: 0.95,
-    filter: "blur(8px)"
+    filter: "blur(8px)",
   },
   visible: {
     opacity: 1,
@@ -82,8 +82,8 @@ const tabContentVariants = {
     transition: {
       duration: 0.5,
       ease: [0.25, 0.46, 0.45, 0.94],
-      staggerChildren: 0.1
-    }
+      staggerChildren: 0.1,
+    },
   },
   exit: {
     opacity: 0,
@@ -92,9 +92,9 @@ const tabContentVariants = {
     filter: "blur(8px)",
     transition: {
       duration: 0.3,
-      ease: [0.25, 0.46, 0.45, 0.94]
-    }
-  }
+      ease: [0.25, 0.46, 0.45, 0.94],
+    },
+  },
 };
 
 const ProspectsPage = () => {
@@ -125,18 +125,18 @@ const ProspectsPage = () => {
                   opacity: 0,
                   scale: 0.95,
                   y: 20,
-                  filter: "blur(10px)"
+                  filter: "blur(10px)",
                 }}
                 animate={{
                   opacity: 1,
                   scale: 1,
                   y: 0,
-                  filter: "blur(0px)"
+                  filter: "blur(0px)",
                 }}
                 transition={{
                   duration: 0.8,
                   ease: [0.25, 0.46, 0.45, 0.94],
-                  delay: 0.2
+                  delay: 0.2,
                 }}
               >
                 <motion.div
@@ -146,7 +146,7 @@ const ProspectsPage = () => {
                   transition={{
                     duration: 0.6,
                     ease: [0.25, 0.46, 0.45, 0.94],
-                    delay: 0.5
+                    delay: 0.5,
                   }}
                 >
                   <motion.div
@@ -158,11 +158,11 @@ const ProspectsPage = () => {
                   >
                     <motion.h1
                       className="text-3xl font-bold text-white"
-                      whileHover={{
-                        scale: 1.02,
-                        textShadow: "0px 0px 20px rgba(255, 255, 255, 0.3)",
-                        transition: { duration: 0.3 }
-                      }}
+                      // whileHover={{
+                      //   scale: 1.02,
+                      //   textShadow: "0px 0px 20px rgba(255, 255, 255, 0.3)",
+                      //   transition: { duration: 0.3 }
+                      // }}
                     >
                       Customer Support
                     </motion.h1>
@@ -173,7 +173,7 @@ const ProspectsPage = () => {
                       transition={{
                         duration: 0.6,
                         delay: 0.9,
-                        ease: [0.25, 0.46, 0.45, 0.94]
+                        ease: [0.25, 0.46, 0.45, 0.94],
                       }}
                     >
                       View and manage your customer support sessions and queries
@@ -233,7 +233,7 @@ const ProspectsPage = () => {
                   transition={{
                     duration: 0.4,
                     delay: 0.8,
-                    ease: [0.25, 0.46, 0.45, 0.94]
+                    ease: [0.25, 0.46, 0.45, 0.94],
                   }}
                 >
                   <AnimatePresence mode="wait">
@@ -254,7 +254,7 @@ const ProspectsPage = () => {
                             transition={{
                               duration: 0.4,
                               delay: 0.2,
-                              ease: [0.25, 0.46, 0.45, 0.94]
+                              ease: [0.25, 0.46, 0.45, 0.94],
                             }}
                           >
                             <ClientsTable viewType="sessions" />
@@ -271,7 +271,7 @@ const ProspectsPage = () => {
                             transition={{
                               duration: 0.4,
                               delay: 0.2,
-                              ease: [0.25, 0.46, 0.45, 0.94]
+                              ease: [0.25, 0.46, 0.45, 0.94],
                             }}
                           >
                             <CustomerSupportQueriesTable />
