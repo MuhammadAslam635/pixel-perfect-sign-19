@@ -246,7 +246,7 @@ const CalendarPage: FC = () => {
   // Sort and filter meetings based on selected date
   const sortedMeetings = useMemo(() => {
     let filtered = leadMeetings;
-    
+
     // If a date is selected, filter to show only that date's meetings
     if (selectedDate !== null) {
       filtered = leadMeetings.filter((meeting) => {
@@ -472,16 +472,14 @@ const CalendarPage: FC = () => {
 
                 {/* Days of Week */}
                 <div className="grid grid-cols-7 gap-0.5 mb-1">
-                  {["M", "T", "W", "T", "F", "S", "S"].map(
-                    (day, idx) => (
-                      <div
-                        key={idx}
-                        className="text-center text-white/50 text-[10px] font-medium py-1"
-                      >
-                        {day}
-                      </div>
-                    )
-                  )}
+                  {["M", "T", "W", "T", "F", "S", "S"].map((day, idx) => (
+                    <div
+                      key={idx}
+                      className="text-center text-white/50 text-[10px] font-medium py-1"
+                    >
+                      {day}
+                    </div>
+                  ))}
                 </div>
 
                 {/* Calendar Grid */}
@@ -493,12 +491,13 @@ const CalendarPage: FC = () => {
 
                     const dayMeetings = meetingDayMap.get(day) || [];
                     const dayAvailability = availabilityDayMap.get(day) || [];
-                    
+
                     // Check for different meeting statuses
                     const hasUpcomingMeeting = dayMeetings.some(
                       (meeting) =>
                         meeting.status === "scheduled" &&
-                        new Date(meeting.startDateTime).getTime() >= nowTimestamp
+                        new Date(meeting.startDateTime).getTime() >=
+                          nowTimestamp
                     );
                     const hasCompletedMeeting = dayMeetings.some(
                       (meeting) => meeting.status === "completed"
@@ -511,7 +510,7 @@ const CalendarPage: FC = () => {
                       day === todayRef.getDate() &&
                       currentDate.getMonth() === todayRef.getMonth() &&
                       currentDate.getFullYear() === todayRef.getFullYear();
-                    
+
                     // Priority order: Upcoming > Cancelled > Completed
                     const highlightClass = hasUpcomingMeeting
                       ? "bg-indigo-500/30 border border-indigo-400/70"
@@ -522,7 +521,9 @@ const CalendarPage: FC = () => {
                       : "";
 
                     const textClass =
-                      hasUpcomingMeeting || hasCompletedMeeting || hasCancelledMeeting
+                      hasUpcomingMeeting ||
+                      hasCompletedMeeting ||
+                      hasCancelledMeeting
                         ? "text-white font-medium"
                         : "text-white/70";
 
@@ -549,9 +550,14 @@ const CalendarPage: FC = () => {
                     const isSelected = selectedDate === day;
 
                     return (
-                      <div key={index} className="flex items-center justify-center py-0.5">
+                      <div
+                        key={index}
+                        className="flex items-center justify-center py-0.5"
+                      >
                         <button
-                          onClick={() => setSelectedDate(selectedDate === day ? null : day)}
+                          onClick={() =>
+                            setSelectedDate(selectedDate === day ? null : day)
+                          }
                           className="w-7 h-7 flex items-center justify-center relative rounded-full hover:bg-white/10 transition-colors cursor-pointer"
                           aria-label={ariaLabel}
                           title={ariaLabel}
@@ -562,18 +568,20 @@ const CalendarPage: FC = () => {
                           {!isSelected && isToday && (
                             <div className="absolute inset-0 rounded-full border border-white/50" />
                           )}
-                          {!isSelected && !isToday && (hasUpcomingMeeting ||
-                            hasCompletedMeeting ||
-                            hasCancelledMeeting) && (
-                            <div
-                              className={`absolute inset-0 rounded-full ${highlightClass}`}
-                            />
-                          )}
-                          <span className={`relative z-10 text-xs leading-none ${ 
-                            isSelected 
-                              ? "text-gray-900 font-bold" 
-                              : textClass
-                          }`}>
+                          {!isSelected &&
+                            !isToday &&
+                            (hasUpcomingMeeting ||
+                              hasCompletedMeeting ||
+                              hasCancelledMeeting) && (
+                              <div
+                                className={`absolute inset-0 rounded-full ${highlightClass}`}
+                              />
+                            )}
+                          <span
+                            className={`relative z-10 text-xs leading-none ${
+                              isSelected ? "text-gray-900 font-bold" : textClass
+                            }`}
+                          >
                             {day}
                           </span>
                         </button>
@@ -614,7 +622,9 @@ const CalendarPage: FC = () => {
                 <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                   <h3 className="text-white font-semibold text-base">
                     {selectedDate !== null
-                      ? `Meetings on ${monthNames[currentDate.getMonth()]} ${selectedDate}, ${currentDate.getFullYear()}`
+                      ? `Meetings on ${
+                          monthNames[currentDate.getMonth()]
+                        } ${selectedDate}, ${currentDate.getFullYear()}`
                       : "All Future Meetings"}
                   </h3>
                   {selectedDate !== null && (
@@ -626,7 +636,7 @@ const CalendarPage: FC = () => {
                     </button>
                   )}
                 </div>
-                
+
                 <div className="flex-1 overflow-y-auto scrollbar-hide max-h-[calc(100vh-20rem)]">
                   {isLeadMeetingsBusy ? (
                     <div className="flex items-center gap-2 text-white/60 text-sm">
@@ -637,7 +647,8 @@ const CalendarPage: FC = () => {
                     <div className="space-y-3 pr-2">
                       {sortedMeetings.map((meeting) => {
                         const meetingEnd = new Date(meeting.endDateTime);
-                        const meetingCompleted = meetingEnd.getTime() < nowTimestamp;
+                        const meetingCompleted =
+                          meetingEnd.getTime() < nowTimestamp;
                         return (
                           <div
                             key={meeting._id}
@@ -708,7 +719,9 @@ const CalendarPage: FC = () => {
                                   variant="ghost"
                                   size="sm"
                                   className="text-red-200 hover:text-red-100 hover:bg-red-500/10 h-8 w-8 p-0"
-                                  onClick={() => setMeetingPendingDelete(meeting)}
+                                  onClick={() =>
+                                    setMeetingPendingDelete(meeting)
+                                  }
                                   disabled={deleteMeetingMutation.isPending}
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
@@ -722,16 +735,42 @@ const CalendarPage: FC = () => {
                                   : meeting.body}
                               </p>
                             )}
-                            {meeting.joinLink && (
-                              <a
-                                href={meeting.joinLink}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-xs text-indigo-300 hover:text-indigo-200 mt-2 inline-block"
-                              >
-                                Open calendar event →
-                              </a>
-                            )}
+                            <div className="flex gap-2 mt-3">
+                              {meeting.webLink && (
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-xs h-7 px-3 border-indigo-400/40 text-indigo-300 hover:text-indigo-200 hover:bg-indigo-500/10"
+                                  onClick={() =>
+                                    window.open(
+                                      meeting.webLink,
+                                      "_blank",
+                                      "noopener,noreferrer"
+                                    )
+                                  }
+                                >
+                                  Calendar Event
+                                </Button>
+                              )}
+                              {meeting.joinLink && (
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-xs h-7 px-3 border-indigo-400/40 text-indigo-300 hover:text-indigo-200 hover:bg-indigo-500/10"
+                                  onClick={() =>
+                                    window.open(
+                                      meeting.joinLink,
+                                      "_blank",
+                                      "noopener,noreferrer"
+                                    )
+                                  }
+                                >
+                                  Meeting Link
+                                </Button>
+                              )}
+                            </div>
                           </div>
                         );
                       })}
