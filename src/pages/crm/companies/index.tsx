@@ -121,6 +121,15 @@ const index = () => {
     totalCompanies: filteredTotalCompanies,
   } = useCompaniesData(companiesParams);
 
+  console.log('[CompaniesPage:Data] Companies data from hook:', {
+    isLoading: companiesQuery.isLoading,
+    isError: companiesQuery.isError,
+    companiesCount: companies.length,
+    filteredTotalCompanies,
+    companies: companies.map(c => ({ id: c._id, name: c.name })),
+    queryData: companiesQuery.data,
+  });
+
   // Filter-aware CRM stats for companies page
   const { stats: companyCrmStats } = useCompanyCrmStatsData(companiesParams);
 
@@ -128,6 +137,12 @@ const index = () => {
   const { totalCompanies: totalCompaniesForStats } = useCompaniesData({
     page: 1,
     limit: 1,
+  });
+
+  // Fetch all companies (unfiltered) to get full list of industries for the dropdown
+  const { companies: allCompaniesForFilters } = useCompaniesData({
+    page: 1,
+    limit: 1000, // Get a large number to capture all unique industries
   });
 
   // Prefer filtered stats, fall back to existing counts
@@ -138,13 +153,14 @@ const index = () => {
 
   const industryOptions = useMemo(() => {
     const industries = new Set<string>();
-    companies.forEach((company) => {
+    // Use all companies (unfiltered) to get complete list of industries
+    allCompaniesForFilters.forEach((company) => {
       if (company.industry) {
         industries.add(company.industry);
       }
     });
     return Array.from(industries).sort((a, b) => a.localeCompare(b));
-  }, [companies]);
+  }, [allCompaniesForFilters]);
 
   const hasCompanyAdvancedFilters = useMemo(
     () =>
@@ -163,6 +179,11 @@ const index = () => {
   );
 
   const loading = companiesQuery.isLoading;
+
+  console.log('[CompaniesPage:Loading] Loading state:', {
+    loading,
+    companiesCount: companies.length,
+  });
 
   const stats = useMemo(
     () =>
@@ -256,15 +277,8 @@ const index = () => {
             >
               {/* Controls Container */}
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2 md:gap-3 order-1 lg:order-2">
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2 flex-1">
-                  <div className="flex w-full items-center justify-end gap-1.5 sm:gap-2">
-                    {/* Search Input */}
-                    <SearchInput
-                      placeholder="Search companies..."
-                      value={companiesSearch}
-                      onChange={setCompaniesSearch}
-                    />
-
+                <div className="flex  flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2 flex-1 ">
+                  <div className="flex w-full items-center justify-end gap-1.5 sm:gap-2 ">
                     <div className="flex items-center gap-2">
                       <AnimatePresence mode="wait">
                         {!companyFiltersOpen ? (
@@ -274,7 +288,13 @@ const index = () => {
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.95 }}
                             transition={{ duration: 0.15 }}
+                            className="flex items-center gap-2"
                           >
+                           <SearchInput
+                              placeholder="Search companies..."
+                              value={companiesSearch}
+                              onChange={setCompaniesSearch}
+                            />
                             <FilterButton
                               hasFilters={hasCompanyAdvancedFilters}
                               onClick={() => setCompanyFiltersOpen(true)}
@@ -290,6 +310,8 @@ const index = () => {
                             className="flex items-center gap-2"
                           >
                             <CompanyFiltersInline
+                              search={companiesSearch}
+                              onSearchChange={setCompaniesSearch}
                               industries={industryOptions}
                               industryFilter={companiesIndustryFilter}
                               onIndustryFilterChange={

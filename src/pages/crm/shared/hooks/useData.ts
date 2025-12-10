@@ -18,7 +18,6 @@ import {
   dashboardService,
   DashboardResponse,
 } from "@/services/dashboard.service";
-import { CompaniesQueryParams } from "@/services/companies.service";
 
 export const useCompaniesData = (params: CompaniesQueryParams) => {
   const query = useQuery<CompaniesResponse, Error>({

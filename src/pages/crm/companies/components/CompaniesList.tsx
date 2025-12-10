@@ -80,6 +80,8 @@ const CompaniesList: FC<CompaniesListProps> = ({
   viewMode = "detailed",
   onViewModeChange,
 }) => {
+
+
   // State to track if mobile executives view is open
   const [mobileExecutivesView, setMobileExecutivesView] = useState(false);
   useEffect(() => {
@@ -96,7 +98,8 @@ const CompaniesList: FC<CompaniesListProps> = ({
 
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
     };
 
     handleResize();
@@ -105,11 +108,9 @@ const CompaniesList: FC<CompaniesListProps> = ({
   }, []);
 
   useEffect(() => {
-    if (isMobile) {
-      setVisibleCount(Math.min(2, companies.length));
-    } else {
-      setVisibleCount(companies.length);
-    }
+    const newVisibleCount = isMobile ? Math.min(2, companies.length) : companies.length;
+
+    setVisibleCount(newVisibleCount);
   }, [isMobile, companies.length]);
 
   const handleLoadMore = () => {
@@ -119,6 +120,8 @@ const CompaniesList: FC<CompaniesListProps> = ({
   const displayedCompanies = isMobile
     ? companies.slice(0, visibleCount)
     : companies;
+
+
   // Helper function to format URL and create clickable link
   const formatWebsiteUrl = (url: string | null | undefined): string => {
     if (!url) return "";
@@ -198,8 +201,10 @@ const CompaniesList: FC<CompaniesListProps> = ({
   // Render loading state with skeleton placeholders
   const renderLoading = () => (
     <motion.div
+      key="companies-loading"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
       transition={{ duration: 0.3 }}
       className={
         viewMode === "card"
@@ -261,7 +266,14 @@ const CompaniesList: FC<CompaniesListProps> = ({
 
   // Render empty state
   const renderEmpty = () => (
-    <div className="flex flex-col items-center justify-center py-16 px-4">
+    <motion.div 
+      key="companies-empty"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
+      className="flex flex-col items-center justify-center py-16 px-4"
+    >
       <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-4">
         <Search className="w-6 h-6 text-white/30" />
       </div>
@@ -273,7 +285,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
           ? "Try adjusting your search terms or clear the filter to see all companies."
           : "There are no companies in the database yet."}
       </p>
-    </div>
+    </motion.div>
   );
 
   // Render company card
@@ -770,56 +782,75 @@ const CompaniesList: FC<CompaniesListProps> = ({
         <AnimatePresence mode="wait">
         <motion.div
           key={viewMode}
-          className={
-            viewMode === "card"
-              ? "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"
-              : "space-y-4"
-          }
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.95 }}
+          className="w-full"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
           transition={{
-            duration: 0.3,
+            duration: 0.2,
             ease: "easeInOut",
-            staggerChildren: 0.05,
-            delayChildren: 0.1,
           }}
           layout
         >
           <AnimatePresence mode="wait">
-            {loading
-              ? renderLoading()
-              : companies.length === 0
-              ? renderEmpty()
-              : displayedCompanies.map((company, index) => (
-                  <motion.div
-                    key={company._id}
-                    layout
-                    initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                    transition={{
-                      duration: 0.4,
-                      ease: "easeOut",
-                      delay: index * 0.03,
-                    }}
-                  >
-                    {renderCompanyCard(company)}
-                    {/* Executives panel below the company card should not appear on desktop */}
-                    {selectedCompanyId === company._id &&
-                      viewMode !== "card" && (
-                        <div className="block lg:hidden mt-2 mb-2">
-                          <Card className="bg-[#1f3032] border-[#3A3A3A] p-3 sm:p-4">
-                            <CompanyExecutivesPanel
-                              company={selectedCompany}
-                              onViewAllLeads={onViewAllLeads || (() => {})}
-                              onExecutiveSelect={onExecutiveSelect}
-                            />
-                          </Card>
-                        </div>
-                      )}
-                  </motion.div>
-                ))}
+            {(() => {
+              
+              
+              if (loading) return renderLoading();
+              if (displayedCompanies.length === 0) return renderEmpty();
+              
+              // Wrap in motion.div to provide layout context and single child for AnimatePresence
+              return (
+                <motion.div
+                  key={`companies-grid-${displayedCompanies.length}`}
+                  initial={{ opacity: 0 }}
+                  animate={{ 
+                    opacity: 1,
+                    transition: {  duration: 0.4, ease: "easeOut" }
+                  }}
+                  exit={{ 
+                    opacity: 0,
+                    transition: { duration: 0.2, ease: "easeIn" }
+                  }}
+                  className={
+                    viewMode === "card"
+                      ? "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"
+                      : "space-y-4"
+                  }
+                  layout
+                >
+                  {displayedCompanies.map((company, index) => (
+                    <motion.div
+                      key={company._id}
+                      layout
+                      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                      transition={{
+                        duration: 0.3,
+                        ease: "easeOut",
+                        delay: index * 0.05,
+                      }}
+                    >
+                      {renderCompanyCard(company)}
+                      {/* Executives panel below the company card should not appear on desktop */}
+                      {selectedCompanyId === company._id &&
+                        viewMode !== "card" && (
+                          <div className="block lg:hidden mt-2 mb-2">
+                            <Card className="bg-[#1f3032] border-[#3A3A3A] p-3 sm:p-4">
+                              <CompanyExecutivesPanel
+                                company={selectedCompany}
+                                onViewAllLeads={onViewAllLeads || (() => {})}
+                                onExecutiveSelect={onExecutiveSelect}
+                              />
+                            </Card>
+                          </div>
+                        )}
+                    </motion.div>
+                  ))}
+                </motion.div>
+              );
+            })()}
           </AnimatePresence>
         </motion.div>
       </AnimatePresence>

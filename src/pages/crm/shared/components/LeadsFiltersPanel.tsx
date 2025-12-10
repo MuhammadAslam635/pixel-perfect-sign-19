@@ -78,7 +78,7 @@ export const LeadsFiltersInline = ({
         <label className="text-[11px] uppercase tracking-[0.08em] text-gray-400 whitespace-nowrap">
           Country:
         </label>
-        <div className="w-40">
+        <div className="w-32">
           <MultiSelect
             options={countryOptions}
             value={countryFilter}
@@ -98,7 +98,7 @@ export const LeadsFiltersInline = ({
         <label className="text-[11px] uppercase tracking-[0.08em] text-gray-400 whitespace-nowrap">
           Title:
         </label>
-        <div className="w-40">
+        <div className="w-32">
           <MultiSelect
             options={positionOptions}
             value={positionFilter}

@@ -14,9 +14,12 @@ import {
 } from "@/components/ui/multi-select";
 import { CountrySelect } from "@/components/ui/country-select";
 import countryList from "react-select-country-list";
+import { SearchInput } from "./SearchInput";
 
 interface CompanyFiltersInlineProps {
   // Industry filter
+  search: string;
+  onSearchChange: (value: string) => void;
   industries: string[];
   industryFilter: string[];
   onIndustryFilterChange: (value: string[]) => void;
@@ -42,6 +45,8 @@ interface CompanyFiltersInlineProps {
 }
 
 export const CompanyFiltersInline = ({
+  search,
+  onSearchChange,
   industries,
   industryFilter,
   onIndustryFilterChange,
@@ -63,13 +68,16 @@ export const CompanyFiltersInline = ({
   }));
 
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex flex-col xl:flex-row gap-1.5  xl:gap-3 flex-1">
+      <div className="flex items-center gap-1.5">
+
+
       {/* Industry Filter */}
       <div className="flex items-center gap-1">
         <label className="text-[11px] uppercase tracking-[0.08em] text-gray-400 whitespace-nowrap">
           Industry:
         </label>
-        <div className="w-40">
+        <div className="w-32">
           <MultiSelect
             options={industryOptions}
             value={industryFilter}
@@ -90,7 +98,7 @@ export const CompanyFiltersInline = ({
         <label className="text-[11px] uppercase tracking-[0.08em] text-gray-400 whitespace-nowrap">
           Size:
         </label>
-        <div className="w-40">
+        <div className="w-32">
           <MultiSelect
             options={employeeRanges.filter(r => r.value !== "all").map(r => ({ value: r.value, label: r.label }))}
             value={employeeRange}
@@ -107,7 +115,7 @@ export const CompanyFiltersInline = ({
       </div>
 
       {/* Country Filter */}
-      <div className="flex items-center gap-1">
+      {/* <div className="flex items-center gap-1">
         <label className="text-[11px] uppercase tracking-[0.08em] text-gray-400 whitespace-nowrap">
           Country:
         </label>
@@ -125,8 +133,29 @@ export const CompanyFiltersInline = ({
             showCount={true}
           />
         </div>
+      </div> */}
       </div>
-
+      <div className="flex items-center gap-1.5 justify-end w-full">
+        {/* Country Filter */}
+      <div className="flex items-center gap-1">
+        <label className="text-[11px] uppercase tracking-[0.08em] text-gray-400 whitespace-nowrap">
+          Country:
+        </label>
+        <div className="w-32">
+          <MultiSelect
+            options={countryList().getData().map((c) => ({ value: c.label, label: c.label }))}
+            value={locationFilter}
+            onChange={onLocationFilterChange}
+            placeholder="All countries"
+            searchPlaceholder="Search countries..."
+            emptyMessage="No countries found."
+            className="h-8 text-xs"
+            maxDisplayItems={1}
+            popoverWidth="w-[280px]"
+            showCount={true}
+          />
+        </div>
+      </div>
       {/* Checkboxes */}
       <div className="flex items-center gap-3 ml-2">
         <label className="flex items-center gap-1.5 cursor-pointer">
@@ -163,6 +192,7 @@ export const CompanyFiltersInline = ({
           Clear
         </Button>
       )}
+            </div>
     </div>
   );
 };
