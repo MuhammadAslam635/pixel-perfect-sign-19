@@ -10,6 +10,7 @@ import {
   useNotifications,
   useMarkNotificationAsRead,
 } from "@/hooks/useNotifications";
+import LongRunningTasksButton from "@/components/navigation/LongRunningTasksButton";
 
 export const ActionComponent = () => {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -173,6 +174,8 @@ export const ActionComponent = () => {
           )}
         </button>
 
+        <LongRunningTasksButton />
+        
         <button
           aria-label="Toggle profile menu"
           className="flex items-center gap-1  text-white"

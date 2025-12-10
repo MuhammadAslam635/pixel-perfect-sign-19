@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { AxiosError } from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import ChatList from "@/components/chat/ChatList";
 import ChatMessages from "@/components/chat/ChatMessages";
@@ -20,6 +22,39 @@ import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { StreamEvent, sendStreamingChatMessage } from "@/services/chat.service";
+import {
+  setSelectedChatId,
+  setIsMobileListOpen,
+  setComposerValue,
+  setSearchTerm,
+  setPendingFile,
+  setIsCreatingNewChat,
+  setDeletingChatId,
+  addOptimisticMessage,
+  removeOptimisticMessages,
+  setStreamingEvents,
+  addStreamingEvent,
+  clearStreamingEvents,
+  setIsStreaming,
+  setChatList,
+  setIsChatListLoading,
+  setIsChatDetailLoading,
+  setSelectedChatDetail,
+  addChatToList,
+  createTemporaryChat,
+  addMessageToTemporaryChat,
+  clearTemporaryChat,
+  convertTemporaryChat,
+  handleUrlMessage,
+  resetChatState,
+} from "@/store/slices/chatSlice";
+import {
+  startStreamingTask,
+  updateStreamingTask,
+  completeStreamingTask,
+  errorTask,
+  cleanupOldTasks,
+} from "@/store/slices/longRunningTasksSlice";
 
 const NEW_CHAT_KEY = "__new_chat__";
 
@@ -28,6 +63,26 @@ const ChatPage = () => {
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
+  const dispatch = useDispatch();
+
+  // Redux selectors
+  const selectedChatId = useSelector((state: RootState) => state.chat.selectedChatId);
+  const temporaryChat = useSelector((state: RootState) => state.chat.temporaryChat);
+  const composerValue = useSelector((state: RootState) => state.chat.composerValue);
+  const composerValuesByChat = useSelector((state: RootState) => state.chat.composerValuesByChat);
+  const searchTerm = useSelector((state: RootState) => state.chat.searchTerm);
+  const pendingFile = useSelector((state: RootState) => state.chat.pendingFile);
+  const isCreatingNewChat = useSelector((state: RootState) => state.chat.isCreatingNewChat);
+  const isMobileListOpen = useSelector((state: RootState) => state.chat.isMobileListOpen);
+  const deletingChatId = useSelector((state: RootState) => state.chat.deletingChatId);
+  const optimisticMessagesByChat = useSelector((state: RootState) => state.chat.optimisticMessagesByChat);
+  const streamingEvents = useSelector((state: RootState) => state.chat.streamingEvents);
+  const isStreaming = useSelector((state: RootState) => state.chat.isStreaming);
+  const useStreaming = useSelector((state: RootState) => state.chat.useStreaming);
+
+  // Local state for timing (not in Redux as it's UI-specific)
+  const streamingStartTimeRef = useRef<number | null>(null);
+  const streamingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Animation variants for page transitions
   const pageVariants = {
@@ -40,7 +95,7 @@ const ChatPage = () => {
       scale: 1,
       transition: {
         duration: 0.4,
-        ease: [0.25, 0.46, 0.45, 0.94],
+        ease: "easeOut",
       },
     },
     exit: {
@@ -50,7 +105,7 @@ const ChatPage = () => {
         duration: 0.3,
       },
     },
-  };
+  } as any;
 
   const composerVariants = {
     hidden: {
@@ -65,29 +120,12 @@ const ChatPage = () => {
         ease: "easeOut",
         delay: 0.1,
       },
-    },
+    } as any,
   };
 
-  const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
-  const [composerValue, setComposerValue] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [pendingFile, setPendingFile] = useState<File | null>(null);
-  const [isCreatingNewChat, setIsCreatingNewChat] = useState(false);
-  const [isMobileListOpen, setIsMobileListOpen] = useState(false);
-  const [deletingChatId, setDeletingChatId] = useState<string | null>(null);
-  const [optimisticMessagesByChat, setOptimisticMessagesByChat] = useState<
-    Record<string, ChatMessage[]>
-  >({});
-  const [streamingEvents, setStreamingEvents] = useState<StreamEvent[]>([]);
-  const [isStreaming, setIsStreaming] = useState(false);
-  const [useStreaming, setUseStreaming] = useState(true); // Default to streaming mode
-  const [composerValuesByChat, setComposerValuesByChat] = useState<
-    Record<string, string>
-  >({});
-
   const {
-    data: chatList = [],
-    isLoading: isChatListLoading,
+    data: fetchedChatList = [],
+    isLoading: isFetchedChatListLoading,
     isFetching: isChatListFetching,
   } = useQuery({
     queryKey: ["chatList"],
@@ -98,13 +136,45 @@ const ChatPage = () => {
   const {
     data: selectedChat,
     isFetching: isChatDetailFetching,
-    isLoading: isChatDetailLoading,
+    isLoading: isFetchedChatDetailLoading,
   } = useQuery<ChatDetail | null>({
     queryKey: ["chatDetail", selectedChatId],
     queryFn: () => fetchChatById(selectedChatId ?? ""),
-    enabled: Boolean(selectedChatId),
+    enabled: Boolean(selectedChatId && selectedChatId !== "__new_chat__"),
     staleTime: 10_000,
   });
+
+  // Use query data directly instead of Redux state to avoid sync loops
+  const chatList = fetchedChatList;
+  const isChatListLoading = isFetchedChatListLoading;
+  const isChatDetailLoading = isFetchedChatDetailLoading;
+  const selectedChatDetail = selectedChat;
+
+  // Include temporary chat in the list
+  const fullChatList = useMemo(() => {
+    const list = [...chatList];
+    if (temporaryChat) {
+      list.unshift({
+        _id: temporaryChat.id,
+        title: temporaryChat.title,
+        createdAt: temporaryChat.createdAt,
+        updatedAt: temporaryChat.createdAt,
+      });
+    }
+    return list;
+  }, [chatList, temporaryChat]);
+
+  // Note: Removed sync effects to prevent infinite loops
+  // Components will use query data directly instead of Redux state for chat data
+
+  // Cleanup old completed tasks every 5 minutes
+  useEffect(() => {
+    const cleanupInterval = setInterval(() => {
+      dispatch(cleanupOldTasks(5)); // Clean tasks older than 5 minutes
+    }, 5 * 60 * 1000); // 5 minutes
+
+    return () => clearInterval(cleanupInterval);
+  }, [dispatch]);
 
   useEffect(() => {
     if (chatList.length === 0) {
@@ -117,15 +187,15 @@ const ChatPage = () => {
 
     if (!selectedChatId) {
       if (!isCreatingNewChat) {
-        setSelectedChatId(chatList[0]._id);
+        dispatch(setSelectedChatId(chatList[0]._id));
       }
       return;
     }
 
-    if (!selectedChatExists && !isCreatingNewChat) {
-      setSelectedChatId(chatList[0]._id);
+    if (!selectedChatExists && !isCreatingNewChat && selectedChatId !== "__new_chat__" && !selectedChatId?.startsWith("temp_")) {
+      dispatch(setSelectedChatId(chatList[0]._id));
     }
-  }, [chatList, isCreatingNewChat, selectedChatId]);
+  }, [chatList, isCreatingNewChat, selectedChatId, dispatch]);
 
   useEffect(() => {
     if (!isCreatingNewChat || !selectedChatId) {
@@ -137,9 +207,9 @@ const ChatPage = () => {
     );
 
     if (newChatIsInList) {
-      setIsCreatingNewChat(false);
+      dispatch(setIsCreatingNewChat(false));
     }
-  }, [chatList, isCreatingNewChat, selectedChatId]);
+  }, [chatList, isCreatingNewChat, selectedChatId, dispatch]);
 
   // Handle incoming message from URL parameter
   useEffect(() => {
@@ -150,30 +220,20 @@ const ChatPage = () => {
       return;
     }
 
+    dispatch(handleUrlMessage({ message: messageFromUrl || undefined, chatId: chatIdFromUrl || undefined }));
+
     const nextParams = new URLSearchParams(searchParams);
-
-    if (messageFromUrl) {
-      setComposerValue(messageFromUrl);
-      setIsCreatingNewChat(true);
-      setSelectedChatId(null);
-      nextParams.delete("message");
-    }
-
-    if (chatIdFromUrl) {
-      setSelectedChatId(chatIdFromUrl);
-      setIsCreatingNewChat(false);
-      setIsMobileListOpen(false);
-      nextParams.delete("chatId");
-    }
-
+    if (messageFromUrl) nextParams.delete("message");
+    if (chatIdFromUrl) nextParams.delete("chatId");
     setSearchParams(nextParams);
-  }, [searchParams, setSearchParams]);
+  }, [searchParams, setSearchParams, dispatch]);
 
   // Restore composer value when selected chat changes
   useEffect(() => {
     const chatKey = selectedChatId ?? NEW_CHAT_KEY;
-    setComposerValue(composerValuesByChat[chatKey] ?? "");
-  }, [selectedChatId, composerValuesByChat]);
+    const savedValue = composerValuesByChat[chatKey] ?? "";
+    dispatch(setComposerValue(savedValue));
+  }, [selectedChatId]); // Only depend on selectedChatId
 
 
   // Focus input when navigating from widget
@@ -192,23 +252,12 @@ const ChatPage = () => {
   }, [location.state]);
 
   const selectChatFromList = (chatId: string) => {
-    // Save current composer value before switching
-    const currentChatKey = selectedChatId ?? NEW_CHAT_KEY;
-    setComposerValuesByChat(prev => ({
-      ...prev,
-      [currentChatKey]: composerValue
-    }));
-
-    setIsCreatingNewChat(false);
-    setSelectedChatId(chatId);
-    setIsMobileListOpen(false);
+    dispatch(setIsCreatingNewChat(false));
+    dispatch(setSelectedChatId(chatId));
+    dispatch(setIsMobileListOpen(false));
 
     // Restore composer value for the selected chat
-    const newChatKey = chatId;
-    setComposerValue(composerValuesByChat[newChatKey] ?? "");
-
-    // Also restore pending file if it exists for this chat
-    // Note: We don't have file persistence per chat yet, but this could be added later
+    dispatch(setComposerValue(composerValuesByChat[chatId] ?? ""));
   };
 
   type SendMessageContext = {
@@ -235,17 +284,12 @@ const ChatPage = () => {
           createdAt: new Date().toISOString(),
         };
 
-        // Clear composer value for this specific chat
-        setComposerValuesByChat(prev => ({
-          ...prev,
-          [chatKey]: ""
-        }));
-        setComposerValue("");
-        setPendingFile(null);
-        setOptimisticMessagesByChat((prev) => ({
-          ...prev,
-          [chatKey]: [...(prev[chatKey] ?? []), tempMessage],
-        }));
+        // Clear composer value and pending file
+        dispatch(setComposerValue(""));
+        dispatch(setPendingFile(null));
+
+        // Add optimistic message
+        dispatch(addOptimisticMessage({ chatId: chatKey, message: tempMessage }));
 
         return { chatKey, tempMessage };
       },
@@ -254,7 +298,7 @@ const ChatPage = () => {
 
         if (newChatId) {
           if (!variables.chatId) {
-            setSelectedChatId(newChatId);
+            dispatch(setSelectedChatId(newChatId));
           }
 
           // Set the query data directly from the response when messages are available
@@ -270,24 +314,10 @@ const ChatPage = () => {
           }
 
           // Move optimistic messages from NEW_CHAT_KEY to the actual chat ID for new chats
-          setOptimisticMessagesByChat((prev) => {
-            if (variables.chatId) {
-              return prev;
-            }
-
-            const pendingNewMessages = prev[NEW_CHAT_KEY];
-            if (!pendingNewMessages?.length) {
-              return prev;
-            }
-
-            const updated = { ...prev };
-            delete updated[NEW_CHAT_KEY];
-            updated[newChatId] = pendingNewMessages.map((message) => ({
-              ...message,
-              chatId: newChatId,
-            }));
-            return updated;
-          });
+          if (!variables.chatId) {
+            dispatch(removeOptimisticMessages(NEW_CHAT_KEY));
+            // Add messages to new chat - optimistic messages will be replaced by real messages
+          }
 
           // Invalidate to ensure fresh data
           queryClient.invalidateQueries({
@@ -307,32 +337,12 @@ const ChatPage = () => {
         context
       ) => {
         if (context?.chatKey) {
-          setOptimisticMessagesByChat((prev) => {
-            const pendingMessages = prev[context.chatKey];
-            if (!pendingMessages?.length) {
-              return prev;
-            }
-
-            const filtered = pendingMessages.filter(
-              (message) => message._id !== context.tempMessage._id
-            );
-
-            if (filtered.length === pendingMessages.length) {
-              return prev;
-            }
-
-            const updated = { ...prev };
-            if (filtered.length > 0) {
-              updated[context.chatKey] = filtered;
-            } else {
-              delete updated[context.chatKey];
-            }
-            return updated;
-          });
+          dispatch(removeOptimisticMessages(context.chatKey));
         }
 
-        setComposerValue(variables.message);
-        setPendingFile(variables.file ?? null);
+        // Restore composer value and pending file on error
+        dispatch(setComposerValue(variables.message));
+        dispatch(setPendingFile(variables.file ?? null));
 
         toast({
           title: "Unable to send message",
@@ -375,47 +385,86 @@ const ChatPage = () => {
       return;
     }
 
-    setIsStreaming(true);
-    setStreamingEvents([]);
+    dispatch(setIsStreaming(true));
+    dispatch(clearStreamingEvents());
 
-    const chatKey = selectedChatId ?? NEW_CHAT_KEY;
+    // Generate temporary chat ID if this is a new chat
+    const isNewChat = selectedChatId === "__new_chat__" || !selectedChatId;
+    const actualChatId = isNewChat ? `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}` : selectedChatId;
+
     const tempMessage: ChatMessage = {
       _id: `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      chatId: selectedChatId ?? "temp",
+      chatId: actualChatId,
       role: "user",
       content: trimmedMessage,
       createdAt: new Date().toISOString(),
     };
 
-    // Clear composer value for this specific chat
-    setComposerValuesByChat(prev => ({
-      ...prev,
-      [chatKey]: ""
+    // Clear composer value and pending file
+    dispatch(setComposerValue(""));
+    dispatch(setPendingFile(null));
+
+    // Add optimistic message
+    if (isNewChat) {
+      // For new chats, ensure we have a temporary chat and add the message
+      if (!temporaryChat) {
+        dispatch(createTemporaryChat());
+      }
+      dispatch(addMessageToTemporaryChat(tempMessage));
+    } else {
+      // Add to optimistic messages for existing chats
+      dispatch(addOptimisticMessage({ chatId: actualChatId, message: tempMessage }));
+    }
+
+    // Start long-running task tracking
+    streamingStartTimeRef.current = Date.now();
+    dispatch(startStreamingTask({
+      chatId: actualChatId,
+      messageId: tempMessage._id,
+      title: `Generating response for ${selectedChatDetail?.title || "new chat"}`,
+      description: "AI is processing your message...",
     }));
-    setComposerValue("");
-    setPendingFile(null);
-    setOptimisticMessagesByChat((prev) => ({
-      ...prev,
-      [chatKey]: [...(prev[chatKey] ?? []), tempMessage],
-    }));
+
+    // Set timeout to mark as long-running task after 10 seconds
+    streamingTimeoutRef.current = setTimeout(() => {
+      if (isStreaming) {
+        // Task is still running after 10 seconds, keep it in the list
+        dispatch(updateStreamingTask({
+          chatId: actualChatId,
+          messageId: tempMessage._id,
+          step: "Still processing...",
+        }));
+      }
+    }, 10000);
 
     try {
       const result = await sendStreamingChatMessage(
         {
           message: trimmedMessage,
-          chatId: selectedChatId,
-          file: pendingFile ?? undefined,
+          chatId: isNewChat ? null : actualChatId, // Don't send chatId for new chats
+          file: null, // File is already cleared
         },
         (event: StreamEvent) => {
-          setStreamingEvents(prev => [...prev, event]);
+          dispatch(addStreamingEvent(event));
+
+          // Update long-running task with streaming progress
+          if (event.step) {
+            dispatch(updateStreamingTask({
+              chatId: actualChatId,
+              messageId: tempMessage._id,
+              step: event.step,
+            }));
+          }
         }
       );
 
-      const newChatId = result.data.chatId;
+      // Handle the response - backend may or may not create a chat
+      if (result.data.chatId) {
+        // Backend created a chat
+        const newChatId = result.data.chatId;
 
-      if (newChatId) {
-        if (!selectedChatId) {
-          setSelectedChatId(newChatId);
+        if (isNewChat) {
+          dispatch(setSelectedChatId(newChatId));
         }
 
         if (result.data.messages) {
@@ -428,64 +477,76 @@ const ChatPage = () => {
           });
         }
 
-        // Move optimistic messages from NEW_CHAT_KEY to the actual chat ID for new chats
-        setOptimisticMessagesByChat((prev) => {
-          if (selectedChatId) {
-            return prev;
-          }
-
-          const pendingNewMessages = prev[NEW_CHAT_KEY];
-          if (!pendingNewMessages?.length) {
-            return prev;
-          }
-
-          const updated = { ...prev };
-          delete updated[NEW_CHAT_KEY];
-          updated[newChatId] = pendingNewMessages.map((message) => ({
-            ...message,
-            chatId: newChatId,
-          }));
-          return updated;
+        // Add new chat to chatList optimistically
+        queryClient.setQueryData<ChatSummary[]>(["chatList"], (oldChatList) => {
+          if (!oldChatList) return oldChatList;
+          const newChat: ChatSummary = {
+            _id: newChatId,
+            title: result.data.title || "New Conversation",
+            createdAt: result.data.createdAt || new Date().toISOString(),
+            updatedAt: result.data.updatedAt || new Date().toISOString(),
+          };
+          return [newChat, ...oldChatList];
         });
+
+        // Convert temporary chat to real chat if it was a new chat
+        if (isNewChat && temporaryChat) {
+          dispatch(convertTemporaryChat({
+            realChatId: newChatId,
+            title: result.data.title as string
+          }));
+        }
 
         queryClient.invalidateQueries({
           queryKey: ["chatDetail", newChatId],
         });
-      } else if (selectedChatId) {
         queryClient.invalidateQueries({
-          queryKey: ["chatDetail", selectedChatId],
+          queryKey: ["chatList"],
         });
+      } else {
+        // Backend handled as temporary chat - add assistant response
+        if (result.data.messages && result.data.messages.length > 0) {
+          // The backend already returns the full conversation including assistant response
+          // Add all messages from the response to the temporary chat
+          result.data.messages.forEach((msg: any) => {
+            if (msg.role === 'assistant') {
+              const assistantMessage: ChatMessage = {
+                _id: msg._id || `assistant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                chatId: actualChatId,
+                role: "assistant",
+                content: msg.content,
+                createdAt: msg.createdAt || new Date().toISOString(),
+              };
+
+              if (isNewChat && temporaryChat) {
+                dispatch(addMessageToTemporaryChat(assistantMessage));
+              }
+            }
+          });
+        }
       }
 
       queryClient.invalidateQueries({ queryKey: ["chatList"] });
     } catch (error: any) {
       console.error("Streaming error:", error);
-      setOptimisticMessagesByChat((prev) => {
-        const chatKey = selectedChatId ?? NEW_CHAT_KEY;
-        const pendingMessages = prev[chatKey];
-        if (!pendingMessages?.length) {
-          return prev;
-        }
 
-        const filtered = pendingMessages.filter(
-          (message) => message._id !== tempMessage._id
-        );
+      // Remove the failed optimistic message
+      if (isNewChat && temporaryChat) {
+        // For temporary chats, we need to remove the message from the temporary chat
+        // This would require a new action to remove messages from temporary chat
+      } else {
+        dispatch(removeOptimisticMessages(actualChatId));
+      }
 
-        if (filtered.length === pendingMessages.length) {
-          return prev;
-        }
+      // Mark long-running task as error
+      dispatch(errorTask({
+        id: tempMessage._id,
+        errorMessage: error?.message || "Failed to send message",
+      }));
 
-        const updated = { ...prev };
-        if (filtered.length > 0) {
-          updated[chatKey] = filtered;
-        } else {
-          delete updated[chatKey];
-        }
-        return updated;
-      });
-
-      setComposerValue(trimmedMessage);
-      setPendingFile(pendingFile);
+      // Restore composer value and pending file on error
+      dispatch(setComposerValue(trimmedMessage));
+      dispatch(setPendingFile(pendingFile));
 
       toast({
         title: "Unable to send message",
@@ -493,31 +554,34 @@ const ChatPage = () => {
         variant: "destructive",
       });
     } finally {
-      setIsStreaming(false);
-      setStreamingEvents([]);
+      dispatch(setIsStreaming(false));
+      dispatch(clearStreamingEvents());
+
+      // Complete or clear the long-running task
+      dispatch(completeStreamingTask({
+        chatId: actualChatId,
+        messageId: tempMessage._id,
+      }));
+
+      // Clear timeout
+      if (streamingTimeoutRef.current) {
+        clearTimeout(streamingTimeoutRef.current);
+        streamingTimeoutRef.current = null;
+      }
+      streamingStartTimeRef.current = null;
     }
   };
 
   const handleStartNewChat = () => {
-    // Save current composer value before starting new chat
-    const currentChatKey = selectedChatId ?? NEW_CHAT_KEY;
-    setComposerValuesByChat(prev => ({
-      ...prev,
-      [currentChatKey]: composerValue
-    }));
-
-    setIsCreatingNewChat(true);
-    setSelectedChatId(null);
-    setComposerValue("");
-    setPendingFile(null);
-    setIsMobileListOpen(false);
+    dispatch(createTemporaryChat());
+    dispatch(setIsMobileListOpen(false));
   };
 
   const handleDeleteChat = async (chatId: string) => {
     if (!chatId) {
       return;
     }
-    setDeletingChatId(chatId);
+    dispatch(setDeletingChatId(chatId));
     try {
       await deleteChatById(chatId);
 
@@ -533,29 +597,13 @@ const ChatPage = () => {
       });
 
       if (selectedChatId === chatId) {
-        setSelectedChatId(null);
-        setComposerValue("");
-        setPendingFile(null);
-        setIsCreatingNewChat(false);
+        dispatch(setSelectedChatId(null));
+        dispatch(setComposerValue(""));
+        dispatch(setPendingFile(null));
+        dispatch(setIsCreatingNewChat(false));
       }
 
-      setOptimisticMessagesByChat((prev) => {
-        if (!prev[chatId]) {
-          return prev;
-        }
-        const updated = { ...prev };
-        delete updated[chatId];
-        return updated;
-      });
-
-      setComposerValuesByChat((prev) => {
-        if (!prev[chatId]) {
-          return prev;
-        }
-        const updated = { ...prev };
-        delete updated[chatId];
-        return updated;
-      });
+      dispatch(removeOptimisticMessages(chatId));
 
       toast({
         title: "Chat deleted",
@@ -573,24 +621,35 @@ const ChatPage = () => {
         variant: "destructive",
       });
     } finally {
-      setDeletingChatId(null);
+      dispatch(setDeletingChatId(null));
     }
   };
 
   const resolvedChatTitle = useMemo(() => {
+    // Handle temporary chat
+    if (selectedChatId === "__new_chat__" && temporaryChat) {
+      return temporaryChat.title;
+    }
+
     if (selectedChat?.title) {
       return selectedChat.title;
     }
     const summary =
-      chatList.find((chat) => chat._id === selectedChatId) ?? null;
+      fullChatList.find((chat) => chat._id === selectedChatId) ?? null;
     return summary?.title;
-  }, [chatList, selectedChat, selectedChatId]);
+  }, [fullChatList, selectedChat, selectedChatId, temporaryChat]);
 
   const currentChatKey = selectedChatId ?? NEW_CHAT_KEY;
   const optimisticMessages = optimisticMessagesByChat[currentChatKey] ?? [];
 
   const selectedMessages = useMemo(() => {
+    // If we have a temporary chat selected, use its messages
+    if (selectedChatId === "__new_chat__" && temporaryChat) {
+      return temporaryChat.messages;
+    }
+
     const apiMessages = selectedChat?.messages ?? [];
+    const optimisticMessages = optimisticMessagesByChat[selectedChatId || ""] || [];
 
     if (!apiMessages.length) {
       return optimisticMessages;
@@ -644,7 +703,8 @@ const ChatPage = () => {
   }, [optimisticMessages, selectedChat?.messages]);
 
   const hasActiveConversation =
-    Boolean(selectedChatId) || optimisticMessages.length > 0;
+    Boolean(selectedChatId) || optimisticMessages.length > 0 ||
+    (selectedChatId === "__new_chat__" && temporaryChat && temporaryChat.messages.length > 0);
 
   const isConversationLoading =
     Boolean(selectedChatId) &&
@@ -670,7 +730,7 @@ const ChatPage = () => {
 
   return (
     <DashboardLayout>
-      <Sheet open={isMobileListOpen} onOpenChange={setIsMobileListOpen}>
+      <Sheet open={isMobileListOpen} onOpenChange={(open) => dispatch(setIsMobileListOpen(open))}>
         <motion.main
           initial="hidden"
           animate="visible"
@@ -683,7 +743,7 @@ const ChatPage = () => {
               <div className="hidden lg:flex lg:h-full lg:shrink-0">
                 <div className="overflow-visible p-1 -m-1">
                   <ChatList
-                    chats={chatList as ChatSummary[]}
+                    chats={fullChatList as ChatSummary[]}
                     isLoading={isChatListLoading}
                     onSelectChat={selectChatFromList}
                     onStartNewChat={handleStartNewChat}
@@ -705,13 +765,13 @@ const ChatPage = () => {
                   isLoading={isConversationLoading}
                   isSending={isCurrentChatSending}
                   messages={selectedMessages}
-                  onOpenChatList={() => setIsMobileListOpen(true)}
+                  onOpenChatList={() => dispatch(setIsMobileListOpen(true))}
                   streamingEvents={streamingEvents}
                   isStreaming={isStreaming && isCurrentChatSending}
                 />
 
 
-                <AnimatePresence mode="wait">
+                <AnimatePresence mode="sync">
                   <motion.div
                     key={hasActiveConversation ? "composer" : "empty"}
                     initial="hidden"
@@ -734,7 +794,7 @@ const ChatPage = () => {
                           variant="ghost"
                           size="icon"
                           className="size-8 text-primary hover:text-primary"
-                          onClick={() => setPendingFile(null)}
+                          onClick={() => dispatch(setPendingFile(null))}
                         >
                           <X className="size-4" />
                         </Button>
@@ -743,12 +803,12 @@ const ChatPage = () => {
 
                     <ChatComposer
                       value={composerValue}
-                      onChange={setComposerValue}
+                      onChange={(value) => dispatch(setComposerValue(value))}
                       onSend={handleSendMessage}
                       isSending={isSendingMessage}
                       isAwaitingResponse={isSendingMessage}
                       disabled={isConversationLoading}
-                      onUploadFile={setPendingFile}
+                      onUploadFile={(file) => dispatch(setPendingFile(file))}
                     />
                   </motion.div>
                 </AnimatePresence>
@@ -763,12 +823,12 @@ const ChatPage = () => {
         >
           <div className="flex h-full flex-col">
             <ChatList
-              chats={chatList as ChatSummary[]}
+              chats={fullChatList as ChatSummary[]}
               isLoading={isChatListLoading}
               onSelectChat={selectChatFromList}
               onStartNewChat={handleStartNewChat}
               searchTerm={searchTerm}
-              onSearchTermChange={setSearchTerm}
+              onSearchTermChange={(term) => dispatch(setSearchTerm(term))}
               selectedChatId={selectedChatId}
               className="h-full max-w-none rounded-none border-none"
               onDeleteChat={handleDeleteChat}
