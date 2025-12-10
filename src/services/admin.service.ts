@@ -9,6 +9,11 @@ export interface Company {
   isVerified?: boolean;
   createdAt?: string;
   updatedAt?: string;
+  employees?: number;
+  industry?: string;
+  logo?: string;
+  website?: string;
+  description?: string;
 }
 
 export interface CompanyAdmin {
@@ -221,6 +226,24 @@ export const adminService = {
       const response = await API.get(
         `/admin/companies/${companyId}/mailgun/status`
       );
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  /**
+   * Get company statistics based on user role
+   */
+  getCompanyStatistics: async (): Promise<{
+    success: boolean;
+    data: {
+      totalCompanies: number;
+      activeCompanies: number;
+    };
+  }> => {
+    try {
+      const response = await API.get("/admin/companies/statistics");
       return response.data;
     } catch (error: any) {
       throw error;

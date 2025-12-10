@@ -42,6 +42,11 @@ const Companies = () => {
   const [companiesViewMode, setCompaniesViewMode] = useState<ViewMode>("table");
   const [selectedCompanyForPrompt, setSelectedCompanyForPrompt] =
     useState<Company | null>(null);
+  const [statistics, setStatistics] = useState({
+    totalCompanies: 0,
+    activeCompanies: 0,
+  });
+  const [statisticsLoading, setStatisticsLoading] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -86,9 +91,23 @@ const Companies = () => {
     }
   };
 
+  const fetchStatistics = async () => {
+    try {
+      setStatisticsLoading(true);
+      const response = await adminService.getCompanyStatistics();
+      setStatistics(response.data);
+    } catch (error) {
+      console.error("Failed to fetch statistics:", error);
+      toast.error("Failed to fetch statistics");
+    } finally {
+      setStatisticsLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchPrompts();
     fetchCompanies();
+    fetchStatistics();
   }, []);
 
   // Clear selected prompt and content when prompt type/category changes
@@ -368,11 +387,13 @@ const Companies = () => {
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="text-2xl sm:text-3xl font-bold text-white">
-                  1,247
+                  {statisticsLoading ? (
+                    <div className="animate-pulse">...</div>
+                  ) : (
+                    statistics.totalCompanies.toLocaleString()
+                  )}
                 </div>
-                <p className="text-xs text-white/60 mt-1">
-                  +12% from last month
-                </p>
+                <p className="text-xs text-white/60 mt-1">Based on your role</p>
               </CardContent>
             </Card>
 
@@ -385,9 +406,21 @@ const Companies = () => {
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="text-2xl sm:text-3xl font-bold text-green-400">
-                  1,189
+                  {statisticsLoading ? (
+                    <div className="animate-pulse">...</div>
+                  ) : (
+                    statistics.activeCompanies.toLocaleString()
+                  )}
                 </div>
-                <p className="text-xs text-white/60 mt-1">95.3% active rate</p>
+                <p className="text-xs text-white/60 mt-1">
+                  {statistics.totalCompanies > 0
+                    ? `${Math.round(
+                        (statistics.activeCompanies /
+                          statistics.totalCompanies) *
+                          100
+                      )}% active rate`
+                    : "No companies"}
+                </p>
               </CardContent>
             </Card>
 

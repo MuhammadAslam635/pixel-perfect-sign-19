@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Building2, Grid3X3, List } from "lucide-react";
-import { Company } from "@/services/companies.service";
+import { Company } from "@/services/admin.service";
 
 type ViewMode = "cards" | "table";
 
@@ -75,11 +75,12 @@ export const CompaniesList = ({
                         {company.industry}
                       </p>
                     )}
-                    {company.employees && (
-                      <p className="text-white/50 text-xs mt-1">
-                        {company.employees} employees
-                      </p>
-                    )}
+                    {company.employees !== undefined &&
+                      company.employees !== null && (
+                        <p className="text-white/50 text-xs mt-1">
+                          {company.employees.toLocaleString()} employees
+                        </p>
+                      )}
                   </div>
                 </div>
               </div>
@@ -129,7 +130,10 @@ export const CompaniesList = ({
                       {company.industry || "-"}
                     </td>
                     <td className="py-3 px-4 text-white/60 text-sm">
-                      {company.employees || "-"}
+                      {company.employees !== undefined &&
+                      company.employees !== null
+                        ? company.employees.toLocaleString()
+                        : "-"}
                     </td>
                   </tr>
                 ))}
