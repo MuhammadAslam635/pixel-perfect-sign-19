@@ -178,6 +178,87 @@ export interface UpdateConnectionMessageResponse {
   data: UpdateConnectionMessageData;
 }
 
+// Prompt Management Types
+export type PromptType = "linkedin" | "email" | "phone";
+export type PromptCategory =
+  | "system"
+  | "human"
+  | "bulk_system"
+  | "bulk_human"
+  | "enhance_system"
+  | "enhance_human";
+
+export interface Prompt {
+  _id: string;
+  companyId?: string | null;
+  promptType: PromptType;
+  promptCategory: PromptCategory;
+  content: string;
+  name?: string;
+  description?: string;
+  metadata?: {
+    tone?: string;
+    emailType?: string;
+    callObjective?: string;
+    scriptLength?: string;
+    version?: number;
+    isDefault?: boolean;
+    model?: string;
+    temperature?: number;
+  };
+  isActive: boolean;
+  createdBy: string;
+  lastModifiedBy?: string;
+  createdAt: string;
+  updatedAt: string;
+  company?: {
+    _id: string;
+    name: string;
+  };
+  createdByUser?: {
+    _id: string;
+    name: string;
+    email: string;
+  };
+  lastModifiedByUser?: {
+    _id: string;
+    name: string;
+    email: string;
+  };
+}
+
+export interface CreatePromptInput {
+  companyId?: string | null;
+  promptType: PromptType;
+  promptCategory: PromptCategory;
+  content: string;
+  name?: string;
+  description?: string;
+  metadata?: Record<string, any>;
+}
+
+export interface GetPromptsResponse {
+  success: boolean;
+  data: {
+    prompts: Prompt[];
+    total: number;
+  };
+}
+
+export interface CreatePromptResponse {
+  success: boolean;
+  message: string;
+  data: {
+    prompt: Prompt;
+    isUpdate: boolean;
+  };
+}
+
+export interface DeletePromptResponse {
+  success: boolean;
+  message: string;
+}
+
 export const connectionMessagesService = {
   generateEmailMessage: async (
     payload: GenerateEmailMessageInput
@@ -217,6 +298,30 @@ export const connectionMessagesService = {
     payload: UpdateConnectionMessageInput
   ): Promise<UpdateConnectionMessageResponse> => {
     const response = await API.put("/connection-messages/update", payload);
+    return response.data;
+  },
+
+  // Prompt Management
+  getPrompts: async (params?: {
+    companyId?: string;
+    promptType?: PromptType;
+    promptCategory?: PromptCategory;
+  }): Promise<GetPromptsResponse> => {
+    const response = await API.get("/connection-messages/prompts", { params });
+    return response.data;
+  },
+
+  createOrUpdatePrompt: async (
+    payload: CreatePromptInput
+  ): Promise<CreatePromptResponse> => {
+    const response = await API.post("/connection-messages/prompts", payload);
+    return response.data;
+  },
+
+  deletePrompt: async (promptId: string): Promise<DeletePromptResponse> => {
+    const response = await API.delete(
+      `/connection-messages/prompts/${promptId}`
+    );
     return response.data;
   },
 };

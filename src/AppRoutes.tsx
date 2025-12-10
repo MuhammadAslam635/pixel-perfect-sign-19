@@ -44,7 +44,7 @@ import CalendarPage from "@/pages/crm/calendar";
 import OnboardingPage from "@/pages/onboarding";
 import AdminDashboard from "@/pages/admin/Dashboard";
 import AdminSystemOverview from "@/pages/admin/SystemOverview";
-import AdminCompanies from "@/pages/admin/Companies";
+import AdminCompanies from "@/pages/admin/companies";
 import AdminMembers from "@/pages/admin/Members";
 import AdminSettings from "@/pages/admin/Settings";
 import AdminAnalytics from "@/pages/admin/Analytics";
