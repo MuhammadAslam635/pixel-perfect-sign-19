@@ -475,16 +475,41 @@ const ChatPage = () => {
           });
         }
 
-        // Add new chat to chatList optimistically
+        // Only add new chat to chatList if it's actually a new chat
+        // For existing chats, just update the existing entry's updatedAt timestamp
         queryClient.setQueryData<ChatSummary[]>(["chatList"], (oldChatList) => {
           if (!oldChatList) return oldChatList;
-          const newChat: ChatSummary = {
-            _id: newChatId,
-            title: result.data.title || "New Conversation",
-            createdAt: result.data.createdAt || new Date().toISOString(),
-            updatedAt: result.data.updatedAt || new Date().toISOString(),
-          };
-          return [newChat, ...oldChatList];
+          
+          if (isNewChat) {
+            // Add new chat to the beginning of the list
+            const newChat: ChatSummary = {
+              _id: newChatId,
+              title: result.data.title || "New Conversation",
+              createdAt: result.data.createdAt || new Date().toISOString(),
+              updatedAt: result.data.updatedAt || new Date().toISOString(),
+            };
+            return [newChat, ...oldChatList];
+          } else {
+            // Update existing chat's updatedAt and move it to the top
+            const updatedChatList = oldChatList.map(chat => {
+              if (chat._id === newChatId) {
+                return {
+                  ...chat,
+                  title: result.data.title || chat.title,
+                  updatedAt: result.data.updatedAt || new Date().toISOString(),
+                };
+              }
+              return chat;
+            });
+            
+            // Move the updated chat to the top
+            const updatedChat = updatedChatList.find(chat => chat._id === newChatId);
+            if (updatedChat) {
+              return [updatedChat, ...updatedChatList.filter(chat => chat._id !== newChatId)];
+            }
+            
+            return updatedChatList;
+          }
         });
 
         // Convert temporary chat to real chat if it was a new chat
