@@ -18,8 +18,7 @@ import {
   type PromptType,
   type PromptCategory,
 } from "@/services/connectionMessages.service";
-import { adminService } from "@/services/admin.service";
-import { type Company } from "@/services/companies.service";
+import { adminService, type Company } from "@/services/admin.service";
 import { toast } from "sonner";
 
 // Import components

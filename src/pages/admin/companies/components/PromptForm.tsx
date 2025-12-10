@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Company } from "@/services/companies.service";
+import { Company } from "@/services/admin.service";
 import {
   type PromptType,
   type PromptCategory,
@@ -133,9 +133,7 @@ export const PromptForm = ({
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="flex flex-col gap-2">
-          <Label htmlFor="company">
-            Company (Optional)
-          </Label>
+          <Label htmlFor="company">Company (Optional)</Label>
           <Select
             value={selectedCompanyForPrompt?._id || "global"}
             onValueChange={(value) => {
