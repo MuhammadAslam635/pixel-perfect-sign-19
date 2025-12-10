@@ -54,6 +54,7 @@ import {
   completeStreamingTask,
   errorTask,
   cleanupOldTasks,
+  updateTask,
 } from "@/store/slices/longRunningTasksSlice";
 
 const NEW_CHAT_KEY = "__new_chat__";
@@ -83,6 +84,7 @@ const ChatPage = () => {
   // Local state for timing (not in Redux as it's UI-specific)
   const streamingStartTimeRef = useRef<number | null>(null);
   const streamingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isStreamingRef = useRef<boolean>(false);
 
   // Animation variants for page transitions
   const pageVariants = {
@@ -387,6 +389,7 @@ const ChatPage = () => {
 
     dispatch(setIsStreaming(true));
     dispatch(clearStreamingEvents());
+    isStreamingRef.current = true;
 
     // Generate temporary chat ID if this is a new chat
     const isNewChat = selectedChatId === "__new_chat__" || !selectedChatId;
@@ -418,21 +421,16 @@ const ChatPage = () => {
 
     // Start long-running task tracking
     streamingStartTimeRef.current = Date.now();
-    dispatch(startStreamingTask({
-      chatId: actualChatId,
-      messageId: tempMessage._id,
-      title: `Generating response for ${selectedChatDetail?.title || "new chat"}`,
-      description: "AI is processing your message...",
-    }));
-
-    // Set timeout to mark as long-running task after 10 seconds
+    
+    // Set timeout to start long-running task only after 10 seconds if still processing
     streamingTimeoutRef.current = setTimeout(() => {
-      if (isStreaming) {
-        // Task is still running after 10 seconds, keep it in the list
-        dispatch(updateStreamingTask({
+      if (isStreamingRef.current) {
+        // Task is still running after 10 seconds, start tracking it
+        dispatch(startStreamingTask({
           chatId: actualChatId,
           messageId: tempMessage._id,
-          step: "Still processing...",
+          title: `Generating response for ${selectedChatDetail?.title || "new chat"}`,
+          description: "AI is processing your message...",
         }));
       }
     }, 10000);
@@ -495,6 +493,14 @@ const ChatPage = () => {
             realChatId: newChatId,
             title: result.data.title as string
           }));
+          
+          // Update long-running task's chatId to the real chat ID if it exists
+          if (tempMessage._id) {
+            dispatch(updateTask({
+              id: tempMessage._id,
+              updates: { chatId: newChatId }
+            }));
+          }
         }
 
         queryClient.invalidateQueries({
@@ -554,6 +560,7 @@ const ChatPage = () => {
         variant: "destructive",
       });
     } finally {
+      isStreamingRef.current = false;
       dispatch(setIsStreaming(false));
       dispatch(clearStreamingEvents());
 
@@ -644,7 +651,9 @@ const ChatPage = () => {
 
   const selectedMessages = useMemo(() => {
     // If we have a temporary chat selected, use its messages
-    if (selectedChatId === "__new_chat__" && temporaryChat) {
+    // Also check if selectedChatId is a temp chat ID (starts with "temp_") and we have a temporary chat
+    const isTempChatId = selectedChatId?.startsWith("temp_");
+    if ((selectedChatId === "__new_chat__" || isTempChatId) && temporaryChat) {
       return temporaryChat.messages;
     }
 
@@ -700,7 +709,7 @@ const ChatPage = () => {
     });
 
     return [...apiMessages, ...filteredOptimistic];
-  }, [optimisticMessages, selectedChat?.messages]);
+  }, [optimisticMessages, selectedChat?.messages, temporaryChat, selectedChatId]);
 
   const hasActiveConversation =
     Boolean(selectedChatId) || optimisticMessages.length > 0 ||
