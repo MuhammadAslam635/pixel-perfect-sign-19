@@ -694,7 +694,7 @@ const CalendarPage: FC = () => {
                                         meeting.recall.status === "active"
                                           ? "bg-emerald-500/20 text-emerald-100 border border-emerald-400/50"
                                           : meeting.recall.status ===
-                                                "starting" ||
+                                              "starting" ||
                                             meeting.recall.status ===
                                               "scheduled"
                                           ? "bg-sky-500/15 text-sky-100 border border-sky-400/40"
@@ -705,7 +705,8 @@ const CalendarPage: FC = () => {
                                     >
                                       {meeting.recall.status === "active"
                                         ? "Recall active"
-                                        : meeting.recall.status === "starting" ||
+                                        : meeting.recall.status ===
+                                            "starting" ||
                                           meeting.recall.status === "scheduled"
                                         ? "Recall pending"
                                         : meeting.recall.status === "failed"
