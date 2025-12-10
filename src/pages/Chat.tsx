@@ -693,6 +693,7 @@ const ChatPage = () => {
                     className="h-full"
                     onDeleteChat={handleDeleteChat}
                     deletingChatId={deletingChatId}
+                    isCreatingNewChat={isCreatingNewChat}
                   />
                 </div>
               </div>
@@ -772,6 +773,7 @@ const ChatPage = () => {
               className="h-full max-w-none rounded-none border-none"
               onDeleteChat={handleDeleteChat}
               deletingChatId={deletingChatId}
+              isCreatingNewChat={isCreatingNewChat}
             />
           </div>
         </SheetContent>
