@@ -19,8 +19,8 @@ export default {
     },
     extend: {
       screens: {
-        "fhd": "1920px",
-        "uhd": "2048px",
+        fhd: "1920px",
+        uhd: "2048px",
       },
       colors: {
         border: "hsl(var(--border))",
@@ -120,5 +120,5 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [require("tailwindcss-animate"), require("tailwind-scrollbar-hide")],
 } satisfies Config;
