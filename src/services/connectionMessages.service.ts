@@ -259,6 +259,26 @@ export interface DeletePromptResponse {
   message: string;
 }
 
+// Available Models Types
+export interface AIModel {
+  id: string;
+  name: string;
+  created?: number;
+  owned_by?: string;
+}
+
+export interface GetAvailableModelsData {
+  models: AIModel[];
+  total: number;
+  isFallback?: boolean;
+}
+
+export interface GetAvailableModelsResponse {
+  success: boolean;
+  message?: string;
+  data: GetAvailableModelsData;
+}
+
 export const connectionMessagesService = {
   generateEmailMessage: async (
     payload: GenerateEmailMessageInput
@@ -322,6 +342,11 @@ export const connectionMessagesService = {
     const response = await API.delete(
       `/connection-messages/prompts/${promptId}`
     );
+    return response.data;
+  },
+
+  getAvailableModels: async (): Promise<GetAvailableModelsResponse> => {
+    const response = await API.get("/connection-messages/models");
     return response.data;
   },
 };

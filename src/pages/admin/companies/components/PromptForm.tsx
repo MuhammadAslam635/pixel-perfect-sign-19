@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,7 +13,10 @@ import { Company } from "@/services/companies.service";
 import {
   type PromptType,
   type PromptCategory,
+  connectionMessagesService,
+  type AIModel,
 } from "@/services/connectionMessages.service";
+import { toast } from "sonner";
 
 interface PromptFormData {
   promptType: PromptType;
@@ -50,6 +54,40 @@ export const PromptForm = ({
   onCancel,
   isEditing,
 }: PromptFormProps) => {
+  const [availableModels, setAvailableModels] = useState<AIModel[]>([]);
+  const [modelsLoading, setModelsLoading] = useState(false);
+
+  // Fetch available models on component mount
+  useEffect(() => {
+    const fetchModels = async () => {
+      try {
+        setModelsLoading(true);
+        const response = await connectionMessagesService.getAvailableModels();
+        setAvailableModels(response.data.models);
+
+        if (response.data.isFallback) {
+          toast.warning(
+            "Using fallback model list - OpenAI API may be unavailable"
+          );
+        }
+      } catch (error) {
+        console.error("Failed to fetch available models:", error);
+        toast.error("Failed to fetch available AI models");
+        // Set fallback models
+        setAvailableModels([
+          { id: "gpt-4o", name: "gpt-4o" },
+          { id: "gpt-4o-mini", name: "gpt-4o-mini" },
+          { id: "gpt-4-turbo", name: "gpt-4-turbo" },
+          { id: "gpt-4", name: "gpt-4" },
+          { id: "gpt-3.5-turbo", name: "gpt-3.5-turbo" },
+        ]);
+      } finally {
+        setModelsLoading(false);
+      }
+    };
+
+    fetchModels();
+  }, []);
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -94,9 +132,9 @@ export const PromptForm = ({
         </div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div>
+        <div className="flex flex-col gap-2">
           <Label htmlFor="company">
-            Company (Optional - leave empty for global prompt)
+            Company (Optional)
           </Label>
           <Select
             value={selectedCompanyForPrompt?._id || "global"}
@@ -132,7 +170,7 @@ export const PromptForm = ({
           )}
         </div>
 
-        <div>
+        <div className="flex flex-col gap-2">
           <Label htmlFor="model">AI Model</Label>
           <Select
             value={formData.metadata?.model || "gpt-4o-mini"}
@@ -142,21 +180,31 @@ export const PromptForm = ({
                 model: value as any,
               })
             }
+            disabled={modelsLoading}
           >
             <SelectTrigger>
-              <SelectValue />
+              <SelectValue
+                placeholder={
+                  modelsLoading ? "Loading models..." : "Select a model"
+                }
+              />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="gpt-4o">GPT-4o (Latest)</SelectItem>
-              <SelectItem value="gpt-4o-mini">GPT-4o Mini (Fast)</SelectItem>
-              <SelectItem value="gpt-4-turbo">GPT-4 Turbo</SelectItem>
-              <SelectItem value="gpt-4">GPT-4</SelectItem>
-              <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
+              {availableModels.map((model) => (
+                <SelectItem key={model.id} value={model.id}>
+                  {model.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
+          {modelsLoading && (
+            <p className="text-white/50 text-xs mt-1">
+              Loading available models...
+            </p>
+          )}
         </div>
 
-        <div>
+        <div className="flex flex-col gap-2">
           <Label htmlFor="temperature">Temperature</Label>
           <Select
             value={formData.metadata?.temperature?.toString() || "0.7"}
