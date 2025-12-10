@@ -257,7 +257,7 @@ const index = () => {
               {/* Controls Container */}
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2 md:gap-3 order-1 lg:order-2">
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2 flex-1">
-                  <div className="flex w-full flex-wrap items-center justify-end gap-1.5 sm:gap-2">
+                  <div className="flex w-full items-center justify-end gap-1.5 sm:gap-2">
                     {/* Search Input */}
                     <SearchInput
                       placeholder="Search companies..."

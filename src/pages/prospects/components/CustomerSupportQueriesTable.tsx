@@ -129,36 +129,122 @@ const CustomerSupportQueriesTable: React.FC = () => {
   }
 
   const containerVariants: Variants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: {
+      opacity: 0,
+      y: 40,
+      scale: 0.95,
+      filter: "blur(8px)",
+      rotateX: 8
+    },
     visible: {
       opacity: 1,
       y: 0,
+      scale: 1,
+      filter: "blur(0px)",
+      rotateX: 0,
       transition: {
-        duration: 0.6,
-        ease: "easeOut",
-      },
-    },
-  };
-
-  const tableVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.08,
+        duration: 0.9,
+        ease: [0.23, 1, 0.32, 1],
+        staggerChildren: 0.12,
         delayChildren: 0.2,
       },
     },
   };
 
-  const rowVariants: Variants = {
-    hidden: { opacity: 0, y: 10 },
+  const tableVariants = {
+    hidden: {
+      opacity: 0,
+      scale: 0.92,
+      y: 30,
+      filter: "blur(6px)",
+      rotateX: 5
+    },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      y: 0,
+      filter: "blur(0px)",
+      rotateX: 0,
+      transition: {
+        duration: 0.8,
+        ease: [0.25, 0.46, 0.45, 0.94],
+        staggerChildren: 0.08,
+        delayChildren: 0.4,
+      },
+    },
+  };
+
+  const headerVariants = {
+    hidden: {
+      opacity: 0,
+      y: -25,
+      scale: 0.9,
+      filter: "blur(4px)",
+      rotateX: -5
+    },
     visible: {
       opacity: 1,
       y: 0,
+      scale: 1,
+      filter: "blur(0px)",
+      rotateX: 0,
       transition: {
-        duration: 0.4,
-        ease: "easeOut",
+        duration: 0.6,
+        ease: [0.25, 0.46, 0.45, 0.94],
+        staggerChildren: 0.05
+      },
+    },
+  };
+
+  const searchInputVariants = {
+    hidden: {
+      opacity: 0,
+      x: -30,
+      scale: 0.95,
+      filter: "blur(3px)"
+    },
+    visible: {
+      opacity: 1,
+      x: 0,
+      scale: 1,
+      filter: "blur(0px)",
+      transition: {
+        duration: 0.5,
+        ease: [0.25, 0.46, 0.45, 0.94],
+        delay: 0.6
+      },
+    },
+  };
+
+  const rowVariants: Variants = {
+    hidden: {
+      opacity: 0,
+      y: 25,
+      scale: 0.95,
+      filter: "blur(4px)",
+      rotateX: 3
+    },
+    visible: (index: number) => ({
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      filter: "blur(0px)",
+      rotateX: 0,
+      transition: {
+        duration: 0.5,
+        ease: [0.25, 0.46, 0.45, 0.94],
+        delay: index * 0.08,
+      },
+    }),
+    exit: {
+      opacity: 0,
+      y: -15,
+      scale: 0.92,
+      filter: "blur(4px)",
+      rotateX: -3,
+      transition: {
+        duration: 0.3,
+        ease: [0.25, 0.46, 0.45, 0.94],
       },
     },
   };
@@ -177,76 +263,171 @@ const CustomerSupportQueriesTable: React.FC = () => {
             "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
         }}
       >
-        <Card className="mb-6 bg-transparent border-[#FFFFFF1A]">
-          <CardContent className="flex flex-col md:flex-row md:items-center gap-4 p-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 z-10" />
-              <Input
-                placeholder="Search by name, email, phone, or status..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 w-full rounded-full bg-[#FFFFFF1A] border border-white/40 text-gray-300 placeholder:text-gray-500 focus:ring-0"
+        <motion.div
+          className="mb-6 bg-transparent border-[#FFFFFF1A] rounded-xl overflow-hidden"
+          variants={searchInputVariants}
+        >
+          <Card className="bg-transparent border-0">
+            <CardContent className="flex flex-col md:flex-row md:items-center gap-4 p-4">
+              <div className="flex-1 relative">
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 z-10" />
+                </motion.div>
+                <motion.div
+                  whileFocus={{ scale: 1.02 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Input
+                    placeholder="Search by name, email, phone, or status..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 w-full rounded-full bg-[#FFFFFF1A] border border-white/40 text-gray-300 placeholder:text-gray-500 focus:ring-0 focus:border-white/60 focus:bg-white/10 transition-all duration-300"
+                    style={{
+                      boxShadow:
+                        "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                      borderRadius: "9999px",
+                    }}
+                  />
+                </motion.div>
+              </div>
+              <motion.button
+                onClick={handleSync}
+                disabled={isSyncing}
+                whileHover={{
+                  scale: 1.05,
+                  boxShadow: "0 20px 40px rgba(0,0,0,0.4)",
+                  filter: "brightness(1.1)"
+                }}
+                whileTap={{
+                  scale: 0.95,
+                  rotate: -2
+                }}
+                className="group relative overflow-hidden flex items-center justify-center h-10 rounded-full border border-white/40 px-3.5 gap-2 text-xs font-medium tracking-wide transition-all duration-400 ease-elastic text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/15 before:to-transparent before:transition-all before:duration-300 before:ease-in-out hover:before:from-white/25 hover:before:duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
+                  background: "#FFFFFF1A",
                   boxShadow:
                     "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
-                  borderRadius: "9999px",
                 }}
-              />
-            </div>
-            <button
-              onClick={handleSync}
-              disabled={isSyncing}
-              className="group relative overflow-hidden flex items-center justify-center h-10 rounded-full border border-white/40 px-3.5 gap-2 text-xs font-medium tracking-wide transition-all duration-400 ease-elastic text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/15 before:to-transparent before:transition-all before:duration-300 before:ease-in-out hover:before:from-white/25 hover:before:duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{
-                background: "#FFFFFF1A",
-                boxShadow:
-                  "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
-              }}
-            >
-              <div
-                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[100px] h-[100px] rounded-full pointer-events-none"
-                style={{
-                  background:
-                    "linear-gradient(180deg, #67B0B7 0%, #4066B3 100%)",
-                  filter: "blur(20px)",
-                  WebkitFilter: "blur(20px)",
-                }}
-              ></div>
-              <RefreshCwIcon
-                className={`h-4 w-4 flex-shrink-0 transition-[color,filter] duration-250 ease-in-out text-white drop-shadow-[0_8px_18px_rgba(62,100,180,0.45)] ${
-                  isSyncing ? "animate-spin" : ""
-                }`}
-              />
-              <span className="whitespace-nowrap relative z-10">
-                {isSyncing ? "Syncing..." : "Sync from Airtable"}
-              </span>
-            </button>
-          </CardContent>
-        </Card>
+              >
+                <motion.div
+                  className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[100px] h-[100px] rounded-full pointer-events-none"
+                  animate={{
+                    scale: isSyncing ? [1, 1.2, 1] : 1,
+                    opacity: isSyncing ? [0.5, 0.8, 0.5] : 0.5
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: isSyncing ? Infinity : 0,
+                    ease: "easeInOut"
+                  }}
+                  style={{
+                    background:
+                      "linear-gradient(180deg, #67B0B7 0%, #4066B3 100%)",
+                    filter: "blur(20px)",
+                    WebkitFilter: "blur(20px)",
+                  }}
+                />
+                <motion.div
+                  animate={{
+                    rotate: isSyncing ? 360 : 0,
+                    scale: isSyncing ? [1, 1.1, 1] : 1
+                  }}
+                  transition={{
+                    duration: isSyncing ? 1 : 0.3,
+                    repeat: isSyncing ? Infinity : 0,
+                    ease: "linear"
+                  }}
+                >
+                  <RefreshCwIcon
+                    className="h-4 w-4 flex-shrink-0 text-white drop-shadow-[0_8px_18px_rgba(62,100,180,0.45)]"
+                  />
+                </motion.div>
+                <span className="whitespace-nowrap relative z-10">
+                  {isSyncing ? "Syncing..." : "Sync from Airtable"}
+                </span>
+              </motion.button>
+            </CardContent>
+          </Card>
+        </motion.div>
 
         {isLoading ? (
           <motion.div
-            className="space-y-3 p-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
+            className="space-y-4 p-4"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
           >
             {Array.from({ length: 5 }).map((_, i) => (
               <motion.div
                 key={i}
-                className="flex space-x-4"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
+                className="flex space-x-4 p-4 rounded-lg bg-white/5 border border-white/10"
+                initial={{ opacity: 0, x: -30, scale: 0.95 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
                 transition={{
-                  duration: 0.4,
-                  delay: i * 0.1,
-                  ease: "easeOut",
+                  duration: 0.6,
+                  delay: i * 0.15,
+                  ease: [0.25, 0.46, 0.45, 0.94],
                 }}
               >
-                <Skeleton className="h-4 flex-1 bg-white/10" />
-                <Skeleton className="h-4 flex-1 bg-white/10" />
-                <Skeleton className="h-4 w-24 bg-white/10" />
-                <Skeleton className="h-4 w-24 bg-white/10" />
+                <motion.div
+                  animate={{
+                    opacity: [0.5, 1, 0.5],
+                    scale: [0.95, 1.02, 0.95]
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: i * 0.2
+                  }}
+                >
+                  <Skeleton className="h-4 flex-1 bg-gradient-to-r from-white/10 via-white/20 to-white/10 rounded" />
+                </motion.div>
+                <motion.div
+                  animate={{
+                    opacity: [0.5, 1, 0.5],
+                    scale: [0.95, 1.02, 0.95]
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: i * 0.2 + 0.3
+                  }}
+                >
+                  <Skeleton className="h-4 flex-1 bg-gradient-to-r from-white/10 via-white/20 to-white/10 rounded" />
+                </motion.div>
+                <motion.div
+                  animate={{
+                    opacity: [0.5, 1, 0.5],
+                    scale: [0.95, 1.02, 0.95]
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: i * 0.2 + 0.6
+                  }}
+                >
+                  <Skeleton className="h-4 w-24 bg-gradient-to-r from-white/10 via-white/20 to-white/10 rounded" />
+                </motion.div>
+                <motion.div
+                  animate={{
+                    opacity: [0.5, 1, 0.5],
+                    scale: [0.95, 1.02, 0.95]
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: i * 0.2 + 0.9
+                  }}
+                >
+                  <Skeleton className="h-4 w-20 bg-gradient-to-r from-white/10 via-white/20 to-white/10 rounded-full" />
+                </motion.div>
               </motion.div>
             ))}
           </motion.div>
@@ -255,21 +436,89 @@ const CustomerSupportQueriesTable: React.FC = () => {
             {/* Header */}
             <motion.div
               className="mb-4 border border-[#FFFFFF1A] rounded-xl overflow-hidden"
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
+              variants={headerVariants}
             >
-              <div className="grid grid-cols-[1.2fr_1fr_1fr_0.8fr_0.8fr_0.8fr_80px] items-center gap-4 px-6 py-4 bg-[#FFFFFF05]">
-                <div className="text-sm text-gray-400">Name</div>
-                <div className="text-sm text-gray-400">Email</div>
-                <div className="text-sm text-gray-400">Phone</div>
-                <div className="text-sm text-gray-400">Start Time</div>
-                <div className="text-sm text-gray-400">Status</div>
-                <div className="text-sm text-gray-400 text-center">
+              <motion.div
+                className="grid grid-cols-[1.2fr_1fr_1fr_0.8fr_0.8fr_0.8fr_80px] items-center gap-4 px-6 py-4 bg-[#FFFFFF05]"
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{
+                  duration: 0.4,
+                  delay: 0.2,
+                  ease: [0.25, 0.46, 0.45, 0.94],
+                }}
+              >
+                <motion.div
+                  className="text-sm text-gray-400"
+                  whileHover={{
+                    color: "#ffffff",
+                    scale: 1.02,
+                    transition: { duration: 0.2 },
+                  }}
+                >
+                  Name
+                </motion.div>
+                <motion.div
+                  className="text-sm text-gray-400"
+                  whileHover={{
+                    color: "#ffffff",
+                    scale: 1.02,
+                    transition: { duration: 0.2 },
+                  }}
+                >
+                  Email
+                </motion.div>
+                <motion.div
+                  className="text-sm text-gray-400"
+                  whileHover={{
+                    color: "#ffffff",
+                    scale: 1.02,
+                    transition: { duration: 0.2 },
+                  }}
+                >
+                  Phone
+                </motion.div>
+                <motion.div
+                  className="text-sm text-gray-400"
+                  whileHover={{
+                    color: "#ffffff",
+                    scale: 1.02,
+                    transition: { duration: 0.2 },
+                  }}
+                >
+                  Start Time
+                </motion.div>
+                <motion.div
+                  className="text-sm text-gray-400"
+                  whileHover={{
+                    color: "#ffffff",
+                    scale: 1.02,
+                    transition: { duration: 0.2 },
+                  }}
+                >
+                  Status
+                </motion.div>
+                <motion.div
+                  className="text-sm text-gray-400 text-center"
+                  whileHover={{
+                    color: "#ffffff",
+                    scale: 1.02,
+                    transition: { duration: 0.2 },
+                  }}
+                >
                   Messages
-                </div>
-                <div className="text-sm text-gray-400 text-center">Actions</div>
-              </div>
+                </motion.div>
+                <motion.div
+                  className="text-sm text-gray-400 text-center"
+                  whileHover={{
+                    color: "#ffffff",
+                    scale: 1.02,
+                    transition: { duration: 0.2 },
+                  }}
+                >
+                  Actions
+                </motion.div>
+              </motion.div>
             </motion.div>
 
             {/* Table Body */}
@@ -294,45 +543,86 @@ const CustomerSupportQueriesTable: React.FC = () => {
                   return (
                     <motion.div
                       key={query._id}
+                      custom={index}
                       variants={rowVariants}
                       layout
+                      layoutId={query._id}
                       whileHover={{
-                        backgroundColor: "rgba(255, 255, 255, 0.05)",
-                        scale: 1.005,
-                        transition: { duration: 0.2 },
+                        backgroundColor: "rgba(255, 255, 255, 0.12)",
+                        scale: 1.02,
+                        y: -3,
+                        rotateX: -2,
+                        boxShadow: "0 15px 35px rgba(0, 0, 0, 0.25), 0 0 30px rgba(255, 255, 255, 0.1)",
+                        filter: "brightness(1.05)",
+                        transition: {
+                          duration: 0.4,
+                          ease: [0.25, 0.46, 0.45, 0.94],
+                          backgroundColor: { duration: 0.3 },
+                        },
                       }}
-                      className="grid grid-cols-[1.2fr_1fr_1fr_0.8fr_0.8fr_0.8fr_80px] items-center gap-4 px-6 py-4 border-b border-[#FFFFFF0D] last:border-b-0 cursor-pointer"
+                      whileTap={{
+                        scale: 0.97,
+                        rotateX: 1,
+                        transition: { duration: 0.15 },
+                      }}
+                      className="grid grid-cols-[1.2fr_1fr_1fr_0.8fr_0.8fr_0.8fr_80px] items-center gap-4 px-6 py-4 border-b border-[#FFFFFF0D] last:border-b-0 cursor-pointer relative overflow-hidden group"
                     >
-                      <div
-                        className="font-medium text-white truncate text-sm"
+                      <motion.div
+                        className="font-medium text-white truncate text-sm group-hover:text-white/90"
                         title={contactInfo?.name || "N/A"}
+                        whileHover={{
+                          scale: 1.05,
+                          color: "#ffffff",
+                          textShadow: "0 0 8px rgba(255, 255, 255, 0.5)",
+                          transition: { duration: 0.25, ease: "easeOut" },
+                        }}
                       >
                         {contactInfo?.name || "N/A"}
-                      </div>
-                      <div
-                        className="text-gray-300 text-sm truncate"
+                      </motion.div>
+                      <motion.div
+                        className="text-gray-300 text-sm truncate group-hover:text-gray-200"
                         title={contactInfo?.email || "N/A"}
+                        whileHover={{
+                          scale: 1.03,
+                          color: "#ffffff",
+                          transition: { duration: 0.25, ease: "easeOut" },
+                        }}
                       >
                         {contactInfo?.email || "N/A"}
-                      </div>
-                      <div
-                        className="text-gray-300 text-sm truncate"
+                      </motion.div>
+                      <motion.div
+                        className="text-gray-300 text-sm truncate group-hover:text-gray-200"
                         title={contactInfo?.phone || "N/A"}
+                        whileHover={{
+                          scale: 1.03,
+                          color: "#ffffff",
+                          transition: { duration: 0.25, ease: "easeOut" },
+                        }}
                       >
                         {contactInfo?.phone || "N/A"}
-                      </div>
-                      <div className="text-gray-300 text-sm">
+                      </motion.div>
+                      <motion.div
+                        className="text-gray-300 text-sm group-hover:text-gray-200"
+                        whileHover={{
+                          scale: 1.03,
+                          color: "#ffffff",
+                          transition: { duration: 0.25, ease: "easeOut" },
+                        }}
+                      >
                         {formatDate(query.startTime)}
-                      </div>
-                      <div>
+                      </motion.div>
+                      <motion.div
+                        whileHover={{ scale: 1.08, rotate: 2 }}
+                        transition={{ duration: 0.2, ease: "easeOut" }}
+                      >
                         <Badge
                           className={`${getStatusColor(
                             query.status
-                          )} rounded-full px-3`}
+                          )} rounded-full px-3 shadow-lg hover:shadow-xl transition-all duration-300 group-hover:scale-105`}
                         >
                           {query.status}
                         </Badge>
-                      </div>
+                      </motion.div>
                       <div className="text-gray-300 text-sm text-center">
                         {query.messagesTotal}
                       </div>
@@ -341,16 +631,34 @@ const CustomerSupportQueriesTable: React.FC = () => {
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <motion.button
-                                className="p-2 rounded-full text-gray-300"
+                                className="p-2 rounded-full text-gray-300 hover:text-white transition-colors duration-200"
                                 whileHover={{
-                                  backgroundColor: "rgba(255, 255, 255, 0.1)",
-                                  scale: 1.1,
-                                  rotate: 90,
-                                  transition: { duration: 0.2 },
+                                  backgroundColor: "rgba(255, 255, 255, 0.15)",
+                                  scale: 1.15,
+                                  rotate: 180,
+                                  boxShadow: "0 0 15px rgba(255, 255, 255, 0.3)",
+                                  transition: {
+                                    duration: 0.3,
+                                    ease: [0.25, 0.46, 0.45, 0.94]
+                                  },
                                 }}
-                                whileTap={{ scale: 0.95 }}
+                                whileTap={{
+                                  scale: 0.9,
+                                  rotate: 90,
+                                  transition: { duration: 0.1 }
+                                }}
                               >
-                                <MoreVertical className="h-5 w-5" />
+                                <motion.div
+                                  animate={{ rotate: [0, 5, -5, 0] }}
+                                  transition={{
+                                    duration: 2,
+                                    repeat: Infinity,
+                                    ease: "easeInOut",
+                                    delay: index * 0.1
+                                  }}
+                                >
+                                  <MoreVertical className="h-5 w-5" />
+                                </motion.div>
                               </motion.button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent
@@ -418,22 +726,27 @@ const CustomerSupportQueriesTable: React.FC = () => {
                     queries
                   </div>
                   <div className="flex items-center justify-center space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        setCurrentPage((prev) => Math.max(prev - 1, 1))
-                      }
-                      disabled={!data.data.hasPrevPage}
-                      className="px-3 bg-[#FFFFFF1A] border-0 text-gray-300 hover:bg-white/10"
-                      style={{
-                        boxShadow:
-                          "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
-                      }}
+                    <motion.div
+                      whileHover={!data.data.hasPrevPage ? {} : { scale: 1.05 }}
+                      whileTap={!data.data.hasPrevPage ? {} : { scale: 0.95 }}
                     >
-                      <span className="hidden sm:inline">Previous</span>
-                      <span className="sm:hidden">Prev</span>
-                    </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          setCurrentPage((prev) => Math.max(prev - 1, 1))
+                        }
+                        disabled={!data.data.hasPrevPage}
+                        className="px-3 bg-[#FFFFFF1A] border-0 text-gray-300 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                        style={{
+                          boxShadow:
+                            "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                        }}
+                      >
+                        <span className="hidden sm:inline">Previous</span>
+                        <span className="sm:hidden">Prev</span>
+                      </Button>
+                    </motion.div>
 
                     <div className="flex items-center space-x-1">
                       {Array.from(
@@ -451,53 +764,64 @@ const CustomerSupportQueriesTable: React.FC = () => {
                           if (pageNumber > data.data.totalPages) return null;
 
                           return (
-                            <Button
+                            <motion.div
                               key={pageNumber}
-                              variant={
-                                pageNumber === currentPage
-                                  ? "default"
-                                  : "outline"
-                              }
-                              size="sm"
-                              onClick={() => setCurrentPage(pageNumber)}
-                              className={`w-9 h-9 p-0 ${
-                                pageNumber === currentPage
-                                  ? "bg-white/20 text-white"
-                                  : "bg-[#FFFFFF1A] border-0 text-gray-300 hover:bg-white/10"
-                              }`}
-                              style={
-                                pageNumber !== currentPage
-                                  ? {
-                                      boxShadow:
-                                        "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
-                                    }
-                                  : undefined
-                              }
+                              whileHover={{ scale: 1.1, y: -2 }}
+                              whileTap={{ scale: 0.9 }}
+                              transition={{ duration: 0.2, ease: "easeOut" }}
                             >
-                              {pageNumber}
-                            </Button>
+                              <Button
+                                variant={
+                                  pageNumber === currentPage
+                                    ? "default"
+                                    : "outline"
+                                }
+                                size="sm"
+                                onClick={() => setCurrentPage(pageNumber)}
+                                className={`w-9 h-9 p-0 transition-all duration-300 ${
+                                  pageNumber === currentPage
+                                    ? "bg-white/20 text-white shadow-lg scale-110"
+                                    : "bg-[#FFFFFF1A] border-0 text-gray-300 hover:bg-white/10 hover:shadow-md"
+                                }`}
+                                style={
+                                  pageNumber !== currentPage
+                                    ? {
+                                        boxShadow:
+                                          "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                                      }
+                                    : undefined
+                                }
+                              >
+                                {pageNumber}
+                              </Button>
+                            </motion.div>
                           );
                         }
                       )}
                     </div>
 
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        setCurrentPage((prev) =>
-                          Math.min(prev + 1, data.data.totalPages)
-                        )
-                      }
-                      disabled={!data.data.hasNextPage}
-                      className="px-3 bg-[#FFFFFF1A] border-0 text-gray-300 hover:bg-white/10"
-                      style={{
-                        boxShadow:
-                          "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
-                      }}
+                    <motion.div
+                      whileHover={!data.data.hasNextPage ? {} : { scale: 1.05 }}
+                      whileTap={!data.data.hasNextPage ? {} : { scale: 0.95 }}
                     >
-                      Next
-                    </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          setCurrentPage((prev) =>
+                            Math.min(prev + 1, data.data.totalPages)
+                          )
+                        }
+                        disabled={!data.data.hasNextPage}
+                        className="px-3 bg-[#FFFFFF1A] border-0 text-gray-300 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                        style={{
+                          boxShadow:
+                            "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                        }}
+                      >
+                        Next
+                      </Button>
+                    </motion.div>
                   </div>
                 </div>
               </div>
