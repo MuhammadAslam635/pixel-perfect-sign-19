@@ -1,5 +1,5 @@
 import { Sparkles, Mic, Send, Loader2 } from "lucide-react";
-import { FC, useState, useEffect, useRef } from "react";
+import { FC, useState, useEffect, useRef, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
@@ -10,6 +10,8 @@ import {
   sendChatMessage,
   SendChatMessagePayload,
   fetchChatById,
+  sendStreamingChatMessage,
+  StreamEvent,
 } from "@/services/chat.service";
 import { deepgramTranscription } from "@/services/deepgram.service";
 import { ChatMessage } from "@/types/chat.types";
@@ -100,6 +102,9 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
     useState<ChatMessage[]>(initialMessages);
   const [isListening, setIsListening] = useState(false);
   const [interimTranscript, setInterimTranscript] = useState("");
+  const [streamingEvents, setStreamingEvents] = useState<StreamEvent[]>([]);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [optimisticMessages, setOptimisticMessages] = useState<ChatMessage[]>([]);
   const scrollAreaRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const isSendingRef = useRef(false);
@@ -109,6 +114,9 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
   const user = useSelector((state: RootState) => state.auth.user);
   const userName = user?.name || user?.email?.split("@")[0] || "User";
   const greeting = getTimeBasedGreeting();
+
+  // Computed value to replace the old isSendingMessage from mutation
+  const isSendingMessage = isStreaming || isSendingRef.current;
 
   // Auto-scroll input to show latest text
   useEffect(() => {
@@ -195,150 +203,86 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
     staleTime: 10_000,
   });
 
+  // Combine API messages and optimistic messages with deduplication
+  const selectedMessages = useMemo(() => {
+    const apiMessages = chatDetail?.messages ?? [];
+
+    if (!apiMessages.length) {
+      return optimisticMessages;
+    }
+
+    if (!optimisticMessages.length) {
+      return apiMessages;
+    }
+
+    const apiMessageIds = new Set(apiMessages.map((message) => message._id));
+
+    const filteredOptimistic = optimisticMessages.filter((message) => {
+      // If message ID exists in server messages, filter it out
+      if (apiMessageIds.has(message._id)) {
+        return false;
+      }
+
+      // If this is a temp message, check if it should be replaced by a server message
+      if (message._id.startsWith("temp-")) {
+        const tempTimestamp = parseInt(message._id.replace("temp-", ""));
+        const signature = `${message.role}-${message.content}`;
+
+        // Only match with server messages created within 30 seconds after the temp message
+        const matchingServerMessage = apiMessages.find(
+          (serverMsg) => {
+            if (`${serverMsg.role}-${serverMsg.content}` !== signature) {
+              return false;
+            }
+            const serverTimestamp = new Date(serverMsg.createdAt).getTime();
+            const timeDiff = serverTimestamp - tempTimestamp;
+            // Server message should be created after temp message, within 30 seconds
+            return timeDiff >= 0 && timeDiff <= 30000;
+          }
+        );
+
+        // If we found a matching recent server message, filter out the temp message
+        if (matchingServerMessage) {
+          return false;
+        }
+
+        // Keep temp messages for up to 30 seconds, then remove them (in case of errors)
+        const tempAge = Date.now() - tempTimestamp;
+        return tempAge < 30000;
+      }
+
+      // For non-temp messages, keep them if ID doesn't match
+      return true;
+    });
+
+    return [...apiMessages, ...filteredOptimistic];
+  }, [optimisticMessages, chatDetail?.messages]);
+
   // Auto-scroll to bottom when messages change
   useEffect(() => {
     if (scrollAreaRef.current) {
       scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
     }
-  }, [localMessages.length]);
+  }, [selectedMessages.length]);
 
   // Save current chat to localStorage whenever it changes
   useEffect(() => {
-    if (currentChatId || localMessages.length > 0) {
+    if (currentChatId || selectedMessages.length > 0) {
       localStorage.setItem(
         CURRENT_CHAT_KEY,
         JSON.stringify({
           chatId: currentChatId,
-          messages: localMessages,
+          messages: selectedMessages,
         })
       );
-      onMessagesChange(localMessages);
+      onMessagesChange(selectedMessages);
     } else {
       localStorage.removeItem(CURRENT_CHAT_KEY);
       onMessagesChange([]);
     }
-  }, [currentChatId, localMessages, onMessagesChange]);
+  }, [currentChatId, selectedMessages, onMessagesChange]);
 
-  const { mutate: mutateSendMessage, isPending: isSendingMessage } =
-    useMutation<
-      Awaited<ReturnType<typeof sendChatMessage>>,
-      AxiosError<{ message?: string }>,
-      SendChatMessagePayload,
-      { tempMessage: ChatMessage }
-    >({
-      mutationFn: sendChatMessage,
-      onMutate: (variables) => {
-        // Prevent multiple simultaneous sends
-        if (isSendingRef.current) {
-          throw new Error("Already sending a message");
-        }
-        isSendingRef.current = true;
 
-        const trimmedMessage = variables.message.trim();
-        const tempMessage: ChatMessage = {
-          _id: `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          chatId: currentChatId ?? "temp",
-          role: "user",
-          content: trimmedMessage,
-          createdAt: new Date().toISOString(),
-        };
-
-        setMessage("");
-        // Use functional update to ensure we have the latest state
-        setLocalMessages((prev) => {
-          // Check if this exact message is already in the list to prevent duplicates
-          const messageExists = prev.some(
-            msg => msg.role === "user" && msg.content === trimmedMessage && !msg._id.startsWith("temp-")
-          );
-          if (messageExists) {
-            return prev; // Don't add duplicate
-          }
-
-          const updated = [...prev, tempMessage];
-          onMessagesChange(updated);
-          return updated;
-        });
-
-        return { tempMessage };
-      },
-      onSuccess: async (response) => {
-        isSendingRef.current = false;
-
-        const newChatId = response.data.chatId;
-        const newMessages = response.data.messages || [];
-
-        if (newChatId) {
-          const isNewChat = newChatId !== currentChatId;
-
-          if (isNewChat) {
-            onChatIdChange(newChatId);
-          }
-
-          // Invalidate queries to refresh chat list and chat detail
-          queryClient.invalidateQueries({ queryKey: ["chatList"] });
-          queryClient.invalidateQueries({
-            queryKey: ["chatDetail", newChatId],
-          });
-
-          // Refetch chat details to get complete message list (including assistant response)
-          try {
-            const chatDetail = await queryClient.fetchQuery({
-              queryKey: ["chatDetail", newChatId],
-              queryFn: () => fetchChatById(newChatId),
-            });
-
-            if (chatDetail?.messages && chatDetail.messages.length > 0) {
-              // Use functional update to replace all messages with server data
-              // Remove any temp messages as server should have the real messages now
-              setLocalMessages(chatDetail.messages);
-              onMessagesChange(chatDetail.messages);
-            } else if (newMessages.length > 0) {
-              // Fallback to response messages if refetch doesn't return messages yet
-              setLocalMessages(newMessages);
-              onMessagesChange(newMessages);
-            }
-          } catch (error) {
-            // If refetch fails, use messages from response
-            if (newMessages.length > 0) {
-              setLocalMessages(newMessages);
-              onMessagesChange(newMessages);
-            }
-          }
-        }
-      },
-      onError: (error, variables, context) => {
-        isSendingRef.current = false;
-
-        // Remove only the temp message that failed, not all messages
-        if (context?.tempMessage) {
-          setLocalMessages((prev) => {
-            const updated = prev.filter(msg => msg._id !== context.tempMessage._id);
-            onMessagesChange(updated);
-            return updated;
-          });
-        }
-
-        // Only restore the message if it's not already restored and user hasn't typed something new
-        if (message.trim() === "") {
-          setMessage(variables.message);
-        }
-
-        toast({
-          title: "Unable to send message",
-          description:
-            error.response?.data?.message ??
-            "We could not deliver your message. Please try again.",
-          variant: "destructive",
-        });
-      },
-    });
-
-  // Cleanup sending ref when mutation state changes
-  useEffect(() => {
-    if (!isSendingMessage) {
-      isSendingRef.current = false;
-    }
-  }, [isSendingMessage]);
 
   // Sync local messages with parent and chat detail
   // Skip syncing when sending a message to preserve optimistic updates
@@ -356,24 +300,116 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
       chatDetail.messages.length > 0
     ) {
       setLocalMessages(chatDetail.messages);
-      onMessagesChange(chatDetail.messages);
     } else if (!currentChatId && initialMessages.length > 0) {
       // Only use initialMessages if we don't have a chatId (new chat scenario)
       setLocalMessages(initialMessages);
+    } else if (!currentChatId) {
+      // Clear messages for new chat
+      setLocalMessages([]);
     }
   }, [
     currentChatId,
     chatDetail?.messages,
     initialMessages,
-    onMessagesChange,
   ]);
 
   const handleSendMessage = () => {
     if (message.trim() && !isSendingRef.current && !isListening) {
-      mutateSendMessage({
-        message: message.trim(),
-        chatId: currentChatId,
+      handleSendStreamingMessage();
+    }
+  };
+
+  const handleSendStreamingMessage = async () => {
+    if (isSendingRef.current || isStreaming) {
+      return;
+    }
+
+    const trimmedMessage = message.trim();
+    if (!trimmedMessage) {
+      return;
+    }
+
+    setIsStreaming(true);
+    setStreamingEvents([]);
+
+    const tempMessage: ChatMessage = {
+      _id: `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      chatId: currentChatId ?? "temp",
+      role: "user",
+      content: trimmedMessage,
+      createdAt: new Date().toISOString(),
+    };
+
+    setMessage("");
+    setOptimisticMessages((prev) => {
+      const messageExists = prev.some(
+        msg => msg.role === "user" && msg.content === trimmedMessage && !msg._id.startsWith("temp-")
+      );
+      if (messageExists) {
+        return prev;
+      }
+      return [...prev, tempMessage];
+    });
+
+    try {
+      const result = await sendStreamingChatMessage(
+        {
+          message: trimmedMessage,
+          chatId: currentChatId,
+        },
+        (event: StreamEvent) => {
+          setStreamingEvents(prev => [...prev, event]);
+        }
+      );
+
+      const newChatId = result.data.chatId;
+
+      if (newChatId) {
+        const isNewChat = newChatId !== currentChatId;
+
+        if (isNewChat) {
+          onChatIdChange(newChatId);
+        }
+
+        queryClient.invalidateQueries({ queryKey: ["chatList"] });
+        queryClient.invalidateQueries({
+          queryKey: ["chatDetail", newChatId],
+        });
+
+        try {
+          const chatDetail = await queryClient.fetchQuery({
+            queryKey: ["chatDetail", newChatId],
+            queryFn: () => fetchChatById(newChatId),
+          });
+
+          if (chatDetail?.messages && chatDetail.messages.length > 0) {
+            setLocalMessages(chatDetail.messages);
+            setOptimisticMessages([]); // Clear optimistic messages since we have server data
+          } else if (result.data.messages?.length > 0) {
+            setLocalMessages(result.data.messages);
+            setOptimisticMessages([]); // Clear optimistic messages since we have server data
+          }
+        } catch (error) {
+          if (result.data.messages?.length > 0) {
+            setLocalMessages(result.data.messages);
+            setOptimisticMessages([]); // Clear optimistic messages since we have server data
+          }
+        }
+      }
+    } catch (error: any) {
+      console.error("Streaming error:", error);
+      setOptimisticMessages((prev) => prev.filter(msg => msg._id !== tempMessage._id));
+
+      setMessage(trimmedMessage);
+
+      toast({
+        title: "Unable to send message",
+        description: error?.message || "We could not deliver your message. Please try again.",
+        variant: "destructive",
       });
+    } finally {
+      setIsStreaming(false);
+      setStreamingEvents([]);
     }
   };
 
@@ -383,7 +419,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
     }
   };
 
-  const hasActiveChat = currentChatId || localMessages.length > 0;
+  const hasActiveChat = currentChatId || selectedMessages.length > 0;
 
   return (
     <div className="flex-1 min-h-0 flex flex-col overflow-hidden w-[calc(100%-2rem)] h-full">
@@ -402,7 +438,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
           ref={scrollAreaRef}
           className="flex-1 min-h-0 space-y-4 overflow-y-auto scrollbar-hide px-2 py-28"
         >
-          {localMessages.map((msg) => {
+          {selectedMessages.map((msg) => {
             const isAssistant = msg.role === "assistant";
             return (
               <div
@@ -544,7 +580,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
               </div>
             );
           })}
-          {isSendingMessage && (
+          {(isSendingMessage || isStreaming) && (
             <motion.div
               key="typing-indicator"
               initial="hidden"
@@ -553,8 +589,8 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
               variants={typingVariants}
               className="flex justify-start"
             >
-              <div className="flex items-center gap-3 rounded-3xl bg-white/5 px-4 py-3 text-xs text-white/80">
-                <div className="flex items-center gap-1">
+              <div className="flex items-start gap-3 rounded-3xl bg-white/5 px-4 py-3 text-sm text-white/80">
+                <div className="flex items-center gap-1 pt-2">
                   <motion.div
                     animate="animate"
                     variants={dotVariants}
@@ -571,7 +607,21 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
                     className="w-2 h-2 bg-white/60 rounded-full"
                   />
                 </div>
-                <span className="text-white/70">Thinking…</span>
+                <div className="flex flex-col gap-1">
+                  <span className="text-white/70 text-left">Thinking…</span>
+                  {isStreaming && streamingEvents.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-xs text-gray-400 italic flex items-center gap-2"
+                    >
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      <span>
+                        {streamingEvents[streamingEvents.length - 1]?.step?.replace(/^[^\w\s]+/, '').trim() || 'Processing...'}
+                      </span>
+                    </motion.div>
+                  )}
+                </div>
               </div>
             </motion.div>
           )}
@@ -582,7 +632,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
         <div className="assistant-composer__entry">
           <input
             ref={inputRef}
-            className="assistant-composer__input font-poppins"
+            className="assistant-composer__input font-poppins focus:outline-none"
             type="text"
             placeholder={
               isListening ? "Listening... Click mic to stop" : "Ask Skylar"
