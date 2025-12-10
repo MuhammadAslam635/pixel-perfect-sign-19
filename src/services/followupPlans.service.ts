@@ -160,6 +160,19 @@ export interface UpdateFollowupPlanPayload {
   }>;
 }
 
+export interface CreateFollowupPlanFromCallPayload {
+  leadId: string;
+  startDate?: string;
+  todo: Array<{
+    type: "email" | "call" | "whatsapp_message";
+    personId: string;
+    day: number;
+    scheduledFor: string;
+    notes: string;
+  }>;
+  summary?: string;
+}
+
 export const followupPlansService = {
   getPlans: async (
     params: FollowupPlansQueryParams = {}
@@ -202,6 +215,13 @@ export const followupPlansService = {
 
   getPlanStats: async (): Promise<FollowupPlanStatsResponse> => {
     const response = await API.get("/followup/plans/stats");
+    return response.data;
+  },
+
+  createPlanFromCallSuggestion: async (
+    payload: CreateFollowupPlanFromCallPayload
+  ): Promise<FollowupPlanResponse> => {
+    const response = await API.post("/followup/plans/from-call", payload);
     return response.data;
   },
 };

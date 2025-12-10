@@ -44,9 +44,12 @@ import {
 import { useFollowupTemplates } from "@/hooks/useFollowupTemplates";
 import {
   useCreateFollowupPlan,
+  useCreateFollowupPlanFromCall,
+  useUpdateFollowupPlan,
   useDeleteFollowupPlan,
   useFollowupPlans,
 } from "@/hooks/useFollowupPlans";
+import EditableFollowupSuggestion from "@/components/followups/EditableFollowupSuggestion";
 import { useLeadsData } from "@/pages/crm/shared/hooks";
 import { Lead } from "@/services/leads.service";
 import { FollowupPlan } from "@/services/followupPlans.service";
@@ -616,6 +619,8 @@ const Activity: FC<ActivityProps> = ({
 
   const { mutate: createFollowupPlan, isPending: isCreatingFollowupPlan } =
     useCreateFollowupPlan();
+  const createPlanFromCallMutation = useCreateFollowupPlanFromCall();
+  const updatePlanMutation = useUpdateFollowupPlan();
   const { mutate: deleteFollowupPlan, isPending: isDeletingPlan } =
     useDeleteFollowupPlan();
 
@@ -1196,92 +1201,113 @@ const Activity: FC<ActivityProps> = ({
                             </Button>
                           </div>
 
-                          <div className="space-y-4 max-h-[calc(100vh-500px)] overflow-y-auto scrollbar-hide pr-1">
-                            <div
-                              className="rounded-lg p-4"
-                              style={{
-                                border: "1px solid rgba(255, 255, 255, 0.2)",
-                                background: "rgba(255, 255, 255, 0.02)",
+                          {Array.isArray(
+                            (
+                              selectedCallLogView.log
+                                .followupSuggestionMetadata as any
+                            )?.raw?.touchpoints
+                          ) &&
+                          (
+                            selectedCallLogView.log
+                              .followupSuggestionMetadata as any
+                          ).raw.touchpoints.length > 0 ? (
+                            <EditableFollowupSuggestion
+                              touchpoints={
+                                (
+                                  selectedCallLogView.log
+                                    .followupSuggestionMetadata as any
+                                ).raw.touchpoints
+                              }
+                              summary={
+                                selectedCallLogView.log.followupSuggestionSummary || undefined
+                              }
+                              callEndTime={
+                                selectedCallLogView.log.endedAt ||
+                                new Date(
+                                  new Date(selectedCallLogView.log.startedAt).getTime() +
+                                    (selectedCallLogView.log.durationSeconds || 0) * 1000
+                                ).toISOString()
+                              }
+                              leadId={selectedCallLogView.log.leadId || lead?._id || ""}
+                              onExecute={async (todo, startDate, executedPlanId?: string) => {
+                                try {
+                                  let planId: string | undefined;
+                                  
+                                  if (executedPlanId) {
+                                    // Update existing plan
+                                    const response = await updatePlanMutation.mutateAsync({
+                                      id: executedPlanId,
+                                      payload: {
+                                        todo: todo.map((task) => ({
+                                          type: task.type,
+                                          personId: task.personId,
+                                          day: task.day,
+                                          scheduledFor: task.scheduledFor,
+                                          notes: task.notes,
+                                        })),
+                                      },
+                                    });
+                                    planId = response?.data?._id || response?.data?.data?._id || executedPlanId;
+                                    toast({
+                                      title: "Follow-up plan updated",
+                                      description: "The follow-up plan has been updated successfully.",
+                                    });
+                                  } else {
+                                    // Create new plan
+                                    const response = await createPlanFromCallMutation.mutateAsync({
+                                      leadId: selectedCallLogView.log.leadId || lead?._id || "",
+                                      startDate,
+                                      todo,
+                                      summary: selectedCallLogView.log.followupSuggestionSummary,
+                                    });
+                                    planId = response?.data?._id || response?.data?.data?._id;
+                                    toast({
+                                      title: "Follow-up plan created",
+                                      description: "The follow-up plan has been created and is now active.",
+                                    });
+                                  }
+                                  
+                                  // Return planId
+                                  return {
+                                    planId,
+                                  };
+                                } catch (error: any) {
+                                  toast({
+                                    title: executedPlanId ? "Failed to update plan" : "Failed to create plan",
+                                    description:
+                                      error?.response?.data?.message ||
+                                      error?.message ||
+                                      "Please try again.",
+                                    variant: "destructive",
+                                  });
+                                  throw error;
+                                }
                               }}
-                            >
-                              <p className="text-xs font-medium uppercase  text-white/50 mb-1">
-                                Summary
-                              </p>
-                              <p className="text-xs text-white/80">
-                                {selectedCallLogView.log
-                                  .followupSuggestionSummary ||
-                                  "No summary available for this call."}
+                              isExecuting={createPlanFromCallMutation.isPending || updatePlanMutation.isPending}
+                            />
+                          ) : (
+                            <div className="space-y-4 max-h-[calc(100vh-500px)] overflow-y-auto scrollbar-hide pr-1">
+                              <div
+                                className="rounded-lg p-4"
+                                style={{
+                                  border: "1px solid rgba(255, 255, 255, 0.2)",
+                                  background: "rgba(255, 255, 255, 0.02)",
+                                }}
+                              >
+                                <p className="text-xs font-medium uppercase text-white/50 mb-1">
+                                  Summary
+                                </p>
+                                <p className="text-xs text-white/80">
+                                  {selectedCallLogView.log
+                                    .followupSuggestionSummary ||
+                                    "No summary available for this call."}
+                                </p>
+                              </div>
+                              <p className="text-xs text-white/60">
+                                No touchpoints available for this call.
                               </p>
                             </div>
-
-                            {Array.isArray(
-                              (
-                                selectedCallLogView.log
-                                  .followupSuggestionMetadata as any
-                              )?.raw?.touchpoints
-                            ) &&
-                              (
-                                selectedCallLogView.log
-                                  .followupSuggestionMetadata as any
-                              ).raw.touchpoints.length > 0 && (
-                                <div
-                                  className="rounded-lg p-4 space-y-3"
-                                  style={{
-                                    border:
-                                      "1px solid rgba(255, 255, 255, 0.2)",
-                                    background: "rgba(255, 255, 255, 0.02)",
-                                  }}
-                                >
-                                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/50">
-                                    Recommended touchpoints
-                                  </p>
-                                  <div className="space-y-3">
-                                    {(
-                                      selectedCallLogView.log
-                                        .followupSuggestionMetadata as any
-                                    ).raw.touchpoints.map(
-                                      (
-                                        tp: {
-                                          offset_hours?: number;
-                                          channel?: string;
-                                          message?: string;
-                                        },
-                                        index: number
-                                      ) => (
-                                        <div
-                                          key={index}
-                                          className="rounded-xl bg-black/40 border border-white/10 p-3"
-                                        >
-                                          <div className="flex items-center justify-between gap-2 mb-1.5">
-                                            <span className="text-xs font-semibold text-white/80">
-                                              Step {index + 1}
-                                            </span>
-                                            <span className="text-[0.7rem] px-2 py-0.5 rounded-full bg-white/10 text-white/80 uppercase tracking-[0.18em]">
-                                              {tp.channel || "unspecified"}
-                                            </span>
-                                          </div>
-                                          {typeof tp.offset_hours ===
-                                            "number" && (
-                                            <p className="text-[0.7rem] text-white/60 mb-1">
-                                              In approximately{" "}
-                                              <span className="font-medium text-white/80">
-                                                {tp.offset_hours} hours
-                                              </span>{" "}
-                                              from the end of the call.
-                                            </p>
-                                          )}
-                                          {tp.message && (
-                                            <p className="text-xs text-white/80 whitespace-pre-line">
-                                              {tp.message}
-                                            </p>
-                                          )}
-                                        </div>
-                                      )
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-                          </div>
+                          )}
                         </div>
                       )}
 

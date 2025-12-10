@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   CreateFollowupPlanPayload,
+  CreateFollowupPlanFromCallPayload,
   UpdateFollowupPlanPayload,
   followupPlansService,
   FollowupPlansQueryParams,
@@ -37,6 +38,18 @@ export const useCreateFollowupPlan = () => {
   return useMutation({
     mutationFn: (payload: CreateFollowupPlanPayload) =>
       followupPlansService.createPlan(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: followupPlanKeys.all });
+    },
+  });
+};
+
+export const useCreateFollowupPlanFromCall = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: CreateFollowupPlanFromCallPayload) =>
+      followupPlansService.createPlanFromCallSuggestion(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: followupPlanKeys.all });
     },
