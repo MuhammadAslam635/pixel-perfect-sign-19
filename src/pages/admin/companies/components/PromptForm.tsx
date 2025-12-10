@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 import {
   Select,
   SelectContent,
@@ -56,6 +57,84 @@ export const PromptForm = ({
 }: PromptFormProps) => {
   const [availableModels, setAvailableModels] = useState<AIModel[]>([]);
   const [modelsLoading, setModelsLoading] = useState(false);
+  const [quillValue, setQuillValue] = useState<string>("");
+
+  // Configure Quill editor modules and formats for prompt editing
+  const quillModules = useMemo(
+    () => ({
+      toolbar: [
+        [{ header: [1, 2, 3, false] }],
+        ["bold", "italic", "underline", "strike"],
+        [{ list: "ordered" }, { list: "bullet" }],
+        ["code-block", "blockquote"],
+        ["link"],
+        ["clean"],
+      ],
+    }),
+    []
+  );
+
+  const quillFormats = [
+    "header",
+    "bold",
+    "italic",
+    "underline",
+    "strike",
+    "list",
+    "bullet",
+    "code-block",
+    "blockquote",
+    "link",
+  ];
+
+  // Convert HTML to plain text while preserving structure
+  const htmlToPlainText = (html: string): string => {
+    if (!html || html.trim() === "" || html === "<p><br></p>") {
+      return "";
+    }
+
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = html;
+
+    // Convert block elements to newlines
+    const blockElements = tempDiv.querySelectorAll(
+      "p, div, h1, h2, h3, h4, h5, h6, li, blockquote"
+    );
+    blockElements.forEach((el) => {
+      const text = el.textContent || "";
+      if (text.trim()) {
+        const textNode = document.createTextNode("\n" + text);
+        el.replaceWith(textNode);
+      } else {
+        el.remove();
+      }
+    });
+
+    // Convert <br> to newlines
+    const brElements = tempDiv.querySelectorAll("br");
+    brElements.forEach((br) => {
+      br.replaceWith(document.createTextNode("\n"));
+    });
+
+    // Get text content and clean up
+    let text = tempDiv.textContent || tempDiv.innerText || "";
+    // Clean up multiple newlines (max 2 consecutive)
+    text = text.replace(/\n{3,}/g, "\n\n");
+    // Trim whitespace but preserve intentional spacing
+    text = text.trim();
+
+    return text;
+  };
+
+  // Convert plain text to HTML for ReactQuill display
+  const plainTextToHtml = (text: string): string => {
+    if (!text) return "";
+    // Convert newlines to <p> tags
+    return text
+      .split("\n")
+      .map((line) => `<p>${line || "<br>"}</p>`)
+      .join("");
+  };
 
   // Fetch available models on component mount
   useEffect(() => {
@@ -88,6 +167,13 @@ export const PromptForm = ({
 
     fetchModels();
   }, []);
+
+  // Sync ReactQuill value with formData.content
+  useEffect(() => {
+    const htmlValue = plainTextToHtml(formData.content);
+    setQuillValue(htmlValue);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.content]);
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -228,15 +314,110 @@ export const PromptForm = ({
         </div>
       </div>
       <div>
-        <Label htmlFor="content">Prompt Content</Label>
-        <Textarea
-          id="content"
-          value={formData.content}
-          onChange={(e) => onFormDataChange("content", e.target.value)}
-          placeholder="Enter the prompt content..."
-          rows={8}
-          className="font-mono text-sm"
-        />
+        <div className="flex items-center justify-between mb-2">
+          <Label htmlFor="content">Prompt Content</Label>
+          <div className="text-xs text-white/50">
+            Use{" "}
+            <code className="px-1 py-0.5 bg-white/10 rounded">
+              {"{{variable}}"}
+            </code>{" "}
+            for template variables
+          </div>
+        </div>
+        <div className="bg-white/5 rounded-lg border border-white/10 overflow-hidden">
+          <ReactQuill
+            key={
+              formData.promptType +
+              formData.promptCategory +
+              (isEditing ? "edit" : "new")
+            }
+            theme="snow"
+            value={quillValue}
+            onChange={(value) => {
+              setQuillValue(value);
+              const plainText = htmlToPlainText(value);
+              onFormDataChange("content", plainText);
+            }}
+            modules={quillModules}
+            formats={quillFormats}
+            placeholder="Enter the prompt content... You can use template variables like {{person.name}}, {{company.name}}, {{context}}, etc."
+            className="bg-transparent"
+            style={{
+              height: "300px",
+            }}
+          />
+        </div>
+        <style>{`
+          .ql-container {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            height: 250px;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.9);
+            overflow-y: auto;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+          }
+          .ql-container::-webkit-scrollbar {
+            display: none;
+          }
+          .ql-editor {
+            min-height: 250px;
+            color: rgba(255, 255, 255, 0.9);
+            overflow-y: auto;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+          }
+          .ql-editor::-webkit-scrollbar {
+            display: none;
+          }
+          .ql-editor.ql-blank::before {
+            color: rgba(255, 255, 255, 0.4);
+            font-style: normal;
+          }
+          .ql-toolbar {
+            background: rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: none;
+            border-left: none;
+            border-right: none;
+          }
+          .ql-toolbar .ql-stroke {
+            stroke: rgba(255, 255, 255, 0.7);
+          }
+          .ql-toolbar .ql-fill {
+            fill: rgba(255, 255, 255, 0.7);
+          }
+          .ql-toolbar button:hover,
+          .ql-toolbar button:focus,
+          .ql-toolbar button.ql-active {
+            background: rgba(255, 255, 255, 0.1);
+          }
+          .ql-toolbar button:hover .ql-stroke,
+          .ql-toolbar button:focus .ql-stroke,
+          .ql-toolbar button.ql-active .ql-stroke {
+            stroke: rgba(255, 255, 255, 0.9);
+          }
+          .ql-toolbar button:hover .ql-fill,
+          .ql-toolbar button:focus .ql-fill,
+          .ql-toolbar button.ql-active .ql-fill {
+            fill: rgba(255, 255, 255, 0.9);
+          }
+          .ql-container {
+            border: none;
+          }
+          .ql-editor code {
+            background: rgba(6, 182, 212, 0.2);
+            color: rgb(103, 232, 249);
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+          }
+          .ql-snow .ql-code-block-container {
+            background: rgba(0, 0, 0, 0.3);
+            border-left: 3px solid rgb(6, 182, 212);
+          }
+        `}</style>
       </div>
       <div className="flex flex-col sm:flex-row justify-end gap-2">
         <Button
