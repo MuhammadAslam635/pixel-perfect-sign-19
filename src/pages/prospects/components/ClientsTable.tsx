@@ -1,4 +1,6 @@
 import React, { useState, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import type { Variants } from "framer-motion";
 import { EyeIcon, RefreshCwIcon, MoreVertical, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +22,92 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 interface ClientsTableProps {
   viewType?: "sessions" | "prospects" | "queries";
 }
+
+const containerVariants: Variants = {
+  hidden: {
+    opacity: 0,
+    y: 30,
+    scale: 0.98,
+    filter: "blur(5px)",
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    filter: "blur(0px)",
+    transition: {
+      duration: 0.7,
+      ease: [0.25, 0.46, 0.45, 0.94],
+      staggerChildren: 0.1,
+      delayChildren: 0.1,
+    },
+  },
+};
+
+const tableVariants = {
+  hidden: {
+    opacity: 0,
+    scale: 0.95,
+    y: 20,
+  },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: {
+      duration: 0.6,
+      ease: [0.25, 0.46, 0.45, 0.94],
+      staggerChildren: 0.06,
+      delayChildren: 0.3,
+    },
+  },
+};
+
+const headerVariants = {
+  hidden: {
+    opacity: 0,
+    y: -15,
+    scale: 0.95,
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      duration: 0.5,
+      ease: [0.25, 0.46, 0.45, 0.94],
+    },
+  },
+};
+
+const rowVariants: Variants = {
+  hidden: {
+    opacity: 0,
+    y: 15,
+    scale: 0.98,
+    filter: "blur(2px)",
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    filter: "blur(0px)",
+    transition: {
+      duration: 0.4,
+      ease: [0.25, 0.46, 0.45, 0.94],
+    },
+  },
+  exit: {
+    opacity: 0,
+    y: -10,
+    scale: 0.95,
+    filter: "blur(2px)",
+    transition: {
+      duration: 0.3,
+      ease: [0.25, 0.46, 0.45, 0.94],
+    },
+  },
+};
 
 const ClientsTable: React.FC<ClientsTableProps> = ({
   viewType = "sessions",
@@ -136,7 +224,12 @@ const ClientsTable: React.FC<ClientsTableProps> = ({
   }
 
   return (
-    <div className="w-full">
+    <motion.div
+      className="w-full"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
       <div
         className="border border-[#FFFFFF0D] p-6 rounded-xl"
         style={{
@@ -192,52 +285,183 @@ const ClientsTable: React.FC<ClientsTableProps> = ({
         </Card>
 
         {isLoading ? (
-          <div className="space-y-3 p-4">
+          <motion.div
+            className="space-y-3 p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
             {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="flex space-x-4">
+              <motion.div
+                key={i}
+                className="flex space-x-4"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{
+                  duration: 0.4,
+                  delay: i * 0.1,
+                  ease: "easeOut",
+                }}
+              >
                 <Skeleton className="h-4 flex-1 bg-white/10" />
                 <Skeleton className="h-4 flex-1 bg-white/10" />
                 <Skeleton className="h-4 w-24 bg-white/10" />
                 <Skeleton className="h-4 w-24 bg-white/10" />
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         ) : (
           <>
             {/* Header */}
-            <div className="mb-4 border border-[#FFFFFF1A] rounded-xl overflow-hidden">
-              <div className="grid grid-cols-[1.5fr_1fr_0.8fr_0.8fr_0.8fr_0.6fr_80px] items-center gap-4 px-6 py-4 bg-[#FFFFFF05]">
-                <div className="text-sm text-gray-400">Session ID</div>
-                <div className="text-sm text-gray-400">Start Time</div>
-                <div className="text-sm text-gray-400">Duration</div>
-                <div className="text-sm text-gray-400">Status</div>
-                <div className="text-sm text-gray-400 text-center">
+            <motion.div
+              className="mb-4 border border-[#FFFFFF1A] rounded-xl overflow-hidden"
+              variants={headerVariants}
+            >
+              <motion.div
+                className="grid grid-cols-[1.5fr_1fr_0.8fr_0.8fr_0.8fr_0.6fr_80px] items-center gap-4 px-6 py-4 bg-[#FFFFFF05]"
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{
+                  duration: 0.4,
+                  delay: 0.2,
+                  ease: [0.25, 0.46, 0.45, 0.94],
+                }}
+              >
+                <motion.div
+                  className="text-sm text-gray-400"
+                  whileHover={{
+                    color: "#ffffff",
+                    scale: 1.02,
+                    transition: { duration: 0.2 },
+                  }}
+                >
+                  Session ID
+                </motion.div>
+                <motion.div
+                  className="text-sm text-gray-400"
+                  whileHover={{
+                    color: "#ffffff",
+                    scale: 1.02,
+                    transition: { duration: 0.2 },
+                  }}
+                >
+                  Start Time
+                </motion.div>
+                <motion.div
+                  className="text-sm text-gray-400"
+                  whileHover={{
+                    color: "#ffffff",
+                    scale: 1.02,
+                    transition: { duration: 0.2 },
+                  }}
+                >
+                  Duration
+                </motion.div>
+                <motion.div
+                  className="text-sm text-gray-400"
+                  whileHover={{
+                    color: "#ffffff",
+                    scale: 1.02,
+                    transition: { duration: 0.2 },
+                  }}
+                >
+                  Status
+                </motion.div>
+                <motion.div
+                  className="text-sm text-gray-400 text-center"
+                  whileHover={{
+                    color: "#ffffff",
+                    scale: 1.02,
+                    transition: { duration: 0.2 },
+                  }}
+                >
                   Messages
-                </div>
-                <div className="text-sm text-gray-400">Avg Response</div>
-                <div className="text-sm text-gray-400 text-center">Actions</div>
-              </div>
-            </div>
+                </motion.div>
+                <motion.div
+                  className="text-sm text-gray-400"
+                  whileHover={{
+                    color: "#ffffff",
+                    scale: 1.02,
+                    transition: { duration: 0.2 },
+                  }}
+                >
+                  Avg Response
+                </motion.div>
+                <motion.div
+                  className="text-sm text-gray-400 text-center"
+                  whileHover={{
+                    color: "#ffffff",
+                    scale: 1.02,
+                    transition: { duration: 0.2 },
+                  }}
+                >
+                  Actions
+                </motion.div>
+              </motion.div>
+            </motion.div>
 
             {/* Table Body */}
-            <div className="rounded-2xl overflow-hidden bg-[#FFFFFF03]">
-              {data?.data.docs.map((client) => (
-                <div
-                  key={client._id}
-                  className="grid grid-cols-[1.5fr_1fr_0.8fr_0.8fr_0.8fr_0.6fr_80px] items-center gap-4 px-6 py-4 hover:bg-white/5 transition-colors border-b border-[#FFFFFF0D] last:border-b-0"
-                >
-                  <div
+            <motion.div
+              className="rounded-2xl overflow-hidden bg-[#FFFFFF03]"
+              variants={tableVariants}
+              initial="hidden"
+              animate="visible"
+            >
+              <AnimatePresence mode="popLayout">
+                {data?.data.docs.map((client, index) => (
+                  <motion.div
+                    key={client._id}
+                    variants={rowVariants}
+                    layout
+                    layoutId={client._id}
+                    whileHover={{
+                      backgroundColor: "rgba(255, 255, 255, 0.08)",
+                      scale: 1.01,
+                      y: -2,
+                      boxShadow: "0 8px 25px rgba(0, 0, 0, 0.15)",
+                      transition: {
+                        duration: 0.3,
+                        ease: [0.25, 0.46, 0.45, 0.94],
+                        backgroundColor: { duration: 0.2 },
+                      },
+                    }}
+                    whileTap={{
+                      scale: 0.98,
+                      transition: { duration: 0.1 },
+                    }}
+                    className="grid grid-cols-[1.5fr_1fr_0.8fr_0.8fr_0.8fr_0.6fr_80px] items-center gap-4 px-6 py-4 border-b border-[#FFFFFF0D] last:border-b-0 cursor-pointer relative overflow-hidden"
+                  >
+                  <motion.div
                     className="font-medium text-white truncate font-mono text-sm"
                     title={client.sessionId}
+                    whileHover={{
+                      scale: 1.02,
+                      color: "#ffffff",
+                      transition: { duration: 0.2 },
+                    }}
                   >
                     {client.sessionId}
-                  </div>
-                  <div className="text-gray-300 text-sm">
+                  </motion.div>
+                  <motion.div
+                    className="text-gray-300 text-sm"
+                    whileHover={{
+                      scale: 1.02,
+                      color: "#ffffff",
+                      transition: { duration: 0.2 },
+                    }}
+                  >
                     {formatDate(client.startTime)}
-                  </div>
-                  <div className="text-gray-300 text-sm">
+                  </motion.div>
+                  <motion.div
+                    className="text-gray-300 text-sm"
+                    whileHover={{
+                      scale: 1.02,
+                      color: "#ffffff",
+                      transition: { duration: 0.2 },
+                    }}
+                  >
                     {formatDuration(client.duration)}
-                  </div>
+                  </motion.div>
                   <div>
                     <Badge
                       className={`${getStatusColor(
@@ -247,44 +471,83 @@ const ClientsTable: React.FC<ClientsTableProps> = ({
                       {client.status}
                     </Badge>
                   </div>
-                  <div className="text-gray-300 text-sm text-center">
+                  <motion.div
+                    className="text-gray-300 text-sm text-center"
+                    whileHover={{
+                      scale: 1.02,
+                      color: "#ffffff",
+                      transition: { duration: 0.2 },
+                    }}
+                  >
                     {client.messagesTotal}
-                  </div>
-                  <div className="text-gray-300 text-sm">
+                  </motion.div>
+                  <motion.div
+                    className="text-gray-300 text-sm"
+                    whileHover={{
+                      scale: 1.02,
+                      color: "#ffffff",
+                      transition: { duration: 0.2 },
+                    }}
+                  >
                     {client.averageResponse}ms
-                  </div>
+                  </motion.div>
                   <div className="flex justify-center">
-                    <TooltipProvider>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button className="p-2 rounded-full hover:bg-white/10 text-gray-300 transition hover:scale-110">
-                            <MoreVertical className="h-5 w-5" />
-                          </button>
+                        <TooltipProvider>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <motion.button
+                                className="p-2 rounded-full text-gray-300"
+                                whileHover={{
+                                  backgroundColor: "rgba(255, 255, 255, 0.1)",
+                                  scale: 1.1,
+                                  rotate: 90,
+                                  transition: { duration: 0.2 },
+                                }}
+                                whileTap={{ scale: 0.95 }}
+                              >
+                                <MoreVertical className="h-5 w-5" />
+                              </motion.button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent
                           align="end"
-                          className="bg-[#1a1a1a] border-[#2a2a2a] text-gray-200 shadow-lg rounded-lg w-40"
-                        >
-                          <DropdownMenuItem
-                            onClick={() => handleViewDetails(client)}
-                            className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-white/10"
-                          >
-                            <EyeIcon size={16} /> View Details
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
+                              className="bg-[#1a1a1a] border-[#2a2a2a] text-gray-200 shadow-lg rounded-lg w-40"
+                            >
+                              <motion.div
+                                whileHover={{
+                                  backgroundColor: "rgba(255, 255, 255, 0.1)",
+                                  scale: 1.02,
+                                  transition: { duration: 0.15 },
+                                }}
+                                whileTap={{ scale: 0.98 }}
+                              >
+                                <DropdownMenuItem
+                                  onClick={() => handleViewDetails(client)}
+                                  className="flex items-center gap-2 px-3 py-2 cursor-pointer"
+                                >
+                                  <EyeIcon size={16} /> View Details
+                                </DropdownMenuItem>
+                              </motion.div>
+                            </DropdownMenuContent>
                       </DropdownMenu>
                     </TooltipProvider>
                   </div>
-                </div>
-              ))}
-              {data && data.data.docs.length === 0 && (
-                <div className="text-center text-gray-400 py-8">
-                  {debouncedSearch
-                    ? `No sessions found matching "${debouncedSearch}"`
-                    : "No sessions found"}
-                </div>
-              )}
-            </div>
+                </motion.div>
+                ))}
+                {data && data.data.docs.length === 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.3 }}
+                    className="text-center text-gray-400 py-8"
+                  >
+                    {debouncedSearch
+                      ? `No sessions found matching "${debouncedSearch}"`
+                      : "No sessions found"}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
 
             {/* Pagination */}
             {data && data.data.totalPages > 1 && (
@@ -404,7 +667,7 @@ const ClientsTable: React.FC<ClientsTableProps> = ({
         onClose={handleCloseModal}
         viewType={viewType}
       />
-    </div>
+    </motion.div>
   );
 };
 
