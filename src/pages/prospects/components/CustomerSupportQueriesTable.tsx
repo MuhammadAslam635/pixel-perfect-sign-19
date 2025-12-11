@@ -142,7 +142,7 @@ const CustomerSupportQueriesTable: React.FC = () => {
       filter: "blur(0px)",
       transition: {
         duration: 0.7,
-        ease: [0.25, 0.46, 0.45, 0.94],
+        ease: [0.25, 0.46, 0.45, 0.94] as const,
         staggerChildren: 0.1,
         delayChildren: 0.1,
       },
@@ -161,12 +161,12 @@ const CustomerSupportQueriesTable: React.FC = () => {
       y: 0,
       transition: {
         duration: 0.6,
-        ease: [0.25, 0.46, 0.45, 0.94],
+        ease: [0.25, 0.46, 0.45, 0.94] as const,
         staggerChildren: 0.06,
         delayChildren: 0.3,
       },
     },
-  };
+  } satisfies Variants;
 
   const headerVariants = {
     hidden: {
@@ -180,10 +180,10 @@ const CustomerSupportQueriesTable: React.FC = () => {
       scale: 1,
       transition: {
         duration: 0.5,
-        ease: [0.25, 0.46, 0.45, 0.94],
+        ease: [0.25, 0.46, 0.45, 0.94] as const,
       },
     },
-  };
+  } satisfies Variants;
 
   const rowVariants: Variants = {
     hidden: {
@@ -199,7 +199,7 @@ const CustomerSupportQueriesTable: React.FC = () => {
       filter: "blur(0px)",
       transition: {
         duration: 0.4,
-        ease: [0.25, 0.46, 0.45, 0.94],
+        ease: [0.25, 0.46, 0.45, 0.94] as const,
       },
     },
     exit: {
@@ -209,7 +209,7 @@ const CustomerSupportQueriesTable: React.FC = () => {
       filter: "blur(2px)",
       transition: {
         duration: 0.3,
-        ease: [0.25, 0.46, 0.45, 0.94],
+        ease: [0.25, 0.46, 0.45, 0.94] as const,
       },
     },
   };
@@ -315,14 +315,13 @@ const CustomerSupportQueriesTable: React.FC = () => {
                 transition={{
                   duration: 0.4,
                   delay: 0.2,
-                  ease: [0.25, 0.46, 0.45, 0.94],
+                  ease: [0.25, 0.46, 0.45, 0.94] as const,
                 }}
               >
                 <motion.div
                   className="text-sm text-gray-400"
                   whileHover={{
                     color: "#ffffff",
-                    scale: 1.02,
                     transition: { duration: 0.2 },
                   }}
                 >
@@ -418,8 +417,6 @@ const CustomerSupportQueriesTable: React.FC = () => {
                       layoutId={query._id}
                       whileHover={{
                         backgroundColor: "rgba(255, 255, 255, 0.08)",
-                        scale: 1.01,
-                        y: -2,
                         boxShadow: "0 8px 25px rgba(0, 0, 0, 0.15)",
                         transition: {
                           duration: 0.3,
@@ -427,17 +424,13 @@ const CustomerSupportQueriesTable: React.FC = () => {
                           backgroundColor: { duration: 0.2 },
                         },
                       }}
-                      whileTap={{
-                        scale: 0.98,
-                        transition: { duration: 0.1 },
-                      }}
+
                       className="grid grid-cols-[1.2fr_1fr_1fr_0.8fr_0.8fr_0.8fr_80px] items-center gap-4 px-6 py-4 border-b border-[#FFFFFF0D] last:border-b-0 cursor-pointer relative overflow-hidden"
                     >
                       <motion.div
                         className="font-medium text-white truncate text-sm"
                         title={contactInfo?.name || "N/A"}
                         whileHover={{
-                          scale: 1.02,
                           color: "#ffffff",
                           transition: { duration: 0.2 },
                         }}
@@ -496,7 +489,6 @@ const CustomerSupportQueriesTable: React.FC = () => {
                                 className="p-2 rounded-full text-gray-300"
                                 whileHover={{
                                   backgroundColor: "rgba(255, 255, 255, 0.1)",
-                                  scale: 1.1,
                                   rotate: 90,
                                   transition: { duration: 0.2 },
                                 }}
@@ -512,7 +504,6 @@ const CustomerSupportQueriesTable: React.FC = () => {
                               <motion.div
                                 whileHover={{
                                   backgroundColor: "rgba(255, 255, 255, 0.1)",
-                                  scale: 1.02,
                                   transition: { duration: 0.15 },
                                 }}
                                 whileTap={{ scale: 0.98 }}

@@ -18,6 +18,24 @@ import OperationsStep from "./components/OperationsStep";
 import SystemsStep from "./components/SystemsStep";
 import StrategyStep from "./components/StrategyStep";
 
+// Validation rules matching backend Zod schema
+const FIELD_VALIDATION_RULES: Record<string, { min: number; max: number }> = {
+  companyName: { min: 2, max: 200 },
+  businessDescription: { min: 10, max: 1000 },
+  mainProductService: { min: 5, max: 500 },
+  idealCustomerProfile: { min: 10, max: 1000 },
+  primaryBusinessGoals: { min: 10, max: 1000 },
+  currentChallenges: { min: 10, max: 1000 },
+  challengeDuration: { min: 5, max: 200 },
+  previousAttempts: { min: 5, max: 1000 },
+  existingTeams: { min: 5, max: 1000 },
+  currentTechStack: { min: 5, max: 1000 },
+  existingPartners: { min: 5, max: 1000 },
+  dataChannels: { min: 5, max: 1000 },
+  preferredCountries: { min: 5, max: 500 },
+  differentiators: { min: 10, max: 1000 },
+};
+
 const OnboardingPage = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
@@ -28,6 +46,11 @@ const OnboardingPage = () => {
     null
   );
   const [formData, setFormData] = useState<OnboardingQuestions>({});
+
+  // Scroll to top when step changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentStep]);
 
   // Fetch existing onboarding data on mount
   useEffect(() => {
@@ -109,7 +132,23 @@ const OnboardingPage = () => {
       return true;
     } catch (error: any) {
       console.error("Error saving progress:", error);
-      // Don't show error toast for every save attempt
+      
+      // Handle validation errors from backend
+      if (error?.response?.data?.errors) {
+        const errors = error.response.data.errors;
+        if (Array.isArray(errors) && errors.length > 0) {
+          // Show the first validation error
+          const firstError = errors[0];
+          toast.error(firstError.message || "Validation error");
+        } else {
+          toast.error("Failed to save progress");
+        }
+      } else if (error?.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else {
+        toast.error("Failed to save progress");
+      }
+      
       return false;
     } finally {
       setSaving(false);
@@ -120,27 +159,59 @@ const OnboardingPage = () => {
     const stepConfig = ONBOARDING_STEPS.find((s) => s.id === stepId);
     if (!stepConfig) return true;
 
-    const missingFields: string[] = [];
+    const errors: string[] = [];
 
     stepConfig.fields.forEach((field) => {
       const value = formData[field as keyof OnboardingQuestions];
+      const rules = FIELD_VALIDATION_RULES[field];
       
-      // Special handling for array fields (like coreOfferings)
-      if (Array.isArray(value)) {
-        if (value.length === 0) {
-          missingFields.push(field);
+      // Special handling for website URL validation
+      if (field === 'website') {
+        if (typeof value === 'string' && value.trim() !== '') {
+          try {
+            new URL(value);
+          } catch {
+            errors.push(`Website: Please provide a valid URL (e.g., https://example.com)`);
+          }
+        } else if (value === undefined || value === null || (typeof value === 'string' && value.trim() === '')) {
+          errors.push(`Website: Required`);
         }
-      } else if (
-        value === undefined ||
-        value === null ||
-        (typeof value === "string" && value.trim() === "")
-      ) {
-        missingFields.push(field);
+      }
+      // Special handling for array fields (coreOfferings)
+      else if (field === 'coreOfferings') {
+        if (Array.isArray(value)) {
+          if (value.length === 0) {
+            errors.push(`Core Offerings: At least one item required`);
+          } else if (rules) {
+            // Validate each item in array
+            const invalidItems = value.filter(item => 
+              typeof item === 'string' && (item.trim().length < rules.min || item.trim().length > rules.max)
+            );
+            if (invalidItems.length > 0) {
+              errors.push(`Core Offerings: Each item must be ${rules.min}-${rules.max} characters`);
+            }
+          }
+        } else {
+          errors.push(`Core Offerings: Required`);
+        }
+      } else if (typeof value === "string") {
+        const trimmed = value.trim();
+        if (trimmed === "") {
+          errors.push(`${field}: Required`);
+        } else if (rules) {
+          if (trimmed.length < rules.min) {
+            errors.push(`${field}: Minimum ${rules.min} characters required`);
+          } else if (trimmed.length > rules.max) {
+            errors.push(`${field}: Maximum ${rules.max} characters allowed`);
+          }
+        }
+      } else if (value === undefined || value === null) {
+        errors.push(`${field}: Required`);
       }
     });
 
-    if (missingFields.length > 0) {
-      toast.error("Please fill in all required fields to proceed.");
+    if (errors.length > 0) {
+      toast.error(errors[0]); // Show first error
       return false;
     }
 
@@ -152,7 +223,12 @@ const OnboardingPage = () => {
       return;
     }
 
-    await saveProgress("in_progress");
+    const saved = await saveProgress("in_progress");
+    if (!saved) {
+      // Don't proceed if save failed
+      return;
+    }
+    
     if (currentStep < ONBOARDING_STEPS.length) {
       setCurrentStep(currentStep + 1);
     }
@@ -174,9 +250,19 @@ const OnboardingPage = () => {
   };
 
   const handleComplete = async () => {
+    // Validate current step before completing
+    if (!validateStep(currentStep)) {
+      return;
+    }
+
     try {
       setCompleting(true);
-      await saveProgress("in_progress");
+      const saved = await saveProgress("in_progress");
+      if (!saved) {
+        // Don't proceed if save failed
+        return;
+      }
+      
       const response = await onboardingService.completeOnboarding();
       if (response.success) {
         // Refresh canonical user data from server and sync localStorage + redux
@@ -194,9 +280,26 @@ const OnboardingPage = () => {
       }
     } catch (error: any) {
       console.error("Error completing onboarding:", error);
-      toast.error(
-        error?.response?.data?.message || "Failed to complete onboarding"
-      );
+      
+      // Handle specific completion errors
+      if (error?.response?.data?.data?.completedSteps) {
+        const steps = error.response.data.data.completedSteps;
+        const incompleteSteps = Object.entries(steps)
+          .filter(([_, completed]) => !completed)
+          .map(([step]) => step);
+        
+        if (incompleteSteps.length > 0) {
+          toast.error(
+            `Please complete all required fields in ${incompleteSteps.join(', ')}`
+          );
+        } else {
+          toast.error(error?.response?.data?.message || "Failed to complete onboarding");
+        }
+      } else {
+        toast.error(
+          error?.response?.data?.message || "Failed to complete onboarding"
+        );
+      }
     } finally {
       setCompleting(false);
     }

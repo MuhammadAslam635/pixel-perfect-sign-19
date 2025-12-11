@@ -19,7 +19,7 @@ const pageVariants = {
     scale: 1,
     transition: {
       duration: 0.8,
-      ease: [0.25, 0.46, 0.45, 0.94],
+      ease: [0.25, 0.46, 0.45, 0.94] as const,
       staggerChildren: 0.1,
       delayChildren: 0.1,
     },
@@ -33,7 +33,7 @@ const containerVariants = {
     y: 0,
     transition: {
       duration: 0.6,
-      ease: [0.25, 0.46, 0.45, 0.94],
+      ease: [0.25, 0.46, 0.45, 0.94] as const,
       staggerChildren: 0.08,
       delayChildren: 0.2,
     },
@@ -48,7 +48,7 @@ const titleVariants = {
     scale: 1,
     transition: {
       duration: 0.7,
-      ease: [0.25, 0.46, 0.45, 0.94],
+      ease: [0.25, 0.46, 0.45, 0.94] as const,
     },
   },
 };
@@ -61,7 +61,7 @@ const tabContainerVariants = {
     scale: 1,
     transition: {
       duration: 0.6,
-      ease: [0.25, 0.46, 0.45, 0.94],
+      ease: [0.25, 0.46, 0.45, 0.94] as const,
       delay: 0.3,
     },
   },
@@ -81,7 +81,7 @@ const tabContentVariants = {
     filter: "blur(0px)",
     transition: {
       duration: 0.5,
-      ease: [0.25, 0.46, 0.45, 0.94],
+      ease: [0.25, 0.46, 0.45, 0.94] as const,
       staggerChildren: 0.1,
     },
   },
@@ -92,7 +92,7 @@ const tabContentVariants = {
     filter: "blur(8px)",
     transition: {
       duration: 0.3,
-      ease: [0.25, 0.46, 0.45, 0.94],
+      ease: [0.25, 0.46, 0.45, 0.94] as const,
     },
   },
 };

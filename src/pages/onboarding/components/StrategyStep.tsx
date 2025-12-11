@@ -129,6 +129,8 @@ const StrategyStep = ({
           value={formData.differentiators || ""}
           onChange={(e) => updateFormData({ differentiators: e.target.value })}
           placeholder="What key advantages or differentiators set you apart from competitors?"
+          minLength={10}
+          maxLength={1000}
           className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 min-h-[120px] scrollbar-hide text-xs sm:text-sm"
         />
         <p className="text-xs text-white/40">10-1000 characters</p>

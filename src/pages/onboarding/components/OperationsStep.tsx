@@ -22,6 +22,8 @@ const OperationsStep = ({ formData, updateFormData }: OperationsStepProps) => {
           value={formData.currentChallenges || ""}
           onChange={(e) => updateFormData({ currentChallenges: e.target.value })}
           placeholder="What are you currently struggling with the most in sales, marketing, or customer engagement?"
+          minLength={10}
+          maxLength={1000}
           className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 min-h-[100px] scrollbar-hide text-xs sm:text-sm"
         />
         <p className="text-xs text-white/40">10-1000 characters</p>
@@ -38,8 +40,11 @@ const OperationsStep = ({ formData, updateFormData }: OperationsStepProps) => {
           value={formData.challengeDuration || ""}
           onChange={(e) => updateFormData({ challengeDuration: e.target.value })}
           placeholder="How long have these issues been affecting your operations?"
+          minLength={5}
+          maxLength={200}
           className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 min-h-[80px] scrollbar-hide text-xs sm:text-sm"
         />
+        <p className="text-xs text-white/40">5-200 characters</p>
       </div>
 
       {/* Q8: Previous Attempts */}
@@ -53,8 +58,11 @@ const OperationsStep = ({ formData, updateFormData }: OperationsStepProps) => {
           value={formData.previousAttempts || ""}
           onChange={(e) => updateFormData({ previousAttempts: e.target.value })}
           placeholder="What tools, partners, or methods have you tried so far to solve these problems?"
+          minLength={5}
+          maxLength={1000}
           className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 min-h-[100px] scrollbar-hide text-xs sm:text-sm"
         />
+        <p className="text-xs text-white/40">5-1000 characters</p>
       </div>
 
       {/* Q9: Existing Teams */}
@@ -68,8 +76,11 @@ const OperationsStep = ({ formData, updateFormData }: OperationsStepProps) => {
           value={formData.existingTeams || ""}
           onChange={(e) => updateFormData({ existingTeams: e.target.value })}
           placeholder="Please outline your key departments (e.g., marketing, sales, customer support) and approximate team sizes."
+          minLength={5}
+          maxLength={1000}
           className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 min-h-[100px] scrollbar-hide text-xs sm:text-sm"
         />
+        <p className="text-xs text-white/40">5-1000 characters</p>
       </div>
 
       {/* Q10: Current Tech Stack */}
@@ -90,9 +101,11 @@ const OperationsStep = ({ formData, updateFormData }: OperationsStepProps) => {
 • Hosting
 • Social Media
 • Analytics"
+          minLength={5}
+          maxLength={1000}
           className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 min-h-[120px] scrollbar-hide text-xs sm:text-sm"
         />
-        <p className="text-xs text-white/40">Example: CRM: Salesforce, Marketing: HubSpot, Email: Mailchimp</p>
+        <p className="text-xs text-white/40">5-1000 characters. Example: CRM: Salesforce, Marketing: HubSpot</p>
       </div>
     </div>
   );

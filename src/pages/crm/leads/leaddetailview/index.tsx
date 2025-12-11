@@ -163,51 +163,62 @@ const LeadDetailView = () => {
               Back to Leads
             </Button>
             <div className="w-full flex flex-col justify-left ml-10">
-              <div className="mt-4 flex items-center justify-between gap-4 w-full max-w-5xl">
+              <div className="mt-4 flex items-center justify-between gap-2 w-full max-w-5xl">
                 {LEAD_STAGE_DEFINITIONS.map((definition, index) => {
                   const state = getStageState(summaryScoreValue, index);
                   const isLast = index === LEAD_STAGE_DEFINITIONS.length - 1;
-                  const baseCircleClasses =
-                    "w-7 h-7 rounded-full flex items-center justify-center border text-xs font-semibold transition-colors duration-300";
+                  const isActive = state === "active";
+                  const isCompleted = state === "completed";
+                  
+                  const baseButtonClasses =
+                    "group relative overflow-hidden flex-none flex items-center justify-center rounded-full border text-xs font-medium tracking-wide transition-[width,background-color,box-shadow,padding,gap] duration-500 ease-out";
                   const baseConnectorClasses =
-                    "flex-1 h-[2px] min-w-[40px] rounded-full transition-colors duration-300";
-                  const circleClasses =
-                    state === "completed"
-                      ? `${baseCircleClasses} bg-gradient-to-r from-[#67B0B7] to-[#4066B3] border-transparent text-white shadow-[0_5px_18px_rgba(103,176,183,0.35)]`
-                      : state === "active"
-                      ? `${baseCircleClasses} border-[#67B0B7] text-white`
-                      : `${baseCircleClasses} border-white/20 text-white/60`;
+                    "flex-1 h-[2px] min-w-[20px] rounded-full transition-colors duration-300";
+                  
+                  const buttonClasses =
+                    isActive
+                      ? `${baseButtonClasses} h-8 px-3 gap-2 border-[#67B0B7] text-white shadow-[0_5px_18px_rgba(103,176,183,0.35)] bg-white/10`
+                      : isCompleted
+                      ? `${baseButtonClasses} w-8 h-8 bg-gradient-to-r from-[#67B0B7] to-[#4066B3] border-transparent text-white shadow-[0_5px_18px_rgba(103,176,183,0.35)]`
+                      : `${baseButtonClasses} w-8 h-8 border-white/20 text-white/60 hover:border-white/40 hover:text-white/80`;
+                  
                   const connectorClasses =
-                    state === "completed"
+                    isCompleted
                       ? `${baseConnectorClasses} bg-gradient-to-r from-[#67B0B7] to-[#4066B3]`
                       : `${baseConnectorClasses} bg-white/15`;
+
+                  const IconComponent = STAGE_ICONS[index];
 
                   return (
                     <div
                       key={definition.label}
                       className="flex items-center flex-1 gap-2"
                     >
-                      <div className="flex flex-col items-center gap-2 min-w-[100px]">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className={circleClasses}>
-                              {state === "completed" ? (
-                                <Check className="w-3.5 h-3.5" />
-                              ) : (
-                                (() => {
-                                  const IconComponent = STAGE_ICONS[index];
-                                  return (
-                                    <IconComponent className="w-3.5 h-3.5" />
-                                  );
-                                })()
-                              )}
-                            </div>
-                          </TooltipTrigger>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            className={buttonClasses}
+                            type="button"
+                            aria-label={definition.label}
+                          >
+                            {isCompleted ? (
+                              <Check className="w-3.5 h-3.5 flex-shrink-0" />
+                            ) : (
+                              <IconComponent className="w-3.5 h-3.5 flex-shrink-0" />
+                            )}
+                            {isActive && (
+                              <span className="whitespace-nowrap transition-opacity duration-500 ease-out">
+                                {definition.label}
+                              </span>
+                            )}
+                          </button>
+                        </TooltipTrigger>
+                        {!isActive && (
                           <TooltipContent side="bottom" align="center">
                             <p>{definition.label}</p>
                           </TooltipContent>
-                        </Tooltip>
-                      </div>
+                        )}
+                      </Tooltip>
                       {!isLast && <div className={connectorClasses} />}
                     </div>
                   );

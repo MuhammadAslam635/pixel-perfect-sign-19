@@ -22,6 +22,8 @@ const SystemsStep = ({ formData, updateFormData }: SystemsStepProps) => {
           value={formData.existingPartners || ""}
           onChange={(e) => updateFormData({ existingPartners: e.target.value })}
           placeholder="Are you currently working with any marketing agencies, sales consultants, or customer support providers?"
+          minLength={5}
+          maxLength={1000}
           className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 min-h-[100px] scrollbar-hide text-xs sm:text-sm"
         />
         <p className="text-xs text-white/40">5-1000 characters</p>
@@ -38,9 +40,11 @@ const SystemsStep = ({ formData, updateFormData }: SystemsStepProps) => {
           value={formData.dataChannels || ""}
           onChange={(e) => updateFormData({ dataChannels: e.target.value })}
           placeholder="Where does your business data come from (ads, website, CRM, etc.)? How is it processed and used?"
+          minLength={5}
+          maxLength={1000}
           className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 min-h-[120px] scrollbar-hide text-xs sm:text-sm"
         />
-        <p className="text-xs text-white/40">Describe your data sources and how information flows through your systems</p>
+        <p className="text-xs text-white/40">5-1000 characters. Describe your data sources and how information flows</p>
       </div>
 
       {/* Q13: Preferred Countries */}
@@ -54,6 +58,8 @@ const SystemsStep = ({ formData, updateFormData }: SystemsStepProps) => {
           value={formData.preferredCountries || ""}
           onChange={(e) => updateFormData({ preferredCountries: e.target.value })}
           placeholder="Are there specific markets or territories you want to prioritize for expansion?"
+          minLength={5}
+          maxLength={500}
           className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 min-h-[100px] scrollbar-hide text-xs sm:text-sm"
         />
         <p className="text-xs text-white/40">5-500 characters</p>
