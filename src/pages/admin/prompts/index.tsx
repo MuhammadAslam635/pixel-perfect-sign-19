@@ -72,60 +72,96 @@ const PromptsPage = () => {
       });
 
       // Map company information to prompts
-      // Note: Backend already populates companyId with { _id, name, industry }
+      // Note: Backend already populates companyId with { _id, name, industry } when it exists
+      // For global prompts, companyId will be null
       const promptsWithCompanyInfo = response.data.prompts.map((prompt) => {
-        if (prompt.companyId) {
+        // Check if this is a company-specific prompt (has companyId)
+        const hasCompanyId =
+          prompt.companyId !== null && prompt.companyId !== undefined;
+
+        if (hasCompanyId) {
           // Check if companyId is already populated (has _id property)
-          if (typeof prompt.companyId === 'object' && prompt.companyId._id) {
-            // Already populated by backend
+          if (typeof prompt.companyId === "object" && prompt.companyId._id) {
+            // Already populated by backend - company-specific prompt
             return {
               ...prompt,
               company: {
                 _id: prompt.companyId._id,
                 name: prompt.companyId.name,
               },
+              // Keep companyId as-is for filtering
+              companyId: prompt.companyId,
             };
-          } else {
+          } else if (typeof prompt.companyId === "string") {
             // If not populated, look up in companies array
             const company = companies.find((c) => c._id === prompt.companyId);
             return {
               ...prompt,
-              company: company ? { _id: company._id, name: company.name } : undefined,
+              company: company
+                ? { _id: company._id, name: company.name }
+                : undefined,
+              // Keep companyId as string for filtering
+              companyId: prompt.companyId,
             };
           }
         }
-        return prompt;
+
+        // Global prompt (companyId is null or undefined)
+        return {
+          ...prompt,
+          company: undefined,
+          companyId: null, // Explicitly set to null for global prompts
+        };
       });
 
       // Debug: Log prompt types with detailed breakdown
       console.log("📊 Admin Prompts Debug Info:");
       console.log("├─ Total prompts fetched:", promptsWithCompanyInfo.length);
-      console.log("├─ 🌐 Global prompts:", promptsWithCompanyInfo.filter(p => !p.companyId).length);
-      console.log("└─ 🏢 Company-specific prompts:", promptsWithCompanyInfo.filter(p => p.companyId).length);
+      console.log(
+        "├─ 🌐 Global prompts:",
+        promptsWithCompanyInfo.filter((p) => !p.companyId).length
+      );
+      console.log(
+        "└─ 🏢 Company-specific prompts:",
+        promptsWithCompanyInfo.filter((p) => p.companyId).length
+      );
 
       // Log breakdown by type
       const promptsByType = {
-        linkedin: promptsWithCompanyInfo.filter(p => p.promptType === "linkedin").length,
-        email: promptsWithCompanyInfo.filter(p => p.promptType === "email").length,
-        phone: promptsWithCompanyInfo.filter(p => p.promptType === "phone").length,
-        whatsapp: promptsWithCompanyInfo.filter(p => p.promptType === "whatsapp").length,
+        linkedin: promptsWithCompanyInfo.filter(
+          (p) => p.promptType === "linkedin"
+        ).length,
+        email: promptsWithCompanyInfo.filter((p) => p.promptType === "email")
+          .length,
+        phone: promptsWithCompanyInfo.filter((p) => p.promptType === "phone")
+          .length,
+        whatsapp: promptsWithCompanyInfo.filter(
+          (p) => p.promptType === "whatsapp"
+        ).length,
       };
       console.log("📈 Prompts by type:", promptsByType);
 
       // If company-specific prompts exist, log their details
-      const companySpecificPrompts = promptsWithCompanyInfo.filter(p => p.companyId);
+      const companySpecificPrompts = promptsWithCompanyInfo.filter(
+        (p) => p.companyId
+      );
       if (companySpecificPrompts.length > 0) {
         console.log("🏢 Company-specific prompt details:");
         companySpecificPrompts.forEach((p, idx) => {
           console.log(`   ${idx + 1}. ${p.promptType} - ${p.promptCategory}:`, {
             promptId: p._id,
-            companyId: typeof p.companyId === 'object' ? p.companyId._id : p.companyId,
-            companyName: p.company?.name || (typeof p.companyId === 'object' ? p.companyId.name : "Unknown"),
+            companyId:
+              typeof p.companyId === "object" ? p.companyId._id : p.companyId,
+            companyName:
+              p.company?.name ||
+              (typeof p.companyId === "object" ? p.companyId.name : "Unknown"),
             isActive: p.isActive,
           });
         });
       } else {
-        console.log("ℹ️ No company-specific prompts found. All prompts are global.");
+        console.log(
+          "ℹ️ No company-specific prompts found. All prompts are global."
+        );
       }
 
       setPrompts(promptsWithCompanyInfo);
@@ -221,10 +257,50 @@ const PromptsPage = () => {
       },
     });
 
-    if (prompt.companyId) {
-      const company = companies.find((c) => c._id === prompt.companyId);
+    // Handle company selection - check if prompt has companyId (company-specific) or is global
+    const companyId = prompt.companyId;
+
+    // Check if companyId exists and is not null
+    if (!companyId || companyId === null) {
+      // Global prompt - no company selected
+      setSelectedCompanyForPrompt(null);
+      return;
+    }
+
+    // Type guard function to check if companyId is a populated object
+    const isPopulatedCompany = (
+      id: string | { _id: string; name?: string; industry?: string } | null
+    ): id is { _id: string; name?: string; industry?: string } => {
+      return typeof id === "object" && id !== null && "_id" in id;
+    };
+
+    // Extract company ID whether it's an object (populated) or string
+    let companyIdValue: string | null = null;
+
+    if (isPopulatedCompany(companyId)) {
+      companyIdValue = companyId._id;
+    } else if (typeof companyId === "string") {
+      companyIdValue = companyId;
+    }
+
+    if (companyIdValue) {
+      // Try to find company in the companies list
+      const company = companies.find((c) => c._id === companyIdValue);
       if (company) {
         setSelectedCompanyForPrompt(company);
+      } else {
+        // If company not found in list, but we have company info from populated data
+        if (isPopulatedCompany(companyId)) {
+          // Create a temporary company object from populated data
+          setSelectedCompanyForPrompt({
+            _id: companyId._id,
+            name: companyId.name || "Unknown Company",
+            email: "",
+            role: "",
+          } as Company);
+        } else {
+          setSelectedCompanyForPrompt(null);
+        }
       }
     } else {
       setSelectedCompanyForPrompt(null);
@@ -583,4 +659,3 @@ const PromptsPage = () => {
 };
 
 export default PromptsPage;
-

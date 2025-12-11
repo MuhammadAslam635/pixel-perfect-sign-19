@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { RootState } from "@/store/store";
 import { AdminLayout } from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,6 +21,7 @@ import { toast } from "sonner";
 
 const AdminDashboard = () => {
   const authState = useSelector((state: RootState) => state.auth);
+  const navigate = useNavigate();
 
   // Get user's role name
   const getUserRoleName = (): string | null => {
@@ -143,18 +145,18 @@ const AdminDashboard = () => {
             <span className="ml-3 text-white/70">Loading dashboard statistics...</span>
           </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             <StatCard
               title="Total Companies"
               value={stats.totalCompanies.toLocaleString()}
               icon={Building2}
-              trend={`${stats.totalFreeCompanies} free • ${stats.totalPremiumCompanies} premium`}
+              trend="Active companies"
             />
             <StatCard
               title="AI Agents"
               value={stats.totalAiAgents.toLocaleString()}
               icon={Activity}
-              trend="Active AI agents"
+              trend="Total agents deployed"
             />
             <StatCard
               title="Agent Requests"
@@ -162,79 +164,6 @@ const AdminDashboard = () => {
               icon={TrendingUp}
               trend="Total requests processed"
             />
-            <StatCard
-              title="Request Portal"
-              value={stats.totalRequestPortal.toLocaleString()}
-              icon={Users}
-              trend="Portal entries"
-            />
-          </div>
-        )}
-
-        {!loading && (
-          <div className="grid gap-6 md:grid-cols-2">
-            {/* System Overview */}
-            <Card className="bg-[linear-gradient(135deg,rgba(58,62,75,0.82),rgba(28,30,40,0.94))] border-white/10">
-              <CardHeader>
-                <CardTitle className="text-white/70 flex items-center gap-2">
-                  <Globe className="w-5 h-5 text-cyan-400" />
-                  System Overview
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-white/70">Total Companies</span>
-                  <span className="text-white font-semibold">{stats.totalCompanies.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-white/70">Free Tier Companies</span>
-                  <span className="text-white font-semibold">{stats.totalFreeCompanies.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-white/70">Premium Companies</span>
-                  <span className="text-cyan-400 font-semibold">{stats.totalPremiumCompanies.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-white/70">AI Agents Deployed</span>
-                  <span className="text-green-400 font-semibold">{stats.totalAiAgents.toLocaleString()}</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Activity Summary */}
-            <Card className="bg-[linear-gradient(135deg,rgba(58,62,75,0.82),rgba(28,30,40,0.94))] border-white/10">
-              <CardHeader>
-                <CardTitle className="text-white/70 flex items-center gap-2">
-                  <Activity className="w-5 h-5 text-cyan-400" />
-                  Activity Summary
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-white/70">Total AI Agent Requests</span>
-                  <span className="text-white font-semibold">{stats.totalAiAgentRequests.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-white/70">Request Portal Entries</span>
-                  <span className="text-white font-semibold">{stats.totalRequestPortal.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-white/70">Avg Requests per Company</span>
-                  <span className="text-cyan-400 font-semibold">
-                    {stats.totalCompanies > 0
-                      ? Math.round(stats.totalAiAgentRequests / stats.totalCompanies).toLocaleString()
-                      : 0}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-white/70">System Status</span>
-                  <span className="text-green-400 font-semibold flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                    Operational
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
           </div>
         )}
 
@@ -248,9 +177,9 @@ const AdminDashboard = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <div className="grid gap-4 md:grid-cols-3">
                 <button
-                  onClick={() => window.location.href = "/admin/prompts"}
+                  onClick={() => navigate("/admin/prompts")}
                   className="p-4 rounded-lg bg-black/35 border border-white/10 hover:bg-black/50 hover:border-cyan-500/30 transition-all text-left group"
                 >
                   <Settings className="w-6 h-6 text-cyan-400 mb-2 group-hover:scale-110 transition-transform" />
@@ -260,17 +189,17 @@ const AdminDashboard = () => {
                   <p className="text-white/60 text-sm">Manage AI prompt configurations</p>
                 </button>
                 <button
-                  onClick={() => window.location.href = "/admin/users"}
+                  onClick={() => navigate("/admin/users")}
                   className="p-4 rounded-lg bg-black/35 border border-white/10 hover:bg-black/50 hover:border-cyan-500/30 transition-all text-left group"
                 >
                   <Users className="w-6 h-6 text-cyan-400 mb-2 group-hover:scale-110 transition-transform" />
                   <h3 className="text-white font-semibold mb-1">
                     User Management
                   </h3>
-                  <p className="text-white/60 text-sm">Global user controls</p>
+                  <p className="text-white/60 text-sm">Manage all users</p>
                 </button>
                 <button
-                  onClick={() => window.location.href = "/admin/settings"}
+                  onClick={() => navigate("/admin/settings")}
                   className="p-4 rounded-lg bg-black/35 border border-white/10 hover:bg-black/50 hover:border-cyan-500/30 transition-all text-left group"
                 >
                   <Shield className="w-6 h-6 text-cyan-400 mb-2 group-hover:scale-110 transition-transform" />
@@ -278,18 +207,8 @@ const AdminDashboard = () => {
                     System Settings
                   </h3>
                   <p className="text-white/60 text-sm">
-                    Security & configuration
+                    System configuration
                   </p>
-                </button>
-                <button
-                  onClick={() => window.location.href = "/admin/dashboard"}
-                  className="p-4 rounded-lg bg-black/35 border border-white/10 hover:bg-black/50 hover:border-cyan-500/30 transition-all text-left group"
-                >
-                  <BarChart3 className="w-6 h-6 text-cyan-400 mb-2 group-hover:scale-110 transition-transform" />
-                  <h3 className="text-white font-semibold mb-1">
-                    View Analytics
-                  </h3>
-                  <p className="text-white/60 text-sm">Detailed system metrics</p>
                 </button>
               </div>
             </CardContent>
