@@ -7,9 +7,6 @@ import ChatInterface from "./ChatInterface";
 import ChatHistoryList from "./ChatHistoryList";
 import { toast } from "sonner";
 
-const STORAGE_KEY = "assistant_panel_chat_history";
-const CURRENT_CHAT_KEY = "assistant_panel_current_chat";
-
 type AssistantPanelProps = {
   isDesktop: boolean;
 };
@@ -24,41 +21,16 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
   const panelRef = useRef<HTMLElement>(null);
   const queryClient = useQueryClient();
 
-  // Load chat history from localStorage on mount
-  // On reload, clear current chat to show greeting (chat remains in list)
-  useEffect(() => {
-    const storedHistory = localStorage.getItem(STORAGE_KEY);
-
-    if (storedHistory) {
-      try {
-        const parsed = JSON.parse(storedHistory);
-        setChatHistory(parsed);
-      } catch (e) {
-        console.error("Failed to parse chat history", e);
-      }
-    }
-
-    // Clear current chat on page reload to show greeting
-    // The chat will still be available in the chat list
-    localStorage.removeItem(CURRENT_CHAT_KEY);
-    setCurrentChatId(null);
-    setLocalMessages([]);
-  }, []);
-
-  // Fetch chat list from API
+  // Fetch chat list from API (always from database, filtered by userId)
   const { data: apiChatList = [], isLoading: isChatListLoading } = useQuery({
     queryKey: ["chatList"],
     queryFn: fetchChatList,
     staleTime: 30_000,
   });
 
-  // Merge API chat list with local history
+  // Update chat history from API response
   useEffect(() => {
-    if (apiChatList.length > 0) {
-      setChatHistory(apiChatList);
-      // Save to localStorage
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(apiChatList));
-    }
+    setChatHistory(apiChatList);
   }, [apiChatList]);
 
   const handleSelectChat = (chatId: string) => {
@@ -85,7 +57,6 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
     setLocalMessages([]);
     setShowChatList(false);
     setSearchTerm("");
-    localStorage.removeItem(CURRENT_CHAT_KEY);
   };
 
   const handleDeleteChat = async (chatId: string) => {
@@ -93,16 +64,11 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
     setDeletingChatId(chatId);
     try {
       await deleteChatById(chatId);
-      setChatHistory((prev) => {
-        const updated = prev.filter((chat) => chat._id !== chatId);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-        return updated;
-      });
+      setChatHistory((prev) => prev.filter((chat) => chat._id !== chatId));
 
       if (currentChatId === chatId) {
         setCurrentChatId(null);
         setLocalMessages([]);
-        localStorage.removeItem(CURRENT_CHAT_KEY);
       }
 
       toast.success("Chat deleted");

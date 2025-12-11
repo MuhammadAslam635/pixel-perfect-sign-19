@@ -21,8 +21,6 @@ import rehypeRaw from "rehype-raw";
 import rehypeSanitize from "rehype-sanitize";
 import { useToast } from "@/components/ui/use-toast";
 
-const CURRENT_CHAT_KEY = "assistant_panel_current_chat";
-
 const getTimeBasedGreeting = () => {
   const hour = new Date().getHours();
   if (hour < 12) return "Good Morning";
@@ -265,22 +263,10 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
     }
   }, [selectedMessages.length]);
 
-  // Save current chat to localStorage whenever it changes
+  // Update parent component with messages
   useEffect(() => {
-    if (currentChatId || selectedMessages.length > 0) {
-      localStorage.setItem(
-        CURRENT_CHAT_KEY,
-        JSON.stringify({
-          chatId: currentChatId,
-          messages: selectedMessages,
-        })
-      );
-      onMessagesChange(selectedMessages);
-    } else {
-      localStorage.removeItem(CURRENT_CHAT_KEY);
-      onMessagesChange([]);
-    }
-  }, [currentChatId, selectedMessages, onMessagesChange]);
+    onMessagesChange(selectedMessages);
+  }, [selectedMessages, onMessagesChange]);
 
 
 

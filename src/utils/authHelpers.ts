@@ -33,9 +33,13 @@ export const setAuthToken = (token: string, userData?: any): void => {
 
 /**
  * Clear all authentication data from localStorage
+ * Also clears chat-related localStorage to prevent showing chats from previous users
  */
 export const clearAuthData = (): void => {
   localStorage.removeItem("user");
+  // Clear chat-related localStorage keys to prevent showing chats from previous users/companies
+  localStorage.removeItem("assistant_panel_chat_history");
+  localStorage.removeItem("assistant_panel_current_chat");
 };
 
 /**
