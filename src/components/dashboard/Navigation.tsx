@@ -68,14 +68,12 @@ const navLinks: NavLink[] = [
     label: "Skylar",
     icon: ChatIcon as typeof Home,
     path: "/chat",
-    roles: contactRoles, // Only CompanyUser can access chat
   },
   {
     id: "agents",
     label: "Agents",
     icon: Bot,
     path: "/agents",
-    roles: contactRoles, // Only CompanyUser can access agents
   },
   {
     id: "campaigns",
@@ -104,14 +102,11 @@ const adminNavLinks: NavLink[] = [
     match: (pathname: string) => pathname === "/admin/dashboard",
   },
   {
-    id: "all-companies",
-    label: "All Companies",
-    icon: Building2,
-    path: "/admin/companies",
-    match: (pathname: string) =>
-      pathname.startsWith("/admin/companies") ||
-      pathname.startsWith("/admin/leads") ||
-      pathname.startsWith("/admin/calendar"),
+    id: "admin-users",
+    label: "Users",
+    icon: Users,
+    path: "/admin/users",
+    match: (pathname: string) => pathname.startsWith("/admin/users"),
   },
   {
     id: "prompts",
@@ -144,7 +139,7 @@ export const Navigation = () => {
 
   // Get user's role name - prioritize roleId over legacy role
   const getUserRoleName = (): string | null => {
-    
+
     if (!sessionUser) return null;
 
     // PRIORITY 1: Check populated roleId (new RBAC system)

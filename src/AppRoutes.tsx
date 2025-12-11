@@ -38,15 +38,13 @@ import {
   StatsPage,
 } from "@/pages/crm/emails";
 import LeadChat from "@/pages/crm/leads/leaddetailview/components/LeadChat";
-import MembersPermissions from "@/pages/admin/MembersPermissions";
 import LeadsPage from "@/pages/crm/leads";
 import CalendarPage from "@/pages/crm/calendar";
 import OnboardingPage from "@/pages/onboarding";
 import AdminDashboard from "@/pages/admin/Dashboard";
-import AdminCompanies from "@/pages/admin/companies";
 import AdminPrompts from "@/pages/admin/prompts";
-import AdminMembers from "@/pages/admin/Members";
 import AdminSettings from "@/pages/admin/Settings";
+import AdminUsers from "@/pages/admin/Users";
 
 const AppRoutes = () => {
   return (
@@ -351,14 +349,6 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/admin/members/permissions"
-        element={
-          <ProtectedRoute allowedRoles={["Admin"]}>
-            <MembersPermissions />
-          </ProtectedRoute>
-        }
-      />
 
       <Route
         path="/calendar"
@@ -379,14 +369,6 @@ const AppRoutes = () => {
         }
       />
       <Route
-        path="/admin/companies"
-        element={
-          <ProtectedRoute allowedRoles={["Admin"]}>
-            <AdminCompanies />
-          </ProtectedRoute>
-        }
-      />
-      <Route
         path="/admin/prompts"
         element={
           <ProtectedRoute allowedRoles={["Admin"]}>
@@ -395,10 +377,10 @@ const AppRoutes = () => {
         }
       />
       <Route
-        path="/admin/members"
+        path="/admin/users"
         element={
           <ProtectedRoute allowedRoles={["Admin"]}>
-            <AdminMembers />
+            <AdminUsers />
           </ProtectedRoute>
         }
       />
