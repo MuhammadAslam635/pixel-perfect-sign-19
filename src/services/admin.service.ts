@@ -275,4 +275,60 @@ export const adminService = {
     const response = await API.get("/admin/prompts/statistics");
     return response.data;
   },
+
+  /**
+   * Get all users globally (Admin only)
+   * Aggregates users from all companies
+   */
+  getAllUsers: async (
+    params: {
+      page?: number;
+      limit?: number;
+      search?: string;
+      role?: string;
+      status?: string;
+      companyId?: string;
+      trashed?: boolean;
+    } = {}
+  ): Promise<CompanyUsersResponse> => {
+    try {
+      const queryParams = new URLSearchParams();
+      if (params.page) queryParams.append("page", params.page.toString());
+      if (params.limit) queryParams.append("limit", params.limit.toString());
+      if (params.search) queryParams.append("search", params.search);
+      if (params.role) queryParams.append("role", params.role);
+      if (params.status) queryParams.append("status", params.status);
+      if (params.companyId) queryParams.append("companyId", params.companyId);
+      if (params.trashed) queryParams.append("trashed", "true");
+
+      const response = await API.get(`/admin/users?${queryParams.toString()}`);
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  /**
+   * Get user statistics globally (Admin only)
+   */
+  getUserStatistics: async (): Promise<{
+    success: boolean;
+    data: {
+      totalUsers: number;
+      activeUsers: number;
+      inactiveUsers: number;
+      admins: number;
+      companyAdmins: number;
+      companyUsers: number;
+      byRole: Record<string, number>;
+      byCompany: Record<string, number>;
+    };
+  }> => {
+    try {
+      const response = await API.get("/admin/users/statistics");
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
 };

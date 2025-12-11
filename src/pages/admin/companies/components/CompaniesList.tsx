@@ -18,6 +18,7 @@ interface CompaniesListProps {
   onViewModeChange: (mode: ViewMode) => void;
   currentPage?: number;
   totalPages?: number;
+  totalRecords?: number;
   onPageChange?: (page: number) => void;
   itemsPerPage?: number;
 }
@@ -29,19 +30,12 @@ export const CompaniesList = ({
   onViewModeChange,
   currentPage = 1,
   totalPages = 1,
+  totalRecords = 0,
   onPageChange,
   itemsPerPage = 12,
 }: CompaniesListProps) => {
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedCompanies = companies.slice(startIndex, endIndex);
-  const tableItemsPerPage = 25;
-  const tableStartIndex = (currentPage - 1) * tableItemsPerPage;
-  const tableEndIndex = tableStartIndex + tableItemsPerPage;
-  const paginatedTableCompanies = companies.slice(
-    tableStartIndex,
-    tableEndIndex
-  );
+  // API already returns paginated data, so use companies directly
+  const displayCompanies = companies;
   return (
     <Card className="bg-[linear-gradient(135deg,rgba(58,62,75,0.82),rgba(28,30,40,0.94))] border-white/10 hover:border-white/20 transition-all duration-300">
       <CardHeader>
@@ -73,7 +67,7 @@ export const CompaniesList = ({
       <CardContent>
         {viewMode === "cards" ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {paginatedCompanies.map((company) => (
+            {displayCompanies.map((company) => (
               <div
                 key={company._id}
                 className="bg-white/5 rounded-lg p-4 border border-white/10 hover:border-white/20 transition-all duration-200"
@@ -127,7 +121,7 @@ export const CompaniesList = ({
                 </tr>
               </thead>
               <tbody>
-                {paginatedTableCompanies.map((company) => (
+                {displayCompanies.map((company) => (
                   <tr
                     key={company._id}
                     className="border-b border-white/5 hover:bg-white/5 transition-colors"
@@ -181,11 +175,19 @@ export const CompaniesList = ({
           companies.length > 0 &&
           onPageChange &&
           totalPages > 1 && (
-            <div className="flex items-center justify-between mt-6 pt-4 border-t border-white/10">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-6 pt-4 border-t border-white/10">
               <div className="text-sm text-white/60">
-                Showing {startIndex + 1} to{" "}
-                {Math.min(endIndex, companies.length)} of {companies.length}{" "}
-                companies
+                {totalRecords > 0 ? (
+                  <>
+                    Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+                    {Math.min(currentPage * itemsPerPage, totalRecords)} of{" "}
+                    {totalRecords.toLocaleString()} companies
+                  </>
+                ) : (
+                  <>
+                    Page {currentPage} of {totalPages}
+                  </>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 <Button

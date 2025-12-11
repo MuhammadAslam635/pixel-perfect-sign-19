@@ -11,7 +11,13 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Building2, Users, Activity, Building } from "lucide-react";
+import {
+  Building2,
+  Users,
+  Activity,
+  Building,
+  MessageSquare,
+} from "lucide-react";
 import {
   connectionMessagesService,
   type Prompt,
@@ -46,10 +52,18 @@ const Companies = () => {
   const [statistics, setStatistics] = useState({
     totalCompanies: 0,
     activeCompanies: 0,
+    prompts: {
+      totalPrompts: 0,
+      linkedinPrompts: 0,
+      emailPrompts: 0,
+      phonePrompts: 0,
+      whatsappPrompts: 0,
+    },
   });
   const [statisticsLoading, setStatisticsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
   const itemsPerPage = 12;
 
   // Form state
@@ -91,12 +105,11 @@ const Companies = () => {
       const companiesData = response.data.companies;
       setCompanies(companiesData);
 
-      // Use totalPages from response, or calculate from totalRecords if not provided
+      // Use pagination data from API response
       const totalPagesFromResponse = response.data.totalPages;
-      const totalRecords = response.data.totalRecords || companiesData.length;
-      const calculatedPages =
-        totalPagesFromResponse || Math.ceil(totalRecords / itemsPerPage);
-      setTotalPages(calculatedPages || 1);
+      const totalRecordsFromResponse = response.data.totalRecords || 0;
+      setTotalPages(totalPagesFromResponse || 1);
+      setTotalRecords(totalRecordsFromResponse);
       setCurrentPage(page);
     } catch (error) {
       console.error("Failed to fetch companies:", error);
@@ -110,7 +123,17 @@ const Companies = () => {
     try {
       setStatisticsLoading(true);
       const response = await adminService.getCompanyStatistics();
-      setStatistics(response.data);
+      setStatistics({
+        totalCompanies: response.data.totalCompanies || 0,
+        activeCompanies: response.data.activeCompanies || 0,
+        prompts: response.data.prompts || {
+          totalPrompts: 0,
+          linkedinPrompts: 0,
+          emailPrompts: 0,
+          phonePrompts: 0,
+          whatsappPrompts: 0,
+        },
+      });
     } catch (error) {
       console.error("Failed to fetch statistics:", error);
       toast.error("Failed to fetch statistics");
@@ -379,10 +402,10 @@ const Companies = () => {
           >
             <div>
               <h1 className="text-3xl font-bold text-white mb-2">
-                Admin Panel - Companies & Prompts
+                Companies
               </h1>
               <p className="text-white/60 text-sm">
-                Global company management and AI prompt configuration
+                User and company management
               </p>
             </div>
             <Badge className="bg-white/10 text-white/85 border border-white/20 px-4 py-2 w-fit">
@@ -446,15 +469,24 @@ const Companies = () => {
             <Card className="bg-[linear-gradient(135deg,rgba(58,62,75,0.82),rgba(28,30,40,0.94))] border-white/10 hover:border-white/20 transition-all duration-300 sm:col-span-2 lg:col-span-1">
               <CardHeader className="pb-2">
                 <CardTitle className="text-white/70 flex items-center gap-2 text-sm">
-                  <Building className="w-4 h-4" />
-                  Active Prompts
+                  <MessageSquare className="w-4 h-4" />
+                  Total Prompts
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="text-2xl sm:text-3xl font-bold text-cyan-400">
-                  {prompts.length}
+                  {statisticsLoading ? (
+                    <div className="animate-pulse">...</div>
+                  ) : (
+                    statistics.prompts?.totalPrompts || 0
+                  )}
                 </div>
-                <p className="text-xs text-white/60 mt-1">Configured prompts</p>
+                <p className="text-xs text-white/60 mt-1">
+                  {statistics.prompts?.linkedinPrompts || 0} LinkedIn •{" "}
+                  {statistics.prompts?.emailPrompts || 0} Email •{" "}
+                  {statistics.prompts?.phonePrompts || 0} Phone •{" "}
+                  {statistics.prompts?.whatsappPrompts || 0} WhatsApp
+                </p>
               </CardContent>
             </Card>
           </motion.div>
@@ -473,6 +505,7 @@ const Companies = () => {
               onViewModeChange={setCompaniesViewMode}
               currentPage={currentPage}
               totalPages={totalPages}
+              totalRecords={totalRecords}
               onPageChange={handlePageChange}
               itemsPerPage={itemsPerPage}
             />

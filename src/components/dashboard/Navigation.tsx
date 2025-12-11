@@ -121,15 +121,8 @@ const adminNavLinks: NavLink[] = [
     match: (pathname: string) => pathname.startsWith("/admin/prompts"),
   },
   {
-    id: "global-members",
-    label: "Global Members",
-    icon: UserCheck,
-    path: "/admin/members",
-    match: (pathname: string) => pathname.startsWith("/admin/members"),
-  },
-  {
-    id: "system-settings",
-    label: "System Settings",
+    id: "settings",
+    label: "Settings",
     icon: Settings,
     path: "/admin/settings",
     match: (pathname: string) => pathname.startsWith("/admin/settings"),
@@ -151,6 +144,7 @@ export const Navigation = () => {
 
   // Get user's role name - prioritize roleId over legacy role
   const getUserRoleName = (): string | null => {
+    
     if (!sessionUser) return null;
 
     // PRIORITY 1: Check populated roleId (new RBAC system)

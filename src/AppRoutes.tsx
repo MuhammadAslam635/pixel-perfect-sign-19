@@ -43,12 +43,10 @@ import LeadsPage from "@/pages/crm/leads";
 import CalendarPage from "@/pages/crm/calendar";
 import OnboardingPage from "@/pages/onboarding";
 import AdminDashboard from "@/pages/admin/Dashboard";
-import AdminSystemOverview from "@/pages/admin/SystemOverview";
 import AdminCompanies from "@/pages/admin/companies";
 import AdminPrompts from "@/pages/admin/prompts";
 import AdminMembers from "@/pages/admin/Members";
 import AdminSettings from "@/pages/admin/Settings";
-import AdminAnalytics from "@/pages/admin/Analytics";
 
 const AppRoutes = () => {
   return (
@@ -381,14 +379,6 @@ const AppRoutes = () => {
         }
       />
       <Route
-        path="/admin/system-overview"
-        element={
-          <ProtectedRoute allowedRoles={["Admin"]}>
-            <AdminSystemOverview />
-          </ProtectedRoute>
-        }
-      />
-      <Route
         path="/admin/companies"
         element={
           <ProtectedRoute allowedRoles={["Admin"]}>
@@ -417,14 +407,6 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute allowedRoles={["Admin"]}>
             <AdminSettings />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/analytics"
-        element={
-          <ProtectedRoute allowedRoles={["Admin"]}>
-            <AdminAnalytics />
           </ProtectedRoute>
         }
       />
