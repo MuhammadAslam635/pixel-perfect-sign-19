@@ -159,11 +159,6 @@ const Activity: FC<ActivityProps> = ({
     "activity"
   );
   const [activeTab, setActiveTab] = useState("summary");
-  const [recordingAudioUrl, setRecordingAudioUrl] = useState<string | null>(
-    null
-  );
-  const [recordingLoading, setRecordingLoading] = useState(false);
-  const [recordingError, setRecordingError] = useState<string | null>(null);
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const [selectedTemplateId, setSelectedTemplateId] = useState("");
   const [selectedLeadsMap, setSelectedLeadsMap] = useState<
@@ -381,87 +376,6 @@ const Activity: FC<ActivityProps> = ({
     isLeadSummaryLoading ||
     isLeadSummaryFetching ||
     refreshLeadSummaryMutation.isPending;
-
-  // Switch to summary tab when a view is selected
-  useEffect(() => {
-    if (selectedCallLogView) {
-      setActiveTab("summary");
-    }
-  }, [selectedCallLogView]);
-
-  // Load recording audio URL when recording view is selected
-  const loadRecordingAudio = useCallback(async (view: SelectedCallLogView) => {
-    const log = view?.log as any;
-    if (!log?._id) {
-      setRecordingError("Recording not available for this call.");
-      return;
-    }
-
-    setRecordingAudioUrl(null);
-    setRecordingError(null);
-    try {
-      setRecordingLoading(true);
-      const recordingUrl =
-        log.elevenlabsRecordingUrl || log.recordingUrl || null;
-
-      // If we have an inline ElevenLabs data: URL, use it directly
-      if (
-        typeof recordingUrl === "string" &&
-        recordingUrl.startsWith("data:audio/")
-      ) {
-        setRecordingAudioUrl(recordingUrl);
-        return;
-      }
-
-      const isElevenLabsCall =
-        !!log.elevenlabsCallId ||
-        !!log.elevenlabsRecordingUrl ||
-        log.metadata?.provider === "elevenlabs";
-
-      const endpoint = isElevenLabsCall
-        ? `/elevenlabs/calls/${log._id}/recording`
-        : `/twilio/calls/${log._id}/recording`;
-
-      const response = await API.get(endpoint, {
-        responseType: "blob",
-      });
-      const blob = response.data as Blob;
-      const url = URL.createObjectURL(blob);
-      setRecordingAudioUrl(url);
-
-    } catch (err: any) {
-      console.error("Failed to load call recording", err);
-      setRecordingError(
-        err?.response?.data?.error ||
-          err?.message ||
-          "Unable to load call recording."
-      );
-    } finally {
-      setRecordingLoading(false);
-    }
-  }, []);
-
-  // Load recording when a recording view is selected
-  useEffect(() => {
-    if (
-      selectedCallLogView?.type === "recording" &&
-      selectedCallLogView.log._id
-    ) {
-      loadRecordingAudio(selectedCallLogView);
-    }
-  }, [selectedCallLogView, loadRecordingAudio]);
-
-  // Clean up recording URL and state when recording view is cleared
-  useEffect(() => {
-    if (!selectedCallLogView || selectedCallLogView.type !== "recording") {
-      if (recordingAudioUrl) {
-        URL.revokeObjectURL(recordingAudioUrl);
-        setRecordingAudioUrl(null);
-      }
-      setRecordingError(null);
-      setRecordingLoading(false);
-    }
-  }, [selectedCallLogView, recordingAudioUrl]);
 
   // Initialize week dates based on currentWeekStart
   useEffect(() => {
@@ -1084,485 +998,111 @@ const Activity: FC<ActivityProps> = ({
 
                 {/* Summary Tab Content */}
                 <TabsContent value="summary" className="mt-6">
-                  {selectedCallLogView ? (
-                    // Selected Call Log View Content
-                    <div className="flex flex-col items-center space-y-6">
-                      {/* Circular Progress Indicator with Score */}
-                      {(() => {
-                        // Calculate the score for the selected view
-                        let viewScore: number | null = null;
-                        if (
-                          selectedCallLogView.type === "followup" ||
-                          selectedCallLogView.type === "transcription" ||
-                          selectedCallLogView.type === "recording"
-                        ) {
-                          const rawScore =
-                            selectedCallLogView.log.leadSuccessScore;
-                          if (
-                            typeof rawScore === "number" &&
-                            !Number.isNaN(rawScore)
-                          ) {
-                            viewScore = Math.max(
-                              0,
-                              Math.min(100, Math.round(rawScore))
-                            );
-                          }
-                        }
-                        // Use view score if available, otherwise fall back to summary score
-                        const displayScore =
-                          viewScore !== null ? viewScore : summaryScoreValue;
-                        const displayProgress = (displayScore ?? 0) / 100;
-                        const displayDashoffset =
-                          summaryCircumference *
-                          (1 - Math.min(1, Math.max(0, displayProgress)));
-
-                        return (
-                          <div className="relative w-48 h-48 mb-4">
-                            <svg
-                              className="w-full h-full transform -rotate-90"
-                              viewBox="0 0 100 100"
-                            >
-                              {/* Background circle */}
-                              <circle
-                                cx="50"
-                                cy="50"
-                                r="45"
-                                fill="none"
-                                stroke="#1a1a1a"
-                                strokeWidth="8"
-                              />
-                              {/* Progress circle */}
-                              <circle
-                                cx="50"
-                                cy="50"
-                                r="45"
-                                fill="none"
-                                stroke="url(#gradient-view)"
-                                strokeWidth="8"
-                                strokeLinecap="round"
-                                strokeDasharray={`${summaryCircumference}`}
-                                strokeDashoffset={`${displayDashoffset}`}
-                              />
-                              {/* Gradient definition */}
-                              <defs>
-                                <linearGradient
-                                  id="gradient-view"
-                                  x1="0%"
-                                  y1="0%"
-                                  x2="100%"
-                                  y2="100%"
-                                >
-                                  <stop offset="0%" stopColor="#3b82f6" />
-                                  <stop offset="100%" stopColor="#06b6d4" />
-                                </linearGradient>
-                              </defs>
-                            </svg>
-                            {/* Percentage text */}
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <span className="text-4xl font-bold text-white">
-                                {displayScore !== null
-                                  ? `${displayScore}%`
-                                  : "--"}
-                              </span>
-                            </div>
-                          </div>
-                        );
-                      })()}
-
-                      {/* View-specific content */}
-                      {selectedCallLogView.type === "followup" && (
-                        <div className="w-full space-y-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <div>
-                              <h3 className="text-xs sm:text-sm font-semibold text-white">
-                                Follow-up suggestions
-                              </h3>
-                              <p className="text-xs text-white/60 mt-1">
-                                Based on the last call with{" "}
-                                <span className="font-medium">
-                                  {selectedCallLogView.log.leadName ||
-                                    "this lead"}
-                                </span>{" "}
-                                on{" "}
-                                {formatCallDate(
-                                  selectedCallLogView.log.startedAt
-                                )}
-                                .
-                              </p>
-                            </div>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="text-white/60 hover:text-white"
-                              onClick={() => setSelectedCallLogView(null)}
-                            >
-                              ✕
-                            </Button>
-                          </div>
-
-                          {Array.isArray(
-                            (
-                              selectedCallLogView.log
-                                .followupSuggestionMetadata as any
-                            )?.raw?.touchpoints
-                          ) &&
-                          (
-                            selectedCallLogView.log
-                              .followupSuggestionMetadata as any
-                          ).raw.touchpoints.length > 0 ? (
-                            <EditableFollowupSuggestion
-                              touchpoints={
-                                (
-                                  selectedCallLogView.log
-                                    .followupSuggestionMetadata as any
-                                ).raw.touchpoints
-                              }
-                              summary={
-                                selectedCallLogView.log.followupSuggestionSummary || undefined
-                              }
-                              callEndTime={
-                                selectedCallLogView.log.endedAt ||
-                                new Date(
-                                  new Date(selectedCallLogView.log.startedAt).getTime() +
-                                    (selectedCallLogView.log.durationSeconds || 0) * 1000
-                                ).toISOString()
-                              }
-                              leadId={selectedCallLogView.log.leadId || lead?._id || ""}
-                              onExecute={async (todo, startDate, executedPlanId?: string) => {
-                                try {
-                                  let planId: string | undefined;
-                                  
-                                  if (executedPlanId) {
-                                    // Update existing plan
-                                    const response = await updatePlanMutation.mutateAsync({
-                                      id: executedPlanId,
-                                      payload: {
-                                        todo: todo.map((task) => ({
-                                          type: task.type,
-                                          personId: task.personId,
-                                          day: task.day,
-                                          scheduledFor: task.scheduledFor,
-                                          notes: task.notes,
-                                        })),
-                                      },
-                                    });
-                                    planId = response?.data?._id || response?.data?.data?._id || executedPlanId;
-                                    toast({
-                                      title: "Follow-up plan updated",
-                                      description: "The follow-up plan has been updated successfully.",
-                                    });
-                                  } else {
-                                    // Create new plan
-                                    const response = await createPlanFromCallMutation.mutateAsync({
-                                      leadId: selectedCallLogView.log.leadId || lead?._id || "",
-                                      startDate,
-                                      todo,
-                                      summary: selectedCallLogView.log.followupSuggestionSummary,
-                                    });
-                                    planId = response?.data?._id || response?.data?.data?._id;
-                                    toast({
-                                      title: "Follow-up plan created",
-                                      description: "The follow-up plan has been created and is now active.",
-                                    });
-                                  }
-                                  
-                                  // Return planId
-                                  return {
-                                    planId,
-                                  };
-                                } catch (error: any) {
-                                  toast({
-                                    title: executedPlanId ? "Failed to update plan" : "Failed to create plan",
-                                    description:
-                                      error?.response?.data?.message ||
-                                      error?.message ||
-                                      "Please try again.",
-                                    variant: "destructive",
-                                  });
-                                  throw error;
-                                }
-                              }}
-                              isExecuting={createPlanFromCallMutation.isPending || updatePlanMutation.isPending}
-                            />
-                          ) : (
-                            <div className="space-y-4 max-h-[calc(100vh-500px)] overflow-y-auto scrollbar-hide pr-1">
-                              <div
-                                className="rounded-lg p-4"
-                                style={{
-                                  border: "1px solid rgba(255, 255, 255, 0.2)",
-                                  background: "rgba(255, 255, 255, 0.02)",
-                                }}
-                              >
-                                <p className="text-xs font-medium uppercase text-white/50 mb-1">
-                                  Summary
-                                </p>
-                                <p className="text-xs text-white/80">
-                                  {selectedCallLogView.log
-                                    .followupSuggestionSummary ||
-                                    "No summary available for this call."}
-                                </p>
-                              </div>
-                              <p className="text-xs text-white/60">
-                                No touchpoints available for this call.
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {selectedCallLogView.type === "transcription" && (
-                        <div className="w-full space-y-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <div>
-                              <h3 className="text-xs sm:text-sm font-semibold text-white">
-                                Call transcription
-                              </h3>
-                              <p className="text-xs text-white/60 mt-1">
-                                {selectedCallLogView.log.leadName ||
-                                  "This lead"}{" "}
-                                —{" "}
-                                {formatCallDate(
-                                  selectedCallLogView.log.startedAt
-                                )}{" "}
-                                •{" "}
-                                {formatDuration(
-                                  selectedCallLogView.log.durationSeconds
-                                )}
-                              </p>
-                            </div>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="text-white/60 hover:text-white"
-                              onClick={() => setSelectedCallLogView(null)}
-                            >
-                              ✕
-                            </Button>
-                          </div>
-
-                          <div
-                            className="rounded-lg p-4 "
-                            style={{
-                              border: "1px solid rgba(255, 255, 255, 0.2)",
-                              background: "rgba(255, 255, 255, 0.02)",
-                            }}
-                          >
-                            {selectedCallLogView.log.transcriptionText ? (
-                              <p className="text-xs text-white/80 whitespace-pre-wrap leading-relaxed">
-                                {selectedCallLogView.log.transcriptionText}
-                              </p>
-                            ) : (
-                              <p className="text-sm text-white/60">
-                                No transcription available for this call.
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      {selectedCallLogView.type === "recording" && (
-                        <div className="w-full space-y-4">
-                          <div className="flex items-center justify-between mb-3">
-                            <div>
-                              <h3 className="text-sm font-semibold text-white">
-                                Call Recording
-                              </h3>
-                              <p className="text-xs text-white/60 mt-1">
-                                {selectedCallLogView.log.leadName ||
-                                  "This lead"}{" "}
-                                —{" "}
-                                {formatCallDate(
-                                  selectedCallLogView.log.startedAt
-                                )}{" "}
-                                •{" "}
-                                {formatDuration(
-                                  selectedCallLogView.log.durationSeconds
-                                )}
-                              </p>
-                            </div>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="text-white/60 hover:text-white hover:bg-white/10 h-8 w-8 p-0 rounded-full"
-                              onClick={() => setSelectedCallLogView(null)}
-                            >
-                              ✕
-                            </Button>
-                          </div>
-
-                          <div className="rounded-2xl p-6 border border-white/10 bg-white/[0.03] backdrop-blur-xl">
-                            {recordingLoading && (
-                              <div className="flex items-center justify-center py-8">
-                                <div className="flex flex-col items-center gap-3">
-                                  <div className="w-8 h-8 border-2 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin"></div>
-                                  <p className="text-sm text-white/70">
-                                    Loading recording...
-                                  </p>
-                                </div>
-                              </div>
-                            )}
-                            {!recordingLoading && recordingError && (
-                              <div className="flex items-center justify-center py-8">
-                                <div className="flex flex-col items-center gap-2 text-center">
-                                  <div className="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center">
-                                    <svg className="w-6 h-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                    </svg>
-                                  </div>
-                                  <p className="text-sm text-red-300 max-w-xs">
-                                    {recordingError}
-                                  </p>
-                                </div>
-                              </div>
-                            )}
-                            {!recordingLoading &&
-                              !recordingError &&
-                              recordingAudioUrl && (
-                                <div className="space-y-4">
-                                  <div className="rounded-xl overflow-hidden border border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.02] p-4">
-                                    <audio
-                                      controls
-                                      className="w-full h-12"
-                                      src={recordingAudioUrl}
-                                      style={{
-                                        filter: 'invert(0.9) hue-rotate(180deg)',
-                                        borderRadius: '8px',
-                                      }}
-                                    />
-                                  </div>
-                                  <div className="flex items-start gap-2 px-2">
-                                    <svg className="w-4 h-4 text-cyan-400/60 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                                    </svg>
-                                    <p className="text-[0.7rem] text-white/40 leading-relaxed">
-                                      Playback is streamed securely from EmpaTech servers. Seeking is supported by your browser's audio player.
-                                    </p>
-                                  </div>
-                                </div>
-                              )}
-                            {!recordingLoading &&
-                              !recordingError &&
-                              !recordingAudioUrl && (
-                                <div className="flex items-center justify-center py-8">
-                                  <p className="text-sm text-white/60">
-                                    Recording not available for this call.
-                                  </p>
-                                </div>
-                              )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    // Default Summary Content
-                    <div className="flex flex-col items-center">
-                      {/* Circular Progress Indicator */}
-                      <div className="relative w-48 h-48 mb-4">
-                        <svg
-                          className="w-full h-full transform -rotate-90"
-                          viewBox="0 0 100 100"
-                        >
-                          {/* Background circle */}
-                          <circle
-                            cx="50"
-                            cy="50"
-                            r="45"
-                            fill="none"
-                            stroke="#1a1a1a"
-                            strokeWidth="8"
-                          />
-                          {/* Progress circle */}
-                          <circle
-                            cx="50"
-                            cy="50"
-                            r="45"
-                            fill="none"
-                            stroke="url(#gradient)"
-                            strokeWidth="8"
-                            strokeLinecap="round"
-                            strokeDasharray={`${summaryCircumference}`}
-                            strokeDashoffset={`${summaryDashoffset}`}
-                          />
-                          {/* Gradient definition */}
-                          <defs>
-                            <linearGradient
-                              id="gradient"
-                              x1="0%"
-                              y1="0%"
-                              x2="100%"
-                              y2="100%"
-                            >
-                              <stop offset="0%" stopColor="#3b82f6" />
-                              <stop offset="100%" stopColor="#06b6d4" />
-                            </linearGradient>
-                          </defs>
-                        </svg>
-                        {/* Percentage text */}
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="text-4xl font-bold text-white">
-                            {summaryScoreValue !== null
-                              ? `${summaryScoreValue}%`
-                              : "--"}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Text below circle */}
-                      <p className="text-white text-center mb-8 text-xs text-white/70">
-                        {summaryScoreValue !== null
-                          ? "Based on recent WhatsApp, SMS, email, and call activity."
-                          : "Run the AI summary to compute the engagement score."}
-                      </p>
-
-                      {/* AI Summary Section */}
-                      <div
-                        className="w-full rounded-lg p-4"
-                        style={{
-                          border: "1px solid rgba(255, 255, 255, 0.2)",
-                          background: "rgba(255, 255, 255, 0.02)",
-                        }}
+                  {/* Default Summary Content */}
+                  <div className="flex flex-col items-center">
+                    {/* Circular Progress Indicator */}
+                    <div className="relative w-48 h-48 mb-4">
+                      <svg
+                        className="w-full h-full transform -rotate-90"
+                        viewBox="0 0 100 100"
                       >
-                        <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
-                          <h3 className="text-white text-xs sm:text-sm font-semibold">
-                            AI Summary
-                          </h3>
-                          <button
-                            onClick={handleRefreshLeadSummary}
-                            disabled={
-                              !leadId || refreshLeadSummaryMutation.isPending
-                            }
-                            className="h-8 w-8 p-0 flex items-center justify-center text-white/70 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        {/* Background circle */}
+                        <circle
+                          cx="50"
+                          cy="50"
+                          r="45"
+                          fill="none"
+                          stroke="#1a1a1a"
+                          strokeWidth="8"
+                        />
+                        {/* Progress circle */}
+                        <circle
+                          cx="50"
+                          cy="50"
+                          r="45"
+                          fill="none"
+                          stroke="url(#gradient)"
+                          strokeWidth="8"
+                          strokeLinecap="round"
+                          strokeDasharray={`${summaryCircumference}`}
+                          strokeDashoffset={`${summaryDashoffset}`}
+                        />
+                        {/* Gradient definition */}
+                        <defs>
+                          <linearGradient
+                            id="gradient"
+                            x1="0%"
+                            y1="0%"
+                            x2="100%"
+                            y2="100%"
                           >
-                            <RefreshCcw className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                        <p className="text-[11px] leading-tight text-white/50 mb-3 whitespace-nowrap overflow-hidden text-ellipsis">
-                          {summaryStatusLabel}
-                        </p>
-                        <div className="text-white/80 text-xs  space-y-3 leading-relaxed min-h-[140px]">
-                          {isSummaryBusy ? (
-                            <div className="flex items-center text-white/60 text-xs">
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                              Generating the latest insights...
-                            </div>
-                          ) : summaryParagraphs.length > 0 ? (
-                            summaryParagraphs.map((paragraph, index) => (
-                              <p key={index}>{paragraph}</p>
-                            ))
-                          ) : (
-                            <div className="text-white/60 text-xs">
-                              No WhatsApp, SMS, email, or call activity recorded
-                              for {lead?.name || "this lead"} in the last 30
-                              day(s).
-                            </div>
-                          )}
-                        </div>
+                            <stop offset="0%" stopColor="#3b82f6" />
+                            <stop offset="100%" stopColor="#06b6d4" />
+                          </linearGradient>
+                        </defs>
+                      </svg>
+                      {/* Percentage text */}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-4xl font-bold text-white">
+                          {summaryScoreValue !== null
+                            ? `${summaryScoreValue}%`
+                            : "--"}
+                        </span>
                       </div>
                     </div>
-                  )}
+
+                    {/* Text below circle */}
+                    <p className="text-white text-center mb-8 text-xs text-white/70">
+                      {summaryScoreValue !== null
+                        ? "Based on recent WhatsApp, SMS, email, and call activity."
+                        : "Run the AI summary to compute the engagement score."}
+                    </p>
+
+                    {/* AI Summary Section */}
+                    <div
+                      className="w-full rounded-lg p-4"
+                      style={{
+                        border: "1px solid rgba(255, 255, 255, 0.2)",
+                        background: "rgba(255, 255, 255, 0.02)",
+                      }}
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
+                        <h3 className="text-white text-xs sm:text-sm font-semibold">
+                          AI Summary
+                        </h3>
+                        <button
+                          onClick={handleRefreshLeadSummary}
+                          disabled={
+                            !leadId || refreshLeadSummaryMutation.isPending
+                          }
+                          className="h-8 w-8 p-0 flex items-center justify-center text-white/70 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <RefreshCcw className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <p className="text-[11px] leading-tight text-white/50 mb-3 whitespace-nowrap overflow-hidden text-ellipsis">
+                        {summaryStatusLabel}
+                      </p>
+                      <div className="text-white/80 text-xs  space-y-3 leading-relaxed min-h-[140px]">
+                        {isSummaryBusy ? (
+                          <div className="flex items-center text-white/60 text-xs">
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Generating the latest insights...
+                          </div>
+                        ) : summaryParagraphs.length > 0 ? (
+                          summaryParagraphs.map((paragraph, index) => (
+                            <p key={index}>{paragraph}</p>
+                          ))
+                        ) : (
+                          <div className="text-white/60 text-xs">
+                            No WhatsApp, SMS, email, or call activity recorded
+                            for {lead?.name || "this lead"} in the last 30
+                            day(s).
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </TabsContent>
 
                 {/* Calendar Tab Content */}
@@ -1872,65 +1412,6 @@ const Activity: FC<ActivityProps> = ({
                             </div>
                           )}
                         </div>
-                        {/* Available Slots Section - Commented Out */}
-                        {/* <div
-                          className="rounded-lg p-6"
-                          style={{
-                            background: "rgba(255, 255, 255, 0.03)",
-                            border: "1px solid rgba(255, 255, 255, 0.1)",
-                          }}
-                        >
-                          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-                            <h3 className="text-white font-semibold text-xs sm:text-sm">
-                              Available Slots
-                            </h3>
-                            <button
-                              onClick={handleRefreshCalendarData}
-                              disabled={
-                                isAvailabilityBusy ||
-                                syncMeetingsMutation.isPending
-                              }
-                              className="h-8 w-8 p-0 flex items-center justify-center text-white/70 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              <RefreshCcw className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                          {isAvailabilityBusy ? (
-                            <div className="flex items-center gap-2 text-white/60 text-xs">
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                              Calculating availability...
-                            </div>
-                          ) : nextAvailableSlots.length > 0 ? (
-                            <div className="space-y-3">
-                              {nextAvailableSlots.map((slot) => (
-                                <div
-                                  key={slot.start}
-                                  className="rounded-lg p-4 border border-white/10 bg-white/5"
-                                >
-                                  <p className="text-white text-xs sm:text-sm font-semibold">
-                                    {format(slot.startDate, "EEE, MMM d")}
-                                  </p>
-                                  <p className="text-xs text-white/70">
-                                    {format(slot.startDate, "h:mm a")} –{" "}
-                                    {format(slot.endDate, "h:mm a")} ·{" "}
-                                    {slot.durationMinutes} min
-                                  </p>
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <div className="text-xs text-white/60">
-                              No availability detected for this range. Try
-                              selecting a different month or adjust your
-                              Microsoft calendar working hours.
-                            </div>
-                          )}
-                          {availabilityErrorMessage && (
-                            <div className="text-xs text-red-300 mt-3">
-                              {availabilityErrorMessage}
-                            </div>
-                          )}
-                        </div> */}
                       </div>
                     </div>
                   )}
@@ -2243,7 +1724,6 @@ const Activity: FC<ActivityProps> = ({
                                   variant="secondary"
                                   className="bg-white/10 text-white border border-white/20 text-xs flex items-center gap-1 w-full justify-between hover:bg-white/20"
                                 >
-                                  {/* <Check className="w-3 h-3 shrink-0" /> */}
                                   {(() => {
                                     const text = `${
                                       leadItem.name || "Lead"
