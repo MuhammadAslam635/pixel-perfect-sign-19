@@ -179,7 +179,7 @@ export interface UpdateConnectionMessageResponse {
 }
 
 // Prompt Management Types
-export type PromptType = "linkedin" | "email" | "phone";
+export type PromptType = "linkedin" | "email" | "phone" | "whatsapp";
 export type PromptCategory =
   | "system"
   | "human"

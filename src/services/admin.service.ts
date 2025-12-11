@@ -240,6 +240,15 @@ export const adminService = {
     data: {
       totalCompanies: number;
       activeCompanies: number;
+      prompts?: {
+        totalPrompts: number;
+        linkedinPrompts: number;
+        emailPrompts: number;
+        phonePrompts: number;
+        whatsappPrompts: number;
+        globalPrompts: number;
+        companySpecificPrompts: number;
+      };
     };
   }> => {
     try {
@@ -248,5 +257,22 @@ export const adminService = {
     } catch (error: any) {
       throw error;
     }
+  },
+
+  // Prompt management methods
+  getPromptsPaginated: async (params?: {
+    page?: number;
+    limit?: number;
+    promptType?: string;
+    promptCategory?: string;
+    companyId?: string;
+  }) => {
+    const response = await API.get("/admin/prompts", { params });
+    return response.data;
+  },
+
+  getPromptStatistics: async () => {
+    const response = await API.get("/admin/prompts/statistics");
+    return response.data;
   },
 };

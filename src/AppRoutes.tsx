@@ -45,6 +45,7 @@ import OnboardingPage from "@/pages/onboarding";
 import AdminDashboard from "@/pages/admin/Dashboard";
 import AdminSystemOverview from "@/pages/admin/SystemOverview";
 import AdminCompanies from "@/pages/admin/companies";
+import AdminPrompts from "@/pages/admin/prompts";
 import AdminMembers from "@/pages/admin/Members";
 import AdminSettings from "@/pages/admin/Settings";
 import AdminAnalytics from "@/pages/admin/Analytics";
@@ -392,6 +393,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute allowedRoles={["Admin"]}>
             <AdminCompanies />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/prompts"
+        element={
+          <ProtectedRoute allowedRoles={["Admin"]}>
+            <AdminPrompts />
           </ProtectedRoute>
         }
       />

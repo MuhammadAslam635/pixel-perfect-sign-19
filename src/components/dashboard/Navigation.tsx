@@ -11,6 +11,7 @@ import {
   Home,
   Mail,
   Megaphone,
+  MessageSquare,
   PhoneCall,
   Settings,
   Shield,
@@ -103,13 +104,6 @@ const adminNavLinks: NavLink[] = [
     match: (pathname: string) => pathname === "/admin/dashboard",
   },
   {
-    id: "system-overview",
-    label: "System Overview",
-    icon: BarChart3,
-    path: "/admin/system-overview",
-    match: (pathname: string) => pathname.startsWith("/admin/system-overview"),
-  },
-  {
     id: "all-companies",
     label: "All Companies",
     icon: Building2,
@@ -118,6 +112,13 @@ const adminNavLinks: NavLink[] = [
       pathname.startsWith("/admin/companies") ||
       pathname.startsWith("/admin/leads") ||
       pathname.startsWith("/admin/calendar"),
+  },
+  {
+    id: "prompts",
+    label: "AI Prompts",
+    icon: MessageSquare,
+    path: "/admin/prompts",
+    match: (pathname: string) => pathname.startsWith("/admin/prompts"),
   },
   {
     id: "global-members",
@@ -132,13 +133,6 @@ const adminNavLinks: NavLink[] = [
     icon: Settings,
     path: "/admin/settings",
     match: (pathname: string) => pathname.startsWith("/admin/settings"),
-  },
-  {
-    id: "analytics",
-    label: "Analytics",
-    icon: TrendingUp,
-    path: "/admin/analytics",
-    match: (pathname: string) => pathname.startsWith("/admin/analytics"),
   },
 ];
 

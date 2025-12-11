@@ -18,13 +18,15 @@ import {
   type PromptType,
   type PromptCategory,
 } from "@/services/connectionMessages.service";
-import { adminService, type Company } from "@/services/admin.service";
+import {
+  adminService,
+  type Company,
+  type CompaniesResponse,
+} from "@/services/admin.service";
 import { toast } from "sonner";
 
 // Import components
 import { CompaniesList } from "./components/CompaniesList";
-import { PromptManagement } from "./components/PromptManagement";
-import { PromptForm } from "./components/PromptForm";
 
 type ViewMode = "cards" | "table";
 
@@ -46,6 +48,9 @@ const Companies = () => {
     activeCompanies: 0,
   });
   const [statisticsLoading, setStatisticsLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const itemsPerPage = 12;
 
   // Form state
   const [formData, setFormData] = useState({
@@ -72,16 +77,27 @@ const Companies = () => {
     }
   };
 
-  const fetchCompanies = async () => {
+  const fetchCompanies = async (page: number = 1) => {
     try {
       setCompaniesLoading(true);
       const params = {
-        page: 1,
-        limit: 100, // Fetch more companies for admin selection
+        page,
+        limit: itemsPerPage,
       };
 
-      const response = await adminService.getCompanies(params);
-      setCompanies(response.data.companies as unknown as Company[]);
+      const response: CompaniesResponse = await adminService.getCompanies(
+        params
+      );
+      const companiesData = response.data.companies;
+      setCompanies(companiesData);
+
+      // Use totalPages from response, or calculate from totalRecords if not provided
+      const totalPagesFromResponse = response.data.totalPages;
+      const totalRecords = response.data.totalRecords || companiesData.length;
+      const calculatedPages =
+        totalPagesFromResponse || Math.ceil(totalRecords / itemsPerPage);
+      setTotalPages(calculatedPages || 1);
+      setCurrentPage(page);
     } catch (error) {
       console.error("Failed to fetch companies:", error);
       toast.error("Failed to fetch companies");
@@ -105,9 +121,13 @@ const Companies = () => {
 
   useEffect(() => {
     fetchPrompts();
-    fetchCompanies();
+    fetchCompanies(currentPage);
     fetchStatistics();
   }, []);
+
+  const handlePageChange = (page: number) => {
+    fetchCompanies(page);
+  };
 
   // Clear selected prompt and content when prompt type/category changes
   useEffect(() => {
@@ -451,153 +471,12 @@ const Companies = () => {
               companiesLoading={companiesLoading}
               viewMode={companiesViewMode}
               onViewModeChange={setCompaniesViewMode}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              itemsPerPage={itemsPerPage}
             />
           </motion.div>
-
-          {/* Prompt Management Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut", delay: 0.5 }}
-          >
-            <PromptManagement
-              prompts={prompts}
-              activeTab={activeTab}
-              onTabChange={setActiveTab}
-              onAddPrompt={handleAddPrompt}
-              onEditPrompt={handleEditPrompt}
-              onDeletePrompt={handleDeletePrompt}
-            />
-          </motion.div>
-
-          {/* Prompt Dialog */}
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-4xl w-[95vw] max-h-[90vh] overflow-y-auto scrollbar-hide">
-              <DialogHeader>
-                <DialogTitle>
-                  {selectedPrompt ? "Edit Prompt" : "Create New Prompt"}
-                </DialogTitle>
-                <DialogDescription>
-                  {selectedPrompt
-                    ? "Update the existing prompt configuration"
-                    : "Create a new AI prompt for connection messages"}
-                </DialogDescription>
-              </DialogHeader>
-              <PromptForm
-                formData={formData}
-                selectedCompanyForPrompt={selectedCompanyForPrompt}
-                companies={companies}
-                companiesLoading={companiesLoading}
-                onFormDataChange={handleFormDataChange}
-                onCompanySelect={(company) => {
-                  setSelectedCompanyForPrompt(company);
-                  setFormData((prev) => ({
-                    ...prev,
-                    companyId: company?._id || "",
-                  }));
-                }}
-                onSubmit={
-                  selectedPrompt ? handleUpdatePrompt : handleCreatePrompt
-                }
-                onCancel={() => setIsDialogOpen(false)}
-                isEditing={!!selectedPrompt}
-              />
-            </DialogContent>
-          </Dialog>
-
-          {/* Delete Confirmation Dialog */}
-          <Dialog
-            open={isDeleteDialogOpen}
-            onOpenChange={setIsDeleteDialogOpen}
-          >
-            <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-md w-[95vw]">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <div className="w-6 h-6 bg-red-600/20 rounded-full flex items-center justify-center">
-                    <svg
-                      className="w-4 h-4 text-red-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                      />
-                    </svg>
-                  </div>
-                  Delete Prompt
-                </DialogTitle>
-                <DialogDescription>
-                  Are you sure you want to delete this prompt? This action
-                  cannot be undone.
-                </DialogDescription>
-              </DialogHeader>
-
-              {promptToDelete && (
-                <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 bg-cyan-600/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <svg
-                        className="w-4 h-4 text-cyan-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                        />
-                      </svg>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white font-medium text-sm">
-                        {promptToDelete.promptType.charAt(0).toUpperCase() +
-                          promptToDelete.promptType.slice(1)}{" "}
-                        Prompt
-                      </p>
-                      <p className="text-white/60 text-xs">
-                        {promptToDelete.promptCategory
-                          .replace("_", " ")
-                          .replace(/\b\w/g, (l) => l.toUpperCase())}
-                        {promptToDelete.companyId
-                          ? ` • Company-specific`
-                          : ` • Global`}
-                      </p>
-                      {promptToDelete.companyId && (
-                        <p className="text-cyan-400 text-xs font-mono truncate">
-                          Company:{" "}
-                          {companies.find(
-                            (c) => c._id === promptToDelete!.companyId
-                          )?.name || "Unknown"}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div className="flex flex-col sm:flex-row justify-end gap-2 mt-4">
-                <Button
-                  variant="outline"
-                  onClick={cancelDeletePrompt}
-                  className="w-full sm:w-auto"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={confirmDeletePrompt}
-                  className="bg-red-600 hover:bg-red-700 w-full sm:w-auto"
-                >
-                  Delete Prompt
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
         </motion.div>
       </motion.main>
     </AdminLayout>

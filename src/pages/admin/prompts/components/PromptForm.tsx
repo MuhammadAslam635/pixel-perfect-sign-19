@@ -18,6 +18,13 @@ import {
   type AIModel,
 } from "@/services/connectionMessages.service";
 import { toast } from "sonner";
+import { PromptVariables } from "./PromptVariables";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { ChevronDown } from "lucide-react";
 
 interface PromptFormData {
   promptType: PromptType;
@@ -192,6 +199,7 @@ export const PromptForm = ({
               <SelectItem value="linkedin">LinkedIn</SelectItem>
               <SelectItem value="email">Email</SelectItem>
               <SelectItem value="phone">Phone</SelectItem>
+              <SelectItem value="whatsapp">WhatsApp</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -316,13 +324,15 @@ export const PromptForm = ({
       <div>
         <div className="flex items-center justify-between mb-2">
           <Label htmlFor="content">Prompt Content</Label>
-          <div className="text-xs text-white/50">
-            Use{" "}
-            <code className="px-1 py-0.5 bg-white/10 rounded">
-              {"{{variable}}"}
-            </code>{" "}
-            for template variables
-          </div>
+          <Collapsible>
+            <CollapsibleTrigger className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1 transition-colors">
+              View Available Variables
+              <ChevronDown className="w-3 h-3" />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-4">
+              <PromptVariables promptType={formData.promptType} />
+            </CollapsibleContent>
+          </Collapsible>
         </div>
         <div className="bg-white/5 rounded-lg border border-white/10 overflow-hidden">
           <ReactQuill

@@ -1,6 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Building2, Grid3X3, List } from "lucide-react";
+import {
+  Building2,
+  Grid3X3,
+  List,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { Company } from "@/services/admin.service";
 
 type ViewMode = "cards" | "table";
@@ -10,6 +16,10 @@ interface CompaniesListProps {
   companiesLoading: boolean;
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
+  currentPage?: number;
+  totalPages?: number;
+  onPageChange?: (page: number) => void;
+  itemsPerPage?: number;
 }
 
 export const CompaniesList = ({
@@ -17,7 +27,21 @@ export const CompaniesList = ({
   companiesLoading,
   viewMode,
   onViewModeChange,
+  currentPage = 1,
+  totalPages = 1,
+  onPageChange,
+  itemsPerPage = 12,
 }: CompaniesListProps) => {
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedCompanies = companies.slice(startIndex, endIndex);
+  const tableItemsPerPage = 25;
+  const tableStartIndex = (currentPage - 1) * tableItemsPerPage;
+  const tableEndIndex = tableStartIndex + tableItemsPerPage;
+  const paginatedTableCompanies = companies.slice(
+    tableStartIndex,
+    tableEndIndex
+  );
   return (
     <Card className="bg-[linear-gradient(135deg,rgba(58,62,75,0.82),rgba(28,30,40,0.94))] border-white/10 hover:border-white/20 transition-all duration-300">
       <CardHeader>
@@ -49,7 +73,7 @@ export const CompaniesList = ({
       <CardContent>
         {viewMode === "cards" ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {companies.slice(0, 12).map((company) => (
+            {paginatedCompanies.map((company) => (
               <div
                 key={company._id}
                 className="bg-white/5 rounded-lg p-4 border border-white/10 hover:border-white/20 transition-all duration-200"
@@ -103,7 +127,7 @@ export const CompaniesList = ({
                 </tr>
               </thead>
               <tbody>
-                {companies.slice(0, 25).map((company) => (
+                {paginatedTableCompanies.map((company) => (
                   <tr
                     key={company._id}
                     className="border-b border-white/5 hover:bg-white/5 transition-colors"
@@ -153,6 +177,71 @@ export const CompaniesList = ({
             <p className="text-white/50 mt-4">Loading companies...</p>
           </div>
         )}
+        {!companiesLoading &&
+          companies.length > 0 &&
+          onPageChange &&
+          totalPages > 1 && (
+            <div className="flex items-center justify-between mt-6 pt-4 border-t border-white/10">
+              <div className="text-sm text-white/60">
+                Showing {startIndex + 1} to{" "}
+                {Math.min(endIndex, companies.length)} of {companies.length}{" "}
+                companies
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onPageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="h-8"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter((page) => {
+                      // Show first page, last page, current page, and pages around current
+                      return (
+                        page === 1 ||
+                        page === totalPages ||
+                        (page >= currentPage - 1 && page <= currentPage + 1)
+                      );
+                    })
+                    .map((page, index, array) => {
+                      // Add ellipsis if there's a gap
+                      const showEllipsis =
+                        index > 0 && array[index] - array[index - 1] > 1;
+                      return (
+                        <div key={page} className="flex items-center gap-1">
+                          {showEllipsis && (
+                            <span className="text-white/40 px-2">...</span>
+                          )}
+                          <Button
+                            variant={
+                              currentPage === page ? "default" : "outline"
+                            }
+                            size="sm"
+                            onClick={() => onPageChange(page)}
+                            className="h-8 w-8 p-0"
+                          >
+                            {page}
+                          </Button>
+                        </div>
+                      );
+                    })}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onPageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="h-8"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          )}
       </CardContent>
     </Card>
   );
