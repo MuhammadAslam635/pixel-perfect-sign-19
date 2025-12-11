@@ -31,7 +31,7 @@ const Dashboard = () => {
   // Redirect Admin users to Members & Permissions page
   useEffect(() => {
     if (userRole === "Admin") {
-      navigate("/admin/members/permissions", { replace: true });
+      navigate("/admin/dashboard", { replace: true });
     }
   }, [userRole, navigate]);
 
