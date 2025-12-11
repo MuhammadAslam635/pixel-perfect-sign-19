@@ -187,7 +187,6 @@ export const PromptForm = ({
       {/* Info Card */}
       <div className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-lg p-4 border border-cyan-500/20">
         <div className="flex items-start gap-3">
-          <span className="text-2xl">✨</span>
           <div className="flex-1">
             <h3 className="text-white/90 font-semibold text-sm mb-1">
               Prompt Configuration
