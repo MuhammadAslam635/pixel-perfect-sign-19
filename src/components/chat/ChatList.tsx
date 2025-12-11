@@ -197,11 +197,7 @@ const ChatList = ({
                     <button
                       type="button"
                       onClick={() => onSelectChat(chat._id)}
-                      disabled={isCreatingNewChat}
-                      className={cn(
-                        "flex min-w-0 flex-1 flex-col text-left",
-                        isCreatingNewChat && "cursor-not-allowed opacity-50"
-                      )}
+                      className="flex min-w-0 flex-1 flex-col text-left"
                     >
                       <div className="flex items-center gap-2">
                         <p
@@ -236,11 +232,10 @@ const ChatList = ({
                             "ml-3 flex size-7 items-center justify-center rounded-full border border-transparent transition",
                             selectedChatId === chat._id
                               ? "bg-white/20"
-                              : "hover:bg-white/10",
-                            isCreatingNewChat && "cursor-not-allowed opacity-50"
+                              : "hover:bg-white/10"
                           )}
                           aria-label="Chat options"
-                          disabled={isDeletingThisChat || isCreatingNewChat}
+                          disabled={isDeletingThisChat}
                         >
                           {isDeletingThisChat ? (
                             <Loader2 className="size-4 animate-spin text-white" />

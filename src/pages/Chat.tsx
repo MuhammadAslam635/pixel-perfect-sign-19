@@ -254,7 +254,14 @@ const ChatPage = () => {
   }, [location.state]);
 
   const selectChatFromList = (chatId: string) => {
-    dispatch(setIsCreatingNewChat(false));
+    // If selecting a different chat (not the temporary chat), we should allow the selection
+    // The temporary chat will remain in the state and list even if isCreatingNewChat is false
+    // Only clear isCreatingNewChat if we're not selecting the temporary chat
+    // If selecting the temporary chat itself, keep isCreatingNewChat true
+    if (chatId !== "__new_chat__") {
+      dispatch(setIsCreatingNewChat(false));
+    }
+    
     dispatch(setSelectedChatId(chatId));
     dispatch(setIsMobileListOpen(false));
 
