@@ -405,18 +405,14 @@ const PromptsPage = () => {
             className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6"
           >
             <div>
-              <h1 className="text-3xl font-bold text-white mb-2">
+              <h1 className="text-2xl font-bold text-white mb-2">
                 AI Prompt Management
               </h1>
-              <p className="text-white/60 text-sm">
+              <p className="text-white/60">
                 Configure AI prompts for LinkedIn, Email, Phone, and WhatsApp
                 messages
               </p>
             </div>
-            <Badge className="bg-white/10 text-white/85 border border-white/20 px-4 py-2 w-fit">
-              <Settings className="w-4 h-4 mr-2" />
-              PROMPT CONFIGURATION
-            </Badge>
           </motion.div>
 
           {/* Stats Cards */}

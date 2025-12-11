@@ -180,25 +180,31 @@ export const PromptManagement = ({
           value={activeTab}
           onValueChange={(value) => onTabChange(value as PromptType)}
         >
-          <TabsList className="grid w-full grid-cols-4 h-auto">
+          <TabsList className="grid w-full grid-cols-4 h-auto bg-transparent p-0 gap-2">
             <TabsTrigger
               value="linkedin"
-              className="flex items-center gap-2 py-2"
+              className="flex items-center justify-center gap-2 py-2 px-4 rounded-lg border border-white/20 text-white/60 transition-all duration-300 hover:border-[#67B0B7] hover:text-white data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#67B0B7] data-[state=active]:to-[#4066B3] data-[state=active]:border-transparent data-[state=active]:text-white data-[state=active]:shadow-[0_5px_18px_rgba(103,176,183,0.35)]"
             >
               <MessageSquare className="w-4 h-4" />
               <span className="hidden sm:inline">LinkedIn</span>
             </TabsTrigger>
-            <TabsTrigger value="email" className="flex items-center gap-2 py-2">
+            <TabsTrigger
+              value="email"
+              className="flex items-center justify-center gap-2 py-2 px-4 rounded-lg border border-white/20 text-white/60 transition-all duration-300 hover:border-[#67B0B7] hover:text-white data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#67B0B7] data-[state=active]:to-[#4066B3] data-[state=active]:border-transparent data-[state=active]:text-white data-[state=active]:shadow-[0_5px_18px_rgba(103,176,183,0.35)]"
+            >
               <Mail className="w-4 h-4" />
               <span className="hidden sm:inline">Email</span>
             </TabsTrigger>
-            <TabsTrigger value="phone" className="flex items-center gap-2 py-2">
+            <TabsTrigger
+              value="phone"
+              className="flex items-center justify-center gap-2 py-2 px-4 rounded-lg border border-white/20 text-white/60 transition-all duration-300 hover:border-[#67B0B7] hover:text-white data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#67B0B7] data-[state=active]:to-[#4066B3] data-[state=active]:border-transparent data-[state=active]:text-white data-[state=active]:shadow-[0_5px_18px_rgba(103,176,183,0.35)]"
+            >
               <Phone className="w-4 h-4" />
               <span className="hidden sm:inline">Phone</span>
             </TabsTrigger>
             <TabsTrigger
               value="whatsapp"
-              className="flex items-center gap-2 py-2"
+              className="flex items-center justify-center gap-2 py-2 px-4 rounded-lg border border-white/20 text-white/60 transition-all duration-300 hover:border-[#67B0B7] hover:text-white data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#67B0B7] data-[state=active]:to-[#4066B3] data-[state=active]:border-transparent data-[state=active]:text-white data-[state=active]:shadow-[0_5px_18px_rgba(103,176,183,0.35)]"
             >
               <MessageSquare className="w-4 h-4" />
               <span className="hidden sm:inline">WhatsApp</span>
@@ -225,7 +231,7 @@ export const PromptManagement = ({
                       </p>
                     </div>
                     <Badge className="bg-green-600/20 text-green-300 border-green-600/40 px-3 py-1 text-xs font-bold">
-                      ✓ DEFAULT
+                      DEFAULT
                     </Badge>
                   </div>
 
@@ -321,7 +327,7 @@ export const PromptManagement = ({
                       </p>
                     </div>
                     <Badge className="bg-blue-600/20 text-blue-300 border-blue-600/40 px-3 py-1 text-xs font-bold">
-                      ⚡ OVERRIDE
+                      OVERRIDE
                     </Badge>
                   </div>
 

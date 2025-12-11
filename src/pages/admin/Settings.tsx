@@ -83,7 +83,7 @@ const AdminSettings = () => {
         >
           <header className="flex flex-col gap-2">
             <motion.h1
-              className="text-3xl font-semibold tracking-tight text-white sm:text-4xl"
+              className="text-2xl font-bold tracking-tight text-white"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
@@ -91,7 +91,7 @@ const AdminSettings = () => {
               Admin Settings
             </motion.h1>
             <motion.p
-              className="max-w-2xl text-sm text-white/70 sm:text-base"
+              className="text-white/70"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.6 }}

@@ -437,16 +437,13 @@ const AdminUsers = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">
+            <h1 className="text-2xl font-bold text-white my-2">
               User Management
             </h1>
-            <p className="text-white/60 text-sm">
+            <p className="text-white/60">
               Manage users across all companies by roles and permissions
             </p>
           </div>
-          <Badge className="bg-white/10 text-white/85 border border-white/20 px-4 py-2">
-            GLOBAL VIEW
-          </Badge>
         </div>
 
         {/* Statistics Cards */}
@@ -635,15 +632,15 @@ const AdminUsers = () => {
                 onValueChange={setActiveRoleTab}
                 className="w-full"
               >
-                <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 mb-6 bg-black/20 border border-white/10">
+                <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 mb-6 bg-transparent p-0 gap-2">
                   {roleTabs.map((tab) => (
                     <TabsTrigger
                       key={tab.value}
                       value={tab.value}
-                      className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-300 text-white/70"
+                      className="flex items-center justify-center gap-2 py-2 px-4 rounded-lg border border-white/20 text-white/60 transition-all duration-300 hover:border-[#67B0B7] hover:text-white data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#67B0B7] data-[state=active]:to-[#4066B3] data-[state=active]:border-transparent data-[state=active]:text-white data-[state=active]:shadow-[0_5px_18px_rgba(103,176,183,0.35)] group"
                     >
                       {tab.label}
-                      <Badge className="ml-2 bg-white/10 text-white/70">
+                      <Badge className="ml-2 bg-white/10 text-white/70 group-data-[state=active]:bg-white/20 group-data-[state=active]:text-white transition-colors">
                         {tab.count}
                       </Badge>
                     </TabsTrigger>
