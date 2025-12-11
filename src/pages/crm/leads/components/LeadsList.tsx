@@ -312,8 +312,8 @@ const LeadsList: FC<LeadsListProps> = ({
       return (
         <Card
           key={lead._id}
-          className={`relative flex items-center gap-2.5 overflow-hidden border-0 rounded-lg p-2.5 transition-all duration-300 hover:bg-white/5 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] cursor-pointer aspect-[3/1] before:absolute before:content-[''] before:-left-1 before:top-1/2 before:-translate-y-1/2 before:h-[55%] sm:before:h-[60%] before:w-0 md:before:w-[3px] lg:before:w-[4px] xl:before:w-[6px] before:rounded-full backdrop-blur-[22.6px] ${
-            isActive ? "md:before:bg-primary" : "md:before:bg-white/75"
+          className={`relative flex items-center gap-3 overflow-hidden border-0 rounded-xl p-2 pb-3 transition-all duration-300 hover:bg-white/5 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] cursor-pointer  before:absolute before:content-[''] before:-left-1 before:top-1/2 before:-translate-y-1/2 before:h-[60%] before:w-1 md:before:w-[3px] lg:before:w-[4px] before:rounded-full backdrop-blur-[22.6px] ${
+            isActive ? "before:bg-primary" : "before:bg-white/75"
           }`}
           style={{
             background: `linear-gradient(180deg, rgba(104, 177, 184, 0.1) 0%, rgba(104, 177, 184, 0.08) 100%), radial-gradient(50% 100% at 50% 0%, rgba(104, 177, 184, 0.1) 0%, rgba(104, 177, 184, 0) 100%)`,
@@ -328,12 +328,11 @@ const LeadsList: FC<LeadsListProps> = ({
           />
 
           {/* Content */}
-          <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-            {/* First Row: Name and Company Badge */}
-            <div className="flex items-center justify-between gap-2 min-w-0">
+          <div className="flex flex-col justify-center gap-1 flex-1 min-w-0">
+            <div className="flex flex-col gap-0.5">
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <h3 className="text-xs sm:text-sm font-semibold text-white leading-tight overflow-hidden text-ellipsis whitespace-nowrap">
+                  <h3 className="text-sm sm:text-base font-bold text-white leading-tight truncate -mb-1">
                     {lead.name}
                   </h3>
                 </TooltipTrigger>
@@ -342,9 +341,24 @@ const LeadsList: FC<LeadsListProps> = ({
                 </TooltipContent>
               </Tooltip>
 
+              {lead.position && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <p className="text-xs text-white/50 leading-tight truncate">
+                      {lead.position}
+                    </p>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{lead.position}</p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
+            </div>
+
+            <div className="flex items-center mt-0.5">
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Badge className="rounded-full bg-primary/20 text-primary border-primary/30 px-1.5 py-0.5 text-[10px] sm:text-xs overflow-hidden text-ellipsis whitespace-nowrap flex-shrink-0">
+                  <Badge className="rounded-md bg-white/5 hover:bg-white/10 text-white/70 border-white/10 px-2 py-0.5 text-[9px] font-normal transition-colors max-w-full truncate">
                     {lead.companyName || "Company"}
                   </Badge>
                 </TooltipTrigger>
@@ -353,20 +367,6 @@ const LeadsList: FC<LeadsListProps> = ({
                 </TooltipContent>
               </Tooltip>
             </div>
-
-            {/* Second Row: Position/Role */}
-            {lead.position && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <p className="text-[10px] sm:text-xs text-white/60 leading-tight overflow-hidden text-ellipsis whitespace-nowrap">
-                    {lead.position}
-                  </p>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{lead.position}</p>
-                </TooltipContent>
-              </Tooltip>
-            )}
           </div>
         </Card>
       );
