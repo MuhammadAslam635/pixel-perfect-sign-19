@@ -264,46 +264,45 @@ const PromptsPage = () => {
     if (!companyId || companyId === null) {
       // Global prompt - no company selected
       setSelectedCompanyForPrompt(null);
-      return;
-    }
-
-    // Type guard function to check if companyId is a populated object
-    const isPopulatedCompany = (
-      id: string | { _id: string; name?: string; industry?: string } | null
-    ): id is { _id: string; name?: string; industry?: string } => {
-      return typeof id === "object" && id !== null && "_id" in id;
-    };
-
-    // Extract company ID whether it's an object (populated) or string
-    let companyIdValue: string | null = null;
-
-    if (isPopulatedCompany(companyId)) {
-      companyIdValue = companyId._id;
-    } else if (typeof companyId === "string") {
-      companyIdValue = companyId;
-    }
-
-    if (companyIdValue) {
-      // Try to find company in the companies list
-      const company = companies.find((c) => c._id === companyIdValue);
-      if (company) {
-        setSelectedCompanyForPrompt(company);
-      } else {
-        // If company not found in list, but we have company info from populated data
-        if (isPopulatedCompany(companyId)) {
-          // Create a temporary company object from populated data
-          setSelectedCompanyForPrompt({
-            _id: companyId._id,
-            name: companyId.name || "Unknown Company",
-            email: "",
-            role: "",
-          } as Company);
-        } else {
-          setSelectedCompanyForPrompt(null);
-        }
-      }
     } else {
-      setSelectedCompanyForPrompt(null);
+      // Type guard function to check if companyId is a populated object
+      const isPopulatedCompany = (
+        id: string | { _id: string; name?: string; industry?: string } | null
+      ): id is { _id: string; name?: string; industry?: string } => {
+        return typeof id === "object" && id !== null && "_id" in id;
+      };
+
+      // Extract company ID whether it's an object (populated) or string
+      let companyIdValue: string | null = null;
+
+      if (isPopulatedCompany(companyId)) {
+        companyIdValue = companyId._id;
+      } else if (typeof companyId === "string") {
+        companyIdValue = companyId;
+      }
+
+      if (companyIdValue) {
+        // Try to find company in the companies list
+        const company = companies.find((c) => c._id === companyIdValue);
+        if (company) {
+          setSelectedCompanyForPrompt(company);
+        } else {
+          // If company not found in list, but we have company info from populated data
+          if (isPopulatedCompany(companyId)) {
+            // Create a temporary company object from populated data
+            setSelectedCompanyForPrompt({
+              _id: companyId._id,
+              name: companyId.name || "Unknown Company",
+              email: "",
+              role: "",
+            } as Company);
+          } else {
+            setSelectedCompanyForPrompt(null);
+          }
+        }
+      } else {
+        setSelectedCompanyForPrompt(null);
+      }
     }
 
     setIsDialogOpen(true);
