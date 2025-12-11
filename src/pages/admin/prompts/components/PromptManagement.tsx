@@ -48,8 +48,20 @@ export const PromptManagement = ({
   const filteredPrompts = prompts.filter(
     (prompt) => prompt.promptType === activeTab
   );
+
+  // Filter global prompts (no companyId)
   const globalPrompts = filteredPrompts.filter((prompt) => !prompt.companyId);
-  const companyPrompts = filteredPrompts.filter((prompt) => prompt.companyId);
+
+  // Filter company-specific prompts (has companyId)
+  // Handle both string IDs and populated objects
+  const companyPrompts = filteredPrompts.filter((prompt) => {
+    if (!prompt.companyId) return false;
+    // Check if it's a populated object with _id or just a string ID
+    if (typeof prompt.companyId === 'object') {
+      return prompt.companyId._id ? true : false;
+    }
+    return true; // It's a string ID
+  });
 
   return (
     <Card className="bg-[linear-gradient(135deg,rgba(58,62,75,0.82),rgba(28,30,40,0.94))] border-white/10 hover:border-white/20 transition-all duration-300">
@@ -239,6 +251,30 @@ export const PromptManagement = ({
                         </div>
                       </div>
                     ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Info card when only global prompts exist */}
+              {globalPrompts.length > 0 && companyPrompts.length === 0 && (
+                <div className="mt-4 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-lg p-4 border border-blue-500/20">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="text-white/90 font-semibold text-sm mb-1">
+                        Company-Specific Prompts
+                      </h4>
+                      <p className="text-white/60 text-xs leading-relaxed mb-2">
+                        No company-specific prompts have been created yet. All companies are using the global prompts shown above.
+                      </p>
+                      <p className="text-white/50 text-xs leading-relaxed">
+                        <strong className="text-blue-300">Tip:</strong> Click "Add Prompt" and select a company from the dropdown to create a custom prompt that will override the global prompt for that specific company.
+                      </p>
+                    </div>
                   </div>
                 </div>
               )}

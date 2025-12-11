@@ -70,9 +70,68 @@ const PromptsPage = () => {
       const response = await adminService.getPromptsPaginated({
         limit: 1000, // Get all for statistics
       });
-      setPrompts(response.data.prompts);
-      updateStatistics(response.data.prompts);
+
+      // Map company information to prompts
+      // Note: Backend already populates companyId with { _id, name, industry }
+      const promptsWithCompanyInfo = response.data.prompts.map((prompt) => {
+        if (prompt.companyId) {
+          // Check if companyId is already populated (has _id property)
+          if (typeof prompt.companyId === 'object' && prompt.companyId._id) {
+            // Already populated by backend
+            return {
+              ...prompt,
+              company: {
+                _id: prompt.companyId._id,
+                name: prompt.companyId.name,
+              },
+            };
+          } else {
+            // If not populated, look up in companies array
+            const company = companies.find((c) => c._id === prompt.companyId);
+            return {
+              ...prompt,
+              company: company ? { _id: company._id, name: company.name } : undefined,
+            };
+          }
+        }
+        return prompt;
+      });
+
+      // Debug: Log prompt types with detailed breakdown
+      console.log("📊 Admin Prompts Debug Info:");
+      console.log("├─ Total prompts fetched:", promptsWithCompanyInfo.length);
+      console.log("├─ 🌐 Global prompts:", promptsWithCompanyInfo.filter(p => !p.companyId).length);
+      console.log("└─ 🏢 Company-specific prompts:", promptsWithCompanyInfo.filter(p => p.companyId).length);
+
+      // Log breakdown by type
+      const promptsByType = {
+        linkedin: promptsWithCompanyInfo.filter(p => p.promptType === "linkedin").length,
+        email: promptsWithCompanyInfo.filter(p => p.promptType === "email").length,
+        phone: promptsWithCompanyInfo.filter(p => p.promptType === "phone").length,
+        whatsapp: promptsWithCompanyInfo.filter(p => p.promptType === "whatsapp").length,
+      };
+      console.log("📈 Prompts by type:", promptsByType);
+
+      // If company-specific prompts exist, log their details
+      const companySpecificPrompts = promptsWithCompanyInfo.filter(p => p.companyId);
+      if (companySpecificPrompts.length > 0) {
+        console.log("🏢 Company-specific prompt details:");
+        companySpecificPrompts.forEach((p, idx) => {
+          console.log(`   ${idx + 1}. ${p.promptType} - ${p.promptCategory}:`, {
+            promptId: p._id,
+            companyId: typeof p.companyId === 'object' ? p.companyId._id : p.companyId,
+            companyName: p.company?.name || (typeof p.companyId === 'object' ? p.companyId.name : "Unknown"),
+            isActive: p.isActive,
+          });
+        });
+      } else {
+        console.log("ℹ️ No company-specific prompts found. All prompts are global.");
+      }
+
+      setPrompts(promptsWithCompanyInfo);
+      updateStatistics(promptsWithCompanyInfo);
     } catch (error) {
+      console.error("Error fetching prompts:", error);
       toast.error("Failed to fetch prompts");
     } finally {
       setLoading(false);
@@ -109,8 +168,11 @@ const PromptsPage = () => {
   };
 
   useEffect(() => {
-    fetchPrompts();
-    fetchCompanies();
+    const loadData = async () => {
+      await fetchCompanies(); // Load companies first
+      await fetchPrompts(); // Then load prompts with company mapping
+    };
+    loadData();
   }, []);
 
   const handleCreatePrompt = async () => {

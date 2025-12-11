@@ -331,4 +331,27 @@ export const adminService = {
       throw error;
     }
   },
+
+  /**
+   * Get admin dashboard statistics
+   */
+  getDashboardStats: async (): Promise<{
+    success: boolean;
+    data: {
+      totalCompanies: number;
+      totalAiAgents: number;
+      totalAiAgentRequests: number;
+      totalRequestPortal: number;
+      totalFreeCompanies: number;
+      totalPremiumCompanies: number;
+    };
+    message: string;
+  }> => {
+    try {
+      const response = await API.get("/admin/dashboard/stats");
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
 };

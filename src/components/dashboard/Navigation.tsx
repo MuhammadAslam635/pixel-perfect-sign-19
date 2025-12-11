@@ -6,18 +6,11 @@ import ChatIcon from "@/components/icons/ChatIcon";
 import {
   BarChart3,
   Bot,
-  Building2,
-  CalendarDays,
   Home,
-  Mail,
   Megaphone,
   MessageSquare,
   PhoneCall,
   Settings,
-  Shield,
-  Target,
-  TrendingUp,
-  UserCheck,
   Users,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -110,7 +103,7 @@ const adminNavLinks: NavLink[] = [
   },
   {
     id: "prompts",
-    label: "AI Prompts",
+    label: "Prompts",
     icon: MessageSquare,
     path: "/admin/prompts",
     match: (pathname: string) => pathname.startsWith("/admin/prompts"),

@@ -184,7 +184,22 @@ export const PromptForm = ({
   }, [formData.content]);
   return (
     <div className="space-y-6">
-
+      {/* Info Card */}
+      <div className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-lg p-4 border border-cyan-500/20">
+        <div className="flex items-start gap-3">
+          <span className="text-2xl">✨</span>
+          <div className="flex-1">
+            <h3 className="text-white/90 font-semibold text-sm mb-1">
+              Prompt Configuration
+            </h3>
+            <p className="text-white/60 text-xs leading-relaxed">
+              <strong className="text-cyan-300">Global Prompts:</strong> Leave "Company" as "Global" to apply this prompt to all companies.
+              <br />
+              <strong className="text-blue-300">Company-Specific:</strong> Select a specific company to create a custom prompt that overrides the global prompt for that company only.
+            </p>
+          </div>
+        </div>
+      </div>
 
       {/* Prompt Type & Category */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
