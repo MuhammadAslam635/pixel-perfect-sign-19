@@ -55,7 +55,7 @@ export class AdminGlobalIntegrationsService {
   async fetchGlobalIntegrations(): Promise<GlobalIntegrationsResponse> {
     try {
       const response = await axios.get(
-        `${APP_BACKEND_URL}/api/admin/integrations/global`,
+        `${APP_BACKEND_URL}/admin/integrations/global`,
         {
           headers: this.getAuthHeaders(),
         }
@@ -79,7 +79,7 @@ export class AdminGlobalIntegrationsService {
   ): Promise<SaveIntegrationResponse> {
     try {
       const response = await axios.post(
-        `${APP_BACKEND_URL}/api/admin/integrations/global/${provider}`,
+        `${APP_BACKEND_URL}/admin/integrations/global/${provider}`,
         {
           connectionData: {},
           metadata,
@@ -107,7 +107,7 @@ export class AdminGlobalIntegrationsService {
   ): Promise<{ success: boolean; message?: string }> {
     try {
       const response = await axios.delete(
-        `${APP_BACKEND_URL}/api/admin/integrations/global/${provider}`,
+        `${APP_BACKEND_URL}/admin/integrations/global/${provider}`,
         {
           headers: this.getAuthHeaders(),
         }
@@ -131,7 +131,7 @@ export class AdminGlobalIntegrationsService {
   ): Promise<{ success: boolean; message?: string }> {
     try {
       const response = await axios.post(
-        `${APP_BACKEND_URL}/api/admin/integrations/global/${provider}/test`,
+        `${APP_BACKEND_URL}/admin/integrations/global/${provider}/test`,
         {},
         {
           headers: this.getAuthHeaders(),
@@ -157,7 +157,7 @@ export class AdminGlobalIntegrationsService {
   }> {
     try {
       const response = await axios.get(
-        `${APP_BACKEND_URL}/api/admin/integrations/env/check`,
+        `${APP_BACKEND_URL}/admin/integrations/env/check`,
         {
           headers: this.getAuthHeaders(),
         }
@@ -181,7 +181,7 @@ export class AdminGlobalIntegrationsService {
   }> {
     try {
       const response = await axios.get(
-        `${APP_BACKEND_URL}/api/admin/integrations/env/validate/${provider}`,
+        `${APP_BACKEND_URL}/admin/integrations/env/validate/${provider}`,
         {
           headers: this.getAuthHeaders(),
         }

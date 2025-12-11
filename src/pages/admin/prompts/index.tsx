@@ -382,32 +382,42 @@ const PromptsPage = () => {
 
           {/* Prompt Dialog */}
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-4xl w-[95vw] max-h-[90vh] overflow-y-auto scrollbar-hide">
-              <DialogHeader>
-                <DialogTitle>
-                  {selectedPrompt ? "Edit Prompt" : "Create New Prompt"}
+            <DialogContent className="bg-[linear-gradient(135deg,rgba(58,62,75,0.95),rgba(28,30,40,0.98))] border-cyan-500/20 text-white max-w-[95vw] lg:max-w-7xl w-[95vw] max-h-[95vh] overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+              <DialogHeader className="border-b border-white/10 pb-4">
+                <DialogTitle className="text-2xl font-bold flex items-center gap-3">
+                  {selectedPrompt ? (
+                    <>
+                      <span>Edit Prompt</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Create New Prompt</span>
+                    </>
+                  )}
                 </DialogTitle>
-                <DialogDescription>
+                <DialogDescription className="text-white/60 text-sm">
                   {selectedPrompt
-                    ? "Update the existing prompt configuration"
-                    : "Create a new AI prompt for connection messages"}
+                    ? "Update the existing prompt configuration and customize variables"
+                    : "Create a new AI prompt for connection messages with dynamic variables"}
                 </DialogDescription>
               </DialogHeader>
-              <PromptForm
-                formData={formData}
-                selectedCompanyForPrompt={selectedCompanyForPrompt}
-                companies={companies}
-                companiesLoading={companiesLoading}
-                onFormDataChange={handleFormDataChange}
-                onCompanySelect={(company) => {
-                  setSelectedCompanyForPrompt(company);
-                }}
-                onSubmit={
-                  selectedPrompt ? handleUpdatePrompt : handleCreatePrompt
-                }
-                onCancel={() => setIsDialogOpen(false)}
-                isEditing={!!selectedPrompt}
-              />
+              <div className="mt-4">
+                <PromptForm
+                  formData={formData}
+                  selectedCompanyForPrompt={selectedCompanyForPrompt}
+                  companies={companies}
+                  companiesLoading={companiesLoading}
+                  onFormDataChange={handleFormDataChange}
+                  onCompanySelect={(company) => {
+                    setSelectedCompanyForPrompt(company);
+                  }}
+                  onSubmit={
+                    selectedPrompt ? handleUpdatePrompt : handleCreatePrompt
+                  }
+                  onCancel={() => setIsDialogOpen(false)}
+                  isEditing={!!selectedPrompt}
+                />
+              </div>
             </DialogContent>
           </Dialog>
 

@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import {
@@ -182,17 +183,23 @@ export const PromptForm = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.content]);
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+
+
+      {/* Prompt Type & Category */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="promptType">Prompt Type</Label>
+          <Label htmlFor="promptType" className="text-white/80 mb-2 flex items-center gap-2">
+            <span>Prompt Type</span>
+            <Badge className="bg-cyan-500/20 text-cyan-300 border-cyan-500/30 text-xs">Required</Badge>
+          </Label>
           <Select
             value={formData.promptType}
             onValueChange={(value: PromptType) =>
               onFormDataChange("promptType", value)
             }
           >
-            <SelectTrigger>
+            <SelectTrigger className="bg-black/30 border-white/10 text-white hover:border-cyan-500/40 transition-colors">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -204,14 +211,17 @@ export const PromptForm = ({
           </Select>
         </div>
         <div>
-          <Label htmlFor="promptCategory">Category</Label>
+          <Label htmlFor="promptCategory" className="text-white/80 mb-2 flex items-center gap-2">
+            <span>Category</span>
+            <Badge className="bg-cyan-500/20 text-cyan-300 border-cyan-500/30 text-xs">Required</Badge>
+          </Label>
           <Select
             value={formData.promptCategory}
             onValueChange={(value: PromptCategory) =>
               onFormDataChange("promptCategory", value)
             }
           >
-            <SelectTrigger>
+            <SelectTrigger className="bg-black/30 border-white/10 text-white hover:border-cyan-500/40 transition-colors">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -225,9 +235,13 @@ export const PromptForm = ({
           </Select>
         </div>
       </div>
+      {/* Settings Row */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="flex flex-col gap-2">
-          <Label htmlFor="company">Company (Optional)</Label>
+          <Label htmlFor="company" className="text-white/80 mb-2 flex items-center gap-2">
+            <span>Company</span>
+            <Badge className="bg-white/10 text-white/60 border-white/20 text-xs">Optional</Badge>
+          </Label>
           <Select
             value={selectedCompanyForPrompt?._id || "global"}
             onValueChange={(value) => {
@@ -242,7 +256,7 @@ export const PromptForm = ({
             }}
             disabled={companiesLoading}
           >
-            <SelectTrigger>
+            <SelectTrigger className="bg-black/30 border-white/10 text-white hover:border-cyan-500/40 transition-colors">
               <SelectValue placeholder="Select a company (optional)" />
             </SelectTrigger>
             <SelectContent>
@@ -263,7 +277,10 @@ export const PromptForm = ({
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label htmlFor="model">AI Model</Label>
+          <Label htmlFor="model" className="text-white/80 mb-2 flex items-center gap-2">
+            <span>AI Model</span>
+            <Badge className="bg-cyan-500/20 text-cyan-300 border-cyan-500/30 text-xs">Required</Badge>
+          </Label>
           <Select
             value={formData.metadata?.model || "gpt-4o-mini"}
             onValueChange={(value) =>
@@ -274,7 +291,7 @@ export const PromptForm = ({
             }
             disabled={modelsLoading}
           >
-            <SelectTrigger>
+            <SelectTrigger className="bg-black/30 border-white/10 text-white hover:border-cyan-500/40 transition-colors">
               <SelectValue
                 placeholder={
                   modelsLoading ? "Loading models..." : "Select a model"
@@ -297,7 +314,10 @@ export const PromptForm = ({
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label htmlFor="temperature">Temperature</Label>
+          <Label htmlFor="temperature" className="text-white/80 mb-2 flex items-center gap-2">
+            <span>Temperature</span>
+            <Badge className="bg-cyan-500/20 text-cyan-300 border-cyan-500/30 text-xs">Required</Badge>
+          </Label>
           <Select
             value={formData.metadata?.temperature?.toString() || "0.7"}
             onValueChange={(value) =>
@@ -307,7 +327,7 @@ export const PromptForm = ({
               })
             }
           >
-            <SelectTrigger>
+            <SelectTrigger className="bg-black/30 border-white/10 text-white hover:border-cyan-500/40 transition-colors">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -321,47 +341,70 @@ export const PromptForm = ({
           </Select>
         </div>
       </div>
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <Label htmlFor="content">Prompt Content</Label>
-          <Collapsible>
-            <CollapsibleTrigger className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1 transition-colors">
-              View Available Variables
-              <ChevronDown className="w-3 h-3" />
-            </CollapsibleTrigger>
-            <CollapsibleContent className="mt-4">
-              <PromptVariables promptType={formData.promptType} />
-            </CollapsibleContent>
-          </Collapsible>
+
+      {/* Two-Column Layout: Prompt Editor and Variables */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Left Column: Prompt Editor */}
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="content" className="text-white/80 mb-2 flex items-center gap-2">
+              <span>Prompt Content</span>
+              <Badge className="bg-cyan-500/20 text-cyan-300 border-cyan-500/30 text-xs">Required</Badge>
+            </Label>
+            <div className="bg-white/5 rounded-lg border border-white/10 overflow-hidden">
+              <ReactQuill
+                key={
+                  formData.promptType +
+                  formData.promptCategory +
+                  (isEditing ? "edit" : "new")
+                }
+                theme="snow"
+                value={quillValue}
+                onChange={(value) => {
+                  setQuillValue(value);
+                  const plainText = htmlToPlainText(value);
+                  onFormDataChange("content", plainText);
+                }}
+                modules={quillModules}
+                formats={quillFormats}
+                placeholder="Enter the prompt content... You can use template variables like {{person.name}}, {{company.name}}, {{context}}, etc."
+                className="bg-transparent"
+                style={{
+                  height: "400px",
+                }}
+              />
+            </div>
+          </div>
         </div>
-        <div className="bg-white/5 rounded-lg border border-white/10 overflow-hidden">
-          <ReactQuill
-            key={
-              formData.promptType +
-              formData.promptCategory +
-              (isEditing ? "edit" : "new")
-            }
-            theme="snow"
-            value={quillValue}
-            onChange={(value) => {
-              setQuillValue(value);
-              const plainText = htmlToPlainText(value);
-              onFormDataChange("content", plainText);
-            }}
-            modules={quillModules}
-            formats={quillFormats}
-            placeholder="Enter the prompt content... You can use template variables like {{person.name}}, {{company.name}}, {{context}}, etc."
-            className="bg-transparent"
-            style={{
-              height: "300px",
-            }}
-          />
+
+        {/* Right Column: Available Variables */}
+        <div className="space-y-4">
+          <PromptVariables promptType={formData.promptType} />
         </div>
-        <style>{`
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-white/10">
+        <Button
+          variant="outline"
+          onClick={onCancel}
+          className="w-full sm:w-auto bg-black/30 border-white/10 text-white hover:bg-white/10 hover:border-white/20 transition-all"
+        >
+          Cancel
+        </Button>
+        <Button
+          onClick={onSubmit}
+          className="w-full sm:w-auto bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white font-semibold shadow-lg hover:shadow-cyan-500/20 transition-all"
+        >
+          {isEditing ? "Update Prompt" : "Create Prompt"}
+        </Button>
+      </div>
+
+      <style>{`
           .ql-container {
             font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
             font-size: 14px;
-            height: 250px;
+            height: 350px;
             background: transparent;
             color: rgba(255, 255, 255, 0.9);
             overflow-y: auto;
@@ -372,7 +415,7 @@ export const PromptForm = ({
             display: none;
           }
           .ql-editor {
-            min-height: 250px;
+            min-height: 350px;
             color: rgba(255, 255, 255, 0.9);
             overflow-y: auto;
             -ms-overflow-style: none;
@@ -428,22 +471,6 @@ export const PromptForm = ({
             border-left: 3px solid rgb(6, 182, 212);
           }
         `}</style>
-      </div>
-      <div className="flex flex-col sm:flex-row justify-end gap-2">
-        <Button
-          variant="outline"
-          onClick={onCancel}
-          className="w-full sm:w-auto"
-        >
-          Cancel
-        </Button>
-        <Button
-          onClick={onSubmit}
-          className="bg-cyan-600 hover:bg-cyan-700 w-full sm:w-auto"
-        >
-          {isEditing ? "Update" : "Create"} Prompt
-        </Button>
-      </div>
     </div>
   );
 };
