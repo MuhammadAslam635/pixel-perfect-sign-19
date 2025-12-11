@@ -87,9 +87,8 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
 
   const hasActiveChat = currentChatId || localMessages.length > 0;
 
-
   return (
-    <section 
+    <section
       ref={panelRef}
       className="hidden assistant-panel mx-auto w-full h-full lg:flex flex-col overflow-hidden relative sm:order-1 animate-in fade-in duration-700"
     >
@@ -124,8 +123,7 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
             className="assistant-tool cursor-pointer"
             onClick={handleStartNewChat}
             style={{
-              background:
-                !showChatList ? "#5D5D5D" : "transparent",
+              background: !showChatList ? "#5D5D5D" : "transparent",
             }}
           >
             <Plus size={14} />
