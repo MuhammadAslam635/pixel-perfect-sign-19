@@ -102,7 +102,9 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
   const [interimTranscript, setInterimTranscript] = useState("");
   const [streamingEvents, setStreamingEvents] = useState<StreamEvent[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
-  const [optimisticMessages, setOptimisticMessages] = useState<ChatMessage[]>([]);
+  const [optimisticMessages, setOptimisticMessages] = useState<ChatMessage[]>(
+    []
+  );
   const scrollAreaRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const isSendingRef = useRef(false);
@@ -227,17 +229,15 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
         const signature = `${message.role}-${message.content}`;
 
         // Only match with server messages created within 30 seconds after the temp message
-        const matchingServerMessage = apiMessages.find(
-          (serverMsg) => {
-            if (`${serverMsg.role}-${serverMsg.content}` !== signature) {
-              return false;
-            }
-            const serverTimestamp = new Date(serverMsg.createdAt).getTime();
-            const timeDiff = serverTimestamp - tempTimestamp;
-            // Server message should be created after temp message, within 30 seconds
-            return timeDiff >= 0 && timeDiff <= 30000;
+        const matchingServerMessage = apiMessages.find((serverMsg) => {
+          if (`${serverMsg.role}-${serverMsg.content}` !== signature) {
+            return false;
           }
-        );
+          const serverTimestamp = new Date(serverMsg.createdAt).getTime();
+          const timeDiff = serverTimestamp - tempTimestamp;
+          // Server message should be created after temp message, within 30 seconds
+          return timeDiff >= 0 && timeDiff <= 30000;
+        });
 
         // If we found a matching recent server message, filter out the temp message
         if (matchingServerMessage) {
@@ -268,8 +268,6 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
     onMessagesChange(selectedMessages);
   }, [selectedMessages, onMessagesChange]);
 
-
-
   // Sync local messages with parent and chat detail
   // Skip syncing when sending a message to preserve optimistic updates
   useEffect(() => {
@@ -293,11 +291,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
       // Clear messages for new chat
       setLocalMessages([]);
     }
-  }, [
-    currentChatId,
-    chatDetail?.messages,
-    initialMessages,
-  ]);
+  }, [currentChatId, chatDetail?.messages, initialMessages]);
 
   const handleSendMessage = () => {
     if (message.trim() && !isSendingRef.current && !isListening) {
@@ -329,7 +323,10 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
     setMessage("");
     setOptimisticMessages((prev) => {
       const messageExists = prev.some(
-        msg => msg.role === "user" && msg.content === trimmedMessage && !msg._id.startsWith("temp-")
+        (msg) =>
+          msg.role === "user" &&
+          msg.content === trimmedMessage &&
+          !msg._id.startsWith("temp-")
       );
       if (messageExists) {
         return prev;
@@ -344,7 +341,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
           chatId: currentChatId,
         },
         (event: StreamEvent) => {
-          setStreamingEvents(prev => [...prev, event]);
+          setStreamingEvents((prev) => [...prev, event]);
         }
       );
 
@@ -384,13 +381,17 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
       }
     } catch (error: any) {
       console.error("Streaming error:", error);
-      setOptimisticMessages((prev) => prev.filter(msg => msg._id !== tempMessage._id));
+      setOptimisticMessages((prev) =>
+        prev.filter((msg) => msg._id !== tempMessage._id)
+      );
 
       setMessage(trimmedMessage);
 
       toast({
         title: "Unable to send message",
-        description: error?.message || "We could not deliver your message. Please try again.",
+        description:
+          error?.message ||
+          "We could not deliver your message. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -451,7 +452,10 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
                           <div className="my-4 max-w-full overflow-x-auto rounded-lg border border-white/20 scrollbar-hide">
                             <table
                               // let table grow to the width of its content
-                              style={{ tableLayout: "auto", width: "max-content" }}
+                              style={{
+                                tableLayout: "auto",
+                                width: "max-content",
+                              }}
                               className="border-collapse text-sm"
                               {...props}
                             />
@@ -476,10 +480,10 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
                           <th
                             className="break-words border border-white/20 px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-white overflow-hidden"
                             style={{
-                              wordBreak: 'break-word',
-                              overflowWrap: 'break-word',
-                              whiteSpace: 'normal',
-                              maxWidth: '400px'
+                              wordBreak: "break-word",
+                              overflowWrap: "break-word",
+                              whiteSpace: "normal",
+                              maxWidth: "400px",
                             }}
                             {...props}
                           />
@@ -488,10 +492,10 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
                           <td
                             className="break-words border border-white/20 px-3 py-2 text-left text-sm text-white/90 overflow-hidden"
                             style={{
-                              wordBreak: 'break-word',
-                              overflowWrap: 'break-word',
-                              whiteSpace: 'normal',
-                              maxWidth: '400px'
+                              wordBreak: "break-word",
+                              overflowWrap: "break-word",
+                              whiteSpace: "normal",
+                              maxWidth: "400px",
                             }}
                             {...props}
                           />
@@ -603,7 +607,9 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
                     >
                       <Loader2 className="w-3 h-3 animate-spin" />
                       <span>
-                        {streamingEvents[streamingEvents.length - 1]?.step?.replace(/^[^\w\s]+/, '').trim() || 'Processing...'}
+                        {streamingEvents[streamingEvents.length - 1]?.step
+                          ?.replace(/^[^\w\s]+/, "")
+                          .trim() || "Processing..."}
                       </span>
                     </motion.div>
                   )}
