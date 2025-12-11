@@ -74,6 +74,10 @@ export const CallView = ({
   const { toast } = useToast();
   const createPlanFromCallMutation = useCreateFollowupPlanFromCall();
   const updatePlanMutation = useUpdateFollowupPlan();
+  
+  // New state for call details view
+  const [selectedCallLog, setSelectedCallLog] = useState<LeadCallLog | null>(null);
+  const [activeTab, setActiveTab] = useState<"recording" | "followup">("recording");
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
@@ -107,6 +111,8 @@ export const CallView = ({
   const leadName = lead?.name || null;
   const leadPhone = lead?.phone || null;
 
+
+
   const fetchCallLogs = useCallback(
     async (options?: { background?: boolean }) => {
       const isBackground = options?.background ?? false;
@@ -123,6 +129,7 @@ export const CallView = ({
         if (!isBackground) {
           setCallLogsLoading(true);
         }
+        
         const response = await twilioService.getLeadCallLogs(leadId, {
           limit: 10,
         });
@@ -152,7 +159,7 @@ export const CallView = ({
         }
       }
     },
-    [leadId]
+    [leadId, leadName, leadPhone]
   );
 
   useEffect(() => {
@@ -170,7 +177,7 @@ export const CallView = ({
   }, [fetchCallLogs, leadId]);
 
   const handleRecordingView = useCallback(
-    async (log: LeadCallLog) => {
+    async (log: LeadCallLog) =>{
       setSelectedCallLogView({ type: "recording", log });
       // All actual audio fetching is handled in the Activity summary view,
       // which listens to selectedCallLogView changes and chooses the correct
@@ -178,6 +185,84 @@ export const CallView = ({
     },
     [setSelectedCallLogView]
   );
+
+  // New handler to open call details in the right panel
+  const handleOpenCallDetails = useCallback(
+    async (log: LeadCallLog) => {
+      setSelectedCallLog(log);
+      setActiveTab("recording");
+      
+      console.log("[handleOpenCallDetails] Call log:", log._id);
+      
+      setRecordingAudioUrl(null);
+      setRecordingError(null);
+      setRecordingLoading(true);
+
+      try {
+        const recordingUrl = log.elevenlabsRecordingUrl || log.recordingUrl || null;
+        
+        // If it's a direct URL (like data: or http), use it
+        if (
+          typeof recordingUrl === "string" &&
+          (recordingUrl.startsWith("http://") || 
+           recordingUrl.startsWith("https://") || 
+           recordingUrl.startsWith("data:audio/"))
+        ) {
+          console.log("[handleOpenCallDetails] Setting audio URL:", recordingUrl);
+          setRecordingAudioUrl(recordingUrl);
+          setRecordingLoading(false);
+          return;
+        }
+
+        // Otherwise fetch via API proxy
+        const isElevenLabsCall =
+          !!log.elevenlabsCallId ||
+          !!log.elevenlabsRecordingUrl ||
+          log.metadata?.provider === "elevenlabs";
+
+        const endpoint = isElevenLabsCall
+          ? `/elevenlabs/calls/${log._id}/recording`
+          : `/twilio/calls/${log._id}/recording`;
+
+        const response = await API.get(endpoint, {
+          responseType: "blob",
+        });
+        const blob = response.data as Blob;
+        const url = URL.createObjectURL(blob);
+        setRecordingAudioUrl(url);
+
+      } catch (err: any) {
+        console.error("Failed to load call recording", err);
+        // Only show error if no recording is expected or fetch failed
+        if (!log.recordingSid && !log.elevenlabsRecordingUrl && !log.recordingUrl) {
+             setRecordingError("No recording available for this call.");
+        } else {
+             setRecordingError(
+               err?.response?.data?.error ||
+               err?.message ||
+               "Unable to load call recording."
+             );
+        }
+      } finally {
+        setRecordingLoading(false);
+      }
+    },
+    []
+  );
+
+  // Handler to close call details and return to "Make a call" view
+  const handleCloseCallDetails = useCallback(() => {
+    setSelectedCallLog(null);
+    setSelectedCallLogView(null); // Also clear old view
+    setRecordingAudioUrl(null);
+    setRecordingError(null);
+    setRecordingLoading(false);
+  }, [setSelectedCallLogView]);
+
+  // Close details when switching tabs (modes)
+  useEffect(() => {
+    handleCloseCallDetails();
+  }, [mode, handleCloseCallDetails]);
 
   // Load recording audio URL when recording view is selected
   const loadRecordingAudio = useCallback(async (view: SelectedCallLogView) => {
@@ -203,6 +288,9 @@ export const CallView = ({
         return;
       }
 
+      // ============================================================
+      // RESTORED: Original API call for production use
+      // ============================================================
       const isElevenLabsCall =
         !!log.elevenlabsCallId ||
         !!log.elevenlabsRecordingUrl ||
@@ -218,6 +306,11 @@ export const CallView = ({
       const blob = response.data as Blob;
       const url = URL.createObjectURL(blob);
       setRecordingAudioUrl(url);
+
+      // If we got here, we have a URL from the blob
+      if (!url) {
+        setRecordingError("No recording available for this call.");
+      }
     } catch (err: any) {
       console.error("Failed to load call recording", err);
       setRecordingError(
@@ -242,7 +335,8 @@ export const CallView = ({
 
   // Cleanup recording URL when view is cleared
   useEffect(() => {
-    if (!selectedCallLogView || selectedCallLogView.type !== "recording") {
+    // Only clear if NEITHER view is showing a recording
+    if ((!selectedCallLogView || selectedCallLogView.type !== "recording") && !selectedCallLog) {
       if (recordingAudioUrl) {
         URL.revokeObjectURL(recordingAudioUrl);
         setRecordingAudioUrl(null);
@@ -250,7 +344,7 @@ export const CallView = ({
       setRecordingError(null);
       setRecordingLoading(false);
     }
-  }, [selectedCallLogView, recordingAudioUrl]);
+  }, [selectedCallLogView, selectedCallLog, recordingAudioUrl]);
 
   const logCallCompletion = useCallback(
     async (status: LeadCallStatus = "completed") => {
@@ -293,6 +387,7 @@ export const CallView = ({
 
       try {
         await twilioService.logLeadCall(payload);
+        
         // Refresh call logs in the background so the UI doesn't flash
         await fetchCallLogs({ background: true });
       } catch (logError: any) {
@@ -1005,11 +1100,19 @@ export const CallView = ({
                   : "text-emerald-400";
 
                 const statusText = isMissed ? "Missed" : "";
+                
+                // Check if this call log is currently selected
+                const isSelected = selectedCallLog?._id === log._id;
 
                 return (
                   <div
                     key={log._id}
-                    className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden hover:bg-white/[0.05] transition-colors"
+                    onClick={() => handleOpenCallDetails(log)}
+                    className={`rounded-2xl border backdrop-blur-xl overflow-hidden transition-colors cursor-pointer ${
+                      isSelected
+                        ? "border-white/10 bg-white/20"
+                        : "border-white/10 bg-white/[0.03] hover:bg-white/[0.05]"
+                    }`}
                   >
                     <div className="flex items-center justify-between px-4 py-3 gap-4">
                       {/* Left side: Icon + Call Type + Duration */}
@@ -1103,10 +1206,10 @@ export const CallView = ({
                       </div>
                     </div>
 
-                    {/* Additional Info Section - Score, Transcript, Follow-up */}
+                    {/* Additional Info Section - Score, Transcript, Follow-up - COMMENTED OUT
                     <div className="px-3 pb-3">
                       <div className="flex flex-wrap items-center gap-2">
-                        {/* Success Score */}
+                        {/* Success Score * /}
                         {scoreStatus === "completed" &&
                           typeof log.leadSuccessScore === "number" && (
                             <div className="flex items-center gap-2">
@@ -1140,7 +1243,7 @@ export const CallView = ({
                           </span>
                         )}
 
-                        {/* Transcription */}
+                        {/* Transcription * /}
                         {hasTranscript ? (
                           <Button
                             type="button"
@@ -1168,7 +1271,7 @@ export const CallView = ({
                           </Button>
                         ) : null}
 
-                        {/* Follow-up */}
+                        {/* Follow-up * /}
                         {followupStatus === "completed" ? (
                           <Button
                             type="button"
@@ -1200,6 +1303,7 @@ export const CallView = ({
                         ) : null}
                       </div>
                     </div>
+                    */}
                   </div>
                 );
               });
@@ -1211,15 +1315,283 @@ export const CallView = ({
         )}
       </div>
 
-      {/* Right Side: Web Call - 1/3 width */}
+      {/* Right Side: Web Call / Call Details - 1/3 width */}
       <div className="col-span-1 flex flex-col text-white/80 text-center gap-3 overflow-hidden">
-        <h2 className="text-xs sm:text-sm font-semibold text-white leading-snug text-left">
-          Call Now
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-xs sm:text-sm font-semibold text-white leading-snug text-left">
+            {selectedCallLog ? "Call Details" : "Call Now"}
+          </h2>
+          {selectedCallLog && (
+            <button
+              onClick={handleCloseCallDetails}
+              className="w-6 h-6 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors"
+              aria-label="Close call details"
+            >
+              <svg className="w-4 h-4 text-white/60 hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
+        </div>
         
         {/* Card Container */}
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-y-auto scrollbar-hide p-6 flex flex-col items-center gap-6 flex-1">
+        <div className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-y-auto scrollbar-hide p-6 flex flex-col gap-6 flex-1">
+          
+          {/* Show Call Details if a call log is selected */}
+          {selectedCallLog ? (
+            <div className="flex flex-col gap-4 h-full">
+              {/* Call Info Header */}
+              <div className="flex flex-col gap-2 pb-4 border-b border-white/10">
+                <div className="flex items-center gap-2">
+                  <div className={`w-8 h-8 rounded-full ${
+                    selectedCallLog.status === "completed" ? "bg-emerald-500/10" : "bg-red-500/10"
+                  } flex items-center justify-center`}>
+                    <svg className={`w-4 h-4 ${
+                      selectedCallLog.status === "completed" ? "text-emerald-400" : "text-red-400"
+                    }`} fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 00-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z"/>
+                    </svg>
+                  </div>
+                  <div className="flex flex-col items-start">
+                    <span className="text-sm font-medium text-white">
+                      {selectedCallLog.direction === "inbound" ? "Incoming Call" : "Outgoing Call"}
+                    </span>
+                    <span className="text-xs text-white/60">
+                      {formatCallDate(selectedCallLog.startedAt)} • {formatDuration(selectedCallLog.durationSeconds)}
+                    </span>
+                  </div>
+                </div>
+              </div>
 
+              {/* Tabs */}
+              <div className="flex gap-2 border-b border-white/10">
+                <button
+                  onClick={() => setActiveTab("recording")}
+                  className={`px-4 py-2 text-sm font-medium transition-colors relative ${
+                    activeTab === "recording"
+                      ? "text-cyan-400"
+                      : "text-white/60 hover:text-white/80"
+                  }`}
+                >
+                  Recording
+                  {activeTab === "recording" && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400" />
+                  )}
+                </button>
+                <button
+                  onClick={() => setActiveTab("followup")}
+                  className={`px-4 py-2 text-sm font-medium transition-colors relative ${
+                    activeTab === "followup"
+                      ? "text-cyan-400"
+                      : "text-white/60 hover:text-white/80"
+                  }`}
+                >
+                  Follow-up
+                  {activeTab === "followup" && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400" />
+                  )}
+                </button>
+              </div>
+
+              {/* Tab Content */}
+              <div className="flex-1 overflow-y-auto scrollbar-hide">
+                {activeTab === "recording" ? (
+                  <div className="flex flex-col gap-4">
+                    {/* Audio Player */}
+                    {recordingLoading ? (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="w-6 h-6 text-cyan-400 animate-spin" />
+                        <span className="ml-2 text-sm text-white/60">Loading recording...</span>
+                      </div>
+                    ) : recordingError ? (
+                      <div className="flex flex-col items-center justify-center py-8 px-4 rounded-lg bg-red-500/10 border border-red-500/20">
+                        <svg className="w-8 h-8 text-red-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <p className="text-sm text-red-300 text-center">{recordingError}</p>
+                      </div>
+                    ) : recordingAudioUrl ? (
+                      <div className="flex flex-col gap-3">
+                        <div className="rounded-lg bg-white/5 p-4 border border-white/10">
+                          <audio
+                            controls
+                            src={recordingAudioUrl}
+                            className="w-full"
+                            style={{
+                              filter: "invert(1) hue-rotate(180deg)",
+                            }}
+                          />
+                        </div>
+                        <p className="text-xs text-white/40 text-center">
+                          Playback is streamed securely from EmpaTech servers.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center py-8 px-4 rounded-lg bg-white/5 border border-white/10">
+                        <svg className="w-8 h-8 text-white/40 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                        </svg>
+                        <p className="text-sm text-white/60 text-center">No recording available</p>
+                      </div>
+                    )}
+
+                    {/* Transcript */}
+                    <div className="flex flex-col gap-2">
+                      <h3 className="text-xs font-semibold text-white/80">Transcript</h3>
+                      {selectedCallLog.transcriptionStatus === "pending" ? (
+                        <div className="flex items-center gap-2 py-4 px-4 rounded-lg bg-white/5 border border-white/10">
+                          <Loader2 className="w-4 h-4 text-cyan-400 animate-spin" />
+                          <span className="text-sm text-white/60">Transcription in progress...</span>
+                        </div>
+                      ) : (selectedCallLog.transcriptionText || selectedCallLog.elevenlabsTranscript) ? (
+                        <div className="py-3 px-4 rounded-lg bg-white/5 border border-white/10 text-left">
+                          <p className="text-sm text-white/80 leading-relaxed">
+                            {selectedCallLog.transcriptionText || selectedCallLog.elevenlabsTranscript}
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="py-3 px-4 rounded-lg bg-white/5 border border-white/10 text-center">
+                          <p className="text-sm text-white/40">No transcript available</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-4">
+                    {/* Follow-up Content */}
+                    {selectedCallLog.leadSuccessScore !== null && selectedCallLog.leadSuccessScore !== undefined ? (
+                      <div className="flex flex-col gap-2">
+                        <h3 className="text-xs font-semibold text-white/80">Success Score</h3>
+                        <div className="flex items-center gap-3 py-3 px-4 rounded-lg bg-white/5 border border-white/10">
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-sm text-white/80">Lead Quality</span>
+                              <span className="text-sm font-semibold text-cyan-400">{selectedCallLog.leadSuccessScore}/100</span>
+                            </div>
+                            <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-gradient-to-r from-cyan-500 to-emerald-500 rounded-full transition-all"
+                                style={{ width: `${selectedCallLog.leadSuccessScore}%` }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : null}
+
+                    {/* Follow-up Suggestions with EditableFollowupSuggestion */}
+                    <div className="flex flex-col gap-2">
+                      <h3 className="text-xs font-semibold text-white/80">Follow-up Suggestions</h3>
+                      {selectedCallLog.followupSuggestionStatus === "pending" ? (
+                        <div className="flex items-center gap-2 py-4 px-4 rounded-lg bg-white/5 border border-white/10">
+                          <Loader2 className="w-4 h-4 text-cyan-400 animate-spin" />
+                          <span className="text-sm text-white/60">Generating suggestions...</span>
+                        </div>
+                      ) : Array.isArray(
+                          (selectedCallLog.followupSuggestionMetadata as any)?.raw?.touchpoints
+                        ) &&
+                        (selectedCallLog.followupSuggestionMetadata as any).raw.touchpoints.length > 0 ? (
+                        <EditableFollowupSuggestion
+                          touchpoints={
+                            (selectedCallLog.followupSuggestionMetadata as any).raw.touchpoints
+                          }
+                          summary={selectedCallLog.followupSuggestionSummary || undefined}
+                          callEndTime={
+                            selectedCallLog.endedAt ||
+                            new Date(
+                              new Date(selectedCallLog.startedAt).getTime() +
+                                (selectedCallLog.durationSeconds || 0) * 1000
+                            ).toISOString()
+                          }
+                          leadId={selectedCallLog.leadId || lead?._id || ""}
+                          onExecute={async (
+                            todo,
+                            startDate,
+                            executedPlanId?: string
+                          ) => {
+                            try {
+                              let planId: string | undefined;
+
+                              if (executedPlanId) {
+                                const response = await updatePlanMutation.mutateAsync({
+                                  id: executedPlanId,
+                                  payload: {
+                                    todo: todo.map((task) => ({
+                                      type: task.type,
+                                      personId: task.personId,
+                                      day: task.day,
+                                      scheduledFor: task.scheduledFor,
+                                      notes: task.notes,
+                                    })),
+                                  },
+                                });
+                                planId =
+                                  (response as any)?.data?._id ||
+                                  (response as any)?.data?.data?._id ||
+                                  executedPlanId;
+                                toast({
+                                  title: "Follow-up plan updated",
+                                  description:
+                                    "The follow-up plan has been updated successfully.",
+                                });
+                              } else {
+                                const response = await createPlanFromCallMutation.mutateAsync({
+                                  leadId: selectedCallLog.leadId || lead?._id || "",
+                                  startDate,
+                                  todo,
+                                  summary: selectedCallLog.followupSuggestionSummary,
+                                });
+                                planId =
+                                  (response as any)?.data?._id ||
+                                  (response as any)?.data?.data?._id;
+                                toast({
+                                  title: "Follow-up plan created",
+                                  description:
+                                    "The follow-up plan has been created and is now active.",
+                                });
+                              }
+
+                              return {
+                                planId,
+                              };
+                            } catch (error: any) {
+                              toast({
+                                title: executedPlanId
+                                  ? "Failed to update plan"
+                                  : "Failed to create plan",
+                                description:
+                                  error?.response?.data?.message ||
+                                  error?.message ||
+                                  "Please try again.",
+                                variant: "destructive",
+                              });
+                              throw error;
+                            }
+                          }}
+                          isExecuting={
+                            createPlanFromCallMutation.isPending ||
+                            updatePlanMutation.isPending
+                          }
+                        />
+                      ) : selectedCallLog.followupSuggestionSummary ? (
+                        <div className="py-3 px-4 rounded-lg bg-white/5 border border-white/10 text-left">
+                          <p className="text-sm text-white/80 leading-relaxed">
+                            {selectedCallLog.followupSuggestionSummary}
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="py-3 px-4 rounded-lg bg-white/5 border border-white/10 text-center">
+                          <p className="text-sm text-white/40">No follow-up suggestions available</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            // Original "Make a call" content
+            <>
           {mode === "call" && (
             <div className="flex flex-col items-center gap-4">
               <div className="flex items-center justify-center pt-5">
@@ -1472,9 +1844,11 @@ export const CallView = ({
               Calls are routed via Twilio Voice with mic data processed locally.
             </p>
           </div>
+          </>
+          )}
 
-          {/* Selected Call Log View Content */}
-          {selectedCallLogView && (
+          {/* Selected Call Log View Content - Only show if not using new call details view */}
+          {selectedCallLogView && !selectedCallLog && (
             <div className="w-full mt-6 pt-6 border-t border-white/10">
               {/* Recording View */}
               {selectedCallLogView.type === "recording" && (
