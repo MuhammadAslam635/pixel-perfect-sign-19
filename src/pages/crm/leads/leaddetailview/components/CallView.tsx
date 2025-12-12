@@ -1189,7 +1189,7 @@ export const CallView = ({
                                 <TooltipTrigger asChild>
                                   {playButton}
                                 </TooltipTrigger>
-                                <TooltipContent side="top" align="center">
+                                <TooltipContent>
                                   <span>Recording processing…</span>
                                 </TooltipContent>
                               </Tooltip>

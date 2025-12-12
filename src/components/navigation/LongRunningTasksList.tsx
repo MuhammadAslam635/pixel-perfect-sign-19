@@ -81,7 +81,7 @@ const LongRunningTasksList = () => {
               key={task.id}
               variant="ghost"
               className={cn(
-                "w-full justify-start p-3 h-auto text-left hover:bg-white/5",
+                "w-full justify-start p-3 h-auto text-left hover:bg-white/5 whitespace-normal",
                 "border border-transparent hover:border-white/10"
               )}
               onClick={() => handleTaskClick(task.chatId)}
@@ -91,10 +91,10 @@ const LongRunningTasksList = () => {
                   {getStatusIcon(task.status)}
                 </div>
 
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <MessageCircle className="h-3 w-3 text-gray-400 flex-shrink-0" />
-                    <span className="text-sm font-medium text-white truncate">
+                <div className="flex-1 min-w-0 ">
+                  <div className="flex items-start gap-2 mb-1">
+                    <MessageCircle className="h-3 w-3 text-gray-400 flex-shrink-0 mt-1" />
+                    <span className="text-xs font-medium text-white break-words">
                       {task.title}
                     </span>
                   </div>

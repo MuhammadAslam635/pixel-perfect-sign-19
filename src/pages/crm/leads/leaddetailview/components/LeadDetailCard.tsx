@@ -527,8 +527,8 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
                           )}
                         </button>
                       </TooltipTrigger>
-                      <TooltipContent side="bottom" align="center">
-                        <span className="text-xs">Fill missing info</span>
+                      <TooltipContent>
+                        Fill missing info
                       </TooltipContent>
                     </Tooltip>
 
@@ -543,8 +543,8 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
                           <Edit2 className="w-3 h-3" />
                         </button>
                       </TooltipTrigger>
-                      <TooltipContent side="bottom" align="center">
-                        <span className="text-xs">Edit details</span>
+                      <TooltipContent>
+                        Edit details
                       </TooltipContent>
                     </Tooltip>
 
@@ -563,8 +563,8 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
                           <CalendarPlus className="w-3 h-3" />
                         </button>
                       </TooltipTrigger>
-                      <TooltipContent side="bottom" align="center">
-                        <span className="text-xs">Schedule meeting</span>
+                      <TooltipContent>
+                        Schedule meeting
                       </TooltipContent>
                     </Tooltip>
                   </div>

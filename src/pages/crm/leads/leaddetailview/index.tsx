@@ -179,17 +179,23 @@ const LeadDetailView = () => {
       <main className="relative mt-24 pt-5 flex w-full flex-1 min-h-0 max-h-[calc(100vh-6rem)] px-6 pb-6 sm:px-10 md:px-14 lg:px-6 overflow-y-hidden overflow-x-hidden scrollbar-hide bg-[#0F0F0F]">
         <div className="relative z-10 flex w-full flex-1 min-h-0 flex-col gap-6">
           {/* Back Button & Summary Progress */}
-          <div className="flex flex-row items-center gap-4">
-            <Button
-              onClick={() => navigate("/leads")}
-              variant="ghost"
-              className="text-white/70 text-sm hover:text-white hover:bg-white/10 w-fit"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Leads
-            </Button>
-            <div className="w-full flex flex-col justify-left ml-10">
-              <div className="mt-4 flex items-center justify-between gap-2 w-full max-w-5xl">
+          {/* Back Button & Summary Progress */}
+          <div className="grid grid-cols-12 gap-4 w-full items-center">
+            {/* Left: Back Button */}
+            <div className="col-span-2">
+              <Button
+                onClick={() => navigate("/leads")}
+                variant="ghost"
+                className="text-white/70 text-sm hover:text-white hover:bg-white/10 w-fit p-0 hover:bg-transparent"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Leads
+              </Button>
+            </div>
+
+            {/* Middle: Lead Stage Progress */}
+            <div className="col-span-7 col-start-3 flex justify-center">
+              <div className="flex items-center justify-center gap-1 w-fit">
                 {LEAD_STAGE_DEFINITIONS.map((definition, index) => {
                   const state = getStageState(summaryScoreValue, index);
                   const isLast = index === LEAD_STAGE_DEFINITIONS.length - 1;
@@ -199,7 +205,7 @@ const LeadDetailView = () => {
                   const baseButtonClasses =
                     "group relative overflow-hidden flex-none flex items-center justify-center rounded-full border text-xs font-medium tracking-wide transition-[width,background-color,box-shadow,padding,gap] duration-500 ease-out";
                   const baseConnectorClasses =
-                    "flex-1 h-[2px] min-w-[20px] rounded-full transition-colors duration-300";
+                    "h-[2px] w-8 sm:w-12 rounded-full transition-colors duration-300";
                   
                   const buttonClasses =
                     isActive
@@ -218,9 +224,9 @@ const LeadDetailView = () => {
                   return (
                     <div
                       key={definition.label}
-                      className="flex items-center flex-1 gap-2"
+                      className="flex items-center gap-1"
                     >
-                      <Tooltip>
+                      <Tooltip delayDuration={200}>
                         <TooltipTrigger asChild>
                           <button
                             className={buttonClasses}
@@ -240,7 +246,7 @@ const LeadDetailView = () => {
                           </button>
                         </TooltipTrigger>
                         {!isActive && (
-                          <TooltipContent side="bottom" align="center">
+                          <TooltipContent>
                             <p>{definition.label}</p>
                           </TooltipContent>
                         )}

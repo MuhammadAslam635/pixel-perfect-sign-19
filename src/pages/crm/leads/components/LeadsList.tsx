@@ -477,7 +477,7 @@ const LeadsList: FC<LeadsListProps> = ({
                     <Phone className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                   </button>
                 </TooltipTrigger>
-                <TooltipContent side="top" sideOffset={8}>
+                <TooltipContent sideOffset={8}>
                   <p>{!hasPhone ? "No phone available" : "Call lead"}</p>
                 </TooltipContent>
               </Tooltip>
@@ -496,7 +496,7 @@ const LeadsList: FC<LeadsListProps> = ({
                     <Mail className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                   </button>
                 </TooltipTrigger>
-                <TooltipContent side="top" sideOffset={8}>
+                <TooltipContent sideOffset={8}>
                   <p>{!hasEmail ? "No email available" : "Email lead"}</p>
                 </TooltipContent>
               </Tooltip>
@@ -511,7 +511,7 @@ const LeadsList: FC<LeadsListProps> = ({
                     <MessageCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                   </button>
                 </TooltipTrigger>
-                <TooltipContent side="top" sideOffset={8}>
+                <TooltipContent sideOffset={8}>
                   <p>{!hasPhone ? "No phone available" : "Open WhatsApp"}</p>
                 </TooltipContent>
               </Tooltip>
@@ -531,7 +531,7 @@ const LeadsList: FC<LeadsListProps> = ({
                     <Send className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                   </button>
                 </TooltipTrigger>
-                <TooltipContent side="top" sideOffset={8}>
+                <TooltipContent sideOffset={8}>
                   <p>
                     {!hasLinkedin
                       ? "No LinkedIn available"
@@ -565,7 +565,7 @@ const LeadsList: FC<LeadsListProps> = ({
                     )}
                   </button>
                 </TooltipTrigger>
-                <TooltipContent side="top" sideOffset={8}>
+                <TooltipContent sideOffset={8}>
                   <p>
                     {canEnrich
                       ? "Fill missing information"
