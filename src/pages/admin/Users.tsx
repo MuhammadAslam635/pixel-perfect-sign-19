@@ -117,46 +117,60 @@ const AdminUsers = () => {
 
     setLoading(true);
     try {
-      // Fetch all companies first, then their users
-      const companiesResponse = await adminService.getCompanies({
+      // Fetch ALL users using the new global endpoint
+      const usersResponse = await adminService.getAllUsers({
         page: 1,
-        limit: 1000,
+        limit: 10000, // Get all users
         trashed: false,
       });
 
-      if (companiesResponse.success && companiesResponse.data) {
-        const usersList: UserWithCompany[] = [];
-        const companiesList = companiesResponse.data.companies;
+      if (usersResponse.success && usersResponse.data) {
+        // Fetch companies to map company names
+        const companiesResponse = await adminService.getCompanies({
+          page: 1,
+          limit: 1000,
+          trashed: false,
+        });
 
-        // Fetch users from each company
-        for (const company of companiesList) {
-          try {
-            const usersResponse = await adminService.getCompanyUsers(
+        const companiesMap = new Map<string, string>();
+        if (companiesResponse.success && companiesResponse.data) {
+          companiesResponse.data.companies.forEach((company) => {
+            companiesMap.set(
               company._id,
-              {
-                page: 1,
-                limit: 1000,
-                search: "",
-                trashed: false,
-              }
+              company.name || company.email?.split("@")[0] || "Unknown"
             );
-
-            if (usersResponse.success && usersResponse.data) {
-              const companyUsers = usersResponse.data.users.map((user) => ({
-                ...user,
-                companyName: company.name || company.email?.split("@")[0],
-                companyId: company._id,
-              }));
-
-              usersList.push(...companyUsers);
-            }
-          } catch (error) {
-            console.error(
-              `Error fetching users for company ${company._id}:`,
-              error
-            );
-          }
+          });
         }
+
+        // Map users and add company information
+        const usersList: UserWithCompany[] = usersResponse.data.users.map(
+          (user: any) => {
+            let companyName = "N/A";
+            let companyId = undefined;
+
+            // Determine company information
+            if (user.role === "Company") {
+              // User is a company owner
+              companyName = user.name || user.email?.split("@")[0] || "Unknown";
+              companyId = user._id;
+            } else if (user.parentCompany) {
+              // User is an employee
+              companyName =
+                companiesMap.get(user.parentCompany) ||
+                user.parentCompany.toString();
+              companyId = user.parentCompany;
+            } else if (user.role === "Admin") {
+              // System admin
+              companyName = "System";
+            }
+
+            return {
+              ...user,
+              companyName,
+              companyId,
+            };
+          }
+        );
 
         setAllUsers(usersList);
       }
@@ -168,19 +182,105 @@ const AdminUsers = () => {
     }
   }, [userRoleName]);
 
+  // Helper function to extract role name from a user object (prioritizes roleId over legacy role)
+  // But maps custom roles back to their legacy role for grouping purposes
+  const extractRoleName = (user: UserWithCompany): string => {
+    const standardRoles = ["Admin", "Company", "CompanyAdmin", "CompanyUser", "CompanyViewer"];
+
+    // Priority 1: Check if roleId is populated as object (from backend populate)
+    if (
+      user.roleId &&
+      typeof user.roleId === "object" &&
+      (user.roleId as Role).name
+    ) {
+      const roleIdName = (user.roleId as Role).name;
+      // If roleId points to a standard role, use it
+      // If it's a custom role but user has legacy role set, check if we should use legacy role for grouping
+      const legacyRole = user.role;
+
+      // Map standard roles: if roleId.name matches legacy role, use it
+      // If roleId is custom but legacy role is standard, use legacy role for standard role grouping
+      if (standardRoles.includes(roleIdName)) {
+        return roleIdName;
+      }
+
+      // If roleId is custom (like "sales manager") but legacy role is standard, use legacy role for grouping
+      if (legacyRole && standardRoles.includes(legacyRole)) {
+        return legacyRole;
+      }
+
+      // Otherwise use the custom role name
+      return roleIdName;
+    }
+
+    // Priority 2: Check if roleId is a string ID and find in availableRoles
+    if (user.roleId && typeof user.roleId === "string") {
+      const role = availableRoles.find((r) => r._id === user.roleId);
+      if (role && role.name) {
+        // Same logic: if it's a standard role, use it; if custom but legacy role is standard, use legacy
+        if (standardRoles.includes(role.name)) {
+          return role.name;
+        }
+        if (user.role && standardRoles.includes(user.role)) {
+          return user.role;
+        }
+        return role.name;
+      }
+    }
+
+    // Priority 3: Fallback to legacy role field (this handles users with role: "CompanyUser" but roleId: null)
+    if (user.role && typeof user.role === "string") {
+      return user.role;
+    }
+
+    return "No Role";
+  };
+
+  // Helper function to get role name for statistics (maps custom roles to standard roles)
+  const getRoleNameForStats = (user: UserWithCompany): string | null => {
+    const standardRoles = ["Admin", "Company", "CompanyAdmin", "CompanyUser", "CompanyViewer"];
+
+    // Priority 1: Check if roleId is populated as object (backend populates this)
+    if (
+      user.roleId &&
+      typeof user.roleId === "object" &&
+      (user.roleId as Role).name
+    ) {
+      const roleIdName = (user.roleId as Role).name;
+      const legacyRole = user.role;
+
+      // If roleId points to a standard role, use it
+      if (standardRoles.includes(roleIdName)) {
+        return roleIdName;
+      }
+
+      // If roleId is custom but legacy role is standard, use legacy role for statistics
+      if (legacyRole && standardRoles.includes(legacyRole)) {
+        return legacyRole;
+      }
+
+      // Otherwise use the custom role name (won't be counted in standard stats)
+      return roleIdName;
+    }
+
+    // Priority 2: Fallback to legacy role field
+    return user.role || null;
+  };
+
   // Calculate statistics
   const calculateStatistics = useCallback(async () => {
     if (userRoleName !== "Admin") return;
 
     setStatisticsLoading(true);
     try {
-      const companiesResponse = await adminService.getCompanies({
+      // Fetch ALL users using the global endpoint
+      const usersResponse = await adminService.getAllUsers({
         page: 1,
-        limit: 1000,
+        limit: 10000, // Get all users
         trashed: false,
       });
 
-      if (companiesResponse.success && companiesResponse.data) {
+      if (usersResponse.success && usersResponse.data) {
         let totalUsers = 0;
         let activeUsers = 0;
         let admins = 0;
@@ -188,43 +288,26 @@ const AdminUsers = () => {
         let companyUsers = 0;
         let companyViewers = 0;
 
-        for (const company of companiesResponse.data.companies) {
-          try {
-            const usersResponse = await adminService.getCompanyUsers(
-              company._id,
-              {
-                page: 1,
-                limit: 1000,
-                trashed: false,
-              }
-            );
+        const allUsersList = usersResponse.data.users;
+        totalUsers = allUsersList.length;
+        activeUsers = allUsersList.filter(
+          (u: any) => u.status === "active"
+        ).length;
 
-            if (usersResponse.success && usersResponse.data) {
-              const companyUsersList = usersResponse.data.users;
-              totalUsers += companyUsersList.length;
-              activeUsers += companyUsersList.filter(
-                (u) => u.status === "active"
-              ).length;
-              admins += companyUsersList.filter(
-                (u) => u.role === "Admin"
-              ).length;
-              companyAdmins += companyUsersList.filter(
-                (u) => u.role === "CompanyAdmin"
-              ).length;
-              companyUsers += companyUsersList.filter(
-                (u) => u.role === "CompanyUser"
-              ).length;
-              companyViewers += companyUsersList.filter(
-                (u) => u.role === "CompanyViewer"
-              ).length;
-            }
-          } catch (error) {
-            console.error(
-              `Error fetching stats for company ${company._id}:`,
-              error
-            );
+        // Count users by role
+        allUsersList.forEach((u: any) => {
+          const roleName = getRoleNameForStats(u);
+          if (roleName === "Admin") {
+            admins++;
+          } else if (roleName === "CompanyAdmin" || roleName === "Company") {
+            // Count Company owners as CompanyAdmins for statistics
+            companyAdmins++;
+          } else if (roleName === "CompanyUser") {
+            companyUsers++;
+          } else if (roleName === "CompanyViewer") {
+            companyViewers++;
           }
-        }
+        });
 
         setStatistics({
           totalUsers,
@@ -246,8 +329,14 @@ const AdminUsers = () => {
     fetchCompanies();
     fetchRoles();
     fetchAllUsers();
-    calculateStatistics();
-  }, [fetchCompanies, fetchRoles, fetchAllUsers, calculateStatistics]);
+  }, [fetchCompanies, fetchRoles, fetchAllUsers]);
+
+  // Calculate statistics after roles are loaded
+  useEffect(() => {
+    if (availableRoles.length > 0) {
+      calculateStatistics();
+    }
+  }, [availableRoles, calculateStatistics]);
 
   const handleStatusToggle = async (
     companyId: string,
@@ -303,6 +392,7 @@ const AdminUsers = () => {
     }
 
     // Fallback to legacy role
+    if (user.role === "Company") return "Company Owner";
     if (user.role === "CompanyAdmin") return "Company Admin";
     if (user.role === "CompanyUser") return "Company User";
     if (user.role === "CompanyViewer") return "Company Viewer";
@@ -313,6 +403,8 @@ const AdminUsers = () => {
   const getRoleBadgeColor = (role: string): string => {
     if (role === "Admin")
       return "bg-yellow-500/20 text-yellow-300 border-yellow-500/30";
+    if (role === "Company")
+      return "bg-green-500/20 text-green-300 border-green-500/30";
     if (role === "CompanyAdmin")
       return "bg-cyan-500/20 text-cyan-300 border-cyan-500/30";
     if (role === "CompanyUser")
@@ -327,7 +419,7 @@ const AdminUsers = () => {
     const groups: Record<string, UserWithCompany[]> = {};
 
     allUsers.forEach((user) => {
-      const roleName = user.role || "No Role";
+      const roleName = extractRoleName(user);
       if (!groups[roleName]) {
         groups[roleName] = [];
       }
@@ -335,7 +427,7 @@ const AdminUsers = () => {
     });
 
     return groups;
-  }, [allUsers]);
+  }, [allUsers, availableRoles]);
 
   // Filter users based on search and status
   const filteredUsers = useMemo(() => {
@@ -394,11 +486,7 @@ const AdminUsers = () => {
         )
       ) {
         const count = allUsers.filter(
-          (u) =>
-            (u.roleId &&
-              typeof u.roleId === "object" &&
-              (u.roleId as Role)._id === role._id) ||
-            u.roleId === role._id
+          (u) => extractRoleName(u) === role.name
         ).length;
         if (count > 0) {
           tabs.push({
