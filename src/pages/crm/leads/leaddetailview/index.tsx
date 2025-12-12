@@ -1,5 +1,5 @@
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import LeadDetailCard from "./components/LeadDetailCard";
@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { LeadCallLog } from "@/services/twilio.service";
+import { ActiveNavButton } from "@/components/ui/primary-btn";
 
 const LEAD_STAGE_DEFINITIONS = [
   { label: "New", min: 0, max: 15 },
@@ -101,6 +102,8 @@ const LeadDetailView = () => {
   const autoStartCall = searchParams.get("autoCall") === "1";
   const [selectedCallLogView, setSelectedCallLogView] =
     useState<SelectedCallLogView>(null);
+  const [isClosingDeal, setIsClosingDeal] = useState(false);
+  const queryClient = useQueryClient();
 
   const {
     data: lead,
@@ -143,6 +146,29 @@ const LeadDetailView = () => {
     }
     return "Awaiting AI summary";
   })();
+
+  const handleCloseDeal = async () => {
+    if (!leadId) {
+      toast.error("Lead ID is required");
+      return;
+    }
+
+    try {
+      setIsClosingDeal(true);
+      await leadSummaryService.closeDeal(leadId);
+      toast.success("Deal closed successfully!");
+      
+      // Invalidate and refetch the lead summary to update the UI
+      await queryClient.invalidateQueries({ queryKey: ["lead-summary", leadId] });
+    } catch (error: any) {
+      console.error("Failed to close deal:", error);
+      toast.error(
+        error?.response?.data?.message || "Failed to close deal. Please try again."
+      );
+    } finally {
+      setIsClosingDeal(false);
+    }
+  };
 
   if (error) {
     toast.error("Failed to load lead details");
@@ -223,6 +249,16 @@ const LeadDetailView = () => {
                     </div>
                   );
                 })}
+                {summaryScoreValue !== 100 && (
+                  <div className="ml-4">
+                    <ActiveNavButton
+                      text={isClosingDeal ? "Closing..." : "Deal Closed"}
+                      onClick={handleCloseDeal}
+                      disabled={isClosingDeal}
+                      className="h-8 text-xs"
+                    />
+                  </div>
+                )}
               </div>
             </div>
           </div>

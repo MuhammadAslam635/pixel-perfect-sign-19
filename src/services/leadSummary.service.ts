@@ -40,6 +40,10 @@ export const leadSummaryService = {
     const response = await API.post(`/leads/${leadId}/summary/refresh`);
     return response.data;
   },
+  closeDeal: async (leadId: string): Promise<LeadSummaryResponse> => {
+    const response = await API.post(`/leads/${leadId}/close-deal`);
+    return response.data;
+  },
 };
 
 
