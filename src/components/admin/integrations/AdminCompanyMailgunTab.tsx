@@ -334,7 +334,7 @@ export const AdminCompanyMailgunTab = () => {
         </motion.div>
       </CardHeader>
 
-      <CardContent className="space-y-6 pt-6 px-4 sm:px-6">
+      <CardContent className="space-y-6 p-6">
         {/* Company Selection */}
         <div className="space-y-2">
           <Label className="text-white/80 text-sm">Select Company</Label>

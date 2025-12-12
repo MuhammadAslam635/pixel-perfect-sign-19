@@ -357,7 +357,7 @@ const CalendarPage: FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
-          className="flex-1 min-h-0 flex flex-col gap-4 sm:gap-6"
+          className="flex-1 min-h-0 flex flex-col gap-4 sm:gap-6 max-w-[1600px] mx-auto w-full"
         >
           {/* Header */}
           <div className="flex items-center justify-between mb-4">

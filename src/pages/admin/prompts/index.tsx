@@ -428,7 +428,7 @@ const PromptsPage = () => {
                   Total Prompts
                 </CardTitle>
               </CardHeader>
-              <CardContent className="pt-0">
+              <CardContent className="p-6 pt-0">
                 <div className="text-2xl sm:text-3xl font-bold text-white">
                   {statistics.totalPrompts}
                 </div>
@@ -443,7 +443,7 @@ const PromptsPage = () => {
                   LinkedIn
                 </CardTitle>
               </CardHeader>
-              <CardContent className="pt-0">
+              <CardContent className="p-6 pt-0">
                 <div className="text-2xl sm:text-3xl font-bold text-blue-400">
                   {statistics.linkedinPrompts}
                 </div>
@@ -458,7 +458,7 @@ const PromptsPage = () => {
                   Email
                 </CardTitle>
               </CardHeader>
-              <CardContent className="pt-0">
+              <CardContent className="p-6 pt-0">
                 <div className="text-2xl sm:text-3xl font-bold text-green-400">
                   {statistics.emailPrompts}
                 </div>
@@ -473,7 +473,7 @@ const PromptsPage = () => {
                   Phone
                 </CardTitle>
               </CardHeader>
-              <CardContent className="pt-0">
+              <CardContent className="p-6 pt-0">
                 <div className="text-2xl sm:text-3xl font-bold text-purple-400">
                   {statistics.phonePrompts}
                 </div>
@@ -488,7 +488,7 @@ const PromptsPage = () => {
                   WhatsApp
                 </CardTitle>
               </CardHeader>
-              <CardContent className="pt-0">
+              <CardContent className="p-6 pt-0">
                 <div className="text-2xl sm:text-3xl font-bold text-cyan-400">
                   {statistics.whatsappPrompts}
                 </div>

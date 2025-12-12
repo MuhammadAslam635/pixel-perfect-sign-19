@@ -260,7 +260,7 @@ export const SecurityTab = () => {
             </CardTitle>
           </motion.div>
         </CardHeader>
-        <CardContent className="space-y-5 pt-6 px-4 sm:px-6">
+        <CardContent className="space-y-5 p-6">
           {renderPasswordField(
             "old_password",
             "Current Password",

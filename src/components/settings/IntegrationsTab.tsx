@@ -1356,7 +1356,7 @@ export const IntegrationsTab = () => {
         </motion.div>
       </CardHeader>
 
-      <CardContent className="space-y-4 sm:space-y-6 pt-4 sm:pt-6 px-4 sm:px-6">
+      <CardContent className="space-y-4 sm:space-y-6 p-6">
         <div>
           <h3 className="font-medium text-white text-sm sm:text-base">
             Connected services

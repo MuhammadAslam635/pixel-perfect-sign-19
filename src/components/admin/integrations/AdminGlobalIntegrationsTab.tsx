@@ -334,7 +334,7 @@ export const AdminGlobalIntegrationsTab = () => {
         </motion.div>
       </CardHeader>
 
-      <CardContent className="space-y-6 pt-6 px-4 sm:px-6">
+      <CardContent className="space-y-6 p-6">
         {/* Deepgram Integration */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

@@ -38,7 +38,7 @@ export const NotificationsTab = () => {
             </CardDescription>
           </motion.div>
         </CardHeader>
-        <CardContent className="space-y-5 pt-6 px-4 sm:px-6">
+        <CardContent className="space-y-5 p-6">
           <div className="flex items-center justify-between gap-4">
             <div className="space-y-1">
               <Label htmlFor="daily-digest" className="text-white/80">

@@ -543,7 +543,7 @@ const AdminUsers = () => {
                 Total Users
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-0">
+            <CardContent className="p-6 pt-0">
               <div className="text-2xl sm:text-3xl font-bold text-white">
                 {statisticsLoading ? (
                   <div className="animate-pulse">...</div>
@@ -562,7 +562,7 @@ const AdminUsers = () => {
                 Active Users
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-0">
+            <CardContent className="p-6 pt-0">
               <div className="text-2xl sm:text-3xl font-bold text-green-400">
                 {statisticsLoading ? (
                   <div className="animate-pulse">...</div>
@@ -587,7 +587,7 @@ const AdminUsers = () => {
                 System Admins
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-0">
+            <CardContent className="p-6 pt-0">
               <div className="text-2xl sm:text-3xl font-bold text-yellow-400">
                 {statisticsLoading ? (
                   <div className="animate-pulse">...</div>
@@ -606,7 +606,7 @@ const AdminUsers = () => {
                 Company Admins
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-0">
+            <CardContent className="p-6 pt-0">
               <div className="text-2xl sm:text-3xl font-bold text-cyan-400">
                 {statisticsLoading ? (
                   <div className="animate-pulse">...</div>
@@ -625,7 +625,7 @@ const AdminUsers = () => {
                 Company Users
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-0">
+            <CardContent className="p-6 pt-0">
               <div className="text-2xl sm:text-3xl font-bold text-blue-400">
                 {statisticsLoading ? (
                   <div className="animate-pulse">...</div>
@@ -644,7 +644,7 @@ const AdminUsers = () => {
                 Company Viewers
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-0">
+            <CardContent className="p-6 pt-0">
               <div className="text-2xl sm:text-3xl font-bold text-purple-400">
                 {statisticsLoading ? (
                   <div className="animate-pulse">...</div>

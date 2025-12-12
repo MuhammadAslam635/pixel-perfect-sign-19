@@ -94,7 +94,7 @@ const AdminDashboard = () => {
         </CardTitle>
         <Icon className="h-4 w-4 text-cyan-400" />
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-6 pt-0">
         <div className="text-2xl font-bold text-white">{value}</div>
         {trend && <p className="text-xs text-white/60">{trend}</p>}
       </CardContent>

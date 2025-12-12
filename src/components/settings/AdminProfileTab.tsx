@@ -160,7 +160,7 @@ export const AdminProfileTab = () => {
             Profile Information
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4 pt-6">
+        <CardContent className="space-y-4 p-6">
           <div className="space-y-2">
             <Label htmlFor="name" className="text-white/80">
               Name
