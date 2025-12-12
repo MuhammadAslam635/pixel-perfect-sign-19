@@ -54,10 +54,12 @@ const index = () => {
   const [companiesIndustryFilter, setCompaniesIndustryFilter] = useState<
     string[]
   >([]);
-  const [companiesEmployeeRange, setCompaniesEmployeeRange] =
-    useState<string[]>([]);
-  const [companiesCountryFilter, setCompaniesCountryFilter] =
-    useState<string[]>([]);
+  const [companiesEmployeeRange, setCompaniesEmployeeRange] = useState<
+    string[]
+  >([]);
+  const [companiesCountryFilter, setCompaniesCountryFilter] = useState<
+    string[]
+  >([]);
   const [companiesHasPeopleFilter, setCompaniesHasPeopleFilter] =
     useState(false);
   const [companiesHasWebsiteFilter, setCompaniesHasWebsiteFilter] =
@@ -121,12 +123,12 @@ const index = () => {
     totalCompanies: filteredTotalCompanies,
   } = useCompaniesData(companiesParams);
 
-  console.log('[CompaniesPage:Data] Companies data from hook:', {
+  console.log("[CompaniesPage:Data] Companies data from hook:", {
     isLoading: companiesQuery.isLoading,
     isError: companiesQuery.isError,
     companiesCount: companies.length,
     filteredTotalCompanies,
-    companies: companies.map(c => ({ id: c._id, name: c.name })),
+    companies: companies.map((c) => ({ id: c._id, name: c.name })),
     queryData: companiesQuery.data,
   });
 
@@ -180,7 +182,7 @@ const index = () => {
 
   const loading = companiesQuery.isLoading;
 
-  console.log('[CompaniesPage:Loading] Loading state:', {
+  console.log("[CompaniesPage:Loading] Loading state:", {
     loading,
     companiesCount: companies.length,
   });
@@ -255,7 +257,7 @@ const index = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
-          className="max-w-[1600px] mx-auto w-full flex flex-col flex-1"
+          className="max-w-[2000px] mx-auto w-full flex flex-col flex-1"
         >
           {/* Wrapper with space-between */}
           <div className="flex items-center justify-between mb-4">
@@ -290,7 +292,7 @@ const index = () => {
                             transition={{ duration: 0.15 }}
                             className="flex items-center gap-2"
                           >
-                           <SearchInput
+                            <SearchInput
                               placeholder="Search companies..."
                               value={companiesSearch}
                               onChange={setCompaniesSearch}

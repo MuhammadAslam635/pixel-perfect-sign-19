@@ -388,183 +388,200 @@ const PromptsPage = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className="relative px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12 2xl:px-16 pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-6 sm:pb-8 flex flex-col gap-4 sm:gap-6 text-white min-h-screen"
+        className="relative px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] mt-20 sm:mt-20 lg:mt-24 xl:mt-28 mb-0 flex flex-col gap-6 text-white flex-1 overflow-y-auto"
       >
+        {/* Header Section */}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut", delay: 0.4 }}
+          className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+        >
+          <div>
+            <h1 className="text-2xl font-bold text-white mb-2">
+              AI Prompt Management
+            </h1>
+            <p className="text-white/60">
+              Configure AI prompts for LinkedIn, Email, Phone, and WhatsApp
+              messages
+            </p>
+          </div>
+        </motion.div>
+
+        {/* Stats Cards */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
-          className="max-w-[1600px] mx-auto w-full flex flex-col flex-1"
+          transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
+          className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5"
         >
-          {/* Header Section */}
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut", delay: 0.4 }}
-            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6"
-          >
-            <div>
-              <h1 className="text-2xl font-bold text-white mb-2">
-                AI Prompt Management
-              </h1>
-              <p className="text-white/60">
-                Configure AI prompts for LinkedIn, Email, Phone, and WhatsApp
-                messages
-              </p>
-            </div>
-          </motion.div>
-
-          {/* Stats Cards */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
-            className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 mb-6"
-          >
-            <Card className="bg-[linear-gradient(135deg,rgba(58,62,75,0.82),rgba(28,30,40,0.94))] border-white/10 hover:border-white/20 transition-all duration-300">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-white/70 flex items-center gap-2 text-sm">
-                  <Settings className="w-4 h-4" />
-                  Total Prompts
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6 pt-0">
-                <div className="text-2xl sm:text-3xl font-bold text-white">
-                  {statistics.totalPrompts}
-                </div>
-                <p className="text-xs text-white/60 mt-1">All prompt types</p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-[linear-gradient(135deg,rgba(58,62,75,0.82),rgba(28,30,40,0.94))] border-white/10 hover:border-white/20 transition-all duration-300">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-white/70 flex items-center gap-2 text-sm">
-                  <MessageSquare className="w-4 h-4" />
-                  LinkedIn
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6 pt-0">
-                <div className="text-2xl sm:text-3xl font-bold text-blue-400">
-                  {statistics.linkedinPrompts}
-                </div>
-                <p className="text-xs text-white/60 mt-1">LinkedIn prompts</p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-[linear-gradient(135deg,rgba(58,62,75,0.82),rgba(28,30,40,0.94))] border-white/10 hover:border-white/20 transition-all duration-300">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-white/70 flex items-center gap-2 text-sm">
-                  <Mail className="w-4 h-4" />
-                  Email
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6 pt-0">
-                <div className="text-2xl sm:text-3xl font-bold text-green-400">
-                  {statistics.emailPrompts}
-                </div>
-                <p className="text-xs text-white/60 mt-1">Email prompts</p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-[linear-gradient(135deg,rgba(58,62,75,0.82),rgba(28,30,40,0.94))] border-white/10 hover:border-white/20 transition-all duration-300">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-white/70 flex items-center gap-2 text-sm">
-                  <Phone className="w-4 h-4" />
-                  Phone
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6 pt-0">
-                <div className="text-2xl sm:text-3xl font-bold text-purple-400">
-                  {statistics.phonePrompts}
-                </div>
-                <p className="text-xs text-white/60 mt-1">Phone prompts</p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-[linear-gradient(135deg,rgba(58,62,75,0.82),rgba(28,30,40,0.94))] border-white/10 hover:border-white/20 transition-all duration-300">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-white/70 flex items-center gap-2 text-sm">
-                  <MessageSquare className="w-4 h-4" />
-                  WhatsApp
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6 pt-0">
-                <div className="text-2xl sm:text-3xl font-bold text-cyan-400">
-                  {statistics.whatsappPrompts}
-                </div>
-                <p className="text-xs text-white/60 mt-1">WhatsApp prompts</p>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          {/* Prompt Management Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut", delay: 0.5 }}
-          >
-            <PromptManagement
-              prompts={prompts}
-              activeTab={activeTab}
-              onTabChange={setActiveTab}
-              onAddPrompt={handleAddPrompt}
-              onEditPrompt={handleEditPrompt}
-              onDeletePrompt={handleDeletePrompt}
-            />
-          </motion.div>
-
-          {/* Prompt Dialog */}
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogContent className="bg-[linear-gradient(135deg,rgba(58,62,75,0.95),rgba(28,30,40,0.98))] border-cyan-500/20 text-white max-w-[95vw] lg:max-w-7xl w-[95vw] max-h-[95vh] overflow-y-auto hide-scrollbar">
-              <DialogHeader className="border-b border-white/10 pb-4">
-                <DialogTitle className="text-2xl font-bold flex items-center gap-3">
-                  {selectedPrompt ? (
-                    <>
-                      <span>Edit Prompt</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Create New Prompt</span>
-                    </>
-                  )}
-                </DialogTitle>
-                <DialogDescription className="text-white/60 text-sm">
-                  {selectedPrompt
-                    ? "Update the existing prompt configuration and customize variables"
-                    : "Create a new AI prompt for connection messages with dynamic variables"}
-                </DialogDescription>
-              </DialogHeader>
-              <div className="mt-4">
-                <PromptForm
-                  formData={formData}
-                  selectedCompanyForPrompt={selectedCompanyForPrompt}
-                  companies={companies}
-                  companiesLoading={companiesLoading}
-                  onFormDataChange={handleFormDataChange}
-                  onCompanySelect={(company) => {
-                    setSelectedCompanyForPrompt(company);
-                  }}
-                  onSubmit={
-                    selectedPrompt ? handleUpdatePrompt : handleCreatePrompt
-                  }
-                  onCancel={() => setIsDialogOpen(false)}
-                  isEditing={!!selectedPrompt}
-                />
+          <Card className="bg-[linear-gradient(135deg,rgba(58,62,75,0.82),rgba(28,30,40,0.94))] border-white/10 hover:border-white/20 transition-all duration-300">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-white/70 flex items-center gap-2 text-sm">
+                <Settings className="w-4 h-4" />
+                Total Prompts
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6 pt-0">
+              <div className="text-2xl sm:text-3xl font-bold text-white">
+                {statistics.totalPrompts}
               </div>
-            </DialogContent>
-          </Dialog>
+              <p className="text-xs text-white/60 mt-1">All prompt types</p>
+            </CardContent>
+          </Card>
 
-          {/* Delete Confirmation Dialog */}
-          <Dialog
-            open={isDeleteDialogOpen}
-            onOpenChange={setIsDeleteDialogOpen}
-          >
-            <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-md w-[95vw]">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <div className="w-6 h-6 bg-red-600/20 rounded-full flex items-center justify-center">
+          <Card className="bg-[linear-gradient(135deg,rgba(58,62,75,0.82),rgba(28,30,40,0.94))] border-white/10 hover:border-white/20 transition-all duration-300">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-white/70 flex items-center gap-2 text-sm">
+                <MessageSquare className="w-4 h-4" />
+                LinkedIn
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6 pt-0">
+              <div className="text-2xl sm:text-3xl font-bold text-blue-400">
+                {statistics.linkedinPrompts}
+              </div>
+              <p className="text-xs text-white/60 mt-1">LinkedIn prompts</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-[linear-gradient(135deg,rgba(58,62,75,0.82),rgba(28,30,40,0.94))] border-white/10 hover:border-white/20 transition-all duration-300">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-white/70 flex items-center gap-2 text-sm">
+                <Mail className="w-4 h-4" />
+                Email
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6 pt-0">
+              <div className="text-2xl sm:text-3xl font-bold text-green-400">
+                {statistics.emailPrompts}
+              </div>
+              <p className="text-xs text-white/60 mt-1">Email prompts</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-[linear-gradient(135deg,rgba(58,62,75,0.82),rgba(28,30,40,0.94))] border-white/10 hover:border-white/20 transition-all duration-300">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-white/70 flex items-center gap-2 text-sm">
+                <Phone className="w-4 h-4" />
+                Phone
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6 pt-0">
+              <div className="text-2xl sm:text-3xl font-bold text-purple-400">
+                {statistics.phonePrompts}
+              </div>
+              <p className="text-xs text-white/60 mt-1">Phone prompts</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-[linear-gradient(135deg,rgba(58,62,75,0.82),rgba(28,30,40,0.94))] border-white/10 hover:border-white/20 transition-all duration-300">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-white/70 flex items-center gap-2 text-sm">
+                <MessageSquare className="w-4 h-4" />
+                WhatsApp
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6 pt-0">
+              <div className="text-2xl sm:text-3xl font-bold text-cyan-400">
+                {statistics.whatsappPrompts}
+              </div>
+              <p className="text-xs text-white/60 mt-1">WhatsApp prompts</p>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Prompt Management Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut", delay: 0.5 }}
+        >
+          <PromptManagement
+            prompts={prompts}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            onAddPrompt={handleAddPrompt}
+            onEditPrompt={handleEditPrompt}
+            onDeletePrompt={handleDeletePrompt}
+          />
+        </motion.div>
+
+        {/* Prompt Dialog */}
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent className="bg-[linear-gradient(135deg,rgba(58,62,75,0.95),rgba(28,30,40,0.98))] border-cyan-500/20 text-white max-w-[95vw] lg:max-w-7xl w-[95vw] max-h-[95vh] overflow-y-auto hide-scrollbar">
+            <DialogHeader className="border-b border-white/10 pb-4">
+              <DialogTitle className="text-2xl font-bold flex items-center gap-3">
+                {selectedPrompt ? (
+                  <>
+                    <span>Edit Prompt</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Create New Prompt</span>
+                  </>
+                )}
+              </DialogTitle>
+              <DialogDescription className="text-white/60 text-sm">
+                {selectedPrompt
+                  ? "Update the existing prompt configuration and customize variables"
+                  : "Create a new AI prompt for connection messages with dynamic variables"}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="mt-4">
+              <PromptForm
+                formData={formData}
+                selectedCompanyForPrompt={selectedCompanyForPrompt}
+                companies={companies}
+                companiesLoading={companiesLoading}
+                onFormDataChange={handleFormDataChange}
+                onCompanySelect={(company) => {
+                  setSelectedCompanyForPrompt(company);
+                }}
+                onSubmit={
+                  selectedPrompt ? handleUpdatePrompt : handleCreatePrompt
+                }
+                onCancel={() => setIsDialogOpen(false)}
+                isEditing={!!selectedPrompt}
+              />
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-md w-[95vw]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <div className="w-6 h-6 bg-red-600/20 rounded-full flex items-center justify-center">
+                  <svg
+                    className="w-4 h-4 text-red-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
+                  </svg>
+                </div>
+                Delete Prompt
+              </DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete this prompt? This action cannot
+                be undone.
+              </DialogDescription>
+            </DialogHeader>
+
+            {promptToDelete && (
+              <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 bg-cyan-600/20 rounded-lg flex items-center justify-center flex-shrink-0">
                     <svg
-                      className="w-4 h-4 text-red-400"
+                      className="w-4 h-4 text-cyan-400"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -573,81 +590,55 @@ const PromptsPage = () => {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth={2}
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
                       />
                     </svg>
                   </div>
-                  Delete Prompt
-                </DialogTitle>
-                <DialogDescription>
-                  Are you sure you want to delete this prompt? This action
-                  cannot be undone.
-                </DialogDescription>
-              </DialogHeader>
-
-              {promptToDelete && (
-                <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 bg-cyan-600/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <svg
-                        className="w-4 h-4 text-cyan-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                        />
-                      </svg>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white font-medium text-sm">
-                        {promptToDelete.promptType.charAt(0).toUpperCase() +
-                          promptToDelete.promptType.slice(1)}{" "}
-                        Prompt
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white font-medium text-sm">
+                      {promptToDelete.promptType.charAt(0).toUpperCase() +
+                        promptToDelete.promptType.slice(1)}{" "}
+                      Prompt
+                    </p>
+                    <p className="text-white/60 text-xs">
+                      {promptToDelete.promptCategory
+                        .replace("_", " ")
+                        .replace(/\b\w/g, (l) => l.toUpperCase())}
+                      {promptToDelete.companyId
+                        ? ` • Company-specific`
+                        : ` • Global`}
+                    </p>
+                    {promptToDelete.companyId && (
+                      <p className="text-cyan-400 text-xs font-mono truncate">
+                        Company:{" "}
+                        {companies.find(
+                          (c) => c._id === promptToDelete!.companyId
+                        )?.name || "Unknown"}
                       </p>
-                      <p className="text-white/60 text-xs">
-                        {promptToDelete.promptCategory
-                          .replace("_", " ")
-                          .replace(/\b\w/g, (l) => l.toUpperCase())}
-                        {promptToDelete.companyId
-                          ? ` • Company-specific`
-                          : ` • Global`}
-                      </p>
-                      {promptToDelete.companyId && (
-                        <p className="text-cyan-400 text-xs font-mono truncate">
-                          Company:{" "}
-                          {companies.find(
-                            (c) => c._id === promptToDelete!.companyId
-                          )?.name || "Unknown"}
-                        </p>
-                      )}
-                    </div>
+                    )}
                   </div>
                 </div>
-              )}
-
-              <div className="flex flex-col sm:flex-row justify-end gap-2 mt-4">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsDeleteDialogOpen(false)}
-                  className="w-full sm:w-auto"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={confirmDeletePrompt}
-                  className="bg-red-600 hover:bg-red-700 w-full sm:w-auto"
-                >
-                  Delete Prompt
-                </Button>
               </div>
-            </DialogContent>
-          </Dialog>
-        </motion.div>
+            )}
+
+            <div className="flex flex-col sm:flex-row justify-end gap-2 mt-4">
+              <Button
+                variant="outline"
+                onClick={() => setIsDeleteDialogOpen(false)}
+                className="w-full sm:w-auto"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={confirmDeletePrompt}
+                className="bg-red-600 hover:bg-red-700 w-full sm:w-auto"
+              >
+                Delete Prompt
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         <style>{`
           .hide-scrollbar {
             -ms-overflow-style: none;
