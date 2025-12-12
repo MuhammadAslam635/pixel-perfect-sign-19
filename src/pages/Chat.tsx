@@ -622,6 +622,33 @@ const ChatPage = () => {
     }
     dispatch(setDeletingChatId(chatId));
     try {
+      // Handle temporary chat deletion (newly created chats that haven't been saved yet)
+      if (chatId === "__new_chat__" || chatId === NEW_CHAT_KEY) {
+        // Clear temporary chat state
+        dispatch(clearTemporaryChat());
+        dispatch(removeOptimisticMessages(NEW_CHAT_KEY));
+        
+        // Clear composer value and pending file
+        dispatch(setComposerValue(""));
+        dispatch(setPendingFile(null));
+        
+        // Select the first available chat if there are any
+        if (chatList.length > 0) {
+          dispatch(setSelectedChatId(chatList[0]._id));
+        } else {
+          dispatch(setSelectedChatId(null));
+        }
+
+        toast({
+          title: "Chat deleted",
+          description: "The conversation has been removed.",
+        });
+        
+        dispatch(setDeletingChatId(null));
+        return;
+      }
+
+      // Handle real chat deletion (existing chats in database)
       await deleteChatById(chatId);
 
       queryClient.setQueryData<ChatSummary[] | undefined>(
@@ -636,7 +663,17 @@ const ChatPage = () => {
       });
 
       if (selectedChatId === chatId) {
-        dispatch(setSelectedChatId(null));
+        // Select the first available chat if there are any
+        if (chatList.length > 1) {
+          const remainingChats = chatList.filter((chat) => chat._id !== chatId);
+          if (remainingChats.length > 0) {
+            dispatch(setSelectedChatId(remainingChats[0]._id));
+          } else {
+            dispatch(setSelectedChatId(null));
+          }
+        } else {
+          dispatch(setSelectedChatId(null));
+        }
         dispatch(setComposerValue(""));
         dispatch(setPendingFile(null));
         dispatch(setIsCreatingNewChat(false));
