@@ -241,8 +241,18 @@ const OnboardingPage = () => {
   };
 
   const handleSkip = async () => {
-    // Try to save but don't block navigation if it fails
-    await saveProgress("draft");
+    // Skip validation and save current progress silently
+    // Don't show errors since user is intentionally skipping
+    try {
+      await onboardingService.updateOnboarding({
+        questions: formData,
+        status: "draft",
+      });
+    } catch (error) {
+      // Silently ignore save errors when skipping
+      console.log("Skip: Could not save progress, continuing anyway");
+    }
+    
     // Store skip preference in sessionStorage so we don't redirect back immediately
     sessionStorage.setItem("onboarding_skipped", "true");
     toast.info("You can complete onboarding later from Settings");
@@ -415,7 +425,7 @@ const OnboardingPage = () => {
             Skip for now
           </Button>
 
-          <div className="flex items-center gap-3 order-1 sm:order-2">
+          <div className="flex items-center gap-3 order-1 sm:order-2 ml-auto">
             <Button
               variant="outline"
               onClick={handleBack}
