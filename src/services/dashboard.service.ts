@@ -87,6 +87,8 @@ export interface DashboardResponse<T> {
   data: T;
 }
 
+export type DashboardPeriod = "all" | "7d" | "30d" | "90d" | "1y";
+
 export interface CrmStats {
   totalOutreach: number;
   totalResponse: number;
@@ -227,9 +229,11 @@ export const dashboardService = {
   /**
    * Get total count of all leads from all companies
    */
-  getTotalLeadsCount: async (): Promise<DashboardResponse<{ count: number }>> => {
+  getTotalLeadsCount: async (
+    params?: { period?: DashboardPeriod }
+  ): Promise<DashboardResponse<{ count: number }>> => {
     try {
-      const response = await API.get("/dashboard/total-leads-count");
+      const response = await API.get("/dashboard/total-leads-count", { params });
       return response.data;
     } catch (error: any) {
       throw error;

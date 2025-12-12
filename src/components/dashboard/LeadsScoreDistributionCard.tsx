@@ -1,8 +1,10 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Loader2, Target, Calendar, Filter, Users, ChevronDown, Clock } from "lucide-react";
-import { dashboardService, TopLead } from "@/services/dashboard.service";
+import { PieChart, Pie, Cell } from "recharts";
+import { dashboardService, DashboardPeriod, TopLead } from "@/services/dashboard.service";
 import { calendarService, LeadMeetingRecord } from "@/services/calendar.service";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 
 type ActivityFilter = 
   | "all"
@@ -13,17 +15,26 @@ type ActivityFilter =
   | "whatsapp_sent"
   | "sms_sent";
 
+type ActivityBreakdownKey = Exclude<ActivityFilter, "all">;
+
 const LeadsScoreDistributionCard = () => {
   const navigate = useNavigate();
   const [topLeads, setTopLeads] = useState<TopLead[]>([]);
   const [topLeadsLoading, setTopLeadsLoading] = useState(true);
   const [totalLeads, setTotalLeads] = useState<number | null>(null);
   const [totalLeadsLoading, setTotalLeadsLoading] = useState(true);
-  const [filteredLeadsCount, setFilteredLeadsCount] = useState<number | null>(null);
-  const [filteredLeadsLoading, setFilteredLeadsLoading] = useState(false);
-  const [selectedFilter, setSelectedFilter] = useState<ActivityFilter>("all");
-  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
-  const filterDropdownRef = useRef<HTMLDivElement>(null);
+  const [totalLeadsPeriod, setTotalLeadsPeriod] = useState<DashboardPeriod>("all");
+  const [showTotalLeadsPeriodDropdown, setShowTotalLeadsPeriodDropdown] = useState(false);
+  const [activityBreakdown, setActivityBreakdown] = useState<Record<ActivityBreakdownKey, number>>({
+    message_sent: 0,
+    email_sent: 0,
+    outbound_calls: 0,
+    inbound_calls: 0,
+    whatsapp_sent: 0,
+    sms_sent: 0,
+  });
+  const [activityBreakdownLoading, setActivityBreakdownLoading] = useState(true);
+  const totalLeadsPeriodDropdownRef = useRef<HTMLDivElement>(null);
   
   // Meetings state
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -84,22 +95,20 @@ const LeadsScoreDistributionCard = () => {
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        filterDropdownRef.current &&
-        !filterDropdownRef.current.contains(event.target as Node)
-      ) {
-        setShowFilterDropdown(false);
-      }
+      const target = event.target as Node;
+      const clickedInsidePeriod = totalLeadsPeriodDropdownRef.current?.contains(target);
+
+      if (!clickedInsidePeriod) setShowTotalLeadsPeriodDropdown(false);
     };
 
-    if (showFilterDropdown) {
+    if (showTotalLeadsPeriodDropdown) {
       document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [showFilterDropdown]);
+  }, [showTotalLeadsPeriodDropdown]);
 
   // Fetch top 3 leads
   useEffect(() => {
@@ -124,7 +133,9 @@ const LeadsScoreDistributionCard = () => {
     const fetchTotalLeads = async () => {
       try {
         setTotalLeadsLoading(true);
-        const response = await dashboardService.getTotalLeadsCount();
+        const response = await dashboardService.getTotalLeadsCount({
+          period: totalLeadsPeriod,
+        });
         setTotalLeads(response.data.count || 0);
       } catch (err: any) {
         console.error("Error fetching total leads:", err);
@@ -135,39 +146,106 @@ const LeadsScoreDistributionCard = () => {
     };
 
     fetchTotalLeads();
-  }, []);
+  }, [totalLeadsPeriod]);
 
-  // Fetch filtered leads count
+  // Fetch activity breakdown counts (for Leads Filter tile)
   useEffect(() => {
-    const fetchFilteredLeads = async () => {
+    const fetchActivityBreakdown = async () => {
       try {
-        setFilteredLeadsLoading(true);
-        const response = await dashboardService.getLeadsCountByActivity(selectedFilter);
-        setFilteredLeadsCount(response.data.count || 0);
+        setActivityBreakdownLoading(true);
+
+        const keys: ActivityBreakdownKey[] = [
+          "message_sent",
+          "email_sent",
+          "outbound_calls",
+          "inbound_calls",
+          "whatsapp_sent",
+          "sms_sent",
+        ];
+
+        const results = await Promise.all(
+          keys.map(async (key) => {
+            const response = await dashboardService.getLeadsCountByActivity(key);
+            return { key, count: response.data.count || 0 };
+          })
+        );
+
+        const next: Record<ActivityBreakdownKey, number> = {
+          message_sent: 0,
+          email_sent: 0,
+          outbound_calls: 0,
+          inbound_calls: 0,
+          whatsapp_sent: 0,
+          sms_sent: 0,
+        };
+        results.forEach(({ key, count }) => {
+          next[key] = count;
+        });
+
+        setActivityBreakdown(next);
       } catch (err: any) {
-        console.error("Error fetching filtered leads:", err);
-        setFilteredLeadsCount(0);
+        console.error("Error fetching activity breakdown:", err);
+        setActivityBreakdown({
+          message_sent: 0,
+          email_sent: 0,
+          outbound_calls: 0,
+          inbound_calls: 0,
+          whatsapp_sent: 0,
+          sms_sent: 0,
+        });
       } finally {
-        setFilteredLeadsLoading(false);
+        setActivityBreakdownLoading(false);
       }
     };
 
-    fetchFilteredLeads();
-  }, [selectedFilter]);
+    fetchActivityBreakdown();
+  }, []);
 
-  const filterOptions: { value: ActivityFilter; label: string }[] = [
-    { value: "all", label: "All Leads" },
-    { value: "message_sent", label: "Message Sent" },
-    { value: "email_sent", label: "Email Sent" },
-    { value: "outbound_calls", label: "Outbound Calls" },
-    { value: "inbound_calls", label: "Inbound Calls" },
-    { value: "whatsapp_sent", label: "WhatsApp Sent" },
-    { value: "sms_sent", label: "SMS Sent" },
+  const totalLeadsPeriodOptions: { value: DashboardPeriod; label: string }[] = [
+    { value: "all", label: "All time" },
+    { value: "7d", label: "Last week" },
+    { value: "30d", label: "Last month" },
+    { value: "90d", label: "Last 3 months" },
+    { value: "1y", label: "Last year" },
   ];
 
   const handleLeadClick = (leadId: string) => {
     navigate(`/leads/${leadId}`);
   };
+
+  // Muted palette to match the app's dark/professional theme (avoid overly saturated "cartoon" colors)
+  const activityPalette: Record<ActivityBreakdownKey, string> = {
+    // Dark + cyan personality: one hero cyan, plus slate/gray and deep blue accents.
+    // Avoid yellow/green hues.
+    message_sent: "#68B1B8", // hero cyan
+    email_sent: "#3B82F6", // deep blue
+    sms_sent: "#2B6CB0", // darker blue
+    whatsapp_sent: "#334155", // slate/gray
+    outbound_calls: "#1F2A37", // near-black gray
+    inbound_calls: "#0B3A57", // deep navy-cyan (not green)
+  };
+
+  const activityOptions: Array<{
+    key: ActivityBreakdownKey;
+    label: string;
+    color: string;
+  }> = [
+    { key: "message_sent", label: "Messages", color: activityPalette.message_sent },
+    { key: "email_sent", label: "Email", color: activityPalette.email_sent },
+    { key: "sms_sent", label: "SMS", color: activityPalette.sms_sent },
+    { key: "whatsapp_sent", label: "WhatsApp", color: activityPalette.whatsapp_sent },
+    { key: "outbound_calls", label: "Out Calls", color: activityPalette.outbound_calls },
+    { key: "inbound_calls", label: "In Calls", color: activityPalette.inbound_calls },
+  ];
+
+  const donutData = activityOptions.map((opt) => ({
+    key: opt.key,
+    name: opt.label,
+    value: activityBreakdown[opt.key] ?? 0,
+    fill: opt.color,
+  }));
+
+  const donutDataNonZero = donutData.filter((d) => d.value > 0);
 
   return (
     <div className="col-span-2 grid grid-cols-2 gap-4">
@@ -306,32 +384,107 @@ const LeadsScoreDistributionCard = () => {
 
       {/* Tile 3: Leads Filter */}
       <div className="relative overflow-hidden rounded-[36px] border border-white/10 bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] p-4 lg:p-5 h-[140px] lg:h-[170px] flex flex-col transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-white/5 hover:scale-[1.01]">
+        <div className="flex items-center gap-2 mb-2">
+          <Filter className="w-4 h-4 text-white/70" />
+          <h3 className="text-white text-sm font-medium">Leads Filter</h3>
+        </div>
+
+        <div className="flex-1 flex items-center gap-3 min-h-0">
+          {activityBreakdownLoading ? (
+            <div className="flex items-center justify-center w-full">
+              <Loader2 className="w-4 h-4 animate-spin text-white/70" />
+            </div>
+          ) : (
+            <>
+              <div className="w-[88px] h-[88px] lg:w-[104px] lg:h-[104px] shrink-0">
+                <ChartContainer
+                  config={{
+                    message_sent: { label: "Messages", color: activityPalette.message_sent },
+                    email_sent: { label: "Email", color: activityPalette.email_sent },
+                    sms_sent: { label: "SMS", color: activityPalette.sms_sent },
+                    whatsapp_sent: { label: "WhatsApp", color: activityPalette.whatsapp_sent },
+                    outbound_calls: { label: "Out Calls", color: activityPalette.outbound_calls },
+                    inbound_calls: { label: "In Calls", color: activityPalette.inbound_calls },
+                  }}
+                  className="h-full w-full aspect-square"
+                >
+                  <PieChart>
+                    <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                    <Pie
+                      data={donutDataNonZero.length ? donutDataNonZero : donutData}
+                      dataKey="value"
+                      nameKey="name"
+                      // Filled pie (no donut hole) per design request
+                      innerRadius={0}
+                      outerRadius={44}
+                      strokeWidth={0}
+                    >
+                      {(donutDataNonZero.length ? donutDataNonZero : donutData).map((entry) => (
+                        <Cell key={entry.key} fill={entry.fill} fillOpacity={0.9} />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ChartContainer>
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+                  {activityOptions.map((opt) => (
+                    <div key={opt.key} className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span
+                          className="h-2 w-2 rounded-[2px] shrink-0"
+                          style={{ backgroundColor: opt.color }}
+                        />
+                        <span className="text-[10px] text-white/70 truncate">{opt.label}</span>
+                      </div>
+                      <span className="text-[10px] font-mono tabular-nums text-white/90">
+                        {(activityBreakdown[opt.key] ?? 0).toLocaleString()}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Tile 4: Total Leads */}
+      <div className="relative overflow-hidden rounded-[36px] border border-white/10 bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] p-4 lg:p-5 h-[140px] lg:h-[170px] flex flex-col transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-white/5 hover:scale-[1.01]">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-white/70" />
-            <h3 className="text-white text-sm font-medium">Leads Filter</h3>
+            <Users className="w-4 h-4 text-white/70" />
+            <h3 className="text-white text-sm font-medium">Total Leads</h3>
           </div>
-          <div className="relative" ref={filterDropdownRef}>
+          <div className="relative" ref={totalLeadsPeriodDropdownRef}>
             <button
-              onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+              onClick={() =>
+                setShowTotalLeadsPeriodDropdown(!showTotalLeadsPeriodDropdown)
+              }
               className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors text-left"
             >
               <span className="text-[10px] text-white/80">
-                {filterOptions.find((opt) => opt.value === selectedFilter)?.label || "All Leads"}
+                {totalLeadsPeriodOptions.find((opt) => opt.value === totalLeadsPeriod)
+                  ?.label || "All time"}
               </span>
-              <ChevronDown className={`w-3 h-3 text-white/60 transition-transform ${showFilterDropdown ? "rotate-180" : ""}`} />
+              <ChevronDown
+                className={`w-3 h-3 text-white/60 transition-transform ${
+                  showTotalLeadsPeriodDropdown ? "rotate-180" : ""
+                }`}
+              />
             </button>
-            {showFilterDropdown && (
+            {showTotalLeadsPeriodDropdown && (
               <div className="absolute top-full right-0 mt-1 rounded-lg bg-[#1a1a1a] border border-white/10 shadow-lg z-10 max-h-40 overflow-y-auto scrollbar-hide min-w-[140px]">
-                {filterOptions.map((option) => (
+                {totalLeadsPeriodOptions.map((option) => (
                   <button
                     key={option.value}
                     onClick={() => {
-                      setSelectedFilter(option.value);
-                      setShowFilterDropdown(false);
+                      setTotalLeadsPeriod(option.value);
+                      setShowTotalLeadsPeriodDropdown(false);
                     }}
                     className={`w-full text-left px-3 py-2 text-xs transition-colors ${
-                      selectedFilter === option.value
+                      totalLeadsPeriod === option.value
                         ? "bg-white/10 text-white"
                         : "text-white/70 hover:bg-white/5"
                     }`}
@@ -342,23 +495,6 @@ const LeadsScoreDistributionCard = () => {
               </div>
             )}
           </div>
-          </div>
-        <div className="flex-1 flex items-center">
-          {filteredLeadsLoading ? (
-            <Loader2 className="w-4 h-4 animate-spin text-white/70" />
-          ) : (
-            <p className="text-4xl font-semibold text-white">
-              {filteredLeadsCount?.toLocaleString() || 0}
-            </p>
-          )}
-          </div>
-          </div>
-
-      {/* Tile 4: Total Leads */}
-      <div className="relative overflow-hidden rounded-[36px] border border-white/10 bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] p-4 lg:p-5 h-[140px] lg:h-[170px] flex flex-col transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-white/5 hover:scale-[1.01]">
-        <div className="flex items-center gap-2 mb-2">
-          <Users className="w-4 h-4 text-white/70" />
-          <h3 className="text-white text-sm font-medium">Total Leads</h3>
         </div>
         <div className="flex-1 flex items-center ">
           {totalLeadsLoading ? (
