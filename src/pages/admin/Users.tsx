@@ -829,11 +829,13 @@ const AdminUsers = () => {
                                     )}
                                   </td>
                                   <td className="py-4 px-4">
-                                    {user.companyId && (
+                                    {/* Show button for all users except system admins without company */}
+                                    {(user.companyId || user.role === "Company") && (
                                       <Button
                                         onClick={() =>
                                           handleStatusToggle(
-                                            user.companyId!,
+                                            // For company owners, use their own ID as companyId
+                                            user.role === "Company" ? user._id : user.companyId!,
                                             user._id,
                                             user.status || "inactive"
                                           )
