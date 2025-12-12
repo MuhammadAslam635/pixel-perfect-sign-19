@@ -192,9 +192,12 @@ export const PromptForm = ({
               Prompt Configuration
             </h3>
             <p className="text-white/60 text-xs leading-relaxed">
-              <strong className="text-cyan-300">Global Prompts:</strong> Leave "Company" as "Global" to apply this prompt to all companies.
+              <strong className="text-cyan-300">Global Prompts:</strong> Leave
+              "Company" as "Global" to apply this prompt to all companies.
               <br />
-              <strong className="text-blue-300">Company-Specific:</strong> Select a specific company to create a custom prompt that overrides the global prompt for that company only.
+              <strong className="text-blue-300">Company-Specific:</strong>{" "}
+              Select a specific company to create a custom prompt that overrides
+              the global prompt for that company only.
             </p>
           </div>
         </div>
@@ -203,9 +206,14 @@ export const PromptForm = ({
       {/* Prompt Type & Category */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="promptType" className="text-white/80 mb-2 flex items-center gap-2">
+          <Label
+            htmlFor="promptType"
+            className="text-white/80 mb-2 flex items-center gap-2"
+          >
             <span>Prompt Type</span>
-            <Badge className="bg-cyan-500/20 text-cyan-300 border-cyan-500/30 text-xs">Required</Badge>
+            <Badge className="bg-cyan-500/20 text-cyan-300 border-cyan-500/30 text-xs">
+              Required
+            </Badge>
           </Label>
           <Select
             value={formData.promptType}
@@ -225,9 +233,14 @@ export const PromptForm = ({
           </Select>
         </div>
         <div>
-          <Label htmlFor="promptCategory" className="text-white/80 mb-2 flex items-center gap-2">
+          <Label
+            htmlFor="promptCategory"
+            className="text-white/80 mb-2 flex items-center gap-2"
+          >
             <span>Category</span>
-            <Badge className="bg-cyan-500/20 text-cyan-300 border-cyan-500/30 text-xs">Required</Badge>
+            <Badge className="bg-cyan-500/20 text-cyan-300 border-cyan-500/30 text-xs">
+              Required
+            </Badge>
           </Label>
           <Select
             value={formData.promptCategory}
@@ -252,9 +265,14 @@ export const PromptForm = ({
       {/* Settings Row */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="flex flex-col gap-2">
-          <Label htmlFor="company" className="text-white/80 mb-2 flex items-center gap-2">
+          <Label
+            htmlFor="company"
+            className="text-white/80 mb-2 flex items-center gap-2"
+          >
             <span>Company</span>
-            <Badge className="bg-white/10 text-white/60 border-white/20 text-xs">Optional</Badge>
+            <Badge className="bg-white/10 text-white/60 border-white/20 text-xs">
+              Optional
+            </Badge>
           </Label>
           <Select
             value={selectedCompanyForPrompt?._id || "global"}
@@ -291,9 +309,14 @@ export const PromptForm = ({
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label htmlFor="model" className="text-white/80 mb-2 flex items-center gap-2">
+          <Label
+            htmlFor="model"
+            className="text-white/80 mb-2 flex items-center gap-2"
+          >
             <span>AI Model</span>
-            <Badge className="bg-cyan-500/20 text-cyan-300 border-cyan-500/30 text-xs">Required</Badge>
+            <Badge className="bg-cyan-500/20 text-cyan-300 border-cyan-500/30 text-xs">
+              Required
+            </Badge>
           </Label>
           <Select
             value={formData.metadata?.model || "gpt-4o-mini"}
@@ -328,9 +351,14 @@ export const PromptForm = ({
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label htmlFor="temperature" className="text-white/80 mb-2 flex items-center gap-2">
+          <Label
+            htmlFor="temperature"
+            className="text-white/80 mb-2 flex items-center gap-2"
+          >
             <span>Temperature</span>
-            <Badge className="bg-cyan-500/20 text-cyan-300 border-cyan-500/30 text-xs">Required</Badge>
+            <Badge className="bg-cyan-500/20 text-cyan-300 border-cyan-500/30 text-xs">
+              Required
+            </Badge>
           </Label>
           <Select
             value={formData.metadata?.temperature?.toString() || "0.7"}
@@ -361,9 +389,14 @@ export const PromptForm = ({
         {/* Left Column: Prompt Editor */}
         <div className="space-y-4">
           <div>
-            <Label htmlFor="content" className="text-white/80 mb-2 flex items-center gap-2">
+            <Label
+              htmlFor="content"
+              className="text-white/80 mb-2 flex items-center gap-2"
+            >
               <span>Prompt Content</span>
-              <Badge className="bg-cyan-500/20 text-cyan-300 border-cyan-500/30 text-xs">Required</Badge>
+              <Badge className="bg-cyan-500/20 text-cyan-300 border-cyan-500/30 text-xs">
+                Required
+              </Badge>
             </Label>
             <div className="bg-white/5 rounded-lg border border-white/10 overflow-hidden">
               <ReactQuill
@@ -427,6 +460,8 @@ export const PromptForm = ({
           }
           .ql-container::-webkit-scrollbar {
             display: none;
+            width: 0;
+            height: 0;
           }
           .ql-editor {
             min-height: 350px;
@@ -437,6 +472,8 @@ export const PromptForm = ({
           }
           .ql-editor::-webkit-scrollbar {
             display: none;
+            width: 0;
+            height: 0;
           }
           .ql-editor.ql-blank::before {
             color: rgba(255, 255, 255, 0.4);

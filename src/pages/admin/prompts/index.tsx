@@ -515,7 +515,7 @@ const PromptsPage = () => {
 
           {/* Prompt Dialog */}
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogContent className="bg-[linear-gradient(135deg,rgba(58,62,75,0.95),rgba(28,30,40,0.98))] border-cyan-500/20 text-white max-w-[95vw] lg:max-w-7xl w-[95vw] max-h-[95vh] overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+            <DialogContent className="bg-[linear-gradient(135deg,rgba(58,62,75,0.95),rgba(28,30,40,0.98))] border-cyan-500/20 text-white max-w-[95vw] lg:max-w-7xl w-[95vw] max-h-[95vh] overflow-y-auto hide-scrollbar">
               <DialogHeader className="border-b border-white/10 pb-4">
                 <DialogTitle className="text-2xl font-bold flex items-center gap-3">
                   {selectedPrompt ? (
@@ -648,6 +648,17 @@ const PromptsPage = () => {
             </DialogContent>
           </Dialog>
         </motion.div>
+        <style>{`
+          .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+          }
+          .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+            width: 0;
+            height: 0;
+          }
+        `}</style>
       </motion.main>
     </AdminLayout>
   );

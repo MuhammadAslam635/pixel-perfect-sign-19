@@ -350,15 +350,12 @@ export const PromptVariables = ({ promptType }: PromptVariablesProps) => {
     {} as Record<string, Variable[]>
   );
 
-
   return (
     <Card className="bg-[linear-gradient(135deg,rgba(58,62,75,0.82),rgba(28,30,40,0.94))] border-white/10 shadow-lg">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between mb-2">
           <CardTitle className="text-white/90 text-base flex items-center gap-2">
-            <span>
-              Available Variables
-            </span>
+            <span>Available Variables</span>
           </CardTitle>
           <Badge
             variant="outline"
@@ -368,7 +365,8 @@ export const PromptVariables = ({ promptType }: PromptVariablesProps) => {
           </Badge>
         </div>
         <p className="text-white/50 text-xs mb-3">
-          {promptType.charAt(0).toUpperCase() + promptType.slice(1)} prompt variables
+          {promptType.charAt(0).toUpperCase() + promptType.slice(1)} prompt
+          variables
         </p>
         {/* Search Bar */}
         <div className="relative">
@@ -381,7 +379,7 @@ export const PromptVariables = ({ promptType }: PromptVariablesProps) => {
           />
         </div>
       </CardHeader>
-      <CardContent className="max-h-[500px] overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+      <CardContent className="max-h-[500px] overflow-y-auto hide-scrollbar">
         <div className="space-y-4">
           {Object.entries(filteredGroupedVariables).map(([category, vars]) => (
             <div key={category}>
@@ -423,7 +421,9 @@ export const PromptVariables = ({ promptType }: PromptVariablesProps) => {
                           {variable.description}
                         </p>
                         <div className="flex items-start gap-1.5">
-                          <span className="text-white/40 text-xs flex-shrink-0">Example:</span>
+                          <span className="text-white/40 text-xs flex-shrink-0">
+                            Example:
+                          </span>
                           <code className="text-white/50 text-xs font-mono bg-black/20 px-1.5 py-0.5 rounded">
                             {variable.example}
                           </code>
@@ -439,7 +439,9 @@ export const PromptVariables = ({ promptType }: PromptVariablesProps) => {
           ))}
           {Object.keys(filteredGroupedVariables).length === 0 && (
             <div className="text-center py-8">
-              <p className="text-white/50 text-sm">No variables found matching "{searchTerm}"</p>
+              <p className="text-white/50 text-sm">
+                No variables found matching "{searchTerm}"
+              </p>
             </div>
           )}
         </div>
@@ -447,26 +449,23 @@ export const PromptVariables = ({ promptType }: PromptVariablesProps) => {
           <div className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-lg p-3 border border-cyan-500/20">
             <p className="text-white/70 text-xs flex items-start gap-2">
               <span>
-                <strong className="text-cyan-300">Quick Tip:</strong> Click on any variable card to copy it instantly.
-                Paste it directly into your prompt content where you want the dynamic value to appear.
+                <strong className="text-cyan-300">Quick Tip:</strong> Click on
+                any variable card to copy it instantly. Paste it directly into
+                your prompt content where you want the dynamic value to appear.
               </span>
             </p>
           </div>
         </div>
       </CardContent>
       <style>{`
-        .scrollbar-thin::-webkit-scrollbar {
-          width: 6px;
+        .hide-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
         }
-        .scrollbar-thin::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .scrollbar-thin::-webkit-scrollbar-thumb {
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 3px;
-        }
-        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-          background: rgba(255, 255, 255, 0.2);
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none;
+          width: 0;
+          height: 0;
         }
       `}</style>
     </Card>
