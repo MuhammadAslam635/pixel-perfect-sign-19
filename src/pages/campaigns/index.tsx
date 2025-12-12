@@ -143,6 +143,18 @@ const CampaignsPage = () => {
     }
   }, [selectedCampaign]);
 
+  // Sync selectedCampaign with updated campaigns list when it changes
+  useEffect(() => {
+    if (selectedCampaign && campaigns.length > 0) {
+      const updatedCampaign = campaigns.find(
+        (campaign) => campaign._id === selectedCampaign._id
+      );
+      if (updatedCampaign && updatedCampaign !== selectedCampaign) {
+        setSelectedCampaign(updatedCampaign);
+      }
+    }
+  }, [campaigns, selectedCampaign]);
+
   useEffect(() => {
     const debounceTimer = setTimeout(() => {
       setDebouncedSearch(searchInput);
@@ -1187,15 +1199,20 @@ const CampaignsPage = () => {
             }
           }}
         >
-          <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0 text-white border border-white/10 overflow-hidden rounded-[32px] shadow-[0_25px_60px_rgba(0,0,0,0.55)]"
+          <DialogContent
+            className="max-w-4xl max-h-[90vh] flex flex-col p-0 text-white border border-white/10 overflow-hidden rounded-[32px] shadow-[0_25px_60px_rgba(0,0,0,0.55)]"
             style={{
-              background: "#0a0a0a"
-            }}>
+              background: "#0a0a0a",
+            }}
+          >
             {/* Glassmorphism Background - pointer-events-none so they don't block clicks */}
-            <div className="absolute inset-0 pointer-events-none"
+            <div
+              className="absolute inset-0 pointer-events-none"
               style={{
-                background: "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0) 38.08%, rgba(255, 255, 255, 0) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)"
-              }} />
+                background:
+                  "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0) 38.08%, rgba(255, 255, 255, 0) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
+              }}
+            />
 
             <div className="relative z-10 flex flex-col h-full min-h-0">
               {selectedCampaign && editedCampaign && (
@@ -1283,7 +1300,9 @@ const CampaignsPage = () => {
                     <div className="flex flex-wrap gap-4 items-center">
                       {isEditing ? (
                         <div className="flex items-center gap-2">
-                          <Label className="text-xs text-white/70">Status:</Label>
+                          <Label className="text-xs text-white/70">
+                            Status:
+                          </Label>
                           <Select
                             value={editedCampaign.status}
                             onValueChange={(value) =>
