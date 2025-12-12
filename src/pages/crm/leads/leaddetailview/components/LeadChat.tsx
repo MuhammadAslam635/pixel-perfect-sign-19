@@ -455,14 +455,21 @@ const LeadChat = ({
     refetchIntervalInBackground: true,
     queryFn: async () => {
       if (!leadEmailLower) {
+        console.log('📧 [LeadChat] No lead email provided');
         return [];
       }
 
+      console.log(`📧 [LeadChat] Fetching ALL email threads for lead: ${leadEmailLower}`);
+      
       const threadsResponse = await emailService.getEmailThreads({
         limit: 100,
       });
       const threads = threadsResponse.data?.threads || [];
-      const matchingThread = threads.find(
+      
+      console.log(`📧 [LeadChat] Found ${threads.length} total threads`);
+      
+      // Find ALL threads that include the lead's email (case-insensitive)
+      const matchingThreads = threads.filter(
         (thread) =>
           Array.isArray(thread.participants) &&
           thread.participants.some(
@@ -470,13 +477,58 @@ const LeadChat = ({
           )
       );
 
-      if (!matchingThread) {
+      if (matchingThreads.length === 0) {
+        console.log(`📧 [LeadChat] No threads found with participant: ${leadEmailLower}`);
+        console.log(`📧 [LeadChat] Available threads participants:`, threads.map(t => ({
+          subject: t.subject,
+          participants: t.participants?.map(p => p.email).join(', ')
+        })));
         return [];
       }
 
-      const threadResponse = await emailService.getThread(matchingThread._id);
-      const emails = threadResponse.data?.emails || [];
-      return [...emails].sort(
+      console.log(`📧 [LeadChat] Found ${matchingThreads.length} matching thread(s)`);
+      console.log(`📧 [LeadChat] Thread subjects:`, matchingThreads.map(t => t.subject));
+
+      // Fetch emails from ALL matching threads
+      const allEmailsPromises = matchingThreads.map(async (thread) => {
+        try {
+          const threadResponse = await emailService.getThread(thread._id);
+          return threadResponse.data?.emails || [];
+        } catch (error) {
+          console.error(`Failed to fetch emails from thread ${thread._id}:`, error);
+          return [];
+        }
+      });
+
+      const emailArrays = await Promise.all(allEmailsPromises);
+      const allEmails = emailArrays.flat();
+      
+      console.log(`📧 [LeadChat] Fetched ${allEmails.length} total emails from ${matchingThreads.length} thread(s)`);
+      
+      if (allEmails.length > 0) {
+        console.log(`📧 [LeadChat] Email details:`, allEmails.map(e => ({
+          id: e._id,
+          subject: e.subject,
+          from: e.from?.email,
+          to: e.to?.map(t => t.email).join(', '),
+          direction: e.direction,
+          createdAt: e.createdAt,
+          threadId: e.threadId,
+        })));
+      }
+      
+      // Remove duplicates by email ID (in case an email appears in multiple threads)
+      const uniqueEmails = allEmails.reduce((acc, email) => {
+        if (!acc.find(e => e._id === email._id)) {
+          acc.push(email);
+        }
+        return acc;
+      }, [] as typeof allEmails);
+      
+      console.log(`📧 [LeadChat] After deduplication: ${uniqueEmails.length} unique emails`);
+      
+      // Sort all emails chronologically
+      return [...uniqueEmails].sort(
         (a, b) =>
           new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
       );
