@@ -1960,18 +1960,18 @@ export const CallView = ({
                   </div>
 
                   <div
-                    className="rounded-lg p-4 text-left"
+                    className="rounded-lg p-4"
                     style={{
                       border: "1px solid rgba(255, 255, 255, 0.2)",
                       background: "rgba(255, 255, 255, 0.02)",
                     }}
                   >
                     {selectedCallLogView.log.transcriptionText ? (
-                      <p className="text-xs text-white/80 whitespace-pre-wrap leading-relaxed text-left">
+                      <p className="text-xs text-white/80 whitespace-pre-wrap leading-relaxed">
                         {selectedCallLogView.log.transcriptionText}
                       </p>
                     ) : (
-                      <p className="text-sm text-white/60 text-left">
+                      <p className="text-sm text-white/60">
                         No transcription available for this call.
                       </p>
                     )}
