@@ -64,6 +64,7 @@ const index = () => {
   const [leadsHasEmailFilter, setLeadsHasEmailFilter] = useState(false);
   const [leadsHasPhoneFilter, setLeadsHasPhoneFilter] = useState(false);
   const [leadsHasLinkedinFilter, setLeadsHasLinkedinFilter] = useState(false);
+  const [leadsSortBy, setLeadsSortBy] = useState<string>("newest");
   
   // Reset filters
   const resetLeadAdvancedFilters = () => {
@@ -72,6 +73,7 @@ const index = () => {
     setLeadsHasEmailFilter(false);
     setLeadsHasPhoneFilter(false);
     setLeadsHasLinkedinFilter(false);
+    setLeadsSortBy("newest");
   };
 
 
@@ -508,6 +510,33 @@ const index = () => {
       result = result.filter((lead) => lead.linkedinUrl);
     }
 
+    // Sorting
+    if (leadsSortBy === "newest") {
+      result = result.sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA; // Newest first
+      });
+    } else if (leadsSortBy === "oldest") {
+      result = result.sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateA - dateB; // Oldest first
+      });
+    } else if (leadsSortBy === "name-asc") {
+      result = result.sort((a, b) => {
+        const nameA = (a.name || "").toLowerCase();
+        const nameB = (b.name || "").toLowerCase();
+        return nameA.localeCompare(nameB); // A-Z
+      });
+    } else if (leadsSortBy === "name-desc") {
+      result = result.sort((a, b) => {
+        const nameA = (a.name || "").toLowerCase();
+        const nameB = (b.name || "").toLowerCase();
+        return nameB.localeCompare(nameA); // Z-A
+      });
+    }
+
     return result;
   }, [
     allLeadsForCount,
@@ -518,6 +547,7 @@ const index = () => {
     leadsHasEmailFilter,
     leadsHasPhoneFilter,
     leadsHasLinkedinFilter,
+    leadsSortBy,
   ]);
 
   // Client-side pagination
@@ -755,6 +785,8 @@ const index = () => {
                               positionFilter={leadsPositionFilter}
                               onPositionFilterChange={setLeadsPositionFilter}
                               leads={allLeadsForCount}
+                              sortBy={leadsSortBy}
+                              onSortByChange={setLeadsSortBy}
                               hasEmailFilter={leadsHasEmailFilter}
                               onHasEmailFilterChange={setLeadsHasEmailFilter}
                               hasPhoneFilter={leadsHasPhoneFilter}

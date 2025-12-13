@@ -6,6 +6,13 @@ import {
   type MultiSelectOption,
 } from "@/components/ui/multi-select";
 import { CountrySelect } from "@/components/ui/country-select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Extract unique job titles from leads data
 const extractJobTitles = (leads?: any[]): MultiSelectOption[] => {
@@ -39,6 +46,10 @@ interface LeadsFiltersInlineProps {
   onPositionFilterChange: (value: string[]) => void;
   leads?: any[]; // For extracting dynamic job titles
 
+  // Sorting filter
+  sortBy: string;
+  onSortByChange: (value: string) => void;
+
   // Checkbox filters
   hasEmailFilter: boolean;
   onHasEmailFilterChange: (checked: boolean) => void;
@@ -58,6 +69,8 @@ export const LeadsFiltersInline = ({
   positionFilter,
   onPositionFilterChange,
   leads,
+  sortBy,
+  onSortByChange,
   hasEmailFilter,
   onHasEmailFilterChange,
   hasPhoneFilter,
@@ -75,10 +88,7 @@ export const LeadsFiltersInline = ({
   return (
     <div className="flex flex-wrap flex-1 shrink-0  items-center gap-1.5">
       <div className="flex items-center gap-1">
-        <label className="text-[11px] uppercase tracking-[0.08em] text-gray-400 whitespace-nowrap">
-          Country:
-        </label>
-        <div className="w-32">
+        <div className="w-36">
           <MultiSelect
             options={countryOptions}
             value={countryFilter}
@@ -95,9 +105,6 @@ export const LeadsFiltersInline = ({
       </div>
 
       <div className="flex items-center gap-1">
-        <label className="text-[11px] uppercase tracking-[0.08em] text-gray-400 whitespace-nowrap">
-          Title:
-        </label>
         <div className="w-32">
           <MultiSelect
             options={positionOptions}
@@ -114,8 +121,33 @@ export const LeadsFiltersInline = ({
         </div>
       </div>
 
+      {/* Sort Filter */}
+      <div className="flex items-center gap-1">
+        <div className="w-36">
+          <Select value={sortBy} onValueChange={onSortByChange}>
+            <SelectTrigger className="h-8 text-xs border-white/20 bg-transparent text-gray-300">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="newest" className="text-xs">
+                New to Old
+              </SelectItem>
+              <SelectItem value="oldest" className="text-xs">
+                Old to New
+              </SelectItem>
+              <SelectItem value="name-asc" className="text-xs">
+                Name (A-Z)
+              </SelectItem>
+              <SelectItem value="name-desc" className="text-xs">
+                Name (Z-A)
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
       {/* Checkboxes */}
-      <div className="flex items-center gap-1.5 ml-1 ml-auto">
+      <div className="flex items-center gap-1.5 ml-auto">
         <label className="flex items-center gap-1 cursor-pointer">
           <Checkbox
             checked={hasEmailFilter}
