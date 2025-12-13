@@ -433,6 +433,19 @@ const CompaniesList: FC<CompaniesListProps> = ({
                 </a>
               </div>
             )}
+
+            {/* Third Row: Scraping Date */}
+            {company.createdAt && (
+              <div className="flex items-center gap-1 min-w-0 mt-0.5">
+                <span className="text-[9px] sm:text-[10px] text-white/50">
+                  Scraped: {new Date(company.createdAt).toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric', 
+                    year: 'numeric' 
+                  })}
+                </span>
+              </div>
+            )}
           </div>
         </Card>
       );
@@ -597,6 +610,16 @@ const CompaniesList: FC<CompaniesListProps> = ({
                 </p>
               )}
             </div>
+          )}
+          {/* Scraping Date - Above View Details Button */}
+          {company.createdAt && (
+            <p className="text-[10px] sm:text-xs text-white/50 text-center md:text-right">
+              Scraped: {new Date(company.createdAt).toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric', 
+                year: 'numeric' 
+              })}
+            </p>
           )}
           <div className="flex items-center gap-1.5">
             <Tooltip>
