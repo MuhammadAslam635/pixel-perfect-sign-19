@@ -29,6 +29,7 @@ export interface Lead {
   companyLocation?: string | null;
   country?: string | null;
   stage?: string | null;
+  isFavourite?: boolean;
   createdAt: string;
   updatedAt: string;
   company?: LeadCompanyInfo | null;
@@ -189,6 +190,21 @@ export const leadsService = {
   ): Promise<{ success: boolean; message: string }> => {
     try {
       const response = await API.delete(`/leads/${id}`);
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  /**
+   * Toggle favourite status of a lead
+   */
+  toggleFavourite: async (
+    id: string,
+    isFavourite: boolean
+  ): Promise<{ success: boolean; message: string; data: Lead }> => {
+    try {
+      const response = await API.put(`/leads/${id}`, { isFavourite });
       return response.data;
     } catch (error: any) {
       throw error;

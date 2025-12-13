@@ -64,6 +64,7 @@ const index = () => {
   const [leadsHasEmailFilter, setLeadsHasEmailFilter] = useState(false);
   const [leadsHasPhoneFilter, setLeadsHasPhoneFilter] = useState(false);
   const [leadsHasLinkedinFilter, setLeadsHasLinkedinFilter] = useState(false);
+  const [leadsHasFavouriteFilter, setLeadsHasFavouriteFilter] = useState(false);
   const [leadsSortBy, setLeadsSortBy] = useState<string>("newest");
   
   // Reset filters
@@ -73,6 +74,7 @@ const index = () => {
     setLeadsHasEmailFilter(false);
     setLeadsHasPhoneFilter(false);
     setLeadsHasLinkedinFilter(false);
+    setLeadsHasFavouriteFilter(false);
     setLeadsSortBy("newest");
   };
 
@@ -448,7 +450,8 @@ const index = () => {
       leadsCompanyFilter.length > 0 ||
       leadsHasEmailFilter ||
       leadsHasPhoneFilter ||
-      leadsHasLinkedinFilter,
+      leadsHasLinkedinFilter ||
+      leadsHasFavouriteFilter,
     [
       leadsCountryFilter,
       leadsPositionFilter,
@@ -456,6 +459,7 @@ const index = () => {
       leadsHasEmailFilter,
       leadsHasPhoneFilter,
       leadsHasLinkedinFilter,
+      leadsHasFavouriteFilter,
     ]
   );
 
@@ -509,6 +513,9 @@ const index = () => {
     if (leadsHasLinkedinFilter) {
       result = result.filter((lead) => lead.linkedinUrl);
     }
+    if (leadsHasFavouriteFilter) {
+      result = result.filter((lead) => lead.isFavourite === true);
+    }
 
     // Sorting
     if (leadsSortBy === "newest") {
@@ -547,6 +554,7 @@ const index = () => {
     leadsHasEmailFilter,
     leadsHasPhoneFilter,
     leadsHasLinkedinFilter,
+    leadsHasFavouriteFilter,
     leadsSortBy,
   ]);
 
@@ -626,6 +634,7 @@ const index = () => {
     leadsHasEmailFilter,
     leadsHasPhoneFilter,
     leadsHasLinkedinFilter,
+    leadsHasFavouriteFilter,
   ]);
 
   useEffect(() => {
@@ -794,6 +803,10 @@ const index = () => {
                               hasLinkedinFilter={leadsHasLinkedinFilter}
                               onHasLinkedinFilterChange={
                                 setLeadsHasLinkedinFilter
+                              }
+                              hasFavouriteFilter={leadsHasFavouriteFilter}
+                              onHasFavouriteFilterChange={
+                                setLeadsHasFavouriteFilter
                               }
                               hasFilters={hasLeadAdvancedFilters}
                               onResetFilters={resetLeadAdvancedFilters}

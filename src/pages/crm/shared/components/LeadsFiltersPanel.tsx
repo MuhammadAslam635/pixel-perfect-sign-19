@@ -57,6 +57,8 @@ interface LeadsFiltersInlineProps {
   onHasPhoneFilterChange: (checked: boolean) => void;
   hasLinkedinFilter: boolean;
   onHasLinkedinFilterChange: (checked: boolean) => void;
+  hasFavouriteFilter: boolean;
+  onHasFavouriteFilterChange: (checked: boolean) => void;
 
   // Actions
   hasFilters: boolean;
@@ -77,6 +79,8 @@ export const LeadsFiltersInline = ({
   onHasPhoneFilterChange,
   hasLinkedinFilter,
   onHasLinkedinFilterChange,
+  hasFavouriteFilter,
+  onHasFavouriteFilterChange,
   hasFilters,
   onResetFilters,
 }: LeadsFiltersInlineProps) => {
@@ -148,6 +152,17 @@ export const LeadsFiltersInline = ({
 
       {/* Checkboxes */}
       <div className="flex items-center gap-1.5 ml-auto">
+        <label className="flex items-center gap-1 cursor-pointer">
+          <Checkbox
+            checked={hasFavouriteFilter}
+            onCheckedChange={(checked) =>
+              onHasFavouriteFilterChange(Boolean(checked))
+            }
+            className="border-white/40 data-[state=checked]:bg-yellow-400 data-[state=checked]:text-gray-900"
+          />
+          <span className="text-xs text-gray-300">⭐ Favourites</span>
+        </label>
+
         <label className="flex items-center gap-1 cursor-pointer">
           <Checkbox
             checked={hasEmailFilter}

@@ -26,6 +26,7 @@ import {
   LayoutGrid,
   MessageCircle,
   Trash2,
+  Star,
 } from "lucide-react";
 import { Lead, leadsService } from "@/services/leads.service";
 import { Company, companiesService } from "@/services/companies.service";
@@ -112,6 +113,56 @@ const LeadsList: FC<LeadsListProps> = ({
   const [fillingLeads, setFillingLeads] = useState<Record<string, boolean>>({});
   const [leadToDelete, setLeadToDelete] = useState<Lead | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [togglingFavourite, setTogglingFavourite] = useState<Record<string, boolean>>({});
+
+  // Toggle favourite mutation
+  const toggleFavouriteMutation = useMutation({
+    mutationFn: ({ id, isFavourite }: { id: string; isFavourite: boolean }) =>
+      leadsService.toggleFavourite(id, isFavourite),
+    onMutate: async ({ id, isFavourite }) => {
+      setTogglingFavourite((prev) => ({ ...prev, [id]: true }));
+      
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["leads"] });
+      
+      // Snapshot the previous value
+      const previousLeads = queryClient.getQueryData(["leads"]);
+      
+      // Optimistically update the lead
+      queryClient.setQueryData(["leads"], (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          data: {
+            ...old.data,
+            docs: old.data.docs.map((lead: Lead) =>
+              lead._id === id ? { ...lead, isFavourite } : lead
+            ),
+          },
+        };
+      });
+      
+      return { previousLeads };
+    },
+    onSuccess: () => {
+      toast.success("Favourite status updated");
+      queryClient.invalidateQueries({ queryKey: ["leads"] });
+    },
+    onError: (error: any, { id }, context) => {
+      // Rollback on error
+      if (context?.previousLeads) {
+        queryClient.setQueryData(["leads"], context.previousLeads);
+      }
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to update favourite status";
+      toast.error(errorMessage);
+    },
+    onSettled: (data, error, { id }) => {
+      setTogglingFavourite((prev) => ({ ...prev, [id]: false }));
+    },
+  });
 
   // Delete lead mutation
   const deleteMutation = useMutation({
@@ -168,6 +219,14 @@ const LeadsList: FC<LeadsListProps> = ({
     if (leadToDelete) {
       deleteMutation.mutate(leadToDelete._id);
     }
+  };
+
+  const handleToggleFavourite = (lead: Lead, e: MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    toggleFavouriteMutation.mutate({
+      id: lead._id,
+      isFavourite: !lead.isFavourite,
+    });
   };
 
   const handleFillLeadData = async (lead: Lead) => {
@@ -372,6 +431,8 @@ const LeadsList: FC<LeadsListProps> = ({
     };
 
     if (viewMode === "card") {
+      const isTogglingFav = togglingFavourite[lead._id];
+      
       return (
         <Card
           key={lead._id}
@@ -383,6 +444,33 @@ const LeadsList: FC<LeadsListProps> = ({
           }}
           onClick={() => navigate(`/leads/${lead._id}`)}
         >
+          {/* Favourite Star Button - Top Right */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                className="absolute top-2 right-2 z-10 h-6 w-6 rounded-full flex items-center justify-center transition-all duration-200 hover:bg-white/10"
+                onClick={(e) => handleToggleFavourite(lead, e)}
+                disabled={isTogglingFav}
+                aria-label={lead.isFavourite ? "Remove from favourites" : "Add to favourites"}
+              >
+                {isTogglingFav ? (
+                  <Loader2 className="w-3.5 h-3.5 text-yellow-400 animate-spin" />
+                ) : (
+                  <Star
+                    className={`w-3.5 h-3.5 transition-all ${
+                      lead.isFavourite
+                        ? "fill-yellow-400 text-yellow-400"
+                        : "text-white/40 hover:text-yellow-400"
+                    }`}
+                  />
+                )}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{lead.isFavourite ? "Remove from favourites" : "Add to favourites"}</p>
+            </TooltipContent>
+          </Tooltip>
+
           {/* Avatar */}
           <AvatarFallback
             name={lead.name}
@@ -639,6 +727,33 @@ const LeadsList: FC<LeadsListProps> = ({
             </div>
           )}
           <div className="flex items-center gap-1.5">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  className={`h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center border transition-colors duration-200 ${
+                    lead.isFavourite
+                      ? "border-yellow-400/50 bg-yellow-400/10 text-yellow-400 hover:bg-yellow-400/20"
+                      : "border-white/20 bg-white/5 text-white/60 hover:bg-white/10 hover:text-yellow-400"
+                  }`}
+                  onClick={(e) => handleToggleFavourite(lead, e)}
+                  disabled={togglingFavourite[lead._id]}
+                  aria-label={lead.isFavourite ? "Remove from favourites" : "Add to favourites"}
+                >
+                  {togglingFavourite[lead._id] ? (
+                    <Loader2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 animate-spin" />
+                  ) : (
+                    <Star
+                      className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${
+                        lead.isFavourite ? "fill-yellow-400" : ""
+                      }`}
+                    />
+                  )}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent sideOffset={8}>
+                <p>{lead.isFavourite ? "Remove from favourites" : "Add to favourites"}</p>
+              </TooltipContent>
+            </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
