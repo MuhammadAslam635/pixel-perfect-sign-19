@@ -14,10 +14,46 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
   onViewAllLeads,
   onExecutiveSelect,
 }) => {
+  // Get company LinkedIn URL (from company data or first executive)
+  const companyLinkedIn = 
+    company?.people?.[0]?.linkedin || 
+    (company?.website?.includes('linkedin.com') ? company.website : null);
+  
+  const hasLinkedIn = Boolean(companyLinkedIn);
+
   return (
     <>
+      {/* Company Header with LinkedIn */}
+      {company && (
+        <div className="mb-4 pb-3 border-b border-white/10">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex-1 min-w-0">
+              <h2 className="text-base sm:text-lg font-semibold text-white mb-1 truncate">
+                {company.name}
+              </h2>
+              <p className="text-xs text-white/60 line-clamp-2">
+                {company.description || company.about || "No description available"}
+              </p>
+            </div>
+            {hasLinkedIn && (
+              <a
+                href={companyLinkedIn!.startsWith("http") ? companyLinkedIn! : `https://${companyLinkedIn}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#0A66C2] hover:bg-[#004182] text-white transition-colors duration-200 text-xs font-medium flex-shrink-0"
+                onClick={(e) => e.stopPropagation()}
+                title="View LinkedIn Profile"
+              >
+                <Linkedin className="w-3.5 h-3.5" />
+                <span className="hidden lg:inline">LinkedIn</span>
+              </a>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="hidden sm:flex sm:items-center sm:justify-between mb-3 sm:mb-4">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-1">
           <div className="p-2 sm:p-3 md:p-4 mr-1 sm:mr-2 rounded-full bg-black/10 hover:bg-black/20 text-white flex items-center justify-center">
             <Users className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>

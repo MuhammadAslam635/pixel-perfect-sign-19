@@ -20,6 +20,7 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
   const [deletingChatId, setDeletingChatId] = useState<string | null>(null);
   const panelRef = useRef<HTMLElement>(null);
   const queryClient = useQueryClient();
+  const hasAutoLoadedRef = useRef(false); // Track if we've already auto-loaded a chat
 
   // Fetch chat list from API (always from database, filtered by userId)
   const { data: apiChatList = [], isLoading: isChatListLoading } = useQuery({
@@ -33,9 +34,10 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
     setChatHistory(apiChatList);
   }, [apiChatList]);
 
-  // Auto-load the most recent chat on initial mount
+  // Auto-load the most recent chat on initial mount only
   useEffect(() => {
     if (
+      !hasAutoLoadedRef.current &&
       apiChatList.length > 0 &&
       !currentChatId &&
       localMessages.length === 0
@@ -44,9 +46,10 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
       const mostRecentChat = apiChatList[0];
       if (mostRecentChat?._id) {
         handleSelectChat(mostRecentChat._id);
+        hasAutoLoadedRef.current = true; // Mark as loaded
       }
     }
-  }, [apiChatList, currentChatId, localMessages.length]);
+  }, [apiChatList]);
 
   const handleSelectChat = (chatId: string) => {
     setCurrentChatId(chatId);
