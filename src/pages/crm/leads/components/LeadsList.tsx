@@ -113,7 +113,9 @@ const LeadsList: FC<LeadsListProps> = ({
   const [fillingLeads, setFillingLeads] = useState<Record<string, boolean>>({});
   const [leadToDelete, setLeadToDelete] = useState<Lead | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [togglingFavourite, setTogglingFavourite] = useState<Record<string, boolean>>({});
+  const [togglingFavourite, setTogglingFavourite] = useState<
+    Record<string, boolean>
+  >({});
 
   // Toggle favourite mutation
   const toggleFavouriteMutation = useMutation({
@@ -121,13 +123,13 @@ const LeadsList: FC<LeadsListProps> = ({
       leadsService.toggleFavourite(id, isFavourite),
     onMutate: async ({ id, isFavourite }) => {
       setTogglingFavourite((prev) => ({ ...prev, [id]: true }));
-      
+
       // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: ["leads"] });
-      
+
       // Snapshot the previous value
       const previousLeads = queryClient.getQueryData(["leads"]);
-      
+
       // Optimistically update the lead
       queryClient.setQueryData(["leads"], (old: any) => {
         if (!old) return old;
@@ -141,7 +143,7 @@ const LeadsList: FC<LeadsListProps> = ({
           },
         };
       });
-      
+
       return { previousLeads };
     },
     onSuccess: () => {
@@ -221,7 +223,10 @@ const LeadsList: FC<LeadsListProps> = ({
     }
   };
 
-  const handleToggleFavourite = (lead: Lead, e: MouseEvent<HTMLButtonElement>) => {
+  const handleToggleFavourite = (
+    lead: Lead,
+    e: MouseEvent<HTMLButtonElement>
+  ) => {
     e.stopPropagation();
     toggleFavouriteMutation.mutate({
       id: lead._id,
@@ -432,7 +437,7 @@ const LeadsList: FC<LeadsListProps> = ({
 
     if (viewMode === "card") {
       const isTogglingFav = togglingFavourite[lead._id];
-      
+
       return (
         <Card
           key={lead._id}
@@ -451,7 +456,11 @@ const LeadsList: FC<LeadsListProps> = ({
                 className="absolute top-2 right-2 z-10 h-6 w-6 rounded-full flex items-center justify-center transition-all duration-200 hover:bg-white/10"
                 onClick={(e) => handleToggleFavourite(lead, e)}
                 disabled={isTogglingFav}
-                aria-label={lead.isFavourite ? "Remove from favourites" : "Add to favourites"}
+                aria-label={
+                  lead.isFavourite
+                    ? "Remove from favourites"
+                    : "Add to favourites"
+                }
               >
                 {isTogglingFav ? (
                   <Loader2 className="w-3.5 h-3.5 text-yellow-400 animate-spin" />
@@ -467,7 +476,11 @@ const LeadsList: FC<LeadsListProps> = ({
               </button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>{lead.isFavourite ? "Remove from favourites" : "Add to favourites"}</p>
+              <p>
+                {lead.isFavourite
+                  ? "Remove from favourites"
+                  : "Add to favourites"}
+              </p>
             </TooltipContent>
           </Tooltip>
 
@@ -613,7 +626,8 @@ const LeadsList: FC<LeadsListProps> = ({
         <div className="flex flex-col items-end gap-0.5 sm:gap-1 md:gap-2 w-full md:w-auto">
           {viewMode === "detailed" && (
             <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 flex-wrap justify-center">
-              <Tooltip>
+              {/* Commented out action buttons - Replaced with Star and Delete only */}
+              {/* <Tooltip>
                 <TooltipTrigger asChild>
                   <button
                     className={getIconButtonClasses(!hasPhone)}
@@ -723,51 +737,63 @@ const LeadsList: FC<LeadsListProps> = ({
                       : "Missing IDs to enrich"}
                   </p>
                 </TooltipContent>
+              </Tooltip> */}
+
+              {/* Star (Favourite) Icon */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    className={`h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center border transition-colors duration-200 ${
+                      lead.isFavourite
+                        ? "border-yellow-400/50 bg-yellow-400/10 text-yellow-400 hover:bg-yellow-400/20"
+                        : "border-white/20 bg-white/5 text-white/60 hover:bg-white/10 hover:text-yellow-400"
+                    }`}
+                    onClick={(e) => handleToggleFavourite(lead, e)}
+                    disabled={togglingFavourite[lead._id]}
+                    aria-label={
+                      lead.isFavourite
+                        ? "Remove from favourites"
+                        : "Add to favourites"
+                    }
+                  >
+                    {togglingFavourite[lead._id] ? (
+                      <Loader2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 animate-spin" />
+                    ) : (
+                      <Star
+                        className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${
+                          lead.isFavourite ? "fill-yellow-400" : ""
+                        }`}
+                      />
+                    )}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent sideOffset={8}>
+                  <p>
+                    {lead.isFavourite
+                      ? "Remove from favourites"
+                      : "Add to favourites"}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+
+              {/* Delete Icon */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    className="h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center border border-white bg-white text-gray-900 hover:bg-white/80 hover:text-gray-950 transition-colors duration-200"
+                    onClick={(e) => handleDeleteClick(lead, e)}
+                    aria-label="Delete lead"
+                  >
+                    <Trash2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent sideOffset={8}>
+                  <p>Delete lead</p>
+                </TooltipContent>
               </Tooltip>
             </div>
           )}
           <div className="flex items-center gap-1.5">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  className={`h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center border transition-colors duration-200 ${
-                    lead.isFavourite
-                      ? "border-yellow-400/50 bg-yellow-400/10 text-yellow-400 hover:bg-yellow-400/20"
-                      : "border-white/20 bg-white/5 text-white/60 hover:bg-white/10 hover:text-yellow-400"
-                  }`}
-                  onClick={(e) => handleToggleFavourite(lead, e)}
-                  disabled={togglingFavourite[lead._id]}
-                  aria-label={lead.isFavourite ? "Remove from favourites" : "Add to favourites"}
-                >
-                  {togglingFavourite[lead._id] ? (
-                    <Loader2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 animate-spin" />
-                  ) : (
-                    <Star
-                      className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${
-                        lead.isFavourite ? "fill-yellow-400" : ""
-                      }`}
-                    />
-                  )}
-                </button>
-              </TooltipTrigger>
-              <TooltipContent sideOffset={8}>
-                <p>{lead.isFavourite ? "Remove from favourites" : "Add to favourites"}</p>
-              </TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  className="h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center border border-white bg-white text-gray-900 hover:bg-white/80 hover:text-gray-950 transition-colors duration-200"
-                  onClick={(e) => handleDeleteClick(lead, e)}
-                  aria-label="Delete lead"
-                >
-                  <Trash2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent sideOffset={8}>
-                <p>Delete lead</p>
-              </TooltipContent>
-            </Tooltip>
             <ActiveNavButton
               icon={ArrowRight}
               text="View Details"
@@ -968,9 +994,7 @@ const LeadsList: FC<LeadsListProps> = ({
   };
 
   return (
-    <div
-      className={`flex flex-col ${viewMode === "card" ? "px-2" : ""}`}
-    >
+    <div className={`flex flex-col ${viewMode === "card" ? "px-2" : ""}`}>
       {renderPageSizeSelector("top")}
       <div className="w-full pb-4">
         <AnimatePresence mode="wait">
