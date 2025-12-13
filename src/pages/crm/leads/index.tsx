@@ -61,23 +61,24 @@ const index = () => {
   const [leadsCountryFilter, setLeadsCountryFilter] = useState<string[]>([]);
   const [leadsPositionFilter, setLeadsPositionFilter] = useState<string[]>([]);
   const [leadsCompanyFilter, setLeadsCompanyFilter] = useState<string[]>([]);
+  const [leadsStageFilter, setLeadsStageFilter] = useState<string[]>([]);
   const [leadsHasEmailFilter, setLeadsHasEmailFilter] = useState(false);
   const [leadsHasPhoneFilter, setLeadsHasPhoneFilter] = useState(false);
   const [leadsHasLinkedinFilter, setLeadsHasLinkedinFilter] = useState(false);
   const [leadsHasFavouriteFilter, setLeadsHasFavouriteFilter] = useState(false);
   const [leadsSortBy, setLeadsSortBy] = useState<string>("newest");
-  
+
   // Reset filters
   const resetLeadAdvancedFilters = () => {
     setLeadsCountryFilter([]);
     setLeadsPositionFilter([]);
+    setLeadsStageFilter([]);
     setLeadsHasEmailFilter(false);
     setLeadsHasPhoneFilter(false);
     setLeadsHasLinkedinFilter(false);
     setLeadsHasFavouriteFilter(false);
     setLeadsSortBy("newest");
   };
-
 
   const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
@@ -114,7 +115,6 @@ const index = () => {
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [phoneMessageId, setPhoneMessageId] = useState<string | null>(null);
   const [leadFiltersOpen, setLeadFiltersOpen] = useState(false);
-
 
   const resolveErrorMessage = useCallback(
     (error: unknown, fallback: string) => {
@@ -430,7 +430,6 @@ const index = () => {
 
   // Leads filters and pagination
 
-
   // Fetch all companies for the leads filter dropdown (limit to 500 for dropdown)
   const { companies: allCompaniesForFilter } = useCompaniesData({
     page: 1,
@@ -448,6 +447,7 @@ const index = () => {
       leadsCountryFilter.length > 0 ||
       leadsPositionFilter.length > 0 ||
       leadsCompanyFilter.length > 0 ||
+      leadsStageFilter.length > 0 ||
       leadsHasEmailFilter ||
       leadsHasPhoneFilter ||
       leadsHasLinkedinFilter ||
@@ -456,6 +456,7 @@ const index = () => {
       leadsCountryFilter,
       leadsPositionFilter,
       leadsCompanyFilter,
+      leadsStageFilter,
       leadsHasEmailFilter,
       leadsHasPhoneFilter,
       leadsHasLinkedinFilter,
@@ -487,8 +488,8 @@ const index = () => {
 
     // Country filter (multi-select)
     if (leadsCountryFilter.length > 0) {
-      result = result.filter((lead) =>
-        lead.country && leadsCountryFilter.includes(lead.country)
+      result = result.filter(
+        (lead) => lead.country && leadsCountryFilter.includes(lead.country)
       );
     }
 
@@ -501,6 +502,34 @@ const index = () => {
             lead.position?.toLowerCase().includes(pos.toLowerCase())
           )
       );
+    }
+
+    // Stage filter (multi-select)
+    if (leadsStageFilter.length > 0) {
+      result = result.filter((lead) => {
+        // Determine the lead's current stage
+        // Priority: manual stage > event-driven logic
+        let leadStage = "New"; // Default
+
+        if (lead.stage === "closed") {
+          leadStage = "Deal Closed";
+        } else if (lead.stage === "followup_close") {
+          leadStage = "Follow-up to Close";
+        } else if (lead.stage === "proposal_sent") {
+          leadStage = "Proposal Sent";
+        } else if (lead.stage === "Appointment Booked") {
+          leadStage = "Appointment Booked";
+        } else if (lead.stage === "Follow-up") {
+          leadStage = "Follow-up";
+        } else if (lead.stage === "Interested") {
+          leadStage = "Interested";
+        } else {
+          // Fallback to New if no recognized stage
+          leadStage = "New";
+        }
+
+        return leadsStageFilter.includes(leadStage);
+      });
     }
 
     // Boolean filters
@@ -551,6 +580,7 @@ const index = () => {
     leadsCompanyFilter,
     leadsCountryFilter,
     leadsPositionFilter,
+    leadsStageFilter,
     leadsHasEmailFilter,
     leadsHasPhoneFilter,
     leadsHasLinkedinFilter,
@@ -575,7 +605,7 @@ const index = () => {
 
   // Use local data instead of server query for the list
   const leadsLoading = !allLeadsForCount; // Simplistic loading check
-  
+
   // Create pagination object matching the expected interface
   const clientPagination = {
     page: leadsPage,
@@ -631,6 +661,7 @@ const index = () => {
     leadsLimit,
     leadsCountryFilter,
     leadsPositionFilter,
+    leadsStageFilter,
     leadsHasEmailFilter,
     leadsHasPhoneFilter,
     leadsHasLinkedinFilter,
@@ -643,8 +674,10 @@ const index = () => {
     const { email, name } = pendingLeadIdentifier;
 
     const matchedLead =
-      (email && allLeadsForCount.find((lead) => lead.email?.toLowerCase() === email)) ||
-      (name && allLeadsForCount.find((lead) => lead.name?.toLowerCase() === name));
+      (email &&
+        allLeadsForCount.find((lead) => lead.email?.toLowerCase() === email)) ||
+      (name &&
+        allLeadsForCount.find((lead) => lead.name?.toLowerCase() === name));
 
     if (matchedLead) {
       setSelectedLeadId(matchedLead._id);
@@ -672,8 +705,12 @@ const index = () => {
 
     if (allLeadsForCount && allLeadsForCount.length > 0) {
       const matchedLead =
-        (email && allLeadsForCount.find((lead) => lead.email?.toLowerCase() === email)) ||
-        (name && allLeadsForCount.find((lead) => lead.name?.toLowerCase() === name));
+        (email &&
+          allLeadsForCount.find(
+            (lead) => lead.email?.toLowerCase() === email
+          )) ||
+        (name &&
+          allLeadsForCount.find((lead) => lead.name?.toLowerCase() === name));
 
       if (matchedLead) {
         setSelectedLeadId(matchedLead._id);
@@ -793,6 +830,8 @@ const index = () => {
                               onCountryFilterChange={setLeadsCountryFilter}
                               positionFilter={leadsPositionFilter}
                               onPositionFilterChange={setLeadsPositionFilter}
+                              stageFilter={leadsStageFilter}
+                              onStageFilterChange={setLeadsStageFilter}
                               leads={allLeadsForCount}
                               sortBy={leadsSortBy}
                               onSortByChange={setLeadsSortBy}

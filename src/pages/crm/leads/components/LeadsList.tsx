@@ -195,6 +195,8 @@ const LeadsList: FC<LeadsListProps> = ({
     onSuccess: () => {
       toast.success("Lead deleted successfully");
       queryClient.invalidateQueries({ queryKey: ["leads"] });
+      queryClient.invalidateQueries({ queryKey: ["company-crm-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["crm-stats"] });
       setShowDeleteDialog(false);
       setLeadToDelete(null);
     },
@@ -232,6 +234,18 @@ const LeadsList: FC<LeadsListProps> = ({
       id: lead._id,
       isFavourite: !lead.isFavourite,
     });
+  };
+
+  // Helper function to check if a date is today
+  const isCreatedToday = (createdAt: string | Date) => {
+    const today = new Date();
+    const created = new Date(createdAt);
+    
+    return (
+      created.getDate() === today.getDate() &&
+      created.getMonth() === today.getMonth() &&
+      created.getFullYear() === today.getFullYear()
+    );
   };
 
   const handleFillLeadData = async (lead: Lead) => {
@@ -553,51 +567,35 @@ const LeadsList: FC<LeadsListProps> = ({
       >
         <div className="flex-1 w-full md:w-auto">
           <div className="flex flex-wrap items-center gap-2 text-white">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <h3 className="text-xs sm:text-base font-semibold cursor-default">
-                  {lead.name.length > 20
-                    ? `${lead.name.slice(0, 20)}...`
-                    : lead.name}
-                </h3>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{lead.name}</p>
-              </TooltipContent>
-            </Tooltip>
+            <h3 className="text-xs sm:text-base font-semibold cursor-default">
+              {lead.name.length > 20
+                ? `${lead.name.slice(0, 20)}...`
+                : lead.name}
+            </h3>
+            {lead.createdAt && isCreatedToday(lead.createdAt) && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-gradient-to-r from-green-500 to-emerald-500 text-white">
+                NEW
+              </span>
+            )}
             {lead.companyName && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="text-xs text-white/70 cursor-default">
-                    |{" "}
-                    {lead.companyName.length > 20
-                      ? `${lead.companyName.slice(0, 20)}...`
-                      : lead.companyName}
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{lead.companyName}</p>
-                </TooltipContent>
-              </Tooltip>
+              <span className="text-xs text-white/70 cursor-default">
+                |{" "}
+                {lead.companyName.length > 20
+                  ? `${lead.companyName.slice(0, 20)}...`
+                  : lead.companyName}
+              </span>
             )}
           </div>
           {viewMode === "detailed" && (
             <>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <p className="text-[8px] sm:text-[9px] font-bold text-white/60 mt-0.5 cursor-default">
-                    {(lead.position || "Chief Executive Officer").length > 20
-                      ? `${(lead.position || "Chief Executive Officer").slice(
-                          0,
-                          20
-                        )}...`
-                      : lead.position || "Chief Executive Officer"}
-                  </p>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{lead.position || "Chief Executive Officer"}</p>
-                </TooltipContent>
-              </Tooltip>
+              <p className="text-[8px] sm:text-[9px] font-bold text-white/60 mt-0.5 cursor-default">
+                {(lead.position || "Chief Executive Officer").length > 20
+                  ? `${(lead.position || "Chief Executive Officer").slice(
+                      0,
+                      20
+                    )}...`
+                  : lead.position || "Chief Executive Officer"}
+              </p>
               <div className="mt-0.5 sm:mt-1 md:mt-2 flex flex-wrap items-center gap-1.5 sm:gap-2 md:gap-3 text-xs text-gray-300">
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -998,30 +996,44 @@ const LeadsList: FC<LeadsListProps> = ({
       {renderPageSizeSelector("top")}
       <div className="w-full pb-4">
         <AnimatePresence mode="wait">
-          <motion.div
-            key={viewMode}
-            className={
-              viewMode === "card"
-                ? "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"
-                : "space-y-2"
-            }
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{
-              duration: 0.3,
-              ease: "easeInOut",
-              staggerChildren: 0.05,
-              delayChildren: 0.1,
-            }}
-            layout
-          >
-            <AnimatePresence mode="wait">
-              {loading
-                ? renderLoading()
-                : leads.length === 0
-                ? renderEmpty()
-                : leads.map((lead, index) => (
+        <motion.div
+          key={viewMode}
+          className="w-full"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{
+            duration: 0.2,
+            ease: "easeInOut",
+          }}
+          layout
+        >
+          <AnimatePresence mode="wait">
+            {(() => {
+              if (loading) return renderLoading();
+              if (leads.length === 0) return renderEmpty();
+              
+              return (
+                <motion.div
+                  key="leads-list"
+                  initial={{
+                    opacity: 1,
+                  }}
+                  animate={{
+                    opacity: 1,
+                  }}
+                  exit={{
+                    opacity: 0,
+                    transition: { duration: 0.2, ease: "easeIn" }
+                  }}
+                  className={
+                    viewMode === "card"
+                      ? "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"
+                      : "space-y-2"
+                  }
+                  layout
+                >
+                  {leads.map((lead, index) => (
                     <motion.div
                       key={lead._id}
                       layout
@@ -1029,20 +1041,27 @@ const LeadsList: FC<LeadsListProps> = ({
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: -20, scale: 0.95 }}
                       transition={{
-                        duration: 0.4,
+                        duration: 0.3,
                         ease: "easeOut",
-                        delay: index * 0.03,
+                        delay: index * 0.05,
                       }}
                     >
                       {renderLeadCard(lead)}
                     </motion.div>
                   ))}
-            </AnimatePresence>
-          </motion.div>
-        </AnimatePresence>
+                </motion.div>
+              );
+            })()}
+          </AnimatePresence>
+        </motion.div>
+      </AnimatePresence>
       </div>
       {/* Fixed pagination at bottom */}
-      {!loading && leads.length > 0 && renderPagination()}
+      {!loading && leads.length > 0 && (
+        <div className="pb-4">
+          {renderPagination()}
+        </div>
+      )}
 
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog

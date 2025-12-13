@@ -123,6 +123,8 @@ const CompaniesList: FC<CompaniesListProps> = ({
       toast.success(data?.message || "Company and associated leads deleted successfully");
       queryClient.invalidateQueries({ queryKey: ["companies"] });
       queryClient.invalidateQueries({ queryKey: ["leads"] });
+      queryClient.invalidateQueries({ queryKey: ["company-crm-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["crm-stats"] });
       setShowDeleteDialog(false);
       setCompanyToDelete(null);
       // Clear selection if deleted company was selected
@@ -153,6 +155,18 @@ const CompaniesList: FC<CompaniesListProps> = ({
     if (companyToDelete) {
       deleteMutation.mutate(companyToDelete._id);
     }
+  };
+
+  // Helper function to check if a date is today
+  const isCreatedToday = (createdAt: string | Date) => {
+    const today = new Date();
+    const created = new Date(createdAt);
+    
+    return (
+      created.getDate() === today.getDate() &&
+      created.getMonth() === today.getMonth() &&
+      created.getFullYear() === today.getFullYear()
+    );
   };
 
 
@@ -408,6 +422,11 @@ const CompaniesList: FC<CompaniesListProps> = ({
             {/* First Row: Company Name and Industry */}
             <h3 className="text-xs sm:text-sm font-semibold text-white leading-tight overflow-hidden text-ellipsis whitespace-nowrap">
               {company.name}
+              {company.createdAt && isCreatedToday(company.createdAt) && (
+                <span className="inline-flex items-center px-2 py-0.5 ml-2 rounded-full text-[10px] font-bold bg-gradient-to-r from-green-500 to-emerald-500 text-white">
+                  NEW
+                </span>
+              )}
               {company.industry && (
                 <span className="text-white/60 font-normal">
                   {" | "}
@@ -458,6 +477,11 @@ const CompaniesList: FC<CompaniesListProps> = ({
             <div className="text-xs sm:text-sm font-semibold text-white text-center sm:text-left sm:mx-0 mx-auto">
               {company.name}
             </div>
+            {company.createdAt && isCreatedToday(company.createdAt) && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-gradient-to-r from-green-500 to-emerald-500 text-white">
+                NEW
+              </span>
+            )}
             {company.industry && (
               <span className="text-xs text-white/70 font-medium">
                 | {company.industry}
@@ -964,7 +988,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
       {/* Fixed pagination at bottom */}
       {/* Fixed pagination at bottom */}
       {!loading && companies.length > 0 && (
-        <div className="mt-4">
+        <div className="mt-4 pb-4">
           {renderPagination()}
         </div>
       )}
