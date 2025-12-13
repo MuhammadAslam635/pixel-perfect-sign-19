@@ -35,7 +35,11 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
 
   // Auto-load the most recent chat on initial mount
   useEffect(() => {
-    if (apiChatList.length > 0 && !currentChatId && localMessages.length === 0) {
+    if (
+      apiChatList.length > 0 &&
+      !currentChatId &&
+      localMessages.length === 0
+    ) {
       // Get the most recent chat (first in the list)
       const mostRecentChat = apiChatList[0];
       if (mostRecentChat?._id) {
