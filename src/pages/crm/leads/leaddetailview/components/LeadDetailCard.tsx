@@ -446,6 +446,11 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
       setScheduleDialogOpen(false);
       resetScheduleForm();
       await Promise.all([
+        // Invalidate all meetings query (for stage detection)
+        queryClient.invalidateQueries({
+          queryKey: ["lead-all-meetings", lead._id],
+        }),
+        // Invalidate calendar month meetings query (for calendar view)
         queryClient.invalidateQueries({
           queryKey: ["lead-calendar-meetings", lead._id],
         }),

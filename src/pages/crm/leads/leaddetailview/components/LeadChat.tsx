@@ -30,6 +30,7 @@ type LeadChatProps = {
   setSelectedCallLogView: (view: SelectedCallLogView) => void;
   initialTab?: string;
   autoStartCall?: boolean;
+  onCommunicationUpdate?: (stats: { inboundCount: number }) => void;
 };
 
 type SmsStatusDisplay = {
@@ -102,6 +103,7 @@ const LeadChat = ({
   setSelectedCallLogView,
   initialTab,
   autoStartCall = false,
+  onCommunicationUpdate,
 }: LeadChatProps) => {
   const displayName = lead?.name || fallbackLeadInfo.name;
   const position = lead?.position || fallbackLeadInfo.position;
@@ -796,6 +798,42 @@ const LeadChat = ({
     whatsappPhoneNumberId,
     markReadMutation,
   ]);
+
+  // Notify parent component about communication stats (for stage determination)
+  const prevInboundCountRef = useRef<number>(0);
+  useEffect(() => {
+    if (!onCommunicationUpdate) return;
+
+    // Count inbound messages from all channels
+    const whatsappInbound = whatsappMessages.filter(
+      (msg) => msg.direction === "inbound"
+    ).length;
+
+    const emailInbound = emailMessages.filter(
+      (email) => email.direction === "inbound"
+    ).length;
+
+    const smsInbound = smsMessages.filter(
+      (sms) => sms.direction === "inbound"
+    ).length;
+
+    const totalInbound = whatsappInbound + emailInbound + smsInbound;
+
+    console.log('📊 Inbound message counts:', {
+      whatsapp: whatsappInbound,
+      email: emailInbound,
+      sms: smsInbound,
+      total: totalInbound,
+      previous: prevInboundCountRef.current
+    });
+
+    // Only call callback if the count actually changed
+    if (prevInboundCountRef.current !== totalInbound) {
+      console.log('✅ Inbound count changed! Calling onCommunicationUpdate');
+      prevInboundCountRef.current = totalInbound;
+      onCommunicationUpdate({ inboundCount: totalInbound });
+    }
+  }, [whatsappMessages, emailMessages, smsMessages, onCommunicationUpdate]);
 
   const handleSendSms = () => {
     if (

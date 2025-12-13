@@ -115,4 +115,18 @@ export const companiesService = {
       throw error;
     }
   },
+
+  /**
+   * Delete a company by ID (also deletes associated leads)
+   */
+  deleteCompany: async (
+    id: string
+  ): Promise<{ success: boolean; message: string }> => {
+    try {
+      const response = await API.delete(`/companies/${id}`);
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
 };

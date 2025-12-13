@@ -28,6 +28,7 @@ export interface Lead {
   companyName?: string | null;
   companyLocation?: string | null;
   country?: string | null;
+  stage?: string | null;
   createdAt: string;
   updatedAt: string;
   company?: LeadCompanyInfo | null;
@@ -176,6 +177,20 @@ export const leadsService = {
           data: { lead: null },
         };
       }
+      throw error;
+    }
+  },
+
+  /**
+   * Delete a lead by ID
+   */
+  deleteLead: async (
+    id: string
+  ): Promise<{ success: boolean; message: string }> => {
+    try {
+      const response = await API.delete(`/leads/${id}`);
+      return response.data;
+    } catch (error: any) {
       throw error;
     }
   },

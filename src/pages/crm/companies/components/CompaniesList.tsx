@@ -27,11 +27,20 @@ import {
   Grid3X3,
   List,
   LayoutGrid,
+  Trash2,
 } from "lucide-react";
 import { ActiveNavButton } from "@/components/ui/primary-btn";
-import { Company } from "@/services/companies.service";
+import { Company, companiesService } from "@/services/companies.service";
 import CompanyExecutivesPanel from "./CompanyExecutivesPanel";
 import { CompanyLogoFallback } from "@/components/ui/company-logo-fallback";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 type ViewMode = "compact" | "detailed" | "card";
 
@@ -80,6 +89,71 @@ const CompaniesList: FC<CompaniesListProps> = ({
   viewMode = "detailed",
   onViewModeChange,
 }) => {
+  const queryClient = useQueryClient();
+  const [companyToDelete, setCompanyToDelete] = useState<Company | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  // Delete company mutation
+  const deleteMutation = useMutation({
+    mutationFn: (companyId: string) => companiesService.deleteCompany(companyId),
+    onMutate: async (companyId) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["companies"] });
+
+      // Snapshot the previous value
+      const previousCompanies = queryClient.getQueryData(["companies"]);
+
+      // Optimistically update to remove the company
+      queryClient.setQueryData(["companies"], (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          data: {
+            ...old.data,
+            docs: old.data.docs.filter((company: Company) => company._id !== companyId),
+            totalDocs: old.data.totalDocs - 1,
+          },
+        };
+      });
+
+      // Return context with the snapshot
+      return { previousCompanies };
+    },
+    onSuccess: (data) => {
+      toast.success(data?.message || "Company and associated leads deleted successfully");
+      queryClient.invalidateQueries({ queryKey: ["companies"] });
+      queryClient.invalidateQueries({ queryKey: ["leads"] });
+      setShowDeleteDialog(false);
+      setCompanyToDelete(null);
+      // Clear selection if deleted company was selected
+      if (selectedCompanyId === companyToDelete?._id) {
+        onSelectCompany("");
+      }
+    },
+    onError: (error: any, companyId, context) => {
+      // Rollback on error
+      if (context?.previousCompanies) {
+        queryClient.setQueryData(["companies"], context.previousCompanies);
+      }
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to delete company";
+      toast.error(errorMessage);
+    },
+  });
+
+  const handleDeleteClick = (company: Company, e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    setCompanyToDelete(company);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = () => {
+    if (companyToDelete) {
+      deleteMutation.mutate(companyToDelete._id);
+    }
+  };
 
 
   // State to track if mobile executives view is open
@@ -524,7 +598,21 @@ const CompaniesList: FC<CompaniesListProps> = ({
               )}
             </div>
           )}
-          <div className="flex flex-col sm:flex-row items-center md:items-center justify-end gap-0.5 sm:gap-1 w-full md:w-auto">
+          <div className="flex items-center gap-1.5">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  className="h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center border border-white bg-white text-gray-900 hover:bg-white/80 hover:text-gray-950 transition-colors duration-200"
+                  onClick={(e) => handleDeleteClick(company, e)}
+                  aria-label="Delete company"
+                >
+                  <Trash2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent sideOffset={8}>
+                <p>Delete company</p>
+              </TooltipContent>
+            </Tooltip>
             <ActiveNavButton
               icon={Users}
               text={isActive ? "Close Details" : "View Details"}
@@ -880,6 +968,21 @@ const CompaniesList: FC<CompaniesListProps> = ({
           {renderPagination()}
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={showDeleteDialog}
+        title="Delete Company"
+        description={`Are you sure you want to delete ${companyToDelete?.name}? This will also delete all ${companyToDelete?.people?.length || 0} associated ${(companyToDelete?.people?.length || 0) === 1 ? 'lead' : 'leads'}. This action cannot be undone.`}
+        confirmText="Yes, Delete"
+        cancelText="Cancel"
+        isPending={deleteMutation.isPending}
+        onConfirm={confirmDelete}
+        onCancel={() => {
+          setShowDeleteDialog(false);
+          setCompanyToDelete(null);
+        }}
+      />
     </div>
   );
 };

@@ -25,11 +25,14 @@ import {
   List,
   LayoutGrid,
   MessageCircle,
+  Trash2,
 } from "lucide-react";
-import { Lead } from "@/services/leads.service";
+import { Lead, leadsService } from "@/services/leads.service";
 import { Company, companiesService } from "@/services/companies.service";
 import { toast } from "sonner";
 import { ActiveNavButton } from "@/components/ui/primary-btn";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   Select,
   SelectContent,
@@ -105,7 +108,67 @@ const LeadsList: FC<LeadsListProps> = ({
   onViewModeChange,
 }) => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [fillingLeads, setFillingLeads] = useState<Record<string, boolean>>({});
+  const [leadToDelete, setLeadToDelete] = useState<Lead | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  // Delete lead mutation
+  const deleteMutation = useMutation({
+    mutationFn: (leadId: string) => leadsService.deleteLead(leadId),
+    onMutate: async (leadId) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["leads"] });
+
+      // Snapshot the previous value
+      const previousLeads = queryClient.getQueryData(["leads"]);
+
+      // Optimistically update to remove the lead
+      queryClient.setQueryData(["leads"], (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          data: {
+            ...old.data,
+            docs: old.data.docs.filter((lead: Lead) => lead._id !== leadId),
+            totalDocs: old.data.totalDocs - 1,
+          },
+        };
+      });
+
+      // Return context with the snapshot
+      return { previousLeads };
+    },
+    onSuccess: () => {
+      toast.success("Lead deleted successfully");
+      queryClient.invalidateQueries({ queryKey: ["leads"] });
+      setShowDeleteDialog(false);
+      setLeadToDelete(null);
+    },
+    onError: (error: any, leadId, context) => {
+      // Rollback on error
+      if (context?.previousLeads) {
+        queryClient.setQueryData(["leads"], context.previousLeads);
+      }
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to delete lead";
+      toast.error(errorMessage);
+    },
+  });
+
+  const handleDeleteClick = (lead: Lead, e: MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    setLeadToDelete(lead);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = () => {
+    if (leadToDelete) {
+      deleteMutation.mutate(leadToDelete._id);
+    }
+  };
 
   const handleFillLeadData = async (lead: Lead) => {
     if (!lead._id || !lead.companyId) {
@@ -575,15 +638,31 @@ const LeadsList: FC<LeadsListProps> = ({
               </Tooltip>
             </div>
           )}
-          <ActiveNavButton
-            icon={ArrowRight}
-            text="View Details"
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/leads/${lead._id}`);
-            }}
-            className="w-auto md:w-auto ml-auto md:ml-0 text-[10px] px-1.5 py-0.5 h-6"
-          />
+          <div className="flex items-center gap-1.5">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  className="h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center border border-white bg-white text-gray-900 hover:bg-white/80 hover:text-gray-950 transition-colors duration-200"
+                  onClick={(e) => handleDeleteClick(lead, e)}
+                  aria-label="Delete lead"
+                >
+                  <Trash2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent sideOffset={8}>
+                <p>Delete lead</p>
+              </TooltipContent>
+            </Tooltip>
+            <ActiveNavButton
+              icon={ArrowRight}
+              text="View Details"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/leads/${lead._id}`);
+              }}
+              className="w-auto md:w-auto ml-auto md:ml-0 text-[10px] px-1.5 py-0.5 h-6"
+            />
+          </div>
         </div>
       </Card>
     );
@@ -823,13 +902,23 @@ const LeadsList: FC<LeadsListProps> = ({
           </motion.div>
         </AnimatePresence>
       </div>
-
       {/* Fixed pagination at bottom */}
-      {!loading && leads.length > 0 && (
-        <div className="mt-0 pb-4">
-          {renderPagination()}
-        </div>
-      )}
+      {!loading && leads.length > 0 && renderPagination()}
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={showDeleteDialog}
+        title="Delete Lead"
+        description={`Are you sure you want to delete ${leadToDelete?.name}? This action cannot be undone.`}
+        confirmText="Yes, Delete"
+        cancelText="Cancel"
+        isPending={deleteMutation.isPending}
+        onConfirm={confirmDelete}
+        onCancel={() => {
+          setShowDeleteDialog(false);
+          setLeadToDelete(null);
+        }}
+      />
     </div>
   );
 };

@@ -1,5 +1,5 @@
-import { FC, useCallback, useEffect, useMemo, useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -78,6 +78,7 @@ type ActivityProps = {
   lead?: Lead;
   selectedCallLogView: SelectedCallLogView;
   setSelectedCallLogView: (view: SelectedCallLogView) => void;
+  onActivityUpdate?: (stats: { hasBookedAppointment: boolean }) => void;
 };
 
 type HydratedSlot = AvailableSlot & {
@@ -154,6 +155,7 @@ const Activity: FC<ActivityProps> = ({
   lead,
   selectedCallLogView,
   setSelectedCallLogView,
+  onActivityUpdate,
 }) => {
   const [topLevelTab, setTopLevelTab] = useState<"activity" | "company">(
     "activity"
@@ -182,6 +184,7 @@ const Activity: FC<ActivityProps> = ({
   const [selectedWeekDate, setSelectedWeekDate] = useState<Date>(new Date());
   const [weekDates, setWeekDates] = useState<Date[]>([]);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const leadId = lead?._id;
   const isCalendarTabActive = activeTab === "calendar";
   const userTimeZone = useMemo(() => {
@@ -240,6 +243,30 @@ const Activity: FC<ActivityProps> = ({
 
   const leadSummary = leadSummaryResponse?.data ?? null;
 
+  // Query for ALL meetings (for stage detection) - always enabled, no date restrictions
+  const {
+    data: allLeadMeetingsResponse,
+    isLoading: isAllLeadMeetingsLoading,
+    isFetching: isAllLeadMeetingsFetching,
+    refetch: refetchAllLeadMeetings,
+  } = useQuery({
+    queryKey: ["lead-all-meetings", leadId],
+    queryFn: () => {
+      if (!leadId) {
+        throw new Error("Lead ID is required");
+      }
+      return calendarService.getLeadMeetings({
+        personId: leadId,
+        // No date restrictions - get all meetings for stage detection
+        sort: "asc",
+        limit: 500,
+      });
+    },
+    enabled: Boolean(leadId), // Always enabled for stage detection
+    staleTime: 30 * 1000, // Shorter stale time for stage detection
+  });
+
+  // Query for calendar month meetings (for calendar view) - only when calendar tab is active
   const {
     data: leadMeetingsResponse,
     isLoading: isLeadMeetingsLoading,
@@ -272,14 +299,20 @@ const Activity: FC<ActivityProps> = ({
     mutationFn: async (meetingId: string) => {
       return calendarService.deleteMeeting(meetingId);
     },
-    onSuccess: (response, meetingId) => {
+    onSuccess: async (response, meetingId) => {
       toast({
         title: "Meeting deleted",
         description:
           response.message ||
           "Meeting has been successfully deleted from your calendar.",
       });
-      refetchLeadMeetings();
+      // Invalidate and refetch all queries
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["lead-all-meetings", leadId],
+        }),
+        refetchLeadMeetings(),
+      ]);
     },
     onError: (error: any) => {
       toast({
@@ -315,6 +348,7 @@ const Activity: FC<ActivityProps> = ({
     staleTime: 60 * 1000,
   });
 
+  // Calendar month meetings (for calendar view display)
   const leadMeetings = useMemo<LeadMeetingRecord[]>(
     () => leadMeetingsResponse?.data ?? [],
     [leadMeetingsResponse]
@@ -330,6 +364,28 @@ const Activity: FC<ActivityProps> = ({
       return weekday >= 1 && weekday <= 5;
     });
   }, [availableSlotsResponse]);
+
+  // Use ALL meetings for stage detection (not just current month)
+  const allLeadMeetings = useMemo<LeadMeetingRecord[]>(
+    () => allLeadMeetingsResponse?.data ?? [],
+    [allLeadMeetingsResponse]
+  );
+
+  // Notify parent component about meeting/activity stats (for stage determination)
+  const prevHasAppointmentRef = useRef<boolean>(false);
+  useEffect(() => {
+    if (!onActivityUpdate) return;
+
+    // Use ALL meetings for stage detection, not just current month
+    const hasBookedAppointment = allLeadMeetings.length > 0;
+    
+    // Only call callback if the value actually changed
+    if (prevHasAppointmentRef.current !== hasBookedAppointment) {
+      prevHasAppointmentRef.current = hasBookedAppointment;
+      onActivityUpdate({ hasBookedAppointment });
+    }
+  }, [allLeadMeetings, onActivityUpdate]);
+
   const isLeadMeetingsBusy = isLeadMeetingsLoading || isLeadMeetingsFetching;
   const isAvailabilityBusy = isAvailabilityLoading || isAvailabilityFetching;
 

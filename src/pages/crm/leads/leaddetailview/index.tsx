@@ -1,6 +1,6 @@
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useCallback, useEffect } from "react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import LeadDetailCard from "./components/LeadDetailCard";
 import LeadChat from "./components/LeadChat";
@@ -31,6 +31,7 @@ import {
 import { toast } from "sonner";
 import { LeadCallLog } from "@/services/twilio.service";
 import { ActiveNavButton } from "@/components/ui/primary-btn";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 const LEAD_STAGE_DEFINITIONS = [
   { label: "New", min: 0, max: 15 },
@@ -59,35 +60,6 @@ const clampScore = (value: number | null) => {
   return Math.max(0, Math.min(100, Math.round(value)));
 };
 
-const getStageForScore = (score: number | null) => {
-  if (score === null) {
-    return null;
-  }
-  return LEAD_STAGE_DEFINITIONS.find((stage, index) => {
-    const isLast = index === LEAD_STAGE_DEFINITIONS.length - 1;
-    if (isLast) {
-      return score >= stage.min;
-    }
-    return score >= stage.min && score < stage.max;
-  });
-};
-
-const getStageState = (score: number | null, index: number) => {
-  if (score === null) {
-    return "pending";
-  }
-  const stage = LEAD_STAGE_DEFINITIONS[index];
-  const nextStage = LEAD_STAGE_DEFINITIONS[index + 1];
-  const stageMax = nextStage ? nextStage.min : 100;
-  if (score >= stageMax) {
-    return "completed";
-  }
-  if (score >= stage.min) {
-    return "active";
-  }
-  return "upcoming";
-};
-
 export type SelectedCallLogView =
   | { type: "followup"; log: LeadCallLog }
   | { type: "transcription"; log: LeadCallLog }
@@ -103,7 +75,37 @@ const LeadDetailView = () => {
   const [selectedCallLogView, setSelectedCallLogView] =
     useState<SelectedCallLogView>(null);
   const [isClosingDeal, setIsClosingDeal] = useState(false);
+  const [isSendingProposal, setIsSendingProposal] = useState(false);
+  const [showCloseDealDialog, setShowCloseDealDialog] = useState(false);
   const queryClient = useQueryClient();
+
+  // State for event-driven stage calculation
+  const [communicationStats, setCommunicationStats] = useState({ inboundCount: 0 });
+  const [activityStats, setActivityStats] = useState({ hasBookedAppointment: false });
+  
+  // Track inbound count when proposal was sent to detect new replies
+  const [inboundCountAtProposalSent, setInboundCountAtProposalSent] = useState<number | null>(null);
+
+  // Memoize callbacks to prevent infinite re-renders
+  const handleCommunicationUpdate = useCallback((stats: { inboundCount: number }) => {
+    setCommunicationStats(prev => {
+      // Only update if the value actually changed
+      if (prev.inboundCount !== stats.inboundCount) {
+        return stats;
+      }
+      return prev;
+    });
+  }, []);
+
+  const handleActivityUpdate = useCallback((stats: { hasBookedAppointment: boolean }) => {
+    setActivityStats(prev => {
+      // Only update if the value actually changed
+      if (prev.hasBookedAppointment !== stats.hasBookedAppointment) {
+        return stats;
+      }
+      return prev;
+    });
+  }, []);
 
   const {
     data: lead,
@@ -134,40 +136,125 @@ const LeadDetailView = () => {
   const summaryScoreValue = clampScore(
     leadSummaryResponse?.data?.momentumScore ?? null
   );
-  const stage = getStageForScore(summaryScoreValue);
-  const progressPercent = summaryScoreValue ?? 0;
   const isSummaryBusy = isLeadSummaryLoading || isLeadSummaryFetching;
-  const summaryStatusText = (() => {
-    if (isSummaryBusy) {
-      return "Syncing summary...";
-    }
-    if (summaryScoreValue !== null) {
-      return `${summaryScoreValue}% · ${stage?.label ?? "Calibrating"}`;
-    }
-    return "Awaiting AI summary";
-  })();
 
-  const handleCloseDeal = async () => {
+  // Event-driven stage determination
+  const determineStage = (
+    inboundCount: number,
+    hasBookedAppointment: boolean,
+    manualStage: string | null | undefined
+  ): string => {
+    // Manual overrides ALWAYS take precedence
+    if (manualStage === 'closed') return 'Deal Closed';
+    if (manualStage === 'followup_close') return 'Follow-up to Close';
+    if (manualStage === 'proposal_sent') return 'Proposal Sent';
+    
+    // Event-driven logic (only applies if no manual stage is set)
+    if (hasBookedAppointment) return 'Appointment Booked';
+    if (inboundCount > 1) return 'Follow-up';
+    if (inboundCount === 1) return 'Interested';
+    // "New" - if no conversation or we haven't received any message from Lead
+    return 'New';
+  };
+
+  const currentStageLabel = determineStage(
+    communicationStats.inboundCount,
+    activityStats.hasBookedAppointment,
+    lead?.stage
+  );
+
+  const currentStageIndex = LEAD_STAGE_DEFINITIONS.findIndex(
+    (s) => s.label === currentStageLabel
+  );
+
+  // Auto-update to "Follow-up to Close" when lead replies after proposal is sent
+  useEffect(() => {
+    // Only proceed if we're in "Proposal Sent" stage
+    if (lead?.stage !== 'proposal_sent') return;
+    
+    // Only proceed if we have a baseline count from when proposal was sent
+    if (inboundCountAtProposalSent === null) return;
+    
+    // Check if inbound count has increased (new message received)
+    if (communicationStats.inboundCount > inboundCountAtProposalSent) {
+      console.log('🔔 Lead replied after proposal sent!');
+      console.log('📊 Baseline count:', inboundCountAtProposalSent);
+      console.log('📊 Current count:', communicationStats.inboundCount);
+      
+      // Auto-update to "Follow-up to Close"
+      leadsService.updateLead(leadId!, { stage: 'followup_close' })
+        .then(() => {
+          queryClient.refetchQueries({ queryKey: ["lead", leadId] });
+          toast.success('Stage updated to "Follow-up to Close" - Lead has replied!');
+          // Reset the baseline count
+          setInboundCountAtProposalSent(null);
+        })
+        .catch((error) => {
+          console.error('Failed to auto-update stage:', error);
+        });
+    }
+  }, [lead?.stage, communicationStats.inboundCount, inboundCountAtProposalSent, leadId, queryClient]);
+  
+  // Determine if "Proposal Sent" button should be shown
+  // Show when current stage is "Appointment Booked" (index 3) - all previous steps completed
+  // Hide when already at Proposal Sent (index 4) or beyond
+  const showProposalSentButton = currentStageIndex === 3; // Appointment Booked
+
+  const progressPercent = currentStageIndex >= 0 
+    ? Math.round(((currentStageIndex + 1) / LEAD_STAGE_DEFINITIONS.length) * 100)
+    : 0;
+
+  // Handler for manual stage updates
+  const handleSetStage = async (stageValue: string) => {
     if (!leadId) {
       toast.error("Lead ID is required");
       return;
     }
 
     try {
-      setIsClosingDeal(true);
-      await leadSummaryService.closeDeal(leadId);
-      toast.success("Deal closed successfully!");
+      setIsClosingDeal(stageValue === 'closed'); // Show loading state for Deal Closed
+      setIsSendingProposal(stageValue === 'proposal_sent'); // Show loading state for Proposal Sent
       
-      // Invalidate and refetch the lead summary to update the UI
-      await queryClient.invalidateQueries({ queryKey: ["lead-summary", leadId] });
+      console.log('🔄 Updating stage to:', stageValue);
+      const response = await leadsService.updateLead(leadId, { stage: stageValue });
+      console.log('✅ Stage update response:', response);
+      
+      // Refetch the lead data immediately to update the UI
+      await queryClient.refetchQueries({ queryKey: ["lead", leadId] });
+      console.log('✅ Lead data refetched');
+      
+      const stageLabels: Record<string, string> = {
+        'proposal_sent': 'Proposal Sent',
+        'followup_close': 'Follow-up to Close',
+        'closed': 'Deal Closed',
+      };
+      
+      toast.success(`Stage updated to "${stageLabels[stageValue] || stageValue}"!`);
     } catch (error: any) {
-      console.error("Failed to close deal:", error);
+      console.error("Failed to update stage:", error);
       toast.error(
-        error?.response?.data?.message || "Failed to close deal. Please try again."
+        error?.response?.data?.message || "Failed to update stage. Please try again."
       );
     } finally {
       setIsClosingDeal(false);
+      setIsSendingProposal(false);
     }
+  };
+
+  const handleCloseDeal = () => {
+    setShowCloseDealDialog(true);
+  };
+
+  const confirmCloseDeal = async () => {
+    setShowCloseDealDialog(false);
+    await handleSetStage('closed');
+  };
+
+  const handleSendProposal = async () => {
+    // Store current inbound count before sending proposal
+    setInboundCountAtProposalSent(communicationStats.inboundCount);
+    console.log('📊 Storing inbound count at proposal sent:', communicationStats.inboundCount);
+    await handleSetStage('proposal_sent');
   };
 
   if (error) {
@@ -197,10 +284,9 @@ const LeadDetailView = () => {
             <div className="col-span-7 col-start-3 flex justify-center">
               <div className="flex items-center justify-center gap-1 w-fit">
                 {LEAD_STAGE_DEFINITIONS.map((definition, index) => {
-                  const state = getStageState(summaryScoreValue, index);
+                  const isActive = definition.label === currentStageLabel;
+                  const isCompleted = index < currentStageIndex;
                   const isLast = index === LEAD_STAGE_DEFINITIONS.length - 1;
-                  const isActive = state === "active";
-                  const isCompleted = state === "completed";
                   
                   const baseButtonClasses =
                     "group relative overflow-hidden flex-none flex items-center justify-center rounded-full border text-xs font-medium tracking-wide transition-[width,background-color,box-shadow,padding,gap] duration-500 ease-out";
@@ -209,9 +295,9 @@ const LeadDetailView = () => {
                   
                   const buttonClasses =
                     isActive
-                      ? `${baseButtonClasses} h-8 px-3 gap-2 border-[#67B0B7] text-white shadow-[0_5px_18px_rgba(103,176,183,0.35)] bg-white/10`
+                      ? `${baseButtonClasses} h-8 px-3 gap-2 border-[#67B0B7] text-white shadow-[0_5px_18px_rgba(103,176,183,0.35)] bg-white/10 hover:bg-white/15`
                       : isCompleted
-                      ? `${baseButtonClasses} w-8 h-8 bg-gradient-to-r from-[#67B0B7] to-[#4066B3] border-transparent text-white shadow-[0_5px_18px_rgba(103,176,183,0.35)]`
+                      ? `${baseButtonClasses} w-8 h-8 bg-gradient-to-r from-[#67B0B7] to-[#4066B3] border-transparent text-white shadow-[0_5px_18px_rgba(103,176,183,0.35)] hover:opacity-90`
                       : `${baseButtonClasses} w-8 h-8 border-white/20 text-white/60 hover:border-white/40 hover:text-white/80`;
                   
                   const connectorClasses =
@@ -228,9 +314,8 @@ const LeadDetailView = () => {
                     >
                       <Tooltip delayDuration={200}>
                         <TooltipTrigger asChild>
-                          <button
+                          <div
                             className={buttonClasses}
-                            type="button"
                             aria-label={definition.label}
                           >
                             {isCompleted ? (
@@ -243,7 +328,7 @@ const LeadDetailView = () => {
                                 {definition.label}
                               </span>
                             )}
-                          </button>
+                          </div>
                         </TooltipTrigger>
                         {!isActive && (
                           <TooltipContent>
@@ -255,7 +340,17 @@ const LeadDetailView = () => {
                     </div>
                   );
                 })}
-                {summaryScoreValue !== 100 && (
+                {currentStageLabel !== 'Proposal Sent' && currentStageLabel !== 'Follow-up to Close' && currentStageLabel !== 'Deal Closed' && (
+                  <div className="ml-4">
+                    <ActiveNavButton
+                      text={isSendingProposal ? "Sending..." : "Proposal Sent"}
+                      onClick={handleSendProposal}
+                      disabled={isSendingProposal || currentStageIndex !== 3}
+                      className="h-8 text-xs"
+                    />
+                  </div>
+                )}
+                {currentStageLabel !== 'Deal Closed' && (
                   <div className="ml-4">
                     <ActiveNavButton
                       text={isClosingDeal ? "Closing..." : "Deal Closed"}
@@ -305,6 +400,7 @@ const LeadDetailView = () => {
                   autoStartCall={autoStartCall}
                   selectedCallLogView={selectedCallLogView}
                   setSelectedCallLogView={setSelectedCallLogView}
+                  onCommunicationUpdate={handleCommunicationUpdate}
                 />
               </div>
               {/* Right: Activity Component (with internal Activity/Company toggle) */}
@@ -313,12 +409,26 @@ const LeadDetailView = () => {
                   lead={lead}
                   selectedCallLogView={selectedCallLogView}
                   setSelectedCallLogView={setSelectedCallLogView}
+                  onActivityUpdate={handleActivityUpdate}
                 />
               </div>
             </div>
           )}
         </div>
       </main>
+
+      {/* Deal Closed Confirmation Dialog */}
+      <ConfirmDialog
+        open={showCloseDealDialog}
+        title="Close Deal"
+        description="Are you sure you want to mark this deal as closed? This action will update the lead status to 'Deal Closed'."
+        confirmText="Yes, Close Deal"
+        cancelText="Cancel"
+        isPending={isClosingDeal}
+        confirmVariant="default"
+        onConfirm={confirmCloseDeal}
+        onCancel={() => setShowCloseDealDialog(false)}
+      />
     </DashboardLayout>
   );
 };
