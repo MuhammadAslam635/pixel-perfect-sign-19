@@ -72,6 +72,7 @@ import {
 } from "@/services/calendar.service";
 import { SelectedCallLogView } from "../index";
 import CompanyTab from "./CompanyTab";
+import CallScriptTab from "./CallScriptTab";
 import API from "@/utils/api";
 
 type ActivityProps = {
@@ -157,7 +158,7 @@ const Activity: FC<ActivityProps> = ({
   setSelectedCallLogView,
   onActivityUpdate,
 }) => {
-  const [topLevelTab, setTopLevelTab] = useState<"activity" | "company">(
+  const [topLevelTab, setTopLevelTab] = useState<"activity" | "company" | "call_script">(
     "activity"
   );
   const [activeTab, setActiveTab] = useState("summary");
@@ -994,11 +995,11 @@ const Activity: FC<ActivityProps> = ({
           <Tabs
             value={topLevelTab}
             onValueChange={(value) =>
-              setTopLevelTab(value as "activity" | "company")
+              setTopLevelTab(value as "activity" | "company" | "call_script")
             }
             className="flex-1 flex flex-col min-h-0"
           >
-            {/* Top-level Activity / Company toggle (replaces static heading) */}
+            {/* Top-level Activity / Company / Call Script toggle (replaces static heading) */}
             <div className="mb-4">
               <TabsList className="bg-transparent p-0 h-auto gap-4 border-none">
                 <TabsTrigger
@@ -1013,6 +1014,13 @@ const Activity: FC<ActivityProps> = ({
                   className="px-0 py-2 text-xs font-medium sm:text-sm text-white/60 data-[state=active]:text-white data-[state=active]:font-semibold data-[state=active]:bg-transparent data-[state=active]:shadow-none border-none rounded-none relative group"
                 >
                   Company
+                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white hidden group-data-[state=active]:block" />
+                </TabsTrigger>
+                <TabsTrigger
+                  value="call_script"
+                  className="px-0 py-2 text-xs font-medium sm:text-sm text-white/60 data-[state=active]:text-white data-[state=active]:font-semibold data-[state=active]:bg-transparent data-[state=active]:shadow-none border-none rounded-none relative group"
+                >
+                  Call Script
                   <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white hidden group-data-[state=active]:block" />
                 </TabsTrigger>
               </TabsList>
@@ -1855,6 +1863,14 @@ const Activity: FC<ActivityProps> = ({
               className="mt-2 data-[state=active]:flex data-[state=active]:flex-col"
             >
               <CompanyTab lead={lead} />
+            </TabsContent>
+
+            {/* Call Script content */}
+            <TabsContent
+              value="call_script"
+              className="mt-2 data-[state=active]:flex data-[state=active]:flex-col"
+            >
+              <CallScriptTab lead={lead} />
             </TabsContent>
           </Tabs>
         </CardContent>
