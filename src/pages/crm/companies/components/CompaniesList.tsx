@@ -95,7 +95,8 @@ const CompaniesList: FC<CompaniesListProps> = ({
 
   // Delete company mutation
   const deleteMutation = useMutation({
-    mutationFn: (companyId: string) => companiesService.deleteCompany(companyId),
+    mutationFn: (companyId: string) =>
+      companiesService.deleteCompany(companyId),
     onMutate: async (companyId) => {
       // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: ["companies"] });
@@ -110,7 +111,9 @@ const CompaniesList: FC<CompaniesListProps> = ({
           ...old,
           data: {
             ...old.data,
-            docs: old.data.docs.filter((company: Company) => company._id !== companyId),
+            docs: old.data.docs.filter(
+              (company: Company) => company._id !== companyId
+            ),
             totalDocs: old.data.totalDocs - 1,
           },
         };
@@ -120,7 +123,9 @@ const CompaniesList: FC<CompaniesListProps> = ({
       return { previousCompanies };
     },
     onSuccess: (data) => {
-      toast.success(data?.message || "Company and associated leads deleted successfully");
+      toast.success(
+        data?.message || "Company and associated leads deleted successfully"
+      );
       queryClient.invalidateQueries({ queryKey: ["companies"] });
       queryClient.invalidateQueries({ queryKey: ["leads"] });
       setShowDeleteDialog(false);
@@ -143,7 +148,10 @@ const CompaniesList: FC<CompaniesListProps> = ({
     },
   });
 
-  const handleDeleteClick = (company: Company, e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleDeleteClick = (
+    company: Company,
+    e: React.MouseEvent<HTMLButtonElement>
+  ) => {
     e.stopPropagation();
     setCompanyToDelete(company);
     setShowDeleteDialog(true);
@@ -154,7 +162,6 @@ const CompaniesList: FC<CompaniesListProps> = ({
       deleteMutation.mutate(companyToDelete._id);
     }
   };
-
 
   // State to track if mobile executives view is open
   const [mobileExecutivesView, setMobileExecutivesView] = useState(false);
@@ -182,7 +189,9 @@ const CompaniesList: FC<CompaniesListProps> = ({
   }, []);
 
   useEffect(() => {
-    const newVisibleCount = isMobile ? Math.min(2, companies.length) : companies.length;
+    const newVisibleCount = isMobile
+      ? Math.min(2, companies.length)
+      : companies.length;
 
     setVisibleCount(newVisibleCount);
   }, [isMobile, companies.length]);
@@ -194,7 +203,6 @@ const CompaniesList: FC<CompaniesListProps> = ({
   const displayedCompanies = isMobile
     ? companies.slice(0, visibleCount)
     : companies;
-
 
   // Helper function to format URL and create clickable link
   const formatWebsiteUrl = (url: string | null | undefined): string => {
@@ -340,7 +348,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
 
   // Render empty state
   const renderEmpty = () => (
-    <motion.div 
+    <motion.div
       key="companies-empty"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -372,7 +380,6 @@ const CompaniesList: FC<CompaniesListProps> = ({
     const primaryEmail =
       primaryExecutive?.email || primaryExecutive?.emails?.[0] || null;
     const primaryLinkedIn = primaryExecutive?.linkedin || null;
-
 
     if (viewMode === "card") {
       return (
@@ -438,10 +445,11 @@ const CompaniesList: FC<CompaniesListProps> = ({
             {company.createdAt && (
               <div className="flex items-center gap-1 min-w-0 mt-0.5">
                 <span className="text-[9px] sm:text-[10px] text-white/50">
-                  Scraped: {new Date(company.createdAt).toLocaleDateString('en-US', { 
-                    month: 'short', 
-                    day: 'numeric', 
-                    year: 'numeric' 
+                  Scraped:{" "}
+                  {new Date(company.createdAt).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
                   })}
                 </span>
               </div>
@@ -614,10 +622,11 @@ const CompaniesList: FC<CompaniesListProps> = ({
           {/* Scraping Date - Above View Details Button */}
           {company.createdAt && (
             <p className="text-[10px] sm:text-xs text-white/50 text-center md:text-right">
-              Scraped: {new Date(company.createdAt).toLocaleDateString('en-US', { 
-                month: 'short', 
-                day: 'numeric', 
-                year: 'numeric' 
+              Scraped:{" "}
+              {new Date(company.createdAt).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
               })}
             </p>
           )}
@@ -891,80 +900,78 @@ const CompaniesList: FC<CompaniesListProps> = ({
       {renderPageSizeSelector("top")}
       <div className="w-full pb-4">
         <AnimatePresence mode="wait">
-        <motion.div
-          key={viewMode}
-          className="w-full"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{
-            duration: 0.2,
-            ease: "easeInOut",
-          }}
-          layout
-        >
-          <AnimatePresence mode="wait">
-            {(() => {
-              
-              
-              if (loading) return renderLoading();
-              if (displayedCompanies.length === 0) return renderEmpty();
-              
-              // Wrap in motion.div to provide layout context and single child for AnimatePresence
-              return (
-                <motion.div
-                  key={`companies-grid-${displayedCompanies.length}`}
-                  initial={{ opacity: 0 }}
-                  animate={{ 
-                    opacity: 1,
-                    transition: {  duration: 0.4, ease: "easeOut" }
-                  }}
-                  exit={{ 
-                    opacity: 0,
-                    transition: { duration: 0.2, ease: "easeIn" }
-                  }}
-                  className={
-                    viewMode === "card"
-                      ? "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"
-                      : "space-y-4"
-                  }
-                  layout
-                >
-                  {displayedCompanies.map((company, index) => (
-                    <motion.div
-                      key={company._id}
-                      layout
-                      initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                      transition={{
-                        duration: 0.3,
-                        ease: "easeOut",
-                        delay: index * 0.05,
-                      }}
-                    >
-                      {renderCompanyCard(company)}
-                      {/* Executives panel below the company card should not appear on desktop */}
-                      {selectedCompanyId === company._id &&
-                        viewMode !== "card" && (
-                          <div className="block lg:hidden mt-2 mb-2">
-                            <Card className="bg-[#1f3032] border-[#3A3A3A] p-3 sm:p-4">
-                              <CompanyExecutivesPanel
-                                company={selectedCompany}
-                                onViewAllLeads={onViewAllLeads || (() => {})}
-                                onExecutiveSelect={onExecutiveSelect}
-                              />
-                            </Card>
-                          </div>
-                        )}
-                    </motion.div>
-                  ))}
-                </motion.div>
-              );
-            })()}
-          </AnimatePresence>
-        </motion.div>
-      </AnimatePresence>
+          <motion.div
+            key={viewMode}
+            className="w-full"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{
+              duration: 0.2,
+              ease: "easeInOut",
+            }}
+            layout
+          >
+            <AnimatePresence mode="wait">
+              {(() => {
+                if (loading) return renderLoading();
+                if (displayedCompanies.length === 0) return renderEmpty();
+
+                // Wrap in motion.div to provide layout context and single child for AnimatePresence
+                return (
+                  <motion.div
+                    key={`companies-grid-${displayedCompanies.length}`}
+                    initial={{ opacity: 0 }}
+                    animate={{
+                      opacity: 1,
+                      transition: { duration: 0.4, ease: "easeOut" },
+                    }}
+                    exit={{
+                      opacity: 0,
+                      transition: { duration: 0.2, ease: "easeIn" },
+                    }}
+                    className={
+                      viewMode === "card"
+                        ? "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"
+                        : "space-y-4"
+                    }
+                    layout
+                  >
+                    {displayedCompanies.map((company, index) => (
+                      <motion.div
+                        key={company._id}
+                        layout
+                        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                        transition={{
+                          duration: 0.3,
+                          ease: "easeOut",
+                          delay: index * 0.05,
+                        }}
+                      >
+                        {renderCompanyCard(company)}
+                        {/* Executives panel below the company card should not appear on desktop */}
+                        {selectedCompanyId === company._id &&
+                          viewMode !== "card" && (
+                            <div className="block lg:hidden mt-2 mb-2">
+                              <Card className="bg-[#1f3032] border-[#3A3A3A] p-3 sm:p-4">
+                                <CompanyExecutivesPanel
+                                  company={selectedCompany}
+                                  onViewAllLeads={onViewAllLeads || (() => {})}
+                                  onExecutiveSelect={onExecutiveSelect}
+                                />
+                              </Card>
+                            </div>
+                          )}
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                );
+              })()}
+            </AnimatePresence>
+          </motion.div>
+        </AnimatePresence>
       </div>
 
       {isMobile && companies.length > 2 && (
@@ -987,16 +994,20 @@ const CompaniesList: FC<CompaniesListProps> = ({
       {/* Fixed pagination at bottom */}
       {/* Fixed pagination at bottom */}
       {!loading && companies.length > 0 && (
-        <div className="mt-4">
-          {renderPagination()}
-        </div>
+        <div className="mt-4">{renderPagination()}</div>
       )}
 
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog
         open={showDeleteDialog}
         title="Delete Company"
-        description={`Are you sure you want to delete ${companyToDelete?.name}? This will also delete all ${companyToDelete?.people?.length || 0} associated ${(companyToDelete?.people?.length || 0) === 1 ? 'lead' : 'leads'}. This action cannot be undone.`}
+        description={`Are you sure you want to delete ${
+          companyToDelete?.name
+        }? This will also delete all ${
+          companyToDelete?.people?.length || 0
+        } associated ${
+          (companyToDelete?.people?.length || 0) === 1 ? "lead" : "leads"
+        }. This action cannot be undone.`}
         confirmText="Yes, Delete"
         cancelText="Cancel"
         isPending={deleteMutation.isPending}
