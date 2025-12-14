@@ -517,12 +517,14 @@ const index = () => {
           leadStage = "Follow-up to Close";
         } else if (lead.stage === "proposal_sent") {
           leadStage = "Proposal Sent";
-        } else if (lead.stage === "Appointment Booked") {
+        } else if (lead.stage === "appointment_booked") {
           leadStage = "Appointment Booked";
-        } else if (lead.stage === "Follow-up") {
+        } else if (lead.stage === "followup") {
           leadStage = "Follow-up";
-        } else if (lead.stage === "Interested") {
+        } else if (lead.stage === "interested") {
           leadStage = "Interested";
+        } else if (lead.stage === "new") {
+          leadStage = "New";
         } else {
           // Fallback to New if no recognized stage
           leadStage = "New";

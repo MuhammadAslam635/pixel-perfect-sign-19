@@ -2,6 +2,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   MultiSelect,
   type MultiSelectOption,
 } from "@/components/ui/multi-select";
@@ -55,6 +62,14 @@ interface LeadsFiltersInlineProps {
   // Actions
   hasFilters: boolean;
   onResetFilters: () => void;
+
+  // Sorting
+  sortBy: string;
+  onSortByChange: (value: string) => void;
+
+  // Additional Checkbox Filter
+  hasFavouriteFilter: boolean;
+  onHasFavouriteFilterChange: (checked: boolean) => void;
 }
 
 export const LeadsFiltersInline = ({
@@ -73,6 +88,10 @@ export const LeadsFiltersInline = ({
   onHasLinkedinFilterChange,
   hasFilters,
   onResetFilters,
+  sortBy,
+  onSortByChange,
+  hasFavouriteFilter,
+  onHasFavouriteFilterChange,
 }: LeadsFiltersInlineProps) => {
   const positionOptions = extractJobTitles(leads);
   const countryOptions = countryList()
@@ -149,6 +168,25 @@ export const LeadsFiltersInline = ({
         </div>
       </div>
 
+      <div className="flex items-center gap-1">
+        <label className="text-[11px] uppercase tracking-[0.08em] text-gray-400 whitespace-nowrap">
+          Sort:
+        </label>
+        <div className="w-32">
+          <Select value={sortBy} onValueChange={onSortByChange}>
+            <SelectTrigger className="h-8 text-xs bg-transparent border-input">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="newest">Newest</SelectItem>
+              <SelectItem value="oldest">Oldest</SelectItem>
+              <SelectItem value="name-asc">Name (A-Z)</SelectItem>
+              <SelectItem value="name-desc">Name (Z-A)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
       {/* Checkboxes */}
       <div className="flex items-center gap-1.5 ml-1 ml-auto">
         <label className="flex items-center gap-1 cursor-pointer">
@@ -182,6 +220,17 @@ export const LeadsFiltersInline = ({
             className="border-white/40 data-[state=checked]:bg-white data-[state=checked]:text-gray-900"
           />
           <span className="text-xs text-gray-300">LinkedIn</span>
+        </label>
+
+        <label className="flex items-center gap-1 cursor-pointer">
+          <Checkbox
+            checked={hasFavouriteFilter}
+            onCheckedChange={(checked) =>
+              onHasFavouriteFilterChange(Boolean(checked))
+            }
+            className="border-white/40 data-[state=checked]:bg-white data-[state=checked]:text-gray-900"
+          />
+          <span className="text-xs text-gray-300">Favourite</span>
         </label>
       </div>
 

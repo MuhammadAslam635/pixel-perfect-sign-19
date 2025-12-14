@@ -74,38 +74,24 @@ const LeadDetailView = () => {
   const autoStartCall = searchParams.get("autoCall") === "1";
   const [selectedCallLogView, setSelectedCallLogView] =
     useState<SelectedCallLogView>(null);
+  // State for manual actions
   const [isClosingDeal, setIsClosingDeal] = useState(false);
   const [isSendingProposal, setIsSendingProposal] = useState(false);
   const [showCloseDealDialog, setShowCloseDealDialog] = useState(false);
   const queryClient = useQueryClient();
 
-  // State for event-driven stage calculation
-  const [communicationStats, setCommunicationStats] = useState({ inboundCount: 0 });
-  const [activityStats, setActivityStats] = useState({ hasBookedAppointment: false });
-  
-  // Track inbound count when proposal was sent to detect new replies
-  const [inboundCountAtProposalSent, setInboundCountAtProposalSent] = useState<number | null>(null);
-
-  // Memoize callbacks to prevent infinite re-renders
-  const handleCommunicationUpdate = useCallback((stats: { inboundCount: number }) => {
-    setCommunicationStats(prev => {
-      // Only update if the value actually changed
-      if (prev.inboundCount !== stats.inboundCount) {
-        return stats;
-      }
-      return prev;
-    });
-  }, []);
-
-  const handleActivityUpdate = useCallback((stats: { hasBookedAppointment: boolean }) => {
-    setActivityStats(prev => {
-      // Only update if the value actually changed
-      if (prev.hasBookedAppointment !== stats.hasBookedAppointment) {
-        return stats;
-      }
-      return prev;
-    });
-  }, []);
+  const mapStageToLabel = (stage: string | null | undefined): string => {
+    switch (stage) {
+      case 'new': return 'New';
+      case 'interested': return 'Interested';
+      case 'followup': return 'Follow-up';
+      case 'appointment_booked': return 'Appointment Booked';
+      case 'proposal_sent': return 'Proposal Sent';
+      case 'followup_close': return 'Follow-up to Close';
+      case 'closed': return 'Deal Closed';
+      default: return 'New';
+    }
+  };
 
   const {
     data: lead,
@@ -138,62 +124,12 @@ const LeadDetailView = () => {
   );
   const isSummaryBusy = isLeadSummaryLoading || isLeadSummaryFetching;
 
-  // Event-driven stage determination
-  const determineStage = (
-    inboundCount: number,
-    hasBookedAppointment: boolean,
-    manualStage: string | null | undefined
-  ): string => {
-    // Manual overrides ALWAYS take precedence
-    if (manualStage === 'closed') return 'Deal Closed';
-    if (manualStage === 'followup_close') return 'Follow-up to Close';
-    if (manualStage === 'proposal_sent') return 'Proposal Sent';
-    
-    // Event-driven logic (only applies if no manual stage is set)
-    if (hasBookedAppointment) return 'Appointment Booked';
-    if (inboundCount > 1) return 'Follow-up';
-    if (inboundCount === 1) return 'Interested';
-    // "New" - if no conversation or we haven't received any message from Lead
-    return 'New';
-  };
-
-  const currentStageLabel = determineStage(
-    communicationStats.inboundCount,
-    activityStats.hasBookedAppointment,
-    lead?.stage
-  );
+  // Use backend stage directly
+  const currentStageLabel = mapStageToLabel(lead?.stage);
 
   const currentStageIndex = LEAD_STAGE_DEFINITIONS.findIndex(
     (s) => s.label === currentStageLabel
   );
-
-  // Auto-update to "Follow-up to Close" when lead replies after proposal is sent
-  useEffect(() => {
-    // Only proceed if we're in "Proposal Sent" stage
-    if (lead?.stage !== 'proposal_sent') return;
-    
-    // Only proceed if we have a baseline count from when proposal was sent
-    if (inboundCountAtProposalSent === null) return;
-    
-    // Check if inbound count has increased (new message received)
-    if (communicationStats.inboundCount > inboundCountAtProposalSent) {
-      console.log('🔔 Lead replied after proposal sent!');
-      console.log('📊 Baseline count:', inboundCountAtProposalSent);
-      console.log('📊 Current count:', communicationStats.inboundCount);
-      
-      // Auto-update to "Follow-up to Close"
-      leadsService.updateLead(leadId!, { stage: 'followup_close' })
-        .then(() => {
-          queryClient.refetchQueries({ queryKey: ["lead", leadId] });
-          toast.success('Stage updated to "Follow-up to Close" - Lead has replied!');
-          // Reset the baseline count
-          setInboundCountAtProposalSent(null);
-        })
-        .catch((error) => {
-          console.error('Failed to auto-update stage:', error);
-        });
-    }
-  }, [lead?.stage, communicationStats.inboundCount, inboundCountAtProposalSent, leadId, queryClient]);
   
   // Determine if "Proposal Sent" button should be shown
   // Show when current stage is "Appointment Booked" (index 3) - all previous steps completed
@@ -251,9 +187,6 @@ const LeadDetailView = () => {
   };
 
   const handleSendProposal = async () => {
-    // Store current inbound count before sending proposal
-    setInboundCountAtProposalSent(communicationStats.inboundCount);
-    console.log('📊 Storing inbound count at proposal sent:', communicationStats.inboundCount);
     await handleSetStage('proposal_sent');
   };
 
@@ -400,7 +333,6 @@ const LeadDetailView = () => {
                   autoStartCall={autoStartCall}
                   selectedCallLogView={selectedCallLogView}
                   setSelectedCallLogView={setSelectedCallLogView}
-                  onCommunicationUpdate={handleCommunicationUpdate}
                 />
               </div>
               {/* Right: Activity Component (with internal Activity/Company toggle) */}
@@ -409,7 +341,6 @@ const LeadDetailView = () => {
                   lead={lead}
                   selectedCallLogView={selectedCallLogView}
                   setSelectedCallLogView={setSelectedCallLogView}
-                  onActivityUpdate={handleActivityUpdate}
                 />
               </div>
             </div>
