@@ -73,6 +73,7 @@ import {
 import { SelectedCallLogView } from "../index";
 import CompanyTab from "./CompanyTab";
 import CallScriptTab from "./CallScriptTab";
+import AgentResearchTab from "./AgentResearchTab";
 import API from "@/utils/api";
 
 type ActivityProps = {
@@ -158,7 +159,7 @@ const Activity: FC<ActivityProps> = ({
   setSelectedCallLogView,
   onActivityUpdate,
 }) => {
-  const [topLevelTab, setTopLevelTab] = useState<"activity" | "company" | "call_script">(
+  const [topLevelTab, setTopLevelTab] = useState<"activity" | "company" | "call_script" | "agent_research">(
     "activity"
   );
   const [activeTab, setActiveTab] = useState("summary");
@@ -995,11 +996,11 @@ const Activity: FC<ActivityProps> = ({
           <Tabs
             value={topLevelTab}
             onValueChange={(value) =>
-              setTopLevelTab(value as "activity" | "company" | "call_script")
+              setTopLevelTab(value as "activity" | "company" | "call_script" | "agent_research")
             }
             className="flex-1 flex flex-col min-h-0"
           >
-            {/* Top-level Activity / Company / Call Script toggle (replaces static heading) */}
+            {/* Top-level Activity / Company / Call Script / Agent Research toggle */}
             <div className="mb-4">
               <TabsList className="bg-transparent p-0 h-auto gap-4 border-none">
                 <TabsTrigger
@@ -1021,6 +1022,13 @@ const Activity: FC<ActivityProps> = ({
                   className="px-0 py-2 text-xs font-medium sm:text-sm text-white/60 data-[state=active]:text-white data-[state=active]:font-semibold data-[state=active]:bg-transparent data-[state=active]:shadow-none border-none rounded-none relative group"
                 >
                   Call Script
+                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white hidden group-data-[state=active]:block" />
+                </TabsTrigger>
+                <TabsTrigger
+                  value="agent_research"
+                  className="px-0 py-2 text-xs font-medium sm:text-sm text-white/60 data-[state=active]:text-white data-[state=active]:font-semibold data-[state=active]:bg-transparent data-[state=active]:shadow-none border-none rounded-none relative group"
+                >
+                  Agent Research
                   <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white hidden group-data-[state=active]:block" />
                 </TabsTrigger>
               </TabsList>
@@ -1871,6 +1879,14 @@ const Activity: FC<ActivityProps> = ({
               className="mt-2 data-[state=active]:flex data-[state=active]:flex-col"
             >
               <CallScriptTab lead={lead} />
+            </TabsContent>
+
+            {/* Agent Research content */}
+            <TabsContent
+              value="agent_research"
+              className="mt-2 data-[state=active]:flex data-[state=active]:flex-col"
+            >
+              <AgentResearchTab lead={lead} />
             </TabsContent>
           </Tabs>
         </CardContent>

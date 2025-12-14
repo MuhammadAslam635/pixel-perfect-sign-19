@@ -1,4 +1,5 @@
 import API from "@/utils/api";
+import { ResearchData } from "./leadResearch.service";
 
 export interface LeadCompanyInfo {
   _id: string;
@@ -33,6 +34,9 @@ export interface Lead {
   createdAt: string;
   updatedAt: string;
   company?: LeadCompanyInfo | null;
+  // Agent Research fields
+  isResearched?: boolean;
+  researchData?: ResearchData;
 }
 
 export interface LeadsResponse {
