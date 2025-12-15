@@ -81,9 +81,23 @@ const ContactNow = () => {
       await device.register();
       deviceRef.current = device;
       return device;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Failed to fetch token";
+    } catch (error: unknown) {
+      // Extract error message from API response
+      let errorMessage = "Failed to fetch token";
+
+      if (error && typeof error === "object" && "response" in error) {
+        const apiError = error as {
+          response?: { data?: { message?: string; error?: string } };
+        };
+        // Backend returned an error response
+        const errorData = apiError.response?.data;
+        errorMessage = errorData?.message || errorData?.error || errorMessage;
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === "string") {
+        errorMessage = error;
+      }
+
       setCallStatus(errorMessage);
       throw new Error(errorMessage);
     }
@@ -168,58 +182,66 @@ const ContactNow = () => {
 
       setMessageStatus(`Message ${data?.status ?? "queued"}`);
       setMessageBody("");
-    } catch (error: any) {
-      const errorMessage =
-        error?.response?.data?.error ||
-        error?.message ||
-        "Failed to send message";
+    } catch (error: unknown) {
+      let errorMessage = "Failed to send message";
+
+      if (error && typeof error === "object" && "response" in error) {
+        const apiError = error as {
+          response?: { data?: { error?: string } };
+          message?: string;
+        };
+        errorMessage =
+          apiError.response?.data?.error || apiError.message || errorMessage;
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === "string") {
+        errorMessage = error;
+      }
+
       setMessageStatus(errorMessage);
     } finally {
       setSendingMessage(false);
     }
   }
 
-  const handleIncoming = useCallback(
-    (connection: TwilioCall) => {
-      const caller =
-        (connection.parameters as unknown as { From?: string })?.From ??
-        connection.customParameters?.get("From") ??
-        "";
-      const label = caller ? `Incoming call from ${caller}` : "Incoming call";
+  const handleIncoming = useCallback((connection: TwilioCall) => {
+    const caller =
+      (connection.parameters as unknown as { From?: string })?.From ??
+      connection.customParameters?.get("From") ??
+      "";
+    const label = caller ? `Incoming call from ${caller}` : "Incoming call";
 
-      setCallStatus(label);
-      setIncomingLabel(label);
+    setCallStatus(label);
+    setIncomingLabel(label);
+    setCalling(false);
+    activeCallRef.current = null;
+
+    connection.on("accept", () => {
+      setIncomingLabel(null);
+      setCalling(true);
+      setCallStatus("In call");
+    });
+    connection.on("disconnect", () => {
       setCalling(false);
+      setIncomingLabel(null);
+      setCallStatus("Call ended");
       activeCallRef.current = null;
+    });
+    connection.on("cancel", () => {
+      setCalling(false);
+      setIncomingLabel(null);
+      setCallStatus("Cancelled");
+      activeCallRef.current = null;
+    });
+    connection.on("error", (event: DeviceError) => {
+      setCalling(false);
+      setIncomingLabel(null);
+      setCallStatus(`Call error: ${event.message}`);
+      activeCallRef.current = null;
+    });
 
-      connection.on("accept", () => {
-        setIncomingLabel(null);
-        setCalling(true);
-        setCallStatus("In call");
-      });
-      connection.on("disconnect", () => {
-        setCalling(false);
-        setIncomingLabel(null);
-        setCallStatus("Call ended");
-        activeCallRef.current = null;
-      });
-      connection.on("cancel", () => {
-        setCalling(false);
-        setIncomingLabel(null);
-        setCallStatus("Cancelled");
-        activeCallRef.current = null;
-      });
-      connection.on("error", (event: DeviceError) => {
-        setCalling(false);
-        setIncomingLabel(null);
-        setCallStatus(`Call error: ${event.message}`);
-        activeCallRef.current = null;
-      });
-
-      activeCallRef.current = connection;
-    },
-    []
-  );
+    activeCallRef.current = connection;
+  }, []);
 
   const handleAcceptIncoming = useCallback(() => {
     const connection = activeCallRef.current;
@@ -252,13 +274,26 @@ const ContactNow = () => {
           return;
         }
         device.on("incoming", handleIncoming);
-      } catch (error) {
+      } catch (error: unknown) {
         if (!mounted) {
           return;
         }
-        setCallStatus(
-          error instanceof Error ? error.message : "Unable to initialize device"
-        );
+        // Extract error message from API response or use default
+        let errorMessage = "Unable to initialize device";
+
+        if (error && typeof error === "object" && "response" in error) {
+          const apiError = error as {
+            response?: { data?: { message?: string; error?: string } };
+          };
+          errorMessage =
+            apiError.response?.data?.message ||
+            apiError.response?.data?.error ||
+            errorMessage;
+        } else if (error instanceof Error) {
+          errorMessage = error.message;
+        }
+
+        setCallStatus(errorMessage);
       }
     }
 
@@ -273,6 +308,7 @@ const ContactNow = () => {
         /* noop */
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [handleIncoming]);
 
   return (
@@ -397,4 +433,3 @@ const ContactNow = () => {
 };
 
 export default ContactNow;
-
