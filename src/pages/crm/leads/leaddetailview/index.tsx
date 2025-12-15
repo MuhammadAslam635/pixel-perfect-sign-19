@@ -203,7 +203,6 @@ const LeadDetailView = () => {
 
     const handleLeadUpdate = (data: { leadId: string }) => {
       if (data.leadId === leadId) {
-        console.log('⚡ [Socket] Lead update received, refreshing data...');
         queryClient.invalidateQueries({ queryKey: ["lead", leadId] });
         queryClient.invalidateQueries({ queryKey: ["lead-summary", leadId] });
       }

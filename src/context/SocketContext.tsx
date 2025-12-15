@@ -24,8 +24,6 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     // Ensure URL doesn't have /api suffix if it was used for REST
     const baseUrl = SOCKET_URL.replace(/\/api\/?$/, '');
 
-    console.log('🔌 Connecting to socket server at:', baseUrl);
-
     const socketInstance = io(baseUrl, {
       transports: ['websocket'],
       reconnection: true,
@@ -34,17 +32,15 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
 
     socketInstance.on('connect', () => {
-      console.log('✅ Socket connected:', socketInstance.id);
       setConnected(true);
     });
 
     socketInstance.on('disconnect', () => {
-      console.log('❌ Socket disconnected');
       setConnected(false);
     });
 
     socketInstance.on('connect_error', (err) => {
-      console.error('⚠️ Socket connection error:', err);
+      // console.error('⚠️ Socket connection error:', err);
     });
 
     setSocket(socketInstance);
