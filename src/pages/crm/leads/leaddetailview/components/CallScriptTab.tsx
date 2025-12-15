@@ -410,3 +410,4 @@ const CallScriptTab: FC<CallScriptTabProps> = ({ lead }) => {
 
 export default CallScriptTab;
 
+
