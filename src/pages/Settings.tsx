@@ -10,8 +10,9 @@ import { NotificationsTab } from "@/components/settings/NotificationsTab";
 import { IntegrationsTab } from "@/components/settings/IntegrationsTab";
 import { SecurityTab } from "@/components/settings/SecurityTab";
 import { AdminProfileTab } from "@/components/settings/AdminProfileTab";
+import { PerplexityPromptTab } from "@/components/settings/PerplexityPromptTab";
 import { RootState } from "@/store/store";
-import { Lock, Plug, Settings as SettingsIcon, User } from "lucide-react";
+import { Lock, Plug, Settings as SettingsIcon, User, Sparkles } from "lucide-react";
 
 const SettingsPage = () => {
   const location = useLocation();
@@ -22,6 +23,9 @@ const SettingsPage = () => {
   const isAdmin = userRole === "Admin";
   const isCompany = userRole === "Company";
   const canAccessIntegrations = ["Company", "CompanyAdmin"].includes(
+    userRole ?? ""
+  );
+  const canManagePerplexityPrompt = ["Company", "CompanyAdmin"].includes(
     userRole ?? ""
   );
   const isCompanyUser = ["CompanyAdmin", "CompanyUser"].includes(
@@ -62,10 +66,16 @@ const SettingsPage = () => {
         icon: SettingsIcon,
         hidden: false,
       },
+      {
+        value: "perplexity-prompt",
+        label: "AI Research Prompt",
+        icon: Sparkles,
+        hidden: !canManagePerplexityPrompt,
+      },
     ];
 
     return baseTabs.filter((tab) => !tab.hidden);
-  }, [canAccessIntegrations]);
+  }, [canAccessIntegrations, canManagePerplexityPrompt]);
 
   return (
     <DashboardLayout>
@@ -204,6 +214,21 @@ const SettingsPage = () => {
                       <NotificationsTab />
                     </motion.div>
                   </TabsContent>
+
+                  {canManagePerplexityPrompt && (
+                    <TabsContent
+                      value="perplexity-prompt"
+                      className="mt-0 space-y-6"
+                    >
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.2, ease: "easeOut" }}
+                      >
+                        <PerplexityPromptTab />
+                      </motion.div>
+                    </TabsContent>
+                  )}
                 </motion.div>
               </AnimatePresence>
             </div>
