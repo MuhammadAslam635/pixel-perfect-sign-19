@@ -239,6 +239,17 @@ const Activity: FC<ActivityProps> = ({
       return leadSummaryService.getSummary(leadId);
     },
     enabled: Boolean(leadId),
+    // Only refetch when pending to check if generation completed
+    refetchInterval: (data) => {
+      if (data?.data?.status === "pending") {
+        return 5000; // Poll every 5 seconds when pending
+      }
+      return false; // Don't auto-refetch otherwise
+    },
+    // Prevent aggressive background refetching
+    refetchOnWindowFocus: false,
+    // Keep data fresh for 30 seconds
+    staleTime: 30000,
   });
 
 
@@ -387,8 +398,8 @@ const Activity: FC<ActivityProps> = ({
 
   const isSummaryBusy =
     isLeadSummaryLoading ||
-    isLeadSummaryFetching ||
-    refreshLeadSummaryMutation.isPending;
+    refreshLeadSummaryMutation.isPending ||
+    leadSummary?.status === "pending";
 
   // Initialize week dates based on currentWeekStart
   useEffect(() => {
