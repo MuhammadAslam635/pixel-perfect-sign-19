@@ -333,6 +333,10 @@ const LeadDetailView = () => {
                   autoStartCall={autoStartCall}
                   selectedCallLogView={selectedCallLogView}
                   setSelectedCallLogView={setSelectedCallLogView}
+                  onMessageUpdate={() => {
+                    queryClient.invalidateQueries({ queryKey: ["lead", leadId] });
+                    queryClient.invalidateQueries({ queryKey: ["lead-summary", leadId] });
+                  }}
                 />
               </div>
               {/* Right: Activity Component (with internal Activity/Company toggle) */}

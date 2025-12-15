@@ -31,6 +31,7 @@ type LeadChatProps = {
   setSelectedCallLogView: (view: SelectedCallLogView) => void;
   initialTab?: string;
   autoStartCall?: boolean;
+  onMessageUpdate?: () => void;
 };
 
 type SmsStatusDisplay = {
@@ -103,6 +104,7 @@ const LeadChat = ({
   setSelectedCallLogView,
   initialTab,
   autoStartCall = false,
+  onMessageUpdate,
 }: LeadChatProps) => {
   const displayName = lead?.name || fallbackLeadInfo.name;
   const position = lead?.position || fallbackLeadInfo.position;
@@ -600,6 +602,13 @@ const LeadChat = ({
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
     );
   }, [smsMessages]);
+
+  // Notify parent component when messages update (to refresh lead stage)
+  useEffect(() => {
+    if (onMessageUpdate) {
+      onMessageUpdate();
+    }
+  }, [whatsappMessages, emailMessages, smsMessages, onMessageUpdate]);
 
   useEffect(() => {
     if (activeTab === "Email") {

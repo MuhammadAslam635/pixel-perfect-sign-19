@@ -30,7 +30,11 @@ import {
   Trash2,
 } from "lucide-react";
 import { ActiveNavButton } from "@/components/ui/primary-btn";
-import { Company, companiesService } from "@/services/companies.service";
+import {
+  Company,
+  CompaniesResponse,
+  companiesService,
+} from "@/services/companies.service";
 import CompanyExecutivesPanel from "./CompanyExecutivesPanel";
 import { CompanyLogoFallback } from "@/components/ui/company-logo-fallback";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -59,7 +63,7 @@ type CompaniesListProps = {
   showFilters?: boolean;
   selectedCompany?: Company;
   onViewAllLeads?: () => void;
-  onExecutiveSelect?: (executive: any) => void;
+  onExecutiveSelect?: (executive: unknown) => void;
   onMobileExecutivesViewChange?: (isOpen: boolean) => void;
   pageSize?: number;
   pageSizeOptions?: number[];
@@ -105,19 +109,22 @@ const CompaniesList: FC<CompaniesListProps> = ({
       const previousCompanies = queryClient.getQueryData(["companies"]);
 
       // Optimistically update to remove the company
-      queryClient.setQueryData(["companies"], (old: any) => {
-        if (!old) return old;
-        return {
-          ...old,
-          data: {
-            ...old.data,
-            docs: old.data.docs.filter(
-              (company: Company) => company._id !== companyId
-            ),
-            totalDocs: old.data.totalDocs - 1,
-          },
-        };
-      });
+      queryClient.setQueryData(
+        ["companies"],
+        (old: CompaniesResponse | undefined) => {
+          if (!old) return old;
+          return {
+            ...old,
+            data: {
+              ...old.data,
+              docs: old.data.docs.filter(
+                (company: Company) => company._id !== companyId
+              ),
+              totalDocs: old.data.totalDocs - 1,
+            },
+          };
+        }
+      );
 
       // Return context with the snapshot
       return { previousCompanies };
@@ -137,13 +144,14 @@ const CompaniesList: FC<CompaniesListProps> = ({
         onSelectCompany("");
       }
     },
-    onError: (error: any, companyId, context) => {
+    onError: (error: Error, companyId, context) => {
       // Rollback on error
       if (context?.previousCompanies) {
         queryClient.setQueryData(["companies"], context.previousCompanies);
       }
       const errorMessage =
-        error?.response?.data?.message ||
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message ||
         error?.message ||
         "Failed to delete company";
       toast.error(errorMessage);
