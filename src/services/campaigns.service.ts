@@ -1,5 +1,27 @@
 import API from "@/utils/api";
 
+export interface ResearchDoc {
+  content: string;
+  createdAt: string | null;
+  status: "pending" | "in-progress" | "completed" | "failed";
+}
+
+export interface ProcessingStatus {
+  research: {
+    status: "pending" | "in-progress" | "completed" | "failed";
+    completedDocs: number;
+    totalDocs: number;
+  };
+  content: {
+    status: "pending" | "in-progress" | "completed" | "failed";
+    jobId: string | null;
+  };
+  media: {
+    status: "pending" | "in-progress" | "completed" | "failed";
+    jobId: string | null;
+  };
+}
+
 export interface Campaign {
   _id: string;
   userId: string;
@@ -17,6 +39,13 @@ export interface Campaign {
   updatedAt: string;
   __v: number;
   content?: string;
+  researchDocs?: {
+    marketResearch?: ResearchDoc;
+    offerServiceBrief?: ResearchDoc;
+    necessaryBriefs?: ResearchDoc;
+    brandDesign?: ResearchDoc;
+  };
+  processingStatus?: ProcessingStatus;
 }
 
 export interface CampaignsResponse {
