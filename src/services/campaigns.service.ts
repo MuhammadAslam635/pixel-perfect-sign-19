@@ -1,4 +1,5 @@
 import API from "@/utils/api";
+import { getAuthToken, getUserData } from "@/utils/authHelpers";
 
 export interface ResearchDoc {
   content: string;
@@ -110,10 +111,28 @@ export interface RegenerateCampaignData {
   fileMimeType?: string;
 }
 
+export interface DocumentCreationStep {
+  name: string;
+  description: string;
+  status: "pending" | "in-progress" | "completed" | "failed";
+}
+
+export interface CampaignStreamEvent {
+  type: 'connection' | 'step' | 'campaign_created' | 'workflow_completed' | 'result' | 'error';
+  step?: string;
+  description?: string;
+  message?: string;
+  success?: boolean;
+  data?: any;
+  error?: string;
+  timestamp?: string;
+}
+
 export interface CampaignResponse {
   success: boolean;
   message: string;
   data: Campaign;
+  documentCreationSteps?: DocumentCreationStep[];
 }
 
 export const campaignsService = {
@@ -251,6 +270,115 @@ export const campaignsService = {
     } catch (error: any) {
       throw error;
     }
+  },
+
+  /**
+   * Create a new campaign with streaming updates
+   */
+  createCampaignStream: async (
+    data: CreateCampaignData,
+    onEvent: (event: CampaignStreamEvent) => void
+  ): Promise<CampaignResponse> => {
+    return new Promise((resolve, reject) => {
+      // Reuse the same token source as Axios (stored under "user")
+      const token = getAuthToken() || getUserData()?.token;
+      if (!token) {
+        reject(new Error("No authentication token found"));
+        return;
+      }
+
+      const controller = new AbortController();
+      // Align base URL with the Axios client (includes /api prefix if configured)
+      const baseUrl =
+        (API.defaults.baseURL as string | undefined) ||
+        import.meta.env.VITE_APP_BACKEND_URL ||
+        import.meta.env.VITE_API_URL ||
+        "";
+
+      fetch(`${baseUrl.replace(/\/$/, "")}/campaigns/create/stream`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+        signal: controller.signal,
+      })
+        .then(async (response) => {
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(
+              `HTTP error! status: ${response.status}, message: ${errorText}`
+            );
+          }
+
+          const reader = response.body?.getReader();
+          if (!reader) {
+            throw new Error("No response body reader available");
+          }
+
+          const decoder = new TextDecoder();
+          let buffer = "";
+          let campaignData: Campaign | null = null;
+
+          const readStream = async () => {
+            try {
+              while (true) {
+                const { done, value } = await reader.read();
+
+                if (done) {
+                  break;
+                }
+
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split("\n\n");
+                buffer = lines.pop() || ""; // Keep incomplete data in buffer
+
+                for (const line of lines) {
+                  if (line.startsWith("data: ")) {
+                    try {
+                      const eventData = JSON.parse(line.slice(6));
+                      onEvent(eventData);
+
+                      // Store campaign data when received
+                      if (eventData.type === "campaign_created" && eventData.data) {
+                        campaignData = eventData.data;
+                      }
+
+                      // Resolve promise on result or error
+                      if (eventData.type === "result" && eventData.success) {
+                        resolve({
+                          success: true,
+                          message: eventData.message || "Campaign created successfully",
+                          data: campaignData || eventData.data,
+                        });
+                      } else if (eventData.type === "error") {
+                        reject(
+                          new Error(eventData.message || eventData.error || "Streaming error")
+                        );
+                      }
+                    } catch (parseError) {
+                      console.error("Failed to parse SSE data:", parseError);
+                    }
+                  } else if (line === "event: close") {
+                    // Connection closed
+                    break;
+                  }
+                }
+              }
+            } catch (error) {
+              reject(error);
+            }
+          };
+
+          readStream();
+        })
+        .catch((error) => {
+          if (error.name !== "AbortError") {
+            reject(error);
+          }
+        });
+    });
   },
 };
 

@@ -18,10 +18,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Upload, ImageIcon } from "lucide-react";
-import { CreateCampaignData } from "@/services/campaigns.service";
+import { Upload, ImageIcon, Circle, CheckCircle2, Loader2 } from "lucide-react";
+import { CreateCampaignData, campaignsService, CampaignStreamEvent, DocumentCreationStep } from "@/services/campaigns.service";
 import { useToast } from "@/hooks/use-toast";
-import { useCreateCampaign } from "@/hooks/useCampaigns";
 import ImageCarousel from "./ImageCarousel";
 
 interface CreateCampaignModalProps {
@@ -36,7 +35,8 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
   onSuccess,
 }) => {
   const { toast } = useToast();
-  const { mutate: createCampaign, isPending } = useCreateCampaign();
+  const [isPending, setIsPending] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const [formData, setFormData] = useState<CreateCampaignData>({
     name: "",
     userRequirements: "",
@@ -49,6 +49,29 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
     status: "draft",
   });
   const [media, setMedia] = useState<string[]>([]);
+  const [documentSteps, setDocumentSteps] = useState<DocumentCreationStep[]>([
+    {
+      name: "Market Research Document",
+      description: "Analyzing market insights and competitive landscape",
+      status: "pending",
+    },
+    {
+      name: "Offer/Service Brief",
+      description: "Developing value propositions and messaging framework",
+      status: "pending",
+    },
+    {
+      name: "Necessary Briefs",
+      description: "Generating campaign objectives and requirements",
+      status: "pending",
+    },
+    {
+      name: "Brand/Design Guidelines",
+      description: "Developing visual identity and design specifications",
+      status: "pending",
+    },
+  ]);
+  const [currentStep, setCurrentStep] = useState<string | null>(null);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -156,32 +179,124 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
       return;
     }
 
-    createCampaign(formData, {
-      onSuccess: () => {
-        toast({
-          title: "Campaign created",
-          description: `"${formData.name}" has been created successfully. The system is now running research (market research, offer/service brief, necessary briefs, brand/design), then will create content and generate media automatically.`,
-        });
+    setIsPending(true);
+    setIsStreaming(true);
+    setCurrentStep("Creating campaign...");
 
-        // Reset form
-        setFormData({
-          name: "",
-          userRequirements: "",
-          campaignType: "awareness",
-          platform: [],
-          targetAudience: "all",
-          location: "",
-          estimatedBudget: 0,
-          numberOfDays: 1,
-          status: "draft",
-        });
-        setMedia([]);
-        onClose();
-        if (onSuccess) {
-          onSuccess();
-        }
+    // Reset document steps status
+    setDocumentSteps([
+      {
+        name: "Market Research Document",
+        description: "Analyzing market insights and competitive landscape",
+        status: "pending",
       },
-      onError: (error: any) => {
+      {
+        name: "Offer/Service Brief",
+        description: "Developing value propositions and messaging framework",
+        status: "pending",
+      },
+      {
+        name: "Necessary Briefs",
+        description: "Generating campaign objectives and requirements",
+        status: "pending",
+      },
+      {
+        name: "Brand/Design Guidelines",
+        description: "Developing visual identity and design specifications",
+        status: "pending",
+      },
+    ]);
+
+    campaignsService
+      .createCampaignStream(formData, (event: CampaignStreamEvent) => {
+        // Handle streaming events
+        if (event.type === "step") {
+          setCurrentStep(event.step || null);
+          
+          // Update document steps based on step name
+          if (event.step) {
+            const stepName = event.step.toLowerCase();
+            const description = event.description?.toLowerCase() || "";
+            
+            setDocumentSteps((prev) =>
+              prev.map((step) => {
+                const stepNameLower = step.name.toLowerCase();
+                
+                // Check if this step matches the current event
+                const isMarketResearch = 
+                  (stepNameLower.includes("market research") && 
+                   (stepName.includes("market research") || description.includes("market")));
+                
+                const isOfferService = 
+                  (stepNameLower.includes("offer") || stepNameLower.includes("service brief")) &&
+                  (stepName.includes("offer") || stepName.includes("service") || description.includes("value proposition"));
+                
+                const isNecessaryBriefs = 
+                  stepNameLower.includes("necessary briefs") &&
+                  (stepName.includes("necessary") || description.includes("objectives"));
+                
+                const isBrandDesign = 
+                  (stepNameLower.includes("brand") || stepNameLower.includes("design")) &&
+                  (stepName.includes("brand") || stepName.includes("design") || description.includes("visual identity"));
+                
+                if (isMarketResearch || isOfferService || isNecessaryBriefs || isBrandDesign) {
+                  // If step name includes "completed", mark as completed
+                  if (stepName.includes("completed") || stepName.includes("successfully")) {
+                    return { ...step, status: "completed" };
+                  }
+                  // Otherwise mark as in-progress
+                  return { ...step, status: "in-progress" };
+                }
+                
+                return step;
+              })
+            );
+          }
+        } else if (event.type === "campaign_created") {
+          setCurrentStep("Campaign created successfully");
+        } else if (event.type === "workflow_completed") {
+          setCurrentStep("Workflow completed");
+        } else if (event.type === "result") {
+          setIsStreaming(false);
+          setCurrentStep(null);
+          toast({
+            title: "Campaign created",
+            description: `"${formData.name}" has been created successfully. The system is now running research, then will create content and generate media automatically.`,
+          });
+
+          // Reset form
+          setFormData({
+            name: "",
+            userRequirements: "",
+            campaignType: "awareness",
+            platform: [],
+            targetAudience: "all",
+            location: "",
+            estimatedBudget: 0,
+            numberOfDays: 1,
+            status: "draft",
+          });
+          setMedia([]);
+          setIsPending(false);
+          onClose();
+          if (onSuccess) {
+            onSuccess();
+          }
+        } else if (event.type === "error") {
+          setIsStreaming(false);
+          setCurrentStep(null);
+          setIsPending(false);
+          toast({
+            title: "Creation failed",
+            description: event.message || event.error || "Failed to create campaign",
+            variant: "destructive",
+          });
+        }
+      })
+      .catch((error: any) => {
+        setIsStreaming(false);
+        setCurrentStep(null);
+        setIsPending(false);
         toast({
           title: "Creation failed",
           description:
@@ -190,8 +305,7 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
             "Failed to create campaign",
           variant: "destructive",
         });
-      },
-    });
+      });
   };
 
   const handleClose = () => {
@@ -584,6 +698,61 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
                     </p>
                   </div>
                 )}
+              </div>
+
+              {/* Document Creation Steps */}
+              <div className="space-y-3 pt-2 border-t border-white/10">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs text-white/70 font-semibold">
+                    Document Creation Steps
+                  </Label>
+                  {isStreaming && currentStep && (
+                    <div className="flex items-center gap-2 text-xs text-white/60">
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      <span>{currentStep}</span>
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs text-gray-400 mb-3">
+                  {isStreaming
+                    ? "Documents are being generated in real-time..."
+                    : "After campaign creation, the following documents will be automatically generated:"}
+                </p>
+                <div className="space-y-2">
+                  {documentSteps.map((step, index) => (
+                    <div
+                      key={index}
+                      className={`flex items-start gap-3 p-2 rounded-lg backdrop-blur-sm border transition-all ${
+                        step.status === "completed"
+                          ? "bg-green-500/10 border-green-500/30"
+                          : step.status === "in-progress"
+                          ? "bg-blue-500/10 border-blue-500/30"
+                          : "bg-white/5 border-white/10"
+                      }`}
+                    >
+                      {step.status === "completed" ? (
+                        <CheckCircle2 className="w-4 h-4 mt-0.5 text-green-400 flex-shrink-0" />
+                      ) : step.status === "in-progress" ? (
+                        <Loader2 className="w-4 h-4 mt-0.5 text-blue-400 animate-spin flex-shrink-0" />
+                      ) : (
+                        <Circle className="w-4 h-4 mt-0.5 text-white/50 flex-shrink-0" />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-white">
+                          {step.name}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          {step.description}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-500 mt-2 italic">
+                  {isStreaming
+                    ? "These documents are being created in parallel, followed by content creation and media generation."
+                    : "These documents will be created in parallel, followed by content creation and media generation."}
+                </p>
               </div>
             </div>
 
