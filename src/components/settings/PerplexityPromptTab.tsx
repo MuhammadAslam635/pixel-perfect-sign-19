@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import { getUserData } from "@/utils/authHelpers";
 import { companyConfigService } from "@/services/companyConfig.service";
-import { Info, RefreshCw } from "lucide-react";
+import { Info, RefreshCw, Copy, Check } from "lucide-react";
 
 const DEFAULT_PROMPT = `Conduct comprehensive professional research on the following individual:
 
@@ -70,6 +70,47 @@ export const PerplexityPromptTab = () => {
   const [prompt, setPrompt] = useState<string>("");
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [copiedVariable, setCopiedVariable] = useState<string | null>(null);
+
+  const availableVariables = [
+    { name: "{{name}}", description: "Lead's full name" },
+    { name: "{{position}}", description: "Job title or position" },
+    { name: "{{companyName}}", description: "Company name" },
+    { name: "{{industry}}", description: "Industry sector" },
+    { name: "{{location}}", description: "Geographic location" },
+    { name: "{{linkedinUrl}}", description: "LinkedIn profile URL" },
+    { name: "{{description}}", description: "Bio or description" },
+  ];
+
+  const handleCopyVariable = (variable: string) => {
+    navigator.clipboard.writeText(variable);
+    setCopiedVariable(variable);
+    setTimeout(() => setCopiedVariable(null), 2000);
+  };
+
+  const handleInsertVariable = (variable: string) => {
+    const textarea = document.getElementById(
+      "perplexity-prompt"
+    ) as HTMLTextAreaElement;
+    if (textarea) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const textBefore = prompt.substring(0, start);
+      const textAfter = prompt.substring(end);
+      const newPrompt = textBefore + variable + textAfter;
+      setPrompt(newPrompt);
+      handlePromptChange(newPrompt);
+
+      // Set cursor position after inserted variable
+      setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(
+          start + variable.length,
+          start + variable.length
+        );
+      }, 0);
+    }
+  };
 
   const {
     data: configData,
@@ -121,7 +162,8 @@ export const PerplexityPromptTab = () => {
       if (response.success) {
         toast({
           title: "Prompt updated",
-          description: "Perplexity research prompt has been saved successfully.",
+          description:
+            "Perplexity research prompt has been saved successfully.",
         });
         setHasChanges(false);
         refetch();
@@ -199,7 +241,8 @@ export const PerplexityPromptTab = () => {
             Perplexity Research Prompt
           </CardTitle>
           <CardDescription className="text-white/60">
-            Customize the prompt used for AI-powered lead research. Use placeholders like{" "}
+            Customize the prompt used for AI-powered lead research. Use
+            placeholders like{" "}
             <code className="text-cyan-400">{"{{name}}"}</code>,{" "}
             <code className="text-cyan-400">{"{{position}}"}</code>,{" "}
             <code className="text-cyan-400">{"{{companyName}}"}</code>, etc.
@@ -217,22 +260,52 @@ export const PerplexityPromptTab = () => {
             <div className="rounded-lg bg-blue-500/10 border border-blue-500/30 p-4">
               <div className="flex items-start gap-3">
                 <Info className="h-5 w-5 text-blue-400 flex-shrink-0 mt-0.5" />
-                <div className="space-y-2 text-sm">
-                  <p className="text-blue-300 font-medium">
-                    Available Placeholders
-                  </p>
-                  <div className="grid grid-cols-2 gap-2 text-xs text-blue-200/80">
-                    <code>{"{{name}}"}</code>
-                    <code>{"{{position}}"}</code>
-                    <code>{"{{companyName}}"}</code>
-                    <code>{"{{industry}}"}</code>
-                    <code>{"{{location}}"}</code>
-                    <code>{"{{linkedinUrl}}"}</code>
-                    <code>{"{{description}}"}</code>
+                <div className="space-y-3 flex-1">
+                  <div>
+                    <p className="text-blue-300 font-medium text-sm mb-2">
+                      Available Variables
+                    </p>
+                    <p className="text-blue-200/70 text-xs">
+                      Click any variable to insert it into your prompt, or click
+                      the copy icon to copy it.
+                    </p>
                   </div>
-                  <p className="text-blue-200/70 text-xs mt-2">
-                    These placeholders will be replaced with actual lead data
-                    when research is conducted.
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {availableVariables.map((variable) => (
+                      <div
+                        key={variable.name}
+                        className="flex items-center justify-between gap-2 p-2 rounded-md bg-white/5 hover:bg-white/10 transition-colors cursor-pointer group"
+                        onClick={() => handleInsertVariable(variable.name)}
+                      >
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <code className="text-cyan-400 font-mono text-xs font-semibold">
+                            {variable.name}
+                          </code>
+                          <span className="text-blue-200/60 text-xs truncate">
+                            {variable.description}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCopyVariable(variable.name);
+                          }}
+                          className="flex-shrink-0 p-1 rounded hover:bg-white/10 transition-colors"
+                          title="Copy variable"
+                        >
+                          {copiedVariable === variable.name ? (
+                            <Check className="h-3.5 w-3.5 text-emerald-400" />
+                          ) : (
+                            <Copy className="h-3.5 w-3.5 text-blue-300/60 group-hover:text-blue-300" />
+                          )}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-blue-200/70 text-xs pt-2 border-t border-blue-500/20">
+                    These variables will be automatically replaced with actual
+                    lead data when research is conducted.
                   </p>
                 </div>
               </div>
@@ -258,7 +331,7 @@ export const PerplexityPromptTab = () => {
                 value={prompt}
                 onChange={(e) => handlePromptChange(e.target.value)}
                 placeholder="Enter your custom research prompt..."
-                className="min-h-[400px] bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 font-mono text-sm"
+                className="min-h-[400px] bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 font-mono text-sm [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
               />
               <p className="text-xs text-white/50">
                 The prompt must include instructions to return JSON in the
@@ -288,4 +361,3 @@ export const PerplexityPromptTab = () => {
 };
 
 export default PerplexityPromptTab;
-
