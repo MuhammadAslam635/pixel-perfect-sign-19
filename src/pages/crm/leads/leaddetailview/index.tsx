@@ -32,6 +32,7 @@ import { toast } from "sonner";
 import { LeadCallLog } from "@/services/twilio.service";
 import { ActiveNavButton } from "@/components/ui/primary-btn";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useSocket } from "@/context/SocketContext";
 
 const LEAD_STAGE_DEFINITIONS = [
   { label: "New", min: 0, max: 15 },
@@ -190,10 +191,30 @@ const LeadDetailView = () => {
     await handleSetStage('proposal_sent');
   };
 
+  const { socket } = useSocket();
+
   const handleMessageUpdate = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ["lead", leadId] });
     queryClient.invalidateQueries({ queryKey: ["lead-summary", leadId] });
   }, [queryClient, leadId]);
+
+  useEffect(() => {
+    if (!socket || !leadId) return;
+
+    const handleLeadUpdate = (data: { leadId: string }) => {
+      if (data.leadId === leadId) {
+        console.log('⚡ [Socket] Lead update received, refreshing data...');
+        queryClient.invalidateQueries({ queryKey: ["lead", leadId] });
+        queryClient.invalidateQueries({ queryKey: ["lead-summary", leadId] });
+      }
+    };
+
+    socket.on('lead:update', handleLeadUpdate);
+
+    return () => {
+      socket.off('lead:update', handleLeadUpdate);
+    };
+  }, [socket, leadId, queryClient]);
 
   if (error) {
     toast.error("Failed to load lead details");
