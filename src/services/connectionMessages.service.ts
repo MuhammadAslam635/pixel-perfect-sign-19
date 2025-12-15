@@ -188,11 +188,22 @@ export type PromptCategory =
   | "enhance_system"
   | "enhance_human";
 
+export type PromptStage =
+  | "new"
+  | "interested"
+  | "followup"
+  | "appointment_booked"
+  | "proposal_sent"
+  | "followup_close"
+  | "closed"
+  | "general";
+
 export interface Prompt {
   _id: string;
   companyId?: string | null;
   promptType: PromptType;
   promptCategory: PromptCategory;
+  stage: PromptStage;
   content: string;
   name?: string;
   description?: string;
@@ -231,6 +242,7 @@ export interface CreatePromptInput {
   companyId?: string | null;
   promptType: PromptType;
   promptCategory: PromptCategory;
+  stage?: PromptStage;
   content: string;
   name?: string;
   description?: string;

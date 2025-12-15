@@ -248,10 +248,32 @@ export const PromptManagement = ({
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-2">
+                              <div className="flex items-center gap-2 mb-2 flex-wrap">
                                 <span className="text-white/70 font-medium capitalize text-sm">
                                   {prompt.promptCategory.replace("_", " ")}
                                 </span>
+                                <Badge
+                                  variant="outline"
+                                  className="text-xs border-cyan-500/30 bg-cyan-500/10 text-cyan-300"
+                                >
+                                  {prompt.stage === "general"
+                                    ? "General"
+                                    : prompt.stage === "new"
+                                    ? "New Lead"
+                                    : prompt.stage === "interested"
+                                    ? "Interested"
+                                    : prompt.stage === "followup"
+                                    ? "Follow-up"
+                                    : prompt.stage === "appointment_booked"
+                                    ? "Appointment"
+                                    : prompt.stage === "proposal_sent"
+                                    ? "Proposal"
+                                    : prompt.stage === "followup_close"
+                                    ? "Closing"
+                                    : prompt.stage === "closed"
+                                    ? "Closed"
+                                    : prompt.stage}
+                                </Badge>
                                 {prompt.name && (
                                   <Badge
                                     variant="outline"
@@ -354,6 +376,28 @@ export const PromptManagement = ({
                                 <span className="text-white/70 font-medium capitalize text-sm">
                                   {prompt.promptCategory.replace("_", " ")}
                                 </span>
+                                <Badge
+                                  variant="outline"
+                                  className="text-xs border-cyan-500/30 bg-cyan-500/10 text-cyan-300"
+                                >
+                                  {prompt.stage === "general"
+                                    ? "General"
+                                    : prompt.stage === "new"
+                                    ? "New Lead"
+                                    : prompt.stage === "interested"
+                                    ? "Interested"
+                                    : prompt.stage === "followup"
+                                    ? "Follow-up"
+                                    : prompt.stage === "appointment_booked"
+                                    ? "Appointment"
+                                    : prompt.stage === "proposal_sent"
+                                    ? "Proposal"
+                                    : prompt.stage === "followup_close"
+                                    ? "Closing"
+                                    : prompt.stage === "closed"
+                                    ? "Closed"
+                                    : prompt.stage}
+                                </Badge>
                                 {prompt.company?.name && (
                                   <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/40 text-xs font-semibold px-2.5 py-0.5">
                                     🏢 {prompt.company.name}

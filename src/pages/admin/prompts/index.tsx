@@ -54,6 +54,7 @@ const PromptsPage = () => {
   const [formData, setFormData] = useState({
     promptType: "linkedin" as PromptType,
     promptCategory: "system" as any,
+    stage: "general" as any,
     content: "",
     name: "",
     description: "",
@@ -226,6 +227,7 @@ const PromptsPage = () => {
       setFormData({
         promptType: "linkedin",
         promptCategory: "system",
+        stage: "general",
         content: "",
         name: "",
         description: "",
@@ -247,6 +249,7 @@ const PromptsPage = () => {
     setFormData({
       promptType: prompt.promptType,
       promptCategory: prompt.promptCategory,
+      stage: prompt.stage || "general",
       content: prompt.content,
       name: prompt.name || "",
       description: prompt.description || "",
@@ -326,6 +329,7 @@ const PromptsPage = () => {
       setFormData({
         promptType: "linkedin",
         promptCategory: "system",
+        stage: "general",
         content: "",
         name: "",
         description: "",
@@ -367,6 +371,7 @@ const PromptsPage = () => {
     setFormData({
       promptType: activeTab,
       promptCategory: "system",
+      stage: "general",
       content: "",
       name: "",
       description: "",

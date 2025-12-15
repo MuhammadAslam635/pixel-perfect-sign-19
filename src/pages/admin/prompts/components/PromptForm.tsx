@@ -15,6 +15,7 @@ import { Company } from "@/services/admin.service";
 import {
   type PromptType,
   type PromptCategory,
+  type PromptStage,
   connectionMessagesService,
   type AIModel,
 } from "@/services/connectionMessages.service";
@@ -30,6 +31,7 @@ import { ChevronDown } from "lucide-react";
 interface PromptFormData {
   promptType: PromptType;
   promptCategory: PromptCategory;
+  stage?: PromptStage;
   content: string;
   name: string;
   description: string;
@@ -203,8 +205,8 @@ export const PromptForm = ({
         </div>
       </div>
 
-      {/* Prompt Type & Category */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {/* Prompt Type, Category & Stage */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
           <Label
             htmlFor="promptType"
@@ -258,6 +260,37 @@ export const PromptForm = ({
               <SelectItem value="bulk_human">Bulk Human</SelectItem>
               <SelectItem value="enhance_system">Enhance System</SelectItem>
               <SelectItem value="enhance_human">Enhance Human</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label
+            htmlFor="stage"
+            className="text-white/80 mb-2 flex items-center gap-2"
+          >
+            <span>Lead Stage</span>
+            <Badge className="bg-white/10 text-white/60 border-white/20 text-xs">
+              Optional
+            </Badge>
+          </Label>
+          <Select
+            value={formData.stage || "general"}
+            onValueChange={(value: PromptStage) =>
+              onFormDataChange("stage", value)
+            }
+          >
+            <SelectTrigger className="bg-black/30 border-white/10 text-white hover:border-cyan-500/40 transition-colors">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="general">General (Fallback)</SelectItem>
+              <SelectItem value="new">New Lead</SelectItem>
+              <SelectItem value="interested">Interested</SelectItem>
+              <SelectItem value="followup">Follow-up</SelectItem>
+              <SelectItem value="appointment_booked">Appointment Booked</SelectItem>
+              <SelectItem value="proposal_sent">Proposal Sent</SelectItem>
+              <SelectItem value="followup_close">Follow-up to Close</SelectItem>
+              <SelectItem value="closed">Closed/Won</SelectItem>
             </SelectContent>
           </Select>
         </div>
