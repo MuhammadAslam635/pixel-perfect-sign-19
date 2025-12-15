@@ -13,7 +13,7 @@ import {
 import API from "@/utils/api";
 import { SelectedCallLogView } from "../index";
 import { ActiveNavButton } from "@/components/ui/primary-btn";
-import { RefreshCcw, Loader2 } from "lucide-react";
+import { RefreshCcw, Loader2, Sparkles } from "lucide-react";
 import EditableFollowupSuggestion from "@/components/followups/EditableFollowupSuggestion";
 import {
   useCreateFollowupPlanFromCall,
@@ -1777,6 +1777,71 @@ export const CallView = ({
                       </svg>
                     </div>
                   )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {mode === "ai" && (
+            <div className="flex flex-col items-center gap-4">
+              <div className="flex items-center justify-center pt-5">
+                <div
+                  className="flex items-center justify-center relative cursor-pointer group"
+                  onClick={handleAICall}
+                  style={{
+                    width: "130px",
+                    height: "130px",
+                  }}
+                >
+                  {/* Layer 1: Outer Tech Ring (Static/Slow) */}
+                  <div
+                    className="absolute inset-0 rounded-full border border-cyan-500/20"
+                    style={{
+                      boxShadow: "0 0 15px rgba(6,182,212,0.1)",
+                    }}
+                  />
+
+                  {/* Layer 2: Mechanical Gear (Dashed, Rotating) */}
+                  <div
+                    className="absolute inset-[4px] rounded-full border-2 border-dashed border-cyan-500/30"
+                    style={{
+                      animation: "spin 20s linear infinite",
+                    }}
+                  />
+
+                  {/* Layer 3: Inner Gear (Reverse Rotation) */}
+                  <div
+                    className="absolute inset-[15px] rounded-full border border-cyan-400/20 border-t-cyan-400/60 border-b-cyan-400/60"
+                     style={{
+                      animation: "spin 10s linear infinite reverse",
+                    }}
+                  />
+
+                  {/* Layer 4: Reticle / Crosshair */}
+                  <div className="absolute inset-0 z-10 opacity-40 pointer-events-none">
+                      {/* Top mark */}
+                      <div className="absolute top-2 left-1/2 -translate-x-1/2 w-0.5 h-3 bg-cyan-400" />
+                      {/* Bottom mark */}
+                      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-0.5 h-3 bg-cyan-400" />
+                      {/* Left mark */}
+                      <div className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-0.5 bg-cyan-400" />
+                      {/* Right mark */}
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-0.5 bg-cyan-400" />
+                  </div>
+
+                  {/* Layer 5: Scanning Radar Effect */}
+                   <div 
+                    className="absolute inset-0 rounded-full overflow-hidden opacity-30 pointer-events-none"
+                    style={{
+                      background: "linear-gradient(180deg, transparent 0%, rgba(34, 211, 238, 0.4) 50%, transparent 100%)",
+                      animation: "spin 4s linear infinite",
+                    }}
+                  />
+
+                  {/* Core Icon */}
+                  <div className="relative z-30 text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.8)] group-hover:scale-110 transition-transform duration-300">
+                    <Sparkles className="w-8 h-8" />
+                  </div>
                 </div>
               </div>
             </div>

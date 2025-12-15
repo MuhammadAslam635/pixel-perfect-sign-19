@@ -190,6 +190,11 @@ const LeadDetailView = () => {
     await handleSetStage('proposal_sent');
   };
 
+  const handleMessageUpdate = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ["lead", leadId] });
+    queryClient.invalidateQueries({ queryKey: ["lead-summary", leadId] });
+  }, [queryClient, leadId]);
+
   if (error) {
     toast.error("Failed to load lead details");
   }
@@ -333,10 +338,7 @@ const LeadDetailView = () => {
                   autoStartCall={autoStartCall}
                   selectedCallLogView={selectedCallLogView}
                   setSelectedCallLogView={setSelectedCallLogView}
-                  onMessageUpdate={() => {
-                    queryClient.invalidateQueries({ queryKey: ["lead", leadId] });
-                    queryClient.invalidateQueries({ queryKey: ["lead-summary", leadId] });
-                  }}
+                  onMessageUpdate={handleMessageUpdate}
                 />
               </div>
               {/* Right: Activity Component (with internal Activity/Company toggle) */}

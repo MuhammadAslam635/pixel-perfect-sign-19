@@ -42,6 +42,21 @@ export const emailService = {
   },
 
   /**
+   * Get emails for a specific lead
+   */
+  getLeadEmails: async (
+    leadId: string,
+    params?: GetInboxEmailsParams
+  ): Promise<GetInboxEmailsResponse> => {
+    try {
+      const response = await API.get(`/emails/lead/${leadId}`, { params });
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  /**
    * Get sent emails with pagination and filters
    */
   getSentEmails: async (

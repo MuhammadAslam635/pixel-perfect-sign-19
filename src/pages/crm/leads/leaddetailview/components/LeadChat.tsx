@@ -23,6 +23,7 @@ import {
 import { connectionMessagesService } from "@/services/connectionMessages.service";
 import { SelectedCallLogView } from "../index";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
+import { toast } from "sonner";
 
 type LeadChatProps = {
   lead?: Lead;
@@ -97,6 +98,7 @@ const normalizePhoneNumber = (raw?: string | null): string | null => {
 };
 
 const DEFAULT_EMAIL_SUBJECT = "Message from Lead Chat";
+const EMPTY_ARRAY = [] as const;
 
 const LeadChat = ({
   lead,
@@ -201,7 +203,7 @@ const LeadChat = ({
     staleTime: 120000,
   });
 
-  const whatsappConnections = whatsappConnectionsData?.credentials || [];
+  const whatsappConnections = whatsappConnectionsData?.credentials || EMPTY_ARRAY;
   const primaryWhatsAppConnection = whatsappConnections[0] || null;
   const whatsappReady = whatsappConnections.length > 0;
   const whatsappPhoneNumberId =
@@ -366,7 +368,7 @@ const LeadChat = ({
   });
 
   const whatsappMessages =
-    (whatsappConversationResponse?.data as WhatsAppChatMessage[]) || [];
+    (whatsappConversationResponse?.data as WhatsAppChatMessage[]) || EMPTY_ARRAY;
 
   const unreadInboundMessageIds = useMemo(() => {
     if (!whatsappConversationEnabled) return [];
@@ -437,7 +439,7 @@ const LeadChat = ({
     };
   }, []);
 
-  const emailConversationQueryKey = ["lead-email-conversation", leadEmailLower];
+  const emailConversationQueryKey = ["lead-email-conversation", leadId];
 
   const emailQueryEnabled = activeTab === "Email" && Boolean(leadEmailLower);
 
@@ -457,91 +459,37 @@ const LeadChat = ({
     refetchInterval: shouldPollEmail ? 5000 : false,
     refetchIntervalInBackground: true,
     queryFn: async () => {
-      if (!leadEmailLower) {
-        console.log('📧 [LeadChat] No lead email provided');
+      if (!leadId) {
+        console.log('📧 [LeadChat] No lead ID provided');
         return [];
       }
 
-      console.log(`📧 [LeadChat] Fetching ALL email threads for lead: ${leadEmailLower}`);
+      console.log(`📧 [LeadChat] Fetching emails for lead: ${leadId}`);
       
-      const threadsResponse = await emailService.getEmailThreads({
-        limit: 100,
-      });
-      const threads = threadsResponse.data?.threads || [];
-      
-      console.log(`📧 [LeadChat] Found ${threads.length} total threads`);
-      
-      // Find ALL threads that include the lead's email (case-insensitive)
-      const matchingThreads = threads.filter(
-        (thread) =>
-          Array.isArray(thread.participants) &&
-          thread.participants.some(
-            (participant) => participant.email?.toLowerCase() === leadEmailLower
-          )
-      );
+      try {
+        const response = await emailService.getLeadEmails(leadId, {
+          limit: 100,
+        });
+        
+        const emails = response.data.emails || [];
+        console.log(`📧 [LeadChat] Found ${emails.length} emails linked to lead`);
 
-      if (matchingThreads.length === 0) {
-        console.log(`📧 [LeadChat] No threads found with participant: ${leadEmailLower}`);
-        console.log(`📧 [LeadChat] Available threads participants:`, threads.map(t => ({
-          subject: t.subject,
-          participants: t.participants?.map(p => p.email).join(', ')
-        })));
+        // Sort chronologically
+        return emails.sort(
+          (a, b) =>
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+      } catch (error) {
+        console.error("Failed to fetch lead emails:", error);
         return [];
       }
-
-      console.log(`📧 [LeadChat] Found ${matchingThreads.length} matching thread(s)`);
-      console.log(`📧 [LeadChat] Thread subjects:`, matchingThreads.map(t => t.subject));
-
-      // Fetch emails from ALL matching threads
-      const allEmailsPromises = matchingThreads.map(async (thread) => {
-        try {
-          const threadResponse = await emailService.getThread(thread._id);
-          return threadResponse.data?.emails || [];
-        } catch (error) {
-          console.error(`Failed to fetch emails from thread ${thread._id}:`, error);
-          return [];
-        }
-      });
-
-      const emailArrays = await Promise.all(allEmailsPromises);
-      const allEmails = emailArrays.flat();
-      
-      console.log(`📧 [LeadChat] Fetched ${allEmails.length} total emails from ${matchingThreads.length} thread(s)`);
-      
-      if (allEmails.length > 0) {
-        console.log(`📧 [LeadChat] Email details:`, allEmails.map(e => ({
-          id: e._id,
-          subject: e.subject,
-          from: e.from?.email,
-          to: e.to?.map(t => t.email).join(', '),
-          direction: e.direction,
-          createdAt: e.createdAt,
-          threadId: e.threadId,
-        })));
-      }
-      
-      // Remove duplicates by email ID (in case an email appears in multiple threads)
-      const uniqueEmails = allEmails.reduce((acc, email) => {
-        if (!acc.find(e => e._id === email._id)) {
-          acc.push(email);
-        }
-        return acc;
-      }, [] as typeof allEmails);
-      
-      console.log(`📧 [LeadChat] After deduplication: ${uniqueEmails.length} unique emails`);
-      
-      // Sort all emails chronologically
-      return [...uniqueEmails].sort(
-        (a, b) =>
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-      );
     },
   });
 
   const isEmailLoading =
     isEmailConversationLoading ||
     (isEmailConversationFetching && !emailConversationData);
-  const emailMessages = emailConversationData || [];
+  const emailMessages = emailConversationData || EMPTY_ARRAY;
   const emailError = isEmailConversationError
     ? (emailConversationError as any)?.response?.data?.message ||
       (emailConversationError as Error)?.message ||
@@ -576,7 +524,7 @@ const LeadChat = ({
     isSmsInitialLoading ||
     (isSmsFetching && !leadSmsResponse);
 
-  const smsMessages: LeadSmsMessage[] = leadSmsResponse?.data || [];
+  const smsMessages: LeadSmsMessage[] = leadSmsResponse?.data || (EMPTY_ARRAY as unknown as LeadSmsMessage[]);
   const smsUnavailableMessage =
     !twilioReady && !twilioStatusLoading
       ? twilioConnection.message ||
@@ -584,11 +532,7 @@ const LeadChat = ({
       : null;
   const smsInputsDisabled = Boolean(smsUnavailableMessage) || !phoneNumber;
 
-  useEffect(() => {
-    if (!smsUnavailableMessage && smsSendError) {
-      setSmsSendError(null);
-    }
-  }, [smsUnavailableMessage, smsSendError]);
+
 
   useEffect(() => {
     if (!whatsappUnavailableMessage && whatsappSendError) {
@@ -643,7 +587,7 @@ const LeadChat = ({
         mutationError?.response?.data?.error ||
         mutationError?.message ||
         "Failed to send SMS";
-      setSmsSendError(fallbackMessage);
+      toast.error(fallbackMessage);
     },
   });
 
