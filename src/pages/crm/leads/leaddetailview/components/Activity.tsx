@@ -104,25 +104,61 @@ const formatDateTimeRange = (start?: string, end?: string) => {
   if (!start || !end) {
     return "Time not available";
   }
+  // Parse dates - new Date() automatically converts UTC to local timezone
   const startDate = new Date(start);
   const endDate = new Date(end);
   if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
     return "Time not available";
   }
+  
+  // Use toLocaleString to ensure we're displaying in user's local timezone
   const sameDay =
     startDate.getFullYear() === endDate.getFullYear() &&
     startDate.getMonth() === endDate.getMonth() &&
     startDate.getDate() === endDate.getDate();
+  
   if (sameDay) {
-    return `${format(startDate, "EEE, MMM d · h:mm a")} – ${format(
-      endDate,
-      "h:mm a"
-    )}`;
+    // Format in user's local timezone
+    const dateStr = startDate.toLocaleDateString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    });
+    const startTime = startDate.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+    const endTime = endDate.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+    return `${dateStr} · ${startTime} – ${endTime}`;
   }
-  return `${format(startDate, "EEE, MMM d · h:mm a")} → ${format(
-    endDate,
-    "EEE, MMM d · h:mm a"
-  )}`;
+  
+  // Different days
+  const startDateStr = startDate.toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
+  const startTimeStr = startDate.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+  const endDateStr = endDate.toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
+  const endTimeStr = endDate.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+  return `${startDateStr} · ${startTimeStr} → ${endDateStr} · ${endTimeStr}`;
 };
 
 const slotComparator = (a: Date, b: Date) => a.getTime() - b.getTime();
@@ -959,13 +995,13 @@ const Activity: FC<ActivityProps> = ({
         }}
       >
         <CardContent className="p-6 flex-1 min-h-0 overflow-y-auto scrollbar-hide">
-          <Tabs
-            value={topLevelTab}
-            onValueChange={(value) =>
-              setTopLevelTab(value as "activity" | "company" | "call_script" | "agent_research")
-            }
-            className="flex-1 flex flex-col min-h-0"
-          >
+            <Tabs
+              value={topLevelTab}
+              onValueChange={(value) =>
+                setTopLevelTab(value as "activity" | "company" | "call_script" | "agent_research")
+              }
+              className="flex-1 flex flex-col min-h-0"
+            >
             {/* Top-level Activity / Company / Call Script / Agent Research toggle */}
             <div className="mb-4">
               <TabsList className="bg-transparent p-0 h-auto gap-4 border-none">

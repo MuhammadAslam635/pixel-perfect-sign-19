@@ -16,6 +16,7 @@ import { Email } from "@/types/email.types";
 import { twilioService, LeadSmsMessage } from "@/services/twilio.service";
 import API from "@/utils/api";
 import { CallView } from "./CallView";
+import MeetingBotTab from "./MeetingBotTab";
 import {
   whatsappService,
   WhatsAppMessage as WhatsAppChatMessage,
@@ -266,6 +267,7 @@ const LeadChat = ({
       hasWhatsapp && (whatsappReady || isWhatsAppConnectionLoading);
     const smsAvailable = hasPhone && (twilioReady || twilioStatusLoading);
     const aiCallAvailable = hasPhone;
+    const meetingBotAvailable = true; // Always available as it depends on meetings, not phone/email
 
     return [
       {
@@ -280,6 +282,11 @@ const LeadChat = ({
         label: "AI Call",
         status: aiCallAvailable ? "Ready" : "Add phone",
         isAvailable: aiCallAvailable,
+      },
+      {
+        label: "Meeting Bot",
+        status: "Ready",
+        isAvailable: meetingBotAvailable,
       },
     ];
   }, [
@@ -1969,6 +1976,10 @@ const LeadChat = ({
               setSelectedCallLogView={setSelectedCallLogView}
               mode="ai"
             />
+          </div>
+        ) : activeTab === "Meeting Bot" ? (
+          <div className="flex w-full flex-1 min-h-0 flex-col text-xs sm:text-sm font-medium text-white/70">
+            <MeetingBotTab lead={lead} />
           </div>
         ) : (
           <div className="flex w-full flex-1 items-center justify-center py-20 text-xs sm:text-sm font-medium text-white/70">

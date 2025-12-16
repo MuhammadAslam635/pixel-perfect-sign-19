@@ -67,6 +67,8 @@ export interface LeadMeetingRecord {
     sessionId?: string | null;
     webhookUrl?: string | null;
     lastError?: string | null;
+    transcriptUrl?: string | null;
+    recordingUrl?: string | null;
   };
   createdAt: string;
   updatedAt: string;
@@ -169,6 +171,18 @@ export const calendarService = {
   },
   syncMeetings: async (payload: SyncMeetingsPayload = {}): Promise<SyncMeetingsResponse> => {
     const response = await API.post('/calendar/sync-meetings', payload);
+    return response.data;
+  },
+  getMeetingRecording: async (meetingId: string): Promise<{
+    success: boolean;
+    data: {
+      transcriptUrl?: string | null;
+      recordingUrl?: string | null;
+      status?: string;
+      sessionId?: string | null;
+    };
+  }> => {
+    const response = await API.get(`/recall/meeting/${meetingId}/recording`);
     return response.data;
   },
 };

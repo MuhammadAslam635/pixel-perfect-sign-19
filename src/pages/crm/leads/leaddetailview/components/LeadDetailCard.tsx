@@ -411,6 +411,23 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
       }
     }
 
+    // Get user's timezone
+    const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+    // NO CONVERSIONS - use raw values exactly as entered
+    const rawStartDateTime = scheduleForm.startDateTime?.trim() || '';
+    const rawEndDateTime = scheduleForm.endDateTime?.trim() || '';
+
+    // DEBUG: Log what we're sending
+    console.log('========================================');
+    console.log('[FRONTEND] Sending meeting booking:');
+    console.log(`  RAW startDateTime from form state: "${rawStartDateTime}"`);
+    console.log(`  RAW endDateTime from form state: "${rawEndDateTime}"`);
+    console.log(`  timezone: ${userTimezone}`);
+    console.log(`  findAvailableSlot: ${scheduleForm.findAvailableSlot}`);
+    console.log(`  Current time for reference: ${new Date().toLocaleString('en-US', { timeZone: userTimezone })}`);
+    console.log('========================================');
+
     const payload = {
       personId: lead._id,
       subject: scheduleForm.subject?.trim() || undefined,
@@ -420,12 +437,13 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
       durationMinutes: scheduleForm.findAvailableSlot
         ? scheduleForm.durationMinutes
         : undefined,
-      startDateTime: !scheduleForm.findAvailableSlot
-        ? new Date(scheduleForm.startDateTime).toISOString()
+      startDateTime: !scheduleForm.findAvailableSlot && rawStartDateTime
+        ? rawStartDateTime // Send RAW value - NO CONVERSIONS, NO PROCESSING
         : undefined,
-      endDateTime: !scheduleForm.findAvailableSlot
-        ? new Date(scheduleForm.endDateTime).toISOString()
+      endDateTime: !scheduleForm.findAvailableSlot && rawEndDateTime
+        ? rawEndDateTime // Send RAW value - NO CONVERSIONS, NO PROCESSING
         : undefined,
+      timezone: userTimezone, // Send user's timezone
       startDate:
         scheduleForm.findAvailableSlot && autoModeStart
           ? autoModeStart.toISOString()
@@ -435,6 +453,8 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
           ? autoModeEnd.toISOString()
           : undefined,
     };
+
+    console.log('[FRONTEND] Final payload being sent to API:', JSON.stringify(payload, null, 2));
 
     setSchedulingMeeting(true);
     try {
@@ -1046,12 +1066,14 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
                   <Input
                     type="datetime-local"
                     value={scheduleForm.startDateTime}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const rawValue = e.target.value;
+                      console.log('[FRONTEND] Start datetime input changed:', rawValue);
                       setScheduleForm((prev) => ({
                         ...prev,
-                        startDateTime: e.target.value,
-                      }))
-                    }
+                        startDateTime: rawValue, // Use RAW value - NO CONVERSIONS
+                      }));
+                    }}
                     className="bg-white/5 border-white/10 text-white text-xs [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert"
                   />
                 </div>
@@ -1062,12 +1084,14 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
                   <Input
                     type="datetime-local"
                     value={scheduleForm.endDateTime}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const rawValue = e.target.value;
+                      console.log('[FRONTEND] End datetime input changed:', rawValue);
                       setScheduleForm((prev) => ({
                         ...prev,
-                        endDateTime: e.target.value,
-                      }))
-                    }
+                        endDateTime: rawValue, // Use RAW value - NO CONVERSIONS
+                      }));
+                    }}
                     className="bg-white/5 border-white/10 text-white text-xs [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert"
                   />
                 </div>
