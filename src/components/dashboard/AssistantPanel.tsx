@@ -6,6 +6,7 @@ import { ChatMessage, ChatSummary } from "@/types/chat.types";
 import ChatInterface from "./ChatInterface";
 import ChatHistoryList from "./ChatHistoryList";
 import { toast } from "sonner";
+import { getUserData, getAuthToken } from "@/utils/authHelpers";
 
 type AssistantPanelProps = {
   isDesktop: boolean;
@@ -21,35 +22,101 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
   const panelRef = useRef<HTMLElement>(null);
   const queryClient = useQueryClient();
   const hasAutoLoadedRef = useRef(false); // Track if we've already auto-loaded a chat
+  const currentAuthTokenRef = useRef<string | null>(null); // Track current auth token
+
+  // Get current auth token to identify user changes
+  const getCurrentAuthToken = (): string | null => {
+    return getAuthToken();
+  };
+
+  // Get current user ID from auth data (for query key)
+  const getCurrentUserId = (): string | null => {
+    const userData = getUserData();
+    // Try to get user ID from various possible fields
+    return (
+      userData?.userId ||
+      userData?.user?._id ||
+      userData?._id ||
+      userData?.id ||
+      null
+    );
+  };
+
+  // Use auth token as the identifier since it changes when users switch
+  const currentAuthToken = getCurrentAuthToken();
+  const currentUserId = getCurrentUserId();
 
   // Fetch chat list from API (always from database, filtered by userId)
+  // Include auth token in query key to ensure different users get different cache entries
   const { data: apiChatList = [], isLoading: isChatListLoading } = useQuery({
-    queryKey: ["chatList"],
+    queryKey: ["chatList", currentAuthToken],
     queryFn: fetchChatList,
     staleTime: 30_000,
+    enabled: !!currentAuthToken, // Only fetch if we have an auth token
   });
+
+  // Detect user/company change and reset state
+  useEffect(() => {
+    const authToken = getCurrentAuthToken();
+
+    // If auth token has changed, reset everything
+    if (
+      currentAuthTokenRef.current !== null &&
+      currentAuthTokenRef.current !== authToken
+    ) {
+      // User/company has changed - invalidate queries and reset state
+      queryClient.invalidateQueries({ queryKey: ["chatList"] });
+      queryClient.invalidateQueries({ queryKey: ["chatDetail"] });
+      setCurrentChatId(null);
+      setLocalMessages([]);
+      setChatHistory([]);
+      hasAutoLoadedRef.current = false; // Reset auto-load flag for new user
+    }
+
+    // Update current auth token reference
+    currentAuthTokenRef.current = authToken;
+  }, [currentAuthToken, queryClient]);
 
   // Update chat history from API response
   useEffect(() => {
     setChatHistory(apiChatList);
   }, [apiChatList]);
 
-  // Auto-load the most recent chat on initial mount only
+  // Auto-load the most recent chat on initial mount only (for current user)
   useEffect(() => {
+    const authToken = getCurrentAuthToken();
+
+    // Only auto-load if:
+    // 1. We have a current auth token
+    // 2. The auth token matches the current one OR ref is null (first mount) - to prevent loading stale data
+    // 3. We haven't auto-loaded yet for this user
+    // 4. We have chat data
+    // 5. No chat is currently selected
+    // 6. Data is fresh (not loading)
     if (
+      authToken &&
+      (currentAuthTokenRef.current === null ||
+        authToken === currentAuthTokenRef.current) &&
       !hasAutoLoadedRef.current &&
       apiChatList.length > 0 &&
       !currentChatId &&
-      localMessages.length === 0
+      localMessages.length === 0 &&
+      !isChatListLoading // Only auto-load when data is fresh (not loading)
     ) {
       // Get the most recent chat (first in the list)
       const mostRecentChat = apiChatList[0];
       if (mostRecentChat?._id) {
         handleSelectChat(mostRecentChat._id);
-        hasAutoLoadedRef.current = true; // Mark as loaded
+        hasAutoLoadedRef.current = true; // Mark as loaded for this user
       }
     }
-  }, [apiChatList]);
+  }, [
+    apiChatList,
+    currentChatId,
+    localMessages.length,
+    isChatListLoading,
+    currentAuthToken,
+  ]);
 
   const handleSelectChat = (chatId: string) => {
     setCurrentChatId(chatId);
@@ -90,7 +157,10 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
       }
 
       toast.success("Chat deleted");
-      await queryClient.invalidateQueries({ queryKey: ["chatList"] });
+      const authToken = getCurrentAuthToken();
+      await queryClient.invalidateQueries({
+        queryKey: ["chatList", authToken],
+      });
       await queryClient.invalidateQueries({ queryKey: ["chatDetail", chatId] });
     } catch (error: any) {
       console.error("Failed to delete chat", error);
