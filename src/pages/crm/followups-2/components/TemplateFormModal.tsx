@@ -254,10 +254,11 @@ const TemplateFormModal = ({
                                 timeInputRef.current = node;
                               }}
                               disabled={isCreating || isUpdating}
+                              style={{ colorScheme: "dark" }}
                               className="pl-10 bg-white/5 backdrop-blur-sm border-white/20 text-white text-xs placeholder:text-gray-400 focus:bg-white/10 focus:border-white/30 transition-all"
                             />
                             <svg
-                              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/80 pointer-events-none"
+                              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white pointer-events-none"
                               viewBox="0 0 24 24"
                               fill="none"
                               stroke="currentColor"

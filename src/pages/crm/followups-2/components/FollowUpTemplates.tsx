@@ -13,6 +13,7 @@ import {
   Pencil,
   Trash2,
   Copy,
+  Loader2,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -20,6 +21,23 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { Checkbox } from "@/components/ui/checkbox";
 import { SearchInput } from "../../shared/components";
 import ActiveFollowUpPlans from "./ActiveFollowUpPlans";
 import TemplateFormModal from "./TemplateFormModal";
@@ -32,6 +50,9 @@ import {
 import { FollowupTemplate } from "@/services/followupTemplates.service";
 import { useToast } from "@/hooks/use-toast";
 import { isAxiosError } from "axios";
+import { useCreateFollowupPlan } from "@/hooks/useFollowupPlans";
+import { useLeadsData } from "@/pages/crm/shared/hooks";
+import { Lead } from "@/services/leads.service";
 
 const getErrorMessage = (error: unknown, fallback: string) => {
   if (isAxiosError<{ message?: string }>(error)) {
@@ -52,25 +73,33 @@ export interface FollowUpTemplatesRef {
   createTemplate: () => void;
 }
 
-const FollowUpTemplates = forwardRef<FollowUpTemplatesRef, FollowUpTemplatesProps>(({
-  searchQuery = "",
-  onSearchChange
-}, ref) => {
-  const [activeTab, setActiveTab] = useState<"templates" | "plans">(
-    "plans"
-  );
+const FollowUpTemplates = forwardRef<
+  FollowUpTemplatesRef,
+  FollowUpTemplatesProps
+>(({ searchQuery = "", onSearchChange }, ref) => {
+  const [activeTab, setActiveTab] = useState<"templates" | "plans">("plans");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [formMode, setFormMode] = useState<"create" | "edit">("create");
   const [selectedTemplate, setSelectedTemplate] =
     useState<FollowupTemplate | null>(null);
   const [templateToDelete, setTemplateToDelete] =
     useState<FollowupTemplate | null>(null);
+  const [templateToRun, setTemplateToRun] = useState<FollowupTemplate | null>(
+    null
+  );
+  const [leadSelectorOpen, setLeadSelectorOpen] = useState(false);
+  const [leadsSearch, setLeadsSearch] = useState("");
+  const [selectedLeadsMap, setSelectedLeadsMap] = useState<
+    Record<string, Lead>
+  >({});
 
   const { toast } = useToast();
   const { mutate: deleteTemplate, isPending: isDeleting } =
     useDeleteFollowupTemplate();
   const { mutate: duplicateTemplate, isPending: isDuplicating } =
     useDuplicateFollowupTemplate();
+  const { mutate: createFollowupPlan, isPending: isCreatingPlan } =
+    useCreateFollowupPlan();
 
   // Fetch followup templates from API
   const {
@@ -102,9 +131,13 @@ const FollowUpTemplates = forwardRef<FollowUpTemplatesRef, FollowUpTemplatesProp
     setIsFormOpen(true);
   };
 
-  useImperativeHandle(ref, () => ({
-    createTemplate: handleCreate
-  }), []);
+  useImperativeHandle(
+    ref,
+    () => ({
+      createTemplate: handleCreate,
+    }),
+    []
+  );
 
   const handleDuplicate = (template: FollowupTemplate) => {
     duplicateTemplate(template._id, {
@@ -147,6 +180,109 @@ const FollowUpTemplates = forwardRef<FollowUpTemplatesRef, FollowUpTemplatesProp
     });
   };
 
+  // Lead selection for running template
+  const leadsQueryParams = useMemo(
+    () => ({
+      limit: 100,
+      search: leadsSearch || undefined,
+    }),
+    [leadsSearch]
+  );
+  const { query: leadsQuery, leads: fetchedLeads } = useLeadsData(
+    leadsQueryParams,
+    { enabled: leadSelectorOpen }
+  );
+  const isLeadsLoading = leadsQuery.isLoading || leadsQuery.isFetching;
+  const leadsError = leadsQuery.error as Error | null;
+
+  const selectedLeadIds = useMemo(
+    () => Object.keys(selectedLeadsMap),
+    [selectedLeadsMap]
+  );
+
+  const selectedLeads = useMemo(
+    () => Object.values(selectedLeadsMap),
+    [selectedLeadsMap]
+  );
+
+  const handleToggleLeadSelection = (leadItem: Lead) => {
+    const leadId = leadItem?._id;
+    if (!leadId) {
+      return;
+    }
+    setSelectedLeadsMap((prev) => {
+      const next = { ...prev };
+      if (next[leadId]) {
+        delete next[leadId];
+      } else {
+        next[leadId] = leadItem;
+      }
+      return next;
+    });
+  };
+
+  const handleRunTemplate = (template: FollowupTemplate) => {
+    setTemplateToRun(template);
+    setSelectedLeadsMap({});
+    setLeadsSearch("");
+    setLeadSelectorOpen(true);
+  };
+
+  const handleConfirmRunTemplate = () => {
+    if (!templateToRun) return;
+
+    if (!selectedLeadIds.length) {
+      toast({
+        title: "Select at least one lead",
+        description: "Pick one or more leads to include in the followup plan.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    createFollowupPlan(
+      {
+        templateId: templateToRun._id,
+        personIds: selectedLeadIds,
+      },
+      {
+        onSuccess: (response) => {
+          toast({
+            title: "Followup plan started",
+            description:
+              response.message ||
+              `Followup plan "${templateToRun.title}" has been created successfully.`,
+          });
+          setTemplateToRun(null);
+          setSelectedLeadsMap({});
+          setLeadSelectorOpen(false);
+          setLeadsSearch("");
+          // Switch to plans tab to show the new plan
+          setActiveTab("plans");
+        },
+        onError: (error: unknown) => {
+          const errorMessage = isAxiosError<{ message?: string }>(error)
+            ? error.response?.data?.message ?? error.message
+            : error instanceof Error
+            ? error.message
+            : "Please try again.";
+          toast({
+            title: "Failed to start followup plan",
+            description: errorMessage,
+            variant: "destructive",
+          });
+        },
+      }
+    );
+  };
+
+  const handleCancelRunTemplate = () => {
+    setTemplateToRun(null);
+    setSelectedLeadsMap({});
+    setLeadSelectorOpen(false);
+    setLeadsSearch("");
+  };
+
   return (
     <div className="space-y-6">
       {/* Header Section */}
@@ -170,9 +306,7 @@ const FollowUpTemplates = forwardRef<FollowUpTemplatesRef, FollowUpTemplatesProp
                 </button>
                 <p
                   className={`px-3 py-0.5 rounded-md text-[10px] font-light transition-all ${
-                    activeTab === "plans"
-                      ? "text-white/70"
-                      : "text-[#FFFFFF4D]"
+                    activeTab === "plans" ? "text-white/70" : "text-[#FFFFFF4D]"
                   }`}
                 >
                   View and manage your active followup campaigns
@@ -448,17 +582,21 @@ const FollowUpTemplates = forwardRef<FollowUpTemplatesRef, FollowUpTemplatesProp
                         >
                           Day time: {template.timeOfDayToRun} (UTC)
                         </span>
-                        <Button
+                        {/* <Button
                           variant="ghost"
                           size="sm"
-                          className="relative h-8 px-4 rounded-full border-0 text-white text-xs hover:bg-[#2F2F2F]/60 transition-all overflow-hidden"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRunTemplate(template);
+                          }}
+                          disabled={isCreatingPlan}
+                          className="relative h-8 px-4 rounded-full border-0 text-white text-xs hover:bg-[#2F2F2F]/60 transition-all overflow-hidden disabled:opacity-50"
                           style={{
                             background: "#FFFFFF1A",
                             boxShadow:
                               "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
                           }}
                         >
-                          {/* gradient element left to right */}
                           <div
                             className="absolute left-0 top-0 bottom-0 right-0 pointer-events-none rounded-full"
                             style={{
@@ -477,9 +615,9 @@ const FollowUpTemplates = forwardRef<FollowUpTemplatesRef, FollowUpTemplatesProp
                               color: "#FFFFFF",
                             }}
                           >
-                            Run Templates
+                            {isCreatingPlan ? "Creating..." : "Run Templates"}
                           </span>
-                        </Button>
+                        </Button> */}
                       </div>
                     </CardContent>
                   </Card>
@@ -512,6 +650,174 @@ const FollowUpTemplates = forwardRef<FollowUpTemplatesRef, FollowUpTemplatesProp
         confirmVariant="destructive"
         isPending={isDeleting}
       />
+
+      {/* Run Template Dialog - Lead Selection */}
+      <Dialog open={leadSelectorOpen} onOpenChange={setLeadSelectorOpen}>
+        <DialogContent
+          className="max-w-2xl max-h-[90vh] flex flex-col p-0 text-white border border-white/10 overflow-hidden rounded-[32px] shadow-[0_25px_60px_rgba(0,0,0,0.55)]"
+          style={{
+            background: "#0a0a0a",
+          }}
+        >
+          {/* Gradient overlay */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background:
+                "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0) 38.08%, rgba(255, 255, 255, 0) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
+            }}
+          />
+
+          <div className="relative z-10 flex flex-col h-full min-h-0">
+            <DialogHeader className="px-6 pt-6 pb-4 flex-shrink-0 border-b border-white/10">
+              <DialogTitle className="text-xs sm:text-sm font-semibold text-white drop-shadow-lg -mb-1">
+                Run Template: {templateToRun?.title}
+              </DialogTitle>
+              <DialogDescription className="text-xs text-white/70">
+                Select leads to create a personalized followup plan using this
+                template.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="flex-1 overflow-y-auto px-6 space-y-4 scrollbar-hide py-4 min-h-0">
+              <div className="space-y-3">
+                <h3 className="text-sm font-medium text-white">Select Leads</h3>
+                <div className="rounded-lg border border-white/10 bg-white/5 overflow-hidden">
+                  <Command className="bg-transparent [&_[cmdk-input-wrapper]]:border-b [&_[cmdk-input-wrapper]]:border-white/10 [&_[cmdk-input-wrapper]]:px-3">
+                    <CommandInput
+                      placeholder="Search leads..."
+                      value={leadsSearch}
+                      onValueChange={setLeadsSearch}
+                      className="text-white placeholder:text-white/40 h-11 border-0 focus:ring-0 bg-transparent py-3 [&_svg]:text-white/50"
+                    />
+                    <CommandList className="max-h-48 overflow-y-auto scrollbar-hide">
+                      {isLeadsLoading ? (
+                        <div className="flex items-center justify-center py-6 text-xs text-white/60">
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Loading leads...
+                        </div>
+                      ) : (
+                        <>
+                          <CommandEmpty className="py-6 text-center text-xs text-white/60">
+                            No leads found.
+                          </CommandEmpty>
+                          <CommandGroup className="p-1 overflow-y-auto scrollbar-hide space-y-2">
+                            {fetchedLeads.map((leadItem) => {
+                              const leadId = leadItem?._id;
+                              if (!leadId) {
+                                return null;
+                              }
+                              const isSelected = Boolean(
+                                selectedLeadsMap[leadId]
+                              );
+                              return (
+                                <CommandItem
+                                  key={leadId}
+                                  className={`flex items-center gap-3 cursor-pointer px-2 py-2 transition-colors hover:bg-white/10 focus:bg-white/10 data-[selected='true']:bg-transparent data-[selected='true']:hover:bg-white/10 ${
+                                    isSelected
+                                      ? "bg-white/10 text-white"
+                                      : "text-white bg-transparent"
+                                  }`}
+                                  onSelect={() =>
+                                    handleToggleLeadSelection(leadItem)
+                                  }
+                                >
+                                  <Checkbox
+                                    checked={isSelected}
+                                    onCheckedChange={() =>
+                                      handleToggleLeadSelection(leadItem)
+                                    }
+                                    className="h-4 w-4 border-2 border-white/40 data-[state=checked]:bg-white data-[state=checked]:border-white data-[state=checked]:text-[#0a0a0a]"
+                                  />
+                                  <div className="flex flex-col flex-1 min-w-0 ">
+                                    <span className="text-xs font-medium text-white mb-1">
+                                      {leadItem.name || "Unnamed lead"}
+                                    </span>
+                                    <span className="text-[10px] text-white/60">
+                                      {leadItem.companyName ||
+                                        leadItem.position ||
+                                        "Unknown organization"}
+                                    </span>
+                                  </div>
+                                </CommandItem>
+                              );
+                            })}
+                          </CommandGroup>
+                          {leadsError && (
+                            <div className="px-4 py-3 text-xs text-red-300">
+                              {leadsError.message}
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </CommandList>
+                  </Command>
+                </div>
+
+                {selectedLeads.length > 0 && (
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    {selectedLeads.map((leadItem) => {
+                      const leadId = leadItem?._id;
+                      if (!leadId) {
+                        return null;
+                      }
+                      return (
+                        <Badge
+                          key={leadId}
+                          variant="secondary"
+                          className="bg-white/10 text-white border border-white/20 text-xs flex items-center gap-1 w-full justify-between hover:bg-white/20"
+                        >
+                          <span className="text-[10px] font-medium">
+                            {leadItem.name || "Lead"} ·{" "}
+                            {leadItem.companyName ||
+                              leadItem.position ||
+                              "Unknown"}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleToggleLeadSelection(leadItem)}
+                            className="ml-1 text-blue-400 hover:text-blue-300 transition-colors"
+                            aria-label="Remove lead"
+                          >
+                            x
+                          </button>
+                        </Badge>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <DialogFooter className="px-6 py-4 flex-shrink-0 border-t border-white/10 gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCancelRunTemplate}
+                disabled={isCreatingPlan}
+                className="bg-white/5 border-white/20 text-white hover:bg-white/10 hover:text-white transition-all text-xs"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={handleConfirmRunTemplate}
+                disabled={isCreatingPlan || selectedLeadIds.length === 0}
+                className="bg-primary hover:bg-primary/90 text-white transition-all text-xs disabled:opacity-50"
+              >
+                {isCreatingPlan ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  "Create Followup Plan"
+                )}
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 });
