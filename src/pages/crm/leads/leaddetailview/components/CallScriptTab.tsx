@@ -229,7 +229,7 @@ const CallScriptTab: FC<CallScriptTabProps> = ({ lead }) => {
         }}
       >
         {/* Metadata */}
-        {metadata && (
+        {/* {metadata && (
           <div className="mb-4 p-3 rounded-lg bg-white/5 border border-white/10">
             <div className="grid grid-cols-2 gap-2 text-xs">
               {metadata.prospectName && (
@@ -260,12 +260,12 @@ const CallScriptTab: FC<CallScriptTabProps> = ({ lead }) => {
               )}
             </div>
           </div>
-        )}
+        )} */}
 
         {/* Action buttons */}
         <div className="flex items-center justify-between gap-2 mb-3">
           <div className="flex items-center gap-2">
-            {messageId && (
+            {/* {messageId && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -276,7 +276,7 @@ const CallScriptTab: FC<CallScriptTabProps> = ({ lead }) => {
                 <Edit className="h-3.5 w-3.5" />
                 {editMode ? "Cancel Edit" : "Edit with AI"}
               </Button>
-            )}
+            )} */}
             <Button
               variant="ghost"
               size="sm"
@@ -392,7 +392,7 @@ const CallScriptTab: FC<CallScriptTabProps> = ({ lead }) => {
         </div>
 
         {/* Phone number info */}
-        {lead.phone && (
+        {/* {lead.phone && (
           <div className="mt-4 p-3 rounded-lg bg-white/5 border border-white/10 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Phone className="w-4 h-4 text-primary" />
@@ -402,7 +402,7 @@ const CallScriptTab: FC<CallScriptTabProps> = ({ lead }) => {
               </div>
             </div>
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );

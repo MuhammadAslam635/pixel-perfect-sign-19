@@ -278,7 +278,7 @@ const LeadDetailView = () => {
                     </div>
                   );
                 })}
-                {currentStageLabel !== 'Proposal Sent' && currentStageLabel !== 'Follow-up to Close' && currentStageLabel !== 'Deal Closed' && (
+                {/* {currentStageLabel !== 'Proposal Sent' && currentStageLabel !== 'Follow-up to Close' && currentStageLabel !== 'Deal Closed' && (
                   <div className="ml-4">
                     <ActiveNavButton
                       text={isSendingProposal ? "Sending..." : "Proposal Sent"}
@@ -287,7 +287,7 @@ const LeadDetailView = () => {
                       className="h-8 text-xs"
                     />
                   </div>
-                )}
+                )} */}
                 {currentStageLabel !== 'Deal Closed' && (
                   <div className="ml-4">
                     <ActiveNavButton
