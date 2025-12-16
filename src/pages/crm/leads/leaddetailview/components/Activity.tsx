@@ -110,13 +110,13 @@ const formatDateTimeRange = (start?: string, end?: string) => {
   if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
     return "Time not available";
   }
-  
+
   // Use toLocaleString to ensure we're displaying in user's local timezone
   const sameDay =
     startDate.getFullYear() === endDate.getFullYear() &&
     startDate.getMonth() === endDate.getMonth() &&
     startDate.getDate() === endDate.getDate();
-  
+
   if (sameDay) {
     // Format in user's local timezone
     const dateStr = startDate.toLocaleDateString("en-US", {
@@ -136,7 +136,7 @@ const formatDateTimeRange = (start?: string, end?: string) => {
     });
     return `${dateStr} · ${startTime} – ${endTime}`;
   }
-  
+
   // Different days
   const startDateStr = startDate.toLocaleDateString("en-US", {
     weekday: "short",
@@ -193,9 +193,9 @@ const Activity: FC<ActivityProps> = ({
   selectedCallLogView,
   setSelectedCallLogView,
 }) => {
-  const [topLevelTab, setTopLevelTab] = useState<"activity" | "company" | "call_script" | "agent_research">(
-    "activity"
-  );
+  const [topLevelTab, setTopLevelTab] = useState<
+    "activity" | "company" | "call_script" | "agent_research"
+  >("activity");
   const [activeTab, setActiveTab] = useState("summary");
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const [selectedTemplateId, setSelectedTemplateId] = useState("");
@@ -288,10 +288,6 @@ const Activity: FC<ActivityProps> = ({
     staleTime: 30000,
   });
 
-
-
-
-
   const leadSummary = leadSummaryResponse?.data ?? null;
 
   // Query for calendar month meetings (for calendar view) - only when calendar tab is active
@@ -337,9 +333,7 @@ const Activity: FC<ActivityProps> = ({
           "Meeting has been successfully deleted from your calendar.",
       });
       // Invalidate and refetch all queries
-      await Promise.all([
-        refetchLeadMeetings(),
-      ]);
+      await Promise.all([refetchLeadMeetings()]);
     },
     onError: (error: any) => {
       toast({
@@ -390,7 +384,8 @@ const Activity: FC<ActivityProps> = ({
       const weekday = startDate.getDay(); // 0 = Sun, 6 = Sat
       return weekday >= 1 && weekday <= 5;
     });
-  }, [availableSlotsResponse]);  const isLeadMeetingsBusy = isLeadMeetingsLoading || isLeadMeetingsFetching;
+  }, [availableSlotsResponse]);
+  const isLeadMeetingsBusy = isLeadMeetingsLoading || isLeadMeetingsFetching;
   const isAvailabilityBusy = isAvailabilityLoading || isAvailabilityFetching;
 
   const refreshLeadSummaryMutation = useMutation<
@@ -995,13 +990,19 @@ const Activity: FC<ActivityProps> = ({
         }}
       >
         <CardContent className="p-6 flex-1 min-h-0 overflow-y-auto scrollbar-hide">
-            <Tabs
-              value={topLevelTab}
-              onValueChange={(value) =>
-                setTopLevelTab(value as "activity" | "company" | "call_script" | "agent_research")
-              }
-              className="flex-1 flex flex-col min-h-0"
-            >
+          <Tabs
+            value={topLevelTab}
+            onValueChange={(value) =>
+              setTopLevelTab(
+                value as
+                  | "activity"
+                  | "company"
+                  | "call_script"
+                  | "agent_research"
+              )
+            }
+            className="flex-1 flex flex-col min-h-0"
+          >
             {/* Top-level Activity / Company / Call Script / Agent Research toggle */}
             <div className="mb-4">
               <TabsList className="bg-transparent p-0 h-auto gap-4 border-none">
@@ -1026,13 +1027,13 @@ const Activity: FC<ActivityProps> = ({
                   Call Script
                   <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white hidden group-data-[state=active]:block" />
                 </TabsTrigger>
-                <TabsTrigger
+                {/* <TabsTrigger
                   value="agent_research"
                   className="px-0 py-2 text-xs font-medium sm:text-sm text-white/60 data-[state=active]:text-white data-[state=active]:font-semibold data-[state=active]:bg-transparent data-[state=active]:shadow-none border-none rounded-none relative group"
                 >
                   Agent Research
                   <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white hidden group-data-[state=active]:block" />
-                </TabsTrigger>
+                </TabsTrigger> */}
               </TabsList>
             </div>
 
@@ -1896,15 +1897,10 @@ const Activity: FC<ActivityProps> = ({
 
       <ConfirmDialog
         open={Boolean(planPendingDelete)}
-        title="Delete followup plan?"
-        description={
-          planPendingDelete
-            ? `This will immediately delete "${getTemplateTitle(
-                planPendingDelete
-              )}" and its scheduled tasks for all included leads.`
-            : undefined
-        }
-        confirmText="Delete plan"
+        title="Delete Follow-up Plan"
+        description="Are you sure you want to delete this follow-up plan? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
         confirmVariant="destructive"
         isPending={isDeletingPlan}
         onConfirm={handleConfirmPlanDeletion}

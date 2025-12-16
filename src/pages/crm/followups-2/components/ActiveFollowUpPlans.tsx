@@ -28,6 +28,8 @@ import {
 import { FollowupPlan } from "@/services/followupPlans.service";
 import FollowupPlanSchedule from "@/components/dashboard/FollowupPlanSchedule";
 import ConfirmDialog from "@/components/ui/confirm-dialog";
+import { useToast } from "@/hooks/use-toast";
+import { isAxiosError } from "axios";
 
 // Transform API plan data to component format
 const transformPlanData = (plan: FollowupPlan) => {
@@ -101,16 +103,30 @@ const transformPlanData = (plan: FollowupPlan) => {
   };
 };
 
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (isAxiosError<{ message?: string }>(error)) {
+    return error.response?.data?.message ?? error.message ?? fallback;
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return fallback;
+};
+
 const ActiveFollowUpPlans = () => {
   const [selectedPlanForSchedule, setSelectedPlanForSchedule] =
     useState<FollowupPlan | null>(null);
-  const [planToDelete, setPlanToDelete] = useState<string | null>(null);
+  const [planToDelete, setPlanToDelete] = useState<FollowupPlan | null>(null);
+  const { toast } = useToast();
 
   // Fetch followup plans from API
   const {
     data: plansData,
     isLoading,
     isError,
+    refetch: refetchPlans,
   } = useFollowupPlans({
     limit: 100, // Get all active plans
   });
@@ -119,10 +135,8 @@ const ActiveFollowUpPlans = () => {
   const { data: planScheduleData, isLoading: isPlanScheduleLoading } =
     useFollowupPlanSchedule(selectedPlanForSchedule?._id || "");
 
-  // const { mutate: deletePlan } = useDeleteFollowupPlan();
-  const deletePlan = (id: string) => {
-    console.log("Mock delete plan", id);
-  }
+  const { mutate: deleteFollowupPlan, isPending: isDeletingPlan } =
+    useDeleteFollowupPlan();
 
   // Transform API data
   const activePlans = useMemo(() => {
@@ -185,6 +199,29 @@ const ActiveFollowUpPlans = () => {
     setSelectedPlanForSchedule(null);
   };
 
+  const handleDeletePlan = () => {
+    if (!planToDelete) return;
+
+    deleteFollowupPlan(planToDelete._id, {
+      onSuccess: (response) => {
+        toast({
+          title: "Followup plan deleted",
+          description:
+            response?.message || "Followup plan has been deleted successfully.",
+        });
+        setPlanToDelete(null);
+        refetchPlans();
+      },
+      onError: (mutationError) => {
+        toast({
+          title: "Unable to delete followup plan",
+          description: getErrorMessage(mutationError, "Please try again."),
+          variant: "destructive",
+        });
+      },
+    });
+  };
+
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -194,165 +231,174 @@ const ActiveFollowUpPlans = () => {
             onClick={() => handleViewPlanSchedule(plan.originalPlan)}
             className="bg-white/5 border-white/10 hover:border-white/20 transition-all duration-300 hover:shadow-lg hover:shadow-white/5 rounded-3xl cursor-pointer"
           >
-          <CardContent className="p-4 space-y-4">
-            {/* Card Header */}
-            <div className="flex items-center justify-between gap-3">
-              <h4 className="text-white font-medium text-sm">{plan.name}</h4>
+            <CardContent className="p-4 space-y-4">
+              {/* Card Header */}
+              <div className="flex items-center justify-between gap-3">
+                <h4 className="text-white font-medium text-sm">{plan.name}</h4>
 
-              <div className="flex items-center gap-2">
-                <Badge
-                  className={`rounded-full px-2.5 py-1 text-xs font-medium border ${getStatusBadgeStyle(
-                    plan.status
-                  )}`}
-                >
-                  {plan.status}
-                </Badge>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setPlanToDelete(plan.id);
-                  }}
-                  className="text-white/40 hover:text-red-400 transition-colors h-7 w-7 flex items-center justify-center rounded-full hover:bg-white/10"
-                >
-                  <Trash className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
-            {/* Date Row with Communication Icons */}
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-1.5 text-xs">
-                <div className="w-6 h-6 rounded-full bg-cyan-500/20 flex items-center justify-center">
-                  <Calendar className="w-3.5 h-3.5 text-cyan-400" />
+                <div className="flex items-center gap-2">
+                  <Badge
+                    className={`rounded-full px-2.5 py-1 text-xs font-medium border ${getStatusBadgeStyle(
+                      plan.status
+                    )}`}
+                  >
+                    {plan.status}
+                  </Badge>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setPlanToDelete(plan.originalPlan);
+                    }}
+                    className="text-white/40 hover:text-red-400 transition-colors h-7 w-7 flex items-center justify-center rounded-full hover:bg-white/10"
+                  >
+                    <Trash className="w-4 h-4" />
+                  </button>
                 </div>
-                <span className="text-white/70">{plan.date}</span>
               </div>
 
-              {/* Communication Icons and Counts - Far Right */}
-              <div className="flex items-center gap-3">
-                {/* Email */}
-                {plan.cumulativeCounts.email > 0 && (
-                  <div
-                    className="flex flex-col items-center gap-0.5"
-                    title={`${plan.cumulativeCounts.email} Emails`}
-                  >
-                    <Mail className="w-3.5 h-3.5 text-cyan-300/80" />
-                    <span className="text-xs text-cyan-300/70 font-medium">
-                      {plan.cumulativeCounts.email}
-                    </span>
+              {/* Date Row with Communication Icons */}
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-1.5 text-xs">
+                  <div className="w-6 h-6 rounded-full bg-cyan-500/20 flex items-center justify-center">
+                    <Calendar className="w-3.5 h-3.5 text-cyan-400" />
                   </div>
-                )}
+                  <span className="text-white/70">{plan.date}</span>
+                </div>
 
-                {/* SMS */}
-                {plan.cumulativeCounts.sms > 0 && (
-                  <div
-                    className="flex flex-col items-center gap-0.5"
-                    title={`${plan.cumulativeCounts.sms} SMS`}
-                  >
-                    <MessageSquare className="w-3.5 h-3.5 text-cyan-300/80" />
-                    <span className="text-xs text-cyan-300/70 font-medium">
-                      {plan.cumulativeCounts.sms}
-                    </span>
-                  </div>
-                )}
+                {/* Communication Icons and Counts - Far Right */}
+                <div className="flex items-center gap-3">
+                  {/* Email */}
+                  {plan.cumulativeCounts.email > 0 && (
+                    <div
+                      className="flex flex-col items-center gap-0.5"
+                      title={`${plan.cumulativeCounts.email} Emails`}
+                    >
+                      <Mail className="w-3.5 h-3.5 text-cyan-300/80" />
+                      <span className="text-xs text-cyan-300/70 font-medium">
+                        {plan.cumulativeCounts.email}
+                      </span>
+                    </div>
+                  )}
 
-                {/* WhatsApp */}
-                {plan.cumulativeCounts.whatsapp > 0 && (
-                  <div
-                    className="flex flex-col items-center gap-0.5"
-                    title={`${plan.cumulativeCounts.whatsapp} WhatsApp`}
-                  >
-                    <MessageCircle className="w-3.5 h-3.5 text-cyan-300/80" />
-                    <span className="text-xs text-cyan-300/70 font-medium">
-                      {plan.cumulativeCounts.whatsapp}
-                    </span>
-                  </div>
-                )}
+                  {/* SMS */}
+                  {plan.cumulativeCounts.sms > 0 && (
+                    <div
+                      className="flex flex-col items-center gap-0.5"
+                      title={`${plan.cumulativeCounts.sms} SMS`}
+                    >
+                      <MessageSquare className="w-3.5 h-3.5 text-cyan-300/80" />
+                      <span className="text-xs text-cyan-300/70 font-medium">
+                        {plan.cumulativeCounts.sms}
+                      </span>
+                    </div>
+                  )}
 
-                {/* Call */}
-                {plan.cumulativeCounts.call > 0 && (
-                  <div
-                    className="flex flex-col items-center gap-0.5"
-                    title={`${plan.cumulativeCounts.call} Calls`}
-                  >
-                    <Phone className="w-3.5 h-3.5 text-cyan-300/80" />
-                    <span className="text-xs text-cyan-300/70 font-medium">
-                      {plan.cumulativeCounts.call}
-                    </span>
-                  </div>
-                )}
+                  {/* WhatsApp */}
+                  {plan.cumulativeCounts.whatsapp > 0 && (
+                    <div
+                      className="flex flex-col items-center gap-0.5"
+                      title={`${plan.cumulativeCounts.whatsapp} WhatsApp`}
+                    >
+                      <MessageCircle className="w-3.5 h-3.5 text-cyan-300/80" />
+                      <span className="text-xs text-cyan-300/70 font-medium">
+                        {plan.cumulativeCounts.whatsapp}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Call */}
+                  {plan.cumulativeCounts.call > 0 && (
+                    <div
+                      className="flex flex-col items-center gap-0.5"
+                      title={`${plan.cumulativeCounts.call} Calls`}
+                    >
+                      <Phone className="w-3.5 h-3.5 text-cyan-300/80" />
+                      <span className="text-xs text-cyan-300/70 font-medium">
+                        {plan.cumulativeCounts.call}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
 
-            {/* 7-Day Timeline */}
-            <div className="relative py-12 px-4">
-              {/* Status Bar */}
-              <div className="w-full h-2 bg-white/10 rounded-full" />
+              {/* 7-Day Timeline */}
+              <div className="relative py-12 px-4">
+                {/* Status Bar */}
+                <div className="w-full h-2 bg-white/10 rounded-full" />
 
-              {/* Circular Markers */}
-              {Array.from({ length: plan.totalDays }, (_, dayIndex) => {
-                const dayNumber = dayIndex + 1;
-                const isCompleted = dayNumber <= plan.progress;
-                const isFuture = dayNumber > plan.progress;
+                {/* Circular Markers */}
+                {Array.from({ length: plan.totalDays }, (_, dayIndex) => {
+                  const dayNumber = dayIndex + 1;
+                  const isCompleted = dayNumber <= plan.progress;
+                  const isFuture = dayNumber > plan.progress;
 
-                // Calculate position (evenly spaced within the padded area)
-                // First circle at 1rem, last circle at calc(100% - 1rem)
-                const positionRatio = plan.totalDays > 1 ? dayIndex / (plan.totalDays - 1) : 0;
+                  // Calculate position (evenly spaced within the padded area)
+                  // First circle at 1rem, last circle at calc(100% - 1rem)
+                  const positionRatio =
+                    plan.totalDays > 1 ? dayIndex / (plan.totalDays - 1) : 0;
 
-                return (
-                  <Tooltip key={dayNumber}>
-                    <TooltipTrigger asChild>
-                      <div
-                        className="absolute z-10 flex flex-col items-center cursor-pointer"
-                        style={{
-                          left: `calc(1rem + ${positionRatio * 100}% - ${positionRatio * 2}rem)`,
-                          top: "52px", // top-12 (48px) + half of h-2 (4px) = 52px (center of status bar)
-                          transform: "translateX(-50%)",
-                        }}
-                      >
-                        {/* Circular Marker */}
+                  return (
+                    <Tooltip key={dayNumber}>
+                      <TooltipTrigger asChild>
                         <div
-                          className={`w-4 h-4 rounded-full transition-all -mt-2 ${
-                            isCompleted
-                              ? "bg-cyan-400 border-2 border-cyan-400"
-                              : "bg-white border-2 border-white/20"
-                          }`}
-                        />
-
-                        {/* Day Label */}
-                        <span
-                          className={`text-[10px] mt-2 whitespace-nowrap ${
-                            isCompleted ? "text-cyan-300" : "text-white/40"
-                          }`}
+                          className="absolute z-10 flex flex-col items-center cursor-pointer"
+                          style={{
+                            left: `calc(1rem + ${positionRatio * 100}% - ${
+                              positionRatio * 2
+                            }rem)`,
+                            top: "52px", // top-12 (48px) + half of h-2 (4px) = 52px (center of status bar)
+                            transform: "translateX(-50%)",
+                          }}
                         >
-                          Day {dayNumber}
-                        </span>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>
-                        {plan.progress}/{plan.totalDays.toString().padStart(2, "0")}
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                );
-              })}
+                          {/* Circular Marker */}
+                          <div
+                            className={`w-4 h-4 rounded-full transition-all -mt-2 ${
+                              isCompleted
+                                ? "bg-cyan-400 border-2 border-cyan-400"
+                                : "bg-white border-2 border-white/20"
+                            }`}
+                          />
 
-              {/* Progress Bar - Snaps to last completed circle */}
-              {plan.progress > 0 && (
-                <div
-                  className="absolute top-12 left-4 h-2 bg-cyan-400/50 rounded-full transition-all"
-                  style={{
-                    width: plan.totalDays > 1
-                      ? `calc(${((plan.progress - 1) / (plan.totalDays - 1)) * 100}% - ${((plan.progress - 1) / (plan.totalDays - 1)) * 2}rem)`
-                      : "0",
-                  }}
-                />
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+                          {/* Day Label */}
+                          <span
+                            className={`text-[10px] mt-2 whitespace-nowrap ${
+                              isCompleted ? "text-cyan-300" : "text-white/40"
+                            }`}
+                          >
+                            Day {dayNumber}
+                          </span>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>
+                          {plan.progress}/
+                          {plan.totalDays.toString().padStart(2, "0")}
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  );
+                })}
+
+                {/* Progress Bar - Snaps to last completed circle */}
+                {plan.progress > 0 && (
+                  <div
+                    className="absolute top-12 left-4 h-2 bg-cyan-400/50 rounded-full transition-all"
+                    style={{
+                      width:
+                        plan.totalDays > 1
+                          ? `calc(${
+                              ((plan.progress - 1) / (plan.totalDays - 1)) * 100
+                            }% - ${
+                              ((plan.progress - 1) / (plan.totalDays - 1)) * 2
+                            }rem)`
+                          : "0",
+                    }}
+                  />
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* Schedule View Modal */}
@@ -381,12 +427,8 @@ const ActiveFollowUpPlans = () => {
         confirmText="Delete"
         cancelText="Cancel"
         confirmVariant="destructive"
-        onConfirm={() => {
-          if (planToDelete) {
-            deletePlan(planToDelete);
-            setPlanToDelete(null);
-          }
-        }}
+        isPending={isDeletingPlan}
+        onConfirm={handleDeletePlan}
         onCancel={() => setPlanToDelete(null)}
       />
     </>

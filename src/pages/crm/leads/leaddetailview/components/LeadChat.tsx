@@ -204,7 +204,8 @@ const LeadChat = ({
     staleTime: 120000,
   });
 
-  const whatsappConnections = whatsappConnectionsData?.credentials || EMPTY_ARRAY;
+  const whatsappConnections =
+    whatsappConnectionsData?.credentials || EMPTY_ARRAY;
   const primaryWhatsAppConnection = whatsappConnections[0] || null;
   const whatsappReady = whatsappConnections.length > 0;
   const whatsappPhoneNumberId =
@@ -283,11 +284,11 @@ const LeadChat = ({
         status: aiCallAvailable ? "Ready" : "Add phone",
         isAvailable: aiCallAvailable,
       },
-      {
-        label: "Meeting Bot",
-        status: "Ready",
-        isAvailable: meetingBotAvailable,
-      },
+      // {
+      //   label: "Meeting Bot",
+      //   status: "Ready",
+      //   isAvailable: meetingBotAvailable,
+      // },
     ];
   }, [
     emailAddress,
@@ -375,7 +376,8 @@ const LeadChat = ({
   });
 
   const whatsappMessages =
-    (whatsappConversationResponse?.data as WhatsAppChatMessage[]) || EMPTY_ARRAY;
+    (whatsappConversationResponse?.data as WhatsAppChatMessage[]) ||
+    EMPTY_ARRAY;
 
   const unreadInboundMessageIds = useMemo(() => {
     if (!whatsappConversationEnabled) return [];
@@ -467,19 +469,21 @@ const LeadChat = ({
     refetchIntervalInBackground: true,
     queryFn: async () => {
       if (!leadId) {
-        console.log('📧 [LeadChat] No lead ID provided');
+        console.log("📧 [LeadChat] No lead ID provided");
         return [];
       }
 
       console.log(`📧 [LeadChat] Fetching emails for lead: ${leadId}`);
-      
+
       try {
         const response = await emailService.getLeadEmails(leadId, {
           limit: 100,
         });
-        
+
         const emails = response.data.emails || [];
-        console.log(`📧 [LeadChat] Found ${emails.length} emails linked to lead`);
+        console.log(
+          `📧 [LeadChat] Found ${emails.length} emails linked to lead`
+        );
 
         // Sort chronologically
         return emails.sort(
@@ -531,15 +535,14 @@ const LeadChat = ({
     isSmsInitialLoading ||
     (isSmsFetching && !leadSmsResponse);
 
-  const smsMessages: LeadSmsMessage[] = leadSmsResponse?.data || (EMPTY_ARRAY as unknown as LeadSmsMessage[]);
+  const smsMessages: LeadSmsMessage[] =
+    leadSmsResponse?.data || (EMPTY_ARRAY as unknown as LeadSmsMessage[]);
   const smsUnavailableMessage =
     !twilioReady && !twilioStatusLoading
       ? twilioConnection.message ||
         "Twilio is not configured. Please contact your administrator."
       : null;
   const smsInputsDisabled = Boolean(smsUnavailableMessage) || !phoneNumber;
-
-
 
   useEffect(() => {
     if (!whatsappUnavailableMessage && whatsappSendError) {
@@ -757,8 +760,6 @@ const LeadChat = ({
     whatsappPhoneNumberId,
     markReadMutation,
   ]);
-
-
 
   const handleSendSms = () => {
     if (
@@ -1527,7 +1528,7 @@ const LeadChat = ({
                   onBlur={() => {
                     // Shrink back to 1 line when clicking outside
                     if (whatsappTextareaRef.current) {
-                      whatsappTextareaRef.current.style.height = '24px';
+                      whatsappTextareaRef.current.style.height = "24px";
                     }
                   }}
                   disabled={whatsappInputsDisabled}
@@ -1538,7 +1539,12 @@ const LeadChat = ({
                       : "Type WhatsApp message"
                   }
                   rows={1}
-                  style={{ minHeight: "24px", maxHeight: "60px", paddingTop: "2px", paddingBottom: "2px" }}
+                  style={{
+                    minHeight: "24px",
+                    maxHeight: "60px",
+                    paddingTop: "2px",
+                    paddingBottom: "2px",
+                  }}
                 />
                 <button
                   className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-white/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
@@ -1886,7 +1892,7 @@ const LeadChat = ({
                   onBlur={() => {
                     // Shrink back to 1 line when clicking outside
                     if (smsTextareaRef.current) {
-                      smsTextareaRef.current.style.height = '24px';
+                      smsTextareaRef.current.style.height = "24px";
                     }
                   }}
                   disabled={smsInputsDisabled}
@@ -1899,7 +1905,12 @@ const LeadChat = ({
                       : "Add a phone number to send SMS"
                   }
                   rows={1}
-                  style={{ minHeight: "24px", maxHeight: "60px", paddingTop: "2px", paddingBottom: "2px" }}
+                  style={{
+                    minHeight: "24px",
+                    maxHeight: "60px",
+                    paddingTop: "2px",
+                    paddingBottom: "2px",
+                  }}
                 />
                 <button
                   className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-white/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"

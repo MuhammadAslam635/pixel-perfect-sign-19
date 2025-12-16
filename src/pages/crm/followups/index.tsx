@@ -1394,8 +1394,8 @@ const FollowupTemplatesPage = () => {
 
         <ConfirmDialog
           open={!!planToDelete}
-          title="Delete followup plan?"
-          description="This followup plan will be permanently removed. This action cannot be undone."
+          title="Delete Follow-up Plan"
+          description="Are you sure you want to delete this follow-up plan? This action cannot be undone."
           confirmText="Delete"
           cancelText="Cancel"
           confirmVariant="destructive"
