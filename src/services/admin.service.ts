@@ -161,7 +161,15 @@ export const adminService = {
   updateCompanyStatus: async (
     companyId: string,
     data: Partial<Company>
-  ): Promise<{ success: boolean; message: string; data?: Company }> => {
+  ): Promise<{
+    success: boolean;
+    message: string;
+    data?: Company;
+    provisioning?: {
+      twilio: { success: boolean; error: string | null };
+      elevenlabs: { success: boolean; error: string | null };
+    };
+  }> => {
     try {
       const response = await API.post(`/admin/companies/${companyId}`, data);
       return response.data;

@@ -354,19 +354,58 @@ const AdminUsers = () => {
         return;
       }
 
-      await adminService.updateCompanyUserStatus(companyId, userId, {
-        name:
-          user.name || `${user.firstName || ""} ${user.lastName || ""}`.trim(),
-        email: user.email,
-        role: user.role,
-        status: newStatus,
-      });
+      // For company owners, use updateCompanyStatus to trigger provisioning
+      if (user.role === "Company") {
+        const response = await adminService.updateCompanyStatus(userId, {
+          name: user.name || `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+          email: user.email,
+          isVerified: newStatus === "active", // Set isVerified when activating
+          status: newStatus,
+        });
 
-      toast.success(
-        `User status updated to ${
-          newStatus === "active" ? "Active" : "Inactive"
-        }`
-      );
+        // Show provisioning status if available
+        if (response.provisioning) {
+          const { twilio, elevenlabs } = response.provisioning;
+          if (twilio.success && elevenlabs.success) {
+            toast.success(
+              `Company activated and provisioned successfully! Twilio and ElevenLabs configured.`
+            );
+          } else if (twilio.success) {
+            toast.success(
+              `Company activated. Twilio configured. ElevenLabs: ${elevenlabs.error || "Failed"}`
+            );
+          } else if (elevenlabs.success) {
+            toast.success(
+              `Company activated. ElevenLabs configured. Twilio: ${twilio.error || "Failed"}`
+            );
+          } else {
+            toast.warning(
+              `Company activated but provisioning failed. Twilio: ${twilio.error || "Failed"}, ElevenLabs: ${elevenlabs.error || "Failed"}`
+            );
+          }
+        } else {
+          toast.success(
+            `Company status updated to ${
+              newStatus === "active" ? "Active" : "Inactive"
+            }`
+          );
+        }
+      } else {
+        // For regular company users, use updateCompanyUserStatus
+        await adminService.updateCompanyUserStatus(companyId, userId, {
+          name:
+            user.name || `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+          email: user.email,
+          role: user.role,
+          status: newStatus,
+        });
+
+        toast.success(
+          `User status updated to ${
+            newStatus === "active" ? "Active" : "Inactive"
+          }`
+        );
+      }
 
       // Refresh data
       fetchAllUsers();
