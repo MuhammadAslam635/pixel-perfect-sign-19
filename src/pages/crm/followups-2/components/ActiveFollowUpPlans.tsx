@@ -3,11 +3,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   Calendar,
-  MoreVertical,
+  MessageCircle,
+  Trash,
   Mail,
   Phone,
   MessageSquare,
-  MessageCircle,
 } from "lucide-react";
 import {
   Tooltip,
@@ -23,9 +23,11 @@ import {
 import {
   useFollowupPlans,
   useFollowupPlanSchedule,
+  useDeleteFollowupPlan,
 } from "@/hooks/useFollowupPlans";
 import { FollowupPlan } from "@/services/followupPlans.service";
 import FollowupPlanSchedule from "@/components/dashboard/FollowupPlanSchedule";
+import ConfirmDialog from "@/components/ui/confirm-dialog";
 
 // Transform API plan data to component format
 const transformPlanData = (plan: FollowupPlan) => {
@@ -102,6 +104,7 @@ const transformPlanData = (plan: FollowupPlan) => {
 const ActiveFollowUpPlans = () => {
   const [selectedPlanForSchedule, setSelectedPlanForSchedule] =
     useState<FollowupPlan | null>(null);
+  const [planToDelete, setPlanToDelete] = useState<string | null>(null);
 
   // Fetch followup plans from API
   const {
@@ -115,6 +118,11 @@ const ActiveFollowUpPlans = () => {
   // Fetch schedule data for selected plan
   const { data: planScheduleData, isLoading: isPlanScheduleLoading } =
     useFollowupPlanSchedule(selectedPlanForSchedule?._id || "");
+
+  // const { mutate: deletePlan } = useDeleteFollowupPlan();
+  const deletePlan = (id: string) => {
+    console.log("Mock delete plan", id);
+  }
 
   // Transform API data
   const activePlans = useMemo(() => {
@@ -202,11 +210,11 @@ const ActiveFollowUpPlans = () => {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    // TODO: Add menu functionality
+                    setPlanToDelete(plan.id);
                   }}
-                  className="text-white/40 hover:text-white/60 transition-colors"
+                  className="text-white/40 hover:text-red-400 transition-colors h-7 w-7 flex items-center justify-center rounded-full hover:bg-white/10"
                 >
-                  <MoreVertical className="w-4 h-4" />
+                  <Trash className="w-4 h-4" />
                 </button>
               </div>
             </div>
@@ -365,6 +373,22 @@ const ActiveFollowUpPlans = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={!!planToDelete}
+        title="Delete Follow-up Plan"
+        description="Are you sure you want to delete this follow-up plan? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        confirmVariant="destructive"
+        onConfirm={() => {
+          if (planToDelete) {
+            deletePlan(planToDelete);
+            setPlanToDelete(null);
+          }
+        }}
+        onCancel={() => setPlanToDelete(null)}
+      />
     </>
   );
 };
