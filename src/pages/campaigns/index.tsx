@@ -84,35 +84,37 @@ import { ArrowRight as ArrowRightIcon } from "lucide-react";
 // Processing Status Component
 const ProcessingStatusBadge = ({ campaign }: { campaign: Campaign }) => {
   const processingStatus = campaign.processingStatus;
-  
+
   if (!processingStatus) return null;
 
-  const isProcessing = 
-    processingStatus.research?.status === 'in-progress' ||
-    processingStatus.content?.status === 'in-progress' ||
-    processingStatus.media?.status === 'in-progress';
+  const isProcessing =
+    processingStatus.research?.status === "in-progress" ||
+    processingStatus.content?.status === "in-progress" ||
+    processingStatus.media?.status === "in-progress";
 
   if (!isProcessing) return null;
 
   const getStatusText = () => {
-    if (processingStatus.research?.status === 'in-progress') {
+    if (processingStatus.research?.status === "in-progress") {
       const completed = processingStatus.research.completedDocs || 0;
       const total = processingStatus.research.totalDocs || 4;
       return `Research: ${completed}/${total} docs`;
     }
-    if (processingStatus.content?.status === 'in-progress') {
-      return 'Generating content...';
+    if (processingStatus.content?.status === "in-progress") {
+      return "Generating content...";
     }
-    if (processingStatus.media?.status === 'in-progress') {
-      return 'Generating media...';
+    if (processingStatus.media?.status === "in-progress") {
+      return "Generating media...";
     }
-    return 'Processing...';
+    return "Processing...";
   };
 
   return (
     <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-500/20 border border-blue-500/30">
       <Loader2 className="w-3 h-3 text-blue-400 animate-spin" />
-      <span className="text-xs text-blue-300 font-medium">{getStatusText()}</span>
+      <span className="text-xs text-blue-300 font-medium">
+        {getStatusText()}
+      </span>
     </div>
   );
 };
@@ -1306,6 +1308,16 @@ const CampaignsPage = () => {
                             <Edit2 className="w-3 h-3 mr-1.5" />
                             Edit
                           </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setDeleteDialogOpen(true)}
+                            disabled={isDeleting}
+                            className="text-red-400 hover:text-red-300 hover:bg-red-500/10 backdrop-blur-sm transition-all text-xs h-7 px-3 py-1"
+                          >
+                            <Trash2 className="w-3 h-3 mr-1.5" />
+                            Delete
+                          </Button>
                         </div>
                       ) : (
                         <div className="flex gap-2 ml-2 pr-3">
@@ -1345,17 +1357,25 @@ const CampaignsPage = () => {
                         <div className="mt-3 space-y-2">
                           {selectedCampaign.processingStatus.research && (
                             <div className="text-xs text-gray-400">
-                              Research: {selectedCampaign.processingStatus.research.completedDocs || 0}/{selectedCampaign.processingStatus.research.totalDocs || 4} docs completed
+                              Research:{" "}
+                              {selectedCampaign.processingStatus.research
+                                .completedDocs || 0}
+                              /
+                              {selectedCampaign.processingStatus.research
+                                .totalDocs || 4}{" "}
+                              docs completed
                             </div>
                           )}
                           {selectedCampaign.processingStatus.content && (
                             <div className="text-xs text-gray-400">
-                              Content: {selectedCampaign.processingStatus.content.status}
+                              Content:{" "}
+                              {selectedCampaign.processingStatus.content.status}
                             </div>
                           )}
                           {selectedCampaign.processingStatus.media && (
                             <div className="text-xs text-gray-400">
-                              Media: {selectedCampaign.processingStatus.media.status}
+                              Media:{" "}
+                              {selectedCampaign.processingStatus.media.status}
                             </div>
                           )}
                         </div>
