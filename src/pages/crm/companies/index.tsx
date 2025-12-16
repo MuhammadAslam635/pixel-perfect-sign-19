@@ -257,7 +257,7 @@ const index = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
-          className="max-w-[2000px] mx-auto w-full flex flex-col flex-1"
+          className="max-w-[1600px] mx-auto w-full flex flex-col flex-1"
         >
           {/* Wrapper with space-between */}
           <div className="flex items-center justify-between mb-4">
