@@ -616,12 +616,16 @@ const LeadChat = ({
       });
     },
     onError: (mutationError: any) => {
+      const errorData = mutationError?.response?.data;
       const fallbackMessage =
-        mutationError?.response?.data?.message ||
-        mutationError?.response?.data?.error ||
+      errorData?.message ||
+        errorData?.error?.error?.message ||
+        errorData?.error?.message ||
         mutationError?.message ||
         "Failed to send WhatsApp message";
+      
       setWhatsappSendError(fallbackMessage);
+      toast.error(fallbackMessage);
     },
   });
 

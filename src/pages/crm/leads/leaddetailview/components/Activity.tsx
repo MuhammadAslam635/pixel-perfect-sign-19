@@ -332,8 +332,12 @@ const Activity: FC<ActivityProps> = ({
           response.message ||
           "Meeting has been successfully deleted from your calendar.",
       });
-      // Invalidate and refetch all queries
-      await Promise.all([refetchLeadMeetings()]);
+      // Invalidate and refetch all queries to update lead stage in UI
+      await Promise.all([
+        refetchLeadMeetings(),
+        queryClient.invalidateQueries({ queryKey: ["lead", leadId] }),
+        queryClient.invalidateQueries({ queryKey: ["lead-summary", leadId] }),
+      ]);
     },
     onError: (error: any) => {
       toast({

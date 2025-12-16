@@ -44,7 +44,7 @@ const DetailsSidebar: FC<DetailsSidebarProps> = ({
       className="
         w-full
         h-fit
-        max-h-[calc(100vh-320px)] lg:max-h-[calc(100vh-340px)] xl:max-h-[calc(100vh-320px)] 2xl:max-h-[calc(100vh-330px)]
+        min-h-[calc(100vh-320px)] lg:min-h-[calc(100vh-340px)] xl:min-h-[calc(100vh-320px)] 2xl:min-h-[calc(100vh-330px)]
         bg-[#222B2C]/95
         backdrop-blur-sm
         border-[#3A3A3A]
@@ -65,7 +65,7 @@ const DetailsSidebar: FC<DetailsSidebarProps> = ({
           variant="ghost"
           size="sm"
           onClick={onClose}
-          className="absolute top-3 right-3 h-7 w-7 p-0  hover:bg-white/10 text-neutral-500 hover:text-neutral-400 rounded-full flex items-center justify-center z-10"
+          className="absolute top-2 right-2 h-7 w-7 p-0  hover:bg-white/10 text-neutral-500 hover:text-neutral-400 rounded-full flex items-center justify-center z-10"
           aria-label="Close sidebar"
         >
           <X className="w-4 h-4" />
