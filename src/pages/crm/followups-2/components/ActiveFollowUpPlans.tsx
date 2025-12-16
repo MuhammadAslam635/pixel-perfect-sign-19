@@ -157,13 +157,13 @@ const ActiveFollowUpPlans = () => {
   const getStatusBadgeStyle = (status: string) => {
     switch (status) {
       case "Scheduled":
-        return "bg-green-500/20 text-green-400 border-green-500/40";
+        return "bg-green-500/20 text-green-400 border-green-500/40 hover:bg-transparent";
       case "In Progress":
-        return "bg-red-500/20 text-red-400 border-red-500/40";
+        return "bg-red-500/20 text-red-400 border-red-500/40 hover:bg-transparent";
       case "Completed":
-        return "bg-blue-500/20 text-blue-400 border-blue-500/40";
+        return "bg-blue-500/20 text-blue-400 border-blue-500/40 hover:bg-transparent";
       default:
-        return "bg-white/10 text-white/60 border-white/20";
+        return "bg-white/10 text-white/60 border-white/20 hover:bg-transparent";
     }
   };
 
@@ -229,7 +229,7 @@ const ActiveFollowUpPlans = () => {
           <Card
             key={plan.id}
             onClick={() => handleViewPlanSchedule(plan.originalPlan)}
-            className="bg-white/5 border-white/10 hover:border-white/20 transition-all duration-300 hover:shadow-lg hover:shadow-white/5 rounded-3xl cursor-pointer"
+            className="group bg-white/5 border-white/10 hover:border-white/20 transition-all duration-300 hover:shadow-lg hover:shadow-white/5 rounded-3xl cursor-pointer"
           >
             <CardContent className="p-4 space-y-4">
               {/* Card Header */}
@@ -238,7 +238,7 @@ const ActiveFollowUpPlans = () => {
 
                 <div className="flex items-center gap-2">
                   <Badge
-                    className={`rounded-full px-2.5 py-1 text-xs font-medium border ${getStatusBadgeStyle(
+                    className={`rounded-full px-2.5 py-1 text-xs font-medium border transition-all duration-300 ${getStatusBadgeStyle(
                       plan.status
                     )}`}
                   >
@@ -249,7 +249,7 @@ const ActiveFollowUpPlans = () => {
                       e.stopPropagation();
                       setPlanToDelete(plan.originalPlan);
                     }}
-                    className="text-white/40 hover:text-red-400 transition-colors h-7 w-7 flex items-center justify-center rounded-full hover:bg-white/10"
+                    className="text-red-500 hover:text-red-600 transition-colors h-7 w-7 flex items-center justify-center rounded-full hover:bg-white/10"
                   >
                     <Trash className="w-4 h-4" />
                   </button>
