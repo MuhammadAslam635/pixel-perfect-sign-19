@@ -25,7 +25,6 @@ import {
   ChevronLeft,
   ChevronRight,
   MoveRight,
-  Loader2,
 } from "lucide-react";
 import {
   Select,
@@ -81,43 +80,6 @@ import CreateCampaignModal from "@/components/campaigns/CreateCampaignModal";
 import FacebookIcon from "@/components/icons/FacebookIcon";
 import { ArrowRight as ArrowRightIcon } from "lucide-react";
 
-// Processing Status Component
-const ProcessingStatusBadge = ({ campaign }: { campaign: Campaign }) => {
-  const processingStatus = campaign.processingStatus;
-
-  if (!processingStatus) return null;
-
-  const isProcessing =
-    processingStatus.research?.status === "in-progress" ||
-    processingStatus.content?.status === "in-progress" ||
-    processingStatus.media?.status === "in-progress";
-
-  if (!isProcessing) return null;
-
-  const getStatusText = () => {
-    if (processingStatus.research?.status === "in-progress") {
-      const completed = processingStatus.research.completedDocs || 0;
-      const total = processingStatus.research.totalDocs || 4;
-      return `Research: ${completed}/${total} docs`;
-    }
-    if (processingStatus.content?.status === "in-progress") {
-      return "Generating content...";
-    }
-    if (processingStatus.media?.status === "in-progress") {
-      return "Generating media...";
-    }
-    return "Processing...";
-  };
-
-  return (
-    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-500/20 border border-blue-500/30">
-      <Loader2 className="w-3 h-3 text-blue-400 animate-spin" />
-      <span className="text-xs text-blue-300 font-medium">
-        {getStatusText()}
-      </span>
-    </div>
-  );
-};
 
 const CampaignsPage = () => {
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
@@ -1073,11 +1035,6 @@ const CampaignsPage = () => {
                     <h3 className="text-base sm:text-lg font-semibold text-white mb-2 leading-tight">
                       {campaign.name}
                     </h3>
-                    {campaign.processingStatus && (
-                      <div className="mb-2">
-                        <ProcessingStatusBadge campaign={campaign} />
-                      </div>
-                    )}
                     <p className="text-xs text-gray-500 mb-4 flex-grow line-clamp-2 leading-relaxed">
                       {renderTextWithLinks(
                         campaign.userRequirements ||
@@ -1350,37 +1307,6 @@ const CampaignsPage = () => {
                   </DialogHeader>
 
                   <div className="flex-1 overflow-y-auto px-6 space-y-4 scrollbar-hide py-4 min-h-0">
-                    {/* Processing Status Section */}
-                    {selectedCampaign.processingStatus && (
-                      <div className="mb-4">
-                        <ProcessingStatusBadge campaign={selectedCampaign} />
-                        <div className="mt-3 space-y-2">
-                          {selectedCampaign.processingStatus.research && (
-                            <div className="text-xs text-gray-400">
-                              Research:{" "}
-                              {selectedCampaign.processingStatus.research
-                                .completedDocs || 0}
-                              /
-                              {selectedCampaign.processingStatus.research
-                                .totalDocs || 4}{" "}
-                              docs completed
-                            </div>
-                          )}
-                          {selectedCampaign.processingStatus.content && (
-                            <div className="text-xs text-gray-400">
-                              Content:{" "}
-                              {selectedCampaign.processingStatus.content.status}
-                            </div>
-                          )}
-                          {selectedCampaign.processingStatus.media && (
-                            <div className="text-xs text-gray-400">
-                              Media:{" "}
-                              {selectedCampaign.processingStatus.media.status}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
                     {/* Status Section */}
                     <div className="flex flex-wrap gap-4 items-center">
                       {isEditing ? (
