@@ -1025,7 +1025,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
 
       {/* Fixed pagination at bottom */}
       {!loading && companies.length > 0 && (
-        <div className="mt-4 pb-4">{renderPagination()}</div>
+        <div className="pb-4">{renderPagination()}</div>
       )}
 
       {/* Delete Confirmation Dialog */}
