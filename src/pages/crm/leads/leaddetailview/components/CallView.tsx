@@ -189,6 +189,7 @@ export const CallView = ({
   // New handler to open call details in the right panel
   const handleOpenCallDetails = useCallback(
     async (log: LeadCallLog) => {
+      // First, set the log immediately for UI responsiveness
       setSelectedCallLog(log);
       setActiveTab("recording");
       
@@ -198,32 +199,60 @@ export const CallView = ({
       setRecordingError(null);
       setRecordingLoading(true);
 
+      // Refetch call logs to get the latest data (including transcript)
+      // This ensures we have the most up-to-date transcript if it was added after initial fetch
+      let refreshedLog: LeadCallLog | null = null;
       try {
-        const recordingUrl = log.elevenlabsRecordingUrl || log.recordingUrl || null;
+        const refreshedResponse = await twilioService.getLeadCallLogs(leadId || "", {
+          limit: 10,
+        });
+        const refreshedLogs = refreshedResponse.data || [];
+        refreshedLog = refreshedLogs.find((l: LeadCallLog) => l._id === log._id) || null;
         
-        // If it's a direct URL (like data: or http), use it
+        // Update selected call log with latest data if found
+        if (refreshedLog) {
+          console.log("[handleOpenCallDetails] Updated call log with latest data");
+          setSelectedCallLog(refreshedLog);
+          // Update the log in the callLogs array too
+          setCallLogs((prev) =>
+            prev.map((l) => (l._id === log._id ? refreshedLog! : l))
+          );
+        }
+      } catch (refreshError) {
+        console.warn("[handleOpenCallDetails] Failed to refresh call log, using cached data", refreshError);
+        // Continue with cached log if refresh fails
+      }
+
+      try {
+        // Use the refreshed log if available, otherwise use the original
+        const currentLog = refreshedLog || log;
+        const recordingUrl = currentLog.elevenlabsRecordingUrl || currentLog.recordingUrl || null;
+        
+        // Only use data: URLs directly (base64 encoded audio)
+        // Never use http/https URLs directly - always go through backend proxy
+        // to avoid Twilio authentication popups
         if (
           typeof recordingUrl === "string" &&
-          (recordingUrl.startsWith("http://") || 
-           recordingUrl.startsWith("https://") || 
-           recordingUrl.startsWith("data:audio/"))
+          recordingUrl.startsWith("data:audio/")
         ) {
-          console.log("[handleOpenCallDetails] Setting audio URL:", recordingUrl);
+          console.log("[handleOpenCallDetails] Using inline data URL");
           setRecordingAudioUrl(recordingUrl);
           setRecordingLoading(false);
           return;
         }
 
-        // Otherwise fetch via API proxy
+        // Always fetch via API proxy (even if we have a URL)
+        // This ensures we don't hit Twilio auth popups
         const isElevenLabsCall =
-          !!log.elevenlabsCallId ||
-          !!log.elevenlabsRecordingUrl ||
-          log.metadata?.provider === "elevenlabs";
+          !!currentLog.elevenlabsCallId ||
+          !!currentLog.elevenlabsRecordingUrl ||
+          currentLog.metadata?.provider === "elevenlabs";
 
         const endpoint = isElevenLabsCall
-          ? `/elevenlabs/calls/${log._id}/recording`
-          : `/twilio/calls/${log._id}/recording`;
+          ? `/elevenlabs/calls/${currentLog._id}/recording`
+          : `/twilio/calls/${currentLog._id}/recording`;
 
+        console.log("[handleOpenCallDetails] Fetching recording via backend proxy:", endpoint);
         const response = await API.get(endpoint, {
           responseType: "blob",
         });
@@ -234,7 +263,8 @@ export const CallView = ({
       } catch (err: any) {
         console.error("Failed to load call recording", err);
         // Only show error if no recording is expected or fetch failed
-        if (!log.recordingSid && !log.elevenlabsRecordingUrl && !log.recordingUrl) {
+        const currentLog = refreshedLog || log;
+        if (!currentLog.recordingSid && !currentLog.elevenlabsRecordingUrl && !currentLog.recordingUrl) {
              setRecordingError("No recording available for this call.");
         } else {
              setRecordingError(
@@ -247,7 +277,7 @@ export const CallView = ({
         setRecordingLoading(false);
       }
     },
-    []
+    [leadId]
   );
 
   // Handler to close call details and return to "Make a call" view
