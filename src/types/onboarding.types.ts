@@ -1,6 +1,6 @@
 // Onboarding Types
 
-export type OnboardingStatus = 'draft' | 'in_progress' | 'completed' | 'approved' | 'rejected';
+export type OnboardingStatus = 'not_started' | 'draft' | 'in_progress' | 'completed' | 'approved' | 'rejected';
 
 export interface OnboardingQuestions {
   // Section 1: Company Overview

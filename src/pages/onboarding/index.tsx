@@ -253,9 +253,10 @@ const OnboardingPage = () => {
       console.log("Skip: Could not save progress, continuing anyway");
     }
     
-    // Store skip preference in sessionStorage so we don't redirect back immediately
+    // Set sessionStorage to allow skipping in current session
+    // This will be cleared on next login, so user will be redirected back to onboarding
     sessionStorage.setItem("onboarding_skipped", "true");
-    toast.info("You can complete onboarding later from Settings");
+    toast.info("You can complete onboarding later. You'll be prompted to complete it on your next login.");
     navigate("/dashboard", { replace: true });
   };
 

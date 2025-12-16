@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Eye, EyeOff } from "lucide-react";
+import { AxiosError } from "axios";
 import { Button } from "@/components/ui/button";
 import { AuthInput } from "@/components/ui/auth-input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +16,7 @@ import { Link, useNavigate } from "react-router-dom";
 import AuthLayout from "./AuthLayout";
 import { authService } from "@/services/auth.service";
 import { leadsService } from "@/services/leads.service";
+import { onboardingService } from "@/services/onboarding.service";
 import { fetchUserPermissions } from "@/store/slices/permissionsSlice";
 
 const SignIn = () => {
@@ -69,11 +71,51 @@ const SignIn = () => {
         );
         dispatch(fetchUserPermissions());
 
+        // Clear any onboarding skip flags on login to force status check
+        // This ensures users who skipped onboarding are redirected back
+        sessionStorage.removeItem("onboarding_skipped");
+
         // Check if user needs to change password
         if (response.user.requiresPasswordChange) {
           toast.info("Please change your temporary password to continue.");
           navigate("/change-password");
           return;
+        }
+
+        // Check onboarding status before allowing dashboard access
+        // Only check for Company and CompanyAdmin roles
+        const userRole = response.user.role;
+        if (userRole === "Company" || userRole === "CompanyAdmin") {
+          try {
+            const onboardingResponse =
+              await onboardingService.getOnboardingStatus();
+            if (onboardingResponse.success) {
+              const onboardingStatus = onboardingResponse.data.status;
+
+              // If onboarding is not completed, redirect to onboarding
+              if (
+                onboardingStatus === "not_started" ||
+                onboardingStatus === "draft" ||
+                onboardingStatus === "in_progress"
+              ) {
+                toast.info("Please complete your onboarding to continue.");
+                navigate("/onboarding");
+                return;
+              }
+            }
+          } catch (onboardingError) {
+            // If 404, onboarding doesn't exist - redirect to onboarding
+            if (
+              onboardingError instanceof AxiosError &&
+              onboardingError.response?.status === 404
+            ) {
+              toast.info("Please complete your onboarding to continue.");
+              navigate("/onboarding");
+              return;
+            }
+            // For other errors, log but don't block - allow dashboard access
+            console.error("Error checking onboarding status:", onboardingError);
+          }
         }
 
         // After successful login, immediately fetch leads once
@@ -97,10 +139,11 @@ const SignIn = () => {
         dispatch(loginFailure(response.message || "Login failed"));
         toast.error(response.message || "Login failed");
       }
-    } catch (error: any) {
+    } catch (error) {
       const errorMessage =
-        error.response?.data?.message ||
-        error.response?.data?.errors?.[0]?.msg ||
+        (error instanceof AxiosError && error.response?.data?.message) ||
+        (error instanceof AxiosError &&
+          error.response?.data?.errors?.[0]?.msg) ||
         "Network error. Please try again.";
       dispatch(loginFailure(errorMessage));
       toast.error(errorMessage);

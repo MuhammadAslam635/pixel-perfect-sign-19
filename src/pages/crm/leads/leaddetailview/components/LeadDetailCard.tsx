@@ -446,6 +446,14 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
       setScheduleDialogOpen(false);
       resetScheduleForm();
       await Promise.all([
+        // Invalidate lead query to refresh stage (appointment_booked)
+        queryClient.invalidateQueries({
+          queryKey: ["lead", lead._id],
+        }),
+        // Invalidate lead summary query
+        queryClient.invalidateQueries({
+          queryKey: ["lead-summary", lead._id],
+        }),
         // Invalidate all meetings query (for stage detection)
         queryClient.invalidateQueries({
           queryKey: ["lead-all-meetings", lead._id],

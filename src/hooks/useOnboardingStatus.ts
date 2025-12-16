@@ -25,18 +25,20 @@ export const useOnboardingStatus = (
   // Only check for Company and CompanyAdmin roles
   const shouldCheck = enabled && (userRole === "Company" || userRole === "CompanyAdmin");
 
-  // Check if user has skipped onboarding this session
+  // Check if user has skipped onboarding in this session
+  // This allows skipping in current session, but will be cleared on next login
   const hasSkippedThisSession = sessionStorage.getItem('onboarding_skipped') === 'true';
 
   const fetchStatus = async () => {
-    // If user has skipped this session, don't redirect them back
-    if (hasSkippedThisSession) {
+    if (!shouldCheck) {
       setLoading(false);
       setStatus(null);
       return;
     }
 
-    if (!shouldCheck) {
+    // If user skipped in this session, allow them to continue
+    // But on next login, sessionStorage will be cleared and they'll be redirected
+    if (hasSkippedThisSession) {
       setLoading(false);
       setStatus(null);
       return;
@@ -50,15 +52,13 @@ export const useOnboardingStatus = (
         setStatus(response.data.status);
       }
     } catch (err: any) {
-      // 404 means no onboarding exists yet - but don't require it if API fails
+      // 404 means no onboarding exists yet - require onboarding
       if (err?.response?.status === 404) {
-        // Only require onboarding if explicitly not started
-        // If API fails for other reasons, don't block user
         setStatus("not_started");
       } else {
         console.error("Error fetching onboarding status:", err);
         setError(err?.response?.data?.message || "Failed to check onboarding status");
-        // Don't block navigation on error - set status to null to skip redirect
+        // On error, don't block user - set status to null to skip redirect
         setStatus(null);
       }
     } finally {
@@ -71,10 +71,10 @@ export const useOnboardingStatus = (
   }, [shouldCheck, hasSkippedThisSession]);
 
   // Requires onboarding if status is not completed
-  // Redirect for: "not_started", "draft", or "in_progress"
-  // Only allow access to dashboard when status is "completed", "approved", or "rejected"
+  // BUT: Allow skipping in current session (hasSkippedThisSession)
+  // On next login, sessionStorage will be cleared and they'll be redirected
   const requiresOnboarding = shouldCheck && 
-    !hasSkippedThisSession && 
+    !hasSkippedThisSession &&
     (status === "not_started" || status === "draft" || status === "in_progress");
 
   return {
