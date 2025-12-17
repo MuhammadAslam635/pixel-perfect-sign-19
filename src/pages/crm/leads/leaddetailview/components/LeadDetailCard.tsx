@@ -261,9 +261,46 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
         personId: lead._id,
       });
       if (response?.success) {
-        toast.success(
-          response.message || "Enrichment request submitted successfully"
-        );
+        const fieldsUpdated = response?.data?.fieldsUpdated || [];
+        const phoneRevealPending = response?.data?.phoneRevealPending || false;
+        
+        if (fieldsUpdated.length > 0) {
+          // Format field names for display
+          const fieldLabels: Record<string, string> = {
+            email: "Email",
+            phone: "Phone",
+            position: "Position",
+            linkedinUrl: "LinkedIn URL",
+            location: "Location",
+            pictureUrl: "Profile Picture",
+            description: "Description",
+            companyName: "Company Name",
+            companyLocation: "Company Location",
+          };
+          
+          const updatedFieldsList = fieldsUpdated
+            .map((field: string) => fieldLabels[field] || field)
+            .join(", ");
+          
+          let toastMessage = `Successfully updated: ${updatedFieldsList}`;
+          
+          if (phoneRevealPending) {
+            toastMessage += ". Phone number will be updated shortly.";
+          }
+          
+          toast.success(toastMessage);
+        } else {
+          if (phoneRevealPending) {
+            toast.info(
+              "Phone number is being revealed and will be updated shortly."
+            );
+          } else {
+            toast.info(
+              "No new data found. All available information is already up to date."
+            );
+          }
+        }
+        
         // Invalidate and refetch lead data
         await queryClient.invalidateQueries({ queryKey: ["lead", lead._id] });
       } else {
