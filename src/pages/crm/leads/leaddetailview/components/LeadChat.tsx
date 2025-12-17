@@ -297,11 +297,11 @@ const LeadChat = ({
         status: "Ready",
         isAvailable: true,
       },
-      // {
-      //   label: "Meeting Bot",
-      //   status: "Ready",
-      //   isAvailable: meetingBotAvailable,
-      // },
+      {
+        label: "Meeting Bot",
+        status: "Ready",
+        isAvailable: meetingBotAvailable,
+      },
     ];
   }, [
     emailAddress,
