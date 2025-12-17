@@ -123,6 +123,7 @@ class WhatsAppService {
   async getConversation(params: {
     contact: string;
     phoneNumberId?: string;
+    leadId?: string;
     page?: number;
     limit?: number;
   }): Promise<PaginatedResponse<WhatsAppMessage[]>> {

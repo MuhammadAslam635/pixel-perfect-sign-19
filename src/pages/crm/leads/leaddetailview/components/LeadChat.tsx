@@ -385,6 +385,7 @@ const LeadChat = ({
       whatsappService.getConversation({
         contact: normalizedLeadWhatsapp as string,
         phoneNumberId: whatsappPhoneNumberId || undefined,
+        leadId: leadId || undefined,
         limit: 100,
       }),
     enabled: whatsappConversationEnabled,
