@@ -35,6 +35,7 @@ import {
   type BusinessAccountsResponse,
   type SelectPagePayload,
   type SelectBusinessAccountPayload,
+  type FacebookAdAccount,
 } from "@/services/facebook.service";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { AdminGlobalIntegrationsTab } from "@/components/admin/integrations/AdminGlobalIntegrationsTab";
@@ -77,9 +78,7 @@ export const IntegrationsTab = () => {
   const [selectedPageId, setSelectedPageId] = useState<string>("");
   const [selectedBusinessAccountId, setSelectedBusinessAccountId] =
     useState<string>("");
-  const [adAccounts, setAdAccounts] = useState<
-    { id: string; name: string; account_status?: number; currency?: string }[]
-  >([]);
+  const [adAccounts, setAdAccounts] = useState<FacebookAdAccount[]>([]);
   const [isLoadingAdAccounts, setIsLoadingAdAccounts] = useState(false);
   const [selectedAdAccountId, setSelectedAdAccountId] = useState<string>("");
   const [whatsappConnections, setWhatsAppConnections] = useState<
@@ -2010,12 +2009,18 @@ export const IntegrationsTab = () => {
                 </SelectTrigger>
                 <SelectContent>
                   {adAccounts.length > 0 ? (
-                    adAccounts.map((account) => (
-                      <SelectItem key={account.id} value={account.id}>
-                        {account.name || account.id}
-                        {account.currency ? ` (${account.currency})` : ""}
-                      </SelectItem>
-                    ))
+                    adAccounts.map((account) => {
+                      // Use account_id (numeric) for display, id (act_XXXXXXXXX) for value
+                      const displayId = account.account_id || account.id;
+                      const displayName =
+                        account.name || displayId || account.id;
+                      return (
+                        <SelectItem key={account.id} value={account.id}>
+                          {displayName}
+                          {account.currency ? ` (${account.currency})` : ""}
+                        </SelectItem>
+                      );
+                    })
                   ) : (
                     <SelectItem value="no-accounts" disabled>
                       No ad accounts available

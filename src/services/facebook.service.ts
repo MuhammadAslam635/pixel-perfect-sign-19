@@ -65,6 +65,7 @@ export interface BusinessAccountsResponse {
 
 export interface FacebookAdAccount {
   id: string;
+  account_id?: string;
   name: string;
   account_status?: number;
   currency?: string;
