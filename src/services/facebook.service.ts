@@ -63,6 +63,20 @@ export interface BusinessAccountsResponse {
   message: string;
 }
 
+export interface FacebookAdAccount {
+  id: string;
+  name: string;
+  account_status?: number;
+  currency?: string;
+  timezone_name?: string;
+}
+
+export interface AdAccountsResponse {
+  success: boolean;
+  data: FacebookAdAccount[];
+  message: string;
+}
+
 export const facebookService = {
   /**
    * Get Facebook integration status
@@ -149,6 +163,21 @@ export const facebookService = {
         "/facebook/select-business-account",
         payload
       );
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  /**
+   * Get Facebook ad accounts
+   */
+  getAdAccounts: async (
+    businessAccountId?: string
+  ): Promise<AdAccountsResponse> => {
+    try {
+      const params = businessAccountId ? { businessAccountId } : undefined;
+      const response = await API.get("/facebook/ad-accounts", { params });
       return response.data;
     } catch (error: any) {
       throw error;

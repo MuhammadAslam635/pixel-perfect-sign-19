@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import axios from "axios";
@@ -77,6 +77,11 @@ export const IntegrationsTab = () => {
   const [selectedPageId, setSelectedPageId] = useState<string>("");
   const [selectedBusinessAccountId, setSelectedBusinessAccountId] =
     useState<string>("");
+  const [adAccounts, setAdAccounts] = useState<
+    { id: string; name: string; account_status?: number; currency?: string }[]
+  >([]);
+  const [isLoadingAdAccounts, setIsLoadingAdAccounts] = useState(false);
+  const [selectedAdAccountId, setSelectedAdAccountId] = useState<string>("");
   const [whatsappConnections, setWhatsAppConnections] = useState<
     WhatsAppCredential[]
   >([]);
@@ -546,7 +551,14 @@ export const IntegrationsTab = () => {
     }
     if (facebookIntegration?.businessAccountId) {
       setSelectedBusinessAccountId(facebookIntegration.businessAccountId);
+      // Fetch ad accounts when business account is loaded
+      fetchAdAccounts(facebookIntegration.businessAccountId);
+    } else if (facebookIntegration) {
+      // Even if no business account, try to fetch ad accounts directly
+      // Ad accounts can be accessed via /me/adaccounts without business account
+      fetchAdAccounts();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [facebookIntegration]);
 
   useEffect(() => {
@@ -941,6 +953,44 @@ export const IntegrationsTab = () => {
     }
   };
 
+  const fetchAdAccounts = useCallback(
+    async (businessAccountId?: string) => {
+      if (!user?.token) return;
+      setIsLoadingAdAccounts(true);
+      try {
+        const response = await facebookService.getAdAccounts(businessAccountId);
+        if (response?.success) {
+          setAdAccounts(response.data || []);
+          // Auto-select first ad account if available
+          if (response.data && response.data.length > 0) {
+            setSelectedAdAccountId((prev) => prev || response.data[0].id);
+          }
+          // Show message if no ad accounts found
+          if (!response.data || response.data.length === 0) {
+            if (response.message) {
+              console.warn("Ad accounts fetch result:", response.message);
+            }
+          }
+        }
+      } catch (error: unknown) {
+        console.error("Error loading ad accounts:", error);
+        setAdAccounts([]);
+        // Show error toast to inform user
+        toast({
+          title: "Unable to fetch ad accounts",
+          description:
+            error instanceof Error
+              ? error.message
+              : "Please ensure you have granted ads_read permission and reconnected your Facebook account.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoadingAdAccounts(false);
+      }
+    },
+    [user?.token]
+  );
+
   const handleRefreshPages = async () => {
     try {
       await refreshPages();
@@ -967,6 +1017,8 @@ export const IntegrationsTab = () => {
         description:
           "Facebook business account has been selected successfully.",
       });
+      // Fetch ad accounts for the selected business account
+      fetchAdAccounts(businessAccountId);
     } catch (error: unknown) {
       console.error("Error selecting business account:", error);
       toast({
@@ -1837,9 +1889,14 @@ export const IntegrationsTab = () => {
           {facebookConnected && (
             <div className="space-y-3 pt-4 border-t border-white/10">
               <div className="flex items-center justify-between gap-2">
-                <Label className="text-white/80 text-sm">
-                  Select Business Account
-                </Label>
+                <div>
+                  <Label className="text-white/80 text-sm">
+                    Step 1: Select Business Account
+                  </Label>
+                  <p className="text-xs text-white/50 mt-1">
+                    Required before selecting ad accounts
+                  </p>
+                </div>
                 <Button
                   type="button"
                   variant="ghost"
@@ -1891,7 +1948,7 @@ export const IntegrationsTab = () => {
               </Select>
               {selectedBusinessAccountId && (
                 <p className="text-xs sm:text-sm text-emerald-400">
-                  Selected business account will be used for ad campaigns.
+                  ✓ Business account selected. Ad accounts are loading below...
                 </p>
               )}
               {(!businessAccountsData?.data ||
@@ -1902,6 +1959,88 @@ export const IntegrationsTab = () => {
                     business_management permission.
                   </p>
                 )}
+            </div>
+          )}
+
+          {facebookConnected && (
+            <div className="space-y-3 pt-4 border-t border-white/10">
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <Label className="text-white/80 text-sm">
+                    {selectedBusinessAccountId
+                      ? "Step 2: Select Ad Account"
+                      : "Select Ad Account"}
+                  </Label>
+                  <p className="text-xs text-white/50 mt-1">
+                    {selectedBusinessAccountId
+                      ? "Ad accounts from your selected business account"
+                      : "Your ad accounts (can be accessed without business account)"}
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() =>
+                    fetchAdAccounts(selectedBusinessAccountId || undefined)
+                  }
+                  disabled={isLoadingAdAccounts}
+                  className="text-white/70 hover:text-white flex-shrink-0"
+                >
+                  <RefreshCw
+                    className={`h-4 w-4 ${
+                      isLoadingAdAccounts ? "animate-spin" : ""
+                    }`}
+                  />
+                </Button>
+              </div>
+              <Select
+                value={selectedAdAccountId}
+                onValueChange={setSelectedAdAccountId}
+                disabled={isLoadingAdAccounts}
+              >
+                <SelectTrigger className="bg-white/[0.06] border-white/10 text-white text-sm sm:text-base">
+                  <SelectValue
+                    placeholder={
+                      isLoadingAdAccounts
+                        ? "Loading ad accounts..."
+                        : "Select an ad account"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {adAccounts.length > 0 ? (
+                    adAccounts.map((account) => (
+                      <SelectItem key={account.id} value={account.id}>
+                        {account.name || account.id}
+                        {account.currency ? ` (${account.currency})` : ""}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="no-accounts" disabled>
+                      No ad accounts available
+                    </SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+              {selectedAdAccountId && (
+                <p className="text-xs sm:text-sm text-emerald-400">
+                  ✓ Ad account selected ({selectedAdAccountId}). Ready to create
+                  ad campaigns!
+                </p>
+              )}
+              {adAccounts.length === 0 && !isLoadingAdAccounts && (
+                <div className="rounded-lg bg-amber-500/10 border border-amber-500/30 p-3">
+                  <p className="text-xs text-amber-300 font-medium mb-1">
+                    No ad accounts available
+                  </p>
+                  <p className="text-xs text-amber-300/80">
+                    {selectedBusinessAccountId
+                      ? "This business account doesn't have ad accounts, or your token doesn't have Marketing API access. Please disconnect and reconnect your Facebook account with ads_read and ads_management permissions."
+                      : "To use ad campaigns, you need to reconnect your Facebook account with ads_read and ads_management permissions. Click 'Disconnect' then 'Connect' again and grant the required permissions during the OAuth flow."}
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>
