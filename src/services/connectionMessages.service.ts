@@ -94,6 +94,25 @@ export interface GenerateConnectionMessageInput {
   regenerate?: boolean;
 }
 
+export interface GenerateProposalInput {
+  companyId: string;
+  personId: string;
+  regenerate?: boolean;
+}
+
+export interface ProposalData {
+  proposal: string;
+  proposalId?: string;
+  metadata?: any;
+  isExisting?: boolean;
+}
+
+export interface GenerateProposalResponse {
+  success: boolean;
+  message?: string;
+  data: ProposalData;
+}
+
 export interface ConnectionMessagePerson {
   id: string;
   name: string;
@@ -359,6 +378,13 @@ export const connectionMessagesService = {
 
   getAvailableModels: async (): Promise<GetAvailableModelsResponse> => {
     const response = await API.get("/connection-messages/models");
+    return response.data;
+  },
+
+  generateProposal: async (
+    payload: GenerateProposalInput
+  ): Promise<GenerateProposalResponse> => {
+    const response = await API.post("/connection-messages/proposal", payload);
     return response.data;
   },
 };

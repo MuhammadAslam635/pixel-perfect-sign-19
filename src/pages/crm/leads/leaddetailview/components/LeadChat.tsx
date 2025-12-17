@@ -7,6 +7,8 @@ import {
   Send,
   Sparkles,
   Trash2,
+  Copy,
+  Check,
 } from "lucide-react";
 import { ActiveNavButton } from "@/components/ui/primary-btn";
 import { Button } from "@/components/ui/button";
@@ -145,6 +147,9 @@ const LeadChat = ({
   const [isGeneratingSmsMessage, setIsGeneratingSmsMessage] = useState(false);
   const [isEmailEditorExpanded, setIsEmailEditorExpanded] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [proposalContent, setProposalContent] = useState<string>("");
+  const [isGeneratingProposal, setIsGeneratingProposal] = useState(false);
+  const [proposalCopied, setProposalCopied] = useState(false);
   const [messageToDelete, setMessageToDelete] = useState<string | null>(null);
   const [openMessageMenu, setOpenMessageMenu] = useState<string | null>(null);
   const [twilioConnection, setTwilioConnection] = useState<{
@@ -276,6 +281,7 @@ const LeadChat = ({
         status: whatsappStatus,
         isAvailable: whatsappAvailable,
       },
+
       { label: "Email", status: emailStatus, isAvailable: hasEmail },
       { label: "SMS", status: smsStatus, isAvailable: smsAvailable },
       { label: "Call", status: smsStatus, isAvailable: smsAvailable },
@@ -283,6 +289,11 @@ const LeadChat = ({
         label: "AI Call",
         status: aiCallAvailable ? "Ready" : "Add phone",
         isAvailable: aiCallAvailable,
+      },
+      {
+        label: "Proposal",
+        status: "Ready",
+        isAvailable: true,
       },
       // {
       //   label: "Meeting Bot",
@@ -336,6 +347,11 @@ const LeadChat = ({
     setEmailInput("");
     setEmailSubject(DEFAULT_EMAIL_SUBJECT);
     setEmailSendError(null);
+  }, [lead?._id]);
+
+  useEffect(() => {
+    setProposalContent("");
+    setProposalCopied(false);
   }, [lead?._id]);
 
   const whatsappConversationQueryKey = [
@@ -618,12 +634,12 @@ const LeadChat = ({
     onError: (mutationError: any) => {
       const errorData = mutationError?.response?.data;
       const fallbackMessage =
-      errorData?.message ||
+        errorData?.message ||
         errorData?.error?.error?.message ||
         errorData?.error?.message ||
         mutationError?.message ||
         "Failed to send WhatsApp message";
-      
+
       setWhatsappSendError(fallbackMessage);
       toast.error(fallbackMessage);
     },
@@ -939,6 +955,56 @@ const LeadChat = ({
       setSmsSendError(friendlyMessage);
     } finally {
       setIsGeneratingSmsMessage(false);
+    }
+  };
+
+  const handleGenerateProposal = async () => {
+    if (!lead?.companyId || !lead?._id) {
+      toast.error("Lead information is incomplete for generating proposals.");
+      return;
+    }
+
+    setIsGeneratingProposal(true);
+    try {
+      const response = await connectionMessagesService.generateProposal({
+        companyId: lead.companyId,
+        personId: lead._id,
+        regenerate: proposalContent ? true : false,
+      });
+
+      const generated =
+        response.data?.proposal?.trim() || response.data?.proposal;
+
+      if (generated) {
+        setProposalContent(generated);
+        toast.success("Proposal generated successfully!");
+      } else {
+        toast.error("No proposal was generated. Try again.");
+      }
+    } catch (error: any) {
+      const friendlyMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to generate proposal.";
+      toast.error(friendlyMessage);
+    } finally {
+      setIsGeneratingProposal(false);
+    }
+  };
+
+  const handleCopyProposal = async () => {
+    if (!proposalContent) {
+      toast.error("No proposal to copy.");
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(proposalContent);
+      setProposalCopied(true);
+      toast.success("Proposal copied to clipboard!");
+      setTimeout(() => setProposalCopied(false), 2000);
+    } catch (error) {
+      toast.error("Failed to copy proposal.");
     }
   };
 
@@ -1592,6 +1658,86 @@ const LeadChat = ({
                 </p>
               )}
             </div>
+          </div>
+        ) : activeTab === "Proposal" ? (
+          <div className="flex flex-1 flex-col min-h-0 relative">
+            {!lead?.companyId || !lead?._id ? (
+              <div className="flex w-full flex-1 items-center justify-center py-20 text-center text-white/70">
+                Lead information is incomplete for generating proposals.
+              </div>
+            ) : (
+              <div className="flex flex-1 flex-col min-h-0">
+                {/* Header with Generate and Copy buttons */}
+                <div className="flex items-center justify-between gap-3 mb-4 px-1">
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      className="flex items-center gap-2 rounded-lg bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] px-4 py-2 text-xs font-medium text-white transition hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+                      onClick={handleGenerateProposal}
+                      disabled={isGeneratingProposal}
+                    >
+                      {isGeneratingProposal ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="h-4 w-4" />
+                          {proposalContent
+                            ? "Regenerate with AI"
+                            : "Generate with AI"}
+                        </>
+                      )}
+                    </button>
+                    {proposalContent && (
+                      <button
+                        type="button"
+                        className="flex items-center gap-2 rounded-lg border border-white/30 bg-white/10 px-4 py-2 text-xs font-medium text-white transition hover:bg-white/20 disabled:opacity-40"
+                        onClick={handleCopyProposal}
+                        disabled={!proposalContent}
+                      >
+                        {proposalCopied ? (
+                          <>
+                            <Check className="h-4 w-4" />
+                            Copied!
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="h-4 w-4" />
+                            Copy
+                          </>
+                        )}
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Proposal Content */}
+                {proposalContent ? (
+                  <div className="flex-1 overflow-y-auto scrollbar-hide pb-4">
+                    <div className="rounded-2xl bg-white/10 p-6 text-white/90">
+                      <div className="whitespace-pre-wrap text-sm leading-relaxed">
+                        {proposalContent}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex w-full flex-1 items-center justify-center py-20 text-center text-white/70">
+                    <div className="flex flex-col items-center gap-3">
+                      <Sparkles className="h-12 w-12 text-white/30" />
+                      <p>Click "Generate with AI" to create a proposal</p>
+                      <p className="text-xs text-white/50">
+                        The proposal will be generated based on all
+                        communication history
+                        <br />
+                        (SMS, emails, WhatsApp, phone calls) and knowledge base
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         ) : activeTab === "Email" ? (
           <div className="flex flex-1 flex-col min-h-0 relative">
