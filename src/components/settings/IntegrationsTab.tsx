@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import axios from "axios";
 import {
@@ -28,12 +28,14 @@ import {
 } from "@/services/whatsapp.service";
 import { mailgunService } from "@/services/mailgun.service";
 import {
-  useFacebookConnect,
-  useFacebookDisconnect,
-  useFacebookRefreshPages,
-  useFacebookSelectPage,
-  useFacebookStatus,
-} from "@/components/settings/services/facebook.api";
+  facebookService,
+  type FacebookStatusResponse,
+  type FacebookRedirectResponse,
+  type RefreshPagesResponse,
+  type BusinessAccountsResponse,
+  type SelectPagePayload,
+  type SelectBusinessAccountPayload,
+} from "@/services/facebook.service";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { AdminGlobalIntegrationsTab } from "@/components/admin/integrations/AdminGlobalIntegrationsTab";
 import facebookLogo from "@/assets/facebook-icon.svg";
@@ -73,6 +75,8 @@ export const IntegrationsTab = () => {
   const [isLoadingCustomers, setIsLoadingCustomers] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedPageId, setSelectedPageId] = useState<string>("");
+  const [selectedBusinessAccountId, setSelectedBusinessAccountId] =
+    useState<string>("");
   const [whatsappConnections, setWhatsAppConnections] = useState<
     WhatsAppCredential[]
   >([]);
@@ -124,29 +128,106 @@ export const IntegrationsTab = () => {
   } | null>(null);
   const [isValidatingMailgunEnv, setIsValidatingMailgunEnv] = useState(false);
 
-  const {
-    mutateAsync: fetchFacebookRedirectUrl,
-    isPending: isFacebookLoading,
-  } = useFacebookConnect();
+  const queryClient = useQueryClient();
+  const user = getUserData();
 
+  // Facebook status query
   const {
     data: facebookStatus,
     isLoading: isFacebookStatusLoading,
     refetch: refetchFacebookStatus,
-  } = useFacebookStatus();
+  } = useQuery<FacebookStatusResponse>({
+    queryKey: ["facebook-integration", user?._id],
+    queryFn: () => facebookService.getStatus(),
+    enabled: !!user,
+    staleTime: 30000,
+    retry: 1,
+  });
 
+  // Facebook connect mutation
+  const {
+    mutateAsync: fetchFacebookRedirectUrl,
+    isPending: isFacebookLoading,
+  } = useMutation<FacebookRedirectResponse, Error>({
+    mutationFn: () => facebookService.getRedirectUrl(),
+    onError: (error: unknown) => {
+      console.error("Facebook connect error:", error);
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error("Failed to initiate Facebook connection.");
+    },
+  });
+
+  // Facebook disconnect mutation
   const {
     mutateAsync: disconnectFacebook,
     isPending: isDisconnectingFacebook,
-  } = useFacebookDisconnect();
+  } = useMutation<unknown, Error>({
+    mutationFn: () => facebookService.disconnect(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["facebook-integration", user?._id],
+      });
+    },
+  });
 
-  const { mutateAsync: selectPage, isPending: isSelectingPage } =
-    useFacebookSelectPage();
+  // Facebook select page mutation
+  const { mutateAsync: selectPage, isPending: isSelectingPage } = useMutation<
+    unknown,
+    Error,
+    SelectPagePayload
+  >({
+    mutationFn: (payload: SelectPagePayload) =>
+      facebookService.selectPage(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["facebook-integration", user?._id],
+      });
+    },
+  });
 
+  // Facebook refresh pages mutation
   const { mutateAsync: refreshPages, isPending: isRefreshingPages } =
-    useFacebookRefreshPages();
+    useMutation<RefreshPagesResponse, Error>({
+      mutationFn: () => facebookService.refreshPages(),
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: ["facebook-integration", user?._id],
+        });
+      },
+    });
 
-  const user = getUserData();
+  // Facebook business accounts query
+  const {
+    data: businessAccountsData,
+    isLoading: isBusinessAccountsLoading,
+    refetch: refetchBusinessAccounts,
+  } = useQuery<BusinessAccountsResponse>({
+    queryKey: ["facebook-business-accounts", user?._id],
+    queryFn: () => facebookService.getBusinessAccounts(),
+    enabled: !!user,
+    staleTime: 30000,
+    retry: 1,
+  });
+
+  // Facebook select business account mutation
+  const {
+    mutateAsync: selectBusinessAccount,
+    isPending: isSelectingBusinessAccount,
+  } = useMutation<unknown, Error, SelectBusinessAccountPayload>({
+    mutationFn: (payload: SelectBusinessAccountPayload) =>
+      facebookService.selectBusinessAccount(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["facebook-integration", user?._id],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["facebook-business-accounts", user?._id],
+      });
+    },
+  });
+
   const isAdmin = user?.role === "Admin";
   const canManageWhatsApp =
     user?.role === "Company" || user?.role === "CompanyAdmin";
@@ -462,6 +543,9 @@ export const IntegrationsTab = () => {
   useEffect(() => {
     if (facebookIntegration?.pageId) {
       setSelectedPageId(facebookIntegration.pageId);
+    }
+    if (facebookIntegration?.businessAccountId) {
+      setSelectedBusinessAccountId(facebookIntegration.businessAccountId);
     }
   }, [facebookIntegration]);
 
@@ -869,6 +953,42 @@ export const IntegrationsTab = () => {
       toast({
         title: "Error",
         description: "Failed to refresh pages. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleBusinessAccountSelect = async (businessAccountId: string) => {
+    try {
+      setSelectedBusinessAccountId(businessAccountId);
+      await selectBusinessAccount({ businessAccountId });
+      toast({
+        title: "Business account selected",
+        description:
+          "Facebook business account has been selected successfully.",
+      });
+    } catch (error: unknown) {
+      console.error("Error selecting business account:", error);
+      toast({
+        title: "Error",
+        description: "Failed to select business account. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleRefreshBusinessAccounts = async () => {
+    try {
+      await refetchBusinessAccounts();
+      toast({
+        title: "Business accounts refreshed",
+        description: "Facebook business accounts list has been refreshed.",
+      });
+    } catch (error: unknown) {
+      console.error("Error refreshing business accounts:", error);
+      toast({
+        title: "Error",
+        description: "Failed to refresh business accounts. Please try again.",
         variant: "destructive",
       });
     }
@@ -1713,6 +1833,77 @@ export const IntegrationsTab = () => {
                 )}
               </div>
             )}
+
+          {facebookConnected && (
+            <div className="space-y-3 pt-4 border-t border-white/10">
+              <div className="flex items-center justify-between gap-2">
+                <Label className="text-white/80 text-sm">
+                  Select Business Account
+                </Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleRefreshBusinessAccounts}
+                  disabled={isBusinessAccountsLoading}
+                  className="text-white/70 hover:text-white flex-shrink-0"
+                >
+                  <RefreshCw
+                    className={`h-4 w-4 ${
+                      isBusinessAccountsLoading ? "animate-spin" : ""
+                    }`}
+                  />
+                </Button>
+              </div>
+              <Select
+                value={selectedBusinessAccountId}
+                onValueChange={handleBusinessAccountSelect}
+                disabled={
+                  isSelectingBusinessAccount || isBusinessAccountsLoading
+                }
+              >
+                <SelectTrigger className="bg-white/[0.06] border-white/10 text-white text-sm sm:text-base">
+                  <SelectValue
+                    placeholder={
+                      isBusinessAccountsLoading
+                        ? "Loading business accounts..."
+                        : "Select a business account"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {businessAccountsData?.data &&
+                  businessAccountsData.data.length > 0 ? (
+                    businessAccountsData.data.map((account) => (
+                      <SelectItem key={account.id} value={account.id}>
+                        {account.name}
+                        {account.primary_page?.name
+                          ? ` (${account.primary_page.name})`
+                          : ""}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="no-accounts" disabled>
+                      No business accounts available
+                    </SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+              {selectedBusinessAccountId && (
+                <p className="text-xs sm:text-sm text-emerald-400">
+                  Selected business account will be used for ad campaigns.
+                </p>
+              )}
+              {(!businessAccountsData?.data ||
+                businessAccountsData.data.length === 0) &&
+                !isBusinessAccountsLoading && (
+                  <p className="text-xs text-amber-300">
+                    No business accounts found. Make sure you have granted
+                    business_management permission.
+                  </p>
+                )}
+            </div>
+          )}
         </div>
 
         <div className="space-y-4 sm:space-y-6 rounded-2xl sm:rounded-3xl border border-white/10 bg-white/[0.02] p-4 sm:p-5">
