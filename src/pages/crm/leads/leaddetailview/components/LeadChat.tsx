@@ -606,6 +606,8 @@ const LeadChat = ({
       setSmsSendError(null);
       if (leadId) {
         queryClient.invalidateQueries({ queryKey: ["lead-sms", leadId] });
+        // Also invalidate lead query for stage updates
+        queryClient.invalidateQueries({ queryKey: ["lead", leadId] });
       }
     },
     onError: (mutationError: any) => {
@@ -630,6 +632,10 @@ const LeadChat = ({
       queryClient.invalidateQueries({
         queryKey: whatsappConversationQueryKey,
       });
+      // Also invalidate lead query for stage updates
+      if (leadId) {
+        queryClient.invalidateQueries({ queryKey: ["lead", leadId] });
+      }
     },
     onError: (mutationError: any) => {
       const errorData = mutationError?.response?.data;
@@ -709,6 +715,10 @@ const LeadChat = ({
       setEmailSubject(DEFAULT_EMAIL_SUBJECT);
       setEmailSendError(null);
       queryClient.invalidateQueries({ queryKey: emailConversationQueryKey });
+      // Also invalidate lead query for stage updates
+      if (leadId) {
+        queryClient.invalidateQueries({ queryKey: ["lead", leadId] });
+      }
     },
     onError: (mutationError: any) => {
       const fallbackMessage =

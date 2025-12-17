@@ -328,14 +328,16 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
           .replace(/^linkedin\.com\//, "");
       }
 
+      // Build update payload - use null instead of undefined to allow clearing fields
+      // null values will be sent in JSON, allowing backend to clear the fields
       const updatePayload: Partial<Lead> = {
-        phone: editData.phone.trim() || undefined,
-        whatsapp: editData.whatsapp.trim() || undefined,
-        email: editData.email.trim() || undefined,
-        linkedinUrl: cleanedLinkedinUrl || undefined,
-        location: editData.location.trim() || undefined,
-        position: editData.position.trim() || undefined,
-        language: editData.language.trim() || undefined,
+        phone: editData.phone.trim() || null,
+        whatsapp: editData.whatsapp.trim() || null,
+        email: editData.email.trim() || null,
+        linkedinUrl: cleanedLinkedinUrl || null,
+        location: editData.location.trim() || null,
+        position: editData.position.trim() || null,
+        language: editData.language.trim() || null,
       };
 
       const response = await leadsService.updateLead(lead._id, updatePayload);
@@ -459,36 +461,58 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
     setSchedulingMeeting(true);
     try {
       const response = await calendarService.scheduleMeeting(payload);
-      toast.success(
-        response?.message ||
-          "Meeting scheduled successfully in Microsoft Calendar"
-      );
-      setScheduleDialogOpen(false);
-      resetScheduleForm();
-      await Promise.all([
-        // Invalidate lead query to refresh stage (appointment_booked)
-        queryClient.invalidateQueries({
-          queryKey: ["lead", lead._id],
-        }),
-        // Invalidate lead summary query
-        queryClient.invalidateQueries({
-          queryKey: ["lead-summary", lead._id],
-        }),
-        // Invalidate all meetings query (for stage detection)
-        queryClient.invalidateQueries({
-          queryKey: ["lead-all-meetings", lead._id],
-        }),
-        // Invalidate calendar month meetings query (for calendar view)
-        queryClient.invalidateQueries({
-          queryKey: ["lead-calendar-meetings", lead._id],
-        }),
-        queryClient.invalidateQueries({
-          queryKey: ["calendar-available-slots"],
-        }),
-      ]);
+      
+      // Check if the meeting was successfully saved to database
+      if (response.success) {
+        if (response.data?.leadMeetingId) {
+          // Full success - meeting saved to both Microsoft Calendar and database
+          toast.success(
+            response?.message ||
+              "Meeting scheduled successfully in Microsoft Calendar"
+          );
+          setScheduleDialogOpen(false);
+          resetScheduleForm();
+          await Promise.all([
+            // Invalidate lead query to refresh stage (appointment_booked)
+            queryClient.invalidateQueries({
+              queryKey: ["lead", lead._id],
+            }),
+            // Invalidate lead summary query
+            queryClient.invalidateQueries({
+              queryKey: ["lead-summary", lead._id],
+            }),
+            // Invalidate all meetings query (for stage detection)
+            queryClient.invalidateQueries({
+              queryKey: ["lead-all-meetings", lead._id],
+            }),
+            // Invalidate calendar month meetings query (for calendar view)
+            queryClient.invalidateQueries({
+              queryKey: ["lead-calendar-meetings", lead._id],
+            }),
+            queryClient.invalidateQueries({
+              queryKey: ["calendar-available-slots"],
+            }),
+          ]);
+        } else {
+          // Partial success - meeting in Microsoft Calendar but not in database
+          toast.warning(
+            "Meeting created in Microsoft Calendar but could not be saved locally. " +
+            "The meeting exists in your calendar but may not appear in the app. " +
+            "Please refresh or contact support if the meeting doesn't appear."
+          );
+          // Still close dialog and reset form, but don't invalidate queries
+          // since the meeting isn't in the database
+          setScheduleDialogOpen(false);
+          resetScheduleForm();
+        }
+      } else {
+        // Full failure
+        toast.error(response.message || "Failed to schedule meeting");
+      }
     } catch (error: any) {
       const message =
         error?.response?.data?.message ||
+        error?.response?.data?.error ||
         error?.message ||
         "Failed to schedule meeting";
       toast.error(message);

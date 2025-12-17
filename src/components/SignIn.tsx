@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { AxiosError } from "axios";
 import { Button } from "@/components/ui/button";
 import { AuthInput } from "@/components/ui/auth-input";
@@ -23,6 +23,7 @@ const SignIn = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [checkingOnboarding, setCheckingOnboarding] = useState(false);
   const [errors, setErrors] = useState({
     email: "",
     password: "",
@@ -86,6 +87,7 @@ const SignIn = () => {
         // Only check for Company and CompanyAdmin roles
         const userRole = response.user.role;
         if (userRole === "Company" || userRole === "CompanyAdmin") {
+          setCheckingOnboarding(true);
           try {
             const onboardingResponse =
               await onboardingService.getOnboardingStatus();
@@ -98,6 +100,7 @@ const SignIn = () => {
                 onboardingStatus === "draft" ||
                 onboardingStatus === "in_progress"
               ) {
+                setCheckingOnboarding(false);
                 toast.info("Please complete your onboarding to continue.");
                 navigate("/onboarding");
                 return;
@@ -109,12 +112,15 @@ const SignIn = () => {
               onboardingError instanceof AxiosError &&
               onboardingError.response?.status === 404
             ) {
+              setCheckingOnboarding(false);
               toast.info("Please complete your onboarding to continue.");
               navigate("/onboarding");
               return;
             }
             // For other errors, log but don't block - allow dashboard access
             console.error("Error checking onboarding status:", onboardingError);
+          } finally {
+            setCheckingOnboarding(false);
           }
         }
 
@@ -170,6 +176,17 @@ const SignIn = () => {
         </p>
       }
     >
+      {/* Loading overlay for onboarding check */}
+      {checkingOnboarding && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="h-8 w-8 animate-spin text-white" />
+            <p className="font-[Poppins] text-lg font-medium text-white">
+              Checking onboarding status...
+            </p>
+          </div>
+        </div>
+      )}
       <form onSubmit={handleSubmit} className="space-y-5 font-[Poppins]">
         {/* Email */}
         <div className="space-y-2">
@@ -237,9 +254,9 @@ const SignIn = () => {
         <Button
           type="submit"
           className="mt-2 h-[56px] w-full rounded-[18px] bg-gradient-to-r from-[#69B4B7] via-[#5486D0] to-[#3E64B3] text-lg font-semibold text-white transition-all hover:brightness-110"
-          disabled={loading}
+          disabled={loading || checkingOnboarding}
         >
-          {loading ? "Logging in..." : "Log In"}
+          {loading || checkingOnboarding ? "Logging in..." : "Log In"}
         </Button>
 
         {/* Sign Up Link */}
