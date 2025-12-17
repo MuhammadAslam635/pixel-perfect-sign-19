@@ -214,4 +214,18 @@ export const leadsService = {
       throw error;
     }
   },
+
+  /**
+   * Mark proposal as sent (updates lead stage to proposal_sent)
+   */
+  markProposalSent: async (
+    id: string
+  ): Promise<{ success: boolean; message: string; data: Lead }> => {
+    try {
+      const response = await API.put(`/leads/${id}/proposal-sent`);
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
 };

@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { ActiveNavButton } from "@/components/ui/primary-btn";
 import { Button } from "@/components/ui/button";
-import { Lead } from "@/services/leads.service";
+import { Lead, leadsService } from "@/services/leads.service";
 import { emailService } from "@/services/email.service";
 import { Email } from "@/types/email.types";
 import { twilioService, LeadSmsMessage } from "@/services/twilio.service";
@@ -27,6 +27,7 @@ import { connectionMessagesService } from "@/services/connectionMessages.service
 import { SelectedCallLogView } from "../index";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { toast } from "sonner";
+import ReactMarkdown from "react-markdown";
 
 type LeadChatProps = {
   lead?: Lead;
@@ -150,6 +151,7 @@ const LeadChat = ({
   const [proposalContent, setProposalContent] = useState<string>("");
   const [isGeneratingProposal, setIsGeneratingProposal] = useState(false);
   const [proposalCopied, setProposalCopied] = useState(false);
+  const [isUpdatingStage, setIsUpdatingStage] = useState(false);
   const [messageToDelete, setMessageToDelete] = useState<string | null>(null);
   const [openMessageMenu, setOpenMessageMenu] = useState<string | null>(null);
   const [twilioConnection, setTwilioConnection] = useState<{
@@ -1018,6 +1020,35 @@ const LeadChat = ({
     }
   };
 
+  const handleUpdateStage = async () => {
+    if (!lead?._id) {
+      toast.error("Lead information is incomplete.");
+      return;
+    }
+
+    setIsUpdatingStage(true);
+    try {
+      await leadsService.markProposalSent(lead._id);
+      toast.success("Lead stage updated to 'Proposal Sent'!");
+
+      // Refresh lead data to update the UI
+      if (onMessageUpdate) {
+        onMessageUpdate();
+      }
+
+      // Invalidate queries to refresh lead data
+      queryClient.invalidateQueries({ queryKey: ["lead", lead._id] });
+    } catch (error: any) {
+      const friendlyMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to update lead stage.";
+      toast.error(friendlyMessage);
+    } finally {
+      setIsUpdatingStage(false);
+    }
+  };
+
   const handleDeleteWhatsAppConversation = () => {
     if (
       deleteConversationMutation.isPending ||
@@ -1701,24 +1732,44 @@ const LeadChat = ({
                       )}
                     </button>
                     {proposalContent && (
-                      <button
-                        type="button"
-                        className="flex items-center gap-2 rounded-lg border border-white/30 bg-white/10 px-4 py-2 text-xs font-medium text-white transition hover:bg-white/20 disabled:opacity-40"
-                        onClick={handleCopyProposal}
-                        disabled={!proposalContent}
-                      >
-                        {proposalCopied ? (
-                          <>
-                            <Check className="h-4 w-4" />
-                            Copied!
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="h-4 w-4" />
-                            Copy
-                          </>
-                        )}
-                      </button>
+                      <>
+                        <button
+                          type="button"
+                          className="flex items-center gap-2 rounded-lg border border-white/30 bg-white/10 px-4 py-2 text-xs font-medium text-white transition hover:bg-white/20 disabled:opacity-40"
+                          onClick={handleCopyProposal}
+                          disabled={!proposalContent}
+                        >
+                          {proposalCopied ? (
+                            <>
+                              <Check className="h-4 w-4" />
+                              Copied!
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="h-4 w-4" />
+                              Copy
+                            </>
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          className="flex items-center gap-2 rounded-lg bg-gradient-to-br from-[#68B3B7] to-[#3E65B4] px-4 py-2 text-xs font-medium text-white transition hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+                          onClick={handleUpdateStage}
+                          disabled={isUpdatingStage || !proposalContent}
+                        >
+                          {isUpdatingStage ? (
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              Updating...
+                            </>
+                          ) : (
+                            <>
+                              <Check className="h-4 w-4" />
+                              Update Stage
+                            </>
+                          )}
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>
@@ -1727,8 +1778,96 @@ const LeadChat = ({
                 {proposalContent ? (
                   <div className="flex-1 overflow-y-auto scrollbar-hide pb-4">
                     <div className="rounded-2xl bg-white/10 p-6 text-white/90">
-                      <div className="whitespace-pre-wrap text-sm leading-relaxed">
-                        {proposalContent}
+                      <div className="prose prose-invert prose-sm max-w-none">
+                        <ReactMarkdown
+                          components={{
+                            h1: ({ node, ...props }) => (
+                              <h1
+                                className="text-2xl font-bold text-white mt-6 mb-4 first:mt-0"
+                                {...props}
+                              />
+                            ),
+                            h2: ({ node, ...props }) => (
+                              <h2
+                                className="text-xl font-bold text-white mt-5 mb-3"
+                                {...props}
+                              />
+                            ),
+                            h3: ({ node, ...props }) => (
+                              <h3
+                                className="text-lg font-semibold text-white mt-4 mb-2"
+                                {...props}
+                              />
+                            ),
+                            h4: ({ node, ...props }) => (
+                              <h4
+                                className="text-base font-semibold text-white/90 mt-3 mb-2"
+                                {...props}
+                              />
+                            ),
+                            p: ({ node, ...props }) => (
+                              <p
+                                className="text-white/80 mb-3 leading-relaxed"
+                                {...props}
+                              />
+                            ),
+                            strong: ({ node, ...props }) => (
+                              <strong
+                                className="text-white font-semibold"
+                                {...props}
+                              />
+                            ),
+                            em: ({ node, ...props }) => (
+                              <em className="text-white/90 italic" {...props} />
+                            ),
+                            ul: ({ node, ...props }) => (
+                              <ul
+                                className="list-disc list-inside ml-4 mb-3 space-y-1.5"
+                                {...props}
+                              />
+                            ),
+                            ol: ({ node, ...props }) => (
+                              <ol
+                                className="list-decimal list-inside ml-4 mb-3 space-y-1.5"
+                                {...props}
+                              />
+                            ),
+                            li: ({ node, ...props }) => (
+                              <li className="text-white/80" {...props} />
+                            ),
+                            hr: ({ node, ...props }) => (
+                              <hr className="border-white/20 my-4" {...props} />
+                            ),
+                            blockquote: ({ node, ...props }) => (
+                              <blockquote
+                                className="border-l-4 border-white/30 pl-4 my-3 italic text-white/70"
+                                {...props}
+                              />
+                            ),
+                            code: ({ node, inline, ...props }) => {
+                              const codeProps = props as any;
+                              return inline ? (
+                                <code
+                                  className="bg-white/20 px-1.5 py-0.5 rounded text-white/90 text-xs font-mono"
+                                  {...codeProps}
+                                />
+                              ) : (
+                                <code
+                                  className="block bg-white/10 p-3 rounded text-white/90 text-xs font-mono overflow-x-auto mb-3"
+                                  {...codeProps}
+                                />
+                              );
+                            },
+                            pre: ({ node, ...props }) => (
+                              <pre
+                                className="bg-white/10 p-3 rounded text-white/90 text-xs font-mono overflow-x-auto mb-3"
+                                {...props}
+                              />
+                            ),
+                          }}
+                        >
+                          {proposalContent}
+                        </ReactMarkdown>
                       </div>
                     </div>
                   </div>
