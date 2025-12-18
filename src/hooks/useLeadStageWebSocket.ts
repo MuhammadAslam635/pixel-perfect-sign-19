@@ -131,38 +131,52 @@ export const useLeadStageWebSocket = (leadId: string | null | undefined) => {
           if (message.type === "lead_stage_update") {
             const updateMessage = message as LeadStageUpdateMessage;
 
+            // Normalize leadIds to strings for comparison
+            const updateLeadId = String(updateMessage.leadId || "");
+            const currentLeadId = String(leadId || "");
+
             // Only process if it's for the current lead
-            if (updateMessage.leadId === leadId) {
+            if (updateLeadId === currentLeadId && currentLeadId) {
               console.log("[WebSocket] 🔄 Lead stage update received:", {
+                leadId: updateLeadId,
                 oldStage: updateMessage.data.oldStage,
                 newStage: updateMessage.data.newStage,
                 triggeredBy: updateMessage.data.triggeredBy,
               });
 
-              // Invalidate React Query cache for lead data
-              queryClient.invalidateQueries({
+              // Force refetch queries immediately (not just invalidate)
+              // This ensures the UI updates right away
+              queryClient.refetchQueries({
                 queryKey: ["lead", leadId],
               });
 
-              // Also invalidate lead summary
+              // Also refetch lead summary
+              queryClient.refetchQueries({
+                queryKey: ["lead-summary", leadId],
+              });
+
+              // Refetch lead calendar meetings if needed
+              queryClient.refetchQueries({
+                queryKey: ["lead-calendar-meetings", leadId],
+              });
+
+              // Also invalidate to ensure all related queries are refreshed
+              queryClient.invalidateQueries({
+                queryKey: ["lead", leadId],
+              });
               queryClient.invalidateQueries({
                 queryKey: ["lead-summary", leadId],
               });
 
-              // Invalidate lead calendar meetings if needed
-              queryClient.invalidateQueries({
-                queryKey: ["lead-calendar-meetings", leadId],
-              });
-
               console.log(
-                "[WebSocket] ✅ Queries invalidated, UI should update"
+                "[WebSocket] ✅ Queries refetched and invalidated, UI should update immediately"
               );
             } else {
               console.log(
                 "[WebSocket] ⚠️ Update received for different lead:",
-                updateMessage.leadId,
+                updateLeadId,
                 "current:",
-                leadId
+                currentLeadId
               );
             }
           } else if (message.type === "connected") {
