@@ -117,7 +117,12 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
       .filter((m) => {
         const meetingEnd = new Date(m.endDateTime).getTime();
         const isPast = meetingEnd < nowTimestamp;
-        const hasRecall = m.recall?.status === "ended" || m.recall?.sessionId;
+        // Show if meeting has any Recall data: status, sessionId, recordingUrl, or transcriptUrl
+        const hasRecall = 
+          m.recall?.status === "ended" || 
+          m.recall?.sessionId || 
+          m.recall?.recordingUrl || 
+          m.recall?.transcriptUrl;
         return isPast && hasRecall;
       })
       .sort((a, b) => {
@@ -176,6 +181,14 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
 
     setLoadingTranscripts((prev) => ({ ...prev, [meetingId]: true }));
     try {
+      // Try to get transcript from backend API first (it should have downloaded it)
+      const recordingData = await calendarService.getMeetingRecording(meetingId);
+      if (recordingData.data.transcriptText) {
+        setTranscripts((prev) => ({ ...prev, [meetingId]: recordingData.data.transcriptText }));
+        return;
+      }
+      
+      // Fallback: try to fetch directly from URL (may fail due to CORS)
       const response = await fetch(transcriptUrl);
       if (response.ok) {
         const text = await response.text();
