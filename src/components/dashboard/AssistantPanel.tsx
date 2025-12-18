@@ -1,28 +1,38 @@
 import { List, Pencil, Plus } from "lucide-react";
 import { FC, useState, useEffect, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 import { fetchChatList, deleteChatById } from "@/services/chat.service";
 import { ChatMessage, ChatSummary } from "@/types/chat.types";
 import ChatInterface from "./ChatInterface";
 import ChatHistoryList from "./ChatHistoryList";
 import { toast } from "sonner";
 import { getUserData, getAuthToken } from "@/utils/authHelpers";
+import {
+  setSelectedChatId,
+  setDeletingChatId,
+  removeOptimisticMessages,
+} from "@/store/slices/chatSlice";
 
 type AssistantPanelProps = {
   isDesktop: boolean;
 };
 
 const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
+  const dispatch = useDispatch();
   const [showChatList, setShowChatList] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [localMessages, setLocalMessages] = useState<ChatMessage[]>([]);
   const [chatHistory, setChatHistory] = useState<ChatSummary[]>([]);
-  const [deletingChatId, setDeletingChatId] = useState<string | null>(null);
   const panelRef = useRef<HTMLElement>(null);
   const queryClient = useQueryClient();
   const hasAutoLoadedRef = useRef(false); // Track if we've already auto-loaded a chat
   const currentAuthTokenRef = useRef<string | null>(null); // Track current auth token
+
+  // Redux selectors
+  const selectedChatId = useSelector((state: RootState) => state.chat.selectedChatId);
+  const deletingChatId = useSelector((state: RootState) => state.chat.deletingChatId);
 
   // Get current auth token to identify user changes
   const getCurrentAuthToken = (): string | null => {
@@ -67,7 +77,7 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
       // User/company has changed - invalidate queries and reset state
       queryClient.invalidateQueries({ queryKey: ["chatList"] });
       queryClient.invalidateQueries({ queryKey: ["chatDetail"] });
-      setCurrentChatId(null);
+      dispatch(setSelectedChatId(null));
       setLocalMessages([]);
       setChatHistory([]);
       hasAutoLoadedRef.current = false; // Reset auto-load flag for new user
@@ -78,13 +88,22 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
   }, [currentAuthToken, queryClient]);
 
   // Update chat history from API response
+  // Use a ref to track previous chat list to avoid unnecessary updates
+  const prevChatListRef = useRef<string>("");
   useEffect(() => {
-    setChatHistory(apiChatList);
+    const chatListKey = apiChatList.map(chat => chat._id).join(",");
+    if (prevChatListRef.current !== chatListKey) {
+      prevChatListRef.current = chatListKey;
+      setChatHistory(apiChatList);
+    }
   }, [apiChatList]);
 
   // Auto-load the most recent chat on initial mount only (for current user)
+  // Use a ref to track the first chat ID to avoid re-triggering
+  const firstChatIdRef = useRef<string | null>(null);
   useEffect(() => {
     const authToken = getCurrentAuthToken();
+    const firstChatId = apiChatList.length > 0 ? apiChatList[0]?._id : null;
 
     // Only auto-load if:
     // 1. We have a current auth token
@@ -93,34 +112,40 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
     // 4. We have chat data
     // 5. No chat is currently selected
     // 6. Data is fresh (not loading)
+    // 7. The first chat ID hasn't changed (to prevent re-loading when list updates)
     if (
       authToken &&
       (currentAuthTokenRef.current === null ||
         authToken === currentAuthTokenRef.current) &&
       !hasAutoLoadedRef.current &&
-      apiChatList.length > 0 &&
-      !currentChatId &&
+      firstChatId &&
+      firstChatId !== firstChatIdRef.current &&
+      !selectedChatId &&
       localMessages.length === 0 &&
       !isChatListLoading // Only auto-load when data is fresh (not loading)
     ) {
-      // Get the most recent chat (first in the list)
-      const mostRecentChat = apiChatList[0];
-      if (mostRecentChat?._id) {
-        handleSelectChat(mostRecentChat._id);
-        hasAutoLoadedRef.current = true; // Mark as loaded for this user
-      }
+      // Mark as loaded and track the chat ID BEFORE calling handleSelectChat to prevent re-triggering
+      hasAutoLoadedRef.current = true;
+      firstChatIdRef.current = firstChatId;
+      handleSelectChat(firstChatId);
     }
   }, [
-    apiChatList,
-    currentChatId,
-    localMessages.length,
+    apiChatList.length, // Only depend on length, not the array itself
+    selectedChatId,
+    // Removed localMessages.length - it causes infinite loop when handleSelectChat sets it
     isChatListLoading,
     currentAuthToken,
+    // Removed dispatch - it's stable and doesn't need to be in deps
   ]);
 
   const handleSelectChat = (chatId: string) => {
-    setCurrentChatId(chatId);
+    dispatch(setSelectedChatId(chatId));
     setShowChatList(false);
+    // Don't fetch chat messages for temporary IDs - they only exist in optimistic state
+    if (chatId?.startsWith("temp_")) {
+      setLocalMessages([]);
+      return;
+    }
     // Fetch chat messages for selected chat
     queryClient
       .fetchQuery({
@@ -138,7 +163,7 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
   };
 
   const handleStartNewChat = () => {
-    setCurrentChatId(null);
+    dispatch(setSelectedChatId(null));
     setLocalMessages([]);
     setShowChatList(false);
     setSearchTerm("");
@@ -146,15 +171,18 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
 
   const handleDeleteChat = async (chatId: string) => {
     if (!chatId) return;
-    setDeletingChatId(chatId);
+    dispatch(setDeletingChatId(chatId));
     try {
       await deleteChatById(chatId);
       setChatHistory((prev) => prev.filter((chat) => chat._id !== chatId));
 
-      if (currentChatId === chatId) {
-        setCurrentChatId(null);
+      if (selectedChatId === chatId) {
+        dispatch(setSelectedChatId(null));
         setLocalMessages([]);
       }
+
+      // Remove optimistic messages for deleted chat
+      dispatch(removeOptimisticMessages(chatId));
 
       toast.success("Chat deleted");
       const authToken = getCurrentAuthToken();
@@ -169,11 +197,11 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
           "Failed to delete the chat. Please try again."
       );
     } finally {
-      setDeletingChatId(null);
+      dispatch(setDeletingChatId(null));
     }
   };
 
-  const hasActiveChat = currentChatId || localMessages.length > 0;
+  const hasActiveChat = selectedChatId || localMessages.length > 0;
 
   return (
     <section
@@ -222,7 +250,7 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
       {showChatList ? (
         <ChatHistoryList
           chats={chatHistory}
-          selectedChatId={currentChatId}
+          selectedChatId={selectedChatId}
           onSelectChat={handleSelectChat}
           onStartNewChat={handleStartNewChat}
           searchTerm={searchTerm}
@@ -233,9 +261,9 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
         />
       ) : (
         <ChatInterface
-          key={currentChatId || "new-chat"}
-          currentChatId={currentChatId}
-          onChatIdChange={setCurrentChatId}
+          key={selectedChatId || "new-chat"}
+          currentChatId={selectedChatId}
+          onChatIdChange={(chatId) => dispatch(setSelectedChatId(chatId))}
           onMessagesChange={setLocalMessages}
           initialMessages={localMessages}
         />

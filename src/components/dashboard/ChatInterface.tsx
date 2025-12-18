@@ -1,7 +1,7 @@
 import { Sparkles, Mic, Send, Loader2 } from "lucide-react";
 import { FC, useState, useEffect, useRef, useMemo } from "react";
 import { motion } from "framer-motion";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store/store";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
@@ -14,12 +14,29 @@ import {
   StreamEvent,
 } from "@/services/chat.service";
 import { deepgramTranscription } from "@/services/deepgram.service";
-import { ChatMessage } from "@/types/chat.types";
+import { ChatMessage, ChatSummary } from "@/types/chat.types";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import rehypeSanitize from "rehype-sanitize";
 import { useToast } from "@/components/ui/use-toast";
+import {
+  setSelectedChatId,
+  addOptimisticMessage,
+  removeOptimisticMessages,
+  setStreamingEvents,
+  addStreamingEvent,
+  clearStreamingEvents,
+  setIsStreaming,
+  setComposerValue,
+} from "@/store/slices/chatSlice";
+import {
+  startStreamingTask,
+  updateStreamingTask,
+  completeStreamingTask,
+  errorTask,
+  updateTask,
+} from "@/store/slices/longRunningTasksSlice";
 
 const getTimeBasedGreeting = () => {
   const hour = new Date().getHours();
@@ -95,28 +112,58 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
   onMessagesChange,
   initialMessages = [],
 }) => {
-  const [message, setMessage] = useState("");
-  const [localMessages, setLocalMessages] =
-    useState<ChatMessage[]>(initialMessages);
+  const dispatch = useDispatch();
   const [isListening, setIsListening] = useState(false);
   const [interimTranscript, setInterimTranscript] = useState("");
-  const [streamingEvents, setStreamingEvents] = useState<StreamEvent[]>([]);
-  const [isStreaming, setIsStreaming] = useState(false);
-  const [optimisticMessages, setOptimisticMessages] = useState<ChatMessage[]>(
-    []
-  );
   const scrollAreaRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const isSendingRef = useRef(false);
+  const streamingStartTimeRef = useRef<number | null>(null);
+  const streamingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isStreamingRef = useRef<boolean>(false);
+  const streamingChatIdRef = useRef<string | null>(null); // Track which chat is currently streaming
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Redux selectors
+  const selectedChatId = useSelector((state: RootState) => state.chat.selectedChatId);
+  const streamingEvents = useSelector((state: RootState) => state.chat.streamingEvents);
+  const isStreaming = useSelector((state: RootState) => state.chat.isStreaming);
+  const optimisticMessagesByChat = useSelector((state: RootState) => state.chat.optimisticMessagesByChat);
+  const temporaryChat = useSelector((state: RootState) => state.chat.temporaryChat);
+  const composerValue = useSelector((state: RootState) => state.chat.composerValue);
+  
+  // Use Redux composerValue for message input, but keep local state for interim transcript
+  const message = composerValue;
+
+  // Use Redux selectedChatId if currentChatId is not provided (for widget)
+  const activeChatId = currentChatId ?? selectedChatId;
+  const NEW_CHAT_KEY = "__new_chat__";
+  const currentChatKey = activeChatId ?? NEW_CHAT_KEY;
+  const optimisticMessages = optimisticMessagesByChat[currentChatKey] ?? [];
 
   const user = useSelector((state: RootState) => state.auth.user);
   const userName = user?.name || user?.email?.split("@")[0] || "User";
   const greeting = getTimeBasedGreeting();
 
   // Computed value to replace the old isSendingMessage from mutation
-  const isSendingMessage = isStreaming || isSendingRef.current;
+  // Make it chat-specific - only show typing indicator for the current chat being processed
+  const isCurrentChatSending = useMemo(() => {
+    // Only show thinking indicator if:
+    // 1. We're streaming AND the current chat is the one being streamed, OR
+    // 2. The current chat has optimistic messages (user message waiting for response)
+    const isStreamingThisChat = isStreaming && streamingChatIdRef.current === activeChatId;
+    const hasOptimisticMessages = optimisticMessages.length > 0;
+    
+    // Show indicator if streaming for this specific chat OR if this chat has optimistic messages
+    if (isStreamingThisChat || hasOptimisticMessages) {
+      return true;
+    }
+    
+    return false;
+  }, [isStreaming, optimisticMessages.length, activeChatId]);
+
+  const isSendingMessage = isCurrentChatSending;
 
   // Auto-scroll input to show latest text
   useEffect(() => {
@@ -145,7 +192,8 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
 
         // If it's a final result, add it to the message
         if (transcript && isFinal) {
-          setMessage((prev) => prev + (prev ? " " : "") + transcript);
+          const newValue = message + (message ? " " : "") + transcript;
+          dispatch(setComposerValue(newValue));
           setInterimTranscript("");
         }
       },
@@ -164,9 +212,8 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
         setIsListening(false);
         // Move any remaining interim transcript to final message
         if (interimTranscript.trim()) {
-          setMessage(
-            (prev) => prev + (prev ? " " : "") + interimTranscript.trim()
-          );
+          const newValue = message + (message ? " " : "") + interimTranscript.trim();
+          dispatch(setComposerValue(newValue));
           setInterimTranscript("");
         }
       }
@@ -182,7 +229,8 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
     setIsListening(false);
     // Move any remaining interim transcript to final message
     if (interimTranscript.trim()) {
-      setMessage((prev) => prev + (prev ? " " : "") + interimTranscript.trim());
+      const newValue = message + (message ? " " : "") + interimTranscript.trim();
+      dispatch(setComposerValue(newValue));
       setInterimTranscript("");
     }
   };
@@ -195,17 +243,30 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
     }
   };
 
-  // Fetch chat details when currentChatId changes
+  // Fetch chat details when activeChatId changes
   const { data: chatDetail } = useQuery({
-    queryKey: ["chatDetail", currentChatId],
-    queryFn: () => fetchChatById(currentChatId ?? ""),
-    enabled: Boolean(currentChatId),
+    queryKey: ["chatDetail", activeChatId],
+    queryFn: () => fetchChatById(activeChatId ?? ""),
+    enabled: Boolean(activeChatId && activeChatId !== NEW_CHAT_KEY && !activeChatId.startsWith("temp_")),
     staleTime: 10_000,
   });
 
+  // Get chat title for long-running task
+  const chatTitle = chatDetail?.title || "new chat";
+
   // Combine API messages and optimistic messages with deduplication
   const selectedMessages = useMemo(() => {
+    // For widget: check if we have optimistic messages for a temp chat ID
+    // Only use temporary chat if we're on the chat page (activeChatId === NEW_CHAT_KEY)
+    const isTempChatId = activeChatId?.startsWith("temp_");
+    if (activeChatId === NEW_CHAT_KEY && temporaryChat) {
+      // Only use temporary chat for NEW_CHAT_KEY (chat page)
+      return temporaryChat.messages;
+    }
+
     const apiMessages = chatDetail?.messages ?? [];
+    // For widget with temp chat ID, use optimistic messages with that ID
+    const optimisticMessages = optimisticMessagesByChat[activeChatId || ""] || [];
 
     if (!apiMessages.length) {
       return optimisticMessages;
@@ -254,7 +315,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
     });
 
     return [...apiMessages, ...filteredOptimistic];
-  }, [optimisticMessages, chatDetail?.messages]);
+  }, [optimisticMessages, chatDetail?.messages, temporaryChat, activeChatId, optimisticMessagesByChat]);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -264,34 +325,18 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
   }, [selectedMessages.length]);
 
   // Update parent component with messages
+  // Use a ref to track previous messages to avoid infinite loops
+  const prevMessagesRef = useRef<string>("");
   useEffect(() => {
-    onMessagesChange(selectedMessages);
-  }, [selectedMessages, onMessagesChange]);
-
-  // Sync local messages with parent and chat detail
-  // Skip syncing when sending a message to preserve optimistic updates
-  useEffect(() => {
-    // Don't sync if we're currently sending a message (to preserve optimistic updates)
-    if (isSendingRef.current) {
-      return;
+    // Create a stable string representation of messages to compare
+    const messagesKey = selectedMessages.map(m => m._id).join(",");
+    
+    // Only call onMessagesChange if messages actually changed
+    if (prevMessagesRef.current !== messagesKey) {
+      prevMessagesRef.current = messagesKey;
+      onMessagesChange(selectedMessages);
     }
-
-    // Only sync if we have a currentChatId and chatDetail messages
-    // This ensures we get the latest messages when selecting a chat from history
-    if (
-      currentChatId &&
-      chatDetail?.messages &&
-      chatDetail.messages.length > 0
-    ) {
-      setLocalMessages(chatDetail.messages);
-    } else if (!currentChatId && initialMessages.length > 0) {
-      // Only use initialMessages if we don't have a chatId (new chat scenario)
-      setLocalMessages(initialMessages);
-    } else if (!currentChatId) {
-      // Clear messages for new chat
-      setLocalMessages([]);
-    }
-  }, [currentChatId, chatDetail?.messages, initialMessages]);
+  }, [selectedMessages]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSendMessage = () => {
     if (message.trim() && !isSendingRef.current && !isListening) {
@@ -309,83 +354,211 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
       return;
     }
 
-    setIsStreaming(true);
-    setStreamingEvents([]);
+    isSendingRef.current = true;
+    isStreamingRef.current = true;
+    dispatch(setIsStreaming(true));
+    dispatch(clearStreamingEvents());
+
+    const isNewChat = !activeChatId || activeChatId === NEW_CHAT_KEY;
+    const actualChatId = isNewChat ? `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}` : activeChatId;
+    streamingChatIdRef.current = actualChatId; // Track which chat is streaming
 
     const tempMessage: ChatMessage = {
       _id: `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      chatId: currentChatId ?? "temp",
+      chatId: actualChatId,
       role: "user",
       content: trimmedMessage,
       createdAt: new Date().toISOString(),
     };
 
-    setMessage("");
-    setOptimisticMessages((prev) => {
-      const messageExists = prev.some(
-        (msg) =>
-          msg.role === "user" &&
-          msg.content === trimmedMessage &&
-          !msg._id.startsWith("temp-")
-      );
-      if (messageExists) {
-        return prev;
+    dispatch(setComposerValue(""));
+
+    // For new chats in widget, use optimistic messages with actualChatId (not temporary chat)
+    // This prevents creating a temporary chat that would appear on the chat page
+    if (isNewChat) {
+      // Use the actualChatId (temp ID) as the chat key for optimistic messages
+      // This keeps the widget's new chat isolated from the chat page
+      dispatch(addOptimisticMessage({ chatId: actualChatId, message: tempMessage }));
+      
+      // Update the chat ID to the temp ID so messages show immediately
+      if (!activeChatId || activeChatId === NEW_CHAT_KEY) {
+        dispatch(setSelectedChatId(actualChatId));
+        onChatIdChange(actualChatId);
       }
-      return [...prev, tempMessage];
-    });
+    } else {
+      // For existing chats, add optimistic message
+      dispatch(addOptimisticMessage({ chatId: currentChatKey, message: tempMessage }));
+    }
+
+    // For new chats, immediately add to chat list optimistically
+    if (isNewChat) {
+      const optimisticChat: ChatSummary = {
+        _id: actualChatId, // Use temp chat ID for now
+        title: trimmedMessage.length > 50 ? trimmedMessage.substring(0, 50) + "..." : trimmedMessage,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      
+      queryClient.setQueryData<ChatSummary[]>(["chatList"], (oldChatList = []) => {
+        // Check if chat already exists (shouldn't for new chats, but just in case)
+        const exists = oldChatList.some(chat => chat._id === actualChatId);
+        if (exists) {
+          return oldChatList;
+        }
+        return [optimisticChat, ...oldChatList];
+      });
+    }
+
+    // Start long-running task tracking
+    streamingStartTimeRef.current = Date.now();
+    
+    // Set timeout to start long-running task only after 10 seconds if still processing
+    streamingTimeoutRef.current = setTimeout(() => {
+      if (isStreamingRef.current) {
+        // Task is still running after 10 seconds, start tracking it
+        dispatch(startStreamingTask({
+          chatId: actualChatId,
+          messageId: tempMessage._id,
+          title: `Generating response for ${chatTitle}`,
+          description: "AI is processing your message...",
+        }));
+      }
+    }, 10000);
 
     try {
       const result = await sendStreamingChatMessage(
         {
           message: trimmedMessage,
-          chatId: currentChatId,
+          chatId: isNewChat ? null : actualChatId,
         },
         (event: StreamEvent) => {
-          setStreamingEvents((prev) => [...prev, event]);
+          dispatch(addStreamingEvent(event));
+
+          // Update long-running task with streaming progress
+          if (event.step) {
+            dispatch(updateStreamingTask({
+              chatId: actualChatId,
+              messageId: tempMessage._id,
+              step: event.step,
+            }));
+          }
         }
       );
 
       const newChatId = result.data.chatId;
 
       if (newChatId) {
-        const isNewChat = newChatId !== currentChatId;
+        const isNewChatCreated = newChatId !== activeChatId;
 
-        if (isNewChat) {
+        if (isNewChatCreated) {
+          dispatch(setSelectedChatId(newChatId));
           onChatIdChange(newChatId);
         }
 
-        queryClient.invalidateQueries({ queryKey: ["chatList"] });
-        queryClient.invalidateQueries({
-          queryKey: ["chatDetail", newChatId],
+        // Update query cache with response data
+        if (result.data.messages) {
+          queryClient.setQueryData(["chatDetail", newChatId], {
+            _id: newChatId,
+            title: result.data.title || "New Conversation",
+            messages: result.data.messages,
+            createdAt: result.data.createdAt || new Date().toISOString(),
+            updatedAt: result.data.updatedAt || new Date().toISOString(),
+          });
+        }
+
+        // Update chat list - replace optimistic chat with real chat
+        queryClient.setQueryData<ChatSummary[]>(["chatList"], (oldChatList = []) => {
+          if (isNewChatCreated) {
+            // Remove the optimistic chat (with temp ID) and add the real chat
+            const filteredList = oldChatList.filter(chat => chat._id !== actualChatId);
+            const newChat: ChatSummary = {
+              _id: newChatId,
+              title: (result.data.title as string) || "New Conversation",
+              createdAt: (result.data.createdAt as string) || new Date().toISOString(),
+              updatedAt: (result.data.updatedAt as string) || new Date().toISOString(),
+            };
+            return [newChat, ...filteredList];
+          } else {
+            // For existing chats, update the chat's updatedAt and move it to the top
+            const updatedChatList = oldChatList.map(chat => {
+              if (chat._id === newChatId) {
+                return {
+                  ...chat,
+                  title: (result.data.title as string) || chat.title,
+                  updatedAt: (result.data.updatedAt as string) || new Date().toISOString(),
+                };
+              }
+              return chat;
+            });
+            
+            // Move the updated chat to the top
+            const updatedChat = updatedChatList.find(chat => chat._id === newChatId);
+            if (updatedChat) {
+              return [updatedChat, ...updatedChatList.filter(chat => chat._id !== newChatId)];
+            }
+            
+            return updatedChatList;
+          }
         });
 
-        try {
-          const chatDetail = await queryClient.fetchQuery({
-            queryKey: ["chatDetail", newChatId],
-            queryFn: () => fetchChatById(newChatId),
-          });
-
-          if (chatDetail?.messages && chatDetail.messages.length > 0) {
-            setLocalMessages(chatDetail.messages);
-            setOptimisticMessages([]); // Clear optimistic messages since we have server data
-          } else if (result.data.messages?.length > 0) {
-            setLocalMessages(result.data.messages);
-            setOptimisticMessages([]); // Clear optimistic messages since we have server data
+        // Clear optimistic messages for the old chat key and move to new chat
+        if (isNewChatCreated) {
+          // For widget: move optimistic messages from temp chat ID to real chat ID
+          // Get optimistic messages from the temp chat ID
+          const tempOptimisticMessages = optimisticMessagesByChat[actualChatId] || [];
+          if (tempOptimisticMessages.length > 0) {
+            // Move messages to the real chat ID
+            tempOptimisticMessages.forEach(msg => {
+              dispatch(addOptimisticMessage({ chatId: newChatId, message: msg }));
+            });
+            // Remove optimistic messages from temp chat ID
+            dispatch(removeOptimisticMessages(actualChatId));
+          } else {
+            // Fallback: remove optimistic messages if none found
+            dispatch(removeOptimisticMessages(currentChatKey));
           }
-        } catch (error) {
-          if (result.data.messages?.length > 0) {
-            setLocalMessages(result.data.messages);
-            setOptimisticMessages([]); // Clear optimistic messages since we have server data
+          
+          // Update long-running task's chatId to the real chat ID if it exists
+          if (tempMessage._id) {
+            dispatch(updateTask({
+              id: tempMessage._id,
+              updates: { chatId: newChatId }
+            }));
           }
+        } else {
+          // For existing chats, clear optimistic messages after server response
+          dispatch(removeOptimisticMessages(actualChatId));
         }
+
+        // Don't invalidate queries - we've already updated the cache with setQueryData
+        // Invalidating would cause a full refetch and refresh the whole chat
       }
     } catch (error: any) {
       console.error("Streaming error:", error);
-      setOptimisticMessages((prev) =>
-        prev.filter((msg) => msg._id !== tempMessage._id)
-      );
+      
+      // For new chats in widget, remove optimistic messages from temp chat ID
+      if (isNewChat) {
+        // Remove optimistic messages from the temp chat ID
+        dispatch(removeOptimisticMessages(actualChatId));
+      } else {
+        // For existing chats, remove optimistic messages
+        dispatch(removeOptimisticMessages(currentChatKey));
+      }
 
-      setMessage(trimmedMessage);
+      // Remove optimistic chat entry if it was a new chat
+      if (isNewChat) {
+        queryClient.setQueryData<ChatSummary[]>(["chatList"], (oldChatList = []) => {
+          return oldChatList.filter(chat => chat._id !== actualChatId);
+        });
+      }
+
+      // Mark long-running task as error
+      dispatch(errorTask({
+        id: tempMessage._id,
+        errorMessage: error?.message || "Failed to send message",
+      }));
+
+      dispatch(setComposerValue(trimmedMessage));
 
       toast({
         title: "Unable to send message",
@@ -395,8 +568,27 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
         variant: "destructive",
       });
     } finally {
-      setIsStreaming(false);
-      setStreamingEvents([]);
+      isSendingRef.current = false;
+      isStreamingRef.current = false;
+      // Only clear streaming chat ID if this was the chat that was streaming
+      if (streamingChatIdRef.current === actualChatId) {
+        streamingChatIdRef.current = null;
+      }
+      dispatch(setIsStreaming(false));
+      dispatch(clearStreamingEvents());
+
+      // Complete or clear the long-running task
+      dispatch(completeStreamingTask({
+        chatId: actualChatId,
+        messageId: tempMessage._id,
+      }));
+
+      // Clear timeout
+      if (streamingTimeoutRef.current) {
+        clearTimeout(streamingTimeoutRef.current);
+        streamingTimeoutRef.current = null;
+      }
+      streamingStartTimeRef.current = null;
     }
   };
 
@@ -406,7 +598,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
     }
   };
 
-  const hasActiveChat = currentChatId || selectedMessages.length > 0;
+  const hasActiveChat = activeChatId || selectedMessages.length > 0;
 
   return (
     <div className="flex-1 min-h-0 flex flex-col overflow-hidden w-[calc(100%-2rem)] h-full">
@@ -574,7 +766,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
               </div>
             );
           })}
-          {(isSendingMessage || isStreaming) && (
+          {isCurrentChatSending && (
             <motion.div
               key="typing-indicator"
               initial="hidden"
@@ -603,7 +795,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
                 </div>
                 <div className="flex flex-col gap-1">
                   <span className="text-white/70 text-left">Thinking…</span>
-                  {isStreaming && streamingEvents.length > 0 && (
+                  {isStreaming && isCurrentChatSending && streamingEvents.length > 0 && (
                     <motion.div
                       initial={{ opacity: 0, y: 5 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -633,8 +825,14 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
             placeholder={
               isListening ? "Listening... Click mic to stop" : "Ask Skylar"
             }
-            value={message + (interimTranscript ? ` ${interimTranscript}` : "")}
-            onChange={(e) => setMessage(e.target.value)}
+            value={(message || "") + (interimTranscript ? ` ${interimTranscript}` : "")}
+            onChange={(e) => {
+              // Remove interim transcript from the value before updating
+              const valueWithoutInterim = interimTranscript 
+                ? e.target.value.replace(interimTranscript, "").trim()
+                : e.target.value;
+              dispatch(setComposerValue(valueWithoutInterim));
+            }}
             onKeyPress={handleKeyPress}
             disabled={isSendingMessage || isListening}
           />

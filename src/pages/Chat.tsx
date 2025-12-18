@@ -85,6 +85,7 @@ const ChatPage = () => {
   const streamingStartTimeRef = useRef<number | null>(null);
   const streamingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isStreamingRef = useRef<boolean>(false);
+  const streamingChatIdRef = useRef<string | null>(null); // Track which chat is currently streaming
 
   // Animation variants for page transitions
   const pageVariants = {
@@ -401,6 +402,7 @@ const ChatPage = () => {
     // Generate temporary chat ID if this is a new chat
     const isNewChat = selectedChatId === "__new_chat__" || !selectedChatId;
     const actualChatId = isNewChat ? `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}` : selectedChatId;
+    streamingChatIdRef.current = actualChatId; // Track which chat is streaming
 
     const tempMessage: ChatMessage = {
       _id: `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -533,14 +535,16 @@ const ChatPage = () => {
               updates: { chatId: newChatId }
             }));
           }
+          
+          // Clear optimistic messages after converting temporary chat (messages are now in server response)
+          dispatch(removeOptimisticMessages(newChatId));
+        } else {
+          // For existing chats, clear optimistic messages after server response
+          dispatch(removeOptimisticMessages(actualChatId));
         }
 
-        queryClient.invalidateQueries({
-          queryKey: ["chatDetail", newChatId],
-        });
-        queryClient.invalidateQueries({
-          queryKey: ["chatList"],
-        });
+        // Don't invalidate queries - we've already updated the cache with setQueryData
+        // Invalidating would cause a full refetch and refresh the whole chat
       } else {
         // Backend handled as temporary chat - add assistant response
         if (result.data.messages && result.data.messages.length > 0) {
@@ -564,7 +568,8 @@ const ChatPage = () => {
         }
       }
 
-      queryClient.invalidateQueries({ queryKey: ["chatList"] });
+      // Don't invalidate queries - we've already updated the cache with setQueryData
+      // Invalidating would cause a full refetch and refresh the whole chat
     } catch (error: any) {
       console.error("Streaming error:", error);
 
@@ -593,6 +598,10 @@ const ChatPage = () => {
       });
     } finally {
       isStreamingRef.current = false;
+      // Only clear streaming chat ID if this was the chat that was streaming
+      if (streamingChatIdRef.current === actualChatId) {
+        streamingChatIdRef.current = null;
+      }
       dispatch(setIsStreaming(false));
       dispatch(clearStreamingEvents());
 
@@ -791,20 +800,24 @@ const ChatPage = () => {
 
   // Make sending state chat-specific - only show thinking indicator for the chat that's currently processing
   const isCurrentChatSending = useMemo(() => {
-    if (isSendingMessage || isStreaming) {
-      // If we're sending a message, check if it's for the current chat
-      const hasOptimisticMessages = optimisticMessages.length > 0;
-      // If current chat has optimistic messages, it's the one being processed
-      if (hasOptimisticMessages) {
-        return true;
-      }
-      // If no optimistic messages but we're in NEW_CHAT_KEY state, it's a new chat being created
-      if (currentChatKey === NEW_CHAT_KEY && (isSendingMessage || isStreaming)) {
-        return true;
-      }
+    // Only show thinking indicator if:
+    // 1. We're streaming AND the current chat is the one being streamed
+    const isStreamingThisChat = isStreaming && streamingChatIdRef.current === selectedChatId;
+    
+    // For temporary chats, check if we have messages in temporary chat
+    const isTempChatId = selectedChatId?.startsWith("temp_");
+    const hasTemporaryChatMessages = (selectedChatId === "__new_chat__" || isTempChatId) && temporaryChat && temporaryChat.messages.length > 0;
+    
+    // For regular chats, check optimistic messages
+    const hasOptimisticMessages = optimisticMessages.length > 0;
+    
+    // Show indicator if streaming for this specific chat OR if this chat has optimistic/temporary messages
+    if (isStreamingThisChat || hasOptimisticMessages || hasTemporaryChatMessages) {
+      return true;
     }
+    
     return false;
-  }, [isSendingMessage, isStreaming, optimisticMessages.length, currentChatKey]);
+  }, [isStreaming, optimisticMessages.length, selectedChatId, temporaryChat]);
 
   return (
     <DashboardLayout>
