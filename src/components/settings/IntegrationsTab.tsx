@@ -36,6 +36,7 @@ import {
   type SelectPagePayload,
   type SelectBusinessAccountPayload,
   type FacebookAdAccount,
+  type FacebookIntegration,
 } from "@/services/facebook.service";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { AdminGlobalIntegrationsTab } from "@/components/admin/integrations/AdminGlobalIntegrationsTab";
@@ -231,6 +232,18 @@ export const IntegrationsTab = () => {
       });
     },
   });
+
+  // Facebook select ad account mutation
+  const { mutateAsync: selectAdAccount, isPending: isSelectingAdAccount } =
+    useMutation<unknown, Error, { adAccountId: string }>({
+      mutationFn: (payload: { adAccountId: string }) =>
+        facebookService.selectAdAccount(payload),
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: ["facebook-integration", user?._id],
+        });
+      },
+    });
 
   const isAdmin = user?.role === "Admin";
   const canManageWhatsApp =
@@ -556,6 +569,10 @@ export const IntegrationsTab = () => {
       // Even if no business account, try to fetch ad accounts directly
       // Ad accounts can be accessed via /me/adaccounts without business account
       fetchAdAccounts();
+    }
+    // Load saved ad account ID from integration
+    if (facebookIntegration?.adAccountId) {
+      setSelectedAdAccountId(facebookIntegration.adAccountId);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [facebookIntegration]);
@@ -1040,6 +1057,24 @@ export const IntegrationsTab = () => {
       toast({
         title: "Error",
         description: "Failed to refresh business accounts. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAdAccountSelect = async (adAccountId: string) => {
+    try {
+      setSelectedAdAccountId(adAccountId);
+      await selectAdAccount({ adAccountId });
+      toast({
+        title: "Ad account selected",
+        description: "Facebook ad account has been selected successfully.",
+      });
+    } catch (error: unknown) {
+      console.error("Error selecting ad account:", error);
+      toast({
+        title: "Error",
+        description: "Failed to select ad account. Please try again.",
         variant: "destructive",
       });
     }
@@ -1995,8 +2030,8 @@ export const IntegrationsTab = () => {
               </div>
               <Select
                 value={selectedAdAccountId}
-                onValueChange={setSelectedAdAccountId}
-                disabled={isLoadingAdAccounts}
+                onValueChange={handleAdAccountSelect}
+                disabled={isLoadingAdAccounts || isSelectingAdAccount}
               >
                 <SelectTrigger className="bg-white/[0.06] border-white/10 text-white text-sm sm:text-base">
                   <SelectValue

@@ -22,9 +22,14 @@ export interface FacebookIntegration {
   provider: string;
   pageId?: string;
   businessAccountId?: string;
+  adAccountId?: string;
   pages: FacebookPage[];
   businessAccounts: FacebookBusinessAccount[];
   selectedBusinessAccount?: FacebookBusinessAccount;
+  selectedAdAccount?: {
+    id: string;
+    selectedAt?: string;
+  };
   tokenType?: string;
   receivedAt?: string;
   createdAt: string;
@@ -179,6 +184,20 @@ export const facebookService = {
     try {
       const params = businessAccountId ? { businessAccountId } : undefined;
       const response = await API.get("/facebook/ad-accounts", { params });
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  /**
+   * Select a Facebook ad account
+   */
+  selectAdAccount: async (payload: {
+    adAccountId: string;
+  }): Promise<{ success: boolean; message: string }> => {
+    try {
+      const response = await API.post("/facebook/select-ad-account", payload);
       return response.data;
     } catch (error: any) {
       throw error;
