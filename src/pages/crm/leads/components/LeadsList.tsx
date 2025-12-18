@@ -8,8 +8,6 @@ import {
   PaginationContent,
   PaginationItem,
   PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
   PaginationEllipsis,
 } from "@/components/ui/pagination";
 import {
@@ -315,17 +313,26 @@ const LeadsList: FC<LeadsListProps> = ({
       setFillingLeads((prev) => ({ ...prev, [lead._id]: false }));
     }
   };
+  // Calculate totalPages locally based on totalLeads and pageSize
+  const calculatedTotalPages = useMemo(() => {
+    if (totalLeads !== undefined && totalLeads > 0) {
+      return Math.ceil(totalLeads / pageSize);
+    }
+    return totalPages;
+  }, [totalLeads, pageSize, totalPages]);
+
   // Calculate pagination page range
   const paginationPages = useMemo<{
     pages: number[];
     startPage: number;
     endPage: number;
   } | null>(() => {
-    if (totalPages <= 1) return null;
+    const pagesToUse = calculatedTotalPages;
+    if (pagesToUse <= 1) return null;
 
     const maxVisible = 5;
     let startPage = Math.max(1, page - Math.floor(maxVisible / 2));
-    const endPage = Math.min(totalPages, startPage + maxVisible - 1);
+    const endPage = Math.min(pagesToUse, startPage + maxVisible - 1);
 
     if (endPage - startPage < maxVisible - 1) {
       startPage = Math.max(1, endPage - maxVisible + 1);
@@ -337,22 +344,10 @@ const LeadsList: FC<LeadsListProps> = ({
     }
 
     return { pages, startPage, endPage };
-  }, [page, totalPages]);
+  }, [page, calculatedTotalPages]);
 
   const handlePageChange = (newPage: number) => {
     onPageChange?.(newPage);
-  };
-
-  const handlePrevious = () => {
-    if (page > 1) {
-      handlePageChange(page - 1);
-    }
-  };
-
-  const handleNext = () => {
-    if (page < totalPages) {
-      handlePageChange(page + 1);
-    }
   };
 
   // Extract lead data for rendering
@@ -843,105 +838,6 @@ const LeadsList: FC<LeadsListProps> = ({
     );
   };
 
-  // Render pagination
-  const renderPagination = () => {
-    if (!paginationPages) return null;
-
-    const { pages, startPage, endPage } = paginationPages;
-
-    return (
-      <div className="bg-[#222B2C]/40 py-3 px-4 sm:px-6 border border-white/10 rounded-2xl">
-        <Pagination>
-          <PaginationContent className="gap-1">
-            <PaginationItem>
-              <PaginationPrevious
-                onClick={(e) => {
-                  e.preventDefault();
-                  handlePrevious();
-                }}
-                className={
-                  page <= 1
-                    ? "pointer-events-none opacity-50"
-                    : "cursor-pointer hover:bg-white/10 transition-colors"
-                }
-              />
-            </PaginationItem>
-
-            {startPage > 1 && (
-              <>
-                <PaginationItem>
-                  <PaginationLink
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handlePageChange(1);
-                    }}
-                    className="cursor-pointer hover:bg-white/10 transition-colors"
-                  >
-                    1
-                  </PaginationLink>
-                </PaginationItem>
-                {startPage > 2 && (
-                  <PaginationItem>
-                    <PaginationEllipsis />
-                  </PaginationItem>
-                )}
-              </>
-            )}
-
-            {pages.map((p) => (
-              <PaginationItem key={p}>
-                <PaginationLink
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handlePageChange(p);
-                  }}
-                  isActive={p === page}
-                  className="cursor-pointer hover:bg-white/10 transition-colors"
-                >
-                  {p}
-                </PaginationLink>
-              </PaginationItem>
-            ))}
-
-            {endPage < totalPages && (
-              <>
-                {endPage < totalPages - 1 && (
-                  <PaginationItem>
-                    <PaginationEllipsis />
-                  </PaginationItem>
-                )}
-                <PaginationItem>
-                  <PaginationLink
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handlePageChange(totalPages);
-                    }}
-                    className="cursor-pointer hover:bg-white/10 transition-colors"
-                  >
-                    {totalPages}
-                  </PaginationLink>
-                </PaginationItem>
-              </>
-            )}
-
-            <PaginationItem>
-              <PaginationNext
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleNext();
-                }}
-                className={
-                  page >= totalPages
-                    ? "pointer-events-none opacity-50"
-                    : "cursor-pointer hover:bg-white/10 transition-colors"
-                }
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      </div>
-    );
-  };
 
   const renderPageSizeSelector = (position: "top" | "bottom") => {
     const totalCount = totalLeads ?? leads.length;
@@ -1004,13 +900,12 @@ const LeadsList: FC<LeadsListProps> = ({
               </Button>
             </div>
           )}
-          <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-full p-1">
-            <span className="text-xs text-white/60 px-2">Rows per page</span>
+          <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-full px-5 py-1">
             <Select
               value={String(pageSize)}
               onValueChange={(value) => onPageSizeChange?.(Number(value))}
             >
-              <SelectTrigger className="h-7 w-[115px] rounded-full border border-white/20 bg-transparent text-white text-xs">
+              <SelectTrigger className="h-7 w-[175px] rounded-full border border-white/20 bg-transparent text-white text-xs">
                 <SelectValue placeholder={`${pageSize}`} />
               </SelectTrigger>
               <SelectContent className="bg-[#1a1f1f] border border-white/10 text-white">
@@ -1021,6 +916,71 @@ const LeadsList: FC<LeadsListProps> = ({
                 ))}
               </SelectContent>
             </Select>
+            {position === "top" && calculatedTotalPages > 1 && paginationPages ? (
+              <>
+                <div className="h-4 w-px bg-white/20 mx-1"></div>
+                <Pagination>
+                  <PaginationContent className="gap-1">
+                    {paginationPages.startPage > 1 && (
+                      <>
+                        <PaginationItem>
+                          <PaginationLink
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handlePageChange(1);
+                            }}
+                            className="cursor-pointer hover:bg-white/10 transition-colors h-7 w-7 text-xs"
+                          >
+                            1
+                          </PaginationLink>
+                        </PaginationItem>
+                        {paginationPages.startPage > 2 && (
+                          <PaginationItem>
+                            <PaginationEllipsis />
+                          </PaginationItem>
+                        )}
+                      </>
+                    )}
+
+                    {paginationPages.pages.map((p) => (
+                      <PaginationItem key={p}>
+                        <PaginationLink
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handlePageChange(p);
+                          }}
+                          isActive={p === page}
+                          className="cursor-pointer hover:bg-white/10 transition-colors h-7 w-7 text-xs"
+                        >
+                          {p}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+
+                    {paginationPages.endPage < calculatedTotalPages && (
+                      <>
+                        {paginationPages.endPage < calculatedTotalPages - 1 && (
+                          <PaginationItem>
+                            <PaginationEllipsis />
+                          </PaginationItem>
+                        )}
+                        <PaginationItem>
+                          <PaginationLink
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handlePageChange(calculatedTotalPages);
+                            }}
+                            className="cursor-pointer hover:bg-white/10 transition-colors h-7 w-7 text-xs"
+                          >
+                            {calculatedTotalPages}
+                          </PaginationLink>
+                        </PaginationItem>
+                      </>
+                    )}
+                  </PaginationContent>
+                </Pagination>
+              </>
+            ) : null}
           </div>
         </div>
       </div>
@@ -1028,9 +988,9 @@ const LeadsList: FC<LeadsListProps> = ({
   };
 
   return (
-    <div className={`flex flex-col ${viewMode === "card" ? "px-2" : ""}`}>
+    <div className={`flex flex-col h-full ${viewMode === "card" ? "px-2" : ""}`}>
       {renderPageSizeSelector("top")}
-      <div className="w-full pb-4">
+      <div className="w-full pb-4 flex-1 min-h-0 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         <AnimatePresence mode="wait">
         <motion.div
           key={viewMode}
@@ -1092,12 +1052,6 @@ const LeadsList: FC<LeadsListProps> = ({
         </motion.div>
       </AnimatePresence>
       </div>
-      {/* Fixed pagination at bottom */}
-      {!loading && leads.length > 0 && (
-        <div className="pb-4">
-          {renderPagination()}
-        </div>
-      )}
 
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog
