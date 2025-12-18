@@ -1,6 +1,6 @@
-import { ChangeEvent, KeyboardEvent } from "react";
+import { ChangeEvent, KeyboardEvent, useEffect, useRef } from "react";
 import { Loader2, Plus, Send } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 
@@ -23,6 +23,30 @@ const ChatComposer = ({
   onUploadFile,
   isAwaitingResponse = false,
 }: ChatComposerProps) => {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-resize textarea to fit content (max 3 lines)
+  const autoResizeTextarea = () => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    // Reset height to calculate new height
+    textarea.style.height = "auto";
+
+    // Calculate max height for 3 lines (approximately 20px per line + padding)
+    const lineHeight = 20;
+    const maxLines = 3;
+    const maxHeight = lineHeight * maxLines;
+
+    // Set height based on content, capped at max
+    const newHeight = Math.min(textarea.scrollHeight, maxHeight);
+    textarea.style.height = `${newHeight}px`;
+  };
+
+  useEffect(() => {
+    autoResizeTextarea();
+  }, [value]);
+
   const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
@@ -44,7 +68,7 @@ const ChatComposer = ({
     disabled || !value.trim() || isSending || isAwaitingResponse;
 
   // Animation variants
-  const buttonHoverVariants = {
+  const buttonHoverVariants: Variants = {
     idle: { scale: 1 },
     hover: {
       scale: 1.05,
@@ -56,7 +80,7 @@ const ChatComposer = ({
     },
   };
 
-  const sendButtonVariants = {
+  const sendButtonVariants: Variants = {
     idle: {},
     hover: {
       transition: { duration: 0.2, ease: "easeOut" }
@@ -111,12 +135,13 @@ const ChatComposer = ({
         </motion.label>
 
         <Textarea
+          ref={textareaRef}
           value={value}
           onChange={(event) => onChange(event.target.value)}
           onKeyDown={handleKeyDown}
           rows={1}
           placeholder="Type Message"
-          className="flex-1 min-h-0 resize-none border-0 bg-transparent px-0 py-2 text-sm text-white placeholder:text-white focus-visible:ring-0 focus-visible:ring-offset-0"
+          className="flex-1 min-h-0 resize-none border-0 bg-transparent px-0 py-2 text-sm text-white placeholder:text-white focus-visible:ring-0 focus-visible:ring-offset-0 scrollbar-hide"
           disabled={disabled}
         />
 
