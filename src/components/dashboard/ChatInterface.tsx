@@ -530,18 +530,22 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
                         ),
                         ul: ({ node, ...props }) => (
                           <ul
-                            className="list-inside list-disc text-left"
+                            className="mb-2 ml-0 list-none space-y-1 max-w-[600px] text-left"
                             {...props}
                           />
                         ),
                         ol: ({ node, ...props }) => (
                           <ol
-                            className="list-inside list-decimal text-left"
+                            className="mb-2 ml-0 list-none space-y-1 max-w-[600px] text-left"
                             {...props}
                           />
                         ),
                         li: ({ node, ...props }) => (
-                          <li className="text-left" {...props} />
+                          <li
+                            className="break-words text-left"
+                            style={{ overflowWrap: "anywhere" }}
+                            {...props}
+                          />
                         ),
                         h1: ({ node, ...props }) => (
                           <h1 className="text-left" {...props} />
