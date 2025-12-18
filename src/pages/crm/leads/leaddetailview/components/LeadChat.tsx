@@ -152,6 +152,21 @@ const LeadChat = ({
   const [isGeneratingProposal, setIsGeneratingProposal] = useState(false);
   const [proposalCopied, setProposalCopied] = useState(false);
   const [isUpdatingStage, setIsUpdatingStage] = useState(false);
+  const [isProposalEditable, setIsProposalEditable] = useState(false);
+  const [selectedText, setSelectedText] = useState<string>("");
+  const [selectionRange, setSelectionRange] = useState<{
+    start: number;
+    end: number;
+  } | null>(null);
+  const [showEditWithAI, setShowEditWithAI] = useState(false);
+  const [editWithAIPosition, setEditWithAIPosition] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
+  const [showEditAIModal, setShowEditAIModal] = useState(false);
+  const [editAIQuery, setEditAIQuery] = useState<string>("");
+  const [isEditingWithAI, setIsEditingWithAI] = useState(false);
+  const proposalContentRef = useRef<HTMLDivElement>(null);
   const [messageToDelete, setMessageToDelete] = useState<string | null>(null);
   const [openMessageMenu, setOpenMessageMenu] = useState<string | null>(null);
   const [twilioConnection, setTwilioConnection] = useState<{
@@ -298,7 +313,7 @@ const LeadChat = ({
         isAvailable: true,
       },
       {
-        label: "Meeting Bot",
+        label: "Meetings",
         status: "Ready",
         isAvailable: meetingBotAvailable,
       },
@@ -354,6 +369,12 @@ const LeadChat = ({
   useEffect(() => {
     setProposalContent("");
     setProposalCopied(false);
+    setIsProposalEditable(false);
+    setSelectedText("");
+    setSelectionRange(null);
+    setShowEditWithAI(false);
+    setShowEditAIModal(false);
+    setEditAIQuery("");
   }, [lead?._id]);
 
   const whatsappConversationQueryKey = [
@@ -1021,6 +1042,108 @@ const LeadChat = ({
     }
   };
 
+  // Helper function to convert markdown to HTML
+  const markdownToHtml = (markdown: string): string => {
+    if (!markdown) return "";
+
+    let html = markdown
+      // Code blocks (preserve as-is)
+      .replace(/```[\s\S]*?```/g, (match) => {
+        const code = match.replace(/```/g, "").trim();
+        return `<pre><code>${code}</code></pre>`;
+      })
+      // Inline code
+      .replace(/`([^`]+)`/g, "<code>$1</code>")
+      // Headers
+      .replace(/^#### (.*$)/gim, "<h4>$1</h4>")
+      .replace(/^### (.*$)/gim, "<h3>$1</h3>")
+      .replace(/^## (.*$)/gim, "<h2>$1</h2>")
+      .replace(/^# (.*$)/gim, "<h1>$1</h1>")
+      // Bold (must be done before italic to avoid conflicts)
+      .replace(/\*\*(.+?)\*\*/gim, "<strong>$1</strong>")
+      // Italic (single asterisks, processed after bold)
+      .replace(/\*([^*\n]+?)\*/gim, "<em>$1</em>")
+      // Links
+      .replace(
+        /\[([^\]]+)\]\(([^)]+)\)/gim,
+        '<a href="$2" style="color: #68B3B7; text-decoration: underline;">$1</a>'
+      )
+      // Horizontal rule
+      .replace(/^---$/gim, "<hr>")
+      .replace(/^\*\*\*$/gim, "<hr>")
+      // Blockquotes
+      .replace(/^> (.+)$/gim, "<blockquote>$1</blockquote>");
+
+    // Handle lists - wrap consecutive list items
+    const lines = html.split("\n");
+    const processedLines: string[] = [];
+    let inList = false;
+    let listItems: string[] = [];
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const isListItem =
+        /^[\*\-\+] (.+)$/.test(line) || /^\d+\. (.+)$/.test(line);
+
+      if (isListItem) {
+        const content = line
+          .replace(/^[\*\-\+] (.+)$/, "$1")
+          .replace(/^\d+\. (.+)$/, "$1");
+        listItems.push(`<li>${content}</li>`);
+        inList = true;
+      } else {
+        if (inList && listItems.length > 0) {
+          processedLines.push(`<ul>${listItems.join("")}</ul>`);
+          listItems = [];
+          inList = false;
+        }
+        processedLines.push(line);
+      }
+    }
+
+    if (inList && listItems.length > 0) {
+      processedLines.push(`<ul>${listItems.join("")}</ul>`);
+    }
+
+    html = processedLines.join("\n");
+
+    // Convert double newlines to paragraphs
+    html = html
+      .split(/\n\n+/)
+      .map((block) => {
+        const trimmed = block.trim();
+        if (!trimmed) return "";
+        // Don't wrap if it's already a block element
+        if (
+          trimmed.startsWith("<h") ||
+          trimmed.startsWith("<ul") ||
+          trimmed.startsWith("<ol") ||
+          trimmed.startsWith("<pre") ||
+          trimmed.startsWith("<blockquote") ||
+          trimmed.startsWith("<hr")
+        ) {
+          return trimmed;
+        }
+        return `<p>${trimmed.replace(/\n/g, "<br>")}</p>`;
+      })
+      .filter((block) => block)
+      .join("");
+
+    return html;
+  };
+
+  // Helper function to convert markdown to plain text
+  const markdownToText = (markdown: string): string => {
+    if (!markdown) return "";
+    return markdown
+      .replace(/#{1,6}\s+/g, "") // Remove headers
+      .replace(/\*\*(.+?)\*\*/gim, "$1") // Remove bold
+      .replace(/\*(.+?)\*/gim, "$1") // Remove italic
+      .replace(/\[([^\]]+)\]\([^)]+\)/gim, "$1") // Remove links, keep text
+      .replace(/`([^`]+)`/gim, "$1") // Remove inline code
+      .trim();
+  };
+
   const handleUpdateStage = async () => {
     if (!lead?._id) {
       toast.error("Lead information is incomplete.");
@@ -1029,8 +1152,44 @@ const LeadChat = ({
 
     setIsUpdatingStage(true);
     try {
+      // Send proposal via email if email address exists and proposal content is available
+      if (emailAddress && proposalContent) {
+        try {
+          const proposalHtml = markdownToHtml(proposalContent);
+          const proposalText = markdownToText(proposalContent);
+
+          await emailService.sendEmail({
+            to: [emailAddress],
+            subject: `Proposal - ${lead.name || "Your Proposal"}`,
+            html: proposalHtml,
+            text: proposalText,
+          });
+
+          // Invalidate email queries to refresh the conversation
+          queryClient.invalidateQueries({
+            queryKey: emailConversationQueryKey,
+          });
+        } catch (emailError: any) {
+          const emailErrorMessage =
+            emailError?.response?.data?.message ||
+            emailError?.message ||
+            "Failed to send proposal email, but stage will still be updated.";
+          toast.error(emailErrorMessage);
+          // Continue with stage update even if email fails
+        }
+      } else if (!emailAddress) {
+        toast.warning(
+          "No email address found. Stage will be updated, but proposal cannot be sent via email."
+        );
+      }
+
+      // Update lead stage
       await leadsService.markProposalSent(lead._id);
-      toast.success("Lead stage updated to 'Proposal Sent'!");
+      toast.success(
+        emailAddress && proposalContent
+          ? "Proposal sent via email and lead stage updated to 'Proposal Sent'!"
+          : "Lead stage updated to 'Proposal Sent'!"
+      );
 
       // Refresh lead data to update the UI
       if (onMessageUpdate) {
@@ -1049,6 +1208,401 @@ const LeadChat = ({
       setIsUpdatingStage(false);
     }
   };
+
+  const handleProposalClick = () => {
+    if (proposalContent && !isProposalEditable) {
+      setIsProposalEditable(true);
+    }
+  };
+
+  const handleTextareaSelection = (textarea: HTMLTextAreaElement) => {
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selected = proposalContent.substring(start, end).trim();
+
+    console.log("[Edit Mode Selection]", {
+      start,
+      end,
+      selectedLength: selected.length,
+    });
+
+    if (selected.length > 0) {
+      const textareaRect = textarea.getBoundingClientRect();
+      const containerRect = proposalContentRef.current?.getBoundingClientRect();
+
+      if (containerRect && textareaRect) {
+        // Get computed styles for accurate measurements
+        const computedStyle = window.getComputedStyle(textarea);
+        const lineHeight = parseFloat(computedStyle.lineHeight) || 20;
+        const paddingTop = parseFloat(computedStyle.paddingTop) || 0;
+
+        // Count lines before selection start and end
+        const textBeforeStart = proposalContent.substring(0, start);
+        const textBeforeEnd = proposalContent.substring(0, end);
+        const linesBeforeStart = textBeforeStart.split("\n").length - 1;
+        const linesBeforeEnd = textBeforeEnd.split("\n").length - 1;
+
+        // Calculate the pixel position of the selection start
+        const selectionStartY = linesBeforeStart * lineHeight + paddingTop;
+        const selectionEndY = linesBeforeEnd * lineHeight + paddingTop;
+
+        // Use the middle of the selection for positioning
+        const selectionMiddleY = (selectionStartY + selectionEndY) / 2;
+
+        // Account for scroll position - get position relative to visible area
+        const relativeY = selectionMiddleY - textarea.scrollTop;
+
+        // Get the position relative to the container
+        const textareaOffsetTop = textareaRect.top - containerRect.top;
+        const absoluteY = textareaOffsetTop + relativeY;
+
+        // Calculate horizontal center of container
+        const containerWidth = containerRect.width;
+        const left = containerWidth / 2;
+
+        // Position button above or below based on available space
+        const buttonHeight = 45;
+        const margin = 10;
+        let top = absoluteY - buttonHeight - margin;
+
+        // If button would be above visible area, position it below
+        if (top < 10) {
+          top = absoluteY + lineHeight + margin;
+        }
+
+        // Ensure button stays within container bounds
+        const maxTop = containerRect.height - buttonHeight - 10;
+        if (top > maxTop) {
+          top = maxTop;
+        }
+
+        console.log("[Edit Mode] Setting button position:", {
+          top,
+          left,
+          selected: selected.substring(0, 50) + "...",
+          linesBeforeStart,
+          linesBeforeEnd,
+          selectionStartY,
+          selectionMiddleY,
+          relativeY,
+          absoluteY,
+          scrollTop: textarea.scrollTop,
+        });
+
+        setSelectedText(selected);
+        setSelectionRange({ start, end });
+        setEditWithAIPosition({ top, left });
+        setShowEditWithAI(true);
+      }
+    } else {
+      setShowEditWithAI(false);
+      setSelectedText("");
+      setSelectionRange(null);
+    }
+  };
+
+  const findTextInMarkdown = (
+    selectedText: string,
+    markdownContent: string
+  ): { start: number; end: number } | null => {
+    // Remove markdown formatting from both strings for comparison
+    const cleanSelected = selectedText
+      .replace(/\*\*/g, "")
+      .replace(/\*/g, "")
+      .replace(/#/g, "")
+      .replace(/\[|\]/g, "")
+      .replace(/\(|\)/g, "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toLowerCase();
+
+    // Try to find the text in markdown by searching for patterns
+    const lines = markdownContent.split("\n");
+    let currentPos = 0;
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const cleanLine = line
+        .replace(/\*\*/g, "")
+        .replace(/\*/g, "")
+        .replace(/#/g, "")
+        .replace(/\[|\]/g, "")
+        .replace(/\(|\)/g, "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .toLowerCase();
+
+      if (cleanLine.includes(cleanSelected)) {
+        const indexInLine = cleanLine.indexOf(cleanSelected);
+        // Find the actual position accounting for markdown syntax
+        let actualStart = currentPos;
+
+        // Count markdown characters before the match
+        const beforeMatch = line.substring(0, indexInLine);
+        const markdownChars = (beforeMatch.match(/[*_#\[\]()]/g) || []).length;
+
+        // Find the position in original line
+        let charCount = 0;
+        for (let j = 0; j < line.length; j++) {
+          const char = line[j];
+          if (!/[*_#\[\]()]/.test(char)) {
+            if (charCount === indexInLine) {
+              actualStart = currentPos + j - markdownChars;
+              break;
+            }
+            charCount++;
+          }
+        }
+
+        const actualEnd = actualStart + selectedText.length;
+        return { start: actualStart, end: actualEnd };
+      }
+
+      currentPos += line.length + 1; // +1 for newline
+    }
+
+    // Fallback: try direct search with normalization
+    const normalizedSelected = selectedText.replace(/\s+/g, " ").trim();
+    const normalizedMarkdown = markdownContent.replace(/\s+/g, " ");
+    const markdownStart = normalizedMarkdown
+      .toLowerCase()
+      .indexOf(normalizedSelected.toLowerCase());
+
+    if (markdownStart !== -1) {
+      return {
+        start: markdownStart,
+        end: markdownStart + normalizedSelected.length,
+      };
+    }
+
+    return null;
+  };
+
+  const handleProposalSelection = () => {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) {
+      // Don't immediately hide button, selection might still be valid
+      return;
+    }
+
+    const selectedText = selection.toString().trim();
+    if (selectedText.length === 0) {
+      setShowEditWithAI(false);
+      setSelectedText("");
+      setSelectionRange(null);
+      return;
+    }
+
+    // Check if selection is within the proposal container
+    const anchorNode = selection.anchorNode;
+    const isWithinProposal = proposalContentRef.current?.contains(anchorNode);
+
+    if (!isWithinProposal) {
+      setShowEditWithAI(false);
+      setSelectedText("");
+      setSelectionRange(null);
+      return;
+    }
+
+    const range = selection.getRangeAt(0);
+    const rect = range.getBoundingClientRect();
+    const containerRect = proposalContentRef.current?.getBoundingClientRect();
+
+    if (!containerRect) {
+      return;
+    }
+
+    // Calculate position for the "Edit with AI" button
+    // Position it above the selection if there's space, otherwise below
+    const spaceAbove = rect.top - containerRect.top;
+    const spaceBelow = containerRect.bottom - rect.bottom;
+    const buttonHeight = 40;
+
+    let top: number;
+    if (spaceAbove > buttonHeight + 10) {
+      // Position above selection
+      top = rect.top - containerRect.top - buttonHeight - 10;
+    } else {
+      // Position below selection
+      top = rect.top - containerRect.top + rect.height + 10;
+    }
+
+    const left = rect.left - containerRect.left + rect.width / 2;
+
+    setSelectedText(selectedText);
+    setEditWithAIPosition({ top, left });
+    setShowEditWithAI(true);
+
+    // Store selection range for later replacement
+    if (isProposalEditable) {
+      // In textarea, we can get the selection start/end directly
+      const textarea = proposalContentRef.current?.querySelector("textarea");
+      if (textarea) {
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        setSelectionRange({ start, end });
+      }
+    } else {
+      // For markdown view, find the text in the original markdown
+      const markdownContent = proposalContent;
+      const foundRange = findTextInMarkdown(selectedText, markdownContent);
+
+      if (foundRange) {
+        setSelectionRange(foundRange);
+      } else {
+        // Fallback: use the selected text to find approximate position
+        const textContent = proposalContentRef.current?.textContent || "";
+        const textStart = textContent
+          .toLowerCase()
+          .indexOf(selectedText.toLowerCase());
+        if (textStart !== -1) {
+          // Try to map back to markdown - this is approximate
+          const markdownStart = Math.max(0, textStart - 100);
+          setSelectionRange({
+            start: markdownStart,
+            end: markdownStart + selectedText.length,
+          });
+        }
+      }
+    }
+  };
+
+  const handleEditWithAI = () => {
+    if (selectedText && selectionRange) {
+      setShowEditAIModal(true);
+      setShowEditWithAI(false);
+    }
+  };
+
+  const handleEditAI = async () => {
+    if (
+      !lead?.companyId ||
+      !lead?._id ||
+      !selectedText ||
+      !selectionRange ||
+      !editAIQuery.trim()
+    ) {
+      toast.error("Please provide instructions for editing.");
+      return;
+    }
+
+    setIsEditingWithAI(true);
+    try {
+      // Call API to edit the selected part
+      const response = await connectionMessagesService.editProposalPart({
+        companyId: lead.companyId,
+        personId: lead._id,
+        originalProposal: proposalContent,
+        selectedText: selectedText,
+        selectionStart: selectionRange.start,
+        selectionEnd: selectionRange.end,
+        instructions: editAIQuery.trim(),
+      });
+
+      const editedPart = response.data?.editedPart || response.data?.proposal;
+      if (editedPart) {
+        // Replace the selected part with the edited version
+        // For better accuracy, try to find the exact selected text in the content
+        let beforeSelection = "";
+        let afterSelection = "";
+
+        if (isProposalEditable) {
+          // In textarea mode, use the exact range
+          beforeSelection = proposalContent.substring(0, selectionRange.start);
+          afterSelection = proposalContent.substring(selectionRange.end);
+        } else {
+          // In markdown view, try to find the exact text
+          const selectedTextLower = selectedText.toLowerCase().trim();
+          const contentLower = proposalContent.toLowerCase();
+          const foundIndex = contentLower.indexOf(selectedTextLower);
+
+          if (foundIndex !== -1) {
+            // Use the found position
+            beforeSelection = proposalContent.substring(0, foundIndex);
+            afterSelection = proposalContent.substring(
+              foundIndex + selectedText.length
+            );
+          } else {
+            // Fallback to using the range
+            beforeSelection = proposalContent.substring(
+              0,
+              selectionRange.start
+            );
+            afterSelection = proposalContent.substring(selectionRange.end);
+          }
+        }
+
+        const newContent = beforeSelection + editedPart + afterSelection;
+        setProposalContent(newContent);
+        toast.success("Proposal section updated successfully!");
+        setShowEditAIModal(false);
+        setEditAIQuery("");
+        setSelectedText("");
+        setSelectionRange(null);
+        // Switch to editable mode to show the changes
+        setIsProposalEditable(true);
+      } else {
+        toast.error("No edited content was generated. Try again.");
+      }
+    } catch (error: any) {
+      const friendlyMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to edit proposal section.";
+      toast.error(friendlyMessage);
+    } finally {
+      setIsEditingWithAI(false);
+    }
+  };
+
+  // Listen for selection changes in view mode only
+  // Edit mode handles selection via inline handlers on textarea
+  useEffect(() => {
+    if (!isProposalEditable && proposalContent && proposalContentRef.current) {
+      const handleSelection = () => {
+        // Small delay to ensure selection is complete
+        setTimeout(() => {
+          const selection = window.getSelection();
+          const selectedText = selection?.toString().trim();
+          if (selectedText && selectedText.length > 0) {
+            handleProposalSelection();
+          } else {
+            setShowEditWithAI(false);
+            setSelectedText("");
+            setSelectionRange(null);
+          }
+        }, 10);
+      };
+
+      const container = proposalContentRef.current;
+      container.addEventListener("mouseup", handleSelection);
+      container.addEventListener("keyup", handleSelection);
+
+      return () => {
+        container.removeEventListener("mouseup", handleSelection);
+        container.removeEventListener("keyup", handleSelection);
+      };
+    }
+  }, [isProposalEditable, proposalContent]);
+
+  // Close edit menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        proposalContentRef.current &&
+        !proposalContentRef.current.contains(event.target as Node)
+      ) {
+        setShowEditWithAI(false);
+      }
+    };
+
+    if (showEditWithAI) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [showEditWithAI]);
 
   const handleDeleteWhatsAppConversation = () => {
     if (
@@ -1737,6 +2291,15 @@ const LeadChat = ({
                         <button
                           type="button"
                           className="flex items-center gap-2 rounded-lg border border-white/30 bg-white/10 px-4 py-2 text-xs font-medium text-white transition hover:bg-white/20 disabled:opacity-40"
+                          onClick={() =>
+                            setIsProposalEditable(!isProposalEditable)
+                          }
+                        >
+                          {isProposalEditable ? "View" : "Edit"}
+                        </button>
+                        <button
+                          type="button"
+                          className="flex items-center gap-2 rounded-lg border border-white/30 bg-white/10 px-4 py-2 text-xs font-medium text-white transition hover:bg-white/20 disabled:opacity-40"
                           onClick={handleCopyProposal}
                           disabled={!proposalContent}
                         >
@@ -1766,7 +2329,7 @@ const LeadChat = ({
                           ) : (
                             <>
                               <Check className="h-4 w-4" />
-                              Update Stage
+                              Send Proposal
                             </>
                           )}
                         </button>
@@ -1777,99 +2340,208 @@ const LeadChat = ({
 
                 {/* Proposal Content */}
                 {proposalContent ? (
-                  <div className="flex-1 overflow-y-auto scrollbar-hide pb-4">
-                    <div className="rounded-2xl bg-white/10 p-6 text-white/90">
-                      <div className="prose prose-invert prose-sm max-w-none">
-                        <ReactMarkdown
-                          components={{
-                            h1: ({ node, ...props }) => (
-                              <h1
-                                className="text-2xl font-bold text-white mt-6 mb-4 first:mt-0"
-                                {...props}
-                              />
-                            ),
-                            h2: ({ node, ...props }) => (
-                              <h2
-                                className="text-xl font-bold text-white mt-5 mb-3"
-                                {...props}
-                              />
-                            ),
-                            h3: ({ node, ...props }) => (
-                              <h3
-                                className="text-lg font-semibold text-white mt-4 mb-2"
-                                {...props}
-                              />
-                            ),
-                            h4: ({ node, ...props }) => (
-                              <h4
-                                className="text-base font-semibold text-white/90 mt-3 mb-2"
-                                {...props}
-                              />
-                            ),
-                            p: ({ node, ...props }) => (
-                              <p
-                                className="text-white/80 mb-3 leading-relaxed"
-                                {...props}
-                              />
-                            ),
-                            strong: ({ node, ...props }) => (
-                              <strong
-                                className="text-white font-semibold"
-                                {...props}
-                              />
-                            ),
-                            em: ({ node, ...props }) => (
-                              <em className="text-white/90 italic" {...props} />
-                            ),
-                            ul: ({ node, ...props }) => (
-                              <ul
-                                className="list-disc list-inside ml-4 mb-3 space-y-1.5"
-                                {...props}
-                              />
-                            ),
-                            ol: ({ node, ...props }) => (
-                              <ol
-                                className="list-decimal list-inside ml-4 mb-3 space-y-1.5"
-                                {...props}
-                              />
-                            ),
-                            li: ({ node, ...props }) => (
-                              <li className="text-white/80" {...props} />
-                            ),
-                            hr: ({ node, ...props }) => (
-                              <hr className="border-white/20 my-4" {...props} />
-                            ),
-                            blockquote: ({ node, ...props }) => (
-                              <blockquote
-                                className="border-l-4 border-white/30 pl-4 my-3 italic text-white/70"
-                                {...props}
-                              />
-                            ),
-                            code: ({ node, inline, ...props }) => {
-                              const codeProps = props as any;
-                              return inline ? (
-                                <code
-                                  className="bg-white/20 px-1.5 py-0.5 rounded text-white/90 text-xs font-mono"
-                                  {...codeProps}
-                                />
-                              ) : (
-                                <code
-                                  className="block bg-white/10 p-3 rounded text-white/90 text-xs font-mono overflow-x-auto mb-3"
-                                  {...codeProps}
-                                />
+                  <div className="flex-1 overflow-y-auto scrollbar-hide pb-4 relative">
+                    <style>{`
+                      .proposal-content ::selection {
+                        background-color: rgba(34, 197, 94, 0.4) !important;
+                        color: inherit;
+                      }
+                      .proposal-content ::-moz-selection {
+                        background-color: rgba(34, 197, 94, 0.4) !important;
+                        color: inherit;
+                      }
+                      @keyframes fadeIn {
+                        from {
+                          opacity: 0;
+                          transform: translateX(-50%) translateY(-5px);
+                        }
+                        to {
+                          opacity: 1;
+                          transform: translateX(-50%) translateY(0);
+                        }
+                      }
+                    `}</style>
+                    <div
+                      ref={proposalContentRef}
+                      className="proposal-content rounded-2xl bg-white/10 p-6 text-white/90 relative"
+                      onClick={handleProposalClick}
+                    >
+                      {isProposalEditable ? (
+                        <textarea
+                          value={proposalContent}
+                          onChange={(e) => setProposalContent(e.target.value)}
+                          onBlur={() => {
+                            // Keep editable mode, but allow user to click outside
+                          }}
+                          className="w-full min-h-[400px] bg-transparent text-white/90 outline-none resize-none font-sans text-sm leading-relaxed selection:bg-green-500/40"
+                          style={{
+                            fontFamily: "inherit",
+                          }}
+                          onSelect={(e) => {
+                            handleTextareaSelection(
+                              e.target as HTMLTextAreaElement
+                            );
+                          }}
+                          onMouseUp={(e) => {
+                            // Handle mouse up for better selection detection
+                            setTimeout(() => {
+                              handleTextareaSelection(
+                                e.target as HTMLTextAreaElement
                               );
-                            },
-                            pre: ({ node, ...props }) => (
-                              <pre
-                                className="bg-white/10 p-3 rounded text-white/90 text-xs font-mono overflow-x-auto mb-3"
-                                {...props}
-                              />
-                            ),
+                            }, 10);
+                          }}
+                          onKeyUp={(e) => {
+                            // Handle keyboard selection (Shift+Arrow keys)
+                            if (
+                              e.shiftKey ||
+                              e.key === "ArrowLeft" ||
+                              e.key === "ArrowRight" ||
+                              e.key === "ArrowUp" ||
+                              e.key === "ArrowDown"
+                            ) {
+                              handleTextareaSelection(
+                                e.target as HTMLTextAreaElement
+                              );
+                            }
+                          }}
+                        />
+                      ) : (
+                        <div
+                          className="prose prose-invert prose-sm max-w-none cursor-text select-text"
+                          onMouseUp={handleProposalSelection}
+                          onKeyUp={handleProposalSelection}
+                        >
+                          <ReactMarkdown
+                            components={{
+                              h1: ({ node, ...props }) => (
+                                <h1
+                                  className="text-2xl font-bold text-white mt-6 mb-4 first:mt-0"
+                                  {...props}
+                                />
+                              ),
+                              h2: ({ node, ...props }) => (
+                                <h2
+                                  className="text-xl font-bold text-white mt-5 mb-3"
+                                  {...props}
+                                />
+                              ),
+                              h3: ({ node, ...props }) => (
+                                <h3
+                                  className="text-lg font-semibold text-white mt-4 mb-2"
+                                  {...props}
+                                />
+                              ),
+                              h4: ({ node, ...props }) => (
+                                <h4
+                                  className="text-base font-semibold text-white/90 mt-3 mb-2"
+                                  {...props}
+                                />
+                              ),
+                              p: ({ node, ...props }) => (
+                                <p
+                                  className="text-white/80 mb-3 leading-relaxed"
+                                  {...props}
+                                />
+                              ),
+                              strong: ({ node, ...props }) => (
+                                <strong
+                                  className="text-white font-semibold"
+                                  {...props}
+                                />
+                              ),
+                              em: ({ node, ...props }) => (
+                                <em
+                                  className="text-white/90 italic"
+                                  {...props}
+                                />
+                              ),
+                              ul: ({ node, ...props }) => (
+                                <ul
+                                  className="list-disc list-inside ml-4 mb-3 space-y-1.5"
+                                  {...props}
+                                />
+                              ),
+                              ol: ({ node, ...props }) => (
+                                <ol
+                                  className="list-decimal list-inside ml-4 mb-3 space-y-1.5"
+                                  {...props}
+                                />
+                              ),
+                              li: ({ node, ...props }) => (
+                                <li className="text-white/80" {...props} />
+                              ),
+                              hr: ({ node, ...props }) => (
+                                <hr
+                                  className="border-white/20 my-4"
+                                  {...props}
+                                />
+                              ),
+                              blockquote: ({ node, ...props }) => (
+                                <blockquote
+                                  className="border-l-4 border-white/30 pl-4 my-3 italic text-white/70"
+                                  {...props}
+                                />
+                              ),
+                              code: ({ node, ...props }: any) => {
+                                const codeProps = props as any;
+                                const isInline = props.inline !== false;
+                                return isInline ? (
+                                  <code
+                                    className="bg-white/20 px-1.5 py-0.5 rounded text-white/90 text-xs font-mono"
+                                    {...codeProps}
+                                  />
+                                ) : (
+                                  <code
+                                    className="block bg-white/10 p-3 rounded text-white/90 text-xs font-mono overflow-x-auto mb-3"
+                                    {...codeProps}
+                                  />
+                                );
+                              },
+                              pre: ({ node, ...props }) => (
+                                <pre
+                                  className="bg-white/10 p-3 rounded text-white/90 text-xs font-mono overflow-x-auto mb-3"
+                                  {...props}
+                                />
+                              ),
+                            }}
+                          >
+                            {proposalContent}
+                          </ReactMarkdown>
+                        </div>
+                      )}
+
+                      {/* Edit with AI Button - appears when text is selected */}
+                      {(() => {
+                        console.log("[Button Render Check]", {
+                          showEditWithAI,
+                          hasPosition: !!editWithAIPosition,
+                          hasSelectedText: !!selectedText,
+                          position: editWithAIPosition,
+                          isEditable: isProposalEditable,
+                        });
+                        return null;
+                      })()}
+                      {showEditWithAI && editWithAIPosition && selectedText && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditWithAI();
+                          }}
+                          className="absolute flex items-center gap-2 rounded-lg bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] px-4 py-2 text-xs font-semibold text-white shadow-xl transition-all hover:opacity-90 hover:scale-105 border border-white/20"
+                          style={{
+                            top: `${editWithAIPosition.top}px`,
+                            left: `${editWithAIPosition.left}px`,
+                            transform: "translateX(-50%)",
+                            animation: "fadeIn 0.2s ease-in",
+                            zIndex: 9999,
+                            pointerEvents: "auto",
                           }}
                         >
-                          {proposalContent}
-                        </ReactMarkdown>
-                      </div>
+                          <Sparkles className="h-4 w-4" />
+                          Edit with AI
+                        </button>
+                      )}
                     </div>
                   </div>
                 ) : (
@@ -1883,6 +2555,67 @@ const LeadChat = ({
                         <br />
                         (SMS, emails, WhatsApp, phone calls) and knowledge base
                       </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Edit with AI Modal */}
+                {showEditAIModal && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                    <div className="rounded-lg bg-[#1a1a1a] border border-white/20 p-6 max-w-2xl w-full mx-4">
+                      <h3 className="text-sm sm:text-base font-semibold text-white mb-2">
+                        Edit with AI
+                      </h3>
+                      <p className="text-xs text-white/70 mb-4">
+                        Selected text:{" "}
+                        <span className="text-white/90 italic">
+                          "{selectedText.substring(0, 100)}
+                          {selectedText.length > 100 ? "..." : ""}"
+                        </span>
+                      </p>
+                      <div className="mb-4">
+                        <label className="block text-xs font-medium text-white/90 mb-2">
+                          How would you like AI to rewrite this section?
+                        </label>
+                        <textarea
+                          value={editAIQuery}
+                          onChange={(e) => setEditAIQuery(e.target.value)}
+                          placeholder="e.g., Make it more professional, add more technical details, simplify the language..."
+                          className="w-full min-h-[120px] rounded-lg bg-white/10 border border-white/20 px-4 py-3 text-sm text-white placeholder:text-white/40 outline-none focus:border-white/40 transition-colors resize-none"
+                          autoFocus
+                        />
+                      </div>
+                      <div className="flex items-center gap-3 justify-end">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowEditAIModal(false);
+                            setEditAIQuery("");
+                          }}
+                          disabled={isEditingWithAI}
+                          className="rounded-lg border border-white/30 px-4 py-2 text-xs text-white transition hover:bg-white/10 disabled:opacity-50"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleEditAI}
+                          disabled={isEditingWithAI || !editAIQuery.trim()}
+                          className="rounded-lg bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] px-4 py-2 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-50 flex items-center gap-2"
+                        >
+                          {isEditingWithAI ? (
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              Editing...
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="h-4 w-4" />
+                              Edit with AI
+                            </>
+                          )}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}

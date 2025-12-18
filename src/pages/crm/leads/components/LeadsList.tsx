@@ -238,7 +238,7 @@ const LeadsList: FC<LeadsListProps> = ({
   const isCreatedToday = (createdAt: string | Date) => {
     const today = new Date();
     const created = new Date(createdAt);
-    
+
     return (
       created.getDate() === today.getDate() &&
       created.getMonth() === today.getMonth() &&
@@ -263,7 +263,7 @@ const LeadsList: FC<LeadsListProps> = ({
       if (response?.success) {
         const fieldsUpdated = response?.data?.fieldsUpdated || [];
         const phoneRevealPending = response?.data?.phoneRevealPending || false;
-        
+
         if (fieldsUpdated.length > 0) {
           // Format field names for display
           const fieldLabels: Record<string, string> = {
@@ -277,17 +277,17 @@ const LeadsList: FC<LeadsListProps> = ({
             companyName: "Company Name",
             companyLocation: "Company Location",
           };
-          
+
           const updatedFieldsList = fieldsUpdated
             .map((field: string) => fieldLabels[field] || field)
             .join(", ");
-          
+
           let toastMessage = `Successfully updated: ${updatedFieldsList}`;
-          
+
           if (phoneRevealPending) {
             toastMessage += ". Phone number will be updated shortly.";
           }
-          
+
           toast.success(toastMessage);
         } else {
           if (phoneRevealPending) {
@@ -838,7 +838,6 @@ const LeadsList: FC<LeadsListProps> = ({
     );
   };
 
-
   const renderPageSizeSelector = (position: "top" | "bottom") => {
     const totalCount = totalLeads ?? leads.length;
     const hasData = totalCount > 0;
@@ -916,7 +915,9 @@ const LeadsList: FC<LeadsListProps> = ({
                 ))}
               </SelectContent>
             </Select>
-            {position === "top" && calculatedTotalPages > 1 && paginationPages ? (
+            {position === "top" &&
+            calculatedTotalPages > 1 &&
+            paginationPages ? (
               <>
                 <div className="h-4 w-px bg-white/20 mx-1"></div>
                 <Pagination>
@@ -988,69 +989,71 @@ const LeadsList: FC<LeadsListProps> = ({
   };
 
   return (
-    <div className={`flex flex-col h-full ${viewMode === "card" ? "px-2" : ""}`}>
+    <div
+      className={`flex flex-col h-full ${viewMode === "card" ? "px-2" : ""}`}
+    >
       {renderPageSizeSelector("top")}
       <div className="w-full pb-4 flex-1 min-h-0 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         <AnimatePresence mode="wait">
-        <motion.div
-          key={viewMode}
-          className="w-full"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{
-            duration: 0.2,
-            ease: "easeInOut",
-          }}
-          layout
-        >
-          <AnimatePresence mode="wait">
-            {(() => {
-              if (loading) return renderLoading();
-              if (leads.length === 0) return renderEmpty();
-              
-              return (
-                <motion.div
-                  key="leads-list"
-                  initial={{
-                    opacity: 1,
-                  }}
-                  animate={{
-                    opacity: 1,
-                  }}
-                  exit={{
-                    opacity: 0,
-                    transition: { duration: 0.2, ease: "easeIn" }
-                  }}
-                  className={
-                    viewMode === "card"
-                      ? "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"
-                      : "space-y-2"
-                  }
-                  layout
-                >
-                  {leads.map((lead, index) => (
-                    <motion.div
-                      key={lead._id}
-                      layout
-                      initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                      transition={{
-                        duration: 0.3,
-                        ease: "easeOut",
-                        delay: index * 0.05,
-                      }}
-                    >
-                      {renderLeadCard(lead)}
-                    </motion.div>
-                  ))}
-                </motion.div>
-              );
-            })()}
-          </AnimatePresence>
-        </motion.div>
-      </AnimatePresence>
+          <motion.div
+            key={viewMode}
+            className="w-full"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{
+              duration: 0.2,
+              ease: "easeInOut",
+            }}
+            layout
+          >
+            <AnimatePresence mode="wait">
+              {(() => {
+                if (loading) return renderLoading();
+                if (leads.length === 0) return renderEmpty();
+
+                return (
+                  <motion.div
+                    key="leads-list"
+                    initial={{
+                      opacity: 1,
+                    }}
+                    animate={{
+                      opacity: 1,
+                    }}
+                    exit={{
+                      opacity: 0,
+                      transition: { duration: 0.2, ease: "easeIn" },
+                    }}
+                    className={
+                      viewMode === "card"
+                        ? "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"
+                        : "space-y-2"
+                    }
+                    layout
+                  >
+                    {leads.map((lead, index) => (
+                      <motion.div
+                        key={lead._id}
+                        layout
+                        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                        transition={{
+                          duration: 0.3,
+                          ease: "easeOut",
+                          delay: index * 0.05,
+                        }}
+                      >
+                        {renderLeadCard(lead)}
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                );
+              })()}
+            </AnimatePresence>
+          </motion.div>
+        </AnimatePresence>
       </div>
 
       {/* Delete Confirmation Dialog */}

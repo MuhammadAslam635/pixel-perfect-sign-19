@@ -100,6 +100,27 @@ export interface GenerateProposalInput {
   regenerate?: boolean;
 }
 
+export interface EditProposalPartInput {
+  companyId: string;
+  personId: string;
+  originalProposal: string;
+  selectedText: string;
+  selectionStart: number;
+  selectionEnd: number;
+  instructions: string;
+}
+
+export interface EditProposalPartData {
+  editedPart: string;
+  proposal?: string;
+}
+
+export interface EditProposalPartResponse {
+  success: boolean;
+  message?: string;
+  data: EditProposalPartData;
+}
+
 export interface ProposalData {
   proposal: string;
   proposalId?: string;
@@ -385,6 +406,16 @@ export const connectionMessagesService = {
     payload: GenerateProposalInput
   ): Promise<GenerateProposalResponse> => {
     const response = await API.post("/connection-messages/proposal", payload);
+    return response.data;
+  },
+
+  editProposalPart: async (
+    payload: EditProposalPartInput
+  ): Promise<EditProposalPartResponse> => {
+    const response = await API.post(
+      "/connection-messages/proposal/edit-part",
+      payload
+    );
     return response.data;
   },
 };
