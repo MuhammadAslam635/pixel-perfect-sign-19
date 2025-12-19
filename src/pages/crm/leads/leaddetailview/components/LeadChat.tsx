@@ -509,11 +509,11 @@ const LeadChat = ({
     refetchIntervalInBackground: true,
     queryFn: async () => {
       if (!leadId) {
-        console.log("📧 [LeadChat] No lead ID provided");
+        console.log("[LeadChat] No lead ID provided");
         return [];
       }
 
-      console.log(`📧 [LeadChat] Fetching emails for lead: ${leadId}`);
+      console.log(`[LeadChat] Fetching emails for lead: ${leadId}`);
 
       try {
         const response = await emailService.getLeadEmails(leadId, {
@@ -521,9 +521,7 @@ const LeadChat = ({
         });
 
         const emails = response.data.emails || [];
-        console.log(
-          `📧 [LeadChat] Found ${emails.length} emails linked to lead`
-        );
+        console.log(`[LeadChat] Found ${emails.length} emails linked to lead`);
 
         // Sort chronologically
         return emails.sort(

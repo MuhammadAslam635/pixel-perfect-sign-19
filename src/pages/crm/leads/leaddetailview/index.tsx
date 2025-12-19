@@ -86,14 +86,22 @@ const LeadDetailView = () => {
 
   const mapStageToLabel = (stage: string | null | undefined): string => {
     switch (stage) {
-      case 'new': return 'New';
-      case 'interested': return 'Interested';
-      case 'followup': return 'Follow-up';
-      case 'appointment_booked': return 'Appointment Booked';
-      case 'proposal_sent': return 'Proposal Sent';
-      case 'followup_close': return 'Follow-up to Close';
-      case 'closed': return 'Deal Closed';
-      default: return 'New';
+      case "new":
+        return "New";
+      case "interested":
+        return "Interested";
+      case "followup":
+        return "Follow-up";
+      case "appointment_booked":
+        return "Appointment Booked";
+      case "proposal_sent":
+        return "Proposal Sent";
+      case "followup_close":
+        return "Follow-up to Close";
+      case "closed":
+        return "Deal Closed";
+      default:
+        return "New";
     }
   };
 
@@ -134,15 +142,18 @@ const LeadDetailView = () => {
   const currentStageIndex = LEAD_STAGE_DEFINITIONS.findIndex(
     (s) => s.label === currentStageLabel
   );
-  
+
   // Determine if "Proposal Sent" button should be shown
   // Show when current stage is "Appointment Booked" (index 3) - all previous steps completed
   // Hide when already at Proposal Sent (index 4) or beyond
   const showProposalSentButton = currentStageIndex === 3; // Appointment Booked
 
-  const progressPercent = currentStageIndex >= 0 
-    ? Math.round(((currentStageIndex + 1) / LEAD_STAGE_DEFINITIONS.length) * 100)
-    : 0;
+  const progressPercent =
+    currentStageIndex >= 0
+      ? Math.round(
+          ((currentStageIndex + 1) / LEAD_STAGE_DEFINITIONS.length) * 100
+        )
+      : 0;
 
   // Handler for manual stage updates
   const handleSetStage = async (stageValue: string) => {
@@ -152,28 +163,33 @@ const LeadDetailView = () => {
     }
 
     try {
-      setIsClosingDeal(stageValue === 'closed'); // Show loading state for Deal Closed
-      setIsSendingProposal(stageValue === 'proposal_sent'); // Show loading state for Proposal Sent
-      
-      console.log('🔄 Updating stage to:', stageValue);
-      const response = await leadsService.updateLead(leadId, { stage: stageValue });
-      console.log('✅ Stage update response:', response);
-      
+      setIsClosingDeal(stageValue === "closed"); // Show loading state for Deal Closed
+      setIsSendingProposal(stageValue === "proposal_sent"); // Show loading state for Proposal Sent
+
+      console.log("Updating stage to:", stageValue);
+      const response = await leadsService.updateLead(leadId, {
+        stage: stageValue,
+      });
+      console.log("Stage update response:", response);
+
       // Refetch the lead data immediately to update the UI
       await queryClient.refetchQueries({ queryKey: ["lead", leadId] });
-      console.log('✅ Lead data refetched');
-      
+      console.log("Lead data refetched");
+
       const stageLabels: Record<string, string> = {
-        'proposal_sent': 'Proposal Sent',
-        'followup_close': 'Follow-up to Close',
-        'closed': 'Deal Closed',
+        proposal_sent: "Proposal Sent",
+        followup_close: "Follow-up to Close",
+        closed: "Deal Closed",
       };
-      
-      toast.success(`Stage updated to "${stageLabels[stageValue] || stageValue}"!`);
+
+      toast.success(
+        `Stage updated to "${stageLabels[stageValue] || stageValue}"!`
+      );
     } catch (error: any) {
       console.error("Failed to update stage:", error);
       toast.error(
-        error?.response?.data?.message || "Failed to update stage. Please try again."
+        error?.response?.data?.message ||
+          "Failed to update stage. Please try again."
       );
     } finally {
       setIsClosingDeal(false);
@@ -187,11 +203,11 @@ const LeadDetailView = () => {
 
   const confirmCloseDeal = async () => {
     setShowCloseDealDialog(false);
-    await handleSetStage('closed');
+    await handleSetStage("closed");
   };
 
   const handleSendProposal = async () => {
-    await handleSetStage('proposal_sent');
+    await handleSetStage("proposal_sent");
   };
 
   const handleMessageUpdate = useCallback(() => {
@@ -229,23 +245,21 @@ const LeadDetailView = () => {
                   const isActive = definition.label === currentStageLabel;
                   const isCompleted = index < currentStageIndex;
                   const isLast = index === LEAD_STAGE_DEFINITIONS.length - 1;
-                  
+
                   const baseButtonClasses =
                     "group relative overflow-hidden flex-none flex items-center justify-center rounded-full border text-xs font-medium tracking-wide transition-[width,background-color,box-shadow,padding,gap] duration-500 ease-out";
                   const baseConnectorClasses =
                     "h-[2px] w-8 sm:w-12 rounded-full transition-colors duration-300";
-                  
-                  const buttonClasses =
-                    isActive
-                      ? `${baseButtonClasses} h-8 px-3 gap-2 border-[#67B0B7] text-white shadow-[0_5px_18px_rgba(103,176,183,0.35)] bg-white/10 hover:bg-white/15`
-                      : isCompleted
-                      ? `${baseButtonClasses} w-8 h-8 bg-gradient-to-r from-[#67B0B7] to-[#4066B3] border-transparent text-white shadow-[0_5px_18px_rgba(103,176,183,0.35)] hover:opacity-90`
-                      : `${baseButtonClasses} w-8 h-8 border-white/20 text-white/60 hover:border-white/40 hover:text-white/80`;
-                  
-                  const connectorClasses =
-                    isCompleted
-                      ? `${baseConnectorClasses} bg-gradient-to-r from-[#67B0B7] to-[#4066B3]`
-                      : `${baseConnectorClasses} bg-white/15`;
+
+                  const buttonClasses = isActive
+                    ? `${baseButtonClasses} h-8 px-3 gap-2 border-[#67B0B7] text-white shadow-[0_5px_18px_rgba(103,176,183,0.35)] bg-white/10 hover:bg-white/15`
+                    : isCompleted
+                    ? `${baseButtonClasses} w-8 h-8 bg-gradient-to-r from-[#67B0B7] to-[#4066B3] border-transparent text-white shadow-[0_5px_18px_rgba(103,176,183,0.35)] hover:opacity-90`
+                    : `${baseButtonClasses} w-8 h-8 border-white/20 text-white/60 hover:border-white/40 hover:text-white/80`;
+
+                  const connectorClasses = isCompleted
+                    ? `${baseConnectorClasses} bg-gradient-to-r from-[#67B0B7] to-[#4066B3]`
+                    : `${baseConnectorClasses} bg-white/15`;
 
                   const IconComponent = STAGE_ICONS[index];
 
@@ -292,7 +306,7 @@ const LeadDetailView = () => {
                     />
                   </div>
                 )} */}
-                {currentStageLabel !== 'Deal Closed' && (
+                {currentStageLabel !== "Deal Closed" && (
                   <div className="ml-4">
                     <ActiveNavButton
                       text={isClosingDeal ? "Closing..." : "Deal Closed"}

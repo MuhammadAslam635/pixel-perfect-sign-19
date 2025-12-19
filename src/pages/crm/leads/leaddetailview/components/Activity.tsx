@@ -542,8 +542,8 @@ const Activity: FC<ActivityProps> = ({
       search: leadsSearch || undefined,
       companyId: lead?.companyId || undefined, // Filter by the current lead's company
     };
-    console.log("🔍 Leads Query Params:", params);
-    console.log("📋 Current Lead:", {
+    console.log("Leads Query Params:", params);
+    console.log("Current Lead:", {
       id: lead?._id,
       name: lead?.name,
       companyId: lead?.companyId,
@@ -571,7 +571,7 @@ const Activity: FC<ActivityProps> = ({
   useEffect(() => {
     if (fetchedLeads && fetchedLeads.length > 0) {
       console.log(
-        "📦 Fetched Leads:",
+        "Fetched Leads:",
         fetchedLeads.map((l) => ({
           id: l._id,
           name: l.name,
@@ -580,7 +580,7 @@ const Activity: FC<ActivityProps> = ({
         }))
       );
       console.log(
-        "✅ Filtered Leads:",
+        "Filtered Leads:",
         filteredLeads.map((l) => ({
           id: l._id,
           name: l.name,

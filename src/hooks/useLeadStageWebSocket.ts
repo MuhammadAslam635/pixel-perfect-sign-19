@@ -109,7 +109,7 @@ export const useLeadStageWebSocket = (leadId: string | null | undefined) => {
       wsRef.current = ws;
 
       ws.onopen = () => {
-        console.log("[WebSocket] ✅ Connected successfully");
+        console.log("[WebSocket] Connected successfully");
         reconnectAttemptsRef.current = 0;
 
         // Subscribe to this lead's updates
@@ -118,7 +118,7 @@ export const useLeadStageWebSocket = (leadId: string | null | undefined) => {
             type: "subscribe",
             leadId: leadId,
           };
-          console.log("[WebSocket] 📝 Subscribing to lead:", leadId);
+          console.log("[WebSocket] Subscribing to lead:", leadId);
           ws.send(JSON.stringify(subscribeMessage));
         }
       };
@@ -137,7 +137,7 @@ export const useLeadStageWebSocket = (leadId: string | null | undefined) => {
 
             // Only process if it's for the current lead
             if (updateLeadId === currentLeadId && currentLeadId) {
-              console.log("[WebSocket] 🔄 Lead stage update received:", {
+              console.log("[WebSocket] Lead stage update received:", {
                 leadId: updateLeadId,
                 oldStage: updateMessage.data.oldStage,
                 newStage: updateMessage.data.newStage,
@@ -169,30 +169,27 @@ export const useLeadStageWebSocket = (leadId: string | null | undefined) => {
               });
 
               console.log(
-                "[WebSocket] ✅ Queries refetched and invalidated, UI should update immediately"
+                "[WebSocket] Queries refetched and invalidated, UI should update immediately"
               );
             } else {
               console.log(
-                "[WebSocket] ⚠️ Update received for different lead:",
+                "[WebSocket] Update received for different lead:",
                 updateLeadId,
                 "current:",
                 currentLeadId
               );
             }
           } else if (message.type === "connected") {
-            console.log(
-              "[WebSocket] ✅ Connection confirmed:",
-              message.message
-            );
+            console.log("[WebSocket] Connection confirmed:", message.message);
           } else if (message.type === "subscribed") {
             console.log(
-              "[WebSocket] ✅ Subscribed to lead updates:",
+              "[WebSocket] Subscribed to lead updates:",
               message.leadId
             );
           } else if (message.type === "pong") {
             // Heartbeat response - silent
           } else if (message.type === "error") {
-            console.error("[WebSocket] ❌ Error:", message.message);
+            console.error("[WebSocket] Error:", message.message);
           } else {
             console.log("[WebSocket] 📨 Unknown message type:", message.type);
           }
@@ -202,7 +199,7 @@ export const useLeadStageWebSocket = (leadId: string | null | undefined) => {
       };
 
       ws.onerror = (error) => {
-        console.error("[WebSocket] ❌ Connection error:", error);
+        console.error("[WebSocket] Connection error:", error);
       };
 
       ws.onclose = (event) => {
@@ -222,14 +219,14 @@ export const useLeadStageWebSocket = (leadId: string | null | undefined) => {
           const delay = reconnectDelay * reconnectAttemptsRef.current;
 
           console.log(
-            `[WebSocket] 🔄 Attempting to reconnect in ${delay}ms (attempt ${reconnectAttemptsRef.current}/${maxReconnectAttempts})`
+            `[WebSocket] Attempting to reconnect in ${delay}ms (attempt ${reconnectAttemptsRef.current}/${maxReconnectAttempts})`
           );
 
           reconnectTimeoutRef.current = setTimeout(() => {
             connect();
           }, delay);
         } else if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
-          console.error("[WebSocket] ❌ Max reconnection attempts reached");
+          console.error("[WebSocket] Max reconnection attempts reached");
         }
       };
     } catch (error) {

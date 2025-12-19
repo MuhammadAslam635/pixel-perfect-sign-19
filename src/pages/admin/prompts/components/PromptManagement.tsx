@@ -101,14 +101,14 @@ export const PromptManagement = ({
   });
 
   // Debug logging
-  console.log(`🔍 ${activeTab.toUpperCase()} Tab - Filtering Results:`);
+  console.log(`${activeTab.toUpperCase()} Tab - Filtering Results:`);
   console.log(`   Total prompts for ${activeTab}:`, filteredPrompts.length);
   console.log(`   Global prompts:`, globalPrompts.length);
   console.log(`   Company-specific prompts:`, companyPrompts.length);
 
   // Detailed debug info
   console.log(
-    `   📋 Sample prompt companyId values:`,
+    `   Sample prompt companyId values:`,
     filteredPrompts.slice(0, 3).map((p) => ({
       id: p._id,
       category: p.promptCategory,
@@ -123,7 +123,7 @@ export const PromptManagement = ({
 
   if (companyPrompts.length > 0) {
     console.log(
-      `   🏢 Company prompts details:`,
+      `   Company prompts details:`,
       companyPrompts.map((p) => {
         const companyIdValue =
           p.companyId && typeof p.companyId === "object"
@@ -400,7 +400,7 @@ export const PromptManagement = ({
                                 </Badge>
                                 {prompt.company?.name && (
                                   <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/40 text-xs font-semibold px-2.5 py-0.5">
-                                    🏢 {prompt.company.name}
+                                    {prompt.company.name}
                                   </Badge>
                                 )}
                                 {prompt.name && (

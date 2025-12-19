@@ -153,8 +153,14 @@ const CampaignsPage = () => {
     useResetCampaignMedia();
 
   // Fetch aggregated analytics for Facebook and Google
-  const { data: facebookAnalytics } = useUserAggregatedAnalytics("facebook", facebookDays);
-  const { data: googleAnalytics } = useUserAggregatedAnalytics("google", googleDays);
+  const { data: facebookAnalytics } = useUserAggregatedAnalytics(
+    "facebook",
+    facebookDays
+  );
+  const { data: googleAnalytics } = useUserAggregatedAnalytics(
+    "google",
+    googleDays
+  );
 
   // Use campaigns directly from API (platform filtering is now server-side)
   const campaigns = useMemo(() => {
@@ -591,12 +597,18 @@ const CampaignsPage = () => {
   // Helper to map days selection to API parameter
   const getDaysFromSelection = (selection: string): number => {
     switch (selection) {
-      case "last-7-days": return 7;
-      case "last-week": return 7;
-      case "last-month": return 30;
-      case "last-3-months": return 90;
-      case "last-year": return 365;
-      default: return 7;
+      case "last-7-days":
+        return 7;
+      case "last-week":
+        return 7;
+      case "last-month":
+        return 30;
+      case "last-3-months":
+        return 90;
+      case "last-year":
+        return 365;
+      default:
+        return 7;
     }
   };
 
@@ -641,7 +653,9 @@ const CampaignsPage = () => {
                   </div>
                   <Select
                     defaultValue="last-week"
-                    onValueChange={(value) => setFacebookDays(getDaysFromSelection(value))}
+                    onValueChange={(value) =>
+                      setFacebookDays(getDaysFromSelection(value))
+                    }
                   >
                     <SelectTrigger className="w-[110px] h-7 bg-[#252525] border-[#3a3a3a] text-gray-300 text-[10px]">
                       <SelectValue />
@@ -683,35 +697,52 @@ const CampaignsPage = () => {
                 <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
                   <div>
                     <div className="text-base sm:text-lg font-bold text-white mb-0.5">
-                      {facebookAnalytics?.data?.[0] ? formatNumber(facebookAnalytics.data[0].totalImpressions) : "0"}
+                      {facebookAnalytics?.data?.[0]
+                        ? formatNumber(
+                            facebookAnalytics.data[0].totalImpressions
+                          )
+                        : "0"}
                     </div>
                     <div className="text-[10px] text-gray-500 mb-0.5">
                       Impressions
                     </div>
                     <div className="text-[10px] font-medium text-gray-500">
-                      {facebookAnalytics?.data?.[0] ? `${formatNumber(facebookAnalytics.data[0].totalReach)} reach` : "No data"}
+                      {facebookAnalytics?.data?.[0]
+                        ? `${formatNumber(
+                            facebookAnalytics.data[0].totalReach
+                          )} reach`
+                        : "No data"}
                     </div>
                   </div>
                   <div>
                     <div className="text-base sm:text-lg font-bold text-white mb-0.5">
-                      {facebookAnalytics?.data?.[0] ? formatNumber(facebookAnalytics.data[0].totalClicks) : "0"}
+                      {facebookAnalytics?.data?.[0]
+                        ? formatNumber(facebookAnalytics.data[0].totalClicks)
+                        : "0"}
                     </div>
                     <div className="text-[10px] text-gray-500 mb-0.5">
                       Clicks
                     </div>
                     <div className="text-[10px] font-medium text-gray-500">
-                      {facebookAnalytics?.data?.[0] ? `${facebookAnalytics.data[0].avgCtr.toFixed(2)}% CTR` : "No data"}
+                      {facebookAnalytics?.data?.[0]
+                        ? `${facebookAnalytics.data[0].avgCtr.toFixed(2)}% CTR`
+                        : "No data"}
                     </div>
                   </div>
                   <div>
                     <div className="text-base sm:text-lg font-bold text-white mb-0.5">
-                      ${facebookAnalytics?.data?.[0] ? formatNumber(facebookAnalytics.data[0].totalSpend) : "0"}
+                      $
+                      {facebookAnalytics?.data?.[0]
+                        ? formatNumber(facebookAnalytics.data[0].totalSpend)
+                        : "0"}
                     </div>
                     <div className="text-[10px] text-gray-500 mb-0.5">
                       Spend
                     </div>
                     <div className="text-[10px] font-medium text-gray-500">
-                      {facebookAnalytics?.data?.[0] ? `$${facebookAnalytics.data[0].avgCpc.toFixed(2)} CPC` : "No data"}
+                      {facebookAnalytics?.data?.[0]
+                        ? `$${facebookAnalytics.data[0].avgCpc.toFixed(2)} CPC`
+                        : "No data"}
                     </div>
                   </div>
                 </div>
@@ -775,7 +806,9 @@ const CampaignsPage = () => {
                   </div>
                   <Select
                     defaultValue="last-week"
-                    onValueChange={(value) => setGoogleDays(getDaysFromSelection(value))}
+                    onValueChange={(value) =>
+                      setGoogleDays(getDaysFromSelection(value))
+                    }
                   >
                     <SelectTrigger className="w-[110px] h-7 bg-[#252525] border-[#3a3a3a] text-gray-300 text-[10px]">
                       <SelectValue />
@@ -817,35 +850,50 @@ const CampaignsPage = () => {
                 <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
                   <div>
                     <div className="text-base sm:text-lg font-bold text-white mb-0.5">
-                      {googleAnalytics?.data?.[0] ? formatNumber(googleAnalytics.data[0].totalImpressions) : "0"}
+                      {googleAnalytics?.data?.[0]
+                        ? formatNumber(googleAnalytics.data[0].totalImpressions)
+                        : "0"}
                     </div>
                     <div className="text-[10px] text-gray-500 mb-0.5">
                       Impressions
                     </div>
                     <div className="text-[10px] font-medium text-gray-500">
-                      {googleAnalytics?.data?.[0] ? `${formatNumber(googleAnalytics.data[0].totalReach)} reach` : "No data"}
+                      {googleAnalytics?.data?.[0]
+                        ? `${formatNumber(
+                            googleAnalytics.data[0].totalReach
+                          )} reach`
+                        : "No data"}
                     </div>
                   </div>
                   <div>
                     <div className="text-base sm:text-lg font-bold text-white mb-0.5">
-                      {googleAnalytics?.data?.[0] ? formatNumber(googleAnalytics.data[0].totalClicks) : "0"}
+                      {googleAnalytics?.data?.[0]
+                        ? formatNumber(googleAnalytics.data[0].totalClicks)
+                        : "0"}
                     </div>
                     <div className="text-[10px] text-gray-500 mb-0.5">
                       Clicks
                     </div>
                     <div className="text-[10px] font-medium text-gray-500">
-                      {googleAnalytics?.data?.[0] ? `${googleAnalytics.data[0].avgCtr.toFixed(2)}% CTR` : "No data"}
+                      {googleAnalytics?.data?.[0]
+                        ? `${googleAnalytics.data[0].avgCtr.toFixed(2)}% CTR`
+                        : "No data"}
                     </div>
                   </div>
                   <div>
                     <div className="text-base sm:text-lg font-bold text-white mb-0.5">
-                      ${googleAnalytics?.data?.[0] ? formatNumber(googleAnalytics.data[0].totalSpend) : "0"}
+                      $
+                      {googleAnalytics?.data?.[0]
+                        ? formatNumber(googleAnalytics.data[0].totalSpend)
+                        : "0"}
                     </div>
                     <div className="text-[10px] text-gray-500 mb-0.5">
                       Spend
                     </div>
                     <div className="text-[10px] font-medium text-gray-500">
-                      {googleAnalytics?.data?.[0] ? `$${googleAnalytics.data[0].avgCpc.toFixed(2)} CPC` : "No data"}
+                      {googleAnalytics?.data?.[0]
+                        ? `$${googleAnalytics.data[0].avgCpc.toFixed(2)} CPC`
+                        : "No data"}
                     </div>
                   </div>
                 </div>
@@ -959,7 +1007,7 @@ const CampaignsPage = () => {
                               >
                                 {platform === "facebook"
                                   ? "📘 Facebook"
-                                  : "🔍 Google"}
+                                  : "Google"}
                               </Badge>
                             ))}
                           </div>

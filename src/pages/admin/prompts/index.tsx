@@ -116,14 +116,14 @@ const PromptsPage = () => {
       });
 
       // Debug: Log prompt types with detailed breakdown
-      console.log("📊 Admin Prompts Debug Info:");
+      console.log("Admin Prompts Debug Info:");
       console.log("├─ Total prompts fetched:", promptsWithCompanyInfo.length);
       console.log(
         "├─ 🌐 Global prompts:",
         promptsWithCompanyInfo.filter((p) => !p.companyId).length
       );
       console.log(
-        "└─ 🏢 Company-specific prompts:",
+        "└─ Company-specific prompts:",
         promptsWithCompanyInfo.filter((p) => p.companyId).length
       );
 
@@ -147,7 +147,7 @@ const PromptsPage = () => {
         (p) => p.companyId
       );
       if (companySpecificPrompts.length > 0) {
-        console.log("🏢 Company-specific prompt details:");
+        console.log("Company-specific prompt details:");
         companySpecificPrompts.forEach((p, idx) => {
           console.log(`   ${idx + 1}. ${p.promptType} - ${p.promptCategory}:`, {
             promptId: p._id,
@@ -161,7 +161,7 @@ const PromptsPage = () => {
         });
       } else {
         console.log(
-          "ℹ️ No company-specific prompts found. All prompts are global."
+          "No company-specific prompts found. All prompts are global."
         );
       }
 

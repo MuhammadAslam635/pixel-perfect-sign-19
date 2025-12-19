@@ -517,7 +517,7 @@ export const AdminCompanyMailgunTab = () => {
                 />
                 {suggestedEmail && (
                   <p className="text-xs text-emerald-400">
-                    ✓ Suggested: {suggestedEmail}
+                    Suggested: {suggestedEmail}
                   </p>
                 )}
               </div>

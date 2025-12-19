@@ -3,14 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Lead } from "@/services/leads.service";
 import { calendarService } from "@/services/calendar.service";
 import { Button } from "@/components/ui/button";
-import {
-  Loader2,
-  RefreshCcw,
-  FileText,
-  Calendar,
-  Play,
-  X,
-} from "lucide-react";
+import { Loader2, RefreshCcw, FileText, Calendar, Play, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { LeadMeetingRecord } from "@/services/calendar.service";
 
@@ -43,10 +36,10 @@ const formatDate = (dateString: string): string => {
       month: "short",
       day: "numeric",
       year: date.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
   }
 };
 
@@ -207,13 +200,24 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
     return filtered;
   }, [meetings]);
 
-  const [recordingData, setRecordingData] = useState<Record<string, MeetingRecordingData>>({});
-  const [loadingRecordings, setLoadingRecordings] = useState<Record<string, boolean>>({});
+  const [recordingData, setRecordingData] = useState<
+    Record<string, MeetingRecordingData>
+  >({});
+  const [loadingRecordings, setLoadingRecordings] = useState<
+    Record<string, boolean>
+  >({});
   const [transcripts, setTranscripts] = useState<Record<string, string>>({});
-  const [loadingTranscripts, setLoadingTranscripts] = useState<Record<string, boolean>>({});
-  const [selectedMeeting, setSelectedMeeting] = useState<LeadMeetingRecord | null>(null);
-  const [activeTab, setActiveTab] = useState<"recording" | "transcript">("recording");
-  const [recordingAudioUrl, setRecordingAudioUrl] = useState<string | null>(null);
+  const [loadingTranscripts, setLoadingTranscripts] = useState<
+    Record<string, boolean>
+  >({});
+  const [selectedMeeting, setSelectedMeeting] =
+    useState<LeadMeetingRecord | null>(null);
+  const [activeTab, setActiveTab] = useState<"recording" | "transcript">(
+    "recording"
+  );
+  const [recordingAudioUrl, setRecordingAudioUrl] = useState<string | null>(
+    null
+  );
   const [recordingLoading, setRecordingLoading] = useState(false);
   const [recordingError, setRecordingError] = useState<string | null>(null);
 
@@ -253,10 +257,11 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
     }
   };
 
-  const fetchTranscript = useCallback(async (meetingId: string, transcriptUrl: string) => {
-    if (transcripts[meetingId] || loadingTranscripts[meetingId]) {
-      return;
-    }
+  const fetchTranscript = useCallback(
+    async (meetingId: string, transcriptUrl: string) => {
+      if (transcripts[meetingId] || loadingTranscripts[meetingId]) {
+        return;
+      }
 
     setLoadingTranscripts((prev) => ({ ...prev, [meetingId]: true }));
     try {
@@ -287,40 +292,44 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
     }
   }, [transcripts, loadingTranscripts]);
 
-  const handleOpenMeetingDetails = useCallback(async (meeting: LeadMeetingRecord) => {
-    setSelectedMeeting(meeting);
-    setActiveTab("recording");
-    setRecordingAudioUrl(null);
-    setRecordingError(null);
-    setRecordingLoading(false);
+  const handleOpenMeetingDetails = useCallback(
+    async (meeting: LeadMeetingRecord) => {
+      setSelectedMeeting(meeting);
+      setActiveTab("recording");
+      setRecordingAudioUrl(null);
+      setRecordingError(null);
+      setRecordingLoading(false);
 
-    // Fetch recording data if not already loaded
-    if (!recordingData[meeting._id]) {
-      await fetchRecordingData(meeting._id);
-    }
-
-    const storedData = recordingData[meeting._id];
-    const recordingUrl = meeting.recall?.recordingUrl || storedData?.recordingUrl;
-
-    // Load recording if available
-    if (recordingUrl) {
-      setRecordingLoading(true);
-      try {
-        // For Recall recordings, we can use the URL directly or fetch via backend
-        // Using the URL directly for now since it's a pre-signed S3 URL
-        setRecordingAudioUrl(recordingUrl);
-      } catch (err: any) {
-        console.error("Failed to load recording", err);
-        setRecordingError(
-          err?.response?.data?.error ||
-          err?.message ||
-          "Unable to load meeting recording."
-        );
-      } finally {
-        setRecordingLoading(false);
+      // Fetch recording data if not already loaded
+      if (!recordingData[meeting._id]) {
+        await fetchRecordingData(meeting._id);
       }
-    }
-  }, [recordingData]);
+
+      const storedData = recordingData[meeting._id];
+      const recordingUrl =
+        meeting.recall?.recordingUrl || storedData?.recordingUrl;
+
+      // Load recording if available
+      if (recordingUrl) {
+        setRecordingLoading(true);
+        try {
+          // For Recall recordings, we can use the URL directly or fetch via backend
+          // Using the URL directly for now since it's a pre-signed S3 URL
+          setRecordingAudioUrl(recordingUrl);
+        } catch (err: any) {
+          console.error("Failed to load recording", err);
+          setRecordingError(
+            err?.response?.data?.error ||
+              err?.message ||
+              "Unable to load meeting recording."
+          );
+        } finally {
+          setRecordingLoading(false);
+        }
+      }
+    },
+    [recordingData]
+  );
 
   const handleCloseMeetingDetails = useCallback(() => {
     setSelectedMeeting(null);
@@ -383,16 +392,26 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
   // Load transcript if we have URL but not text (moved from IIFE to fix hooks violation)
   useEffect(() => {
     if (!selectedMeeting) return;
-    
+
     const storedData = recordingData[selectedMeeting._id];
-    const transcriptUrl = selectedMeeting.recall?.transcriptUrl || storedData?.transcriptUrl;
-    const transcriptText = selectedMeeting.recall?.transcriptText || storedData?.transcriptText || transcripts[selectedMeeting._id];
+    const transcriptUrl =
+      selectedMeeting.recall?.transcriptUrl || storedData?.transcriptUrl;
+    const transcriptText =
+      selectedMeeting.recall?.transcriptText ||
+      storedData?.transcriptText ||
+      transcripts[selectedMeeting._id];
     const isLoading = loadingTranscripts[selectedMeeting._id];
 
     if (transcriptUrl && !transcriptText && !isLoading) {
       fetchTranscript(selectedMeeting._id, transcriptUrl);
     }
-  }, [selectedMeeting, recordingData, transcripts, loadingTranscripts, fetchTranscript]);
+  }, [
+    selectedMeeting,
+    recordingData,
+    transcripts,
+    loadingTranscripts,
+    fetchTranscript,
+  ]);
 
   const isBusy = isLoading || isFetching;
 
@@ -408,57 +427,60 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
     <div className="grid grid-cols-3 gap-4 h-full min-h-0">
       {/* Left Side: Meeting List - 2/3 width */}
       <div className="col-span-2 flex flex-col gap-4 overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-xs sm:text-sm font-semibold text-white">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-xs sm:text-sm font-semibold text-white">
               Meeting Recordings
-          </h3>
-          <p className="text-xs text-white/60 mt-1">
+            </h3>
+            <p className="text-xs text-white/60 mt-1">
               View recordings and transcripts from past meetings
-          </p>
-        </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => refetch()}
-          disabled={isBusy}
-          className="h-8 w-8 p-0 flex items-center justify-center text-white/70 hover:text-white transition-colors disabled:opacity-50"
-        >
-          <RefreshCcw className={`w-3.5 h-3.5 ${isBusy ? "animate-spin" : ""}`} />
-        </Button>
-      </div>
-
-      {/* Error State */}
-      {error && (
-        <div className="rounded-lg p-4 border border-red-500/20 bg-red-500/10">
-          <div className="flex items-start gap-2 text-xs text-red-300">
-            <span>
-              {(error as any)?.response?.data?.message ||
-                (error as any)?.message ||
-                "Failed to load meetings"}
-            </span>
+            </p>
           </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => refetch()}
+            disabled={isBusy}
+            className="h-8 w-8 p-0 flex items-center justify-center text-white/70 hover:text-white transition-colors disabled:opacity-50"
+          >
+            <RefreshCcw
+              className={`w-3.5 h-3.5 ${isBusy ? "animate-spin" : ""}`}
+            />
+          </Button>
         </div>
-      )}
 
-      {/* Loading State */}
-      {isBusy && meetings.length === 0 ? (
-        <div className="flex items-center justify-center py-12 text-sm text-white/60">
-          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-          Loading meetings...
-        </div>
-      ) : meetingsWithRecordings.length === 0 ? (
-        <div className="rounded-lg p-6 border border-white/10 bg-white/5 text-center">
-          <Calendar className="w-8 h-8 text-white/30 mx-auto mb-2" />
-          <p className="text-xs text-white/60">
-            No meeting recordings available yet.
-          </p>
-          <p className="text-xs text-white/40 mt-2">
-            Recordings will appear here after meetings with Recall bots are completed.
-          </p>
-        </div>
-      ) : (
+        {/* Error State */}
+        {error && (
+          <div className="rounded-lg p-4 border border-red-500/20 bg-red-500/10">
+            <div className="flex items-start gap-2 text-xs text-red-300">
+              <span>
+                {(error as any)?.response?.data?.message ||
+                  (error as any)?.message ||
+                  "Failed to load meetings"}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Loading State */}
+        {isBusy && meetings.length === 0 ? (
+          <div className="flex items-center justify-center py-12 text-sm text-white/60">
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            Loading meetings...
+          </div>
+        ) : meetingsWithRecordings.length === 0 ? (
+          <div className="rounded-lg p-6 border border-white/10 bg-white/5 text-center">
+            <Calendar className="w-8 h-8 text-white/30 mx-auto mb-2" />
+            <p className="text-xs text-white/60">
+              No meeting recordings available yet.
+            </p>
+            <p className="text-xs text-white/40 mt-2">
+              Recordings will appear here after meetings with Recall bots are
+              completed.
+            </p>
+          </div>
+        ) : (
           <div className="flex-1 overflow-y-auto scrollbar-hide space-y-3">
           {meetingsWithRecordings.map((meeting) => {
             const storedData = recordingData[meeting._id];
@@ -478,9 +500,9 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
             const showRecordingLoading = (!hasRecording && (isLoadingRecording || isTranscriptPending)) || isLoadingRecording;
             const showTranscriptLoading = (!hasTranscript && (isLoadingTranscript || isTranscriptPending || isTranscriptProcessing)) || isLoadingTranscript;
 
-            return (
-              <div
-                key={meeting._id}
+              return (
+                <div
+                  key={meeting._id}
                   onClick={() => handleOpenMeetingDetails(meeting)}
                   className={`rounded-2xl border backdrop-blur-xl overflow-hidden transition-colors cursor-pointer ${
                     isSelected
@@ -499,7 +521,7 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
                       {/* Meeting Title and Duration */}
                       <div className="flex flex-col gap-0.5">
                         <span className="text-xs font-medium text-white line-clamp-1">
-                        {meeting.subject || "Meeting"}
+                          {meeting.subject || "Meeting"}
                         </span>
                         <span className="text-xs text-white/60">
                           Duration: {formatDuration(meeting.durationMinutes)}
@@ -571,7 +593,7 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
             </button>
           )}
         </div>
-        
+
         {/* Card Container */}
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-y-auto scrollbar-hide p-6 flex flex-col gap-6 flex-1">
           {selectedMeeting ? (
@@ -587,7 +609,8 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
                       {selectedMeeting.subject || "Meeting"}
                     </span>
                     <span className="text-xs text-white/60">
-                      {formatMeetingDate(selectedMeeting.endDateTime)} • {formatDuration(selectedMeeting.durationMinutes)}
+                      {formatMeetingDate(selectedMeeting.endDateTime)} •{" "}
+                      {formatDuration(selectedMeeting.durationMinutes)}
                     </span>
                   </div>
                 </div>
@@ -621,7 +644,7 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
                     <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400" />
                   )}
                 </button>
-                    </div>
+              </div>
 
               {/* Tab Content */}
               <div className="flex-1 overflow-y-auto scrollbar-hide">
@@ -687,7 +710,9 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
                   <div className="flex flex-col gap-4">
                     {/* Transcript */}
                     <div className="flex flex-col gap-2">
-                      <h3 className="text-xs font-semibold text-white/80">Transcript</h3>
+                      <h3 className="text-xs font-semibold text-white/80">
+                        Transcript
+                      </h3>
                       {(() => {
                         const storedData = recordingData[selectedMeeting._id];
                         const transcriptUrl = selectedMeeting.recall?.transcriptUrl || storedData?.transcriptUrl;
@@ -712,7 +737,9 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
                           return (
                             <div className="flex items-center gap-2 py-4 px-4 rounded-lg bg-white/5 border border-white/10">
                               <Loader2 className="w-4 h-4 text-cyan-400 animate-spin" />
-                              <span className="text-sm text-white/60">Loading transcript...</span>
+                              <span className="text-sm text-white/60">
+                                Loading transcript...
+                              </span>
                             </div>
                           );
                         } else if (transcriptText) {
@@ -731,7 +758,7 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
                           );
                         }
                       })()}
-                      </div>
+                    </div>
                   </div>
                 )}
               </div>

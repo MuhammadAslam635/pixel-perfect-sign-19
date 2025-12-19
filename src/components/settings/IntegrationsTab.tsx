@@ -1982,7 +1982,7 @@ export const IntegrationsTab = () => {
               </Select>
               {selectedBusinessAccountId && (
                 <p className="text-xs sm:text-sm text-emerald-400">
-                  ✓ Business account selected. Ad accounts are loading below...
+                  Business account selected. Ad accounts are loading below...
                 </p>
               )}
               {(!businessAccountsData?.data ||
@@ -2065,7 +2065,7 @@ export const IntegrationsTab = () => {
               </Select>
               {selectedAdAccountId && (
                 <p className="text-xs sm:text-sm text-emerald-400">
-                  ✓ Ad account selected ({selectedAdAccountId}). Ready to create
+                  Ad account selected ({selectedAdAccountId}). Ready to create
                   ad campaigns!
                 </p>
               )}
@@ -2590,7 +2590,7 @@ export const IntegrationsTab = () => {
                           className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 text-sm sm:text-base"
                         />
                         <p className="text-xs text-emerald-400">
-                          ✓ Unique email address suggested. You can modify it if
+                          Unique email address suggested. You can modify it if
                           needed.
                         </p>
                       </div>
