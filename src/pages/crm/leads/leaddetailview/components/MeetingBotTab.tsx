@@ -109,30 +109,103 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
   });
 
   const meetings = meetingsResponse?.data || [];
-  const nowTimestamp = Date.now();
+  
+  // Debug: Log meetings received from API
+  console.log("[MeetingBotTab] Meetings received from API", {
+    count: meetings.length,
+    meetings: meetings.map(m => ({
+      id: m._id,
+      subject: m.subject,
+      endDateTime: m.endDateTime,
+      recallStatus: m.recall?.status,
+      hasSessionId: Boolean(m.recall?.sessionId),
+      hasRecordingUrl: Boolean(m.recall?.recordingUrl),
+      hasTranscriptUrl: Boolean(m.recall?.transcriptUrl),
+    })),
+  });
 
   // Filter and sort meetings: show past meetings that have Recall integration
   // Show meetings as soon as they end, even if recording/transcript isn't ready yet
   const meetingsWithRecordings = useMemo(() => {
-    return meetings
+    const currentTime = Date.now(); // Always use current time, not stale timestamp
+    console.log("[MeetingBotTab] Filtering meetings", {
+      totalMeetings: meetings.length,
+      currentTime: new Date(currentTime).toISOString(),
+      currentTimestamp: currentTime,
+    });
+    
+    const filtered = meetings
       .filter((m) => {
+        if (!m.endDateTime) {
+          console.log("[MeetingBotTab] Meeting missing endDateTime", { meetingId: m._id, subject: m.subject });
+          return false;
+        }
+        
         const meetingEnd = new Date(m.endDateTime).getTime();
-        const isPast = meetingEnd < nowTimestamp;
-        // Show if meeting has Recall integration (status set) or any Recall data
-        // This includes meetings that just ended but are still processing
-        const hasRecallIntegration = 
-          m.recall?.status !== undefined && m.recall?.status !== null || // Has recall status
-          m.recall?.sessionId || // Has active bot
-          m.recall?.recordingUrl || // Has recording
-          m.recall?.transcriptUrl; // Has transcript
-        return isPast && hasRecallIntegration;
+        const meetingStart = m.startDateTime ? new Date(m.startDateTime).getTime() : meetingEnd;
+        const isPast = meetingEnd < currentTime;
+        const hasStarted = meetingStart < currentTime;
+        
+        // Check recall status
+        const recallStatus = m.recall?.status;
+        const hasSessionId = Boolean(m.recall?.sessionId);
+        
+        // SIMPLE RULE: If recall status is "ended", SHOW IT. Period.
+        if (recallStatus === "ended") {
+          return true;
+        }
+        
+        // If meeting has recall data (sessionId, recording, transcript, or status)
+        const hasRecallData = Boolean(
+          hasSessionId || 
+          m.recall?.recordingUrl || 
+          m.recall?.transcriptUrl || 
+          (recallStatus !== null && recallStatus !== undefined)
+        );
+        
+        // Show if: (meeting ended AND has recall data) OR (has active bot AND meeting has started)
+        const shouldShow = (isPast && hasRecallData) || (hasSessionId && hasStarted);
+        
+        if (!shouldShow) {
+          console.log("[MeetingBotTab] Meeting filtered out", {
+            meetingId: m._id,
+            subject: m.subject,
+            startDateTime: m.startDateTime,
+            endDateTime: m.endDateTime,
+            endTimestamp: meetingEnd,
+            currentTimestamp: currentTime,
+            timeDiff: currentTime - meetingEnd,
+            isPast,
+            recallStatus,
+            hasSessionId,
+            hasRecallData,
+          });
+        } else {
+          console.log("[MeetingBotTab] Meeting WILL SHOW", {
+            meetingId: m._id,
+            subject: m.subject,
+            endDateTime: m.endDateTime,
+            isPast,
+            recallStatus,
+            hasRecallData,
+          });
+        }
+        
+        return shouldShow;
       })
       .sort((a, b) => {
         const aTime = new Date(a.endDateTime).getTime();
         const bTime = new Date(b.endDateTime).getTime();
         return bTime - aTime; // Most recent first
       });
-  }, [meetings, nowTimestamp]);
+    
+    console.log("[MeetingBotTab] Filtered meetings", {
+      filteredCount: filtered.length,
+      meetingIds: filtered.map(m => m._id),
+    });
+    
+    return filtered;
+  }, [meetings]);
 
   const [recordingData, setRecordingData] = useState<Record<string, MeetingRecordingData>>({});
   const [loadingRecordings, setLoadingRecordings] = useState<Record<string, boolean>>({});
@@ -145,12 +218,14 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
   const [recordingError, setRecordingError] = useState<string | null>(null);
 
   const fetchRecordingData = async (meetingId: string) => {
-    if (recordingData[meetingId] || loadingRecordings[meetingId]) {
+    // Don't fetch if already loading
+    if (loadingRecordings[meetingId]) {
       return recordingData[meetingId];
     }
 
     setLoadingRecordings((prev) => ({ ...prev, [meetingId]: true }));
     try {
+      // ALWAYS fetch from API to get latest data from Recall
       const response = await calendarService.getMeetingRecording(meetingId);
       const data = response.data;
       console.log("📥 [MeetingBotTab] Received recording data", {
@@ -160,6 +235,7 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
         transcriptTextLength: data.transcriptText?.length || 0,
         transcriptStatus: data.transcriptStatus,
         transcriptProvider: data.transcriptProvider,
+        hasRecordingUrl: Boolean(data.recordingUrl),
       });
       setRecordingData((prev) => ({ ...prev, [meetingId]: data as MeetingRecordingData }));
       
@@ -256,10 +332,12 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
     setRecordingLoading(false);
   }, [recordingAudioUrl]);
 
-  // Pre-fetch recording data for all meetings
+  // Pre-fetch recording data for all meetings - ALWAYS fetch to get latest data from Recall API
   useEffect(() => {
     meetingsWithRecordings.forEach((meeting) => {
-      if (!recordingData[meeting._id] && !loadingRecordings[meeting._id]) {
+      // Always fetch to get latest data from Recall API, even if we have cached data
+      // This ensures we get updates when data becomes available
+      if (!loadingRecordings[meeting._id]) {
         fetchRecordingData(meeting._id);
       }
     });
@@ -279,10 +357,13 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
       // 1. Transcript is processing
       // 2. Meeting just ended (status is "ended" or "active") but doesn't have recording/transcript yet
       // 3. Meeting has recall status but missing data
+      // 4. Status is "pending" - data might be available on Recall API
       return (
         transcriptStatus === "processing" ||
+        transcriptStatus === "pending" ||
         (recallStatus === "ended" && (!hasRecording || !hasTranscript)) ||
-        (recallStatus === "active" && (!hasRecording || !hasTranscript))
+        (recallStatus === "active" && (!hasRecording || !hasTranscript)) ||
+        (recallStatus && !hasRecording && !hasTranscript) // Any recall status but no data yet
       );
     });
 
@@ -382,14 +463,20 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
           {meetingsWithRecordings.map((meeting) => {
             const storedData = recordingData[meeting._id];
             const transcriptUrl = meeting.recall?.transcriptUrl || storedData?.transcriptUrl;
-              const transcriptText = meeting.recall?.transcriptText || storedData?.transcriptText || transcripts[meeting._id];
+            const transcriptText = meeting.recall?.transcriptText || storedData?.transcriptText || transcripts[meeting._id];
             const recordingUrl = meeting.recall?.recordingUrl || storedData?.recordingUrl;
-              const transcriptStatus = meeting.recall?.transcriptStatus || storedData?.transcriptStatus || ((transcriptUrl || transcriptText) ? "done" : "pending");
+            const transcriptStatus = meeting.recall?.transcriptStatus || storedData?.transcriptStatus || ((transcriptUrl || transcriptText) ? "done" : "pending");
             const hasRecording = Boolean(recordingUrl);
-              const hasTranscript = Boolean(transcriptUrl || transcriptText);
-              const isTranscriptProcessing = transcriptStatus === "processing";
+            const hasTranscript = Boolean(transcriptUrl || transcriptText);
+            const isTranscriptProcessing = transcriptStatus === "processing";
+            const isTranscriptPending = transcriptStatus === "pending";
             const isLoadingRecording = loadingRecordings[meeting._id];
-              const isSelected = selectedMeeting?._id === meeting._id;
+            const isLoadingTranscript = loadingTranscripts[meeting._id];
+            const isSelected = selectedMeeting?._id === meeting._id;
+            
+            // Show loading if status is pending or we're actively loading
+            const showRecordingLoading = (!hasRecording && (isLoadingRecording || isTranscriptPending)) || isLoadingRecording;
+            const showTranscriptLoading = (!hasTranscript && (isLoadingTranscript || isTranscriptPending || isTranscriptProcessing)) || isLoadingTranscript;
 
             return (
               <div
@@ -437,7 +524,7 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
                           >
                             <Play className="w-4 h-4 ml-0.5 text-emerald-400" />
                           </button>
-                        ) : (isLoadingRecording || (meeting.recall?.status === "ended" && !hasRecording)) ? (
+                        ) : showRecordingLoading ? (
                           <div className="w-7 h-7 rounded-full border-2 border-amber-400/30 bg-amber-500/10 flex items-center justify-center flex-shrink-0" title="Loading recording...">
                             <Loader2 className="w-4 h-4 text-amber-400 animate-spin" />
                           </div>
@@ -448,7 +535,7 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
                           <div className="w-7 h-7 rounded-full border-2 border-blue-400/30 bg-blue-500/10 flex items-center justify-center flex-shrink-0" title="Transcript available">
                             <FileText className="w-4 h-4 text-blue-400" />
                           </div>
-                        ) : (isTranscriptProcessing || loadingTranscripts[meeting._id] || (meeting.recall?.status === "ended" && !hasTranscript)) ? (
+                        ) : showTranscriptLoading ? (
                           <div className="w-7 h-7 rounded-full border-2 border-amber-400/30 bg-amber-500/10 flex items-center justify-center flex-shrink-0" title="Loading transcript...">
                             <Loader2 className="w-4 h-4 text-amber-400 animate-spin" />
                           </div>
