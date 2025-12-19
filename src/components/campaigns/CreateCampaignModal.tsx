@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -27,12 +27,14 @@ interface CreateCampaignModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  initialData?: Partial<CreateCampaignData>;
 }
 
 const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
   isOpen,
   onClose,
   onSuccess,
+  initialData,
 }) => {
   const { toast } = useToast();
   const [isPending, setIsPending] = useState(false);
@@ -72,6 +74,29 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
     },
   ]);
   const [currentStep, setCurrentStep] = useState<string | null>(null);
+
+  // Pre-fill form with initial data (e.g., from campaign suggestions)
+  useEffect(() => {
+    if (initialData && isOpen) {
+      setFormData((prev) => ({
+        ...prev,
+        ...initialData,
+      }));
+    } else if (!isOpen) {
+      // Reset form when modal closes
+      setFormData({
+        name: "",
+        userRequirements: "",
+        campaignType: "awareness",
+        platform: [],
+        targetAudience: "all",
+        location: "",
+        estimatedBudget: 0,
+        numberOfDays: 1,
+        status: "draft",
+      });
+    }
+  }, [initialData, isOpen]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;

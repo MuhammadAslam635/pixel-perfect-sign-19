@@ -135,6 +135,40 @@ export interface CampaignResponse {
   documentCreationSteps?: DocumentCreationStep[];
 }
 
+export interface CampaignSuggestion {
+  _id: string;
+  userId: string;
+  companyId?: string;
+  searchId?: string;
+  searchQuery?: string;
+  suggestedTitle: string;
+  suggestedDescription: string;
+  suggestedCampaignType: "awareness" | "advertisement" | "product" | "promotion" | "brand" | "other";
+  suggestedTargetAudience: "children" | "youth" | "elders" | "adults" | "teenagers" | "seniors" | "all";
+  suggestedLocation: string;
+  suggestedPlatform: ("facebook" | "google")[];
+  suggestedBudget?: number;
+  suggestedDuration?: number;
+  analysisInsights?: any;
+  companyContext?: any;
+  status: "suggested" | "viewed" | "accepted" | "rejected" | "expired";
+  campaignId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CampaignSuggestionsResponse {
+  success: boolean;
+  message: string;
+  data: {
+    docs: CampaignSuggestion[];
+    totalDocs: number;
+    limit: number;
+    page: number;
+    totalPages: number;
+  };
+}
+
 export const campaignsService = {
   /**
    * Get campaigns list with pagination and filters
@@ -379,6 +413,44 @@ export const campaignsService = {
           }
         });
     });
+  },
+
+  /**
+   * Get campaign suggestions based on ICP analysis
+   */
+  getCampaignSuggestions: async (params: { page?: number; limit?: number; status?: string } = {}): Promise<CampaignSuggestionsResponse> => {
+    try {
+      const { page = 1, limit = 10, status } = params;
+
+      const queryParams: any = {
+        page,
+        limit,
+      };
+
+      if (status) {
+        queryParams.status = status;
+      }
+
+      const response = await API.get("/campaigns/suggestions", {
+        params: queryParams,
+      });
+
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  /**
+   * Regenerate campaign suggestions based on latest ICP analysis
+   */
+  regenerateCampaignSuggestions: async (): Promise<{ success: boolean; message: string; jobId: string }> => {
+    try {
+      const response = await API.post("/campaigns/suggestions/regenerate");
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
   },
 };
 

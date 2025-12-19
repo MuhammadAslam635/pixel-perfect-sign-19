@@ -14,6 +14,8 @@ export const campaignKeys = {
   list: (params: CampaignsQueryParams) => [...campaignKeys.lists(), params] as const,
   details: () => [...campaignKeys.all, "detail"] as const,
   detail: (id: string) => [...campaignKeys.details(), id] as const,
+  suggestions: () => [...campaignKeys.all, "suggestions"] as const,
+  suggestionList: (params: any) => [...campaignKeys.suggestions(), params] as const,
 };
 
 // Hooks
@@ -99,6 +101,25 @@ export const useResetCampaignMedia = () => {
     mutationFn: (id: string) => campaignsService.resetCampaignMedia(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: campaignKeys.all });
+    },
+  });
+};
+
+// Campaign Suggestions hooks
+export const useCampaignSuggestions = (params: { page?: number; limit?: number; status?: string } = {}) => {
+  return useQuery({
+    queryKey: campaignKeys.suggestionList(params),
+    queryFn: () => campaignsService.getCampaignSuggestions(params),
+  });
+};
+
+export const useRegenerateCampaignSuggestions = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => campaignsService.regenerateCampaignSuggestions(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: campaignKeys.suggestions() });
     },
   });
 };
