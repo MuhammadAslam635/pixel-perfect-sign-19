@@ -85,6 +85,8 @@ import ImageCarousel from "@/components/campaigns/ImageCarousel";
 import CreateCampaignModal from "@/components/campaigns/CreateCampaignModal";
 import FacebookIcon from "@/components/icons/FacebookIcon";
 import { ArrowRight as ArrowRightIcon } from "lucide-react";
+import AnalyticsCard from "@/components/campaigns/AnalyticsCard";
+import { useUserAggregatedAnalytics } from "@/hooks/useAnalytics";
 
 const CampaignsPage = () => {
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
@@ -92,6 +94,8 @@ const CampaignsPage = () => {
   const [searchInput, setSearchInput] = useState<string>("");
   const [debouncedSearch, setDebouncedSearch] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [facebookDays, setFacebookDays] = useState<number>(7);
+  const [googleDays, setGoogleDays] = useState<number>(7);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(
     null
   );
@@ -147,6 +151,10 @@ const CampaignsPage = () => {
     useResetCampaignContent();
   const { mutate: resetMedia, isPending: isResettingMedia } =
     useResetCampaignMedia();
+
+  // Fetch aggregated analytics for Facebook and Google
+  const { data: facebookAnalytics } = useUserAggregatedAnalytics("facebook", facebookDays);
+  const { data: googleAnalytics } = useUserAggregatedAnalytics("google", googleDays);
 
   // Use campaigns directly from API (platform filtering is now server-side)
   const campaigns = useMemo(() => {
@@ -568,6 +576,30 @@ const CampaignsPage = () => {
     setIsCreateModalOpen(true);
   };
 
+  // Helper function to format large numbers
+  const formatNumber = (num: number): string => {
+    if (!num || num === 0) return "0";
+    if (num >= 1000000) {
+      return `${(num / 1000000).toFixed(1)}M`;
+    }
+    if (num >= 1000) {
+      return `${(num / 1000).toFixed(1)}K`;
+    }
+    return num.toFixed(0);
+  };
+
+  // Helper to map days selection to API parameter
+  const getDaysFromSelection = (selection: string): number => {
+    switch (selection) {
+      case "last-7-days": return 7;
+      case "last-week": return 7;
+      case "last-month": return 30;
+      case "last-3-months": return 90;
+      case "last-year": return 365;
+      default: return 7;
+    }
+  };
+
   return (
     <DashboardLayout>
       <main className="relative px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] pt-24 sm:pt-28 lg:pt-32 pb-8 flex flex-col gap-6 text-white flex-1 overflow-y-auto animate-in fade-in duration-1000">
@@ -607,7 +639,10 @@ const CampaignsPage = () => {
                       Facebook Ads
                     </h3>
                   </div>
-                  <Select defaultValue="last-week">
+                  <Select
+                    defaultValue="last-week"
+                    onValueChange={(value) => setFacebookDays(getDaysFromSelection(value))}
+                  >
                     <SelectTrigger className="w-[110px] h-7 bg-[#252525] border-[#3a3a3a] text-gray-300 text-[10px]">
                       <SelectValue />
                     </SelectTrigger>
@@ -648,35 +683,35 @@ const CampaignsPage = () => {
                 <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
                   <div>
                     <div className="text-base sm:text-lg font-bold text-white mb-0.5">
-                      1.2M
+                      {facebookAnalytics?.data?.[0] ? formatNumber(facebookAnalytics.data[0].totalImpressions) : "0"}
                     </div>
                     <div className="text-[10px] text-gray-500 mb-0.5">
                       Impressions
                     </div>
-                    <div className="text-[10px] font-medium text-green-500">
-                      ↑ 12%
+                    <div className="text-[10px] font-medium text-gray-500">
+                      {facebookAnalytics?.data?.[0] ? `${formatNumber(facebookAnalytics.data[0].totalReach)} reach` : "No data"}
                     </div>
                   </div>
                   <div>
                     <div className="text-base sm:text-lg font-bold text-white mb-0.5">
-                      845K
-                    </div>
-                    <div className="text-[10px] text-gray-500 mb-0.5">
-                      Reach
-                    </div>
-                    <div className="text-[10px] font-medium text-green-500">
-                      ↑ 8%
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-base sm:text-lg font-bold text-white mb-0.5">
-                      32.5K
+                      {facebookAnalytics?.data?.[0] ? formatNumber(facebookAnalytics.data[0].totalClicks) : "0"}
                     </div>
                     <div className="text-[10px] text-gray-500 mb-0.5">
                       Clicks
                     </div>
-                    <div className="text-[10px] font-medium text-red-500">
-                      ↓ 3%
+                    <div className="text-[10px] font-medium text-gray-500">
+                      {facebookAnalytics?.data?.[0] ? `${facebookAnalytics.data[0].avgCtr.toFixed(2)}% CTR` : "No data"}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-base sm:text-lg font-bold text-white mb-0.5">
+                      ${facebookAnalytics?.data?.[0] ? formatNumber(facebookAnalytics.data[0].totalSpend) : "0"}
+                    </div>
+                    <div className="text-[10px] text-gray-500 mb-0.5">
+                      Spend
+                    </div>
+                    <div className="text-[10px] font-medium text-gray-500">
+                      {facebookAnalytics?.data?.[0] ? `$${facebookAnalytics.data[0].avgCpc.toFixed(2)} CPC` : "No data"}
                     </div>
                   </div>
                 </div>
@@ -738,7 +773,10 @@ const CampaignsPage = () => {
                       Google Ads
                     </h3>
                   </div>
-                  <Select defaultValue="last-week">
+                  <Select
+                    defaultValue="last-week"
+                    onValueChange={(value) => setGoogleDays(getDaysFromSelection(value))}
+                  >
                     <SelectTrigger className="w-[110px] h-7 bg-[#252525] border-[#3a3a3a] text-gray-300 text-[10px]">
                       <SelectValue />
                     </SelectTrigger>
@@ -779,35 +817,35 @@ const CampaignsPage = () => {
                 <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
                   <div>
                     <div className="text-base sm:text-lg font-bold text-white mb-0.5">
-                      980K
+                      {googleAnalytics?.data?.[0] ? formatNumber(googleAnalytics.data[0].totalImpressions) : "0"}
                     </div>
                     <div className="text-[10px] text-gray-500 mb-0.5">
                       Impressions
                     </div>
-                    <div className="text-[10px] font-medium text-green-500">
-                      ↑ 15%
+                    <div className="text-[10px] font-medium text-gray-500">
+                      {googleAnalytics?.data?.[0] ? `${formatNumber(googleAnalytics.data[0].totalReach)} reach` : "No data"}
                     </div>
                   </div>
                   <div>
                     <div className="text-base sm:text-lg font-bold text-white mb-0.5">
-                      765K
-                    </div>
-                    <div className="text-[10px] text-gray-500 mb-0.5">
-                      Reach
-                    </div>
-                    <div className="text-[10px] font-medium text-green-500">
-                      ↑ 10%
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-base sm:text-lg font-bold text-white mb-0.5">
-                      28.3K
+                      {googleAnalytics?.data?.[0] ? formatNumber(googleAnalytics.data[0].totalClicks) : "0"}
                     </div>
                     <div className="text-[10px] text-gray-500 mb-0.5">
                       Clicks
                     </div>
-                    <div className="text-[10px] font-medium text-red-500">
-                      ↓ 2%
+                    <div className="text-[10px] font-medium text-gray-500">
+                      {googleAnalytics?.data?.[0] ? `${googleAnalytics.data[0].avgCtr.toFixed(2)}% CTR` : "No data"}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-base sm:text-lg font-bold text-white mb-0.5">
+                      ${googleAnalytics?.data?.[0] ? formatNumber(googleAnalytics.data[0].totalSpend) : "0"}
+                    </div>
+                    <div className="text-[10px] text-gray-500 mb-0.5">
+                      Spend
+                    </div>
+                    <div className="text-[10px] font-medium text-gray-500">
+                      {googleAnalytics?.data?.[0] ? `$${googleAnalytics.data[0].avgCpc.toFixed(2)} CPC` : "No data"}
                     </div>
                   </div>
                 </div>
@@ -1553,6 +1591,13 @@ const CampaignsPage = () => {
                         </span>
                       </div>
                     </div>
+
+                    <Separator className="bg-white/10" />
+
+                    {/* Analytics Card */}
+                    {selectedCampaign && selectedCampaign._id && (
+                      <AnalyticsCard campaignId={selectedCampaign._id} />
+                    )}
 
                     <Separator className="bg-white/10" />
 
