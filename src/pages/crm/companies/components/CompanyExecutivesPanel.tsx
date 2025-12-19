@@ -15,10 +15,10 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
   onExecutiveSelect,
 }) => {
   // Get company LinkedIn URL (from company data or first executive)
-  const companyLinkedIn = 
-    company?.people?.[0]?.linkedin || 
-    (company?.website?.includes('linkedin.com') ? company.website : null);
-  
+  const companyLinkedIn =
+    company?.people?.[0]?.linkedin ||
+    (company?.website?.includes("linkedin.com") ? company.website : null);
+
   const hasLinkedIn = Boolean(companyLinkedIn);
 
   return (
@@ -32,21 +32,16 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
                 {company.name}
               </h2>
               <p className="text-xs text-white/60 line-clamp-2">
-                {company.description || company.about || "No description available"}
+                {company.description ||
+                  company.about ||
+                  "No description available"}
               </p>
             </div>
             {hasLinkedIn && (
-              <a
-                href={companyLinkedIn!.startsWith("http") ? companyLinkedIn! : `https://${companyLinkedIn}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#0A66C2] hover:bg-[#004182] text-white transition-colors duration-200 text-xs font-medium flex-shrink-0"
-                onClick={(e) => e.stopPropagation()}
-                title="View LinkedIn Profile"
-              >
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#0A66C2] text-white text-xs font-medium flex-shrink-0">
                 <Linkedin className="w-3.5 h-3.5" />
                 <span className="hidden lg:inline">LinkedIn</span>
-              </a>
+              </div>
             )}
           </div>
         </div>

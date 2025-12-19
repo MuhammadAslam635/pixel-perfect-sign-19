@@ -451,15 +451,9 @@ const CompaniesList: FC<CompaniesListProps> = ({
                 <div className="w-2.5 h-2.5 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
                   <span className="text-[6px] text-white/80">🌐</span>
                 </div>
-                <a
-                  href={getFullUrl(company.website)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  className="text-[10px] sm:text-xs text-white/70 overflow-hidden text-ellipsis whitespace-nowrap hover:text-white hover:underline"
-                >
+                <span className="text-[10px] sm:text-xs text-white/70 overflow-hidden text-ellipsis whitespace-nowrap">
                   {formatWebsiteUrl(company.website)}
-                </a>
+                </span>
               </div>
             )}
 
@@ -534,15 +528,9 @@ const CompaniesList: FC<CompaniesListProps> = ({
                 {primaryLinkedIn && (
                   <div className="flex items-center gap-1.5 sm:gap-2 bg-white/10 border border-white/20 rounded-full px-2 sm:px-3 py-1 max-w-[150px] sm:max-w-[220px]">
                     <Linkedin className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-white/85 flex-shrink-0" />
-                    <a
-                      href={getFullUrl(primaryLinkedIn)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="font-medium text-white/85 truncate hover:text-white hover:underline text-xs"
-                    >
+                    <span className="font-medium text-white/85 truncate text-xs">
                       {formatWebsiteUrl(primaryLinkedIn)}
-                    </a>
+                    </span>
                   </div>
                 )}
                 {primaryEmail && (
@@ -555,15 +543,9 @@ const CompaniesList: FC<CompaniesListProps> = ({
                 {(company.website || primaryEmail) && (
                   <p className="text-xs sm:text-sm font-semibold text-white/75 text-right break-words">
                     {company.website && (
-                      <a
-                        href={getFullUrl(company.website)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        className="text-white/85 hover:text-white hover:underline"
-                      >
+                      <span className="text-white/85">
                         {formatWebsiteUrl(company.website)}
-                      </a>
+                      </span>
                     )}
                     {company.website && primaryEmail && (
                       <span className="mx-2 text-white/40">|</span>
@@ -593,15 +575,9 @@ const CompaniesList: FC<CompaniesListProps> = ({
                 {primaryLinkedIn && (
                   <div className="flex items-center gap-1.5 sm:gap-2 bg-white/10 border border-white/20 rounded-full px-2 sm:px-3 py-1 max-w-[150px] sm:max-w-[220px]">
                     <Linkedin className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-white/85 flex-shrink-0" />
-                    <a
-                      href={getFullUrl(primaryLinkedIn)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="font-medium text-white/85 truncate hover:text-white hover:underline text-xs"
-                    >
+                    <span className="font-medium text-white/85 truncate text-xs">
                       {formatWebsiteUrl(primaryLinkedIn)}
-                    </a>
+                    </span>
                   </div>
                 )}
                 {primaryEmail && (
@@ -619,15 +595,9 @@ const CompaniesList: FC<CompaniesListProps> = ({
               {(company.website || primaryEmail) && (
                 <p className="text-xs sm:text-sm font-semibold text-white/75 text-center md:text-right break-words flex-1 md:flex-none">
                   {company.website && (
-                    <a
-                      href={getFullUrl(company.website)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="text-white/85 hover:text-white hover:underline"
-                    >
+                    <span className="text-white/85">
                       {formatWebsiteUrl(company.website)}
-                    </a>
+                    </span>
                   )}
                   {company.website && primaryEmail && (
                     <span className="mx-2 text-white/40">|</span>
