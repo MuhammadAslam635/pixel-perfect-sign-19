@@ -68,6 +68,10 @@ export interface LeadMeetingRecord {
     webhookUrl?: string | null;
     lastError?: string | null;
     transcriptUrl?: string | null;
+    transcriptText?: string | null;
+    transcriptStatus?: string | null;
+    transcriptId?: string | null;
+    transcriptProvider?: string | null;
     recordingUrl?: string | null;
   };
   createdAt: string;
@@ -177,6 +181,10 @@ export const calendarService = {
     success: boolean;
     data: {
       transcriptUrl?: string | null;
+      transcriptText?: string | null;
+      transcriptStatus?: string | null;
+      transcriptId?: string | null;
+      transcriptProvider?: string | null;
       recordingUrl?: string | null;
       status?: string;
       sessionId?: string | null;

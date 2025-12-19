@@ -3021,7 +3021,7 @@ const LeadChat = ({
               mode="ai"
             />
           </div>
-        ) : activeTab === "Meeting Bot" ? (
+        ) : activeTab === "Meetings" ? (
           <div className="flex w-full flex-1 min-h-0 flex-col text-xs sm:text-sm font-medium text-white/70">
             <MeetingBotTab lead={lead} />
           </div>

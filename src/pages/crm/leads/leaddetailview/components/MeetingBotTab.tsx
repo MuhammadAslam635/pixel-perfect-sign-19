@@ -111,19 +111,21 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
   const meetings = meetingsResponse?.data || [];
   const nowTimestamp = Date.now();
 
-  // Filter and sort meetings: only show past meetings that have Recall recordings
+  // Filter and sort meetings: show past meetings that have Recall integration
+  // Show meetings as soon as they end, even if recording/transcript isn't ready yet
   const meetingsWithRecordings = useMemo(() => {
     return meetings
       .filter((m) => {
         const meetingEnd = new Date(m.endDateTime).getTime();
         const isPast = meetingEnd < nowTimestamp;
-        // Show if meeting has any Recall data: status, sessionId, recordingUrl, or transcriptUrl
-        const hasRecall = 
-          m.recall?.status === "ended" || 
-          m.recall?.sessionId || 
-          m.recall?.recordingUrl || 
-          m.recall?.transcriptUrl;
-        return isPast && hasRecall;
+        // Show if meeting has Recall integration (status set) or any Recall data
+        // This includes meetings that just ended but are still processing
+        const hasRecallIntegration = 
+          m.recall?.status !== undefined && m.recall?.status !== null || // Has recall status
+          m.recall?.sessionId || // Has active bot
+          m.recall?.recordingUrl || // Has recording
+          m.recall?.transcriptUrl; // Has transcript
+        return isPast && hasRecallIntegration;
       })
       .sort((a, b) => {
         const aTime = new Date(a.endDateTime).getTime();
@@ -149,23 +151,24 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
 
     setLoadingRecordings((prev) => ({ ...prev, [meetingId]: true }));
     try {
-      const data = await calendarService.getMeetingRecording(meetingId);
+      const response = await calendarService.getMeetingRecording(meetingId);
+      const data = response.data;
       console.log("📥 [MeetingBotTab] Received recording data", {
         meetingId,
-        hasTranscriptUrl: Boolean(data.data.transcriptUrl),
-        hasTranscriptText: Boolean(data.data.transcriptText),
-        transcriptTextLength: data.data.transcriptText?.length || 0,
-        transcriptStatus: data.data.transcriptStatus,
-        transcriptProvider: data.data.transcriptProvider,
+        hasTranscriptUrl: Boolean(data.transcriptUrl),
+        hasTranscriptText: Boolean(data.transcriptText),
+        transcriptTextLength: data.transcriptText?.length || 0,
+        transcriptStatus: data.transcriptStatus,
+        transcriptProvider: data.transcriptProvider,
       });
-      setRecordingData((prev) => ({ ...prev, [meetingId]: data.data }));
+      setRecordingData((prev) => ({ ...prev, [meetingId]: data as MeetingRecordingData }));
       
       // If we have transcriptText, set it immediately
-      if (data.data.transcriptText) {
-        setTranscripts((prev) => ({ ...prev, [meetingId]: data.data.transcriptText! }));
+      if (data.transcriptText) {
+        setTranscripts((prev) => ({ ...prev, [meetingId]: data.transcriptText! }));
       }
       
-      return data.data;
+      return data;
     } catch (error) {
       console.error("Failed to fetch recording data:", error);
       return null;
@@ -182,9 +185,10 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
     setLoadingTranscripts((prev) => ({ ...prev, [meetingId]: true }));
     try {
       // Try to get transcript from backend API first (it should have downloaded it)
-      const recordingData = await calendarService.getMeetingRecording(meetingId);
-      if (recordingData.data.transcriptText) {
-        setTranscripts((prev) => ({ ...prev, [meetingId]: recordingData.data.transcriptText }));
+      const apiResponse = await calendarService.getMeetingRecording(meetingId);
+      const recordingData = apiResponse.data;
+      if (recordingData.transcriptText) {
+        setTranscripts((prev) => ({ ...prev, [meetingId]: recordingData.transcriptText! }));
         return;
       }
       
@@ -261,12 +265,25 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
     });
   }, [meetingsWithRecordings]);
 
-  // Periodically refresh recording data for meetings with processing transcripts
+  // Periodically refresh recording data for meetings that are still processing
+  // This includes meetings with processing transcripts or meetings that just ended
   useEffect(() => {
     const processingMeetings = meetingsWithRecordings.filter((meeting) => {
       const storedData = recordingData[meeting._id];
       const transcriptStatus = meeting.recall?.transcriptStatus || storedData?.transcriptStatus;
-      return transcriptStatus === "processing";
+      const recallStatus = meeting.recall?.status;
+      const hasRecording = meeting.recall?.recordingUrl || storedData?.recordingUrl;
+      const hasTranscript = meeting.recall?.transcriptUrl || storedData?.transcriptUrl || transcripts[meeting._id];
+      
+      // Refresh if:
+      // 1. Transcript is processing
+      // 2. Meeting just ended (status is "ended" or "active") but doesn't have recording/transcript yet
+      // 3. Meeting has recall status but missing data
+      return (
+        transcriptStatus === "processing" ||
+        (recallStatus === "ended" && (!hasRecording || !hasTranscript)) ||
+        (recallStatus === "active" && (!hasRecording || !hasTranscript))
+      );
     });
 
     if (processingMeetings.length === 0) return;
@@ -280,7 +297,7 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
     }, 10000); // Check every 10 seconds
 
     return () => clearInterval(interval);
-  }, [meetingsWithRecordings, recordingData, loadingRecordings]);
+  }, [meetingsWithRecordings, recordingData, loadingRecordings, transcripts]);
 
   // Load transcript if we have URL but not text (moved from IIFE to fix hooks violation)
   useEffect(() => {
@@ -403,25 +420,40 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
                       </div>
                     </div>
 
-                    {/* Right side: Play Button + Date */}
+                    {/* Right side: Status Indicators + Date */}
                     <div className="flex items-center gap-3">
-                      {/* Play Button */}
-                      {hasRecording ? (
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleOpenMeetingDetails(meeting);
-                          }}
-                          className="w-7 h-7 rounded-full border-2 border-emerald-400/30 bg-emerald-500/10 hover:bg-emerald-500/20 cursor-pointer flex items-center justify-center flex-shrink-0 transition-colors"
-                        >
-                          <Play className="w-4 h-4 ml-0.5 text-emerald-400" />
-                        </button>
-                      ) : isLoadingRecording ? (
-                        <div className="w-7 h-7 rounded-full border-2 border-white/15 bg-white/5 flex items-center justify-center flex-shrink-0">
-                          <Loader2 className="w-4 h-4 text-white/40 animate-spin" />
-                        </div>
-                      ) : null}
+                      {/* Status Indicators */}
+                      <div className="flex items-center gap-1.5">
+                        {/* Recording Status */}
+                        {hasRecording ? (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenMeetingDetails(meeting);
+                            }}
+                            className="w-7 h-7 rounded-full border-2 border-emerald-400/30 bg-emerald-500/10 hover:bg-emerald-500/20 cursor-pointer flex items-center justify-center flex-shrink-0 transition-colors"
+                            title="Recording available"
+                          >
+                            <Play className="w-4 h-4 ml-0.5 text-emerald-400" />
+                          </button>
+                        ) : (isLoadingRecording || (meeting.recall?.status === "ended" && !hasRecording)) ? (
+                          <div className="w-7 h-7 rounded-full border-2 border-amber-400/30 bg-amber-500/10 flex items-center justify-center flex-shrink-0" title="Loading recording...">
+                            <Loader2 className="w-4 h-4 text-amber-400 animate-spin" />
+                          </div>
+                        ) : null}
+                        
+                        {/* Transcript Status */}
+                        {hasTranscript ? (
+                          <div className="w-7 h-7 rounded-full border-2 border-blue-400/30 bg-blue-500/10 flex items-center justify-center flex-shrink-0" title="Transcript available">
+                            <FileText className="w-4 h-4 text-blue-400" />
+                          </div>
+                        ) : (isTranscriptProcessing || loadingTranscripts[meeting._id] || (meeting.recall?.status === "ended" && !hasTranscript)) ? (
+                          <div className="w-7 h-7 rounded-full border-2 border-amber-400/30 bg-amber-500/10 flex items-center justify-center flex-shrink-0" title="Loading transcript...">
+                            <Loader2 className="w-4 h-4 text-amber-400 animate-spin" />
+                          </div>
+                        ) : null}
+                      </div>
 
                       {/* Date */}
                       <span className="text-xs text-white/60 whitespace-nowrap">
@@ -509,42 +541,60 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
                 {activeTab === "recording" ? (
                   <div className="flex flex-col gap-4">
                     {/* Audio Player */}
-                    {recordingLoading ? (
-                      <div className="flex items-center justify-center py-8">
-                        <Loader2 className="w-6 h-6 text-cyan-400 animate-spin" />
-                        <span className="ml-2 text-sm text-white/60">Loading recording...</span>
-                      </div>
-                    ) : recordingError ? (
-                      <div className="flex flex-col items-center justify-center py-8 px-4 rounded-lg bg-red-500/10 border border-red-500/20">
-                        <svg className="w-8 h-8 text-red-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <p className="text-sm text-red-300 text-center">{recordingError}</p>
-                        </div>
-                    ) : recordingAudioUrl ? (
-                      <div className="flex flex-col gap-3">
-                        <div className="rounded-lg bg-white/5 p-4 border border-white/10">
-                          <audio
-                            controls
-                            src={recordingAudioUrl}
-                            className="w-full"
-                            style={{
-                              filter: "invert(1) hue-rotate(180deg)",
-                            }}
-                          />
-                        </div>
-                        <p className="text-xs text-white/40 text-center">
-                          Playback is streamed securely from Recall.ai.
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center justify-center py-8 px-4 rounded-lg bg-white/5 border border-white/10">
-                        <svg className="w-8 h-8 text-white/40 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                        </svg>
-                        <p className="text-sm text-white/60 text-center">No recording available</p>
-                      </div>
-                    )}
+                    {(() => {
+                      const storedData = recordingData[selectedMeeting._id];
+                      const meetingEnded = new Date(selectedMeeting.endDateTime).getTime() < Date.now();
+                      const recallStatus = selectedMeeting.recall?.status;
+                      const hasRecordingUrl = selectedMeeting.recall?.recordingUrl || storedData?.recordingUrl;
+                      const isStillProcessing = meetingEnded && (recallStatus === "ended" || recallStatus === "active") && !hasRecordingUrl;
+                      
+                      if (recordingLoading || isStillProcessing) {
+                        return (
+                          <div className="flex items-center justify-center py-8">
+                            <Loader2 className="w-6 h-6 text-cyan-400 animate-spin" />
+                            <span className="ml-2 text-sm text-white/60">
+                              {isStillProcessing ? "Processing recording..." : "Loading recording..."}
+                            </span>
+                          </div>
+                        );
+                      } else if (recordingError) {
+                        return (
+                          <div className="flex flex-col items-center justify-center py-8 px-4 rounded-lg bg-red-500/10 border border-red-500/20">
+                            <svg className="w-8 h-8 text-red-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <p className="text-sm text-red-300 text-center">{recordingError}</p>
+                          </div>
+                        );
+                      } else if (recordingAudioUrl) {
+                        return (
+                          <div className="flex flex-col gap-3">
+                            <div className="rounded-lg bg-white/5 p-4 border border-white/10">
+                              <audio
+                                controls
+                                src={recordingAudioUrl}
+                                className="w-full"
+                                style={{
+                                  filter: "invert(1) hue-rotate(180deg)",
+                                }}
+                              />
+                            </div>
+                            <p className="text-xs text-white/40 text-center">
+                              Playback is streamed securely from Recall.ai.
+                            </p>
+                          </div>
+                        );
+                      } else {
+                        return (
+                          <div className="flex flex-col items-center justify-center py-8 px-4 rounded-lg bg-white/5 border border-white/10">
+                            <svg className="w-8 h-8 text-white/40 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                            </svg>
+                            <p className="text-sm text-white/60 text-center">No recording available</p>
+                          </div>
+                        );
+                      }
+                    })()}
                   </div>
                 ) : (
                   <div className="flex flex-col gap-4">
@@ -556,15 +606,20 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
                         const transcriptUrl = selectedMeeting.recall?.transcriptUrl || storedData?.transcriptUrl;
                         const transcriptText = selectedMeeting.recall?.transcriptText || storedData?.transcriptText || transcripts[selectedMeeting._id];
                         const transcriptStatus = selectedMeeting.recall?.transcriptStatus || storedData?.transcriptStatus;
+                        const meetingEnded = new Date(selectedMeeting.endDateTime).getTime() < Date.now();
+                        const recallStatus = selectedMeeting.recall?.status;
                         const isProcessing = transcriptStatus === "processing";
                         const isLoading = loadingTranscripts[selectedMeeting._id];
+                        const isStillProcessing = meetingEnded && (recallStatus === "ended" || recallStatus === "active") && !transcriptText && !transcriptUrl;
 
-                        if (isProcessing) {
+                        if (isProcessing || isStillProcessing) {
                           return (
                             <div className="flex items-center gap-2 py-4 px-4 rounded-lg bg-white/5 border border-white/10">
                               <Loader2 className="w-4 h-4 text-cyan-400 animate-spin" />
-                              <span className="text-sm text-white/60">Transcription in progress...</span>
-                        </div>
+                              <span className="text-sm text-white/60">
+                                {isStillProcessing ? "Processing transcript..." : "Transcription in progress..."}
+                              </span>
+                            </div>
                           );
                         } else if (isLoading) {
                           return (
@@ -578,14 +633,14 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
                             <div className="py-3 px-4 rounded-lg bg-white/5 border border-white/10 text-left">
                               <pre className="text-sm text-white/80 leading-relaxed whitespace-pre-wrap font-sans">
                                 {transcriptText}
-                            </pre>
-                        </div>
+                              </pre>
+                            </div>
                           );
                         } else {
                           return (
                             <div className="py-3 px-4 rounded-lg bg-white/5 border border-white/10 text-center">
                               <p className="text-sm text-white/40">No transcript available</p>
-                      </div>
+                            </div>
                           );
                         }
                       })()}
