@@ -437,12 +437,12 @@ const CompaniesList: FC<CompaniesListProps> = ({
                   NEW
                 </span>
               )}
-              {company.industry && (
+              {/* {company.industry && (
                 <span className="text-white/60 font-normal">
                   {" | "}
                   {company.industry}
                 </span>
-              )}
+              )} */}
             </h3>
 
             {/* Second Row: Website */}
@@ -500,23 +500,30 @@ const CompaniesList: FC<CompaniesListProps> = ({
                 NEW
               </span>
             )}
-            {company.industry && (
+            {/* {company.industry && (
               <span className="text-xs text-white/70 font-medium">
                 | {company.industry}
               </span>
-            )}
+            )} */}
             {viewMode === "compact" && (
               <Badge className="rounded-full bg-white/15 text-white border-white/20 px-2 py-0.5 text-xs">
                 {employeeCount}
               </Badge>
             )}
           </div>
-          {viewMode === "detailed" && (
-            <p className="mt-0.5 text-xs text-white/65 line-clamp-2">
-              {company.description ||
-                company.about ||
-                "No description available"}
-            </p>
+          {viewMode === "detailed" && company.industry && (
+            <>
+              <span className="text-white/60 font-normal text-xs">
+                {" | "}
+                {company.industry}
+              </span>
+
+              {/* <p className="mt-0.5 text-xs text-white/65 line-clamp-2">
+                {company.description ||
+                  company.about ||
+                  "No description available"}
+              </p> */}
+            </>
           )}
           {/* Mobile: Side by side layout */}
           {viewMode === "detailed" && (
@@ -569,9 +576,9 @@ const CompaniesList: FC<CompaniesListProps> = ({
           {viewMode === "detailed" && (
             <div className="hidden md:block mt-0.5 sm:mt-1 md:mt-2">
               <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-white/75">
-                <Badge className="rounded-full bg-white/15 text-white border-white/20 px-3 sm:px-4 py-1 text-xs">
+                {/* <Badge className="rounded-full bg-white/15 text-white border-white/20 px-3 sm:px-4 py-1 text-xs">
                   {employeeCount}
-                </Badge>
+                </Badge> */}
                 {primaryLinkedIn && (
                   <div className="flex items-center gap-1.5 sm:gap-2 bg-white/10 border border-white/20 rounded-full px-2 sm:px-3 py-1 max-w-[150px] sm:max-w-[220px]">
                     <Linkedin className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-white/85 flex-shrink-0" />
@@ -609,9 +616,9 @@ const CompaniesList: FC<CompaniesListProps> = ({
                   )}
                 </p>
               )}
-              {company.address && (
+              {company.country && (
                 <p className="text-xs text-white/55 text-center md:text-right max-w-full md:max-w-[220px] flex-1 md:flex-none">
-                  {company.address}
+                  {company.country}
                 </p>
               )}
             </div>
@@ -619,7 +626,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
           {/* Scraping Date - Above View Details Button */}
           {company.createdAt && (
             <p className="text-[10px] sm:text-xs text-white/50 text-center md:text-right">
-              Scraped:{" "}
+              {/* Scraped:{" "} */}
               {new Date(company.createdAt).toLocaleDateString("en-US", {
                 month: "short",
                 day: "numeric",
