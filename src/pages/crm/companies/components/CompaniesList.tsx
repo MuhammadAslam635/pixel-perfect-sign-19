@@ -429,32 +429,32 @@ const CompaniesList: FC<CompaniesListProps> = ({
 
           {/* Content */}
           <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-            {/* First Row: Company Name and Industry */}
-            <h3 className="text-xs sm:text-sm font-semibold text-white leading-tight overflow-hidden text-ellipsis whitespace-nowrap">
-              {company.name}
+            {/* First Row: Company Name */}
+            <h3 className="text-xs sm:text-sm font-semibold text-white leading-tight flex items-center gap-2 min-w-0">
+              <span className="overflow-hidden text-ellipsis whitespace-nowrap min-w-0 flex-1">
+                {company.name}
+              </span>
               {company.createdAt && isCreatedToday(company.createdAt) && (
-                <span className="inline-flex items-center px-2 py-0.5 ml-2 rounded-full text-[10px] font-bold bg-gradient-to-r from-green-500 to-emerald-500 text-white">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-gradient-to-r from-green-500 to-emerald-500 text-white flex-shrink-0">
                   NEW
                 </span>
               )}
-              {/* {company.industry && (
-                <span className="text-white/60 font-normal">
-                  {" | "}
-                  {company.industry}
+              {company.website && (
+                <span className="inline-flex items-center gap-1 flex-shrink-0">
+                  <span className="text-[6px] text-white/80">🌐</span>
+                  <span className="text-[10px] sm:text-xs text-white/70 whitespace-nowrap">
+                    {formatWebsiteUrl(company.website)}
+                  </span>
                 </span>
-              )} */}
+              )}
             </h3>
 
-            {/* Second Row: Website */}
-            {company.website && (
-              <div className="flex items-center gap-1 min-w-0">
-                <div className="w-2.5 h-2.5 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                  <span className="text-[6px] text-white/80">🌐</span>
-                </div>
-                <span className="text-[10px] sm:text-xs text-white/70 overflow-hidden text-ellipsis whitespace-nowrap">
-                  {formatWebsiteUrl(company.website)}
-                </span>
-              </div>
+            {/* Second Row: Industry */}
+            {company.industry && (
+              <span className="text-white/60 font-normal text-xs">
+                {" | "}
+                {company.industry}
+              </span>
             )}
 
             {/* Third Row: Scraping Date */}
@@ -471,6 +471,22 @@ const CompaniesList: FC<CompaniesListProps> = ({
               </div>
             )}
           </div>
+
+          {/* Delete Button */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                className="absolute top-12 right-2 h-6 w-6 sm:h-7 sm:w-7 rounded-full flex items-center justify-center border border-white/20 bg-white/10 text-white hover:bg-white/20 hover:border-white/30 transition-colors duration-200 z-10"
+                onClick={(e) => handleDeleteClick(company, e)}
+                aria-label="Delete company"
+              >
+                <Trash2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent sideOffset={8}>
+              <p>Delete company</p>
+            </TooltipContent>
+          </Tooltip>
         </Card>
       );
     }
@@ -505,11 +521,11 @@ const CompaniesList: FC<CompaniesListProps> = ({
                 | {company.industry}
               </span>
             )} */}
-            {viewMode === "compact" && (
+            {/* {viewMode === "compact" && (
               <Badge className="rounded-full bg-white/15 text-white border-white/20 px-2 py-0.5 text-xs">
                 {employeeCount}
               </Badge>
-            )}
+            )} */}
           </div>
           {viewMode === "detailed" && company.industry && (
             <>
@@ -602,9 +618,15 @@ const CompaniesList: FC<CompaniesListProps> = ({
               {(company.website || primaryEmail) && (
                 <p className="text-xs sm:text-sm font-semibold text-white/75 text-center md:text-right break-words flex-1 md:flex-none">
                   {company.website && (
-                    <span className="text-white/85">
+                    <a
+                      href={getFullUrl(company.website)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-white/85 hover:text-white hover:underline transition-colors"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       {formatWebsiteUrl(company.website)}
-                    </span>
+                    </a>
                   )}
                   {company.website && primaryEmail && (
                     <span className="mx-2 text-white/40">|</span>
