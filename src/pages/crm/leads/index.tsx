@@ -893,7 +893,7 @@ const index = () => {
 
           {/* Split View */}
           <div
-            className={`flex flex-col lg:flex-row items-start flex-1 min-h-0 overflow-hidden ${
+            className={`flex flex-col lg:flex-row items-stretch flex-1 min-h-0 overflow-hidden ${
               isSidebarOpen ? "gap-2 sm:gap-3 md:gap-4 lg:gap-6" : ""
             }`}
           >

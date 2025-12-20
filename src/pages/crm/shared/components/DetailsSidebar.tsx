@@ -33,6 +33,7 @@ const DetailsSidebar: FC<DetailsSidebarProps> = ({
       transition-all
       duration-300
       ease-in-out
+      h-full
       ${
         isOpen
           ? "opacity-100 translate-x-0 pointer-events-auto w-[280px] lg:w-[320px] xl:w-[360px] 2xl:w-[400px]"
@@ -43,8 +44,7 @@ const DetailsSidebar: FC<DetailsSidebarProps> = ({
     <Card
       className="
         w-full
-        h-fit
-        min-h-[calc(100vh-320px)] lg:min-h-[calc(100vh-340px)] xl:min-h-[calc(100vh-320px)] 2xl:min-h-[calc(100vh-330px)]
+        h-full
         bg-[#222B2C]/95
         backdrop-blur-sm
         border-[#3A3A3A]
@@ -55,8 +55,6 @@ const DetailsSidebar: FC<DetailsSidebarProps> = ({
         shadow-[0_8px_32px_rgba(0,0,0,0.4)]
         rounded-2xl
         relative
-        sticky
-        top-[280px] lg:top-[290px] xl:top-[300px] 2xl:top-[310px]
       "
     >
       {/* Close Button */}
