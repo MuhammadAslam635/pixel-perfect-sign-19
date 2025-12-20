@@ -572,11 +572,11 @@ const UserList = () => {
                 }}
               >
                 <span
-                  className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[120px] h-[120px] rounded-full pointer-events-none opacity-60 blur-[26px]"
-                  style={{
-                    background:
-                      "linear-gradient(180deg, #67B0B7 0%, #4066B3 100%)",
-                  }}
+                  className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[120px] h-[120px] rounded-full pointer-events-none opacity-60 blur-[26px] bg-[#222B2C]/95"
+                  // style={{
+                  //   background:
+                  //     "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
+                  // }}
                 />
                 <Shield className="h-5 w-5 relative z-10" />
                 <span className="hidden sm:block relative z-10">Roles</span>
@@ -628,15 +628,7 @@ const UserList = () => {
                       }}
                       className="relative flex-1 w-full"
                     >
-                      {/* Gradient glow behind entire role card */}
-                      <div className="absolute -inset-3 lg:-inset-5 bg-gradient-to-r from-cyan-500/20 via-blue-500/15 to-transparent blur-2xl opacity-50" />
-                      <Card
-                        className="relative rounded-2xl border-[#FFFFFF0D] hover:border-[#3a3a3a] transition-all duration-200 w-full overflow-hidden"
-                        style={{
-                          background:
-                            "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
-                        }}
-                      >
+                      <Card className="relative rounded-2xl border-[#FFFFFF0D] hover:border-[#3a3a3a] transition-all duration-200 w-full overflow-hidden bg-[#222B2C]/95 backdrop-blur-sm">
                         <CardContent className="p-4 sm:p-6 space-y-4">
                           {/* Role Header */}
                           <div className="flex items-center gap-3">
@@ -663,7 +655,7 @@ const UserList = () => {
                                   className="relative rounded-2xl border-[#FFFFFF0D] hover:border-[#3a3a3a] transition-all duration-200 w-full overflow-hidden"
                                   style={{
                                     background:
-                                      "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
+                                      "linear-gradient(180deg, #67B0B7 0%, #4066B3 100%)",
                                   }}
                                 >
                                   <CardContent className="p-3 sm:p-4 h-full flex flex-row items-center min-h-[110px] gap-4 relative">
@@ -731,7 +723,7 @@ const UserList = () => {
                                             className="w-14 h-14 rounded-full object-cover border-2 border-white/20"
                                           />
                                         ) : (
-                                          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#67B0B7] to-[#4066B3] flex items-center justify-center border-2 border-white/20">
+                                          <div className="w-16 h-16 rounded-full bg-[#222B2C]/95 backdrop-blur-sm flex items-center justify-center">
                                             <span className="text-white font-semibold text-sm">
                                               {resolveUserDisplayName(user)
                                                 .charAt(0)
@@ -741,11 +733,11 @@ const UserList = () => {
                                         )}
                                       </div>
                                     </div>
-                                    <div className="flex-1 space-y-2 text-left">
-                                      <h4 className="text-white font-medium text-sm">
+                                    <div className="flex-1 text-left">
+                                      <h4 className="text-neutral-900 font-bold text-sm">
                                         {resolveUserDisplayName(user)}
                                       </h4>
-                                      <p className="text-white/70 text-sm">
+                                      <p className="text-neutral-900 text-sm">
                                         {user.email}
                                       </p>
                                       {user.phone && (
