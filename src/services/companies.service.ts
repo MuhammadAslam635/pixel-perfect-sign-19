@@ -30,6 +30,19 @@ export interface Company {
   createdAt: string;
   updatedAt: string;
   __v: number;
+  // Additional fields for company details
+  revenue?: string | number | null;
+  organization_revenue?: string | number | null;
+  organization_revenue_printed?: string | number | null;
+  marketcap?: string | number | null;
+  foundedYear?: string | number | null;
+  facebook?: string | null;
+  linkedinUrl?: string | null;
+  websiteUrl?: string | null;
+  phone?: string | null;
+  tags?: string[];
+  ownerId?: string;
+  [key: string]: unknown;
 }
 
 export interface CompaniesResponse {
