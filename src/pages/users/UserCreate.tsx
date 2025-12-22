@@ -40,11 +40,15 @@ const UserCreate = () => {
     CreateUserData & { mailgunEmail?: string; roleId?: string }
   >({
     name: "",
+    firstName: "",
+    lastName: "",
     email: "",
-    status: "",
+    status: "active",
     mailgunEmail: "",
     roleId: "",
   });
+
+  const [isMailgunManual, setIsMailgunManual] = useState(false);
 
   const [twilioAreaCode, setTwilioAreaCode] = useState("");
   const [twilioCapabilities, setTwilioCapabilities] = useState<
@@ -88,22 +92,27 @@ const UserCreate = () => {
     ? ["CompanyAdmin", "CompanyUser"].includes(selectedRole.type)
     : false;
   useEffect(() => {
-    if (!selectedRole) return;
-    const requiresTwilio = ["CompanyAdmin", "CompanyUser"].includes(
-      selectedRole.type
-    );
-    setShouldProvisionTwilio(requiresTwilio);
+    // We no longer automatically disable Twilio based on role
+    // Twilio provisioning remains true by default
   }, [selectedRole]);
   const isTwilioBlocked =
     shouldProvisionTwilio &&
     !twilioStatusLoading &&
     !twilioCredentialStatus.hasAllCredentials;
 
-  // Fetch Mailgun domain from integration
+  // Fetch Mailgun domain and Company Name (current user name)
   useEffect(() => {
-    const fetchMailgunDomain = async () => {
-      const user = getUserData();
-      if (!user?.token) return;
+    const fetchData = async () => {
+      const userData = getUserData();
+      if (!userData?.token) return;
+
+      // Set Company Name from logged-in user
+      if (userData.name) {
+        setUser((prev) => ({ ...prev, name: userData.name }));
+      } else if (userData.firstName && userData.lastName) {
+        // Fallback if name is not set but first/last are
+         setUser((prev) => ({ ...prev, name: `${userData.firstName} ${userData.lastName}` }));
+      }
 
       try {
         const response = await mailgunService.getIntegrationStatus();
@@ -117,7 +126,7 @@ const UserCreate = () => {
       }
     };
 
-    fetchMailgunDomain();
+    fetchData();
   }, []);
 
   useEffect(() => {
@@ -152,36 +161,45 @@ const UserCreate = () => {
     fetchTwilioStatus();
   }, []);
 
-  // Generate suggested email when name or email changes
+  // Generate suggested email when first/last name changes
   useEffect(() => {
     if (!mailgunDomain) return;
 
     const generateSuggestedEmail = () => {
-      if (!user.name && !user.email) {
-        setSuggestedEmail("");
+      // Use First Name + Last Name for email generation
+      if (!user.firstName && !user.lastName) {
+         // Fallback to email if no name provided yet
+         if (user.email) {
+            const username = user.email.split("@")[0].toLowerCase();
+             const suggested = `${username}@${mailgunDomain}`;
+             setSuggestedEmail(suggested);
+             if (!isMailgunManual) {
+                setUser((prev) => ({ ...prev, mailgunEmail: suggested }));
+             }
+         } else {
+             setSuggestedEmail("");
+         }
         return;
       }
 
-      // Create a username from name or email
-      let username = "";
-      if (user.name) {
-        // Convert name to lowercase, replace spaces with dots, remove special chars
-        username = user.name
+      // Create a username from first + last name
+      let usernameParts = [];
+      if (user.firstName) usernameParts.push(user.firstName);
+      if (user.lastName) usernameParts.push(user.lastName);
+      
+      let username = usernameParts
+          .join(".")
           .toLowerCase()
           .trim()
           .replace(/\s+/g, ".")
           .replace(/[^a-z0-9.]/g, "");
-      } else if (user.email) {
-        // Extract username from email (part before @)
-        username = user.email.split("@")[0].toLowerCase();
-      }
 
       if (username) {
         const suggested = `${username}@${mailgunDomain}`;
         setSuggestedEmail(suggested);
 
-        // Auto-fill if mailgunEmail is empty
-        if (!user.mailgunEmail) {
+        // Auto-fill if not manually edited
+        if (!isMailgunManual) {
           setUser((prev) => ({ ...prev, mailgunEmail: suggested }));
         }
       }
@@ -189,7 +207,7 @@ const UserCreate = () => {
 
     generateSuggestedEmail();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user.name, user.email, mailgunDomain]);
+  }, [user.firstName, user.lastName, user.email, mailgunDomain]);
 
   // Check email uniqueness when mailgunEmail changes
   useEffect(() => {
@@ -234,6 +252,10 @@ const UserCreate = () => {
     const { name, value } = e.target;
     setUser((prev) => ({ ...prev, [name]: value }));
     setErrors((prev) => ({ ...prev, [name]: "" }));
+    
+    if (name === "mailgunEmail") {
+      setIsMailgunManual(true);
+    }
   };
 
   const handleUseSuggestedEmail = () => {
@@ -383,32 +405,73 @@ const UserCreate = () => {
           >
             <Card className="relative pt-3 sm:pt-4 px-3 sm:px-6 pb-4 sm:pb-6 rounded-xl sm:rounded-[30px] border-0 sm:border sm:border-white/10 bg-transparent sm:bg-[linear-gradient(173.83deg,_rgba(255,255,255,0.08)_4.82%,_rgba(255,255,255,0)_38.08%,_rgba(255,255,255,0)_56.68%,_rgba(255,255,255,0.02)_95.1%)]">
               <CardContent className="space-y-4 sm:space-y-6 pt-4 sm:pt-6 px-0">
-                {/* Row 1: Name and Email */}
+                {/* Row 1: First Name and Last Name */}
                 <motion.div
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" }}
                   className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6"
                 >
-                  {/* Name Field */}
+                  {/* First Name */}
+                  <div className="space-y-2">
+                      <Label
+                        htmlFor="firstName"
+                        className="text-white/90 text-sm font-medium"
+                      >
+                        First Name <span className="text-red-400">*</span>
+                      </Label>
+                      <Input
+                        id="firstName"
+                        name="firstName"
+                        value={user.firstName}
+                        onChange={handleInputChange}
+                        className="h-10 rounded-lg bg-[#222B2C]/40 border border-white/10 text-white placeholder:text-white/50 focus:ring-2 focus:ring-cyan-400/40 focus:border-cyan-400/40"
+                        placeholder="Enter first name"
+                      />
+                  </div>
+
+                  {/* Last Name */}
+                  <div className="space-y-2">
+                      <Label
+                        htmlFor="lastName"
+                        className="text-white/90 text-sm font-medium"
+                      >
+                        Last Name
+                      </Label>
+                      <Input
+                        id="lastName"
+                        name="lastName"
+                        value={user.lastName || ""}
+                        onChange={handleInputChange}
+                        className="h-10 rounded-lg bg-[#222B2C]/40 border border-white/10 text-white placeholder:text-white/50 focus:ring-2 focus:ring-cyan-400/40 focus:border-cyan-400/40"
+                        placeholder="Enter last name"
+                      />
+                  </div>
+                </motion.div>
+
+                {/* Row 2: Name (Company) and Email */}
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.15, ease: "easeOut" }}
+                  className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6"
+                >
+                  {/* Name Field (Company Name) - Disabled */}
                   <div className="space-y-2">
                     <Label
                       htmlFor="name"
                       className="text-white/90 text-sm font-medium"
                     >
-                      Name
+                      Company Name
                     </Label>
                     <Input
                       id="name"
                       name="name"
                       value={user.name}
-                      onChange={handleInputChange}
-                      className="h-10 rounded-lg bg-[#222B2C]/40 border border-white/10 text-white placeholder:text-white/50 focus:ring-2 focus:ring-cyan-400/40 focus:border-cyan-400/40"
-                      placeholder="Enter full name"
+                      readOnly
+                      disabled
+                      className="h-10 rounded-lg bg-[#222B2C]/20 border border-white/5 text-white/50 cursor-not-allowed focus:ring-0 focus:border-white/5"
                     />
-                    {errors.name && (
-                      <p className="text-red-400 text-sm mt-1">{errors.name}</p>
-                    )}
                   </div>
 
                   {/* Email Field */}
@@ -436,15 +499,15 @@ const UserCreate = () => {
                   </div>
                 </motion.div>
 
-                {/* Row 2: Status and Role */}
+                {/* Row 2: Status (Hidden), Role, and Mailgun Email */}
                 <motion.div
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
                   className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6"
                 >
-                  {/* Status Field */}
-                  <div className="space-y-2">
+                  {/* Status Field Hidden - Defaults to Active */}
+                  <div className="space-y-2 hidden">
                     <Label
                       htmlFor="status"
                       className="text-white/90 text-sm font-medium"
@@ -476,11 +539,6 @@ const UserCreate = () => {
                         </SelectItem>
                       </SelectContent>
                     </Select>
-                    {errors.status && (
-                      <p className="text-red-400 text-sm mt-1">
-                        {errors.status}
-                      </p>
-                    )}
                   </div>
 
                   {/* RBAC Role Selection */}
@@ -533,15 +591,7 @@ const UserCreate = () => {
                       temporary password will be generated and sent via email.
                     </p>
                   </div>
-                </motion.div>
 
-                {/* Mailgun Email Row */}
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
-                  className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6"
-                >
                   {/* Mailgun Email Field */}
                   {mailgunDomain && (
                     <div className="space-y-2">
@@ -567,6 +617,7 @@ const UserCreate = () => {
                                 ...prev,
                                 mailgunEmail: "",
                               }));
+                              setIsMailgunManual(true);
                               setEmailUnique(null);
                             }}
                             className="h-10 rounded-lg bg-[#222B2C]/40 border border-white/10 text-white placeholder:text-white/50 focus:ring-2 focus:ring-cyan-400/40 focus:border-cyan-400/40"
@@ -574,29 +625,8 @@ const UserCreate = () => {
                               suggestedEmail || `user@${mailgunDomain}`
                             })`}
                           />
-                          {suggestedEmail &&
-                            suggestedEmail !== user.mailgunEmail && (
-                              <Button
-                                type="button"
-                                onClick={handleUseSuggestedEmail}
-                                className="rounded-full bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-xs px-3 whitespace-nowrap"
-                              >
-                                Use Suggested
-                              </Button>
-                            )}
                         </div>
-                        {suggestedEmail && (
-                          <p className="text-xs text-white/60">
-                            Suggested:{" "}
-                            <button
-                              type="button"
-                              onClick={handleUseSuggestedEmail}
-                              className="text-cyan-400 hover:text-cyan-300 underline"
-                            >
-                              {suggestedEmail}
-                            </button>
-                          </p>
-                        )}
+                        {/* Suggested UI removed */}
                         {isCheckingEmail && (
                           <p className="text-xs text-white/60">
                             Checking availability...
@@ -622,49 +652,51 @@ const UserCreate = () => {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.5, delay: 0.6, ease: "easeOut" }}
-                  className="space-y-3 border border-white/10 rounded-2xl p-4"
+                  className="space-y-3"
                 >
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-white text-base font-semibold">
-                        Twilio provisioning
-                      </h3>
-                      <span
-                        className={`text-xs font-medium ${
-                          twilioStatusLoading
-                            ? "text-white/60"
+                  <div className="hidden">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-white text-base font-semibold">
+                          Twilio provisioning
+                        </h3>
+                        <span
+                          className={`text-xs font-medium ${
+                            twilioStatusLoading
+                              ? "text-white/60"
+                              : twilioCredentialStatus.hasAllCredentials
+                              ? "text-emerald-400"
+                              : "text-amber-300"
+                          }`}
+                        >
+                          {twilioStatusLoading
+                            ? "Checking..."
                             : twilioCredentialStatus.hasAllCredentials
-                            ? "text-emerald-400"
-                            : "text-amber-300"
-                        }`}
-                      >
-                        {twilioStatusLoading
-                          ? "Checking..."
-                          : twilioCredentialStatus.hasAllCredentials
-                          ? "Ready"
-                          : "Missing credentials"}
-                      </span>
+                            ? "Ready"
+                            : "Missing credentials"}
+                        </span>
+                      </div>
+                      <p className="text-white/60 text-xs">
+                        Dedicated TwiML app & phone number per member
+                      </p>
                     </div>
-                    <p className="text-white/60 text-xs">
-                      Dedicated TwiML app & phone number per member
-                    </p>
-                  </div>
 
-                  <div className="flex items-center gap-3 pt-1">
-                    <Switch
-                      id="twilioProvisionToggle"
-                      checked={shouldProvisionTwilio}
-                      onCheckedChange={(value) =>
-                        setShouldProvisionTwilio(Boolean(value))
-                      }
-                      disabled={twilioStatusLoading}
-                    />
-                    <Label
-                      htmlFor="twilioProvisionToggle"
-                      className="text-white/80 text-sm font-medium"
-                    >
-                      Provision Twilio assets for this team member
-                    </Label>
+                    <div className="flex items-center gap-3 pt-1">
+                      <Switch
+                        id="twilioProvisionToggle"
+                        checked={shouldProvisionTwilio}
+                        onCheckedChange={(value) =>
+                          setShouldProvisionTwilio(Boolean(value))
+                        }
+                        disabled={twilioStatusLoading}
+                      />
+                      <Label
+                        htmlFor="twilioProvisionToggle"
+                        className="text-white/80 text-sm font-medium"
+                      >
+                        Provision Twilio assets for this team member
+                      </Label>
+                    </div>
                   </div>
 
                   {isTwilioBlocked && (

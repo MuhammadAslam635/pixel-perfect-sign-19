@@ -35,6 +35,8 @@ const UserEdit = () => {
 
   const [user, setUser] = useState<UpdateUserData & { password: string }>({
     name: "",
+    firstName: "",
+    lastName: "",
     email: "",
     password: "",
     status: "",
@@ -45,7 +47,7 @@ const UserEdit = () => {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [mailgunDomain, setMailgunDomain] = useState<string>("");
-  const [suggestedEmail, setSuggestedEmail] = useState<string>("");
+
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [emailUnique, setEmailUnique] = useState<boolean | null>(null);
   const [availableRoles, setAvailableRoles] = useState<Role[]>([]);
@@ -108,6 +110,8 @@ const UserEdit = () => {
           const userData = response.data;
           setUser({
             name: userData.name || "",
+            firstName: userData.firstName || "",
+            lastName: userData.lastName || "",
             email: userData.email || "",
             password: "",
             status: userData.status || "",
@@ -135,39 +139,7 @@ const UserEdit = () => {
     fetchUser();
   }, [id, navigate]);
 
-  // Generate suggested email when name or email changes
-  useEffect(() => {
-    if (!mailgunDomain) return;
 
-    const generateSuggestedEmail = () => {
-      if (!user.name && !user.email) {
-        setSuggestedEmail("");
-        return;
-      }
-
-      // Create a username from name or email
-      let username = "";
-      if (user.name) {
-        // Convert name to lowercase, replace spaces with dots, remove special chars
-        username = user.name
-          .toLowerCase()
-          .trim()
-          .replace(/\s+/g, ".")
-          .replace(/[^a-z0-9.]/g, "");
-      } else if (user.email) {
-        // Extract username from email (part before @)
-        username = user.email.split("@")[0].toLowerCase();
-      }
-
-      if (username) {
-        const suggested = `${username}@${mailgunDomain}`;
-        setSuggestedEmail(suggested);
-      }
-    };
-
-    generateSuggestedEmail();
-     
-  }, [user.name, user.email, mailgunDomain]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -177,12 +149,7 @@ const UserEdit = () => {
     setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-  const handleUseSuggestedEmail = () => {
-    if (suggestedEmail) {
-      setUser((prev) => ({ ...prev, mailgunEmail: suggestedEmail }));
-      setEmailUnique(true);
-    }
-  };
+
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -233,6 +200,8 @@ const UserEdit = () => {
       // Prepare update data - exclude password if empty
       const updateData: UpdateUserData = {
         name: user.name,
+        firstName: user.firstName,
+        lastName: user.lastName,
         email: user.email,
         status: user.status,
         mailgunEmail: user.mailgunEmail,
@@ -263,6 +232,8 @@ const UserEdit = () => {
         ) {
           const newErrors = {
             name: "",
+            firstName: "",
+            lastName: "",
             email: "",
             password: "",
             roleId: "",
@@ -331,10 +302,62 @@ const UserEdit = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
             onSubmit={handleSaveProfile}
+            autoComplete="off"
           >
             <Card className="relative pt-3 sm:pt-4 px-3 sm:px-6 pb-4 sm:pb-6 rounded-xl sm:rounded-[30px] border-0 sm:border sm:border-white/10 bg-transparent sm:bg-[linear-gradient(173.83deg,_rgba(255,255,255,0.08)_4.82%,_rgba(255,255,255,0)_38.08%,_rgba(255,255,255,0)_56.68%,_rgba(255,255,255,0.02)_95.1%)]">
               <CardContent className="space-y-4 sm:space-y-6 pt-4 sm:pt-6 px-0">
-                {/* Name Field */}
+                {/* First Name and Last Name Row */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* First Name Field */}
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" }}
+                    className="space-y-2"
+                  >
+                    <Label
+                      htmlFor="firstName"
+                      className="text-white/90 text-sm font-medium"
+                    >
+                      First Name
+                    </Label>
+                    <Input
+                      id="firstName"
+                      name="firstName"
+                      value={user.firstName}
+                      onChange={handleInputChange}
+                      className="h-10 rounded-lg bg-[#222B2C]/40 border border-white/10 text-white placeholder:text-white/50 focus:ring-2 focus:ring-cyan-400/40 focus:border-cyan-400/40"
+                      placeholder="Enter first name"
+                      autoComplete="off"
+                    />
+                  </motion.div>
+
+                  {/* Last Name Field */}
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" }}
+                    className="space-y-2"
+                  >
+                    <Label
+                      htmlFor="lastName"
+                      className="text-white/90 text-sm font-medium"
+                    >
+                      Last Name
+                    </Label>
+                    <Input
+                      id="lastName"
+                      name="lastName"
+                      value={user.lastName}
+                      onChange={handleInputChange}
+                      className="h-10 rounded-lg bg-[#222B2C]/40 border border-white/10 text-white placeholder:text-white/50 focus:ring-2 focus:ring-cyan-400/40 focus:border-cyan-400/40"
+                      placeholder="Enter last name"
+                      autoComplete="off"
+                    />
+                  </motion.div>
+                </div>
+
+                {/* Company Name Field */}
                 <motion.div
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -345,7 +368,7 @@ const UserEdit = () => {
                     htmlFor="name"
                     className="text-white/90 text-sm font-medium"
                   >
-                    Name
+                    Comapany Name
                   </Label>
                   <Input
                     id="name"
@@ -354,11 +377,15 @@ const UserEdit = () => {
                     onChange={handleInputChange}
                     className="h-10 rounded-lg bg-[#222B2C]/40 border border-white/10 text-white placeholder:text-white/50 focus:ring-2 focus:ring-cyan-400/40 focus:border-cyan-400/40"
                     placeholder="Enter full name"
+                    autoComplete="off"
+                    disabled
                   />
                   {errors.name && (
                     <p className="text-red-400 text-sm mt-1">{errors.name}</p>
                   )}
                 </motion.div>
+
+
 
                 {/* Email Field */}
                 <motion.div
@@ -381,6 +408,7 @@ const UserEdit = () => {
                     onChange={handleInputChange}
                     className="h-10 rounded-lg bg-[#222B2C]/40 border border-white/10 text-white placeholder:text-white/50 focus:ring-2 focus:ring-cyan-400/40 focus:border-cyan-400/40"
                     placeholder="Enter email address"
+                    autoComplete="off"
                   />
                   {errors.email && (
                     <p className="text-red-400 text-sm mt-1">{errors.email}</p>
@@ -411,6 +439,7 @@ const UserEdit = () => {
                     onChange={handleInputChange}
                     className="h-10 rounded-lg bg-[#222B2C]/40 border border-white/10 text-white placeholder:text-white/50 focus:ring-2 focus:ring-cyan-400/40 focus:border-cyan-400/40"
                     placeholder="Enter new password (optional)"
+                    autoComplete="new-password"
                   />
                   {errors.password && (
                     <p className="text-red-400 text-sm mt-1">
@@ -546,33 +575,11 @@ const UserEdit = () => {
                             setEmailUnique(null);
                           }}
                           className="h-10 rounded-lg bg-[#222B2C]/40 border border-white/10 text-white placeholder:text-white/50 focus:ring-2 focus:ring-cyan-400/40 focus:border-cyan-400/40"
-                          placeholder={`Enter email (e.g., ${
-                            suggestedEmail || `user@${mailgunDomain}`
-                          })`}
+                          placeholder={`Enter email (e.g., user@${mailgunDomain})`}
+                          autoComplete="off"
+                          disabled
                         />
-                        {suggestedEmail &&
-                          suggestedEmail !== user.mailgunEmail && (
-                            <Button
-                              type="button"
-                              onClick={handleUseSuggestedEmail}
-                              className="rounded-full bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-xs px-3 whitespace-nowrap"
-                            >
-                              Use Suggested
-                            </Button>
-                          )}
                       </div>
-                      {suggestedEmail && (
-                        <p className="text-xs text-white/60">
-                          Suggested:{" "}
-                          <button
-                            type="button"
-                            onClick={handleUseSuggestedEmail}
-                            className="text-cyan-400 hover:text-cyan-300 underline"
-                          >
-                            {suggestedEmail}
-                          </button>
-                        </p>
-                      )}
                       {isCheckingEmail && (
                         <p className="text-xs text-white/60">
                           Checking availability...

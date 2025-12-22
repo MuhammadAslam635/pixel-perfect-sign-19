@@ -101,6 +101,15 @@ const normalizePhoneNumber = (raw?: string | null): string | null => {
   return /^\+[1-9]\d{7,14}$/.test(formatted) ? formatted : null;
 };
 
+const getSenderName = (userId: any) => {
+  if (!userId) return "Team Member";
+  if (typeof userId === "string") return "Team Member";
+  if (userId.firstName && userId.lastName)
+    return `${userId.firstName} ${userId.lastName}`;
+  if (userId.name) return userId.name;
+  return "Team Member";
+};
+
 const DEFAULT_EMAIL_SUBJECT = "Message from Lead Chat";
 const EMPTY_ARRAY = [] as const;
 
@@ -2056,7 +2065,7 @@ const LeadChat = ({
                               : {}
                           }
                         >
-                          {canDelete && (
+                          {/* {canDelete && (
                             <>
                               <button
                                 type="button"
@@ -2088,10 +2097,12 @@ const LeadChat = ({
                                 </div>
                               )}
                             </>
-                          )}
+                          )} */}
                           <div className="flex items-center justify-between gap-4 text-xs text-white/70">
                             <span className="font-semibold text-white">
-                              {isOutbound ? "You" : displayName}
+                              {isOutbound
+                                ? getSenderName(message.userId)
+                                : displayName}
                             </span>
                             <span className="text-white/60">
                               {formatEmailTimestamp(timestamp)}
@@ -2648,7 +2659,7 @@ const LeadChat = ({
                 {emailMessages.map((email) => {
                   const isOutbound = email.direction === "outbound";
                   const authorName = isOutbound
-                    ? "You"
+                    ? getSenderName(email.userId)
                     : email.from?.name || email.from?.email || displayName;
                   const emailBodyHtml = getEmailBodyHtml(email);
 
@@ -2877,7 +2888,9 @@ const LeadChat = ({
                         >
                           <div className="flex items-center justify-between gap-4 text-xs text-white/70">
                             <span className="font-semibold text-white">
-                              {isOutbound ? "You" : displayName}
+                              {isOutbound
+                                ? getSenderName(message.userId)
+                                : displayName}
                             </span>
                             <span className="text-white/60">
                               {formatEmailTimestamp(message.createdAt)}

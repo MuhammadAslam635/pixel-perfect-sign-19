@@ -30,6 +30,12 @@ export interface WhatsAppThread {
 export interface WhatsAppMessage {
   _id: string;
   companyId: string;
+  userId?: {
+    _id: string;
+    firstName?: string;
+    lastName?: string;
+    name?: string;
+  } | string | null;
   phoneNumberId: string;
   contactPhone: string;
   contactName?: string | null;

@@ -93,7 +93,7 @@ const AppRoutes = () => {
       <Route
         path="/change-password"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute skipOnboardingCheck>
             <ChangePassword />
           </ProtectedRoute>
         }

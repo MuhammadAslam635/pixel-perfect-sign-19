@@ -61,6 +61,7 @@ import {
   Shield,
   MoreHorizontal,
 } from "lucide-react";
+import ConfirmDialog from "@/components/ui/confirm-dialog";
 import { userService, User } from "@/services/user.service";
 import { toast } from "sonner";
 import { rbacService } from "@/services/rbac.service";
@@ -103,6 +104,11 @@ const UserList = () => {
     message: "",
   };
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteData, setDeleteData] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
   const [inviteForm, setInviteForm] = useState(defaultInviteForm);
   const [inviteSubmitting, setInviteSubmitting] = useState(false);
   const [inviteErrors, setInviteErrors] = useState<{
@@ -386,10 +392,10 @@ const UserList = () => {
     return null;
   }
 
-  const resolveUserDisplayName = (userData: User) =>
-    userData.name ||
-    `${userData.firstName || ""} ${userData.lastName || ""}`.trim() ||
-    userData.email.split("@")[0];
+  const resolveUserDisplayName = (userData: User) => {
+    const fullName = `${userData.firstName || ""} ${userData.lastName || ""}`.trim();
+    return fullName || userData.name || userData.email.split("@")[0];
+  };
 
   const currentUser = authState.user;
   const currentUserName =
@@ -398,17 +404,16 @@ const UserList = () => {
     currentUser?.email ||
     "User";
 
-  const handleDelete = async (userId: string, userName: string) => {
-    if (
-      !window.confirm(
-        `Are you sure you want to delete user '${userName}'? This action cannot be undone!`
-      )
-    ) {
-      return;
-    }
+  const handleDelete = (userId: string, userName: string) => {
+    setDeleteData({ id: userId, name: userName });
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteData) return;
 
     try {
-      await userService.deleteUser(userId);
+      await userService.deleteUser(deleteData.id);
       toast.success("User deleted successfully");
       const response = await userService.getUsers({
         page: 1,
@@ -423,6 +428,9 @@ const UserList = () => {
       }
     } catch (error: any) {
       toast.error(error?.response?.data?.message || "Failed to delete user");
+    } finally {
+      setDeleteDialogOpen(false);
+      setDeleteData(null);
     }
   };
 
@@ -687,18 +695,7 @@ const UserList = () => {
                                                 <Eye className="h-4 w-4" />
                                                 View Profile
                                               </DropdownMenuItem>
-                                              <DropdownMenuItem
-                                                onClick={() =>
-                                                  handleDelete(
-                                                    user._id,
-                                                    resolveUserDisplayName(user)
-                                                  )
-                                                }
-                                                className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-red-500/20 text-red-400"
-                                              >
-                                                <Trash2 className="h-4 w-4" />
-                                                Delete User
-                                              </DropdownMenuItem>
+
                                             </>
                                           ) : (
                                             <DropdownMenuItem
@@ -947,6 +944,22 @@ const UserList = () => {
           </form>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        title={`Delete User`}
+        description={`Are you sure you want to delete user '${
+          deleteData?.name || "this user"
+        }'? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        confirmVariant="destructive"
+        onConfirm={confirmDelete}
+        onCancel={() => {
+          setDeleteDialogOpen(false);
+          setDeleteData(null);
+        }}
+      />
     </DashboardLayout>
   );
 };

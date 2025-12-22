@@ -32,7 +32,12 @@ export interface EmailSentiment {
 
 export interface Email {
   _id: string;
-  userId: string;
+  userId: {
+    _id: string;
+    firstName?: string;
+    lastName?: string;
+    name?: string;
+  } | string;
   mailgunMessageId?: string;
   from: EmailRecipient;
   to: EmailRecipient[];

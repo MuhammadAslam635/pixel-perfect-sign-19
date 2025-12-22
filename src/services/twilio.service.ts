@@ -23,7 +23,12 @@ export interface LeadSmsMessage {
   _id: string;
   leadId?: string | null;
   companyId: string;
-  userId?: string | null;
+  userId?: {
+    _id: string;
+    firstName?: string;
+    lastName?: string;
+    name?: string;
+  } | string | null;
   direction: LeadSmsDirection;
   from: string;
   to: string;

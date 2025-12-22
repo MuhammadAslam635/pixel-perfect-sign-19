@@ -59,6 +59,8 @@ export interface InviteUserResponse {
 
 export interface CreateUserData {
   name: string;
+  firstName: string;
+  lastName?: string;
   email: string;
   password?: string; // Optional - will be auto-generated if not provided
   status: string;
@@ -73,6 +75,8 @@ export interface CreateUserData {
 
 export interface UpdateUserData {
   name?: string;
+  firstName?: string;
+  lastName?: string;
   email?: string;
   password?: string;
   role?: string;
