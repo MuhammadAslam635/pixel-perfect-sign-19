@@ -89,7 +89,6 @@ const InboxPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState<
     | "all"
-    | "unread"
     | "starred"
     | "sent"
     | "Client Communication"
@@ -115,9 +114,8 @@ const InboxPage = () => {
       return emailService.getInboxEmails({
         page,
         limit,
-        unread: filter === "unread" ? true : undefined,
         starred: filter === "starred" ? true : undefined,
-        category: ["all", "unread", "starred", "sent"].includes(filter)
+        category: ["all", "starred", "sent"].includes(filter)
           ? undefined
           : (filter as
               | "Client Communication"
@@ -429,26 +427,6 @@ const InboxPage = () => {
                       Sent
                     </Button>
                     <Button
-                      variant={filter === "unread" ? "default" : "ghost"}
-                      className={`w-full justify-start rounded-full ${
-                        filter === "unread"
-                          ? "bg-white/15 text-white border border-white/20"
-                          : "text-white/70 hover:text-white hover:bg-white/10"
-                      }`}
-                      onClick={() => {
-                        setFilter("unread");
-                        setPage(1);
-                      }}
-                    >
-                      <Mail className="h-4 w-4 mr-2" />
-                      Unread
-                      {statsData?.data?.unreadEmails ? (
-                        <Badge className="ml-auto bg-white/15 text-white border-white/20">
-                          {statsData.data.unreadEmails}
-                        </Badge>
-                      ) : null}
-                    </Button>
-                    <Button
                       variant={filter === "starred" ? "default" : "ghost"}
                       className={`w-full justify-start rounded-full ${
                         filter === "starred"
@@ -541,7 +519,6 @@ const InboxPage = () => {
                     <h2 className="text-sm font-semibold text-white">
                       {filter === "all" && "Inbox"}
                       {filter === "sent" && "Sent Emails"}
-                      {filter === "unread" && "Unread Emails"}
                       {filter === "starred" && "Starred Emails"}
                       {filter === "Client Communication" &&
                         "Client Communication"}
@@ -596,7 +573,7 @@ const InboxPage = () => {
                 </div>
               </div>
             </div>
-            </div>
+          </div>
         </motion.div>
       </motion.main>
 

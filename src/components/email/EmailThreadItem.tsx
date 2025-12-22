@@ -13,14 +13,20 @@ interface EmailThreadItemProps {
 export const EmailThreadItem = ({ thread, onClick }: EmailThreadItemProps) => {
   const lastFromName = thread.lastMessageFrom.name || thread.lastMessageFrom.email.split("@")[0];
   
+  const isUnread = thread.unreadCount > 0;
+  
   return (
     <Card
       className={cn(
-        "cursor-pointer transition-all hover:bg-primary/5 border-l-4",
-        thread.unreadCount > 0 && "border-l-primary bg-primary/5",
-        thread.unreadCount === 0 && "border-l-transparent"
+        "cursor-pointer transition-all border-l-4",
+        isUnread 
+          ? "border-l-primary bg-primary/10 hover:bg-primary/15 shadow-md shadow-primary/10 border-primary/80" 
+          : "border-l-transparent hover:bg-muted/50"
       )}
       onClick={onClick}
+      style={{
+        borderWidth: isUnread ? "4px" : "1px",
+      }}
     >
       <div className="p-4 space-y-2">
         <div className="flex items-start justify-between gap-4">
@@ -31,8 +37,8 @@ export const EmailThreadItem = ({ thread, onClick }: EmailThreadItemProps) => {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <span className={cn(
-                  "font-semibold truncate",
-                  thread.unreadCount > 0 && "font-bold"
+                  "truncate",
+                  isUnread ? "font-bold text-primary" : "font-semibold"
                 )}>
                   {thread.subject || "(No Subject)"}
                 </span>
@@ -45,7 +51,7 @@ export const EmailThreadItem = ({ thread, onClick }: EmailThreadItemProps) => {
               </p>
               <p className={cn(
                 "text-xs line-clamp-2",
-                thread.unreadCount > 0 && "font-medium"
+                isUnread && "font-semibold text-white/90"
               )}>
                 {thread.lastMessagePreview}
               </p>

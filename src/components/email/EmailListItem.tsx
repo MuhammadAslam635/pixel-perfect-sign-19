@@ -80,7 +80,7 @@ export const EmailListItem = ({ email, onClick }: EmailListItemProps) => {
       cleanedText = stripQuotedEmailContent(textContent);
     }
   }
-  
+
   const cleanedHtml = email.body.html
     ? stripQuotedEmailContent(email.body.html.replace(/<[^>]*>/g, ""))
     : "";
@@ -93,16 +93,26 @@ export const EmailListItem = ({ email, onClick }: EmailListItemProps) => {
     <Card
       className={cn(
         "relative flex items-start gap-2 overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)]",
-        "bg-gradient-to-r from-[#13363b] via-[#1f4c55] to-[#16383f]",
-        isUnread ? "border-primary/60" : "border-[#274a4f]",
+        isUnread
+          ? "bg-gradient-to-r from-[#1a4d55] via-[#1f5c66] to-[#1a4d55] border-primary/80 shadow-lg shadow-primary/20"
+          : "border-0 backdrop-blur-[22.6px]",
         "rounded-[12px] px-2.5 py-1.5",
-        "before:absolute before:content-[''] before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[60%] before:w-[2.5px] before:rounded-full",
-        isUnread ? "before:bg-primary" : "before:bg-white/75"
+        "before:absolute before:content-[''] before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[70%] before:w-[3px] before:rounded-full",
+        isUnread
+          ? "before:bg-primary before:shadow-[0_0_8px_rgba(102,175,183,0.6)]"
+          : "before:bg-white/75"
       )}
       onClick={onClick}
-      style={{
-        borderWidth: "1px",
-      }}
+      style={
+        isUnread
+          ? {
+              borderWidth: "1.5px",
+            }
+          : {
+              borderWidth: "0px",
+              background: `linear-gradient(180deg, rgba(104, 177, 184, 0.1) 0%, rgba(104, 177, 184, 0.08) 100%), radial-gradient(50% 100% at 50% 0%, rgba(104, 177, 184, 0.1) 0%, rgba(104, 177, 184, 0) 100%)`,
+            }
+      }
     >
       {/* Left side - Main content */}
       <div className="flex-1 min-w-0">

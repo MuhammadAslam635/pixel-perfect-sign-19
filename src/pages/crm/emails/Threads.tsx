@@ -16,7 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 const ThreadsPage = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
-  const [filter, setFilter] = useState<"all" | "unread" | "starred">("all");
+  const [filter, setFilter] = useState<"all" | "starred">("all");
   const [page, setPage] = useState(1);
   const limit = 20;
 
@@ -26,7 +26,6 @@ const ThreadsPage = () => {
       emailService.getEmailThreads({
         page,
         limit,
-        unread: filter === "unread" ? true : undefined,
         starred: filter === "starred" ? true : undefined,
       }),
   });
@@ -81,155 +80,149 @@ const ThreadsPage = () => {
           </div>
 
           <div className="relative flex w-full flex-1 min-h-0 max-h-[calc(100vh-6rem)] justify-center overflow-hidden px-4 pb-6 sm:px-6 md:px-10 lg:px-12 xl:px-16">
-        <div className="flex w-full flex-1 min-h-0 flex-col gap-6 overflow-hidden">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-white">Email Threads</h1>
-              <p className="text-muted-foreground mt-1">
-                {threadsData?.data?.pagination?.total || 0} conversations
-              </p>
-            </div>
-            <Button
-              size="sm"
-              onClick={handleCompose}
-              className="relative h-10 px-5 rounded-full border-0 text-white text-sm hover:bg-[#2F2F2F]/60 transition-all overflow-hidden"
-              style={{
-                background: "#FFFFFF1A",
-                boxShadow:
-                  "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
-              }}
-            >
-              {/* radial element 150px 150px */}
-              <div
-                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[150px] h-[150px] rounded-full pointer-events-none"
-                style={{
-                  background:
-                    "radial-gradient(circle, #66AFB7 0%, transparent 70%)",
-                  backdropFilter: "blur(50px)",
-                  WebkitBackdropFilter: "blur(50px)",
-                  zIndex: -1,
-                }}
-              ></div>
-              <Plus className="w-4 h-4 mr-2 relative z-10" />
-              <span className="relative z-10">Compose</span>
-            </Button>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-300px)] min-h-0">
-            <div className="lg:col-span-1">
-              <Card className="h-full">
-                <CardHeader>
-                  <CardTitle className="text-lg">Filters</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2 overflow-y-auto">
-                  <Button
-                    variant={filter === "all" ? "default" : "ghost"}
-                    className="w-full justify-start"
-                    onClick={() => setFilter("all")}
-                  >
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    All Threads
-                  </Button>
-                  <Button
-                    variant={filter === "unread" ? "default" : "ghost"}
-                    className="w-full justify-start"
-                    onClick={() => setFilter("unread")}
-                  >
-                    Unread
-                  </Button>
-                  <Button
-                    variant={filter === "starred" ? "default" : "ghost"}
-                    className="w-full justify-start"
-                    onClick={() => setFilter("starred")}
-                  >
-                    Starred
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="lg:col-span-3 flex flex-col gap-4 min-h-0">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search threads..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 rounded-full"
+            <div className="flex w-full flex-1 min-h-0 flex-col gap-6 overflow-hidden">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-3xl font-bold text-white">
+                    Email Threads
+                  </h1>
+                  <p className="text-muted-foreground mt-1">
+                    {threadsData?.data?.pagination?.total || 0} conversations
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  onClick={handleCompose}
+                  className="relative h-10 px-5 rounded-full border-0 text-white text-sm hover:bg-[#2F2F2F]/60 transition-all overflow-hidden"
                   style={{
-                    borderRadius: "9999px",
+                    background: "#FFFFFF1A",
+                    boxShadow:
+                      "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
                   }}
-                />
+                >
+                  {/* radial element 150px 150px */}
+                  <div
+                    className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[150px] h-[150px] rounded-full pointer-events-none"
+                    style={{
+                      background:
+                        "radial-gradient(circle, #66AFB7 0%, transparent 70%)",
+                      backdropFilter: "blur(50px)",
+                      WebkitBackdropFilter: "blur(50px)",
+                      zIndex: -1,
+                    }}
+                  ></div>
+                  <Plus className="w-4 h-4 mr-2 relative z-10" />
+                  <span className="relative z-10">Compose</span>
+                </Button>
               </div>
 
-              <Card className="h-full flex flex-col min-h-0">
-                <CardHeader className="border-b">
-                  <CardTitle className="text-lg">
-                    {filter === "all" && "All Threads"}
-                    {filter === "unread" && "Unread Threads"}
-                    {filter === "starred" && "Starred Threads"}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="flex-1 overflow-auto p-4 space-y-3">
-                  {isLoading ? (
-                    <div className="space-y-3">
-                      {[...Array(5)].map((_, i) => (
-                        <Skeleton key={i} className="h-32 w-full" />
-                      ))}
-                    </div>
-                  ) : filteredThreads.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full text-center py-12">
-                      <MessageSquare className="h-12 w-12 text-muted-foreground mb-4" />
-                      <p className="text-muted-foreground text-lg">
-                        No threads found
-                      </p>
-                      <p className="text-muted-foreground text-sm mt-2">
-                        {searchTerm
-                          ? "Try adjusting your search"
-                          : "No email threads yet"}
-                      </p>
-                    </div>
-                  ) : (
-                    filteredThreads.map((thread) => (
-                      <EmailThreadItem
-                        key={thread._id}
-                        thread={thread}
-                        onClick={() => handleThreadClick(thread)}
-                      />
-                    ))
-                  )}
-                </CardContent>
-              </Card>
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-300px)] min-h-0">
+                <div className="lg:col-span-1">
+                  <Card className="h-full">
+                    <CardHeader>
+                      <CardTitle className="text-lg">Filters</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2 overflow-y-auto">
+                      <Button
+                        variant={filter === "all" ? "default" : "ghost"}
+                        className="w-full justify-start"
+                        onClick={() => setFilter("all")}
+                      >
+                        <MessageSquare className="h-4 w-4 mr-2" />
+                        All Threads
+                      </Button>
+                      <Button
+                        variant={filter === "starred" ? "default" : "ghost"}
+                        className="w-full justify-start"
+                        onClick={() => setFilter("starred")}
+                      >
+                        Starred
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </div>
 
-              {threadsData?.data?.pagination &&
-                threadsData.data.pagination.pages > 1 && (
-                  <div className="flex items-center justify-between">
-                    <Button
-                      variant="outline"
-                      onClick={() => setPage((p) => Math.max(1, p - 1))}
-                      disabled={page === 1}
-                    >
-                      Previous
-                    </Button>
-                    <span className="text-sm text-muted-foreground">
-                      Page {page} of {threadsData.data.pagination.pages}
-                    </span>
-                    <Button
-                      variant="outline"
-                      onClick={() =>
-                        setPage((p) =>
-                          Math.min(threadsData.data.pagination.pages, p + 1)
-                        )
-                      }
-                      disabled={page === threadsData.data.pagination.pages}
-                    >
-                      Next
-                    </Button>
+                <div className="lg:col-span-3 flex flex-col gap-4 min-h-0">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search threads..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10 rounded-full"
+                      style={{
+                        borderRadius: "9999px",
+                      }}
+                    />
                   </div>
-                )}
+
+                  <Card className="h-full flex flex-col min-h-0">
+                    <CardHeader className="border-b">
+                      <CardTitle className="text-lg">
+                        {filter === "all" && "All Threads"}
+                        {filter === "starred" && "Starred Threads"}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex-1 overflow-auto p-4 space-y-3">
+                      {isLoading ? (
+                        <div className="space-y-3">
+                          {[...Array(5)].map((_, i) => (
+                            <Skeleton key={i} className="h-32 w-full" />
+                          ))}
+                        </div>
+                      ) : filteredThreads.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center h-full text-center py-12">
+                          <MessageSquare className="h-12 w-12 text-muted-foreground mb-4" />
+                          <p className="text-muted-foreground text-lg">
+                            No threads found
+                          </p>
+                          <p className="text-muted-foreground text-sm mt-2">
+                            {searchTerm
+                              ? "Try adjusting your search"
+                              : "No email threads yet"}
+                          </p>
+                        </div>
+                      ) : (
+                        filteredThreads.map((thread) => (
+                          <EmailThreadItem
+                            key={thread._id}
+                            thread={thread}
+                            onClick={() => handleThreadClick(thread)}
+                          />
+                        ))
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {threadsData?.data?.pagination &&
+                    threadsData.data.pagination.pages > 1 && (
+                      <div className="flex items-center justify-between">
+                        <Button
+                          variant="outline"
+                          onClick={() => setPage((p) => Math.max(1, p - 1))}
+                          disabled={page === 1}
+                        >
+                          Previous
+                        </Button>
+                        <span className="text-sm text-muted-foreground">
+                          Page {page} of {threadsData.data.pagination.pages}
+                        </span>
+                        <Button
+                          variant="outline"
+                          onClick={() =>
+                            setPage((p) =>
+                              Math.min(threadsData.data.pagination.pages, p + 1)
+                            )
+                          }
+                          disabled={page === threadsData.data.pagination.pages}
+                        >
+                          Next
+                        </Button>
+                      </div>
+                    )}
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
           </div>
         </motion.div>
       </motion.main>
