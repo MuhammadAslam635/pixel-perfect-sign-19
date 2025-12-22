@@ -846,44 +846,67 @@ const CompaniesList: FC<CompaniesListProps> = ({
   // Mobile executives view - show only executives list
   if (mobileExecutivesView && selectedCompany) {
     return (
-      <div className="flex flex-col md:hidden">
-        <div className="hidden sm:flex items-center gap-3 mb-4 pb-3 border-b border-white/10">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              setMobileExecutivesView(false);
-              onSelectCompany("");
-            }}
-            className="text-white hover:text-white/80 hover:bg-white/10"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
-          <h3 className="text-base font-semibold text-white">
-            {selectedCompany.name} - Executives
-          </h3>
-        </div>
-        <div className="pb-4">
-          <div className="flex items-center gap-3 mb-3 sm:hidden">
-            <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
-              <img
-                src="/assets/leads-icon.png"
-                alt="Executives icon"
-                className="w-7 h-7 object-contain"
-              />
-            </div>
-            <span className="text-lg font-semibold text-white">Executives</span>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key="mobile-executives-view"
+          className="flex flex-col md:hidden"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: 20 }}
+          transition={{
+            duration: 0.35,
+            ease: [0.4, 0, 0.2, 1],
+          }}
+        >
+          <div className="hidden sm:flex items-center gap-3 mb-4 pb-3 border-b border-white/10">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setMobileExecutivesView(false);
+                onSelectCompany("");
+              }}
+              className="text-white hover:text-white/80 hover:bg-white/10"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back
+            </Button>
+            <h3 className="text-base font-semibold text-white">
+              {selectedCompany.name} - Executives
+            </h3>
           </div>
-          <Card className="bg-transparent border-transparent shadow-none sm:bg-[#1f3032] sm:border-[#3A3A3A] sm:shadow-sm p-3 sm:p-4">
-            <CompanyExecutivesPanel
-              company={selectedCompany}
-              onViewAllLeads={onViewAllLeads || (() => {})}
-              onExecutiveSelect={onExecutiveSelect}
-            />
-          </Card>
-        </div>
-      </div>
+          <motion.div
+            className="pb-4"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{
+              duration: 0.35,
+              ease: [0.4, 0, 0.2, 1],
+            }}
+          >
+            <div className="flex items-center gap-3 mb-3 sm:hidden">
+              <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
+                <img
+                  src="/assets/leads-icon.png"
+                  alt="Executives icon"
+                  className="w-7 h-7 object-contain"
+                />
+              </div>
+              <span className="text-lg font-semibold text-white">
+                Executives
+              </span>
+            </div>
+            <Card className="bg-transparent border-transparent shadow-none sm:bg-[#1f3032] sm:border-[#3A3A3A] sm:shadow-sm p-3 sm:p-4">
+              <CompanyExecutivesPanel
+                company={selectedCompany}
+                onViewAllLeads={onViewAllLeads || (() => {})}
+                onExecutiveSelect={onExecutiveSelect}
+              />
+            </Card>
+          </motion.div>
+        </motion.div>
+      </AnimatePresence>
     );
   }
 
@@ -946,18 +969,31 @@ const CompaniesList: FC<CompaniesListProps> = ({
                       >
                         {renderCompanyCard(company)}
                         {/* Executives panel below the company card should not appear on desktop */}
-                        {selectedCompanyId === company._id &&
-                          viewMode !== "card" && (
-                            <div className="block lg:hidden mt-2 mb-2">
-                              <Card className="bg-[#1f3032] border-[#3A3A3A] p-3 sm:p-4">
-                                <CompanyExecutivesPanel
-                                  company={selectedCompany}
-                                  onViewAllLeads={onViewAllLeads || (() => {})}
-                                  onExecutiveSelect={onExecutiveSelect}
-                                />
-                              </Card>
-                            </div>
-                          )}
+                        <AnimatePresence>
+                          {selectedCompanyId === company._id &&
+                            viewMode !== "card" && (
+                              <motion.div
+                                className="block lg:hidden mt-2 mb-2"
+                                initial={{ opacity: 0, height: 0, y: -10 }}
+                                animate={{ opacity: 1, height: "auto", y: 0 }}
+                                exit={{ opacity: 0, height: 0, y: -10 }}
+                                transition={{
+                                  duration: 0.35,
+                                  ease: [0.4, 0, 0.2, 1],
+                                }}
+                              >
+                                <Card className="bg-[#1f3032] border-[#3A3A3A] p-3 sm:p-4">
+                                  <CompanyExecutivesPanel
+                                    company={selectedCompany}
+                                    onViewAllLeads={
+                                      onViewAllLeads || (() => {})
+                                    }
+                                    onExecutiveSelect={onExecutiveSelect}
+                                  />
+                                </Card>
+                              </motion.div>
+                            )}
+                        </AnimatePresence>
                       </motion.div>
                     ))}
                   </motion.div>
