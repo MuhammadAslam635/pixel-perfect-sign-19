@@ -45,6 +45,111 @@ const getTimeBasedGreeting = () => {
   return "Good Evening";
 };
 
+// Function to transform markdown tables: remove Website column and make company names clickable
+const transformCompanyTable = (content: string): string => {
+  // Match markdown tables
+  const tableRegex = /(\|.*\|[\r\n]+(?:\|[-: ]+\|[\r\n]+)?(?:\|.*\|[\r\n]+)*)/g;
+
+  return content.replace(tableRegex, (tableMatch) => {
+    const lines = tableMatch
+      .trim()
+      .split("\n")
+      .filter((line) => line.trim());
+    if (lines.length < 2) return tableMatch; // Need at least header and separator
+
+    // Parse header row
+    const headerRow = lines[0]
+      .split("|")
+      .map((cell) => cell.trim())
+      .filter((cell) => cell);
+    const websiteIndex = headerRow.findIndex((header) =>
+      header.toLowerCase().includes("website")
+    );
+
+    // If no Website column found, return original table
+    if (websiteIndex === -1) return tableMatch;
+
+    // Find NAME column index
+    const nameIndex = headerRow.findIndex((header) =>
+      header.toLowerCase().includes("name")
+    );
+
+    // Remove Website column from header
+    const newHeaderRow = headerRow.filter((_, index) => index !== websiteIndex);
+
+    // Process separator row (second line)
+    const separatorRow = lines[1]
+      .split("|")
+      .map((cell) => cell.trim())
+      .filter((cell) => cell);
+    const newSeparatorRow = separatorRow.filter(
+      (_, index) => index !== websiteIndex
+    );
+
+    // Process data rows
+    const dataRows = lines.slice(2).map((line) => {
+      const cells = line
+        .split("|")
+        .map((cell) => cell.trim())
+        .filter((cell) => cell);
+      const websiteUrl = cells[websiteIndex]?.trim() || "";
+      const companyName = cells[nameIndex]?.trim() || "";
+
+      // Remove Website column
+      const newCells = cells.filter((_, index) => index !== websiteIndex);
+
+      // If we have a website URL and company name, make the name a link
+      if (websiteUrl && companyName && nameIndex !== -1) {
+        // Clean the website URL (remove markdown link syntax if present)
+        let cleanUrl = websiteUrl;
+        const urlMatch = websiteUrl.match(/\[([^\]]+)\]\(([^)]+)\)/);
+        if (urlMatch) {
+          cleanUrl = urlMatch[2]; // Extract URL from markdown link
+        } else if (websiteUrl.startsWith("http")) {
+          cleanUrl = websiteUrl;
+        } else {
+          // If it's just a URL without markdown, use it as is
+          cleanUrl = websiteUrl;
+        }
+
+        // Ensure URL has protocol
+        if (
+          cleanUrl &&
+          !cleanUrl.startsWith("http://") &&
+          !cleanUrl.startsWith("https://")
+        ) {
+          cleanUrl = "https://" + cleanUrl;
+        }
+
+        // Extract company name text if it's already a markdown link
+        let cleanCompanyName = companyName;
+        const nameLinkMatch = companyName.match(/\[([^\]]+)\]/);
+        if (nameLinkMatch) {
+          cleanCompanyName = nameLinkMatch[1]; // Extract text from markdown link
+        }
+
+        // Replace company name with markdown link
+        const nameCellIndex =
+          nameIndex < websiteIndex ? nameIndex : nameIndex - 1;
+        if (nameCellIndex >= 0 && nameCellIndex < newCells.length && cleanUrl) {
+          newCells[nameCellIndex] = `[${cleanCompanyName}](${cleanUrl})`;
+        }
+      }
+
+      return newCells;
+    });
+
+    // Reconstruct the table
+    const newTable = [
+      "| " + newHeaderRow.join(" | ") + " |",
+      "| " + newSeparatorRow.join(" | ") + " |",
+      ...dataRows.map((cells) => "| " + cells.join(" | ") + " |"),
+    ].join("\n");
+
+    return newTable;
+  });
+};
+
 // Animation variants for typing indicator
 const typingVariants = {
   hidden: {
@@ -126,13 +231,23 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
   const queryClient = useQueryClient();
 
   // Redux selectors
-  const selectedChatId = useSelector((state: RootState) => state.chat.selectedChatId);
-  const streamingEvents = useSelector((state: RootState) => state.chat.streamingEvents);
+  const selectedChatId = useSelector(
+    (state: RootState) => state.chat.selectedChatId
+  );
+  const streamingEvents = useSelector(
+    (state: RootState) => state.chat.streamingEvents
+  );
   const isStreaming = useSelector((state: RootState) => state.chat.isStreaming);
-  const optimisticMessagesByChat = useSelector((state: RootState) => state.chat.optimisticMessagesByChat);
-  const temporaryChat = useSelector((state: RootState) => state.chat.temporaryChat);
-  const composerValue = useSelector((state: RootState) => state.chat.composerValue);
-  
+  const optimisticMessagesByChat = useSelector(
+    (state: RootState) => state.chat.optimisticMessagesByChat
+  );
+  const temporaryChat = useSelector(
+    (state: RootState) => state.chat.temporaryChat
+  );
+  const composerValue = useSelector(
+    (state: RootState) => state.chat.composerValue
+  );
+
   // Use Redux composerValue for message input, but keep local state for interim transcript
   const message = composerValue;
 
@@ -152,14 +267,15 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
     // Only show thinking indicator if:
     // 1. We're streaming AND the current chat is the one being streamed, OR
     // 2. The current chat has optimistic messages (user message waiting for response)
-    const isStreamingThisChat = isStreaming && streamingChatIdRef.current === activeChatId;
+    const isStreamingThisChat =
+      isStreaming && streamingChatIdRef.current === activeChatId;
     const hasOptimisticMessages = optimisticMessages.length > 0;
-    
+
     // Show indicator if streaming for this specific chat OR if this chat has optimistic messages
     if (isStreamingThisChat || hasOptimisticMessages) {
       return true;
     }
-    
+
     return false;
   }, [isStreaming, optimisticMessages.length, activeChatId]);
 
@@ -212,7 +328,8 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
         setIsListening(false);
         // Move any remaining interim transcript to final message
         if (interimTranscript.trim()) {
-          const newValue = message + (message ? " " : "") + interimTranscript.trim();
+          const newValue =
+            message + (message ? " " : "") + interimTranscript.trim();
           dispatch(setComposerValue(newValue));
           setInterimTranscript("");
         }
@@ -229,7 +346,8 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
     setIsListening(false);
     // Move any remaining interim transcript to final message
     if (interimTranscript.trim()) {
-      const newValue = message + (message ? " " : "") + interimTranscript.trim();
+      const newValue =
+        message + (message ? " " : "") + interimTranscript.trim();
       dispatch(setComposerValue(newValue));
       setInterimTranscript("");
     }
@@ -247,7 +365,11 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
   const { data: chatDetail } = useQuery({
     queryKey: ["chatDetail", activeChatId],
     queryFn: () => fetchChatById(activeChatId ?? ""),
-    enabled: Boolean(activeChatId && activeChatId !== NEW_CHAT_KEY && !activeChatId.startsWith("temp_")),
+    enabled: Boolean(
+      activeChatId &&
+        activeChatId !== NEW_CHAT_KEY &&
+        !activeChatId.startsWith("temp_")
+    ),
     staleTime: 10_000,
   });
 
@@ -266,7 +388,8 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
 
     const apiMessages = chatDetail?.messages ?? [];
     // For widget with temp chat ID, use optimistic messages with that ID
-    const optimisticMessages = optimisticMessagesByChat[activeChatId || ""] || [];
+    const optimisticMessages =
+      optimisticMessagesByChat[activeChatId || ""] || [];
 
     if (!apiMessages.length) {
       return optimisticMessages;
@@ -315,7 +438,13 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
     });
 
     return [...apiMessages, ...filteredOptimistic];
-  }, [optimisticMessages, chatDetail?.messages, temporaryChat, activeChatId, optimisticMessagesByChat]);
+  }, [
+    optimisticMessages,
+    chatDetail?.messages,
+    temporaryChat,
+    activeChatId,
+    optimisticMessagesByChat,
+  ]);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -329,8 +458,8 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
   const prevMessagesRef = useRef<string>("");
   useEffect(() => {
     // Create a stable string representation of messages to compare
-    const messagesKey = selectedMessages.map(m => m._id).join(",");
-    
+    const messagesKey = selectedMessages.map((m) => m._id).join(",");
+
     // Only call onMessagesChange if messages actually changed
     if (prevMessagesRef.current !== messagesKey) {
       prevMessagesRef.current = messagesKey;
@@ -360,7 +489,9 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
     dispatch(clearStreamingEvents());
 
     const isNewChat = !activeChatId || activeChatId === NEW_CHAT_KEY;
-    const actualChatId = isNewChat ? `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}` : activeChatId;
+    const actualChatId = isNewChat
+      ? `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      : activeChatId;
     streamingChatIdRef.current = actualChatId; // Track which chat is streaming
 
     const tempMessage: ChatMessage = {
@@ -378,8 +509,10 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
     if (isNewChat) {
       // Use the actualChatId (temp ID) as the chat key for optimistic messages
       // This keeps the widget's new chat isolated from the chat page
-      dispatch(addOptimisticMessage({ chatId: actualChatId, message: tempMessage }));
-      
+      dispatch(
+        addOptimisticMessage({ chatId: actualChatId, message: tempMessage })
+      );
+
       // Update the chat ID to the temp ID so messages show immediately
       if (!activeChatId || activeChatId === NEW_CHAT_KEY) {
         dispatch(setSelectedChatId(actualChatId));
@@ -387,41 +520,51 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
       }
     } else {
       // For existing chats, add optimistic message
-      dispatch(addOptimisticMessage({ chatId: currentChatKey, message: tempMessage }));
+      dispatch(
+        addOptimisticMessage({ chatId: currentChatKey, message: tempMessage })
+      );
     }
 
     // For new chats, immediately add to chat list optimistically
     if (isNewChat) {
       const optimisticChat: ChatSummary = {
         _id: actualChatId, // Use temp chat ID for now
-        title: trimmedMessage.length > 50 ? trimmedMessage.substring(0, 50) + "..." : trimmedMessage,
+        title:
+          trimmedMessage.length > 50
+            ? trimmedMessage.substring(0, 50) + "..."
+            : trimmedMessage,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
-      
-      queryClient.setQueryData<ChatSummary[]>(["chatList"], (oldChatList = []) => {
-        // Check if chat already exists (shouldn't for new chats, but just in case)
-        const exists = oldChatList.some(chat => chat._id === actualChatId);
-        if (exists) {
-          return oldChatList;
+
+      queryClient.setQueryData<ChatSummary[]>(
+        ["chatList"],
+        (oldChatList = []) => {
+          // Check if chat already exists (shouldn't for new chats, but just in case)
+          const exists = oldChatList.some((chat) => chat._id === actualChatId);
+          if (exists) {
+            return oldChatList;
+          }
+          return [optimisticChat, ...oldChatList];
         }
-        return [optimisticChat, ...oldChatList];
-      });
+      );
     }
 
     // Start long-running task tracking
     streamingStartTimeRef.current = Date.now();
-    
+
     // Set timeout to start long-running task only after 10 seconds if still processing
     streamingTimeoutRef.current = setTimeout(() => {
       if (isStreamingRef.current) {
         // Task is still running after 10 seconds, start tracking it
-        dispatch(startStreamingTask({
-          chatId: actualChatId,
-          messageId: tempMessage._id,
-          title: `Generating response for ${chatTitle}`,
-          description: "AI is processing your message...",
-        }));
+        dispatch(
+          startStreamingTask({
+            chatId: actualChatId,
+            messageId: tempMessage._id,
+            title: `Generating response for ${chatTitle}`,
+            description: "AI is processing your message...",
+          })
+        );
       }
     }, 10000);
 
@@ -436,11 +579,13 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
 
           // Update long-running task with streaming progress
           if (event.step) {
-            dispatch(updateStreamingTask({
-              chatId: actualChatId,
-              messageId: tempMessage._id,
-              step: event.step,
-            }));
+            dispatch(
+              updateStreamingTask({
+                chatId: actualChatId,
+                messageId: tempMessage._id,
+                step: event.step,
+              })
+            );
           }
         }
       );
@@ -467,49 +612,66 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
         }
 
         // Update chat list - replace optimistic chat with real chat
-        queryClient.setQueryData<ChatSummary[]>(["chatList"], (oldChatList = []) => {
-          if (isNewChatCreated) {
-            // Remove the optimistic chat (with temp ID) and add the real chat
-            const filteredList = oldChatList.filter(chat => chat._id !== actualChatId);
-            const newChat: ChatSummary = {
-              _id: newChatId,
-              title: (result.data.title as string) || "New Conversation",
-              createdAt: (result.data.createdAt as string) || new Date().toISOString(),
-              updatedAt: (result.data.updatedAt as string) || new Date().toISOString(),
-            };
-            return [newChat, ...filteredList];
-          } else {
-            // For existing chats, update the chat's updatedAt and move it to the top
-            const updatedChatList = oldChatList.map(chat => {
-              if (chat._id === newChatId) {
-                return {
-                  ...chat,
-                  title: (result.data.title as string) || chat.title,
-                  updatedAt: (result.data.updatedAt as string) || new Date().toISOString(),
-                };
+        queryClient.setQueryData<ChatSummary[]>(
+          ["chatList"],
+          (oldChatList = []) => {
+            if (isNewChatCreated) {
+              // Remove the optimistic chat (with temp ID) and add the real chat
+              const filteredList = oldChatList.filter(
+                (chat) => chat._id !== actualChatId
+              );
+              const newChat: ChatSummary = {
+                _id: newChatId,
+                title: (result.data.title as string) || "New Conversation",
+                createdAt:
+                  (result.data.createdAt as string) || new Date().toISOString(),
+                updatedAt:
+                  (result.data.updatedAt as string) || new Date().toISOString(),
+              };
+              return [newChat, ...filteredList];
+            } else {
+              // For existing chats, update the chat's updatedAt and move it to the top
+              const updatedChatList = oldChatList.map((chat) => {
+                if (chat._id === newChatId) {
+                  return {
+                    ...chat,
+                    title: (result.data.title as string) || chat.title,
+                    updatedAt:
+                      (result.data.updatedAt as string) ||
+                      new Date().toISOString(),
+                  };
+                }
+                return chat;
+              });
+
+              // Move the updated chat to the top
+              const updatedChat = updatedChatList.find(
+                (chat) => chat._id === newChatId
+              );
+              if (updatedChat) {
+                return [
+                  updatedChat,
+                  ...updatedChatList.filter((chat) => chat._id !== newChatId),
+                ];
               }
-              return chat;
-            });
-            
-            // Move the updated chat to the top
-            const updatedChat = updatedChatList.find(chat => chat._id === newChatId);
-            if (updatedChat) {
-              return [updatedChat, ...updatedChatList.filter(chat => chat._id !== newChatId)];
+
+              return updatedChatList;
             }
-            
-            return updatedChatList;
           }
-        });
+        );
 
         // Clear optimistic messages for the old chat key and move to new chat
         if (isNewChatCreated) {
           // For widget: move optimistic messages from temp chat ID to real chat ID
           // Get optimistic messages from the temp chat ID
-          const tempOptimisticMessages = optimisticMessagesByChat[actualChatId] || [];
+          const tempOptimisticMessages =
+            optimisticMessagesByChat[actualChatId] || [];
           if (tempOptimisticMessages.length > 0) {
             // Move messages to the real chat ID
-            tempOptimisticMessages.forEach(msg => {
-              dispatch(addOptimisticMessage({ chatId: newChatId, message: msg }));
+            tempOptimisticMessages.forEach((msg) => {
+              dispatch(
+                addOptimisticMessage({ chatId: newChatId, message: msg })
+              );
             });
             // Remove optimistic messages from temp chat ID
             dispatch(removeOptimisticMessages(actualChatId));
@@ -517,13 +679,15 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
             // Fallback: remove optimistic messages if none found
             dispatch(removeOptimisticMessages(currentChatKey));
           }
-          
+
           // Update long-running task's chatId to the real chat ID if it exists
           if (tempMessage._id) {
-            dispatch(updateTask({
-              id: tempMessage._id,
-              updates: { chatId: newChatId }
-            }));
+            dispatch(
+              updateTask({
+                id: tempMessage._id,
+                updates: { chatId: newChatId },
+              })
+            );
           }
         } else {
           // For existing chats, clear optimistic messages after server response
@@ -535,7 +699,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
       }
     } catch (error: any) {
       console.error("Streaming error:", error);
-      
+
       // For new chats in widget, remove optimistic messages from temp chat ID
       if (isNewChat) {
         // Remove optimistic messages from the temp chat ID
@@ -547,16 +711,21 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
 
       // Remove optimistic chat entry if it was a new chat
       if (isNewChat) {
-        queryClient.setQueryData<ChatSummary[]>(["chatList"], (oldChatList = []) => {
-          return oldChatList.filter(chat => chat._id !== actualChatId);
-        });
+        queryClient.setQueryData<ChatSummary[]>(
+          ["chatList"],
+          (oldChatList = []) => {
+            return oldChatList.filter((chat) => chat._id !== actualChatId);
+          }
+        );
       }
 
       // Mark long-running task as error
-      dispatch(errorTask({
-        id: tempMessage._id,
-        errorMessage: error?.message || "Failed to send message",
-      }));
+      dispatch(
+        errorTask({
+          id: tempMessage._id,
+          errorMessage: error?.message || "Failed to send message",
+        })
+      );
 
       dispatch(setComposerValue(trimmedMessage));
 
@@ -578,10 +747,12 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
       dispatch(clearStreamingEvents());
 
       // Complete or clear the long-running task
-      dispatch(completeStreamingTask({
-        chatId: actualChatId,
-        messageId: tempMessage._id,
-      }));
+      dispatch(
+        completeStreamingTask({
+          chatId: actualChatId,
+          messageId: tempMessage._id,
+        })
+      );
 
       // Clear timeout
       if (streamingTimeoutRef.current) {
@@ -629,26 +800,146 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
               >
                 <div
                   className={cn(
-                    "max-w-[78%] rounded-2xl px-3 py-2 text-sm leading-relaxed shadow-lg sm:max-w-[75%]",
+                    "max-w-[100%] rounded-2xl px-3 py-2 text-sm leading-relaxed shadow-lg sm:max-w-[100%]",
                     isAssistant
                       ? "rounded-bl-md bg-white/5 text-white"
                       : "rounded-br-md bg-[linear-gradient(226.23deg,_#3E65B4_0%,_#68B3B7_100%)] text-white"
                   )}
                 >
-                  <div className="text-left">
+                  <div className="text-left max-w-none">
                     <ReactMarkdown
                       remarkPlugins={[remarkGfm]}
                       rehypePlugins={[rehypeRaw, rehypeSanitize]}
                       components={{
+                        // Headings with proper hierarchy and spacing
+                        h1: ({ node, ...props }) => (
+                          <h1
+                            className="text-2xl font-bold mb-4 mt-6 text-white first:mt-0 leading-tight"
+                            {...props}
+                          />
+                        ),
+                        h2: ({ node, ...props }) => (
+                          <h2
+                            className="text-xl font-semibold mb-3 mt-5 text-white first:mt-0 leading-tight"
+                            {...props}
+                          />
+                        ),
+                        h3: ({ node, ...props }) => (
+                          <h3
+                            className="text-lg font-semibold mb-2 mt-4 text-white first:mt-0 leading-tight"
+                            {...props}
+                          />
+                        ),
+                        h4: ({ node, ...props }) => (
+                          <h4
+                            className="text-base font-semibold mb-2 mt-3 text-white first:mt-0 leading-tight"
+                            {...props}
+                          />
+                        ),
+                        h5: ({ node, ...props }) => (
+                          <h5
+                            className="text-sm font-semibold mb-1 mt-2 text-white first:mt-0 leading-tight"
+                            {...props}
+                          />
+                        ),
+                        h6: ({ node, ...props }) => (
+                          <h6
+                            className="text-xs font-semibold mb-1 mt-2 text-white/90 first:mt-0 leading-tight"
+                            {...props}
+                          />
+                        ),
+                        // Paragraphs with proper spacing
+                        p: ({ node, ...props }) => (
+                          <p
+                            className="mb-3 text-white/90 leading-relaxed break-words last:mb-0"
+                            style={{ overflowWrap: "anywhere" }}
+                            {...props}
+                          />
+                        ),
+                        // Links with better styling
+                        a: ({ node, ...props }) => (
+                          <a
+                            className="text-blue-400 hover:text-blue-300 underline underline-offset-2 transition-colors duration-200 break-all"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            {...props}
+                          />
+                        ),
+                        // Inline and block code
+                        code: ({ node, inline, className, ...props }: any) => {
+                          return inline ? (
+                            <code
+                              className="bg-white/15 text-blue-300 rounded px-1.5 py-0.5 text-xs font-mono break-all"
+                              {...props}
+                            />
+                          ) : (
+                            <code
+                              className="block p-0 text-white/90 text-xs font-mono whitespace-pre overflow-x-auto max-w-full"
+                              {...props}
+                            />
+                          );
+                        },
+                        // Preformatted text (code blocks)
+                        pre: ({ node, ...props }) => (
+                          <pre
+                            className="my-3 p-3 rounded-lg bg-white/10 overflow-x-auto max-w-full scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent"
+                            {...props}
+                          />
+                        ),
+                        // Lists with proper indentation and spacing
+                        ul: ({ node, ...props }) => (
+                          <ul
+                            className="mb-3 ml-4 list-disc space-y-1.5 text-white/90 marker:text-white/60"
+                            {...props}
+                          />
+                        ),
+                        ol: ({ node, ...props }) => (
+                          <ol
+                            className="mb-3 ml-4 list-decimal space-y-1.5 text-white/90 marker:text-white/60"
+                            {...props}
+                          />
+                        ),
+                        li: ({ node, ...props }) => (
+                          <li
+                            className="pl-1 break-words leading-relaxed"
+                            style={{ overflowWrap: "anywhere" }}
+                            {...props}
+                          />
+                        ),
+                        // Blockquotes
+                        blockquote: ({ node, ...props }) => (
+                          <blockquote
+                            className="border-l-4 border-white/30 pl-4 my-4 italic text-white/80"
+                            {...props}
+                          />
+                        ),
+                        // Horizontal rule
+                        hr: ({ node, ...props }) => (
+                          <hr
+                            className="my-6 border-0 border-t border-white/20"
+                            {...props}
+                          />
+                        ),
+                        // Strong (bold) text
+                        strong: ({ node, ...props }) => (
+                          <strong
+                            className="font-semibold text-white"
+                            {...props}
+                          />
+                        ),
+                        // Emphasis (italic) text
+                        em: ({ node, ...props }) => (
+                          <em className="italic text-white/95" {...props} />
+                        ),
+                        // Tables with improved styling
                         table: ({ node, ...props }) => (
-                          <div className="my-4 max-w-full overflow-x-auto rounded-lg border border-white/20 scrollbar-hide">
+                          <div className="my-4 max-w-full overflow-x-auto rounded-lg border border-white/20 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
                             <table
-                              // let table grow to the width of its content
                               style={{
                                 tableLayout: "auto",
                                 width: "max-content",
                               }}
-                              className="border-collapse text-sm"
+                              className="border-collapse text-sm w-full"
                               {...props}
                             />
                           </div>
@@ -670,96 +961,40 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
                         ),
                         th: ({ node, ...props }) => (
                           <th
-                            className="break-words border border-white/20 px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-white overflow-hidden"
+                            className="break-words border border-white/20 px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-white"
                             style={{
                               wordBreak: "break-word",
                               overflowWrap: "break-word",
                               whiteSpace: "normal",
-                              maxWidth: "400px",
                             }}
                             {...props}
                           />
                         ),
                         td: ({ node, ...props }) => (
                           <td
-                            className="break-words border border-white/20 px-3 py-2 text-left text-sm text-white/90 overflow-hidden"
+                            className="break-words border border-white/20 px-4 py-2.5 text-left text-sm text-white/90"
                             style={{
                               wordBreak: "break-word",
                               overflowWrap: "break-word",
                               whiteSpace: "normal",
-                              maxWidth: "400px",
                             }}
                             {...props}
                           />
                         ),
-                        a: ({ node, ...props }) => (
-                          <a
-                            className="max-w-full break-all text-left text-blue-400 underline hover:text-blue-300"
+                        // Images
+                        img: ({ node, ...props }) => (
+                          <img
+                            className="my-4 rounded-lg max-w-full h-auto"
                             {...props}
                           />
                         ),
-                        code: ({ node, inline, ...props }: any) =>
-                          inline ? (
-                            <code
-                              className="max-w-full break-all rounded bg-white/10 px-1 py-0.5 text-left text-xs"
-                              {...props}
-                            />
-                          ) : (
-                            <code
-                              className="my-2 block max-w-[600px] overflow-x-auto rounded bg-white/10 p-2 text-left text-xs"
-                              {...props}
-                            />
-                          ),
-                        p: ({ node, ...props }) => (
-                          <p
-                            className="break-words text-left"
-                            style={{ overflowWrap: "anywhere" }}
-                            {...props}
-                          />
-                        ),
+                        // Div wrapper
                         div: ({ node, ...props }: any) => (
                           <div className="text-left" {...props} />
                         ),
-                        ul: ({ node, ...props }) => (
-                          <ul
-                            className="mb-2 ml-0 list-none space-y-1 max-w-[600px] text-left"
-                            {...props}
-                          />
-                        ),
-                        ol: ({ node, ...props }) => (
-                          <ol
-                            className="mb-2 ml-0 list-none space-y-1 max-w-[600px] text-left"
-                            {...props}
-                          />
-                        ),
-                        li: ({ node, ...props }) => (
-                          <li
-                            className="break-words text-left"
-                            style={{ overflowWrap: "anywhere" }}
-                            {...props}
-                          />
-                        ),
-                        h1: ({ node, ...props }) => (
-                          <h1 className="text-left" {...props} />
-                        ),
-                        h2: ({ node, ...props }) => (
-                          <h2 className="text-left" {...props} />
-                        ),
-                        h3: ({ node, ...props }) => (
-                          <h3 className="text-left" {...props} />
-                        ),
-                        h4: ({ node, ...props }) => (
-                          <h4 className="text-left" {...props} />
-                        ),
-                        h5: ({ node, ...props }) => (
-                          <h5 className="text-left" {...props} />
-                        ),
-                        h6: ({ node, ...props }) => (
-                          <h6 className="text-left" {...props} />
-                        ),
                       }}
                     >
-                      {msg.content}
+                      {transformCompanyTable(msg.content)}
                     </ReactMarkdown>
                   </div>
                 </div>
@@ -795,20 +1030,22 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
                 </div>
                 <div className="flex flex-col gap-1">
                   <span className="text-white/70 text-left">Thinking…</span>
-                  {isStreaming && isCurrentChatSending && streamingEvents.length > 0 && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 5 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="text-xs text-gray-400 italic flex items-center gap-2"
-                    >
-                      <Loader2 className="w-3 h-3 animate-spin" />
-                      <span>
-                        {streamingEvents[streamingEvents.length - 1]?.step
-                          ?.replace(/^[^\w\s]+/, "")
-                          .trim() || "Processing..."}
-                      </span>
-                    </motion.div>
-                  )}
+                  {isStreaming &&
+                    isCurrentChatSending &&
+                    streamingEvents.length > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-xs text-gray-400 italic flex items-center gap-2"
+                      >
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        <span>
+                          {streamingEvents[streamingEvents.length - 1]?.step
+                            ?.replace(/^[^\w\s]+/, "")
+                            .trim() || "Processing..."}
+                        </span>
+                      </motion.div>
+                    )}
                 </div>
               </div>
             </motion.div>
@@ -825,10 +1062,13 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
             placeholder={
               isListening ? "Listening... Click mic to stop" : "Ask Skylar"
             }
-            value={(message || "") + (interimTranscript ? ` ${interimTranscript}` : "")}
+            value={
+              (message || "") +
+              (interimTranscript ? ` ${interimTranscript}` : "")
+            }
             onChange={(e) => {
               // Remove interim transcript from the value before updating
-              const valueWithoutInterim = interimTranscript 
+              const valueWithoutInterim = interimTranscript
                 ? e.target.value.replace(interimTranscript, "").trim()
                 : e.target.value;
               dispatch(setComposerValue(valueWithoutInterim));
