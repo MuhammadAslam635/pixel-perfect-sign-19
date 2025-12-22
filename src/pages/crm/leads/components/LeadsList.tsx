@@ -635,14 +635,16 @@ const LeadsList: FC<LeadsListProps> = ({
           </div>
           {viewMode === "detailed" && (
             <>
-              <p className="text-[8px] sm:text-[9px] font-bold text-white/60 mt-0.5 cursor-default">
-                {(lead.position || "Chief Executive Officer").length > 20
-                  ? `${(lead.position || "Chief Executive Officer").slice(
-                      0,
-                      20
-                    )}...`
-                  : lead.position || "Chief Executive Officer"}
-              </p>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <p className="text-[8px] sm:text-[9px] font-bold text-white/60 mt-0.5 cursor-default truncate max-w-full">
+                    {lead.position || "Chief Executive Officer"}
+                  </p>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{lead.position || "Chief Executive Officer"}</p>
+                </TooltipContent>
+              </Tooltip>
               <div className="mt-0.5 sm:mt-1 md:mt-2 flex flex-wrap items-center gap-1.5 sm:gap-2 md:gap-3 text-xs text-gray-300">
                 <Tooltip>
                   <TooltipTrigger asChild>
