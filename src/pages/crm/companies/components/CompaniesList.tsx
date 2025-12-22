@@ -589,12 +589,12 @@ const CompaniesList: FC<CompaniesListProps> = ({
             </div>
           )}
           {/* Desktop: Original badges layout */}
-          {viewMode === "detailed" && (
+          {/* {viewMode === "detailed" && (
             <div className="hidden md:block mt-0.5 sm:mt-1 md:mt-2">
               <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-white/75">
-                {/* <Badge className="rounded-full bg-white/15 text-white border-white/20 px-3 sm:px-4 py-1 text-xs">
+                <Badge className="rounded-full bg-white/15 text-white border-white/20 px-3 sm:px-4 py-1 text-xs">
                   {employeeCount}
-                </Badge> */}
+                </Badge>
                 {primaryLinkedIn && (
                   <div className="flex items-center gap-1.5 sm:gap-2 bg-white/10 border border-white/20 rounded-full px-2 sm:px-3 py-1 max-w-[150px] sm:max-w-[220px]">
                     <Linkedin className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-white/85 flex-shrink-0" />
@@ -610,7 +610,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
                 )}
               </div>
             </div>
-          )}
+          )} */}
         </div>
         <div className="w-full md:w-[240px] lg:w-[260px] flex flex-col items-center md:items-end gap-0.5 sm:gap-1 md:gap-2 text-white/80 md:ml-4 lg:ml-8">
           {viewMode === "detailed" && (
@@ -628,14 +628,14 @@ const CompaniesList: FC<CompaniesListProps> = ({
                       {formatWebsiteUrl(company.website)}
                     </a>
                   )}
-                  {company.website && primaryEmail && (
+                  {/* {company.website && primaryEmail && (
                     <span className="mx-2 text-white/40">|</span>
                   )}
                   {primaryEmail && (
                     <span className="text-white/70 break-all">
                       {primaryEmail}
                     </span>
-                  )}
+                  )} */}
                 </p>
               )}
               {company.country && (

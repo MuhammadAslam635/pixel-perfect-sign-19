@@ -22,12 +22,12 @@ const getColorFromName = (name: string): string => {
     "from-amber-500 to-amber-600",
     "from-red-500 to-red-600",
   ];
-  
+
   let hash = 0;
   for (let i = 0; i < name.length; i++) {
     hash = name.charCodeAt(i) + ((hash << 5) - hash);
   }
-  
+
   const index = Math.abs(hash) % colors.length;
   return colors[index];
 };
@@ -35,12 +35,12 @@ const getColorFromName = (name: string): string => {
 // Get initials from company name
 const getInitials = (name: string): string => {
   if (!name) return "?";
-  
+
   const words = name
     .trim()
     .split(/\s+/)
     .filter((word) => word.length > 0 && !/^(the|and|or|for|of)$/i.test(word)); // Filter out common words
-  
+
   if (words.length >= 2) {
     return (words[0][0] + words[1][0]).toUpperCase();
   }
@@ -73,7 +73,9 @@ export const CompanyLogoFallback: FC<CompanyLogoFallbackProps> = ({
 
   if (logo) {
     return (
-      <div className={`${sizeClasses[size]} rounded-lg overflow-hidden border-2 border-primary/40 bg-white flex-shrink-0 ${className}`}>
+      <div
+        className={`${sizeClasses[size]} rounded-lg overflow-hidden border-2 border-primary/40 bg-white flex-shrink-0 ${className}`}
+      >
         <img
           src={logo}
           alt={name}
@@ -98,8 +100,12 @@ export const CompanyLogoFallback: FC<CompanyLogoFallbackProps> = ({
   }
 
   return (
-    <div className={`${sizeClasses[size]} rounded-full overflow-hidden border-2 border-primary/40 flex-shrink-0 ${className}`}>
-      <div className={`w-full h-full bg-gradient-to-br ${gradientColor} flex items-center justify-center font-bold text-white`}>
+    <div
+      className={`${sizeClasses[size]} rounded-full overflow-hidden border-2 border-primary/40 flex-shrink-0 ${className}`}
+    >
+      <div
+        className={`w-full h-full bg-gradient-to-br ${gradientColor} flex items-center justify-center font-bold text-white`}
+      >
         {initials}
       </div>
     </div>

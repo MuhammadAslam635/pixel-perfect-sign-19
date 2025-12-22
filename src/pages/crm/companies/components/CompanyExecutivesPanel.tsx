@@ -1,4 +1,4 @@
-import { FC, useState } from "react";
+import { FC, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Users,
@@ -8,6 +8,7 @@ import {
   Globe,
   Info,
   Phone,
+  MapPin,
 } from "lucide-react";
 import { Company, CompanyPerson } from "@/services/companies.service";
 import { CompanyLogoFallback } from "@/components/ui/company-logo-fallback";
@@ -28,6 +29,14 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<TabType>("executives");
   const [showLeads, setShowLeads] = useState(false);
+
+  // Automatically show leads when a company is selected
+  useEffect(() => {
+    if (company?._id) {
+      setActiveTab("executives");
+      setShowLeads(true);
+    }
+  }, [company?._id]);
 
   // Get company LinkedIn URL (from company data or first executive)
   const companyLinkedIn =
@@ -63,14 +72,35 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
     return url;
   };
 
+  // Helper function to generate Google Maps URL
+  const getGoogleMapsUrl = (address: string | null | undefined): string => {
+    if (!address) return "";
+    const encodedAddress = encodeURIComponent(address);
+    return `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
+  };
+
+  // Helper function to generate Google Maps embed URL
+  const getGoogleMapsEmbedUrl = (
+    address: string | null | undefined
+  ): string | null => {
+    if (!address) return null;
+    const encodedAddress = encodeURIComponent(address);
+    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+    if (apiKey) {
+      return `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${encodedAddress}`;
+    }
+    // Fallback: Use Google Maps search embed URL (works without API key for basic usage)
+    return `https://www.google.com/maps?q=${encodedAddress}&output=embed&hl=en`;
+  };
+
   return (
     <>
       {/* Company Header with LinkedIn */}
       {company && (
         <div className="mb-4 pb-3 border-b border-white/10">
-          <div className="flex items-start justify-between gap-2">
+          <div className="flex items-start justify-between gap-1">
             <div className="flex-1 min-w-0">
-              <h2 className="text-base sm:text-lg font-semibold text-white mb-1 truncate">
+              <h2 className="text-base sm:text-lg font-semibold text-white truncate">
                 {company.name}
               </h2>
               <p className="text-xs text-white/60 line-clamp-2">
@@ -93,14 +123,8 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
       <div className="flex items-center gap-2 mb-4 pb-3 border-b border-white/10">
         <button
           onClick={() => {
-            if (activeTab === "executives") {
-              // Toggle leads visibility if already on executives tab
-              setShowLeads(!showLeads);
-            } else {
-              // Switch to executives tab and show leads
-              setActiveTab("executives");
-              setShowLeads(true);
-            }
+            setActiveTab("executives");
+            setShowLeads(true);
           }}
           className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 ${
             activeTab === "executives"
@@ -220,7 +244,7 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
             <CompanyLogoFallback
               name={company.name}
               logo={company.logo}
-              size="lg"
+              size="md"
             />
             <div className="flex-1">
               <h3 className="text-lg font-semibold text-white mb-1">
@@ -229,7 +253,7 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
               {/* Website below name */}
               {company.website && (
                 <div className="flex items-center gap-2 text-white/80">
-                  <Globe className="w-4 h-4" />
+                  {/* <Globe className="w-4 h-4" /> */}
                   <a
                     href={getFullUrl(company.website)}
                     target="_blank"
@@ -251,7 +275,7 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
                   href={getFullUrl(companyLinkedIn || undefined)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center w-8 h-8 rounded-full bg-[#0A66C2] text-white hover:bg-[#0A66C2]/80 transition-colors"
+                  className="flex items-center justify-center w-8 h-8 rounded-full border border-white bg-white text-gray-900 transition-colors"
                   title="LinkedIn"
                 >
                   <Linkedin className="w-4 h-4" />
@@ -262,7 +286,7 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
                   href={getFullUrl(company.facebook || undefined)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center w-8 h-8 rounded-full bg-[#1877F2] text-white hover:bg-[#1877F2]/80 transition-colors"
+                  className="flex items-center justify-center w-8 h-8 rounded-full border border-white bg-white text-gray-900 transition-colors"
                   title="Facebook"
                 >
                   <Facebook className="w-4 h-4" />
@@ -271,7 +295,7 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
               {hasPhone && (
                 <a
                   href={`tel:${company.phone}`}
-                  className="flex items-center justify-center w-8 h-8 rounded-full bg-white/15 text-white hover:bg-white/25 transition-colors border border-white/20"
+                  className="flex items-center justify-center w-8 h-8 rounded-full border border-white bg-white text-gray-900 transition-colors"
                   title={company.phone || "Phone"}
                 >
                   <Phone className="w-4 h-4" />
@@ -286,6 +310,60 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
               <p className="text-sm text-white/80 leading-relaxed">
                 {company.description || company.about}
               </p>
+            </div>
+          )}
+
+          {/* Address */}
+          {company.address && (
+            <div className="mb-4">
+              <div className="flex items-start gap-2 mb-2">
+                <MapPin className="w-4 h-4 text-white/70 mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm text-white/80 leading-relaxed">
+                    {company.address}
+                  </p>
+                </div>
+              </div>
+              {/* Google Maps Embed */}
+              {getGoogleMapsEmbedUrl(company.address) && (
+                <div
+                  className="relative w-full h-32 rounded-lg overflow-hidden border border-white/10 cursor-pointer group"
+                  onClick={() => {
+                    const mapsUrl = getGoogleMapsUrl(company.address);
+                    if (mapsUrl) {
+                      window.open(mapsUrl, "_blank");
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      const mapsUrl = getGoogleMapsUrl(company.address);
+                      if (mapsUrl) {
+                        window.open(mapsUrl, "_blank");
+                      }
+                    }
+                  }}
+                  title="Click to open in Google Maps"
+                >
+                  <iframe
+                    src={getGoogleMapsEmbedUrl(company.address) || ""}
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    allowFullScreen
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    className="pointer-events-none"
+                  />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                    <span className="text-xs text-white/0 group-hover:text-white/80 font-medium bg-black/50 px-3 py-1.5 rounded-lg">
+                      Click to open in Google Maps
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
