@@ -191,7 +191,7 @@ export const useLeadStageWebSocket = (leadId: string | null | undefined) => {
           } else if (message.type === "error") {
             console.error("[WebSocket] Error:", message.message);
           } else {
-            console.log("[WebSocket] 📨 Unknown message type:", message.type);
+            console.log("[WebSocket] Unknown message type:", message.type);
           }
         } catch (error) {
           console.error("Error parsing WebSocket message:", error);
@@ -203,7 +203,7 @@ export const useLeadStageWebSocket = (leadId: string | null | undefined) => {
       };
 
       ws.onclose = (event) => {
-        console.log("[WebSocket] 🔌 Connection closed:", {
+        console.log("[WebSocket] Connection closed:", {
           code: event.code,
           reason: event.reason || "No reason provided",
           wasClean: event.wasClean,
