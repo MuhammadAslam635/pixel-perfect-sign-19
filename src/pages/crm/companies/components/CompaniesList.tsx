@@ -431,20 +431,24 @@ const CompaniesList: FC<CompaniesListProps> = ({
           <div className="flex flex-col gap-0.5 flex-1 min-w-0">
             {/* First Row: Company Name */}
             <h3 className="text-xs sm:text-sm font-semibold text-white leading-tight flex items-center gap-2 min-w-0">
-              <span className="overflow-hidden text-ellipsis whitespace-nowrap min-w-0 flex-1">
-                {company.name}
-              </span>
+              {company.website ? (
+                <a
+                  href={getFullUrl(company.website)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="overflow-hidden text-ellipsis whitespace-nowrap min-w-0 flex-1 hover:underline transition-colors cursor-pointer"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {company.name}
+                </a>
+              ) : (
+                <span className="overflow-hidden text-ellipsis whitespace-nowrap min-w-0 flex-1">
+                  {company.name}
+                </span>
+              )}
               {company.createdAt && isCreatedToday(company.createdAt) && (
                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-gradient-to-r from-green-500 to-emerald-500 text-white flex-shrink-0">
                   NEW
-                </span>
-              )}
-              {company.website && (
-                <span className="inline-flex items-center gap-1 flex-shrink-0">
-                  <span className="text-[6px] text-white/80">🌐</span>
-                  <span className="text-[10px] sm:text-xs text-white/70 whitespace-nowrap">
-                    {formatWebsiteUrl(company.website)}
-                  </span>
                 </span>
               )}
             </h3>
@@ -508,9 +512,21 @@ const CompaniesList: FC<CompaniesListProps> = ({
       >
         <div className="flex-1">
           <div className="flex flex-wrap items-center gap-2 text-white/90">
-            <div className="text-xs sm:text-sm font-semibold text-white text-center sm:text-left sm:mx-0 mx-auto">
-              {company.name}
-            </div>
+            {company.website ? (
+              <a
+                href={getFullUrl(company.website)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs sm:text-sm font-semibold text-white text-center sm:text-left sm:mx-0 mx-auto hover:underline transition-colors cursor-pointer"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {company.name}
+              </a>
+            ) : (
+              <div className="text-xs sm:text-sm font-semibold text-white text-center sm:text-left sm:mx-0 mx-auto">
+                {company.name}
+              </div>
+            )}
             {company.createdAt && isCreatedToday(company.createdAt) && (
               <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-gradient-to-r from-green-500 to-emerald-500 text-white">
                 NEW
@@ -563,23 +579,6 @@ const CompaniesList: FC<CompaniesListProps> = ({
                 )}
               </div>
               <div className="flex flex-row gap-2 items-center justify-end text-white/80">
-                {(company.website || primaryEmail) && (
-                  <p className="text-xs sm:text-sm font-semibold text-white/75 text-right break-words">
-                    {company.website && (
-                      <span className="text-white/85">
-                        {formatWebsiteUrl(company.website)}
-                      </span>
-                    )}
-                    {company.website && primaryEmail && (
-                      <span className="mx-2 text-white/40">|</span>
-                    )}
-                    {primaryEmail && (
-                      <span className="text-white/70 break-all">
-                        {primaryEmail}
-                      </span>
-                    )}
-                  </p>
-                )}
                 {company.address && (
                   <p className="text-xs text-white/55 text-right max-w-[220px]">
                     {company.address}
@@ -615,29 +614,6 @@ const CompaniesList: FC<CompaniesListProps> = ({
         <div className="w-full md:w-[240px] lg:w-[260px] flex flex-col items-center md:items-end gap-0.5 sm:gap-1 md:gap-2 text-white/80 md:ml-4 lg:ml-8">
           {viewMode === "detailed" && (
             <div className="hidden md:flex flex-row md:flex-col gap-1.5 md:gap-1 items-center md:items-end">
-              {(company.website || primaryEmail) && (
-                <p className="text-xs sm:text-sm font-semibold text-white/75 text-center md:text-right break-words flex-1 md:flex-none">
-                  {company.website && (
-                    <a
-                      href={getFullUrl(company.website)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-white/85 hover:text-white hover:underline transition-colors"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {formatWebsiteUrl(company.website)}
-                    </a>
-                  )}
-                  {/* {company.website && primaryEmail && (
-                    <span className="mx-2 text-white/40">|</span>
-                  )}
-                  {primaryEmail && (
-                    <span className="text-white/70 break-all">
-                      {primaryEmail}
-                    </span>
-                  )} */}
-                </p>
-              )}
               {company.country && (
                 <p className="text-xs text-white/55 text-center md:text-right max-w-full md:max-w-[220px] flex-1 md:flex-none">
                   {company.country}
