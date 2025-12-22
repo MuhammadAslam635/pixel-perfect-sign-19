@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Send, X, Plus, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { connectionMessagesService } from "@/services/connectionMessages.service";
+import { leadsService } from "@/services/leads.service";
 import { useToast } from "@/hooks/use-toast";
 import { ActiveNavButton } from "@/components/ui/primary-btn";
 import { EmailTemplates } from "@/utils/emailTemplates";
@@ -115,57 +116,84 @@ export const EmailComposer = ({
       // Get the first recipient email
       const recipientEmail = to[0];
 
-      // Strip HTML tags to get plain text for enhancement
-      const plainText = body.replace(/<[^>]*>/g, "").trim();
+      // First, try to find the lead by email to get companyId and personId
+      const leadResponse = await leadsService.findLeadByEmail(recipientEmail);
 
-      // Call enhance endpoint with recipient email
-      // Backend will automatically check if recipient is a lead and generate personalized content
-      const response = await connectionMessagesService.enhanceEmailContent({
-        content: plainText || "", // Allow empty content if recipient is a lead
+      if (!leadResponse.success || !leadResponse.data.lead) {
+        toast({
+          title: "Lead not found",
+          description:
+            "The recipient must be a lead in your CRM to generate personalized emails using knowledge base context.",
+          variant: "destructive",
+        });
+        setIsEnhancing(false);
+        return;
+      }
+
+      const lead = leadResponse.data.lead;
+
+      if (!lead.companyId || !lead._id) {
+        toast({
+          title: "Incomplete lead information",
+          description:
+            "Lead information is incomplete for generating suggestions.",
+          variant: "destructive",
+        });
+        setIsEnhancing(false);
+        return;
+      }
+
+      // Use generateEmailMessage with knowledge base context (like LeadChat)
+      const response = await connectionMessagesService.generateEmailMessage({
+        companyId: lead.companyId,
+        personId: lead._id,
         tone: "professional",
-        recipientEmail: recipientEmail,
       });
 
       if (response.success) {
-        const data = response.data;
-
-        // Check if this was personalized for a lead
-        if (data.recipientInfo?.isLead) {
-          toast({
-            title: "Personalized email generated!",
-            description: `Created personalized email for ${data.recipientInfo.name} based on their profile and history.`,
-          });
-        } else {
-          toast({
-            title: "Content enhanced!",
-            description: "Your message has been improved with AI assistance.",
-          });
-        }
+        const emailData = response.data.email;
 
         // Set subject if provided and current subject is empty
-        if (data.subject && !subject.trim()) {
-          setSubject(data.subject);
+        const generatedSubject = emailData.subject?.trim() || "Email";
+        if (!subject.trim()) {
+          setSubject(generatedSubject);
         }
 
-        // Set body with HTML content if available, otherwise convert plain text to HTML
-        const enhancedHtml =
-          data.enhancedContentHtml ||
-          data.enhancedContent
+        // Prefer HTML body, fallback to plain text converted to HTML
+        let generatedBody = emailData.bodyHtml?.trim();
+
+        if (!generatedBody && emailData.body?.trim()) {
+          // Convert plain text to HTML paragraphs
+          const plainText = emailData.body.trim();
+          generatedBody = plainText
             .split("\n\n")
             .map((paragraph) => paragraph.trim())
             .filter((paragraph) => paragraph.length > 0)
             .map((paragraph) => `<p>${paragraph.replace(/\n/g, "<br>")}</p>`)
             .join("");
+        }
 
-        setBody(enhancedHtml);
+        if (generatedBody) {
+          setBody(generatedBody);
+          toast({
+            title: "Email generated!",
+            description: `Created personalized email for ${lead.name} based on their profile and knowledge base context.`,
+          });
+        } else {
+          throw new Error("No message suggestion was generated. Try again.");
+        }
       } else {
-        throw new Error(response.message || "Failed to enhance content");
+        throw new Error(response.message || "Failed to generate email");
       }
-    } catch (error) {
-      console.error("AI enhancement error:", error);
+    } catch (error: any) {
+      console.error("AI generation error:", error);
+      const friendlyMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to generate a connection message.";
       toast({
-        title: "Enhancement failed",
-        description: "Unable to enhance your content. Please try again.",
+        title: "Generation failed",
+        description: friendlyMessage,
         variant: "destructive",
       });
     } finally {
