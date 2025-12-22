@@ -3,8 +3,9 @@ import { setAuthToken, clearAuthData } from "@/utils/authHelpers";
 
 // Authentication API Service
 export interface RegisterData {
-  name: string;
-  industry?: string;
+  firstName: string;
+  lastName: string;
+  name: string; // Company Name
   email: string;
   password: string;
   confirm_password: string;

@@ -12,8 +12,9 @@ import {
 } from "@/services/auth.service";
 
 const SignUp = () => {
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [companyName, setCompanyName] = useState("");
-  const [industry, setIndustry] = useState("");
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
@@ -22,6 +23,8 @@ const SignUp = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({
+    firstName: "",
+    lastName: "",
     companyName: "",
     fullName: "",
     email: "",
@@ -81,11 +84,14 @@ const SignUp = () => {
 
     // Update field value
     switch (field) {
+      case "firstName":
+        setFirstName(value);
+        break;
+      case "lastName":
+        setLastName(value);
+        break;
       case "companyName":
         setCompanyName(value);
-        break;
-      case "industry":
-        setIndustry(value);
         break;
       case "email":
         setEmail(value);
@@ -108,6 +114,8 @@ const SignUp = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({
+      firstName: "",
+      lastName: "",
       companyName: "",
       fullName: "",
       email: "",
@@ -117,6 +125,8 @@ const SignUp = () => {
 
     // Validate all fields
     const newErrors = {
+      firstName: "",
+      lastName: "",
       companyName: "",
       fullName: "",
       email: "",
@@ -194,6 +204,15 @@ const SignUp = () => {
       return;
     }
 
+    if (!firstName.trim()) {
+      newErrors.firstName = "First name is required";
+      hasError = true;
+    }
+    if (!lastName.trim()) {
+      newErrors.lastName = "Last name is required";
+      hasError = true;
+    }
+
     if (!companyName) {
       newErrors.companyName = "Company name is required";
       hasError = true;
@@ -226,8 +245,9 @@ const SignUp = () => {
 
     try {
       const response = await authService.register({
+        firstName,
+        lastName,
         name: companyName,
-        industry: industry || "",
         email,
         password,
         confirm_password: confirmPassword,
@@ -238,8 +258,9 @@ const SignUp = () => {
           response.message ||
             "Verification email sent! Please check your inbox."
         );
+        setFirstName("");
+        setLastName("");
         setCompanyName("");
-        setIndustry("");
         setEmail("");
         setPassword("");
         setConfirmPassword("");
@@ -362,6 +383,51 @@ const SignUp = () => {
           </>
         ) : (
           <>
+            <div className="flex gap-4">
+              <div className="space-y-2 w-1/2">
+                <Label
+                  htmlFor="firstName"
+                  className="text-base font-light text-white"
+                >
+                  First Name
+                </Label>
+                <AuthInput
+                  id="firstName"
+                  type="text"
+                  name="firstName"
+                  placeholder="First Name"
+                  value={firstName}
+                  onChange={(e) => handleChange(e, "firstName")}
+                  className="text-base font-normal text-white/70"
+                  disabled={isFormDisabled}
+                />
+                {errors.firstName && (
+                  <p className="text-sm text-red-400">{errors.firstName}</p>
+                )}
+              </div>
+              <div className="space-y-2 w-1/2">
+                <Label
+                  htmlFor="lastName"
+                  className="text-base font-light text-white"
+                >
+                  Last Name
+                </Label>
+                <AuthInput
+                  id="lastName"
+                  type="text"
+                  name="lastName"
+                  placeholder="Last Name"
+                  value={lastName}
+                  onChange={(e) => handleChange(e, "lastName")}
+                  className="text-base font-normal text-white/70"
+                  disabled={isFormDisabled}
+                />
+                {errors.lastName && (
+                  <p className="text-sm text-red-400">{errors.lastName}</p>
+                )}
+              </div>
+            </div>
+
             <div className="space-y-2">
               <Label
                 htmlFor="companyName"
@@ -384,21 +450,7 @@ const SignUp = () => {
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="industry" className="text-base font-light text-white">
-                Industry (Optional)
-              </Label>
-              <AuthInput
-                id="industry"
-                type="text"
-                name="industry"
-                placeholder="Enter Your Industry Name"
-                value={industry}
-                onChange={(e) => handleChange(e, "industry")}
-                className="text-base font-normal text-white/70"
-                disabled={isFormDisabled}
-              />
-            </div>
+
 
             <div className="space-y-2">
               <Label htmlFor="email" className="text-base font-light text-white">
