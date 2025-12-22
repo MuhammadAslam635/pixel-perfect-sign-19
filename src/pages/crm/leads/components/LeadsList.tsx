@@ -577,6 +577,22 @@ const LeadsList: FC<LeadsListProps> = ({
               </Tooltip>
             </div>
           </div>
+
+          {/* Delete Icon - Bottom Right */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                className="absolute bottom-2 right-2 z-10 h-6 w-6 rounded-full flex items-center justify-center border border-white bg-white text-gray-900 hover:bg-white/80 hover:text-gray-950 transition-colors duration-200"
+                onClick={(e) => handleDeleteClick(lead, e)}
+                aria-label="Delete lead"
+              >
+                <Trash2 className="w-3 h-3" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Delete lead</p>
+            </TooltipContent>
+          </Tooltip>
         </Card>
       );
     }
@@ -823,6 +839,22 @@ const LeadsList: FC<LeadsListProps> = ({
             </div>
           )}
           <div className="flex items-center gap-1.5">
+            {viewMode === "compact" && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    className="h-6 w-6 rounded-full flex items-center justify-center border border-white bg-white text-gray-900 hover:bg-white/80 hover:text-gray-950 transition-colors duration-200"
+                    onClick={(e) => handleDeleteClick(lead, e)}
+                    aria-label="Delete lead"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent sideOffset={8}>
+                  <p>Delete lead</p>
+                </TooltipContent>
+              </Tooltip>
+            )}
             <ActiveNavButton
               icon={ArrowRight}
               text="View Details"
