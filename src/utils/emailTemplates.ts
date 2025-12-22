@@ -112,14 +112,52 @@ export class EmailTemplates {
       .replace(/\s+/g, " ") // Normalize whitespace
       .trim();
 
+    // Add inline text-align: left to all block elements for Gmail compatibility
+    // Gmail often ignores <style> tags, so inline styles are more reliable
+    const blockElements = [
+      "p",
+      "div",
+      "h1",
+      "h2",
+      "h3",
+      "h4",
+      "h5",
+      "h6",
+      "li",
+      "ul",
+      "ol",
+      "blockquote",
+      "pre",
+    ];
+
+    blockElements.forEach((tag) => {
+      // Replace tags without attributes: <p> -> <p style="text-align: left;">
+      cleanHtml = cleanHtml.replace(
+        new RegExp(`<${tag}>`, "gi"),
+        `<${tag} style="text-align: left;">`
+      );
+      // Replace tags with attributes but no style attribute
+      cleanHtml = cleanHtml.replace(
+        new RegExp(`<${tag}([^>]*?)>`, "gi"),
+        (match) => {
+          // Check if style already exists in the tag
+          if (!match.toLowerCase().includes("style=")) {
+            // Add style attribute before the closing >
+            return match.replace(/>$/, ' style="text-align: left;">');
+          }
+          return match;
+        }
+      );
+    });
+
     // Ensure proper paragraph structure
     if (
-      !cleanHtml.includes("<p>") &&
-      !cleanHtml.includes("<div>") &&
+      !cleanHtml.includes("<p") &&
+      !cleanHtml.includes("<div") &&
       !cleanHtml.includes("<h")
     ) {
-      // If no block elements, wrap in paragraph
-      cleanHtml = `<p>${cleanHtml}</p>`;
+      // If no block elements, wrap in paragraph with inline style
+      cleanHtml = `<p style="text-align: left;">${cleanHtml}</p>`;
     }
 
     // Create the full HTML email template
@@ -144,6 +182,7 @@ export class EmailTemplates {
             line-height: 1.6;
             color: #333;
             background-color: #ffffff;
+            text-align: left;
         }
 
         /* Email container */
@@ -152,6 +191,7 @@ export class EmailTemplates {
             margin: 0 auto;
             background-color: #ffffff;
             padding: 20px;
+            text-align: left;
         }
 
         /* Content styling */
@@ -159,11 +199,13 @@ export class EmailTemplates {
             font-size: 16px;
             line-height: 1.6;
             color: #333;
+            text-align: left;
         }
 
         .email-content p {
             margin: 0 0 1em 0;
             padding: 0;
+            text-align: left;
         }
 
         .email-content h1, .email-content h2, .email-content h3,
@@ -171,6 +213,7 @@ export class EmailTemplates {
             margin: 1.5em 0 0.5em 0;
             padding: 0;
             line-height: 1.2;
+            text-align: left;
         }
 
         .email-content h1 { font-size: 28px; }
@@ -232,9 +275,9 @@ export class EmailTemplates {
         }
     </style>
 </head>
-<body>
-    <div class="email-container">
-        <div class="email-content">
+<body style="text-align: left; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; line-height: 1.6; color: #333; background-color: #ffffff;">
+    <div class="email-container" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px; text-align: left;">
+        <div class="email-content" style="font-size: 16px; line-height: 1.6; color: #333; text-align: left;">
             ${cleanHtml}
         </div>
     </div>
@@ -264,7 +307,7 @@ export class EmailTemplates {
 
         if (lines.length === 1) {
           // Single line paragraph
-          return `<p style="margin: 0 0 1em 0; line-height: 1.6; color: #333; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;">${this.escapeHtml(
+          return `<p style="margin: 0 0 1em 0; line-height: 1.6; color: #333; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; text-align: left;">${this.escapeHtml(
             lines[0]
           )}</p>`;
         } else {
@@ -272,7 +315,7 @@ export class EmailTemplates {
           const formattedLines = lines.map((line) =>
             this.escapeHtml(line.trim())
           );
-          return `<p style="margin: 0 0 1em 0; line-height: 1.6; color: #333; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;">${formattedLines.join(
+          return `<p style="margin: 0 0 1em 0; line-height: 1.6; color: #333; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; text-align: left;">${formattedLines.join(
             "<br>"
           )}</p>`;
         }
@@ -301,6 +344,7 @@ export class EmailTemplates {
             line-height: 1.6;
             color: #333;
             background-color: #ffffff;
+            text-align: left;
         }
 
         /* Email container */
@@ -309,6 +353,7 @@ export class EmailTemplates {
             margin: 0 auto;
             background-color: #ffffff;
             padding: 20px;
+            text-align: left;
         }
 
         /* Content styling */
@@ -316,11 +361,13 @@ export class EmailTemplates {
             font-size: 16px;
             line-height: 1.6;
             color: #333;
+            text-align: left;
         }
 
         .email-content p {
             margin: 0 0 1em 0;
             padding: 0;
+            text-align: left;
         }
 
         .email-content p:last-child {
@@ -349,9 +396,9 @@ export class EmailTemplates {
         }
     </style>
 </head>
-<body>
-    <div class="email-container">
-        <div class="email-content">
+<body style="text-align: left; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; line-height: 1.6; color: #333; background-color: #ffffff;">
+    <div class="email-container" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px; text-align: left;">
+        <div class="email-content" style="font-size: 16px; line-height: 1.6; color: #333; text-align: left;">
             ${formattedParagraphs}
         </div>
     </div>
@@ -387,6 +434,7 @@ export class EmailTemplates {
     }
 
     const cleanText = text.trim();
+
     const paragraphs = cleanText
       .split("\n\n")
       .filter((p) => p.trim().length > 0);
@@ -397,14 +445,14 @@ export class EmailTemplates {
           .split("\n")
           .filter((line) => line.trim().length > 0);
         if (lines.length === 1) {
-          return `<p style="margin: 0 0 1em 0; line-height: 1.6; color: #333; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;">${this.escapeHtml(
+          return `<p style="margin: 0 0 1em 0; line-height: 1.6; color: #333; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; text-align: left;">${this.escapeHtml(
             lines[0]
           )}</p>`;
         } else {
           const formattedLines = lines.map((line) =>
             this.escapeHtml(line.trim())
           );
-          return `<p style="margin: 0 0 1em 0; line-height: 1.6; color: #333; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;">${formattedLines.join(
+          return `<p style="margin: 0 0 1em 0; line-height: 1.6; color: #333; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; text-align: left;">${formattedLines.join(
             "<br>"
           )}</p>`;
         }

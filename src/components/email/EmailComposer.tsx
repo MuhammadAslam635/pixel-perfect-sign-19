@@ -184,10 +184,27 @@ export const EmailComposer = ({
       }}
     >
       <div className="flex flex-col h-full relative z-10">
-        <div className="p-6 pb-4 border-b border-white/10">
+        <div className="p-6 pb-4 border-b border-white/10 flex items-center justify-between">
           <h2 className="text-xl font-semibold text-white">
             {threadId ? "Reply" : "Compose Email"}
           </h2>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={onCancel}
+              disabled={isLoading}
+              className="border-white/30 text-white hover:bg-white/10 rounded-lg"
+            >
+              Cancel
+            </Button>
+            <ActiveNavButton
+              icon={Send}
+              text={isLoading ? "Sending..." : "Send"}
+              onClick={handleSend}
+              disabled={isLoading || to.length === 0 || !subject.trim()}
+              className="flex items-center gap-2"
+            />
+          </div>
         </div>
         <div className="flex flex-col gap-4 p-6 overflow-y-auto scrollbar-hide max-h-[calc(100vh-300px)]">
           <div className="space-y-3">
@@ -395,24 +412,6 @@ export const EmailComposer = ({
               placeholder="Write your message here..."
               height="300px"
               className="min-h-[200px] placeholder:text-white/40"
-            />
-          </div>
-
-          <div className="flex items-center justify-between pt-4 border-t border-white/10 mt-4">
-            <Button
-              variant="outline"
-              onClick={onCancel}
-              disabled={isLoading}
-              className="border-white/30 text-white hover:bg-white/10 rounded-lg"
-            >
-              Cancel
-            </Button>
-            <ActiveNavButton
-              icon={Send}
-              text={isLoading ? "Sending..." : "Send"}
-              onClick={handleSend}
-              disabled={isLoading || to.length === 0 || !subject.trim()}
-              className="flex items-center gap-2"
             />
           </div>
         </div>
