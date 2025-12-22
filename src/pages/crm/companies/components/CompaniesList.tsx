@@ -465,7 +465,6 @@ const CompaniesList: FC<CompaniesListProps> = ({
             {company.createdAt && (
               <div className="flex items-center gap-1 min-w-0 mt-0.5">
                 <span className="text-[9px] sm:text-[10px] text-white/50">
-                  Scraped:{" "}
                   {new Date(company.createdAt).toLocaleDateString("en-US", {
                     month: "short",
                     day: "numeric",
@@ -480,7 +479,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
           <Tooltip>
             <TooltipTrigger asChild>
               <button
-                className="absolute top-12 right-2 h-6 w-6 sm:h-7 sm:w-7 rounded-full flex items-center justify-center border border-white/20 bg-white/10 text-white hover:bg-white/20 hover:border-white/30 transition-colors duration-200 z-10"
+                className="absolute top-12 right-2 h-6 w-6 sm:h-7 sm:w-7 rounded-full flex items-center justify-center border border-white bg-white text-gray-900 hover:bg-white/80 hover:text-gray-950 transition-colors duration-200 z-10"
                 onClick={(e) => handleDeleteClick(company, e)}
                 aria-label="Delete company"
               >
