@@ -918,7 +918,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
                         ),
                         // Tables with improved styling
                         table: ({ node, ...props }) => (
-                          <div className="my-4 max-w-full overflow-x-auto rounded-lg scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
+                          <div className="my-4 max-w-full overflow-x-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
                             <table
                               style={{
                                 tableLayout: "auto",
