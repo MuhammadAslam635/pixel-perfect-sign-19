@@ -9,6 +9,96 @@ import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import rehypeSanitize from "rehype-sanitize";
 
+// Function to transform markdown tables: make website/domain columns clickable
+const transformCompanyTable = (content: string): string => {
+  // Match markdown tables
+  const tableRegex = /(\|.*\|[\r\n]+(?:\|[-: ]+\|[\r\n]+)?(?:\|.*\|[\r\n]+)*)/g;
+
+  return content.replace(tableRegex, (tableMatch) => {
+    const lines = tableMatch
+      .trim()
+      .split("\n")
+      .filter((line) => line.trim());
+    if (lines.length < 2) return tableMatch; // Need at least header and separator
+
+    // Parse header row
+    const headerRow = lines[0]
+      .split("|")
+      .map((cell) => cell.trim())
+      .filter((cell) => cell);
+    
+    // Find Website or Domain column index
+    const websiteIndex = headerRow.findIndex((header) =>
+      header.toLowerCase().includes("website") || header.toLowerCase().includes("domain")
+    );
+
+    // If no Website/Domain column found, return original table
+    if (websiteIndex === -1) return tableMatch;
+
+    // Find NAME column index
+    const nameIndex = headerRow.findIndex((header) =>
+      header.toLowerCase().includes("name")
+    );
+
+    // Process separator row (second line)
+    const separatorRow = lines[1]
+      .split("|")
+      .map((cell) => cell.trim())
+      .filter((cell) => cell);
+
+    // Process data rows
+    const dataRows = lines.slice(2).map((line) => {
+      const cells = line
+        .split("|")
+        .map((cell) => cell.trim())
+        .filter((cell) => cell);
+      const domainUrl = cells[websiteIndex]?.trim() || "";
+
+      // Make domain/website clickable if it's not already a link
+      if (domainUrl) {
+        // Check if it's already a markdown link
+        const isAlreadyLink = /\[([^\]]+)\]\(([^)]+)\)/.test(domainUrl);
+        
+        if (!isAlreadyLink) {
+          // Clean the domain URL
+          let cleanUrl = domainUrl.trim();
+          
+          // Remove any existing markdown link syntax if present
+          const urlMatch = cleanUrl.match(/\[([^\]]+)\]\(([^)]+)\)/);
+          if (urlMatch) {
+            cleanUrl = urlMatch[2]; // Extract URL from markdown link
+          }
+
+          // Ensure URL has protocol
+          if (
+            cleanUrl &&
+            !cleanUrl.startsWith("http://") &&
+            !cleanUrl.startsWith("https://")
+          ) {
+            cleanUrl = "https://" + cleanUrl;
+          }
+
+          // Replace domain with markdown link
+          if (cleanUrl) {
+            cells[websiteIndex] = `[${domainUrl}](${cleanUrl})`;
+          }
+        }
+      }
+
+      return cells;
+    });
+
+    // Reconstruct the table
+    const newTable = [
+      "| " + headerRow.join(" | ") + " |",
+      "| " + separatorRow.join(" | ") + " |",
+      ...dataRows.map((cells) => "| " + cells.join(" | ") + " |"),
+    ].join("\n");
+
+    return newTable;
+  });
+};
+
 type ChatMessagesProps = {
   chatTitle?: string;
   messages?: ChatMessage[];
@@ -322,11 +412,13 @@ const ChatMessages = ({
                     rehypePlugins={[rehypeRaw, rehypeSanitize]}
                     components={{
                       table: ({ node, ...props }) => (
-                        <div className="my-4 max-w-full overflow-x-auto rounded-lg scrollbar-hide">
+                        <div className="my-4 max-w-full overflow-x-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
                           <table
-                            // let table grow to the width of its content
-                            style={{ tableLayout: "auto", width: "max-content" }}
-                            className="border-collapse text-sm"
+                            style={{
+                              tableLayout: "auto",
+                              width: "max-content",
+                            }}
+                            className="border-collapse text-sm w-full"
                             {...props}
                           />
                         </div>
@@ -370,6 +462,8 @@ const ChatMessages = ({
                       a: ({ node, ...props }) => (
                         <a
                           className="max-w-full break-all text-blue-400 underline hover:text-blue-300"
+                          target="_blank"
+                          rel="noopener noreferrer"
                           {...props}
                         />
                       ),
@@ -394,7 +488,7 @@ const ChatMessages = ({
                       ),
                     }}
                   >
-                    {message.content}
+                    {transformCompanyTable(message.content)}
                   </ReactMarkdown>
                 </div>
               </motion.div>
