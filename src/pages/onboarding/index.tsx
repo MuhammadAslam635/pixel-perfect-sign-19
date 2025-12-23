@@ -6,6 +6,7 @@ import { updateUser } from "@/store/slices/authSlice";
 import { ChevronRight, ChevronLeft, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { onboardingService } from "@/services/onboarding.service";
+import { apolloService } from "@/services/apollo.service";
 import { fetchAndSyncUser } from "@/utils/authSync";
 import {
   OnboardingData,
@@ -43,6 +44,7 @@ const OnboardingPage = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [completing, setCompleting] = useState(false);
+  const [fetchingCompanyInfo, setFetchingCompanyInfo] = useState(false);
   const [onboardingData, setOnboardingData] = useState<OnboardingData | null>(
     null
   );
@@ -286,6 +288,54 @@ const OnboardingPage = () => {
       return;
     }
 
+    // If moving from step 1 to step 2, fetch company info from Apollo API
+    if (currentStep === 1 && formData.website) {
+      try {
+        setFetchingCompanyInfo(true);
+        const result = await apolloService.lookupCompany(formData.website);
+
+        if (result.success && result.data) {
+          // Auto-fill company name and description - always update when new data is fetched
+          // Also clear core offerings and preferred countries for the new company
+          const updates: Partial<OnboardingQuestions> = {};
+
+          if (result.data.companyName) {
+            updates.companyName = result.data.companyName;
+          }
+
+          if (result.data.description) {
+            // Truncate description to max 1000 characters to match validation rules
+            const maxLength = FIELD_VALIDATION_RULES.businessDescription.max;
+            const truncatedDescription =
+              result.data.description.length > maxLength
+                ? result.data.description.substring(0, maxLength).trim() + "..."
+                : result.data.description;
+            updates.businessDescription = truncatedDescription;
+          }
+
+          // Clear core offerings and preferred countries when fetching new company data
+          // User will need to generate/select them again for the new company
+          updates.coreOfferings = [];
+          updates.preferredCountries = "";
+
+          if (Object.keys(updates).length > 0) {
+            updateFormData(updates);
+            toast.success(
+              "Company information fetched successfully! Please generate core offerings and select countries for the new company."
+            );
+          }
+        } else {
+          // Don't show error if company not found - user can still fill manually
+          console.log("Company info not found:", result.error);
+        }
+      } catch (error: any) {
+        console.error("Error fetching company info:", error);
+        // Don't block navigation if API fails - user can fill manually
+      } finally {
+        setFetchingCompanyInfo(false);
+      }
+    }
+
     const saved = await saveProgress("in_progress");
     if (!saved) {
       // Don't proceed if save failed
@@ -396,6 +446,7 @@ const OnboardingPage = () => {
           <CompanyWebsiteStep
             formData={formData}
             updateFormData={updateFormData}
+            onEnterPress={handleNext}
           />
         );
       case 2:
@@ -557,13 +608,13 @@ const OnboardingPage = () => {
                 ) : (
                   <Button
                     onClick={handleNext}
-                    disabled={saving || completing}
+                    disabled={saving || completing || fetchingCompanyInfo}
                     className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:from-cyan-600 hover:to-blue-700 min-w-[120px]"
                   >
-                    {saving ? (
+                    {saving || fetchingCompanyInfo ? (
                       <>
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Saving...
+                        {fetchingCompanyInfo ? "Fetching..." : "Saving..."}
                       </>
                     ) : (
                       "Next"

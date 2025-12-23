@@ -106,4 +106,58 @@ export const onboardingService = {
       throw error;
     }
   },
+
+  /**
+   * Suggest core offerings based on company name and description
+   */
+  suggestCoreOfferings: async (companyName: string, description: string): Promise<{
+    success: boolean;
+    data?: {
+      coreOfferings: string[];
+    };
+    error?: string;
+  }> => {
+    try {
+      const response = await API.post("/onboarding/suggest-core-offerings", {
+        companyName,
+        description,
+      });
+      return response.data;
+    } catch (error: any) {
+      // Return error in a consistent format
+      return {
+        success: false,
+        error: error?.response?.data?.error || error?.message || "Failed to generate core offerings suggestions",
+      };
+    }
+  },
+
+  /**
+   * Generate ICP suggestions based on company information
+   */
+  generateICPSuggestions: async (data: {
+    website: string;
+    companyName?: string;
+    businessDescription?: string;
+  }): Promise<{
+    success: boolean;
+    data?: {
+      suggestions: Array<{
+        title: string;
+        description: string;
+      }>;
+    };
+    error?: string;
+  }> => {
+    try {
+      const response = await API.post("/onboarding/generate-icp", data);
+      return response.data;
+    } catch (error: any) {
+      // Return error in a consistent format
+      return {
+        success: false,
+        error: error?.response?.data?.message || error?.message || "Failed to generate ICP suggestions",
+      };
+    }
+  },
 };
