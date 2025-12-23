@@ -785,10 +785,10 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
               >
                 <div
                   className={cn(
-                    "max-w-[100%] rounded-2xl px-3 py-2 text-sm leading-relaxed shadow-lg sm:max-w-[100%]",
+                    "rounded-2xl px-3 py-2 text-sm leading-relaxed shadow-lg",
                     isAssistant
-                      ? "rounded-bl-md bg-white/5 text-white"
-                      : "rounded-br-md bg-[linear-gradient(226.23deg,_#3E65B4_0%,_#68B3B7_100%)] text-white"
+                      ? "max-w-[90%] sm:max-w-[90%] rounded-bl-md bg-white/5 text-white"
+                      : "max-w-[100%] sm:max-w-[100%] rounded-br-md bg-[linear-gradient(226.23deg,_#3E65B4_0%,_#68B3B7_100%)] text-white"
                   )}
                 >
                   <div className="text-left max-w-none">
