@@ -55,40 +55,83 @@ const OnboardingPage = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [currentStep]);
 
-  // Fetch existing onboarding data on mount
+  // Fetch existing onboarding data on mount - only run once
   useEffect(() => {
+    let isMounted = true;
+
     const fetchOnboarding = async () => {
       try {
         setLoading(true);
         const response = await onboardingService.getOnboarding();
+        console.log("[Onboarding] Fetched data:", response);
+
+        if (!isMounted) return;
+
         if (response.success && response.data) {
           setOnboardingData(response.data);
-          setFormData(response.data.questions || {});
 
-          // If already completed, redirect to dashboard
-          if (
-            response.data.status === "completed" ||
-            response.data.status === "approved"
-          ) {
-            navigate("/dashboard", { replace: true });
-            return;
+          // Ensure we properly load all question data
+          const questions = response.data.questions || {};
+          console.log("[Onboarding] Loading questions:", questions);
+
+          // Set form data with all existing values - ensure we preserve all fields
+          // Make sure to handle all data types correctly (strings, arrays, etc.)
+          if (questions && Object.keys(questions).length > 0) {
+            // Deep copy to ensure we don't lose any nested data
+            const formDataCopy: OnboardingQuestions = {
+              website: questions.website,
+              companyName: questions.companyName,
+              businessDescription: questions.businessDescription,
+              coreOfferings: Array.isArray(questions.coreOfferings)
+                ? [...questions.coreOfferings]
+                : questions.coreOfferings,
+              preferredCountries: questions.preferredCountries,
+              idealCustomerProfile: questions.idealCustomerProfile,
+              existingPartners: questions.existingPartners,
+              dataChannels: questions.dataChannels,
+              differentiators: questions.differentiators,
+            };
+
+            setFormData(formDataCopy);
+            console.log(
+              "[Onboarding] Form data set successfully:",
+              formDataCopy
+            );
+          } else {
+            console.log("[Onboarding] No questions found in response");
           }
+
+          // Allow users to view/edit onboarding even if completed
+          // Removed redirect to dashboard - users can always access onboarding page
+        } else {
+          console.log("[Onboarding] No data found, starting fresh");
         }
       } catch (error: any) {
+        if (!isMounted) return;
+
         // If 404, it means no onboarding exists yet - that's okay, backend will create it on first save
         if (error?.response?.status === 404) {
+          console.log(
+            "[Onboarding] No onboarding record found (404), starting fresh"
+          );
           // Silently ignore 404 errors for new users
           return;
         }
         console.error("Error fetching onboarding:", error);
         toast.error("Failed to load onboarding data");
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchOnboarding();
-  }, [navigate]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, []); // Empty dependency array - only run on mount
 
   const dispatch = useDispatch();
 

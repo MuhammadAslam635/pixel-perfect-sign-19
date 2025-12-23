@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ClipboardCheck, FileText, MessageSquare } from "lucide-react";
@@ -24,6 +25,12 @@ const onboardingSteps = [
 ];
 
 const OnboardingPanel = () => {
+  const navigate = useNavigate();
+
+  const handleTalkToOnboarding = () => {
+    navigate("/onboarding");
+  };
+
   return (
     <div className="space-y-6 text-white">
       <Card className="bg-transparent p-0 border-none">
@@ -66,6 +73,7 @@ const OnboardingPanel = () => {
               with configuration, or answer any workflow questions.
             </p>
             <Button
+              onClick={handleTalkToOnboarding}
               className="mt-3 text-[10px] h-8 bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3]"
               style={{
                 boxShadow:
