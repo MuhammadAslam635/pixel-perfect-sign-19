@@ -245,7 +245,28 @@ const LeadsScoreDistributionCard = () => {
     fill: opt.color,
   }));
 
-  const donutDataNonZero = donutData.filter((d) => d.value > 0);
+  // Check if all values are zero
+  const allValuesZero = donutData.every((d) => d.value === 0);
+  
+  // If all values are zero, use equal values (1) to ensure chart renders as equal segments
+  const chartData = allValuesZero
+    ? donutData.map((d) => ({ ...d, value: 1 }))
+    : donutData;
+
+  // Custom tooltip that shows 0 when all values are zero
+  const CustomTooltip = ({ active, payload }: any) => {
+    if (!active || !payload || !payload.length) return null;
+    
+    const data = payload[0].payload;
+    const displayValue = allValuesZero ? 0 : data.value;
+    
+    return (
+      <div className="rounded-lg bg-[#212121] px-4 py-2 text-center text-white shadow-lg border border-white/10">
+        <p className="text-xs text-[#7A7A7A] font-medium mb-1">{data.name}</p>
+        <p className="text-base font-normal">{displayValue.toLocaleString()}</p>
+      </div>
+    );
+  };
 
   return (
     <div className="col-span-2 grid grid-cols-2 gap-4">
@@ -409,9 +430,9 @@ const LeadsScoreDistributionCard = () => {
                   className="h-full w-full aspect-square"
                 >
                   <PieChart>
-                    <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                    <ChartTooltip cursor={false} content={<CustomTooltip />} />
                     <Pie
-                      data={donutDataNonZero.length ? donutDataNonZero : donutData}
+                      data={chartData}
                       dataKey="value"
                       nameKey="name"
                       // Filled pie (no donut hole) per design request
@@ -419,8 +440,12 @@ const LeadsScoreDistributionCard = () => {
                       outerRadius={44}
                       strokeWidth={0}
                     >
-                      {(donutDataNonZero.length ? donutDataNonZero : donutData).map((entry) => (
-                        <Cell key={entry.key} fill={entry.fill} fillOpacity={0.9} />
+                      {chartData.map((entry) => (
+                        <Cell 
+                          key={entry.key} 
+                          fill={entry.fill} 
+                          fillOpacity={allValuesZero ? 0.3 : 0.9}
+                        />
                       ))}
                     </Pie>
                   </PieChart>
