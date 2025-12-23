@@ -87,7 +87,7 @@ const UserEdit = () => {
           setMailgunDomain(domain);
         }
       } catch (error: any) {
-        console.log("Mailgun not configured or not accessible");
+        // Mailgun not configured or not accessible
       }
     };
 

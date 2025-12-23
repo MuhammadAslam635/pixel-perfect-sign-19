@@ -102,35 +102,15 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
   });
 
   const meetings = meetingsResponse?.data || [];
-  
-  // Debug: Log meetings received from API
-  console.log("[MeetingBotTab] Meetings received from API", {
-    count: meetings.length,
-    meetings: meetings.map(m => ({
-      id: m._id,
-      subject: m.subject,
-      endDateTime: m.endDateTime,
-      recallStatus: m.recall?.status,
-      hasSessionId: Boolean(m.recall?.sessionId),
-      hasRecordingUrl: Boolean(m.recall?.recordingUrl),
-      hasTranscriptUrl: Boolean(m.recall?.transcriptUrl),
-    })),
-  });
 
   // Filter and sort meetings: show past meetings that have Recall integration
   // Show meetings as soon as they end, even if recording/transcript isn't ready yet
   const meetingsWithRecordings = useMemo(() => {
     const currentTime = Date.now(); // Always use current time, not stale timestamp
-    console.log("[MeetingBotTab] Filtering meetings", {
-      totalMeetings: meetings.length,
-      currentTime: new Date(currentTime).toISOString(),
-      currentTimestamp: currentTime,
-    });
     
     const filtered = meetings
       .filter((m) => {
         if (!m.endDateTime) {
-          console.log("[MeetingBotTab] Meeting missing endDateTime", { meetingId: m._id, subject: m.subject });
           return false;
         }
         
@@ -159,31 +139,6 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
         // Show if: (meeting ended AND has recall data) OR (has active bot AND meeting has started)
         const shouldShow = (isPast && hasRecallData) || (hasSessionId && hasStarted);
         
-        if (!shouldShow) {
-          console.log("[MeetingBotTab] Meeting filtered out", {
-            meetingId: m._id,
-            subject: m.subject,
-            startDateTime: m.startDateTime,
-            endDateTime: m.endDateTime,
-            endTimestamp: meetingEnd,
-            currentTimestamp: currentTime,
-            timeDiff: currentTime - meetingEnd,
-            isPast,
-            recallStatus,
-            hasSessionId,
-            hasRecallData,
-          });
-        } else {
-          console.log("[MeetingBotTab] Meeting WILL SHOW", {
-            meetingId: m._id,
-            subject: m.subject,
-            endDateTime: m.endDateTime,
-            isPast,
-            recallStatus,
-            hasRecallData,
-          });
-        }
-        
         return shouldShow;
       })
       .sort((a, b) => {
@@ -191,11 +146,6 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
         const bTime = new Date(b.endDateTime).getTime();
         return bTime - aTime; // Most recent first
       });
-    
-    console.log("[MeetingBotTab] Filtered meetings", {
-      filteredCount: filtered.length,
-      meetingIds: filtered.map(m => m._id),
-    });
     
     return filtered;
   }, [meetings]);
@@ -232,15 +182,6 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
       // ALWAYS fetch from API to get latest data from Recall
       const response = await calendarService.getMeetingRecording(meetingId);
       const data = response.data;
-      console.log("📥 [MeetingBotTab] Received recording data", {
-        meetingId,
-        hasTranscriptUrl: Boolean(data.transcriptUrl),
-        hasTranscriptText: Boolean(data.transcriptText),
-        transcriptTextLength: data.transcriptText?.length || 0,
-        transcriptStatus: data.transcriptStatus,
-        transcriptProvider: data.transcriptProvider,
-        hasRecordingUrl: Boolean(data.recordingUrl),
-      });
       setRecordingData((prev) => ({ ...prev, [meetingId]: data as MeetingRecordingData }));
       
       // If we have transcriptText, set it immediately

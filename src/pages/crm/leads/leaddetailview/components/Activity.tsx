@@ -542,13 +542,6 @@ const Activity: FC<ActivityProps> = ({
       search: leadsSearch || undefined,
       companyId: lead?.companyId || undefined, // Filter by the current lead's company
     };
-    console.log("Leads Query Params:", params);
-    console.log("Current Lead:", {
-      id: lead?._id,
-      name: lead?.name,
-      companyId: lead?.companyId,
-      companyName: lead?.companyName,
-    });
     return params;
   }, [leadsSearch, lead?.companyId, lead?._id, lead?.name, lead?.companyName]);
   const { query: leadsQuery, leads: fetchedLeads } = useLeadsData(
@@ -566,29 +559,6 @@ const Activity: FC<ActivityProps> = ({
     // Filter to only include leads with the exact same company name
     return fetchedLeads.filter((l) => l.companyName === lead.companyName);
   }, [fetchedLeads, lead?.companyName]);
-
-  // Debug logging for fetched leads
-  useEffect(() => {
-    if (fetchedLeads && fetchedLeads.length > 0) {
-      console.log(
-        "Fetched Leads:",
-        fetchedLeads.map((l) => ({
-          id: l._id,
-          name: l.name,
-          companyId: l.companyId,
-          companyName: l.companyName,
-        }))
-      );
-      console.log(
-        "Filtered Leads:",
-        filteredLeads.map((l) => ({
-          id: l._id,
-          name: l.name,
-          companyName: l.companyName,
-        }))
-      );
-    }
-  }, [fetchedLeads, filteredLeads]);
 
   const { mutate: createFollowupPlan, isPending: isCreatingFollowupPlan } =
     useCreateFollowupPlan();

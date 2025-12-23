@@ -115,55 +115,6 @@ const PromptsPage = () => {
         };
       });
 
-      // Debug: Log prompt types with detailed breakdown
-      console.log("Admin Prompts Debug Info:");
-      console.log("├─ Total prompts fetched:", promptsWithCompanyInfo.length);
-      console.log(
-        "├─ 🌐 Global prompts:",
-        promptsWithCompanyInfo.filter((p) => !p.companyId).length
-      );
-      console.log(
-        "└─ Company-specific prompts:",
-        promptsWithCompanyInfo.filter((p) => p.companyId).length
-      );
-
-      // Log breakdown by type
-      const promptsByType = {
-        linkedin: promptsWithCompanyInfo.filter(
-          (p) => p.promptType === "linkedin"
-        ).length,
-        email: promptsWithCompanyInfo.filter((p) => p.promptType === "email")
-          .length,
-        phone: promptsWithCompanyInfo.filter((p) => p.promptType === "phone")
-          .length,
-        whatsapp: promptsWithCompanyInfo.filter(
-          (p) => p.promptType === "whatsapp"
-        ).length,
-      };
-      console.log("📈 Prompts by type:", promptsByType);
-
-      // If company-specific prompts exist, log their details
-      const companySpecificPrompts = promptsWithCompanyInfo.filter(
-        (p) => p.companyId
-      );
-      if (companySpecificPrompts.length > 0) {
-        console.log("Company-specific prompt details:");
-        companySpecificPrompts.forEach((p, idx) => {
-          console.log(`   ${idx + 1}. ${p.promptType} - ${p.promptCategory}:`, {
-            promptId: p._id,
-            companyId:
-              typeof p.companyId === "object" ? p.companyId._id : p.companyId,
-            companyName:
-              p.company?.name ||
-              (typeof p.companyId === "object" ? p.companyId.name : "Unknown"),
-            isActive: p.isActive,
-          });
-        });
-      } else {
-        console.log(
-          "No company-specific prompts found. All prompts are global."
-        );
-      }
 
       setPrompts(promptsWithCompanyInfo);
       updateStatistics(promptsWithCompanyInfo);

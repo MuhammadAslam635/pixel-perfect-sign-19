@@ -123,15 +123,6 @@ const index = () => {
     totalCompanies: filteredTotalCompanies,
   } = useCompaniesData(companiesParams);
 
-  console.log("[CompaniesPage:Data] Companies data from hook:", {
-    isLoading: companiesQuery.isLoading,
-    isError: companiesQuery.isError,
-    companiesCount: companies.length,
-    filteredTotalCompanies,
-    companies: companies.map((c) => ({ id: c._id, name: c.name })),
-    queryData: companiesQuery.data,
-  });
-
   // Filter-aware CRM stats for companies page
   const { stats: companyCrmStats } = useCompanyCrmStatsData(companiesParams);
 
@@ -181,11 +172,6 @@ const index = () => {
   );
 
   const loading = companiesQuery.isLoading;
-
-  console.log("[CompaniesPage:Loading] Loading state:", {
-    loading,
-    companiesCount: companies.length,
-  });
 
   const stats = useMemo(
     () =>

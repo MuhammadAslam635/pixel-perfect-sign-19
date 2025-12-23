@@ -62,7 +62,6 @@ export const LinkedinMessageModal = ({
   }, [leadName, message, open]);
 
   const handleSend = () => {
-    console.log("Sending LinkedIn message to:", leadLinkedin);
     onClose();
   };
 

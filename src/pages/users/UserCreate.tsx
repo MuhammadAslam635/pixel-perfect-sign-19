@@ -122,7 +122,7 @@ const UserCreate = () => {
           setMailgunDomain(domain);
         }
       } catch (error: any) {
-        console.log("Mailgun not configured or not accessible");
+        console.error("Mailgun not configured or not accessible");
       }
     };
 

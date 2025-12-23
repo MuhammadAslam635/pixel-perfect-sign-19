@@ -125,16 +125,11 @@ const SignIn = () => {
         }
 
         // After successful login, immediately fetch leads once
-        // and log the response so we can inspect it during development.
         try {
-          const leadsResponse = await leadsService.getLeads({
+          await leadsService.getLeads({
             page: 1,
             limit: 10,
           });
-          // This will appear in the browser devtools console.
-          // It will NOT show in the backend terminal.
-          // For server-side logging, see backend `listLeads` logs.
-          console.log("[Post-login] /leads/list response:", leadsResponse);
         } catch (leadsError) {
           console.error("[Post-login] Error fetching leads:", leadsError);
         }

@@ -100,64 +100,6 @@ export const PromptManagement = ({
     return false;
   });
 
-  // Debug logging
-  console.log(`${activeTab.toUpperCase()} Tab - Filtering Results:`);
-  console.log(`   Total prompts for ${activeTab}:`, filteredPrompts.length);
-  console.log(`   Global prompts:`, globalPrompts.length);
-  console.log(`   Company-specific prompts:`, companyPrompts.length);
-
-  // Detailed debug info
-  console.log(
-    `   Sample prompt companyId values:`,
-    filteredPrompts.slice(0, 3).map((p) => ({
-      id: p._id,
-      category: p.promptCategory,
-      companyIdType: typeof p.companyId,
-      companyIdValue: p.companyId,
-      companyIdIsNull: p.companyId === null,
-      companyIdIsUndefined: p.companyId === undefined,
-      hasCompanyField: !!p.company,
-      companyName: p.company?.name,
-    }))
-  );
-
-  if (companyPrompts.length > 0) {
-    console.log(
-      `   Company prompts details:`,
-      companyPrompts.map((p) => {
-        const companyIdValue =
-          p.companyId && typeof p.companyId === "object"
-            ? (p.companyId as any)?._id || p.companyId
-            : p.companyId;
-        const companyNameValue =
-          p.company?.name ||
-          (p.companyId && typeof p.companyId === "object"
-            ? (p.companyId as any)?.name
-            : "NO NAME");
-        return {
-          id: p._id,
-          category: p.promptCategory,
-          companyId: companyIdValue,
-          companyName: companyNameValue,
-          hasCompanyField: !!p.company,
-        };
-      })
-    );
-  }
-
-  if (globalPrompts.length > 0) {
-    console.log(
-      `   🌐 Global prompts details:`,
-      globalPrompts.map((p) => ({
-        id: p._id,
-        category: p.promptCategory,
-        companyId: p.companyId,
-        companyIdType: typeof p.companyId,
-        companyIdIsNull: p.companyId === null,
-      }))
-    );
-  }
-
   return (
     <Card className="bg-[linear-gradient(135deg,rgba(58,62,75,0.82),rgba(28,30,40,0.94))] border-white/10 hover:border-white/20 transition-all duration-300">
       <CardHeader>

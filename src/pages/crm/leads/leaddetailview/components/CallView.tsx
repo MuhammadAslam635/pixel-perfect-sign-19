@@ -193,8 +193,6 @@ export const CallView = ({
       setSelectedCallLog(log);
       setActiveTab("recording");
       
-      console.log("[handleOpenCallDetails] Call log:", log._id);
-      
       setRecordingAudioUrl(null);
       setRecordingError(null);
       setRecordingLoading(true);
@@ -211,7 +209,6 @@ export const CallView = ({
         
         // Update selected call log with latest data if found
         if (refreshedLog) {
-          console.log("[handleOpenCallDetails] Updated call log with latest data");
           setSelectedCallLog(refreshedLog);
           // Update the log in the callLogs array too
           setCallLogs((prev) =>
@@ -235,7 +232,6 @@ export const CallView = ({
           typeof recordingUrl === "string" &&
           recordingUrl.startsWith("data:audio/")
         ) {
-          console.log("[handleOpenCallDetails] Using inline data URL");
           setRecordingAudioUrl(recordingUrl);
           setRecordingLoading(false);
           return;
@@ -252,7 +248,6 @@ export const CallView = ({
           ? `/elevenlabs/calls/${currentLog._id}/recording`
           : `/twilio/calls/${currentLog._id}/recording`;
 
-        console.log("[handleOpenCallDetails] Fetching recording via backend proxy:", endpoint);
         const response = await API.get(endpoint, {
           responseType: "blob",
         });

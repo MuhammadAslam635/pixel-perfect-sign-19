@@ -67,7 +67,6 @@ export const EmailDraftModal = ({
   }, [open, content, leadName]);
 
   const handleSend = () => {
-    console.log("Sending email to:", leadEmail);
     onClose();
   };
 

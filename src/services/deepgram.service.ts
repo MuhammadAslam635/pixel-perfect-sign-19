@@ -62,7 +62,6 @@ export class DeepgramTranscriptionService {
       this.socket = new WebSocket(this.getBackendWebSocketUrl());
 
       this.socket.onopen = () => {
-        console.log("Backend WebSocket connected");
         resolve();
       };
 
@@ -71,7 +70,6 @@ export class DeepgramTranscriptionService {
           const data: DeepgramMessage | string = JSON.parse(event.data);
 
           if (typeof data === "object" && data.type === "connected") {
-            console.log("Deepgram streaming ready");
             return;
           }
 
@@ -107,7 +105,6 @@ export class DeepgramTranscriptionService {
       };
 
       this.socket.onclose = (event) => {
-        console.log("WebSocket closed:", event.code, event.reason);
         this.isListening = false;
         if (this.onEndCallback) {
           this.onEndCallback();
@@ -144,7 +141,6 @@ export class DeepgramTranscriptionService {
         // Send raw PCM data
         if (int16Data.length > 0) {
           this.socket.send(int16Data.buffer);
-          console.log("Sent audio data:", int16Data.length * 2, "bytes");
         }
       }
     };
@@ -185,7 +181,6 @@ export class DeepgramTranscriptionService {
       this.setupAudioProcessing(this.stream);
 
       this.isListening = true;
-      console.log("Started listening with raw PCM audio");
 
       return true;
     } catch (error) {

@@ -50,7 +50,7 @@ const OnboardingPage = () => {
 
   // Scroll to top when step changes
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }, [currentStep]);
 
   // Fetch existing onboarding data on mount
@@ -96,11 +96,13 @@ const OnboardingPage = () => {
   ): Promise<boolean> => {
     try {
       setSaving(true);
-      
+
       // Clean form data: remove empty arrays and undefined values for fields not in current step
-      const currentStepConfig = ONBOARDING_STEPS.find((s) => s.id === currentStep);
+      const currentStepConfig = ONBOARDING_STEPS.find(
+        (s) => s.id === currentStep
+      );
       const cleanedQuestions: Partial<OnboardingQuestions> = { ...formData };
-      
+
       // Remove empty arrays and undefined values for fields not in current or previous steps
       if (currentStepConfig) {
         const allowedFields = new Set<string>();
@@ -111,14 +113,14 @@ const OnboardingPage = () => {
             step.fields.forEach((field) => allowedFields.add(field));
           }
         }
-        
+
         // Clean up fields not in allowed set
         Object.keys(cleanedQuestions).forEach((key) => {
           if (!allowedFields.has(key)) {
             delete cleanedQuestions[key as keyof OnboardingQuestions];
           }
         });
-        
+
         // Remove empty arrays
         Object.keys(cleanedQuestions).forEach((key) => {
           const value = cleanedQuestions[key as keyof OnboardingQuestions];
@@ -127,7 +129,7 @@ const OnboardingPage = () => {
           }
         });
       }
-      
+
       await onboardingService.updateOnboarding({
         questions: cleanedQuestions,
         status: newStatus || "in_progress",
@@ -165,7 +167,7 @@ const OnboardingPage = () => {
       return true;
     } catch (error: any) {
       console.error("Error saving progress:", error);
-      
+
       // Handle validation errors from backend
       if (error?.response?.data?.errors) {
         const errors = error.response.data.errors;
@@ -181,7 +183,7 @@ const OnboardingPage = () => {
       } else {
         toast.error("Failed to save progress");
       }
-      
+
       return false;
     } finally {
       setSaving(false);
@@ -191,7 +193,6 @@ const OnboardingPage = () => {
   const validateStep = (stepId: number): boolean => {
     const stepConfig = ONBOARDING_STEPS.find((s) => s.id === stepId);
     if (!stepConfig) {
-      console.warn(`No step config found for step ${stepId}`);
       return true;
     }
 
@@ -201,31 +202,42 @@ const OnboardingPage = () => {
     stepConfig.fields.forEach((field) => {
       const value = formData[field as keyof OnboardingQuestions];
       const rules = FIELD_VALIDATION_RULES[field];
-      
+
       // Special handling for website URL validation
-      if (field === 'website') {
-        if (typeof value === 'string' && value.trim() !== '') {
+      if (field === "website") {
+        if (typeof value === "string" && value.trim() !== "") {
           try {
             new URL(value);
           } catch {
-            errors.push(`Website: Please provide a valid URL (e.g., https://example.com)`);
+            errors.push(
+              `Website: Please provide a valid URL (e.g., https://example.com)`
+            );
           }
-        } else if (value === undefined || value === null || (typeof value === 'string' && value.trim() === '')) {
+        } else if (
+          value === undefined ||
+          value === null ||
+          (typeof value === "string" && value.trim() === "")
+        ) {
           errors.push(`Website: Required`);
         }
       }
       // Special handling for array fields (coreOfferings)
-      else if (field === 'coreOfferings') {
+      else if (field === "coreOfferings") {
         if (Array.isArray(value)) {
           if (value.length === 0) {
             errors.push(`Core Offerings: At least one item required`);
           } else if (rules) {
             // Validate each item in array
-            const invalidItems = value.filter(item => 
-              typeof item === 'string' && (item.trim().length < rules.min || item.trim().length > rules.max)
+            const invalidItems = value.filter(
+              (item) =>
+                typeof item === "string" &&
+                (item.trim().length < rules.min ||
+                  item.trim().length > rules.max)
             );
             if (invalidItems.length > 0) {
-              errors.push(`Core Offerings: Each item must be ${rules.min}-${rules.max} characters`);
+              errors.push(
+                `Core Offerings: Each item must be ${rules.min}-${rules.max} characters`
+              );
             }
           }
         } else {
@@ -234,7 +246,8 @@ const OnboardingPage = () => {
       } else if (typeof value === "string") {
         const trimmed = value.trim();
         // Step 4 fields (differentiators) are optional, so don't require them
-        const isStep4Optional = currentStep === 4 && field === 'differentiators';
+        const isStep4Optional =
+          currentStep === 4 && field === "differentiators";
         if (trimmed === "" && !isStep4Optional) {
           errors.push(`${field}: Required`);
         } else if (rules && trimmed !== "" && !isStep4Optional) {
@@ -252,7 +265,8 @@ const OnboardingPage = () => {
         }
       } else if (value === undefined || value === null) {
         // Step 4 fields are optional
-        const isStep4Optional = currentStep === 4 && field === 'differentiators';
+        const isStep4Optional =
+          currentStep === 4 && field === "differentiators";
         if (!isStep4Optional) {
           errors.push(`${field}: Required`);
         }
@@ -277,7 +291,7 @@ const OnboardingPage = () => {
       // Don't proceed if save failed
       return;
     }
-    
+
     if (currentStep < ONBOARDING_STEPS.length) {
       setCurrentStep(currentStep + 1);
     }
@@ -299,13 +313,15 @@ const OnboardingPage = () => {
       });
     } catch (error) {
       // Silently ignore save errors when skipping
-      console.log("Skip: Could not save progress, continuing anyway");
+      console.error("Skip: Could not save progress, continuing anyway");
     }
-    
+
     // Set sessionStorage to allow skipping in current session
     // This will be cleared on next login, so user will be redirected back to onboarding
     sessionStorage.setItem("onboarding_skipped", "true");
-    toast.info("You can complete onboarding later. You'll be prompted to complete it on your next login.");
+    toast.info(
+      "You can complete onboarding later. You'll be prompted to complete it on your next login."
+    );
     navigate("/dashboard", { replace: true });
   };
 
@@ -322,7 +338,7 @@ const OnboardingPage = () => {
         // Don't proceed if save failed
         return;
       }
-      
+
       const response = await onboardingService.completeOnboarding();
       if (response.success) {
         // Refresh canonical user data from server and sync localStorage + redux
@@ -340,20 +356,24 @@ const OnboardingPage = () => {
       }
     } catch (error: any) {
       console.error("Error completing onboarding:", error);
-      
+
       // Handle specific completion errors
       if (error?.response?.data?.data?.completedSteps) {
         const steps = error.response.data.data.completedSteps;
         const incompleteSteps = Object.entries(steps)
           .filter(([_, completed]) => !completed)
           .map(([step]) => step);
-        
+
         if (incompleteSteps.length > 0) {
           toast.error(
-            `Please complete all required fields in ${incompleteSteps.join(', ')}`
+            `Please complete all required fields in ${incompleteSteps.join(
+              ", "
+            )}`
           );
         } else {
-          toast.error(error?.response?.data?.message || "Failed to complete onboarding");
+          toast.error(
+            error?.response?.data?.message || "Failed to complete onboarding"
+          );
         }
       } else {
         toast.error(
@@ -380,12 +400,13 @@ const OnboardingPage = () => {
         );
       case 2:
         return (
-          <CompanyInfoStep formData={formData} updateFormData={updateFormData} />
+          <CompanyInfoStep
+            formData={formData}
+            updateFormData={updateFormData}
+          />
         );
       case 3:
-        return (
-          <ICPStep formData={formData} updateFormData={updateFormData} />
-        );
+        return <ICPStep formData={formData} updateFormData={updateFormData} />;
       case 4:
         return (
           <DataPartnersStep
@@ -426,7 +447,7 @@ const OnboardingPage = () => {
           <div className="w-full flex items-center justify-center min-h-[300px] mt-8 pl-8">
             <Logo variant="full" className="h-16" />
           </div>
-          
+
           {/* Group 60 Image */}
           <div className="w-full h-full flex items-end justify-center">
             <img
@@ -444,7 +465,10 @@ const OnboardingPage = () => {
           {/* Step Indicator - Full width, fixed from top */}
           <div className="w-full pt-[100px] pb-24">
             <div className="max-w-4xl pl-8 pr-4 sm:pl-12 sm:pr-6 lg:pl-16 lg:pr-8">
-              <StepIndicator currentStep={currentStep} steps={ONBOARDING_STEPS} />
+              <StepIndicator
+                currentStep={currentStep}
+                steps={ONBOARDING_STEPS}
+              />
             </div>
           </div>
 
@@ -453,11 +477,26 @@ const OnboardingPage = () => {
             {/* Welcome Header - Only show on step 1 */}
             {currentStep === 1 && (
               <div className="mb-8">
-                <h1 className="text-white mb-2 leading-[1.2]" style={{ fontFamily: 'Poppins, sans-serif', fontSize: '64px', fontWeight: 500 }}>
+                <h1
+                  className="text-white mb-2 leading-[1.2]"
+                  style={{
+                    fontFamily: "Poppins, sans-serif",
+                    fontSize: "64px",
+                    fontWeight: 500,
+                  }}
+                >
                   Welcome to Empatech OS
                 </h1>
-                <p className="text-white/60 max-w-lg" style={{ fontFamily: 'Poppins, sans-serif', fontSize: '20px', fontWeight: 300 }}>
-                  Let's got to know your business so we can personalize your experience
+                <p
+                  className="text-white/60 max-w-lg"
+                  style={{
+                    fontFamily: "Poppins, sans-serif",
+                    fontSize: "20px",
+                    fontWeight: 300,
+                  }}
+                >
+                  Let's got to know your business so we can personalize your
+                  experience
                 </p>
               </div>
             )}

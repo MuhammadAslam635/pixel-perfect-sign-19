@@ -519,11 +519,8 @@ const LeadChat = ({
     refetchIntervalInBackground: true,
     queryFn: async () => {
       if (!leadId) {
-        console.log("[LeadChat] No lead ID provided");
         return [];
       }
-
-      console.log(`[LeadChat] Fetching emails for lead: ${leadId}`);
 
       try {
         const response = await emailService.getLeadEmails(leadId, {
@@ -531,7 +528,6 @@ const LeadChat = ({
         });
 
         const emails = response.data.emails || [];
-        console.log(`[LeadChat] Found ${emails.length} emails linked to lead`);
 
         // Sort chronologically
         return emails.sort(
@@ -1228,12 +1224,6 @@ const LeadChat = ({
     const end = textarea.selectionEnd;
     const selected = proposalContent.substring(start, end).trim();
 
-    console.log("[Edit Mode Selection]", {
-      start,
-      end,
-      selectedLength: selected.length,
-    });
-
     if (selected.length > 0) {
       const textareaRect = textarea.getBoundingClientRect();
       const containerRect = proposalContentRef.current?.getBoundingClientRect();
@@ -1283,19 +1273,6 @@ const LeadChat = ({
         if (top > maxTop) {
           top = maxTop;
         }
-
-        console.log("[Edit Mode] Setting button position:", {
-          top,
-          left,
-          selected: selected.substring(0, 50) + "...",
-          linesBeforeStart,
-          linesBeforeEnd,
-          selectionStartY,
-          selectionMiddleY,
-          relativeY,
-          absoluteY,
-          scrollTop: textarea.scrollTop,
-        });
 
         setSelectedText(selected);
         setSelectionRange({ start, end });
@@ -2521,13 +2498,6 @@ const LeadChat = ({
 
                       {/* Edit with AI Button - appears when text is selected */}
                       {(() => {
-                        console.log("[Button Render Check]", {
-                          showEditWithAI,
-                          hasPosition: !!editWithAIPosition,
-                          hasSelectedText: !!selectedText,
-                          position: editWithAIPosition,
-                          isEditable: isProposalEditable,
-                        });
                         return null;
                       })()}
                       {showEditWithAI && editWithAIPosition && selectedText && (

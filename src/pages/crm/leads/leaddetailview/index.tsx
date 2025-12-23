@@ -166,15 +166,12 @@ const LeadDetailView = () => {
       setIsClosingDeal(stageValue === "closed"); // Show loading state for Deal Closed
       setIsSendingProposal(stageValue === "proposal_sent"); // Show loading state for Proposal Sent
 
-      console.log("Updating stage to:", stageValue);
-      const response = await leadsService.updateLead(leadId, {
+      await leadsService.updateLead(leadId, {
         stage: stageValue,
       });
-      console.log("Stage update response:", response);
 
       // Refetch the lead data immediately to update the UI
       await queryClient.refetchQueries({ queryKey: ["lead", leadId] });
-      console.log("Lead data refetched");
 
       const stageLabels: Record<string, string> = {
         proposal_sent: "Proposal Sent",

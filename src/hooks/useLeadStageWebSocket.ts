@@ -55,7 +55,6 @@ export const useLeadStageWebSocket = (leadId: string | null | undefined) => {
     }
 
     if (!token) {
-      console.warn("No authentication token found for WebSocket connection");
       return null;
     }
 
@@ -80,10 +79,6 @@ export const useLeadStageWebSocket = (leadId: string | null | undefined) => {
     const wsPath = "/api/ws/lead-stage";
 
     const wsUrl = `${wsProtocol}//${wsHost}${wsPath}${tokenParam}`;
-    console.log(
-      "[WebSocket] Constructed URL:",
-      wsUrl.replace(/token=[^&]+/, "token=***")
-    );
     return wsUrl;
   }, []);
 
@@ -100,7 +95,6 @@ export const useLeadStageWebSocket = (leadId: string | null | undefined) => {
 
     const wsUrl = getWebSocketUrl();
     if (!wsUrl) {
-      console.warn("Cannot establish WebSocket connection: No URL available");
       return;
     }
 
@@ -109,7 +103,6 @@ export const useLeadStageWebSocket = (leadId: string | null | undefined) => {
       wsRef.current = ws;
 
       ws.onopen = () => {
-        console.log("[WebSocket] Connected successfully");
         reconnectAttemptsRef.current = 0;
 
         // Subscribe to this lead's updates
@@ -118,7 +111,6 @@ export const useLeadStageWebSocket = (leadId: string | null | undefined) => {
             type: "subscribe",
             leadId: leadId,
           };
-          console.log("[WebSocket] Subscribing to lead:", leadId);
           ws.send(JSON.stringify(subscribeMessage));
         }
       };
@@ -137,13 +129,6 @@ export const useLeadStageWebSocket = (leadId: string | null | undefined) => {
 
             // Only process if it's for the current lead
             if (updateLeadId === currentLeadId && currentLeadId) {
-              console.log("[WebSocket] Lead stage update received:", {
-                leadId: updateLeadId,
-                oldStage: updateMessage.data.oldStage,
-                newStage: updateMessage.data.newStage,
-                triggeredBy: updateMessage.data.triggeredBy,
-              });
-
               // Force refetch queries immediately (not just invalidate)
               // This ensures the UI updates right away
               queryClient.refetchQueries({
@@ -167,31 +152,11 @@ export const useLeadStageWebSocket = (leadId: string | null | undefined) => {
               queryClient.invalidateQueries({
                 queryKey: ["lead-summary", leadId],
               });
-
-              console.log(
-                "[WebSocket] Queries refetched and invalidated, UI should update immediately"
-              );
-            } else {
-              console.log(
-                "[WebSocket] Update received for different lead:",
-                updateLeadId,
-                "current:",
-                currentLeadId
-              );
             }
-          } else if (message.type === "connected") {
-            console.log("[WebSocket] Connection confirmed:", message.message);
-          } else if (message.type === "subscribed") {
-            console.log(
-              "[WebSocket] Subscribed to lead updates:",
-              message.leadId
-            );
           } else if (message.type === "pong") {
             // Heartbeat response - silent
           } else if (message.type === "error") {
             console.error("[WebSocket] Error:", message.message);
-          } else {
-            console.log("[WebSocket] Unknown message type:", message.type);
           }
         } catch (error) {
           console.error("Error parsing WebSocket message:", error);
@@ -203,11 +168,6 @@ export const useLeadStageWebSocket = (leadId: string | null | undefined) => {
       };
 
       ws.onclose = (event) => {
-        console.log("[WebSocket] Connection closed:", {
-          code: event.code,
-          reason: event.reason || "No reason provided",
-          wasClean: event.wasClean,
-        });
         wsRef.current = null;
 
         // Attempt to reconnect if not a normal closure
@@ -217,10 +177,6 @@ export const useLeadStageWebSocket = (leadId: string | null | undefined) => {
         ) {
           reconnectAttemptsRef.current++;
           const delay = reconnectDelay * reconnectAttemptsRef.current;
-
-          console.log(
-            `[WebSocket] Attempting to reconnect in ${delay}ms (attempt ${reconnectAttemptsRef.current}/${maxReconnectAttempts})`
-          );
 
           reconnectTimeoutRef.current = setTimeout(() => {
             connect();
@@ -290,10 +246,8 @@ export const useLeadStageWebSocket = (leadId: string | null | undefined) => {
   // Connect when leadId changes
   useEffect(() => {
     if (leadId) {
-      console.log("[WebSocket] Connecting for leadId:", leadId);
       connect();
     } else {
-      console.log("[WebSocket] No leadId, disconnecting");
       disconnect();
     }
 

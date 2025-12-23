@@ -745,8 +745,6 @@ export const IntegrationsTab = () => {
       );
 
       if (response.data?.success && response.data?.authUrl) {
-        console.log("Google OAuth Mode:", response.data.mode);
-        console.log("Google OAuth Scopes:", response.data.scopes);
         window.location.href = response.data.authUrl;
       } else {
         throw new Error("No auth URL returned from server");
@@ -982,11 +980,6 @@ export const IntegrationsTab = () => {
             setSelectedAdAccountId((prev) => prev || response.data[0].id);
           }
           // Show message if no ad accounts found
-          if (!response.data || response.data.length === 0) {
-            if (response.message) {
-              console.warn("Ad accounts fetch result:", response.message);
-            }
-          }
         }
       } catch (error: unknown) {
         console.error("Error loading ad accounts:", error);
