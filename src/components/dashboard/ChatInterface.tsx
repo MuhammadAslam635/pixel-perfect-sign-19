@@ -889,13 +889,13 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
                         // Lists with proper indentation and spacing
                         ul: ({ node, ...props }) => (
                           <ul
-                            className="mb-3 ml-4 list-disc space-y-1.5 text-white/90 marker:text-white/60"
+                            className="mb-3 ml-0 list-none space-y-1.5 text-white/90 py-2"
                             {...props}
                           />
                         ),
                         ol: ({ node, ...props }) => (
                           <ol
-                            className="mb-3 ml-4 list-decimal space-y-1.5 text-white/90 marker:text-white/60"
+                            className="mb-3 ml-4 list-none space-y-1.5 text-white/90"
                             {...props}
                           />
                         ),
