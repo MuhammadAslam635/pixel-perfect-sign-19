@@ -35,7 +35,9 @@ const OnboardingPanel = () => {
     <div className="space-y-6 text-white">
       <Card className="bg-transparent p-0 border-none">
         <CardHeader className="p-0 mb-4">
-          <CardTitle className="text-xs sm:text-sm md:text-base -mb-1">Company Onboarding</CardTitle>
+          <CardTitle className="text-xs sm:text-sm md:text-base -mb-1">
+            Company Onboarding
+          </CardTitle>
           <p className="text-[10px] text-white/70">
             Follow these steps so we can activate your account and calibrate the
             right AI copilots for your team.
@@ -54,7 +56,9 @@ const OnboardingPanel = () => {
                     <Icon className="h-3.5 w-3.5" />
                   </span>
                   <div>
-                    <h3 className="text-xs sm:text-sm font-semibold">{step.title}</h3>
+                    <h3 className="text-xs sm:text-sm font-semibold">
+                      {step.title}
+                    </h3>
                     <p className="mt-0.5 text-[10px] text-white/70">
                       {step.description}
                     </p>
