@@ -27,6 +27,8 @@ const UserEdit = () => {
   const [errors, setErrors] = useState({
     email: "",
     name: "",
+    firstName: "",
+    lastName: "",
     password: "",
     roleId: "",
     status: "",
@@ -157,6 +159,8 @@ const UserEdit = () => {
     setErrors({
       email: "",
       name: "",
+      firstName: "",
+      lastName: "",
       password: "",
       roleId: "",
       status: "",
@@ -330,6 +334,9 @@ const UserEdit = () => {
                       placeholder="Enter first name"
                       autoComplete="off"
                     />
+                    {errors.firstName && (
+                      <p className="text-red-400 text-sm mt-1">{errors.firstName}</p>
+                    )}
                   </motion.div>
 
                   {/* Last Name Field */}
@@ -354,6 +361,9 @@ const UserEdit = () => {
                       placeholder="Enter last name"
                       autoComplete="off"
                     />
+                    {errors.lastName && (
+                      <p className="text-red-400 text-sm mt-1">{errors.lastName}</p>
+                    )}
                   </motion.div>
                 </div>
 
