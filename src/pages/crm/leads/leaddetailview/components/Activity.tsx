@@ -276,8 +276,8 @@ const Activity: FC<ActivityProps> = ({
     },
     enabled: Boolean(leadId),
     // Only refetch when pending to check if generation completed
-    refetchInterval: (data) => {
-      if (data?.data?.status === "pending") {
+    refetchInterval: (query) => {
+      if (query.state.data?.data?.status === "pending") {
         return 5000; // Poll every 5 seconds when pending
       }
       return false; // Don't auto-refetch otherwise
@@ -1031,13 +1031,13 @@ const Activity: FC<ActivityProps> = ({
                   Call Script
                   <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white hidden group-data-[state=active]:block" />
                 </TabsTrigger>
-                {/* <TabsTrigger
+                <TabsTrigger
                   value="agent_research"
                   className="px-0 py-2 text-xs font-medium sm:text-sm text-white/60 data-[state=active]:text-white data-[state=active]:font-semibold data-[state=active]:bg-transparent data-[state=active]:shadow-none border-none rounded-none relative group"
                 >
                   Agent Research
                   <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white hidden group-data-[state=active]:block" />
-                </TabsTrigger> */}
+                  </TabsTrigger> 
               </TabsList>
             </div>
 
