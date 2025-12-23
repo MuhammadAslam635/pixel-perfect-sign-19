@@ -26,6 +26,7 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
   const [localMessages, setLocalMessages] = useState<ChatMessage[]>([]);
   const [chatHistory, setChatHistory] = useState<ChatSummary[]>([]);
   const panelRef = useRef<HTMLElement>(null);
+  const toolsContainerRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
   const hasAutoLoadedRef = useRef(false); // Track if we've already auto-loaded a chat
   const currentAuthTokenRef = useRef<string | null>(null); // Track current auth token
@@ -203,14 +204,21 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
 
   const hasActiveChat = selectedChatId || localMessages.length > 0;
 
+  // Set width with !important using DOM API
+  useEffect(() => {
+    if (toolsContainerRef.current) {
+      toolsContainerRef.current.style.setProperty("width", "fit-content", "important");
+    }
+  }, []);
+
   return (
     <section
       ref={panelRef}
       className="hidden assistant-panel mx-auto w-full h-full lg:flex flex-col overflow-hidden relative sm:order-1 animate-in fade-in duration-700"
     >
       <div
+        ref={toolsContainerRef}
         style={{
-          width: "fit-content !important",
           position: "absolute",
           top: "15px",
           left: "28px",
