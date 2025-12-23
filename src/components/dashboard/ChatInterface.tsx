@@ -62,10 +62,12 @@ const transformCompanyTable = (content: string): string => {
       .split("|")
       .map((cell) => cell.trim())
       .filter((cell) => cell);
-    
+
     // Find Website or Domain column index
-    const websiteIndex = headerRow.findIndex((header) =>
-      header.toLowerCase().includes("website") || header.toLowerCase().includes("domain")
+    const websiteIndex = headerRow.findIndex(
+      (header) =>
+        header.toLowerCase().includes("website") ||
+        header.toLowerCase().includes("domain")
     );
 
     // If no Website/Domain column found, return original table
@@ -94,11 +96,11 @@ const transformCompanyTable = (content: string): string => {
       if (domainUrl) {
         // Check if it's already a markdown link
         const isAlreadyLink = /\[([^\]]+)\]\(([^)]+)\)/.test(domainUrl);
-        
+
         if (!isAlreadyLink) {
           // Clean the domain URL
           let cleanUrl = domainUrl.trim();
-          
+
           // Remove any existing markdown link syntax if present
           const urlMatch = cleanUrl.match(/\[([^\]]+)\]\(([^)]+)\)/);
           if (urlMatch) {
@@ -212,6 +214,11 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
   const streamingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isStreamingRef = useRef<boolean>(false);
   const streamingChatIdRef = useRef<string | null>(null); // Track which chat is currently streaming
+  const silenceTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Track silence timeout
+  const lastSpeechTimeRef = useRef<number | null>(null); // Track last time speech was detected
+  const hasReceivedSpeechRef = useRef<boolean>(false); // Track if we've received any speech
+  const maxListeningTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Track max listening timeout
+  const accumulatedMessageRef = useRef<string>(""); // Track accumulated message during transcription
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -286,16 +293,90 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
       return;
     }
 
+    // Reset speech tracking
+    hasReceivedSpeechRef.current = false;
+    lastSpeechTimeRef.current = null;
+    accumulatedMessageRef.current = message || ""; // Initialize with current message
+
+    // Clear any existing silence timeout
+    if (silenceTimeoutRef.current) {
+      clearTimeout(silenceTimeoutRef.current);
+      silenceTimeoutRef.current = null;
+    }
+
+    const SILENCE_TIMEOUT = 2000; // 2 seconds of silence before auto-sending
+    const MAX_LISTENING_TIME = 30000; // 30 seconds max listening time as fallback
+
+    // Set a maximum listening time as fallback
+    maxListeningTimeoutRef.current = setTimeout(() => {
+      if (hasReceivedSpeechRef.current) {
+        // If we've received speech, stop and send
+        stopRealtimeTranscriptionAndSend();
+      } else {
+        // If no speech received, just stop without sending
+        stopRealtimeTranscription();
+      }
+    }, MAX_LISTENING_TIME);
+
     const success = await deepgramTranscription.startListening(
-      (transcript, isFinal) => {
+      (transcript, isFinal, speechFinal) => {
         // Update interim transcript for real-time feedback
         setInterimTranscript(transcript);
 
-        // If it's a final result, add it to the message
-        if (transcript && isFinal) {
-          const newValue = message + (message ? " " : "") + transcript;
-          dispatch(setComposerValue(newValue));
-          setInterimTranscript("");
+        // If we received any transcript, mark that we've received speech
+        if (transcript && transcript.trim()) {
+          hasReceivedSpeechRef.current = true;
+          lastSpeechTimeRef.current = Date.now();
+
+          // Clear existing silence timeout
+          if (silenceTimeoutRef.current) {
+            clearTimeout(silenceTimeoutRef.current);
+            silenceTimeoutRef.current = null;
+          }
+
+          // If it's a final result, add it to the accumulated message
+          if (transcript && isFinal) {
+            accumulatedMessageRef.current =
+              accumulatedMessageRef.current +
+              (accumulatedMessageRef.current ? " " : "") +
+              transcript;
+            dispatch(setComposerValue(accumulatedMessageRef.current));
+            setInterimTranscript("");
+
+            // If we got a final transcript, set up auto-send timeout as fallback
+            // This ensures we send even if speechFinal flag isn't received
+            if (hasReceivedSpeechRef.current && !silenceTimeoutRef.current) {
+              silenceTimeoutRef.current = setTimeout(() => {
+                // Auto-stop and send after silence period
+                stopRealtimeTranscriptionAndSend();
+              }, SILENCE_TIMEOUT);
+            }
+          }
+
+          // If speech is final (user stopped speaking), handle it
+          if (speechFinal && hasReceivedSpeechRef.current) {
+            // Clear any existing timeout
+            if (silenceTimeoutRef.current) {
+              clearTimeout(silenceTimeoutRef.current);
+              silenceTimeoutRef.current = null;
+            }
+
+            // If there's a current transcript (even if not final), add it to accumulated message
+            if (transcript && transcript.trim() && !isFinal) {
+              accumulatedMessageRef.current =
+                accumulatedMessageRef.current +
+                (accumulatedMessageRef.current ? " " : "") +
+                transcript.trim();
+              dispatch(setComposerValue(accumulatedMessageRef.current));
+              setInterimTranscript("");
+            }
+
+            // Set up auto-send timeout after a brief delay to ensure final transcript is processed
+            silenceTimeoutRef.current = setTimeout(() => {
+              // Auto-stop and send after silence period
+              stopRealtimeTranscriptionAndSend();
+            }, SILENCE_TIMEOUT);
+          }
         }
       },
       (error) => {
@@ -307,6 +388,16 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
         });
         setIsListening(false);
         setInterimTranscript("");
+        // Clear silence timeout on error
+        if (silenceTimeoutRef.current) {
+          clearTimeout(silenceTimeoutRef.current);
+          silenceTimeoutRef.current = null;
+        }
+        // Clear max listening timeout on error
+        if (maxListeningTimeoutRef.current) {
+          clearTimeout(maxListeningTimeoutRef.current);
+          maxListeningTimeoutRef.current = null;
+        }
       },
       () => {
         // On end
@@ -318,6 +409,16 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
           dispatch(setComposerValue(newValue));
           setInterimTranscript("");
         }
+        // Clear silence timeout on end
+        if (silenceTimeoutRef.current) {
+          clearTimeout(silenceTimeoutRef.current);
+          silenceTimeoutRef.current = null;
+        }
+        // Clear max listening timeout on end
+        if (maxListeningTimeoutRef.current) {
+          clearTimeout(maxListeningTimeoutRef.current);
+          maxListeningTimeoutRef.current = null;
+        }
       }
     );
 
@@ -327,24 +428,113 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
   };
 
   const stopRealtimeTranscription = () => {
+    // Clear silence timeout
+    if (silenceTimeoutRef.current) {
+      clearTimeout(silenceTimeoutRef.current);
+      silenceTimeoutRef.current = null;
+    }
+
+    // Clear max listening timeout
+    if (maxListeningTimeoutRef.current) {
+      clearTimeout(maxListeningTimeoutRef.current);
+      maxListeningTimeoutRef.current = null;
+    }
+
     deepgramTranscription.stopListening();
     setIsListening(false);
-    // Move any remaining interim transcript to final message
+
+    // Get accumulated message and add any interim transcript
+    let finalMessage = accumulatedMessageRef.current || "";
     if (interimTranscript.trim()) {
-      const newValue =
-        message + (message ? " " : "") + interimTranscript.trim();
-      dispatch(setComposerValue(newValue));
+      finalMessage =
+        finalMessage + (finalMessage ? " " : "") + interimTranscript.trim();
+    }
+
+    // Fallback to current message if ref is empty
+    if (!finalMessage.trim()) {
+      finalMessage = message || "";
+    }
+
+    // Update Redux state
+    if (finalMessage.trim()) {
+      dispatch(setComposerValue(finalMessage));
       setInterimTranscript("");
+    }
+
+    // Reset speech tracking
+    hasReceivedSpeechRef.current = false;
+    lastSpeechTimeRef.current = null;
+    accumulatedMessageRef.current = "";
+  };
+
+  const stopRealtimeTranscriptionAndSend = () => {
+    // Clear silence timeout
+    if (silenceTimeoutRef.current) {
+      clearTimeout(silenceTimeoutRef.current);
+      silenceTimeoutRef.current = null;
+    }
+
+    // Clear max listening timeout
+    if (maxListeningTimeoutRef.current) {
+      clearTimeout(maxListeningTimeoutRef.current);
+      maxListeningTimeoutRef.current = null;
+    }
+
+    deepgramTranscription.stopListening();
+    setIsListening(false);
+
+    // Get the accumulated message from ref (most reliable)
+    let finalMessage = accumulatedMessageRef.current || "";
+
+    // Also check for any remaining interim transcript
+    if (interimTranscript.trim()) {
+      finalMessage =
+        finalMessage + (finalMessage ? " " : "") + interimTranscript.trim();
+    }
+
+    // Fallback to Redux state if ref is empty
+    if (!finalMessage.trim()) {
+      finalMessage = composerValue || "";
+    }
+
+    // Update Redux state with final message
+    if (finalMessage.trim()) {
+      dispatch(setComposerValue(finalMessage));
+      setInterimTranscript("");
+    }
+
+    // Reset speech tracking
+    hasReceivedSpeechRef.current = false;
+    lastSpeechTimeRef.current = null;
+    accumulatedMessageRef.current = ""; // Reset accumulated message
+
+    // Auto-send the message if we have content and we're not already sending
+    if (finalMessage.trim() && !isSendingRef.current && !isStreaming) {
+      // Send immediately with the final message
+      handleSendStreamingMessage(finalMessage);
     }
   };
 
   const handleMicClick = () => {
     if (isListening) {
-      stopRealtimeTranscription();
+      // If listening, stop and send the message
+      stopRealtimeTranscriptionAndSend();
     } else {
       startRealtimeTranscription();
     }
   };
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (silenceTimeoutRef.current) {
+        clearTimeout(silenceTimeoutRef.current);
+      }
+      if (maxListeningTimeoutRef.current) {
+        clearTimeout(maxListeningTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Fetch chat details when activeChatId changes
   const { data: chatDetail } = useQuery({
@@ -458,12 +648,14 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
     }
   };
 
-  const handleSendStreamingMessage = async () => {
+  const handleSendStreamingMessage = async (messageToSend?: string) => {
     if (isSendingRef.current || isStreaming) {
       return;
     }
 
-    const trimmedMessage = message.trim();
+    // Use provided message or fall back to current message from state
+    const messageText = messageToSend || message;
+    const trimmedMessage = messageText.trim();
     if (!trimmedMessage) {
       return;
     }

@@ -31,7 +31,7 @@ export class DeepgramTranscriptionService {
 
   // Callbacks
   private onTranscriptCallback:
-    | ((text: string, isFinal: boolean) => void)
+    | ((text: string, isFinal: boolean, speechFinal?: boolean) => void)
     | null = null;
   private onErrorCallback: ((error: string) => void) | null = null;
   private onEndCallback: (() => void) | null = null;
@@ -86,9 +86,10 @@ export class DeepgramTranscriptionService {
             const transcript =
               data.channel?.alternatives?.[0]?.transcript || "";
             const isFinal = data.is_final || false;
+            const speechFinal = data.speech_final || false;
 
             if (this.onTranscriptCallback && transcript) {
-              this.onTranscriptCallback(transcript, isFinal);
+              this.onTranscriptCallback(transcript, isFinal, speechFinal);
             }
           }
         } catch (error) {
@@ -150,7 +151,11 @@ export class DeepgramTranscriptionService {
   }
 
   async startListening(
-    onTranscript: (text: string, isFinal: boolean) => void,
+    onTranscript: (
+      text: string,
+      isFinal: boolean,
+      speechFinal?: boolean
+    ) => void,
     onError?: (error: string) => void,
     onEnd?: () => void
   ): Promise<boolean> {
