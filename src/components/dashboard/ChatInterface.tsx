@@ -62,11 +62,13 @@ const transformCompanyTable = (content: string): string => {
       .split("|")
       .map((cell) => cell.trim())
       .filter((cell) => cell);
+    
+    // Find Website or Domain column index
     const websiteIndex = headerRow.findIndex((header) =>
-      header.toLowerCase().includes("website")
+      header.toLowerCase().includes("website") || header.toLowerCase().includes("domain")
     );
 
-    // If no Website column found, return original table
+    // If no Website/Domain column found, return original table
     if (websiteIndex === -1) return tableMatch;
 
     // Find NAME column index
@@ -74,17 +76,11 @@ const transformCompanyTable = (content: string): string => {
       header.toLowerCase().includes("name")
     );
 
-    // Remove Website column from header
-    const newHeaderRow = headerRow.filter((_, index) => index !== websiteIndex);
-
     // Process separator row (second line)
     const separatorRow = lines[1]
       .split("|")
       .map((cell) => cell.trim())
       .filter((cell) => cell);
-    const newSeparatorRow = separatorRow.filter(
-      (_, index) => index !== websiteIndex
-    );
 
     // Process data rows
     const dataRows = lines.slice(2).map((line) => {
@@ -92,57 +88,46 @@ const transformCompanyTable = (content: string): string => {
         .split("|")
         .map((cell) => cell.trim())
         .filter((cell) => cell);
-      const websiteUrl = cells[websiteIndex]?.trim() || "";
-      const companyName = cells[nameIndex]?.trim() || "";
+      const domainUrl = cells[websiteIndex]?.trim() || "";
 
-      // Remove Website column
-      const newCells = cells.filter((_, index) => index !== websiteIndex);
+      // Make domain/website clickable if it's not already a link
+      if (domainUrl) {
+        // Check if it's already a markdown link
+        const isAlreadyLink = /\[([^\]]+)\]\(([^)]+)\)/.test(domainUrl);
+        
+        if (!isAlreadyLink) {
+          // Clean the domain URL
+          let cleanUrl = domainUrl.trim();
+          
+          // Remove any existing markdown link syntax if present
+          const urlMatch = cleanUrl.match(/\[([^\]]+)\]\(([^)]+)\)/);
+          if (urlMatch) {
+            cleanUrl = urlMatch[2]; // Extract URL from markdown link
+          }
 
-      // If we have a website URL and company name, make the name a link
-      if (websiteUrl && companyName && nameIndex !== -1) {
-        // Clean the website URL (remove markdown link syntax if present)
-        let cleanUrl = websiteUrl;
-        const urlMatch = websiteUrl.match(/\[([^\]]+)\]\(([^)]+)\)/);
-        if (urlMatch) {
-          cleanUrl = urlMatch[2]; // Extract URL from markdown link
-        } else if (websiteUrl.startsWith("http")) {
-          cleanUrl = websiteUrl;
-        } else {
-          // If it's just a URL without markdown, use it as is
-          cleanUrl = websiteUrl;
-        }
+          // Ensure URL has protocol
+          if (
+            cleanUrl &&
+            !cleanUrl.startsWith("http://") &&
+            !cleanUrl.startsWith("https://")
+          ) {
+            cleanUrl = "https://" + cleanUrl;
+          }
 
-        // Ensure URL has protocol
-        if (
-          cleanUrl &&
-          !cleanUrl.startsWith("http://") &&
-          !cleanUrl.startsWith("https://")
-        ) {
-          cleanUrl = "https://" + cleanUrl;
-        }
-
-        // Extract company name text if it's already a markdown link
-        let cleanCompanyName = companyName;
-        const nameLinkMatch = companyName.match(/\[([^\]]+)\]/);
-        if (nameLinkMatch) {
-          cleanCompanyName = nameLinkMatch[1]; // Extract text from markdown link
-        }
-
-        // Replace company name with markdown link
-        const nameCellIndex =
-          nameIndex < websiteIndex ? nameIndex : nameIndex - 1;
-        if (nameCellIndex >= 0 && nameCellIndex < newCells.length && cleanUrl) {
-          newCells[nameCellIndex] = `[${cleanCompanyName}](${cleanUrl})`;
+          // Replace domain with markdown link
+          if (cleanUrl) {
+            cells[websiteIndex] = `[${domainUrl}](${cleanUrl})`;
+          }
         }
       }
 
-      return newCells;
+      return cells;
     });
 
     // Reconstruct the table
     const newTable = [
-      "| " + newHeaderRow.join(" | ") + " |",
-      "| " + newSeparatorRow.join(" | ") + " |",
+      "| " + headerRow.join(" | ") + " |",
+      "| " + separatorRow.join(" | ") + " |",
       ...dataRows.map((cells) => "| " + cells.join(" | ") + " |"),
     ].join("\n");
 
