@@ -210,6 +210,7 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
     >
       <div
         style={{
+          width: "fit-content !important",
           position: "absolute",
           top: "15px",
           left: "28px",
