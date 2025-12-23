@@ -283,6 +283,11 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
 
   // Real-time transcription functions
   const startRealtimeTranscription = async () => {
+    // Don't allow starting transcription while processing
+    if (isSendingMessage || isStreaming) {
+      return;
+    }
+
     if (!deepgramTranscription.isSupported()) {
       toast({
         title: "Not Supported",
@@ -516,6 +521,11 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
   };
 
   const handleMicClick = () => {
+    // Don't allow mic interaction while processing
+    if (isSendingMessage || isStreaming) {
+      return;
+    }
+
     if (isListening) {
       // If listening, stop and send the message
       stopRealtimeTranscriptionAndSend();
@@ -651,6 +661,11 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
   const handleSendStreamingMessage = async (messageToSend?: string) => {
     if (isSendingRef.current || isStreaming) {
       return;
+    }
+
+    // Stop transcription if it's currently active
+    if (isListening) {
+      stopRealtimeTranscription();
     }
 
     // Use provided message or fall back to current message from state
@@ -1257,10 +1272,15 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
         <div className="assistant-composer__actions">
           <div
             className={cn(
-              "round-icon-btn--outline cursor-pointer",
-              isListening && "bg-red-500 text-white animate-pulse"
+              "round-icon-btn--outline",
+              isListening && "bg-red-500 text-white animate-pulse",
+              (isSendingMessage || isStreaming) &&
+                "opacity-50 cursor-not-allowed",
+              !(isSendingMessage || isStreaming) && "cursor-pointer"
             )}
-            onClick={handleMicClick}
+            onClick={
+              isSendingMessage || isStreaming ? undefined : handleMicClick
+            }
           >
             <Mic size={22} />
           </div>
