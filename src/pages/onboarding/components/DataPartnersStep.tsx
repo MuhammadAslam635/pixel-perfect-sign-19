@@ -16,19 +16,19 @@ import {
   File,
 } from "lucide-react";
 
-interface StrategyStepProps {
+interface DataPartnersStepProps {
   formData: OnboardingQuestions;
   updateFormData: (updates: Partial<OnboardingQuestions>) => void;
   documents: SupportingDocument[];
   onDocumentsChange: (documents: SupportingDocument[]) => void;
 }
 
-const StrategyStep = ({
+const DataPartnersStep = ({
   formData,
   updateFormData,
   documents,
   onDocumentsChange,
-}: StrategyStepProps) => {
+}: DataPartnersStepProps) => {
   const [uploading, setUploading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -118,9 +118,9 @@ const StrategyStep = ({
 
   return (
     <div className="space-y-6">
-      {/* Q14: Differentiators */}
+      {/* Differentiators */}
       <div className="space-y-2">
-        <Label htmlFor="differentiators" className="text-white/80 flex items-center gap-2 text-xs sm:text-sm">
+        <Label htmlFor="differentiators" className="text-white flex items-center gap-2 text-sm">
           <Sparkles className="h-4 w-4 text-yellow-400" />
           What Makes You Different?
         </Label>
@@ -128,17 +128,15 @@ const StrategyStep = ({
           id="differentiators"
           value={formData.differentiators || ""}
           onChange={(e) => updateFormData({ differentiators: e.target.value })}
-          placeholder="What key advantages or differentiators set you apart from competitors?"
-          minLength={10}
+          placeholder="What key advantages or differentiators set you apart from competitors? (Optional)"
           maxLength={1000}
-          className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 min-h-[120px] scrollbar-hide text-xs sm:text-sm"
+          className="bg-white/[0.06] border-cyan-400/50 text-white placeholder:text-white/40 min-h-[120px] scrollbar-hide text-sm rounded-lg"
         />
-        <p className="text-xs text-white/40">10-1000 characters</p>
       </div>
 
-      {/* Q15: Supporting Documents */}
+      {/* Supporting Documents */}
       <div className="space-y-4">
-        <Label className="text-white/80 flex items-center gap-2 text-xs sm:text-sm">
+        <Label className="text-white flex items-center gap-2 text-sm">
           <Upload className="h-4 w-4 text-cyan-400" />
           Supporting Documents
         </Label>
@@ -222,4 +220,5 @@ const StrategyStep = ({
   );
 };
 
-export default StrategyStep;
+export default DataPartnersStep;
+

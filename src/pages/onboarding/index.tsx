@@ -13,26 +13,27 @@ import {
   ONBOARDING_STEPS,
 } from "@/types/onboarding.types";
 import StepIndicator from "./components/StepIndicator";
-import CompanyOverviewStep from "./components/CompanyOverviewStep";
-import OperationsStep from "./components/OperationsStep";
-import SystemsStep from "./components/SystemsStep";
-import StrategyStep from "./components/StrategyStep";
+import CompanyWebsiteStep from "./components/CompanyWebsiteStep";
+import CompanyInfoStep from "./components/CompanyInfoStep";
+import ICPStep from "./components/ICPStep";
+import DataPartnersStep from "./components/DataPartnersStep";
+import group60Image from "@/assets/Group 60.png";
+import Logo from "@/components/Logo";
 
 // Validation rules matching backend Zod schema
 const FIELD_VALIDATION_RULES: Record<string, { min: number; max: number }> = {
+  // Step 1
+  website: { min: 1, max: 500 },
+  // Step 2
   companyName: { min: 2, max: 200 },
   businessDescription: { min: 10, max: 1000 },
-  mainProductService: { min: 5, max: 500 },
+  coreOfferings: { min: 5, max: 500 },
+  preferredCountries: { min: 5, max: 500 },
+  // Step 3
   idealCustomerProfile: { min: 10, max: 1000 },
-  primaryBusinessGoals: { min: 10, max: 1000 },
-  currentChallenges: { min: 10, max: 1000 },
-  challengeDuration: { min: 5, max: 200 },
-  previousAttempts: { min: 5, max: 1000 },
-  existingTeams: { min: 5, max: 1000 },
-  currentTechStack: { min: 5, max: 1000 },
+  // Step 4
   existingPartners: { min: 5, max: 1000 },
   dataChannels: { min: 5, max: 1000 },
-  preferredCountries: { min: 5, max: 500 },
   differentiators: { min: 10, max: 1000 },
 };
 
@@ -95,8 +96,40 @@ const OnboardingPage = () => {
   ): Promise<boolean> => {
     try {
       setSaving(true);
+      
+      // Clean form data: remove empty arrays and undefined values for fields not in current step
+      const currentStepConfig = ONBOARDING_STEPS.find((s) => s.id === currentStep);
+      const cleanedQuestions: Partial<OnboardingQuestions> = { ...formData };
+      
+      // Remove empty arrays and undefined values for fields not in current or previous steps
+      if (currentStepConfig) {
+        const allowedFields = new Set<string>();
+        // Include fields from current step and all previous steps
+        for (let i = 1; i <= currentStep; i++) {
+          const step = ONBOARDING_STEPS.find((s) => s.id === i);
+          if (step) {
+            step.fields.forEach((field) => allowedFields.add(field));
+          }
+        }
+        
+        // Clean up fields not in allowed set
+        Object.keys(cleanedQuestions).forEach((key) => {
+          if (!allowedFields.has(key)) {
+            delete cleanedQuestions[key as keyof OnboardingQuestions];
+          }
+        });
+        
+        // Remove empty arrays
+        Object.keys(cleanedQuestions).forEach((key) => {
+          const value = cleanedQuestions[key as keyof OnboardingQuestions];
+          if (Array.isArray(value) && value.length === 0) {
+            delete cleanedQuestions[key as keyof OnboardingQuestions];
+          }
+        });
+      }
+      
       await onboardingService.updateOnboarding({
-        questions: formData,
+        questions: cleanedQuestions,
         status: newStatus || "in_progress",
       });
 
@@ -157,10 +190,14 @@ const OnboardingPage = () => {
 
   const validateStep = (stepId: number): boolean => {
     const stepConfig = ONBOARDING_STEPS.find((s) => s.id === stepId);
-    if (!stepConfig) return true;
+    if (!stepConfig) {
+      console.warn(`No step config found for step ${stepId}`);
+      return true;
+    }
 
     const errors: string[] = [];
 
+    // Only validate fields that belong to this step
     stepConfig.fields.forEach((field) => {
       const value = formData[field as keyof OnboardingQuestions];
       const rules = FIELD_VALIDATION_RULES[field];
@@ -196,17 +233,29 @@ const OnboardingPage = () => {
         }
       } else if (typeof value === "string") {
         const trimmed = value.trim();
-        if (trimmed === "") {
+        // Step 4 fields (differentiators) are optional, so don't require them
+        const isStep4Optional = currentStep === 4 && field === 'differentiators';
+        if (trimmed === "" && !isStep4Optional) {
           errors.push(`${field}: Required`);
-        } else if (rules) {
+        } else if (rules && trimmed !== "" && !isStep4Optional) {
+          // Only validate min/max if field is not optional and has content
           if (trimmed.length < rules.min) {
             errors.push(`${field}: Minimum ${rules.min} characters required`);
           } else if (trimmed.length > rules.max) {
             errors.push(`${field}: Maximum ${rules.max} characters allowed`);
           }
+        } else if (rules && trimmed !== "" && isStep4Optional) {
+          // For optional fields, only validate max length if provided
+          if (trimmed.length > rules.max) {
+            errors.push(`${field}: Maximum ${rules.max} characters allowed`);
+          }
         }
       } else if (value === undefined || value === null) {
-        errors.push(`${field}: Required`);
+        // Step 4 fields are optional
+        const isStep4Optional = currentStep === 4 && field === 'differentiators';
+        if (!isStep4Optional) {
+          errors.push(`${field}: Required`);
+        }
       }
     });
 
@@ -324,22 +373,22 @@ const OnboardingPage = () => {
     switch (currentStep) {
       case 1:
         return (
-          <CompanyOverviewStep
+          <CompanyWebsiteStep
             formData={formData}
             updateFormData={updateFormData}
           />
         );
       case 2:
         return (
-          <OperationsStep formData={formData} updateFormData={updateFormData} />
+          <CompanyInfoStep formData={formData} updateFormData={updateFormData} />
         );
       case 3:
         return (
-          <SystemsStep formData={formData} updateFormData={updateFormData} />
+          <ICPStep formData={formData} updateFormData={updateFormData} />
         );
       case 4:
         return (
-          <StrategyStep
+          <DataPartnersStep
             formData={formData}
             updateFormData={updateFormData}
             documents={onboardingData?.supportingDocuments || []}
@@ -369,119 +418,122 @@ const OnboardingPage = () => {
   const isLastStep = currentStep === ONBOARDING_STEPS.length;
 
   return (
-    <div className="min-h-screen bg-background py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
-            Welcome to EmpaTech OS
-          </h1>
-          <p className="text-white/60 text-sm sm:text-base">
-            Let's get to know your business so we can personalize your
-            experience
-          </p>
+    <div className="min-h-screen bg-background flex">
+      {/* Left Sidebar - 1/3 width */}
+      <div className="hidden lg:flex lg:w-1/3 relative bg-background">
+        <div className="w-full h-full flex flex-col items-center justify-between pt-8 pr-8">
+          {/* Logo */}
+          <div className="w-full flex items-center justify-center min-h-[300px] mt-8 pl-8">
+            <Logo variant="full" className="h-16" />
+          </div>
+          
+          {/* Group 60 Image */}
+          <div className="w-full h-full flex items-end justify-center">
+            <img
+              src={group60Image}
+              alt="Decorative"
+              className="w-full h-auto object-contain"
+            />
+          </div>
         </div>
+      </div>
 
-        {/* Step Indicator */}
-        <StepIndicator currentStep={currentStep} steps={ONBOARDING_STEPS} />
-
-        {/* Form Container - matching TemplateFormModal card style */}
-        <div
-          className="mt-8 rounded-[32px] border border-white/10 p-6 sm:p-8 relative overflow-hidden shadow-[0_25px_60px_rgba(0,0,0,0.55)]"
-          style={{ background: "#0a0a0a" }}
-        >
-          {/* Gradient overlay - matching TemplateFormModal */}
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background:
-                "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0) 38.08%, rgba(255, 255, 255, 0) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
-            }}
-          />
-
-          <div className="relative z-10">
-            {/* Step Title */}
-            <div className="mb-6">
-              <h2 className="text-lg sm:text-xl font-semibold text-white drop-shadow-lg">
-                {ONBOARDING_STEPS[currentStep - 1].title}
-              </h2>
-              <p className="text-sm text-white/60 mt-1">
-                {ONBOARDING_STEPS[currentStep - 1].description}
-              </p>
+      {/* Right Content - 2/3 width */}
+      <div className="w-full lg:w-2/3 flex flex-col min-h-screen">
+        <div className="flex-1 flex flex-col">
+          {/* Step Indicator - Full width, fixed from top */}
+          <div className="w-full pt-[100px] pb-24">
+            <div className="max-w-4xl pl-8 pr-4 sm:pl-12 sm:pr-6 lg:pl-16 lg:pr-8">
+              <StepIndicator currentStep={currentStep} steps={ONBOARDING_STEPS} />
             </div>
+          </div>
+
+          {/* Form Content - Match step indicator width exactly */}
+          <div className="max-w-3xl pl-8 pr-4 sm:pl-12 sm:pr-6 lg:pl-16 lg:pr-8 w-full">
+            {/* Welcome Header - Only show on step 1 */}
+            {currentStep === 1 && (
+              <div className="mb-8">
+                <h1 className="text-white mb-2 leading-[1.2]" style={{ fontFamily: 'Poppins, sans-serif', fontSize: '64px', fontWeight: 500 }}>
+                  Welcome to Empatech OS
+                </h1>
+                <p className="text-white/60 max-w-lg" style={{ fontFamily: 'Poppins, sans-serif', fontSize: '20px', fontWeight: 300 }}>
+                  Let's got to know your business so we can personalize your experience
+                </p>
+              </div>
+            )}
+
+            {/* Step Title */}
+            {currentStep !== 1 && (
+              <div className="mb-6">
+                <h2 className="text-lg sm:text-xl font-semibold text-white">
+                  {ONBOARDING_STEPS[currentStep - 1].title}
+                </h2>
+              </div>
+            )}
 
             {/* Step Content */}
-            <div className="space-y-6">{renderStep()}</div>
-          </div>
-        </div>
+            <div className="space-y-6 mb-8">{renderStep()}</div>
 
-        {/* Navigation Buttons */}
-        <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <Button
-            variant="ghost"
-            onClick={handleSkip}
-            className="text-white/60 hover:text-white hover:bg-white/5 order-3 sm:order-1"
-            disabled={saving || completing}
-          >
-            Skip for now
-          </Button>
-
-          <div className="flex items-center gap-3 order-1 sm:order-2 ml-auto">
-            <Button
-              variant="outline"
-              onClick={handleBack}
-              disabled={currentStep === 1 || saving || completing}
-              className="border-white/10 text-white hover:bg-white/5"
-            >
-              <ChevronLeft className="h-4 w-4 mr-1" />
-              Back
-            </Button>
-
-            {isLastStep ? (
+            {/* Navigation Buttons - Right after form fields */}
+            <div className="flex items-center justify-between gap-4 mt-6">
               <Button
-                onClick={handleComplete}
-                disabled={completing || saving}
-                className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:from-cyan-600 hover:to-blue-700 min-w-[140px]"
-              >
-                {completing ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Completing...
-                  </>
-                ) : (
-                  <>
-                    <Check className="h-4 w-4 mr-2" />
-                    Complete
-                  </>
-                )}
-              </Button>
-            ) : (
-              <Button
-                onClick={handleNext}
+                variant="outline"
+                onClick={handleSkip}
+                className="border-cyan-400/50 text-white hover:bg-white/5"
                 disabled={saving || completing}
-                className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:from-cyan-600 hover:to-blue-700 min-w-[120px]"
               >
-                {saving ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    Next
-                    <ChevronRight className="h-4 w-4 ml-1" />
-                  </>
-                )}
+                Skip
               </Button>
-            )}
-          </div>
 
-          {/* Saving indicator */}
-          {saving && (
-            <p className="text-xs text-white/40 order-2 sm:order-3">
-              Saving progress...
-            </p>
-          )}
+              <div className="flex items-center gap-3 ml-auto">
+                {currentStep > 1 && (
+                  <Button
+                    variant="outline"
+                    onClick={handleBack}
+                    disabled={saving || completing}
+                    className="border-cyan-400/50 text-white hover:bg-white/5"
+                  >
+                    Back
+                  </Button>
+                )}
+
+                {isLastStep ? (
+                  <Button
+                    onClick={handleComplete}
+                    disabled={completing || saving}
+                    className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:from-cyan-600 hover:to-blue-700 min-w-[120px]"
+                  >
+                    {completing ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Completing...
+                      </>
+                    ) : (
+                      <>
+                        <Check className="h-4 w-4 mr-2" />
+                        Complete
+                      </>
+                    )}
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleNext}
+                    disabled={saving || completing}
+                    className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:from-cyan-600 hover:to-blue-700 min-w-[120px]"
+                  >
+                    {saving ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      "Next"
+                    )}
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

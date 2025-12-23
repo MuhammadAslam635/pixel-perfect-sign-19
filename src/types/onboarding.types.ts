@@ -3,29 +3,27 @@
 export type OnboardingStatus = 'not_started' | 'draft' | 'in_progress' | 'completed' | 'approved' | 'rejected';
 
 export interface OnboardingQuestions {
-  // Section 1: Company Overview
-  companyName?: string;
+  // Step 1: Company website
   website?: string;
+
+  // Step 2: Company Info
+  companyName?: string;
   businessDescription?: string;
-  mainProductService?: string;
   coreOfferings?: string[];
-  idealCustomerProfile?: string;
-  primaryBusinessGoals?: string;
-
-  // Section 2: Current Operations & Challenges
-  currentChallenges?: string;
-  challengeDuration?: string;
-  previousAttempts?: string;
-  existingTeams?: string;
-  currentTechStack?: string;
-
-  // Section 3: Data, Systems & Partners
-  existingPartners?: string;
-  dataChannels?: string;
   preferredCountries?: string;
 
-  // Section 4: Strategy, Differentiation & Assets
+  // Step 3: ICP
+  idealCustomerProfile?: string;
+
+  // Step 4: Data & Partners + Strategy
+  existingPartners?: string;
+  dataChannels?: string;
   differentiators?: string;
+}
+
+export interface ICPSuggestion {
+  title: string;
+  description: string;
 }
 
 export interface SupportingDocument {
@@ -104,26 +102,26 @@ export interface OnboardingStep {
 export const ONBOARDING_STEPS: OnboardingStep[] = [
   {
     id: 1,
-    title: 'Company Overview',
-    description: 'Tell us about your company and goals',
-    fields: ['companyName', 'website', 'businessDescription', 'mainProductService', 'coreOfferings', 'idealCustomerProfile', 'primaryBusinessGoals'],
+    title: 'Company website',
+    description: 'Enter your website link',
+    fields: ['website'],
   },
   {
     id: 2,
-    title: 'Operations & Challenges',
-    description: 'Share your current challenges and tech stack',
-    fields: ['currentChallenges', 'challengeDuration', 'previousAttempts', 'existingTeams', 'currentTechStack'],
+    title: 'Company Info',
+    description: 'Tell us about your company',
+    fields: ['companyName', 'businessDescription', 'coreOfferings', 'preferredCountries'],
   },
   {
     id: 3,
-    title: 'Data & Partners',
-    description: 'Tell us about your systems and partnerships',
-    fields: ['existingPartners', 'dataChannels', 'preferredCountries'],
+    title: 'ICP',
+    description: 'Define your Ideal Customer Profile',
+    fields: ['idealCustomerProfile'],
   },
   {
     id: 4,
-    title: 'Strategy & Assets',
-    description: 'What makes you different and upload documents',
+    title: 'Data & Partners',
+    description: 'Tell us what makes you different and upload supporting documents',
     fields: ['differentiators'],
   },
 ];

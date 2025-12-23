@@ -9,7 +9,7 @@ interface StepIndicatorProps {
 const StepIndicator = ({ currentStep, steps }: StepIndicatorProps) => {
   return (
     <div className="flex items-center justify-center">
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
         {steps.map((step, index) => {
           const stepNumber = index + 1;
           const isCompleted = stepNumber < currentStep;
@@ -18,11 +18,11 @@ const StepIndicator = ({ currentStep, steps }: StepIndicatorProps) => {
           return (
             <div key={step.id} className="flex items-center">
               {/* Step Circle + Title inline */}
-              <div className="flex items-center gap-1.5">
-                {/* Step Circle - smaller */}
+              <div className="flex items-center gap-3">
+                {/* Step Circle - bigger */}
                 <div
                   className={`
-                    flex items-center justify-center w-5 h-5 rounded-full shrink-0
+                    flex items-center justify-center w-8 h-8 rounded-full shrink-0
                     font-medium transition-all duration-300
                     ${
                       isCompleted
@@ -32,31 +32,31 @@ const StepIndicator = ({ currentStep, steps }: StepIndicatorProps) => {
                         : "bg-white/5 border border-white/20 text-white/40"
                     }
                   `}
-                  style={{ fontSize: '12px' }}
+                  style={{ fontSize: '16px' }}
                 >
                   {isCompleted ? (
-                    <Check className="h-3 w-3" />
+                    <Check className="h-4 w-4" />
                   ) : (
                     stepNumber
                   )}
                 </div>
 
-                {/* Step Title - inline, 10px */}
+                {/* Step Title - bigger font */}
                 <span
                   className={`whitespace-nowrap ${
                     isCurrent ? "text-white" : isCompleted ? "text-cyan-400" : "text-white/40"
                   }`}
-                  style={{ fontSize: '12px' }}
+                  style={{ fontSize: '16px' }}
                 >
                   {step.title}
                 </span>
               </div>
 
-              {/* Connector Line */}
+              {/* Connector Line - longer */}
               {index < steps.length - 1 && (
                 <div
                   className={`
-                    w-6 h-0.5 mx-2 transition-all duration-300
+                    w-12 h-0.5 mx-3 transition-all duration-300
                     ${isCompleted ? "bg-gradient-to-r from-cyan-500 to-blue-600" : "bg-white/10"}
                   `}
                 />
