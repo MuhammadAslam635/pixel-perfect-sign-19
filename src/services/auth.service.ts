@@ -36,6 +36,7 @@ export interface AuthResponse {
   message: string;
   token?: string;
   user?: any;
+  isApproved?: boolean;
 }
 
 export interface InvitationDetails {
