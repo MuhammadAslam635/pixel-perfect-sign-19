@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Building2, Search as SearchIcon } from "lucide-react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import DomainSpecificTab from "./tabs/DomainSpecificTab";
 import AdvancedQueryTab from "./tabs/AdvancedQueryTab";
 import EnrichmentProgressTracker from "./EnrichmentProgressTracker";
@@ -67,14 +68,22 @@ const LeadEnrichmentModal = ({
         className="max-w-4xl max-h-[90vh] overflow-hidden p-0 bg-gradient-to-br from-gray-800/50 to-gray-900/30 border border-white/10 backdrop-blur-xl"
         hideCloseButton={true}
       >
+        {/* Accessibility - Hidden from visual but available to screen readers */}
+        <VisuallyHidden>
+          <DialogTitle>Lead Enrichment</DialogTitle>
+          <DialogDescription>
+            Discover and enrich company leads with decision-makers using domain-specific or advanced query methods
+          </DialogDescription>
+        </VisuallyHidden>
+
         {/* Header */}
         <div className="sticky top-0 z-10 bg-gradient-to-br from-gray-800/50 to-gray-900/30 backdrop-blur-sm border-b border-white/10 px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-bold text-white">
+              <h2 className="text-2xl font-bold text-white" aria-hidden="true">
                 Lead Enrichment
               </h2>
-              <p className="text-sm text-white/50 mt-1">
+              <p className="text-sm text-white/50 mt-1" aria-hidden="true">
                 Discover and enrich company leads with decision-makers
               </p>
             </div>
