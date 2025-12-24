@@ -7,22 +7,21 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import {
-  REVENUE_RANGES,
-  EMPLOYEE_RANGES,
-  type RevenueRange,
-  type EmployeeRange,
+import type {
+  RevenueRange,
+  EmployeeRange,
+  RangeOption,
 } from "@/types/leadEnrichment";
 
 interface RangeFilterProps {
   type: "revenue" | "employee";
   value: RevenueRange | EmployeeRange | undefined;
   onChange: (range: RevenueRange | EmployeeRange | undefined) => void;
+  ranges: RangeOption[];
 }
 
-const RangeFilter = ({ type, value, onChange }: RangeFilterProps) => {
+const RangeFilter = ({ type, value, onChange, ranges }: RangeFilterProps) => {
   const isRevenue = type === "revenue";
-  const ranges = isRevenue ? REVENUE_RANGES : EMPLOYEE_RANGES;
   const icon = isRevenue ? DollarSign : Users2;
   const label = isRevenue ? "Revenue Range" : "Company Size";
   const color = isRevenue ? "yellow" : "cyan";

@@ -7,6 +7,7 @@ import {
   Filter,
   ChevronDown,
   ChevronUp,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,6 +19,7 @@ import RoleSelector from "../filters/RoleSelector";
 import RegionCountrySelector from "../filters/RegionCountrySelector";
 import RangeFilter from "../filters/RangeFilter";
 import leadEnrichmentService from "@/services/leadEnrichment.service";
+import { useEnrichmentConfigs } from "@/hooks/useEnrichmentConfigs";
 import { toast } from "sonner";
 import type {
   EnrichmentFilters,
@@ -30,6 +32,17 @@ interface AdvancedQueryTabProps {
 }
 
 const AdvancedQueryTab = ({ onEnrichmentStart }: AdvancedQueryTabProps) => {
+  // Fetch dynamic enrichment configs
+  const {
+    regions,
+    countries,
+    seniorityOptions,
+    revenueRanges,
+    employeeRanges,
+    loading: configsLoading,
+    error: configsError,
+  } = useEnrichmentConfigs();
+
   const [query, setQuery] = useState("");
   const [maxCompanies, setMaxCompanies] = useState(5);
   const [showFilters, setShowFilters] = useState(false);
@@ -220,49 +233,70 @@ const AdvancedQueryTab = ({ onEnrichmentStart }: AdvancedQueryTabProps) => {
             exit={{ opacity: 0, height: 0 }}
             className="space-y-6 p-4 bg-gradient-to-br from-gray-800/20 to-gray-900/10 rounded-lg border border-white/10"
           >
-            {/* Industry Categories */}
-            <CategorySelector
-              selectedCategories={filters.categories || []}
-              onChange={(categories) => updateFilters("categories", categories)}
-            />
+            {configsLoading ? (
+              <div className="flex items-center justify-center py-8 text-white/50">
+                <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                Loading filter options...
+              </div>
+            ) : configsError ? (
+              <Alert className="border-red-500/20 bg-red-500/10">
+                <AlertCircle className="h-4 w-4 text-red-500" />
+                <AlertDescription className="text-white/70">
+                  {configsError}
+                </AlertDescription>
+              </Alert>
+            ) : (
+              <>
+                {/* Industry Categories */}
+                <CategorySelector
+                  selectedCategories={filters.categories || []}
+                  onChange={(categories) => updateFilters("categories", categories)}
+                />
 
-            <Separator className="bg-white/10" />
+                <Separator className="bg-white/10" />
 
-            {/* Seniority Levels */}
-            <RoleSelector
-              selectedRoles={filters.roles || []}
-              onChange={(roles) => updateFilters("roles", roles)}
-            />
+                {/* Seniority Levels */}
+                <RoleSelector
+                  selectedRoles={filters.roles || []}
+                  onChange={(roles) => updateFilters("roles", roles)}
+                  seniorityOptions={seniorityOptions}
+                />
 
-            <Separator className="bg-white/10" />
+                <Separator className="bg-white/10" />
 
-            {/* Regions & Countries */}
-            <RegionCountrySelector
-              selectedRegions={filters.regions || []}
-              selectedCountries={filters.countries || []}
-              onRegionsChange={(regions) => updateFilters("regions", regions)}
-              onCountriesChange={(countries) =>
-                updateFilters("countries", countries)
-              }
-            />
+                {/* Regions & Countries */}
+                <RegionCountrySelector
+                  selectedRegions={filters.regions || []}
+                  selectedCountries={filters.countries || []}
+                  onRegionsChange={(regions) => updateFilters("regions", regions)}
+                  onCountriesChange={(countries) =>
+                    updateFilters("countries", countries)
+                  }
+                  regions={regions}
+                  countries={countries}
+                />
 
-            <Separator className="bg-white/10" />
+                <Separator className="bg-white/10" />
 
-            {/* Revenue Range */}
-            <RangeFilter
-              type="revenue"
-              value={filters.revenueRange}
-              onChange={(range) => updateFilters("revenueRange", range)}
-            />
+                {/* Revenue Range */}
+                <RangeFilter
+                  type="revenue"
+                  value={filters.revenueRange}
+                  onChange={(range) => updateFilters("revenueRange", range)}
+                  ranges={revenueRanges}
+                />
 
-            <Separator className="bg-white/10" />
+                <Separator className="bg-white/10" />
 
-            {/* Employee Range */}
-            <RangeFilter
-              type="employee"
-              value={filters.employeeRange}
-              onChange={(range) => updateFilters("employeeRange", range)}
-            />
+                {/* Employee Range */}
+                <RangeFilter
+                  type="employee"
+                  value={filters.employeeRange}
+                  onChange={(range) => updateFilters("employeeRange", range)}
+                  ranges={employeeRanges}
+                />
+              </>
+            )}
           </motion.div>
         )}
       </div>

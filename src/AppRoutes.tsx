@@ -46,6 +46,7 @@ import AdminPrompts from "@/pages/admin/prompts";
 import AdminSettings from "@/pages/admin/Settings";
 import AdminUsers from "@/pages/admin/Users";
 import AdminIndustryCategories from "@/pages/admin/IndustryCategories";
+import AdminEnrichmentConfigs from "@/pages/admin/EnrichmentConfigs";
 
 const AppRoutes = () => {
   return (
@@ -398,6 +399,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute allowedRoles={["Admin"]}>
             <AdminIndustryCategories />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/enrichment-configs"
+        element={
+          <ProtectedRoute allowedRoles={["Admin"]}>
+            <AdminEnrichmentConfigs />
           </ProtectedRoute>
         }
       />

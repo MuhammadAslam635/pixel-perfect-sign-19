@@ -5,13 +5,15 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AnimatePresence, motion } from "framer-motion";
-import { REGIONS, COUNTRIES, type CountryOption } from "@/types/leadEnrichment";
+import type { CountryOption } from "@/types/leadEnrichment";
 
 interface RegionCountrySelectorProps {
   selectedRegions: string[];
   selectedCountries: string[];
   onRegionsChange: (regions: string[]) => void;
   onCountriesChange: (countries: string[]) => void;
+  regions: string[];
+  countries: CountryOption[];
 }
 
 const RegionCountrySelector = ({
@@ -19,6 +21,8 @@ const RegionCountrySelector = ({
   selectedCountries,
   onRegionsChange,
   onCountriesChange,
+  regions,
+  countries,
 }: RegionCountrySelectorProps) => {
   const [expandedRegions, setExpandedRegions] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");

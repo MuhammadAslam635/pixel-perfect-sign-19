@@ -2,14 +2,15 @@ import { Users, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { SENIORITY_OPTIONS, type SeniorityLevel } from "@/types/leadEnrichment";
+import type { SeniorityLevel, SeniorityOption } from "@/types/leadEnrichment";
 
 interface RoleSelectorProps {
   selectedRoles: SeniorityLevel[];
   onChange: (roles: SeniorityLevel[]) => void;
+  seniorityOptions: SeniorityOption[];
 }
 
-const RoleSelector = ({ selectedRoles, onChange }: RoleSelectorProps) => {
+const RoleSelector = ({ selectedRoles, onChange, seniorityOptions }: RoleSelectorProps) => {
   const toggleRole = (role: SeniorityLevel) => {
     const newRoles = selectedRoles.includes(role)
       ? selectedRoles.filter((r) => r !== role)
@@ -18,7 +19,7 @@ const RoleSelector = ({ selectedRoles, onChange }: RoleSelectorProps) => {
   };
 
   const selectAll = () => {
-    onChange(SENIORITY_OPTIONS.map((opt) => opt.value));
+    onChange(seniorityOptions.map((opt) => opt.value));
   };
 
   const clearAll = () => {
@@ -58,7 +59,7 @@ const RoleSelector = ({ selectedRoles, onChange }: RoleSelectorProps) => {
       {selectedRoles.length > 0 && (
         <div className="flex flex-wrap gap-2 p-3 bg-gray-800/30 rounded-lg border border-gray-700">
           {selectedRoles.map((role) => {
-            const option = SENIORITY_OPTIONS.find((opt) => opt.value === role);
+            const option = seniorityOptions.find((opt) => opt.value === role);
             return (
               <Badge
                 key={role}
@@ -82,7 +83,7 @@ const RoleSelector = ({ selectedRoles, onChange }: RoleSelectorProps) => {
 
       {/* Role Options */}
       <div className="grid grid-cols-2 gap-3">
-        {SENIORITY_OPTIONS.map((option) => {
+        {seniorityOptions.map((option) => {
           const isSelected = selectedRoles.includes(option.value);
           return (
             <div

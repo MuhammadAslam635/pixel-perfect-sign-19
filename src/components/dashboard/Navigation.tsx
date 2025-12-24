@@ -12,6 +12,7 @@ import {
   MessageSquare,
   PhoneCall,
   Settings,
+  Settings2,
   Users,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -108,6 +109,13 @@ const adminNavLinks: NavLink[] = [
     icon: FolderTree,
     path: "/admin/industry-categories",
     match: (pathname: string) => pathname.startsWith("/admin/industry-categories"),
+  },
+  {
+    id: "admin-enrichment-configs",
+    label: "Enrichment Configs",
+    icon: Settings2,
+    path: "/admin/enrichment-configs",
+    match: (pathname: string) => pathname.startsWith("/admin/enrichment-configs"),
   },
   {
     id: "prompts",
