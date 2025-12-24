@@ -45,6 +45,7 @@ import AdminDashboard from "@/pages/admin/Dashboard";
 import AdminPrompts from "@/pages/admin/prompts";
 import AdminSettings from "@/pages/admin/Settings";
 import AdminUsers from "@/pages/admin/Users";
+import AdminIndustryCategories from "@/pages/admin/IndustryCategories";
 
 const AppRoutes = () => {
   return (
@@ -389,6 +390,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute allowedRoles={["Admin"]}>
             <AdminSettings />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/industry-categories"
+        element={
+          <ProtectedRoute allowedRoles={["Admin"]}>
+            <AdminIndustryCategories />
           </ProtectedRoute>
         }
       />

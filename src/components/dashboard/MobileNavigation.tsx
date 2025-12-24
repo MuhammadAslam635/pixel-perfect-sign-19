@@ -11,12 +11,15 @@ import {
   BarChart3,
   Bot,
   CalendarDays,
+  FolderTree,
   Home,
   Mail,
   Megaphone,
   MessageSquare,
   PhoneCall,
+  Settings,
   Target,
+  Users,
   X,
 } from "lucide-react";
 
@@ -30,6 +33,45 @@ type NavLink = {
 };
 
 const contactRoles = ["CompanyUser"];
+
+// Admin Navigation Links for mobile
+const adminNavLinks: NavLink[] = [
+  {
+    id: "admin-home",
+    label: "Dashboard",
+    icon: HomeIcon as typeof Home,
+    path: "/admin/dashboard",
+    match: (pathname: string) => pathname === "/admin/dashboard",
+  },
+  {
+    id: "admin-users",
+    label: "Users",
+    icon: Users,
+    path: "/admin/users",
+    match: (pathname: string) => pathname.startsWith("/admin/users"),
+  },
+  {
+    id: "admin-categories",
+    label: "Categories",
+    icon: FolderTree,
+    path: "/admin/industry-categories",
+    match: (pathname: string) => pathname.startsWith("/admin/industry-categories"),
+  },
+  {
+    id: "prompts",
+    label: "Prompts",
+    icon: MessageSquare,
+    path: "/admin/prompts",
+    match: (pathname: string) => pathname.startsWith("/admin/prompts"),
+  },
+  {
+    id: "settings",
+    label: "Settings",
+    icon: Settings,
+    path: "/admin/settings",
+    match: (pathname: string) => pathname.startsWith("/admin/settings"),
+  },
+];
 
 const navLinks: NavLink[] = [
   {
@@ -112,8 +154,16 @@ export const MobileNavigation = () => {
   };
 
   const userRole = getUserRoleName();
+  const isAdmin = userRole === "Admin";
 
-  const filteredNavLinks = navLinks.filter((link) => {
+  // Check if we're on an admin page
+  const location = window.location;
+  const isAdminPage = location.pathname.startsWith("/admin");
+
+  // Use admin links if user is admin and on admin pages, otherwise use regular links
+  const linksToUse = isAdmin && isAdminPage ? adminNavLinks : navLinks;
+
+  const filteredNavLinks = linksToUse.filter((link) => {
     if (!link.roles || link.roles.length === 0) {
       return true;
     }

@@ -6,6 +6,7 @@ import ChatIcon from "@/components/icons/ChatIcon";
 import {
   BarChart3,
   Bot,
+  FolderTree,
   Home,
   Megaphone,
   MessageSquare,
@@ -100,6 +101,13 @@ const adminNavLinks: NavLink[] = [
     icon: Users,
     path: "/admin/users",
     match: (pathname: string) => pathname.startsWith("/admin/users"),
+  },
+  {
+    id: "admin-categories",
+    label: "Categories",
+    icon: FolderTree,
+    path: "/admin/industry-categories",
+    match: (pathname: string) => pathname.startsWith("/admin/industry-categories"),
   },
   {
     id: "prompts",

@@ -92,7 +92,7 @@ export const AdminCompanyMailgunTab = () => {
       });
 
       if (response.success && response.data) {
-        setCompanies(response.data.companies);
+        setCompanies(response.data.companies as unknown as any);
       }
     } catch (error: any) {
       console.error("Error fetching companies:", error);
