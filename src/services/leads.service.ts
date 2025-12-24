@@ -37,6 +37,18 @@ export interface Lead {
   // Agent Research fields
   isResearched?: boolean;
   researchData?: ResearchData;
+  // New fields
+  isVerifiedEmail?: boolean;
+  timezone?: string;
+  departments?: string[];
+  employmentHistory?: {
+    _id?: string;
+    title: string;
+    organizationName: string;
+    from: string;
+    to: string | null;
+    current: boolean;
+  }[];
 }
 
 export interface LeadsResponse {

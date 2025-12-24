@@ -36,7 +36,11 @@ import {
   Edit2,
   Save,
   X,
+  Clock,
+  CheckCircle,
+  Globe,
 } from "lucide-react";
+import { CompanyLogoFallback } from "@/components/ui/company-logo-fallback";
 import { companiesService } from "@/services/companies.service";
 import { calendarService } from "@/services/calendar.service";
 import { toast } from "sonner";
@@ -826,6 +830,16 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
                         <span className="text-[10px] text-white flex-1 truncate">
                           {lead.email || "N/A"}
                         </span>
+                        {lead.isVerifiedEmail && (
+                           <Tooltip>
+                             <TooltipTrigger asChild>
+                                <CheckCircle className="w-3 h-3 text-emerald-500 flex-shrink-0" />
+                             </TooltipTrigger>
+                             <TooltipContent>
+                               <p>Verified Email</p>
+                             </TooltipContent>
+                           </Tooltip>
+                        )}
                       </div>
                     </TooltipTrigger>
                     <TooltipContent>
@@ -890,60 +904,42 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
           <div>
             <h3 className="text-xs sm:text-sm font-semibold text-white mb-2">Personal</h3>
             <div className="space-y-1.5">
-              {/* Date of Birth - Not available in Lead type, showing placeholder */}
+              {/* Country */}
               <div className="flex flex-col gap-0.5">
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div
                         className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-colors bg-[#1a1a1a] border border-white/10 hover:bg-white/20"
                       >
-                        <Calendar className="w-3 h-3 text-white/60 flex-shrink-0" />
-                        <span className="text-[10px] text-white">N/A</span>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Date of Birth not available</p>
-                    </TooltipContent>
-                  </Tooltip>
-              </div>
-
-              {/* Language */}
-              <div className="flex flex-col gap-0.5">
-                {isEditing ? (
-                  <div
-                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
-                    style={{
-                      background: "#1a1a1a",
-                      border: "1px solid rgba(255, 255, 255, 0.1)",
-                    }}
-                  >
-                    <Languages className="w-3 h-3 text-white/60 flex-shrink-0" />
-                    <Input
-                      value={editData.language}
-                      onChange={(e) =>
-                        setEditData({ ...editData, language: e.target.value })
-                      }
-                      className="flex-1 h-6 text-[10px] bg-transparent border-0 text-white focus-visible:ring-0 focus-visible:ring-offset-0 px-2 py-0"
-                      placeholder="Language"
-                    />
-                  </div>
-                ) : (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div
-                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-colors bg-[#1a1a1a] border border-white/10 hover:bg-white/20"
-                      >
-                        <Languages className="w-3 h-3 text-white/60 flex-shrink-0" />
-                        <span className="text-[10px] text-white flex-1 truncate">
-                          {lead.language || "N/A"}
+                        <Globe className="w-3 h-3 text-white/60 flex-shrink-0" />
+                        <span className="text-[10px] text-white truncate">
+                          {lead.country || "N/A"}
                         </span>
                       </div>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>{lead.language || "No language specified"}</p>
+                      <p>{lead.country || "Country not available"}</p>
                     </TooltipContent>
                   </Tooltip>
-                )}
+              </div>
+
+              {/* Timezone */}
+              <div className="flex flex-col gap-0.5">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div
+                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-colors bg-[#1a1a1a] border border-white/10 hover:bg-white/20"
+                      >
+                        <Clock className="w-3 h-3 text-white/60 flex-shrink-0" />
+                        <span className="text-[10px] text-white truncate">
+                          {lead.timezone || "N/A"}
+                        </span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{lead.timezone || "Timezone not available"}</p>
+                    </TooltipContent>
+                  </Tooltip>
               </div>
 
               {/* Region */}
@@ -984,8 +980,64 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
                   </Tooltip>
                 )}
               </div>
+
             </div>
           </div>
+
+          {/* Departments */}
+          {lead.departments && lead.departments.length > 0 && (
+            <div className="mt-4">
+               <h3 className="text-xs sm:text-sm font-semibold text-white mb-2">Departments</h3>
+               <div className="flex flex-col gap-1.5">
+                  {lead.departments.map((dept: string, index: number) => (
+                    <div key={index} className="w-full px-2 py-1 rounded-lg bg-[#1a1a1a] border border-white/10 text-[10px] text-white/80 truncate">
+                       {dept.replace(/_/g, ' ')}
+                    </div>
+                  ))}
+               </div>
+            </div>
+          )}
+
+          {/* Employment History Section */}
+          {lead.employmentHistory && lead.employmentHistory.length > 0 && (
+             <div className="mt-4">
+                <h3 className="text-xs sm:text-sm font-semibold text-white mb-2">Experience</h3>
+                <div className="space-y-2">
+                   {lead.employmentHistory.map((job) => {
+                      const isCurrentCompany = 
+                        (lead.company?.name && job.organizationName?.toLowerCase() === lead.company.name.toLowerCase()) ||
+                        (lead.companyName && job.organizationName?.toLowerCase() === lead.companyName.toLowerCase());
+                      
+                      const logoUrl = isCurrentCompany ? lead.company?.logo : undefined;
+
+                      return (
+                      <div key={job._id || job.title} className="flex gap-3 items-start p-2 rounded-lg bg-[#1a1a1a] border border-white/5">
+                         <div className="flex-shrink-0 mt-0.5">
+                            <CompanyLogoFallback
+                               name={job.organizationName}
+                               logo={logoUrl}
+                               size="sm"
+                               className="rounded"
+                            />
+                         </div>
+                         <div className="flex-1 min-w-0">
+                            <h4 className="text-[11px] font-semibold text-white truncate">{job.title}</h4>
+                            <p className="text-[10px] text-white/70 truncate">{job.organizationName}</p>
+                            <div className="flex items-center gap-1 mt-0.5">
+                               {job.current ? (
+                                  <span className="text-[9px] text-emerald-400 font-medium">Present</span>
+                               ) : (
+                                  <span className="text-[9px] text-white/40">
+                                     {job.from ? new Date(job.from).getFullYear() : ''} - {job.to ? new Date(job.to).getFullYear() : 'Present'}
+                                  </span>
+                               )}
+                            </div>
+                         </div>
+                      </div>
+                   ); })}
+                </div>
+             </div>
+          )}
         </CardContent>
       </Card>
 
