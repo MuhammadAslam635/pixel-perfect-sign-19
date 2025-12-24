@@ -21,12 +21,14 @@ interface CompanyInfoStepProps {
   formData: OnboardingQuestions;
   updateFormData: (updates: Partial<OnboardingQuestions>) => void;
   website?: string; // Add website prop to detect changes
+  errors?: Record<string, string>;
 }
 
 const CompanyInfoStep = ({
   formData,
   updateFormData,
   website,
+  errors = {},
 }: CompanyInfoStepProps) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const hasGeneratedRef = useRef(false);
@@ -55,6 +57,11 @@ const CompanyInfoStep = ({
         .map((c) => c.trim())
         .filter(Boolean)
     : [];
+
+  console.log(
+    "[CompanyInfoStep] formData.businessDescription:",
+    formData.businessDescription
+  );
 
   const handleCountriesChange = (selectedCountries: string[]) => {
     // Convert array back to comma-separated string for backend
@@ -179,8 +186,15 @@ const CompanyInfoStep = ({
           placeholder="Enter your company name"
           minLength={2}
           maxLength={200}
-          className="bg-white/[0.06] border-cyan-400/50 text-white placeholder:text-white/40 text-sm rounded-lg h-12"
+          className={`bg-white/[0.06] text-white placeholder:text-white/40 text-sm rounded-lg h-12 ${
+            errors.companyName
+              ? "border-red-500 ring-offset-red-500"
+              : "border-cyan-400/50"
+          }`}
         />
+        {errors.companyName && (
+          <p className="text-red-500 text-sm mt-1">{errors.companyName}</p>
+        )}
       </div>
 
       {/* Brief Description */}
@@ -201,8 +215,17 @@ const CompanyInfoStep = ({
           placeholder="Describe your business in 2-3 sentences..."
           minLength={10}
           maxLength={1000}
-          className="bg-white/[0.06] border-cyan-400/50 text-white placeholder:text-white/40 min-h-[100px] scrollbar-hide text-sm rounded-lg"
+          className={`bg-white/[0.06] text-white placeholder:text-white/40 min-h-[100px] scrollbar-hide text-sm rounded-lg ${
+            errors.businessDescription
+              ? "border-red-500 ring-offset-red-500"
+              : "border-cyan-400/50"
+          }`}
         />
+        {errors.businessDescription && (
+          <p className="text-red-500 text-sm mt-1">
+            {errors.businessDescription}
+          </p>
+        )}
       </div>
 
       {/* Core Offerings */}
@@ -251,13 +274,20 @@ const CompanyInfoStep = ({
           }
           maxLength={500}
           disabled={isGenerating}
-          className="bg-white/[0.06] border-cyan-400/50 text-white placeholder:text-white/40 text-sm rounded-lg h-12"
+          className={`bg-white/[0.06] text-white placeholder:text-white/40 text-sm rounded-lg h-12 ${
+            errors.coreOfferings
+              ? "border-red-500 ring-offset-red-500"
+              : "border-cyan-400/50"
+          }`}
         />
         {isGenerating && (
           <p className="text-xs text-cyan-400/70 flex items-center gap-1">
             <Loader2 className="h-3 w-3 animate-spin" />
             AI is analyzing your company to suggest core offerings...
           </p>
+        )}
+        {errors.coreOfferings && !isGenerating && (
+          <p className="text-red-500 text-sm mt-1">{errors.coreOfferings}</p>
         )}
       </div>
 
@@ -277,9 +307,18 @@ const CompanyInfoStep = ({
           placeholder="Select preferred countries or regions"
           searchPlaceholder="Search countries..."
           emptyMessage="No countries found."
-          className="bg-white/[0.06] border-cyan-400/50 text-white placeholder:text-white/40 text-sm h-12"
+          className={`bg-white/[0.06] text-white placeholder:text-white/40 text-sm h-12 ${
+            errors.preferredCountries
+              ? "border-red-500 ring-offset-red-500"
+              : "border-cyan-400/50"
+          }`}
           maxDisplayItems={3}
         />
+        {errors.preferredCountries && (
+          <p className="text-red-500 text-sm mt-1">
+            {errors.preferredCountries}
+          </p>
+        )}
       </div>
     </div>
   );

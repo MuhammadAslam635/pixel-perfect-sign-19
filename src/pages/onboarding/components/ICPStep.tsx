@@ -9,9 +9,10 @@ import { toast } from "sonner";
 interface ICPStepProps {
   formData: OnboardingQuestions;
   updateFormData: (updates: Partial<OnboardingQuestions>) => void;
+  errors?: Record<string, string>;
 }
 
-const ICPStep = ({ formData, updateFormData }: ICPStepProps) => {
+const ICPStep = ({ formData, updateFormData, errors = {} }: ICPStepProps) => {
   const [suggestions, setSuggestions] = useState<ICPSuggestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedSuggestion, setSelectedSuggestion] = useState<number | null>(
@@ -188,23 +189,11 @@ const ICPStep = ({ formData, updateFormData }: ICPStepProps) => {
                     <h4 className="text-white font-medium text-sm flex-shrink-0 line-clamp-2">
                       {suggestion.title || "Lorem Ipsum lorem"}
                     </h4>
-                    <p className="text-white/60 text-xs leading-relaxed text-left w-full flex-1 overflow-hidden line-clamp-6">
+                    <p className="text-white/60 text-xs leading-relaxed text-left w-full flex-1 overflow-y-auto pr-2 scrollbar-hide">
                       {suggestion.isEmpty
                         ? "Lorem Ipsum is simply dummy text of the printing & typesis industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled."
-                        : truncateDescription(
-                            suggestion.description || "",
-                            100
-                          )}
+                        : suggestion.description || ""}
                     </p>
-                    {!suggestion.isEmpty &&
-                      suggestions[index] &&
-                      suggestions[index].description &&
-                      suggestions[index].description.trim().split(/\s+/)
-                        .length > 100 && (
-                        <p className="text-cyan-400 text-xs mt-1 flex-shrink-0">
-                          Click to view full details ↓
-                        </p>
-                      )}
                   </div>
                 )}
               </div>
@@ -231,8 +220,17 @@ const ICPStep = ({ formData, updateFormData }: ICPStepProps) => {
           placeholder="✨ Explain in 2 to 3 sentence your requirements"
           minLength={10}
           maxLength={1000}
-          className="bg-white/[0.06] border-cyan-400/50 text-white placeholder:text-white/40 min-h-[120px] scrollbar-hide text-sm rounded-lg"
+          className={`bg-white/[0.06] text-white placeholder:text-white/40 min-h-[120px] scrollbar-hide text-sm rounded-lg ${
+            errors.idealCustomerProfile
+              ? "border-red-500 ring-offset-red-500"
+              : "border-cyan-400/50"
+          }`}
         />
+        {errors.idealCustomerProfile && (
+          <p className="text-red-500 text-sm mt-1">
+            {errors.idealCustomerProfile}
+          </p>
+        )}
       </div>
     </div>
   );

@@ -23,19 +23,20 @@ import Logo from "@/components/Logo";
 
 // Validation rules matching backend Zod schema
 const FIELD_VALIDATION_RULES: Record<string, { min: number; max: number }> = {
-  // Step 1
-  website: { min: 1, max: 500 },
-  // Step 2
-  companyName: { min: 2, max: 200 },
-  businessDescription: { min: 10, max: 2000 },
-  coreOfferings: { min: 5, max: 1000 },
-  preferredCountries: { min: 5, max: 500 },
-  // Step 3
-  idealCustomerProfile: { min: 10, max: 1000 },
-  // Step 4
-  existingPartners: { min: 5, max: 1000 },
-  dataChannels: { min: 5, max: 1000 },
-  differentiators: { min: 10, max: 1000 },
+  // Length validations removed as per user request
+  // Backend consistency should be verified if these are enforced there
+};
+
+const FIELD_LABELS: Record<string, string> = {
+  website: "Website",
+  companyName: "Company Name",
+  businessDescription: "Business Description",
+  coreOfferings: "Core Offerings",
+  preferredCountries: "Preferred Countries",
+  idealCustomerProfile: "Ideal Customer Profile",
+  existingPartners: "Existing Partners",
+  dataChannels: "Data Channels",
+  differentiators: "Differentiators",
 };
 
 const OnboardingPage = () => {
@@ -60,14 +61,37 @@ const OnboardingPage = () => {
   }, [currentStep]);
 
   // Fetch existing onboarding data on mount - only run once
+  // Check sessionStorage first to avoid unnecessary API calls
   useEffect(() => {
     let isMounted = true;
 
     const fetchOnboarding = async () => {
       try {
         setLoading(true);
+
+        // Check if we have cached data in sessionStorage
+        const cachedData = sessionStorage.getItem("onboarding_data");
+        if (cachedData) {
+          try {
+            const parsedData = JSON.parse(cachedData);
+            console.log("[Onboarding] Using cached data from sessionStorage");
+            
+            if (isMounted) {
+              setOnboardingData(parsedData.onboardingData);
+              setFormData(parsedData.formData);
+              setLoading(false);
+            }
+            return; // Exit early, don't fetch from API
+          } catch (e) {
+            console.error("[Onboarding] Error parsing cached data:", e);
+            // If parsing fails, continue to fetch from API
+            sessionStorage.removeItem("onboarding_data");
+          }
+        }
+
+        // No cached data, fetch from API
         const response = await onboardingService.getOnboarding();
-        console.log("[Onboarding] Fetched data:", response);
+        console.log("[Onboarding] Fetched data from API:", response);
 
         if (!isMounted) return;
 
@@ -97,8 +121,15 @@ const OnboardingPage = () => {
             };
 
             setFormData(formDataCopy);
+            
+            // Cache the data in sessionStorage for future navigation
+            sessionStorage.setItem("onboarding_data", JSON.stringify({
+              onboardingData: response.data,
+              formData: formDataCopy
+            }));
+            
             console.log(
-              "[Onboarding] Form data set successfully:",
+              "[Onboarding] Form data set successfully and cached:",
               formDataCopy
             );
           } else {
@@ -196,6 +227,23 @@ const OnboardingPage = () => {
         questions: cleanedQuestions,
         status: newStatus || "in_progress",
       });
+
+      // Update sessionStorage cache with the latest form data
+      try {
+        const cachedData = sessionStorage.getItem("onboarding_data");
+        if (cachedData) {
+          const parsedCache = JSON.parse(cachedData);
+          // Update the formData in cache
+          parsedCache.formData = dataToUse;
+          sessionStorage.setItem("onboarding_data", JSON.stringify(parsedCache));
+          console.log("[Onboarding] sessionStorage cache updated after save");
+        }
+      } catch (e) {
+        console.error("[Onboarding] Error updating sessionStorage cache:", e);
+      }
+
+      // Dispatch custom event to notify OnboardingPanel to refresh
+      window.dispatchEvent(new Event("onboarding_updated"));
 
       // Update local storage user data if company name changed
       if (dataToUse.companyName) {
@@ -339,6 +387,7 @@ const OnboardingPage = () => {
     stepConfig.fields.forEach((field) => {
       const value = formData[field as keyof OnboardingQuestions];
       const rules = FIELD_VALIDATION_RULES[field];
+      const label = FIELD_LABELS[field] || field;
 
       // Special handling for website URL validation
       if (field === "website") {
@@ -353,11 +402,13 @@ const OnboardingPage = () => {
             const url = new URL(urlToValidate);
             // Ensure it has a hostname with at least one dot (e.g. google.com)
             if (!url.hostname.includes(".")) {
-               newErrors[field] = "Website: Please provide a valid URL (e.g., google.com or https://google.com)";
-               isValid = false;
+              newErrors[field] =
+                "Website: Please provide a valid URL (e.g., google.com or https://google.com)";
+              isValid = false;
             }
           } catch {
-            newErrors[field] = "Website: Please provide a valid URL (e.g., google.com or https://google.com)";
+            newErrors[field] =
+              "Website: Please provide a valid URL (e.g., google.com or https://google.com)";
             isValid = false;
           }
         } else if (
@@ -384,7 +435,9 @@ const OnboardingPage = () => {
                   item.trim().length > rules.max)
             );
             if (invalidItems.length > 0) {
-              newErrors[field] = `Core Offerings: Each item must be ${rules.min}-${rules.max} characters`;
+              newErrors[
+                field
+              ] = `Core Offerings: Each item must be ${rules.min}-${rules.max} characters`;
               isValid = false;
             }
           }
@@ -398,22 +451,28 @@ const OnboardingPage = () => {
         const isStep4Optional =
           currentStep === 4 && field === "differentiators";
         if (trimmed === "" && !isStep4Optional) {
-          newErrors[field] = `${field}: Required`;
+          newErrors[field] = `${label}: Required`;
           isValid = false;
         } else if (rules && trimmed !== "" && !isStep4Optional) {
           // Only validate min/max if field is not optional and has content
           if (trimmed.length < rules.min) {
-            newErrors[field] = `${field}: Minimum ${rules.min} characters required`;
+            newErrors[
+              field
+            ] = `${label}: Minimum ${rules.min} characters required`;
             isValid = false;
           } else if (trimmed.length > rules.max) {
-             newErrors[field] = `${field}: Maximum ${rules.max} characters allowed`;
-             isValid = false;
+            newErrors[
+              field
+            ] = `${label}: Maximum ${rules.max} characters allowed`;
+            isValid = false;
           }
         } else if (rules && trimmed !== "" && isStep4Optional) {
           // For optional fields, only validate max length if provided
           if (trimmed.length > rules.max) {
-             newErrors[field] = `${field}: Maximum ${rules.max} characters allowed`;
-             isValid = false;
+            newErrors[
+              field
+            ] = `${label}: Maximum ${rules.max} characters allowed`;
+            isValid = false;
           }
         }
       } else if (value === undefined || value === null) {
@@ -421,7 +480,7 @@ const OnboardingPage = () => {
         const isStep4Optional =
           currentStep === 4 && field === "differentiators";
         if (!isStep4Optional) {
-          newErrors[field] = `${field}: Required`;
+          newErrors[field] = `${label}: Required`;
           isValid = false;
         }
       }
@@ -430,19 +489,19 @@ const OnboardingPage = () => {
     setErrors(newErrors);
 
     if (!isValid) {
-      // Still show toast for general awareness or if inline isn't enough, 
+      // Still show toast for general awareness or if inline isn't enough,
       // but user asked for inline. We can keep toast if we want, but maybe redundant.
       // User said "throws validation error", implying toast.
       // But also "shows the error just below the input field"
-      // I'll keep the toast for now as a fallback or summary, OR remove it if it feels duplicated. 
-      // The code specifically said "toast.error(errors[0])". 
-      // The user COMPLAINED about the validation error text. 
-      // I will remove the toast for `website` if I show it inline. 
+      // I'll keep the toast for now as a fallback or summary, OR remove it if it feels duplicated.
+      // The code specifically said "toast.error(errors[0])".
+      // The user COMPLAINED about the validation error text.
+      // I will remove the toast for `website` if I show it inline.
       // Actually, standard pattern is to use inline errors. I'll rely on inline errors.
-       if (Object.keys(newErrors).length > 0) {
-         // Optionally show toast
-         // toast.error("Please fix the errors before proceeding");
-       }
+      if (Object.keys(newErrors).length > 0) {
+        // Optionally show toast
+        // toast.error("Please fix the errors before proceeding");
+      }
       return false;
     }
 
@@ -453,19 +512,24 @@ const OnboardingPage = () => {
     if (!validateStep(currentStep)) {
       return;
     }
-    
+
     // Create a copy of form data to potentially modify and save
     let dataToSave = { ...formData };
-    
+    let formUpdates: Partial<OnboardingQuestions> = {};
+
     // Normalize Website URL if needed (Step 1)
-    if (currentStep === 1 && typeof formData.website === "string" && formData.website.trim() !== "") {
+    if (
+      currentStep === 1 &&
+      typeof formData.website === "string" &&
+      formData.website.trim() !== ""
+    ) {
       const website = formData.website.trim();
       // If no protocol, prepend https://
       if (!/^https?:\/\//i.test(website)) {
         const normalizedWebsite = `https://${website}`;
         // Update both the data to save and the state
         dataToSave.website = normalizedWebsite;
-        updateFormData({ website: normalizedWebsite });
+        formUpdates.website = normalizedWebsite;
       }
     }
 
@@ -480,33 +544,35 @@ const OnboardingPage = () => {
         if (result.success && result.data) {
           // Auto-fill company name and description - always update when new data is fetched
           // Also clear core offerings and preferred countries for the new company
-          const updates: Partial<OnboardingQuestions> = {};
 
           if (result.data.companyName) {
-            updates.companyName = result.data.companyName;
+            formUpdates.companyName = result.data.companyName;
             dataToSave.companyName = result.data.companyName;
           }
 
           if (result.data.description) {
-            // Truncate description to max 1000 characters to match validation rules
-            const maxLength = FIELD_VALIDATION_RULES.businessDescription.max;
+            // Truncate description to max 1000 characters to match textarea maxLength
+            const maxLength = 1000; // Match the maxLength in CompanyInfoStep textarea
             const truncatedDescription =
               result.data.description.length > maxLength
                 ? result.data.description.substring(0, maxLength).trim() + "..."
                 : result.data.description;
-            updates.businessDescription = truncatedDescription;
+            formUpdates.businessDescription = truncatedDescription;
             dataToSave.businessDescription = truncatedDescription;
+            console.log(
+              "[Onboarding] Setting businessDescription:",
+              truncatedDescription
+            );
           }
 
           // Clear core offerings and preferred countries when fetching new company data
           // User will need to generate/select them again for the new company
-          updates.coreOfferings = [];
-          updates.preferredCountries = "";
+          formUpdates.coreOfferings = [];
+          formUpdates.preferredCountries = "";
           dataToSave.coreOfferings = [];
           dataToSave.preferredCountries = "";
 
-          if (Object.keys(updates).length > 0) {
-            updateFormData(updates);
+          if (Object.keys(formUpdates).length > 0) {
             toast.success(
               "Company information fetched successfully! Please generate core offerings and select countries for the new company."
             );
@@ -523,6 +589,12 @@ const OnboardingPage = () => {
       }
     }
 
+    // Update form data before saving (to ensure immediate UI update)
+    if (Object.keys(formUpdates).length > 0) {
+      updateFormData(formUpdates);
+    }
+
+    // Save progress with the updated data
     const saved = await saveProgress("in_progress", dataToSave);
     if (!saved) {
       // Don't proceed if save failed
@@ -578,6 +650,10 @@ const OnboardingPage = () => {
 
       const response = await onboardingService.completeOnboarding();
       if (response.success) {
+        // Clear sessionStorage cache since onboarding is now complete
+        sessionStorage.removeItem("onboarding_data");
+        console.log("[Onboarding] Cache cleared after completion");
+        
         // Refresh canonical user data from server and sync localStorage + redux
         try {
           const synced = await fetchAndSyncUser();
@@ -624,8 +700,25 @@ const OnboardingPage = () => {
 
   const updateFormData = useCallback(
     (updates: Partial<OnboardingQuestions>) => {
-      setFormData((prev) => ({ ...prev, ...updates }));
-      
+      console.log("[Onboarding] updateFormData called with:", updates);
+      setFormData((prev) => {
+        const newFormData = { ...prev, ...updates };
+        
+        // Update sessionStorage cache immediately with the new form data
+        try {
+          const cachedData = sessionStorage.getItem("onboarding_data");
+          if (cachedData) {
+            const parsedCache = JSON.parse(cachedData);
+            parsedCache.formData = newFormData;
+            sessionStorage.setItem("onboarding_data", JSON.stringify(parsedCache));
+          }
+        } catch (e) {
+          console.error("[Onboarding] Error updating sessionStorage cache:", e);
+        }
+        
+        return newFormData;
+      });
+
       // Clear errors for fields that are being updated
       setErrors((prev) => {
         const newErrors = { ...prev };
@@ -664,10 +757,17 @@ const OnboardingPage = () => {
           <CompanyInfoStep
             formData={formData}
             updateFormData={updateFormData}
+            errors={errors}
           />
         );
       case 3:
-        return <ICPStep formData={formData} updateFormData={updateFormData} />;
+        return (
+          <ICPStep
+            formData={formData}
+            updateFormData={updateFormData}
+            errors={errors}
+          />
+        );
       case 4:
         return (
           <DataPartnersStep
@@ -734,7 +834,7 @@ const OnboardingPage = () => {
           </div>
 
           {/* Form Content - Match step indicator width exactly */}
-          <div className="max-w-3xl pl-8 pr-4 sm:pl-12 sm:pr-6 lg:pl-16 lg:pr-8 w-full">
+          <div className="max-w-4xl pl-8 pr-4 sm:pl-12 sm:pr-6 lg:pl-16 lg:pr-8 w-full">
             {/* Welcome Header - Only show on step 1 */}
             {currentStep === 1 && (
               <div className="mb-8">
