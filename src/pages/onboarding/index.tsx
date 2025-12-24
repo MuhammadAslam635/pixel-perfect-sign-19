@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useDispatch } from "react-redux";
@@ -27,8 +27,8 @@ const FIELD_VALIDATION_RULES: Record<string, { min: number; max: number }> = {
   website: { min: 1, max: 500 },
   // Step 2
   companyName: { min: 2, max: 200 },
-  businessDescription: { min: 10, max: 1000 },
-  coreOfferings: { min: 5, max: 500 },
+  businessDescription: { min: 10, max: 2000 },
+  coreOfferings: { min: 5, max: 1000 },
   preferredCountries: { min: 5, max: 500 },
   // Step 3
   idealCustomerProfile: { min: 10, max: 1000 },
@@ -49,6 +49,10 @@ const OnboardingPage = () => {
     null
   );
   const [formData, setFormData] = useState<OnboardingQuestions>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Auto-save debouncing
+  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Scroll to top when step changes
   useEffect(() => {
@@ -133,20 +137,33 @@ const OnboardingPage = () => {
     };
   }, []); // Empty dependency array - only run on mount
 
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const dispatch = useDispatch();
 
   // Auto-save when navigating between steps
   const saveProgress = async (
-    newStatus?: "draft" | "in_progress"
+    newStatus?: "draft" | "in_progress",
+    formDataOverride?: OnboardingQuestions
   ): Promise<boolean> => {
     try {
       setSaving(true);
+
+      // Use overridden data if provided, otherwise use current state
+      const dataToUse = formDataOverride || formData;
 
       // Clean form data: remove empty arrays and undefined values for fields not in current step
       const currentStepConfig = ONBOARDING_STEPS.find(
         (s) => s.id === currentStep
       );
-      const cleanedQuestions: Partial<OnboardingQuestions> = { ...formData };
+      const cleanedQuestions: Partial<OnboardingQuestions> = { ...dataToUse };
 
       // Remove empty arrays and undefined values for fields not in current or previous steps
       if (currentStepConfig) {
@@ -181,20 +198,20 @@ const OnboardingPage = () => {
       });
 
       // Update local storage user data if company name changed
-      if (formData.companyName) {
+      if (dataToUse.companyName) {
         try {
           const userStr = localStorage.getItem("user");
           if (userStr) {
             const user = JSON.parse(userStr);
-            if (user.name !== formData.companyName) {
+            if (user.name !== dataToUse.companyName) {
               // Update display name to keep greeting in sync
-              user.name = formData.companyName;
+              user.name = dataToUse.companyName;
               localStorage.setItem("user", JSON.stringify(user));
               // Update redux auth slice so current session reflects changes immediately
               try {
                 dispatch(
                   updateUser({
-                    name: formData.companyName,
+                    name: dataToUse.companyName,
                   })
                 );
               } catch (e) {
@@ -235,13 +252,88 @@ const OnboardingPage = () => {
     }
   };
 
+  const autoSaveFormData = useCallback(async () => {
+    try {
+      // Only auto-save if not currently saving and not completing
+      if (saving || completing) return;
+
+      // Clean form data: remove empty arrays and undefined values for fields not in current or previous steps
+      const currentStepConfig = ONBOARDING_STEPS.find(
+        (s) => s.id === currentStep
+      );
+      const cleanedQuestions: Partial<OnboardingQuestions> = { ...formData };
+
+      // Include fields from current step and all previous steps for auto-save
+      if (currentStepConfig) {
+        const allowedFields = new Set<string>();
+        // Include fields from current step and all previous steps
+        for (let i = 1; i <= currentStep; i++) {
+          const step = ONBOARDING_STEPS.find((s) => s.id === i);
+          if (step) {
+            step.fields.forEach((field) => allowedFields.add(field));
+          }
+        }
+
+        // Clean up fields not in allowed set
+        Object.keys(cleanedQuestions).forEach((key) => {
+          if (!allowedFields.has(key)) {
+            delete cleanedQuestions[key as keyof OnboardingQuestions];
+          }
+        });
+
+        // Remove empty arrays
+        Object.keys(cleanedQuestions).forEach((key) => {
+          const value = cleanedQuestions[key as keyof OnboardingQuestions];
+          if (Array.isArray(value) && value.length === 0) {
+            delete cleanedQuestions[key as keyof OnboardingQuestions];
+          }
+        });
+      }
+
+      // Only save if there are actual changes to save
+      if (Object.keys(cleanedQuestions).length === 0) return;
+
+      await onboardingService.updateOnboarding({
+        questions: cleanedQuestions,
+        status: "in_progress",
+      });
+
+      // Update local storage user data if company name changed
+      if (formData.companyName) {
+        try {
+          const userStr = localStorage.getItem("user");
+          if (userStr) {
+            const user = JSON.parse(userStr);
+            if (user.name !== formData.companyName) {
+              user.name = formData.companyName;
+              localStorage.setItem("user", JSON.stringify(user));
+              dispatch(
+                updateUser({
+                  name: formData.companyName,
+                })
+              );
+            }
+          }
+        } catch (e) {
+          console.error("Error updating local user data:", e);
+        }
+      }
+
+      console.log("[Auto-save] Form data saved successfully");
+    } catch (error: any) {
+      // Silently handle auto-save errors - don't show toasts for background saves
+      console.error("Auto-save error (silent):", error);
+    }
+  }, [formData, currentStep, saving, completing, dispatch]);
+
   const validateStep = (stepId: number): boolean => {
     const stepConfig = ONBOARDING_STEPS.find((s) => s.id === stepId);
     if (!stepConfig) {
       return true;
     }
 
-    const errors: string[] = [];
+    const newErrors: Record<string, string> = {};
+    let isValid = true;
 
     // Only validate fields that belong to this step
     stepConfig.fields.forEach((field) => {
@@ -251,26 +343,38 @@ const OnboardingPage = () => {
       // Special handling for website URL validation
       if (field === "website") {
         if (typeof value === "string" && value.trim() !== "") {
+          let urlToValidate = value;
+          // If no protocol, prepend https:// for validation
+          if (!/^https?:\/\//i.test(value)) {
+            urlToValidate = `https://${value}`;
+          }
+
           try {
-            new URL(value);
+            const url = new URL(urlToValidate);
+            // Ensure it has a hostname with at least one dot (e.g. google.com)
+            if (!url.hostname.includes(".")) {
+               newErrors[field] = "Website: Please provide a valid URL (e.g., google.com or https://google.com)";
+               isValid = false;
+            }
           } catch {
-            errors.push(
-              `Website: Please provide a valid URL (e.g., https://example.com)`
-            );
+            newErrors[field] = "Website: Please provide a valid URL (e.g., google.com or https://google.com)";
+            isValid = false;
           }
         } else if (
           value === undefined ||
           value === null ||
           (typeof value === "string" && value.trim() === "")
         ) {
-          errors.push(`Website: Required`);
+          newErrors[field] = "Website: Required";
+          isValid = false;
         }
       }
       // Special handling for array fields (coreOfferings)
       else if (field === "coreOfferings") {
         if (Array.isArray(value)) {
           if (value.length === 0) {
-            errors.push(`Core Offerings: At least one item required`);
+            newErrors[field] = "Core Offerings: At least one item required";
+            isValid = false;
           } else if (rules) {
             // Validate each item in array
             const invalidItems = value.filter(
@@ -280,13 +384,13 @@ const OnboardingPage = () => {
                   item.trim().length > rules.max)
             );
             if (invalidItems.length > 0) {
-              errors.push(
-                `Core Offerings: Each item must be ${rules.min}-${rules.max} characters`
-              );
+              newErrors[field] = `Core Offerings: Each item must be ${rules.min}-${rules.max} characters`;
+              isValid = false;
             }
           }
         } else {
-          errors.push(`Core Offerings: Required`);
+          newErrors[field] = "Core Offerings: Required";
+          isValid = false;
         }
       } else if (typeof value === "string") {
         const trimmed = value.trim();
@@ -294,18 +398,22 @@ const OnboardingPage = () => {
         const isStep4Optional =
           currentStep === 4 && field === "differentiators";
         if (trimmed === "" && !isStep4Optional) {
-          errors.push(`${field}: Required`);
+          newErrors[field] = `${field}: Required`;
+          isValid = false;
         } else if (rules && trimmed !== "" && !isStep4Optional) {
           // Only validate min/max if field is not optional and has content
           if (trimmed.length < rules.min) {
-            errors.push(`${field}: Minimum ${rules.min} characters required`);
+            newErrors[field] = `${field}: Minimum ${rules.min} characters required`;
+            isValid = false;
           } else if (trimmed.length > rules.max) {
-            errors.push(`${field}: Maximum ${rules.max} characters allowed`);
+             newErrors[field] = `${field}: Maximum ${rules.max} characters allowed`;
+             isValid = false;
           }
         } else if (rules && trimmed !== "" && isStep4Optional) {
           // For optional fields, only validate max length if provided
           if (trimmed.length > rules.max) {
-            errors.push(`${field}: Maximum ${rules.max} characters allowed`);
+             newErrors[field] = `${field}: Maximum ${rules.max} characters allowed`;
+             isValid = false;
           }
         }
       } else if (value === undefined || value === null) {
@@ -313,13 +421,28 @@ const OnboardingPage = () => {
         const isStep4Optional =
           currentStep === 4 && field === "differentiators";
         if (!isStep4Optional) {
-          errors.push(`${field}: Required`);
+          newErrors[field] = `${field}: Required`;
+          isValid = false;
         }
       }
     });
 
-    if (errors.length > 0) {
-      toast.error(errors[0]); // Show first error
+    setErrors(newErrors);
+
+    if (!isValid) {
+      // Still show toast for general awareness or if inline isn't enough, 
+      // but user asked for inline. We can keep toast if we want, but maybe redundant.
+      // User said "throws validation error", implying toast.
+      // But also "shows the error just below the input field"
+      // I'll keep the toast for now as a fallback or summary, OR remove it if it feels duplicated. 
+      // The code specifically said "toast.error(errors[0])". 
+      // The user COMPLAINED about the validation error text. 
+      // I will remove the toast for `website` if I show it inline. 
+      // Actually, standard pattern is to use inline errors. I'll rely on inline errors.
+       if (Object.keys(newErrors).length > 0) {
+         // Optionally show toast
+         // toast.error("Please fix the errors before proceeding");
+       }
       return false;
     }
 
@@ -330,12 +453,29 @@ const OnboardingPage = () => {
     if (!validateStep(currentStep)) {
       return;
     }
+    
+    // Create a copy of form data to potentially modify and save
+    let dataToSave = { ...formData };
+    
+    // Normalize Website URL if needed (Step 1)
+    if (currentStep === 1 && typeof formData.website === "string" && formData.website.trim() !== "") {
+      const website = formData.website.trim();
+      // If no protocol, prepend https://
+      if (!/^https?:\/\//i.test(website)) {
+        const normalizedWebsite = `https://${website}`;
+        // Update both the data to save and the state
+        dataToSave.website = normalizedWebsite;
+        updateFormData({ website: normalizedWebsite });
+      }
+    }
+
+    const currentWebsite = dataToSave.website;
 
     // If moving from step 1 to step 2, fetch company info from Apollo API
-    if (currentStep === 1 && formData.website) {
+    if (currentStep === 1 && currentWebsite) {
       try {
         setFetchingCompanyInfo(true);
-        const result = await apolloService.lookupCompany(formData.website);
+        const result = await apolloService.lookupCompany(currentWebsite);
 
         if (result.success && result.data) {
           // Auto-fill company name and description - always update when new data is fetched
@@ -344,6 +484,7 @@ const OnboardingPage = () => {
 
           if (result.data.companyName) {
             updates.companyName = result.data.companyName;
+            dataToSave.companyName = result.data.companyName;
           }
 
           if (result.data.description) {
@@ -354,12 +495,15 @@ const OnboardingPage = () => {
                 ? result.data.description.substring(0, maxLength).trim() + "..."
                 : result.data.description;
             updates.businessDescription = truncatedDescription;
+            dataToSave.businessDescription = truncatedDescription;
           }
 
           // Clear core offerings and preferred countries when fetching new company data
           // User will need to generate/select them again for the new company
           updates.coreOfferings = [];
           updates.preferredCountries = "";
+          dataToSave.coreOfferings = [];
+          dataToSave.preferredCountries = "";
 
           if (Object.keys(updates).length > 0) {
             updateFormData(updates);
@@ -379,7 +523,7 @@ const OnboardingPage = () => {
       }
     }
 
-    const saved = await saveProgress("in_progress");
+    const saved = await saveProgress("in_progress", dataToSave);
     if (!saved) {
       // Don't proceed if save failed
       return;
@@ -478,9 +622,31 @@ const OnboardingPage = () => {
     }
   };
 
-  const updateFormData = (updates: Partial<OnboardingQuestions>) => {
-    setFormData((prev) => ({ ...prev, ...updates }));
-  };
+  const updateFormData = useCallback(
+    (updates: Partial<OnboardingQuestions>) => {
+      setFormData((prev) => ({ ...prev, ...updates }));
+      
+      // Clear errors for fields that are being updated
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        Object.keys(updates).forEach((key) => {
+          delete newErrors[key];
+        });
+        return newErrors;
+      });
+
+      // Clear existing timeout
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+
+      // Set new timeout for auto-save (2 seconds after user stops typing)
+      autoSaveTimeoutRef.current = setTimeout(() => {
+        autoSaveFormData();
+      }, 2000);
+    },
+    [autoSaveFormData]
+  );
 
   const renderStep = () => {
     switch (currentStep) {
@@ -490,6 +656,7 @@ const OnboardingPage = () => {
             formData={formData}
             updateFormData={updateFormData}
             onEnterPress={handleNext}
+            error={errors.website}
           />
         );
       case 2:

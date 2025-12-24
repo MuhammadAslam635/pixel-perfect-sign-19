@@ -7,12 +7,14 @@ interface CompanyWebsiteStepProps {
   formData: OnboardingQuestions;
   updateFormData: (updates: Partial<OnboardingQuestions>) => void;
   onEnterPress?: () => void;
+  error?: string;
 }
 
 const CompanyWebsiteStep = ({
   formData,
   updateFormData,
   onEnterPress,
+  error,
 }: CompanyWebsiteStepProps) => {
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && onEnterPress) {
@@ -37,8 +39,11 @@ const CompanyWebsiteStep = ({
           onChange={(e) => updateFormData({ website: e.target.value })}
           onKeyPress={handleKeyPress}
           placeholder="Enter Your website link"
-          className="bg-white/[0.06] border-cyan-400/50 text-white placeholder:text-white/40 text-sm rounded-lg h-14"
+          className={`bg-white/[0.06] text-white placeholder:text-white/40 text-sm rounded-lg h-14 ${
+            error ? "border-red-500 ring-offset-red-500" : "border-cyan-400/50"
+          }`}
         />
+        {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
       </div>
     </div>
   );
