@@ -17,7 +17,7 @@ import { format } from "date-fns";
 import ConfirmDialog from "@/components/ui/confirm-dialog";
 import { CrmNavigation } from "@/pages/crm/shared/components/CrmNavigation";
 
-const formatDateTimeRange = (start?: string, end?: string) => {
+const formatDateTimeRange = (start?: string, end?: string, timezone?: string) => {
   if (!start || !end) {
     return "Time not available";
   }
@@ -29,9 +29,34 @@ const formatDateTimeRange = (start?: string, end?: string) => {
     }
     const startFormatted = format(startDate, "MMM d, h:mm a");
     const endFormatted = format(endDate, "h:mm a");
-    return `${startFormatted} - ${endFormatted}`;
+
+    let timeRange = `${startFormatted} - ${endFormatted}`;
+    if (timezone && timezone !== "UTC") {
+      // Extract timezone name (e.g., "America/New_York" -> "ET")
+      const tzAbbrev = getTimezoneAbbreviation(timezone);
+      timeRange += ` ${tzAbbrev}`;
+    }
+    return timeRange;
   } catch {
     return "Invalid date";
+  }
+};
+
+// Helper function to get timezone abbreviation
+const getTimezoneAbbreviation = (timezone: string): string => {
+  try {
+    // Create a date and format it with the timezone to get abbreviation
+    const date = new Date();
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      timeZoneName: 'short'
+    });
+    const parts = formatter.formatToParts(date);
+    const tzPart = parts.find(part => part.type === 'timeZoneName');
+    return tzPart ? tzPart.value : timezone;
+  } catch {
+    // Fallback to original timezone string if abbreviation fails
+    return timezone;
   }
 };
 
@@ -662,7 +687,8 @@ const CalendarPage: FC = () => {
                                 <p className="text-xs text-white/60">
                                   {formatDateTimeRange(
                                     meeting.startDateTime,
-                                    meeting.endDateTime
+                                    meeting.endDateTime,
+                                    meeting.timezone
                                   )}
                                 </p>
                                 {/* {meeting.personId && (

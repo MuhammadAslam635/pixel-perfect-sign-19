@@ -1,5 +1,23 @@
 import { FC, useEffect, useMemo, useState } from "react";
 import { Lead, leadsService } from "@/services/leads.service";
+
+// Helper function to get timezone abbreviation
+const getTimezoneAbbreviation = (timezone: string): string => {
+  try {
+    // Create a date and format it with the timezone to get abbreviation
+    const date = new Date();
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      timeZoneName: 'short'
+    });
+    const parts = formatter.formatToParts(date);
+    const tzPart = parts.find(part => part.type === 'timeZoneName');
+    return tzPart ? tzPart.value : timezone;
+  } catch {
+    // Fallback to original timezone string if abbreviation fails
+    return timezone;
+  }
+};
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -491,9 +509,11 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
       if (response.success) {
         if (response.data?.leadMeetingId) {
           // Full success - meeting saved to both Microsoft Calendar and database
+          const timezoneInfo = response.data?.timezone && response.data.timezone !== "UTC"
+            ? ` (${getTimezoneAbbreviation(response.data.timezone)})`
+            : "";
           toast.success(
-            response?.message ||
-              "Meeting scheduled successfully in Microsoft Calendar"
+            `${response?.message || "Meeting scheduled successfully in Microsoft Calendar"}${timezoneInfo}`
           );
           setScheduleDialogOpen(false);
           resetScheduleForm();

@@ -22,7 +22,17 @@ export interface ScheduleMeetingResponse {
     subject?: string;
     startTime?: Record<string, unknown>;
     endTime?: Record<string, unknown>;
+    timezone?: string;
     meetingJoinLink?: string;
+    person?: {
+      id: string;
+      name: string;
+      email: string;
+      companyName?: string;
+      timezone?: string;
+    };
+    followupPlansStopped?: string[];
+    followupPlansStoppedCount?: number;
     leadMeetingId?: string | null;
   };
 }
