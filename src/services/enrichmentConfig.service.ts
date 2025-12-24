@@ -97,9 +97,20 @@ export const enrichmentConfigService = {
 
   /**
    * Get configs by type (convenience method)
+   * Uses public endpoint for better accessibility
    */
   getConfigsByType: async (type: ConfigType, includeInactive = false): Promise<ConfigsResponse> => {
-    return enrichmentConfigService.getConfigs({ type, includeInactive });
+    try {
+      // Use public endpoint for active configs (no admin required)
+      if (!includeInactive) {
+        const response = await API.get(`/leads/enrichment/configs?type=${type}`);
+        return response.data;
+      }
+      // Use admin endpoint if inactive configs are requested
+      return enrichmentConfigService.getConfigs({ type, includeInactive });
+    } catch (error: any) {
+      throw error;
+    }
   },
 
   /**

@@ -25,18 +25,24 @@ const SeniorityQuickSelector = ({
 }: SeniorityQuickSelectorProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
-  const toggleSeniority = (seniority: SeniorityLevel) => {
+  const toggleSeniority = (seniority: SeniorityLevel, e?: React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
     const newSelection = selectedSeniorities.includes(seniority)
       ? selectedSeniorities.filter((s) => s !== seniority)
       : [...selectedSeniorities, seniority];
     onChange(newSelection);
   };
 
-  const selectAll = () => {
+  const selectAll = (e?: React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
     onChange(seniorityOptions.map((opt) => opt.value));
   };
 
-  const clearAll = () => {
+  const clearAll = (e?: React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
     onChange([]);
   };
 
@@ -45,7 +51,7 @@ const SeniorityQuickSelector = ({
       <DropdownMenuTrigger asChild>
         <Button
           variant="outline"
-          className="h-10 px-4 bg-gradient-to-br from-gray-800/50 to-gray-900/30 border border-white/10 text-white hover:bg-white/5 hover:border-white/20"
+          className="h-10 px-4 bg-gradient-to-br from-gray-800/50 to-gray-900/30 border border-white/10 text-white hover:bg-white/5 hover:border-white/20 rounded-full"
         >
           <Users className="w-4 h-4 mr-2" />
           <span className="hidden sm:inline">Seniority Levels</span>
@@ -72,10 +78,7 @@ const SeniorityQuickSelector = ({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  clearAll();
-                }}
+                onClick={clearAll}
                 className="h-6 px-2 text-xs text-red-400 hover:text-red-300 hover:bg-red-900/20"
               >
                 Clear
@@ -84,10 +87,7 @@ const SeniorityQuickSelector = ({
             <Button
               variant="ghost"
               size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                selectAll();
-              }}
+              onClick={selectAll}
               className="h-6 px-2 text-xs text-blue-400 hover:text-blue-300 hover:bg-blue-900/20"
             >
               All
@@ -104,6 +104,7 @@ const SeniorityQuickSelector = ({
                 key={option.value}
                 checked={isSelected}
                 onCheckedChange={() => toggleSeniority(option.value)}
+                onSelect={(e) => e.preventDefault()}
                 className="text-white hover:bg-white/5 focus:bg-white/5 cursor-pointer"
               >
                 <div className="flex items-center justify-between w-full">
