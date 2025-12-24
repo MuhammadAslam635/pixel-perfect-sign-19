@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Building2, Users } from "lucide-react";
+import { Building2, Users, Sparkles } from "lucide-react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { CrmNavigation } from "../shared/components/CrmNavigation";
@@ -19,6 +19,7 @@ import {
   CompanyFiltersInline,
 } from "../shared/components";
 import { buildStats } from "../shared/hooks";
+import LeadEnrichmentModal from "@/components/lead-enrichment/LeadEnrichmentModal";
 
 const COMPANY_EMPLOYEE_RANGES = [
   { value: "all", label: "All company sizes" },
@@ -37,6 +38,7 @@ const index = () => {
   );
   const [isMobileExecutivesView, setIsMobileExecutivesView] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>("detailed");
+  const [enrichmentModalOpen, setEnrichmentModalOpen] = useState(false);
 
   // Companies filters and pagination
   const [companiesPage, setCompaniesPage] = useState(1);
@@ -282,12 +284,21 @@ const index = () => {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, ease: "easeOut", delay: 0.4 }}
-              className="flex flex-col sm:flex-row justify-end items-stretch sm:items-center gap-1.5 sm:gap-2 md:gap-3 w-16"
+              className="flex flex-col sm:flex-row justify-end items-stretch sm:items-center gap-1.5 sm:gap-2 md:gap-3"
             >
               {/* Controls Container */}
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2 md:gap-3 order-1 lg:order-2">
                 <div className="flex  flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2 flex-1 ">
                   <div className="flex w-full items-center justify-end gap-1.5 sm:gap-2 ">
+                    {!companyFiltersOpen && (
+                      <Button
+                        onClick={() => setEnrichmentModalOpen(true)}
+                        className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-medium px-4 h-9 shadow-lg"
+                      >
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        Enrich Leads
+                      </Button>
+                    )}
                     <div className="flex items-center gap-2">
                       <AnimatePresence mode="wait">
                         {!companyFiltersOpen ? (
@@ -419,6 +430,20 @@ const index = () => {
             />
           </div>
         </motion.div>
+
+        {/* Lead Enrichment Modal */}
+        <LeadEnrichmentModal
+          isOpen={enrichmentModalOpen}
+          onClose={() => setEnrichmentModalOpen(false)}
+          onEnrichmentStart={(searchId, mode) => {
+            toast.success(`Enrichment started! Tracking ID: ${searchId}`);
+          }}
+          onEnrichmentComplete={(searchId) => {
+            toast.success("Enrichment completed! Companies list will refresh.");
+            companiesQuery.refetch();
+            setEnrichmentModalOpen(false);
+          }}
+        />
       </motion.main>
     </DashboardLayout>
   );

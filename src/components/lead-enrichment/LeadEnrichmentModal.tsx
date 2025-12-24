@@ -1,0 +1,176 @@
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { X, Building2, Search as SearchIcon } from "lucide-react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import DomainSpecificTab from "./tabs/DomainSpecificTab";
+import AdvancedQueryTab from "./tabs/AdvancedQueryTab";
+import EnrichmentProgressTracker from "./EnrichmentProgressTracker";
+import type {
+  EnrichmentMode,
+  EnrichmentFilters,
+} from "@/types/leadEnrichment";
+
+interface LeadEnrichmentModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onEnrichmentStart?: (searchId: string, mode: EnrichmentMode) => void;
+  onEnrichmentComplete?: (searchId: string) => void;
+}
+
+const LeadEnrichmentModal = ({
+  isOpen,
+  onClose,
+  onEnrichmentStart,
+  onEnrichmentComplete,
+}: LeadEnrichmentModalProps) => {
+  const [activeTab, setActiveTab] = useState<EnrichmentMode>("domain");
+  const [isEnriching, setIsEnriching] = useState(false);
+  const [searchId, setSearchId] = useState<string | null>(null);
+  const [estimatedTime, setEstimatedTime] = useState<string | null>(null);
+
+  const handleEnrichmentStart = (
+    searchId: string,
+    estimatedTime: string,
+    mode: EnrichmentMode
+  ) => {
+    setSearchId(searchId);
+    setEstimatedTime(estimatedTime);
+    setIsEnriching(true);
+    onEnrichmentStart?.(searchId, mode);
+  };
+
+  const handleEnrichmentComplete = () => {
+    setIsEnriching(false);
+    if (searchId) {
+      onEnrichmentComplete?.(searchId);
+    }
+    // Keep modal open to show results
+  };
+
+  const handleClose = () => {
+    if (!isEnriching) {
+      onClose();
+      // Reset state after modal closes
+      setTimeout(() => {
+        setActiveTab("domain");
+        setSearchId(null);
+        setEstimatedTime(null);
+      }, 300);
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 border border-white/10">
+        {/* Header */}
+        <div className="sticky top-0 z-10 bg-gray-900/95 backdrop-blur-sm border-b border-white/10 px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+                <Building2 className="w-6 h-6 text-blue-400" />
+                Lead Enrichment
+              </h2>
+              <p className="text-sm text-gray-400 mt-1">
+                Discover and enrich company leads with decision-makers
+              </p>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleClose}
+              disabled={isEnriching}
+              className="text-gray-400 hover:text-white hover:bg-white/10"
+            >
+              <X className="w-5 h-5" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="px-6 pb-6 overflow-y-auto max-h-[calc(90vh-100px)]">
+          {!isEnriching ? (
+            <Tabs
+              value={activeTab}
+              onValueChange={(value) => setActiveTab(value as EnrichmentMode)}
+              className="w-full mt-4"
+            >
+              {/* Tab Selector */}
+              <TabsList className="grid w-full grid-cols-2 bg-gray-800/50 border border-white/10 p-1">
+                <TabsTrigger
+                  value="domain"
+                  className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-gray-400 transition-all"
+                >
+                  <Building2 className="w-4 h-4 mr-2" />
+                  Domain Specific
+                </TabsTrigger>
+                <TabsTrigger
+                  value="query"
+                  className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-gray-400 transition-all"
+                >
+                  <SearchIcon className="w-4 h-4 mr-2" />
+                  Advanced Query
+                </TabsTrigger>
+              </TabsList>
+
+              {/* Tab Content */}
+              <div className="mt-6">
+                <TabsContent value="domain" className="mt-0">
+                  <DomainSpecificTab
+                    onEnrichmentStart={(searchId, estimatedTime) =>
+                      handleEnrichmentStart(searchId, estimatedTime, "domain")
+                    }
+                  />
+                </TabsContent>
+
+                <TabsContent value="query" className="mt-0">
+                  <AdvancedQueryTab
+                    onEnrichmentStart={(searchId, estimatedTime) =>
+                      handleEnrichmentStart(searchId, estimatedTime, "query")
+                    }
+                  />
+                </TabsContent>
+              </div>
+            </Tabs>
+          ) : (
+            /* Enrichment in Progress */
+            <div className="py-8">
+              <EnrichmentProgressTracker
+                searchId={searchId!}
+                estimatedTime={estimatedTime!}
+                mode={activeTab}
+                onComplete={handleEnrichmentComplete}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Footer Info */}
+        {!isEnriching && (
+          <div className="sticky bottom-0 bg-gradient-to-r from-blue-900/20 to-purple-900/20 border-t border-white/10 px-6 py-3">
+            <p className="text-xs text-gray-400 text-center">
+              {activeTab === "domain" ? (
+                <>
+                  <span className="font-semibold text-blue-400">
+                    Domain Specific:
+                  </span>{" "}
+                  Direct enrichment without AI search - faster processing
+                </>
+              ) : (
+                <>
+                  <span className="font-semibold text-purple-400">
+                    Advanced Query:
+                  </span>{" "}
+                  AI-powered company discovery with custom filters
+                </>
+              )}
+            </p>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default LeadEnrichmentModal;
