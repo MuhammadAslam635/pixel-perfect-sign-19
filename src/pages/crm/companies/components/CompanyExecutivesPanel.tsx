@@ -11,6 +11,8 @@ import {
   Phone,
   MapPin,
   Loader2,
+  DollarSign,
+  TrendingUp,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -31,7 +33,7 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
   onViewAllLeads,
   onExecutiveSelect,
 }) => {
-  const [activeTab, setActiveTab] = useState<TabType>("executives");
+  const [activeTab, setActiveTab] = useState<TabType>("details");
   const [showLeads, setShowLeads] = useState(false);
   const [showLoadingSkeleton, setShowLoadingSkeleton] = useState(false);
   const [mapLoaded, setMapLoaded] = useState(false);
@@ -39,8 +41,8 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
   // Automatically show leads when a company is selected
   useEffect(() => {
     if (company?._id) {
-      setActiveTab("executives");
-      setShowLeads(true);
+      setActiveTab("details");
+      setShowLeads(false);
     }
   }, [company?._id]);
 
@@ -108,6 +110,22 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
     return `https://www.google.com/maps?q=${encodedAddress}&output=embed&hl=en`;
   };
 
+  // Helper function to format large financial numbers
+  const formatFinancialValue = (value: string | number | null | undefined): string => {
+    if (value === null || value === undefined) return "";
+    const num = typeof value === "string" ? parseFloat(value) : value;
+    if (isNaN(num)) return value.toString();
+
+    // If it's already a formatted string like "39.0B", just return it
+    if (typeof value === "string" && /[KMBT]$/i.test(value)) return value;
+
+    if (num >= 1e12) return (num / 1e12).toFixed(1) + "T";
+    if (num >= 1e9) return (num / 1e9).toFixed(1) + "B";
+    if (num >= 1e6) return (num / 1e6).toFixed(1) + "M";
+    if (num >= 1e3) return (num / 1e3).toFixed(1) + "K";
+    return num.toString();
+  };
+
   return (
     <>
       {/* Company Header with LinkedIn */}
@@ -138,29 +156,6 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
       <div className="flex items-center gap-2 mb-4 pb-3 border-b border-white/10">
         <motion.button
           onClick={() => {
-            setActiveTab("executives");
-            setShowLeads(true);
-          }}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 ${
-            activeTab === "executives"
-              ? "bg-white/10 text-white"
-              : "text-white/60 hover:text-white hover:bg-white/5"
-          }`}
-        >
-          <motion.div
-            animate={{
-              rotate: activeTab === "executives" ? [0, -10, 10, 0] : 0,
-            }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-          >
-            <Users className="w-4 h-4" />
-          </motion.div>
-          <span className="text-sm font-medium">Executives</span>
-        </motion.button>
-        <motion.button
-          onClick={() => {
             setActiveTab("details");
             setShowLeads(false);
             if (activeTab !== "details") {
@@ -188,6 +183,29 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
             <Info className="w-4 h-4" />
           </motion.div>
           <span className="text-sm font-medium">Company Details</span>
+        </motion.button>
+        <motion.button
+          onClick={() => {
+            setActiveTab("executives");
+            setShowLeads(true);
+          }}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 ${
+            activeTab === "executives"
+              ? "bg-white/10 text-white"
+              : "text-white/60 hover:text-white hover:bg-white/5"
+          }`}
+        >
+          <motion.div
+            animate={{
+              rotate: activeTab === "executives" ? [0, -10, 10, 0] : 0,
+            }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+          >
+            <Users className="w-4 h-4" />
+          </motion.div>
+          <span className="text-sm font-medium">Executives</span>
         </motion.button>
       </div>
 
@@ -218,7 +236,7 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
                           onExecutiveSelect?.(exec);
                         }
                       }}
-                      className="relative overflow-hidden rounded-xl sm:rounded-2xl border border-white/15 bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] px-2 sm:px-3 py-2 mb-2 max-w-sm h-14 transition-all duration-300 hover:shadow-[0_12px_32px_rgba(0,0,0,0.3)] sm:before:absolute sm:before:content-[''] sm:before:left-0 sm:before:top-1/2 sm:before:-translate-y-1/2 sm:before:h-[55%] sm:before:w-[3px] lg:before:w-[4px] sm:before:rounded-full sm:before:bg-white/70 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/60"
+                      className="relative overflow-hidden rounded-xl sm:rounded-2xl border border-white/15 bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] px-2 sm:px-3 py-2 mb-2 max-w-sm h-14 transition-all duration-300 hover:shadow-[0_12px_32px_rgba(0,0,0,0.3)] cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/60"
                     >
                       <div className="flex items-center justify-between gap-2 h-full">
                         <div className="flex-1 min-w-0">
@@ -380,16 +398,16 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
 
                 {/* Social Icons */}
                 {(Boolean(companyLinkedIn) || Boolean(displayCompany.facebook) || Boolean(displayCompany.phone)) && (
-                  <div className="flex items-center gap-3 mb-4">
+                  <div className="flex items-center gap-2 mb-4">
                     {Boolean(companyLinkedIn) && (
                       <a
                         href={getFullUrl(companyLinkedIn || undefined)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center justify-center w-8 h-8 rounded-full border border-white bg-white text-gray-900 transition-colors hover:bg-white/90"
+                        className="flex items-center justify-center w-6 h-6 rounded-full border border-white bg-white text-gray-900 transition-colors hover:bg-white/90"
                         title="LinkedIn"
                       >
-                        <Linkedin className="w-4 h-4" />
+                        <Linkedin className="w-3.5 h-3.5" />
                       </a>
                     )}
                     {Boolean(displayCompany.facebook) && (
@@ -397,19 +415,19 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
                         href={getFullUrl(displayCompany.facebook || undefined)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center justify-center w-8 h-8 rounded-full border border-white bg-white text-gray-900 transition-colors hover:bg-white/90"
+                        className="flex items-center justify-center w-6 h-6 rounded-full border border-white bg-white text-gray-900 transition-colors hover:bg-white/90"
                         title="Facebook"
                       >
-                        <Facebook className="w-4 h-4" />
+                        <Facebook className="w-3.5 h-3.5" />
                       </a>
                     )}
                     {Boolean(displayCompany.phone) && (
                       <a
                         href={`tel:${displayCompany.phone}`}
-                        className="flex items-center justify-center w-8 h-8 rounded-full border border-white bg-white text-gray-900 transition-colors hover:bg-white/90"
+                        className="flex items-center justify-center w-6 h-6 rounded-full border border-white bg-white text-gray-900 transition-colors hover:bg-white/90"
                         title={displayCompany.phone || "Phone"}
                       >
-                        <Phone className="w-4 h-4" />
+                        <Phone className="w-3.5 h-3.5" />
                       </a>
                     )}
                   </div>
@@ -424,70 +442,85 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
                   </div>
                 )}
 
-                {/* Address */}
-                {displayCompany.address && (
-                  <div className="mb-4">
-                    <div className="flex items-start gap-2 mb-2">
-                      <MapPin className="w-4 h-4 text-white/70 mt-0.5 flex-shrink-0" />
-                      <div className="flex-1">
-                        <p className="text-sm text-white/80 leading-relaxed">
-                          {displayCompany.address}
-                        </p>
+                {/* Details List */}
+                <div className="space-y-3.5">
+                  {/* Address */}
+                  {displayCompany.address && (
+                    <div className="space-y-2">
+                      <div className="flex items-start gap-2">
+                        <MapPin className="w-4 h-4 text-white/70 mt-0.5 flex-shrink-0" />
+                        <div className="flex-1">
+                          <p className="text-sm text-white/80 leading-relaxed">
+                            {displayCompany.address}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                    {/* Google Maps Embed */}
-                    {getGoogleMapsEmbedUrl(displayCompany.address) && (
-                      <div
-                        className="relative w-full h-32 rounded-lg overflow-hidden border border-white/10 cursor-pointer group hover:scale-[1.02] transition-transform duration-200"
-                        onClick={() => {
-                          const mapsUrl = getGoogleMapsUrl(displayCompany.address);
-                          if (mapsUrl) {
-                            window.open(mapsUrl, "_blank");
-                          }
-                        }}
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
+                      {/* Google Maps Embed */}
+                      {getGoogleMapsEmbedUrl(displayCompany.address) && (
+                        <div
+                          className="relative w-full h-32 rounded-lg overflow-hidden border border-white/10 cursor-pointer group hover:scale-[1.02] transition-transform duration-200"
+                          onClick={() => {
                             const mapsUrl = getGoogleMapsUrl(displayCompany.address);
                             if (mapsUrl) {
                               window.open(mapsUrl, "_blank");
                             }
-                          }
-                        }}
-                        title="Click to open in Google Maps"
-                      >
-                         {/* Map Loading Skeleton */}
-                         {!mapLoaded && (
-                             <Skeleton className="absolute inset-0 z-[5] w-full h-full bg-white/10 animate-pulse" />
-                         )}
-                        <iframe
-                          src={getGoogleMapsEmbedUrl(displayCompany.address) || ""}
-                          width="100%"
-                          height="100%"
-                          style={{ border: 0, opacity: mapLoaded ? 1 : 0, transition: 'opacity 0.3s ease-in' }}
-                          allowFullScreen
-                          loading="lazy"
-                          referrerPolicy="no-referrer-when-downgrade"
-                          className="pointer-events-none"
-                          onLoad={() => {
-                              console.log("Map loaded");
-                              setMapLoaded(true);
                           }}
-                        />
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                          <span className="text-xs text-white/0 group-hover:text-white/80 font-medium bg-black/50 px-3 py-1.5 rounded-lg">
-                            Click to open in Google Maps
-                          </span>
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              const mapsUrl = getGoogleMapsUrl(displayCompany.address);
+                              if (mapsUrl) {
+                                window.open(mapsUrl, "_blank");
+                              }
+                            }
+                          }}
+                          title="Click to open in Google Maps"
+                        >
+                           {/* Map Loading Skeleton */}
+                           {!mapLoaded && (
+                               <Skeleton className="absolute inset-0 z-[5] w-full h-full bg-white/10 animate-pulse" />
+                           )}
+                          <iframe
+                            src={getGoogleMapsEmbedUrl(displayCompany.address) || ""}
+                            width="100%"
+                            height="100%"
+                            style={{ border: 0, opacity: mapLoaded ? 1 : 0, transition: 'opacity 0.3s ease-in' }}
+                            allowFullScreen
+                            loading="lazy"
+                            referrerPolicy="no-referrer-when-downgrade"
+                            className="pointer-events-none"
+                            onLoad={() => {
+                                console.log("Map loaded");
+                                setMapLoaded(true);
+                            }}
+                          />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                            <span className="text-xs text-white/0 group-hover:text-white/80 font-medium bg-black/50 px-3 py-1.5 rounded-lg">
+                              Click to open in Google Maps
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                )}
+                      )}
+                    </div>
+                  )}
 
-                {/* Additional Details */}
-                <div className="space-y-2">
+                  {/* Phone Number */}
+                  {displayCompany.phone && (
+                    <div className="flex items-center gap-2">
+                      <Phone className="w-4 h-4 text-white/70 flex-shrink-0" />
+                      <div className="flex-1">
+                        <a
+                          href={`tel:${displayCompany.phone}`}
+                          className="text-sm text-white/80 hover:text-white hover:underline transition-colors"
+                        >
+                          {displayCompany.phone}
+                        </a>
+                      </div>
+                    </div>
+                  )}
+
                   {displayCompany.employees && (
                     <div className="flex items-center gap-2 text-sm text-white/70">
                       <Users className="w-4 h-4" />
@@ -504,13 +537,15 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
 
                   {displayCompany.marketCap && (
                     <div className="flex items-center gap-2 text-sm text-white/70">
-                      <span>Market Cap: {displayCompany.marketCap as string}</span>
+                      <TrendingUp className="w-4 h-4" />
+                      <span>Market Cap: ${formatFinancialValue(displayCompany.marketCap as string)}</span>
                     </div>
                   )}
-
+                  
                   {getRevenue() && (
                     <div className="flex items-center gap-2 text-sm text-white/70">
-                      <span>Revenue: {getRevenue()}</span>
+                      <DollarSign className="w-4 h-4" />
+                      <span>Revenue: ${formatFinancialValue(getRevenue())}</span>
                     </div>
                   )}
                 </div>

@@ -405,9 +405,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
           key={company._id}
           className={`relative flex items-center gap-2.5 overflow-hidden border-0 rounded-lg p-2.5 transition-all duration-300 hover:bg-white/5 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] cursor-pointer ${
             selectedCompanyId ? "aspect-[3/1]" : "aspect-[4/1]"
-          } before:absolute before:content-[''] before:-left-1 before:top-1/2 before:-translate-y-1/2 before:h-[55%] sm:before:h-[60%] before:w-0 md:before:w-[3px] lg:before:w-[4px] xl:before:w-[6px] before:rounded-full backdrop-blur-[22.6px] ${
-            isActive ? "md:before:bg-primary" : "md:before:bg-white/75"
-          }`}
+          } backdrop-blur-[22.6px]`}
           style={{
             background: `linear-gradient(180deg, rgba(104, 177, 184, 0.1) 0%, rgba(104, 177, 184, 0.08) 100%), radial-gradient(50% 100% at 50% 0%, rgba(104, 177, 184, 0.1) 0%, rgba(104, 177, 184, 0) 100%)`,
           }}
@@ -515,11 +513,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
       <Card
         key={company._id}
         className={`relative flex flex-col gap-0.5 sm:gap-1 md:flex-row md:items-center md:justify-between overflow-hidden border-0 mb-1.5 sm:mb-2 rounded-[16px] sm:rounded-[20px] md:rounded-[30px] px-3 sm:px-4 md:px-5 py-1.5 sm:py-2 transition-all duration-300 hover:bg-white/5 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] ${
-          viewMode !== "compact"
-            ? `before:absolute before:content-[''] before:-left-1 before:top-1/2 before:-translate-y-1/2 before:h-[55%] sm:before:h-[60%] before:w-0 md:before:w-[3px] lg:before:w-[4px] xl:before:w-[6px] before:rounded-full backdrop-blur-[22.6px] ${
-                isActive ? "md:before:bg-primary" : "md:before:bg-white/75"
-              }`
-            : ""
+          viewMode !== "compact" ? "backdrop-blur-[22.6px]" : ""
         }`}
         style={{
           background: `linear-gradient(180deg, rgba(104, 177, 184, 0.1) 0%, rgba(104, 177, 184, 0.08) 100%), radial-gradient(50% 100% at 50% 0%, rgba(104, 177, 184, 0.1) 0%, rgba(104, 177, 184, 0) 100%)`,
@@ -562,11 +556,11 @@ const CompaniesList: FC<CompaniesListProps> = ({
                 </TooltipContent>
               </Tooltip>
             )}
-            {/* {company.industry && (
+            {viewMode === "compact" && (company.industry && (
               <span className="text-xs text-white/70 font-medium">
                 | {company.industry}
               </span>
-            )} */}
+            ))}
             {/* {viewMode === "compact" && (
               <Badge className="rounded-full bg-white/15 text-white border-white/20 px-2 py-0.5 text-xs">
                 {employeeCount}
@@ -576,7 +570,6 @@ const CompaniesList: FC<CompaniesListProps> = ({
           {viewMode === "detailed" && company.industry && (
             <>
               <span className="text-white/60 font-normal text-xs">
-                {" | "}
                 {company.industry}
               </span>
 
