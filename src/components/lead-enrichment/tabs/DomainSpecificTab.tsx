@@ -108,10 +108,10 @@ const DomainSpecificTab = ({ onEnrichmentStart }: DomainSpecificTabProps) => {
       className="space-y-6"
     >
       {/* Description */}
-      <Alert className="bg-blue-900/20 border-blue-500/30">
-        <Building2 className="w-4 h-4 text-blue-400" />
-        <AlertDescription className="text-gray-300 text-sm">
-          <strong className="text-blue-400">Direct Domain Enrichment:</strong>{" "}
+      <Alert className="bg-gradient-to-br from-gray-800/30 to-gray-900/20 border border-white/10">
+        <Building2 className="w-4 h-4 text-[#69B4B7]" />
+        <AlertDescription className="text-white/70 text-sm">
+          <strong className="text-[#69B4B7]">Direct Domain Enrichment:</strong>{" "}
           Enter company domains to enrich directly without AI search. This
           bypasses Perplexity and sends requests straight to the Apollo
           microservice for faster processing.
@@ -120,7 +120,7 @@ const DomainSpecificTab = ({ onEnrichmentStart }: DomainSpecificTabProps) => {
 
       {/* Domain Input */}
       <div className="space-y-3">
-        <label className="text-sm font-medium text-gray-200 block">
+        <label className="text-sm font-medium text-white/70 block">
           Add Company Domains
         </label>
 
@@ -131,12 +131,12 @@ const DomainSpecificTab = ({ onEnrichmentStart }: DomainSpecificTabProps) => {
             value={domainInput}
             onChange={(e) => setDomainInput(e.target.value)}
             onKeyPress={(e) => e.key === "Enter" && handleAddDomain()}
-            className="flex-1 bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500"
+            className="flex-1 bg-gradient-to-br from-gray-800/50 to-gray-900/30 border border-white/10 text-white placeholder:text-white/30"
           />
           <Button
             onClick={handleAddDomain}
             disabled={!domainInput.trim()}
-            className="bg-blue-600 hover:bg-blue-700"
+            className="bg-gradient-to-r from-[#69B4B7] to-[#3E64B4] hover:from-[#69B4B7]/80 hover:to-[#3E64B4]/80"
           >
             <Plus className="w-4 h-4 mr-2" />
             Add
@@ -149,13 +149,13 @@ const DomainSpecificTab = ({ onEnrichmentStart }: DomainSpecificTabProps) => {
             variant="outline"
             size="sm"
             onClick={() => setShowBulkInput(true)}
-            className="text-gray-300 border-gray-700 hover:bg-gray-800"
+            className="text-white/50 border border-white/10 hover:bg-white/5"
           >
             Or add multiple domains at once
           </Button>
         ) : (
-          <div className="space-y-2 p-4 bg-gray-800/30 rounded-lg border border-gray-700">
-            <label className="text-xs font-medium text-gray-300 block">
+          <div className="space-y-2 p-4 bg-gradient-to-br from-gray-800/30 to-gray-900/20 rounded-lg border border-white/10">
+            <label className="text-xs font-medium text-white/70 block">
               Bulk Add Domains (comma or newline separated)
             </label>
             <Textarea
@@ -163,14 +163,14 @@ const DomainSpecificTab = ({ onEnrichmentStart }: DomainSpecificTabProps) => {
               value={bulkInput}
               onChange={(e) => setBulkInput(e.target.value)}
               rows={4}
-              className="bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500 font-mono text-sm"
+              className="bg-gradient-to-br from-gray-800/50 to-gray-900/30 border border-white/10 text-white placeholder:text-white/30 font-mono text-sm scrollbar-hide"
             />
             <div className="flex gap-2">
               <Button
                 onClick={handleBulkAdd}
                 disabled={!bulkInput.trim()}
                 size="sm"
-                className="bg-blue-600 hover:bg-blue-700"
+                className="bg-gradient-to-r from-[#69B4B7] to-[#3E64B4] hover:from-[#69B4B7]/80 hover:to-[#3E64B4]/80"
               >
                 <CheckCircle2 className="w-4 h-4 mr-2" />
                 Add All
@@ -182,7 +182,7 @@ const DomainSpecificTab = ({ onEnrichmentStart }: DomainSpecificTabProps) => {
                   setShowBulkInput(false);
                   setBulkInput("");
                 }}
-                className="text-gray-400"
+                className="text-white/50 hover:text-white hover:bg-white/5"
               >
                 Cancel
               </Button>
@@ -195,20 +195,20 @@ const DomainSpecificTab = ({ onEnrichmentStart }: DomainSpecificTabProps) => {
       {domains.length > 0 && (
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <label className="text-sm font-medium text-gray-200">
+            <label className="text-sm font-medium text-white/70">
               Added Domains ({domains.length}/50)
             </label>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setDomains([])}
-              className="text-xs text-gray-400 hover:text-red-400"
+              className="text-xs text-white/50 hover:text-red-400 hover:bg-white/5"
             >
               Clear All
             </Button>
           </div>
 
-          <div className="max-h-[300px] overflow-y-auto bg-gray-800/30 rounded-lg border border-gray-700 p-3 space-y-2">
+          <div className="max-h-[300px] overflow-y-auto scrollbar-hide bg-gradient-to-br from-gray-800/30 to-gray-900/20 rounded-lg border border-white/10 p-3 space-y-2">
             {domains.map((domain, index) => (
               <motion.div
                 key={domain}
@@ -216,11 +216,11 @@ const DomainSpecificTab = ({ onEnrichmentStart }: DomainSpecificTabProps) => {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
                 transition={{ delay: index * 0.05 }}
-                className="flex items-center justify-between bg-gray-800/50 rounded px-3 py-2 group hover:bg-gray-800"
+                className="flex items-center justify-between bg-gradient-to-br from-gray-800/50 to-gray-900/30 rounded px-3 py-2 group hover:bg-white/5"
               >
                 <div className="flex items-center gap-2 flex-1 min-w-0">
-                  <Building2 className="w-4 h-4 text-blue-400 flex-shrink-0" />
-                  <span className="text-sm text-gray-200 truncate">
+                  <Building2 className="w-4 h-4 text-[#69B4B7] flex-shrink-0" />
+                  <span className="text-sm text-white/70 truncate">
                     {domain}
                   </span>
                 </div>
@@ -228,7 +228,7 @@ const DomainSpecificTab = ({ onEnrichmentStart }: DomainSpecificTabProps) => {
                   variant="ghost"
                   size="icon"
                   onClick={() => handleRemoveDomain(domain)}
-                  className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-400"
+                  className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-white/50 hover:text-red-400"
                 >
                   <X className="w-3 h-3" />
                 </Button>
@@ -240,9 +240,9 @@ const DomainSpecificTab = ({ onEnrichmentStart }: DomainSpecificTabProps) => {
 
       {/* Invalid Domains Warning */}
       {invalidDomains.length > 0 && (
-        <Alert className="bg-red-900/20 border-red-500/30">
+        <Alert className="bg-gradient-to-br from-red-900/20 to-red-800/10 border border-red-500/30">
           <AlertCircle className="w-4 h-4 text-red-400" />
-          <AlertDescription className="text-gray-300 text-sm">
+          <AlertDescription className="text-white/70 text-sm">
             <strong className="text-red-400">Invalid domains:</strong>{" "}
             {invalidDomains.join(", ")}
           </AlertDescription>
@@ -251,7 +251,7 @@ const DomainSpecificTab = ({ onEnrichmentStart }: DomainSpecificTabProps) => {
 
       {/* Submit Button */}
       <div className="pt-4 flex justify-between items-center">
-        <div className="text-xs text-gray-400">
+        <div className="text-xs text-white/50">
           {domains.length > 0 && (
             <span>
               Estimated time: ~
@@ -263,7 +263,7 @@ const DomainSpecificTab = ({ onEnrichmentStart }: DomainSpecificTabProps) => {
         <Button
           onClick={handleEnrich}
           disabled={domains.length === 0 || isSubmitting}
-          className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 px-8"
+          className="bg-gradient-to-r from-[#69B4B7] to-[#3E64B4] hover:from-[#69B4B7]/80 hover:to-[#3E64B4]/80 px-8"
         >
           {isSubmitting ? (
             <>

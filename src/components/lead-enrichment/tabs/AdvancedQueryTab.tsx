@@ -129,10 +129,10 @@ const AdvancedQueryTab = ({ onEnrichmentStart }: AdvancedQueryTabProps) => {
       className="space-y-6"
     >
       {/* Description */}
-      <Alert className="bg-purple-900/20 border-purple-500/30">
-        <Sparkles className="w-4 h-4 text-purple-400" />
-        <AlertDescription className="text-gray-300 text-sm">
-          <strong className="text-purple-400">AI-Powered Discovery:</strong>{" "}
+      <Alert className="bg-gradient-to-br from-gray-800/30 to-gray-900/20 border border-white/10">
+        <Sparkles className="w-4 h-4 text-[#69B4B7]" />
+        <AlertDescription className="text-white/70 text-sm">
+          <strong className="text-[#69B4B7]">AI-Powered Discovery:</strong>{" "}
           Describe what you're looking for and use filters to narrow down
           results. Perplexity AI will discover companies matching your criteria,
           then enrich them with decision-makers.
@@ -141,8 +141,8 @@ const AdvancedQueryTab = ({ onEnrichmentStart }: AdvancedQueryTabProps) => {
 
       {/* Search Query */}
       <div className="space-y-3">
-        <label className="text-sm font-medium text-gray-200 flex items-center gap-2">
-          <Search className="w-4 h-4 text-blue-400" />
+        <label className="text-sm font-medium text-white/70 flex items-center gap-2">
+          <Search className="w-4 h-4 text-[#69B4B7]" />
           Search Query
         </label>
         <Textarea
@@ -150,9 +150,9 @@ const AdvancedQueryTab = ({ onEnrichmentStart }: AdvancedQueryTabProps) => {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           rows={3}
-          className="bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500"
+          className="bg-gradient-to-br from-gray-800/50 to-gray-900/30 border border-white/10 text-white placeholder:text-white/30 scrollbar-hide"
         />
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-white/50">
           Describe companies you want to find. Be specific about industry,
           location, and size.
         </p>
@@ -160,7 +160,7 @@ const AdvancedQueryTab = ({ onEnrichmentStart }: AdvancedQueryTabProps) => {
 
       {/* Max Companies */}
       <div className="space-y-3">
-        <label className="text-sm font-medium text-gray-200">
+        <label className="text-sm font-medium text-white/70">
           Maximum Companies to Find
         </label>
         <Input
@@ -169,15 +169,15 @@ const AdvancedQueryTab = ({ onEnrichmentStart }: AdvancedQueryTabProps) => {
           max={50}
           value={maxCompanies}
           onChange={(e) => setMaxCompanies(parseInt(e.target.value) || 20)}
-          className="bg-gray-800/50 border-gray-700 text-white"
+          className="bg-gradient-to-br from-gray-800/50 to-gray-900/30 border border-white/10 text-white"
         />
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-white/50">
           Maximum 50 companies per search (recommended: 10-20 for faster
           results)
         </p>
       </div>
 
-      <Separator className="bg-gray-700" />
+      <Separator className="bg-white/10" />
 
       {/* Filters Section */}
       <div className="space-y-4">
@@ -185,12 +185,12 @@ const AdvancedQueryTab = ({ onEnrichmentStart }: AdvancedQueryTabProps) => {
           <Button
             variant="outline"
             onClick={() => setShowFilters(!showFilters)}
-            className="border-gray-700 text-gray-300 hover:bg-gray-800"
+            className="border border-white/10 text-white/70 hover:bg-white/5"
           >
             <Filter className="w-4 h-4 mr-2" />
             Advanced Filters
             {hasActiveFilters() && (
-              <span className="ml-2 text-xs bg-purple-600 text-white px-2 py-0.5 rounded-full">
+              <span className="ml-2 text-xs bg-gradient-to-r from-[#69B4B7] to-[#3E64B4] text-white px-2 py-0.5 rounded-full">
                 Active
               </span>
             )}
@@ -206,7 +206,7 @@ const AdvancedQueryTab = ({ onEnrichmentStart }: AdvancedQueryTabProps) => {
               variant="ghost"
               size="sm"
               onClick={clearAllFilters}
-              className="text-xs text-gray-400 hover:text-red-400"
+              className="text-xs text-white/50 hover:text-red-400 hover:bg-white/5"
             >
               Clear All Filters
             </Button>
@@ -218,7 +218,7 @@ const AdvancedQueryTab = ({ onEnrichmentStart }: AdvancedQueryTabProps) => {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="space-y-6 p-4 bg-gray-800/20 rounded-lg border border-gray-700"
+            className="space-y-6 p-4 bg-gradient-to-br from-gray-800/20 to-gray-900/10 rounded-lg border border-white/10"
           >
             {/* Industry Categories */}
             <CategorySelector
@@ -226,7 +226,7 @@ const AdvancedQueryTab = ({ onEnrichmentStart }: AdvancedQueryTabProps) => {
               onChange={(categories) => updateFilters("categories", categories)}
             />
 
-            <Separator className="bg-gray-700" />
+            <Separator className="bg-white/10" />
 
             {/* Seniority Levels */}
             <RoleSelector
@@ -234,7 +234,7 @@ const AdvancedQueryTab = ({ onEnrichmentStart }: AdvancedQueryTabProps) => {
               onChange={(roles) => updateFilters("roles", roles)}
             />
 
-            <Separator className="bg-gray-700" />
+            <Separator className="bg-white/10" />
 
             {/* Regions & Countries */}
             <RegionCountrySelector
@@ -246,7 +246,7 @@ const AdvancedQueryTab = ({ onEnrichmentStart }: AdvancedQueryTabProps) => {
               }
             />
 
-            <Separator className="bg-gray-700" />
+            <Separator className="bg-white/10" />
 
             {/* Revenue Range */}
             <RangeFilter
@@ -255,7 +255,7 @@ const AdvancedQueryTab = ({ onEnrichmentStart }: AdvancedQueryTabProps) => {
               onChange={(range) => updateFilters("revenueRange", range)}
             />
 
-            <Separator className="bg-gray-700" />
+            <Separator className="bg-white/10" />
 
             {/* Employee Range */}
             <RangeFilter
@@ -269,9 +269,9 @@ const AdvancedQueryTab = ({ onEnrichmentStart }: AdvancedQueryTabProps) => {
 
       {/* Active Filters Summary */}
       {hasActiveFilters() && !showFilters && (
-        <div className="p-3 bg-purple-900/20 border border-purple-500/30 rounded-lg">
-          <p className="text-xs text-gray-300">
-            <strong className="text-purple-400">Active Filters:</strong>
+        <div className="p-3 bg-gradient-to-br from-gray-800/30 to-gray-900/20 border border-white/10 rounded-lg">
+          <p className="text-xs text-white/70">
+            <strong className="text-[#69B4B7]">Active Filters:</strong>
             {(filters.categories?.length || 0) > 0 && (
               <span className="ml-2">
                 {filters.categories?.length} categories
@@ -308,7 +308,7 @@ const AdvancedQueryTab = ({ onEnrichmentStart }: AdvancedQueryTabProps) => {
             maxCompanies < 1 ||
             maxCompanies > 50
           }
-          className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 px-8"
+          className="bg-gradient-to-r from-[#69B4B7] to-[#3E64B4] hover:from-[#69B4B7]/80 hover:to-[#3E64B4]/80 px-8"
         >
           {isSubmitting ? (
             <>

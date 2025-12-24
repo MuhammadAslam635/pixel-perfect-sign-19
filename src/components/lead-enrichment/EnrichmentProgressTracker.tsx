@@ -141,13 +141,13 @@ const EnrichmentProgressTracker = ({
       {status === "running" && (
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-300">Progress</span>
-            <span className="text-blue-400 font-medium">
+            <span className="text-white/70">Progress</span>
+            <span className="text-[#69B4B7] font-medium">
               {Math.round(progress)}%
             </span>
           </div>
-          <Progress value={progress} className="h-2 bg-gray-800" />
-          <p className="text-xs text-gray-400 text-center">
+          <Progress value={progress} className="h-2 bg-gradient-to-br from-gray-800/50 to-gray-900/30" />
+          <p className="text-xs text-white/50 text-center">
             Estimated time remaining: ~{estimatedTime}
           </p>
         </div>
@@ -156,46 +156,46 @@ const EnrichmentProgressTracker = ({
       {/* Info Cards */}
       <div className="grid grid-cols-2 gap-4">
         {/* Search ID */}
-        <div className="p-4 bg-gray-800/30 rounded-lg border border-gray-700">
+        <div className="p-4 bg-gradient-to-br from-gray-800/30 to-gray-900/20 rounded-lg border border-white/10">
           <div className="flex items-center gap-2 mb-2">
-            <TrendingUp className="w-4 h-4 text-purple-400" />
-            <span className="text-xs font-medium text-gray-400">Search ID</span>
+            <TrendingUp className="w-4 h-4 text-[#69B4B7]" />
+            <span className="text-xs font-medium text-white/50">Search ID</span>
           </div>
-          <p className="text-sm text-gray-200 font-mono truncate">{searchId}</p>
+          <p className="text-sm text-white/70 font-mono truncate">{searchId}</p>
         </div>
 
         {/* Items Processed */}
-        <div className="p-4 bg-gray-800/30 rounded-lg border border-gray-700">
+        <div className="p-4 bg-gradient-to-br from-gray-800/30 to-gray-900/20 rounded-lg border border-white/10">
           <div className="flex items-center gap-2 mb-2">
-            <Building2 className="w-4 h-4 text-blue-400" />
-            <span className="text-xs font-medium text-gray-400">
+            <Building2 className="w-4 h-4 text-[#69B4B7]" />
+            <span className="text-xs font-medium text-white/50">
               Items Processed
             </span>
           </div>
-          <p className="text-2xl font-bold text-blue-400">{itemsProcessed}</p>
+          <p className="text-2xl font-bold text-[#69B4B7]">{itemsProcessed}</p>
         </div>
       </div>
 
       {/* Query Display */}
       {query && (
-        <div className="p-4 bg-purple-900/20 rounded-lg border border-purple-500/30">
+        <div className="p-4 bg-gradient-to-br from-gray-800/30 to-gray-900/20 rounded-lg border border-white/10">
           <div className="flex items-center gap-2 mb-2">
             {mode === "query" ? (
-              <Sparkles className="w-4 h-4 text-purple-400" />
+              <Sparkles className="w-4 h-4 text-[#69B4B7]" />
             ) : (
-              <Building2 className="w-4 h-4 text-blue-400" />
+              <Building2 className="w-4 h-4 text-[#69B4B7]" />
             )}
-            <span className="text-xs font-medium text-gray-300">Search Query</span>
+            <span className="text-xs font-medium text-white/70">Search Query</span>
           </div>
-          <p className="text-sm text-gray-200">{query}</p>
+          <p className="text-sm text-white/70">{query}</p>
         </div>
       )}
 
       {/* Error Alert */}
       {status === "failed" && error && (
-        <Alert className="bg-red-900/20 border-red-500/30">
+        <Alert className="bg-gradient-to-br from-red-900/20 to-red-800/10 border border-red-500/30">
           <AlertCircle className="w-4 h-4 text-red-400" />
-          <AlertDescription className="text-gray-300 text-sm">
+          <AlertDescription className="text-white/70 text-sm">
             {error}
           </AlertDescription>
         </Alert>
@@ -203,9 +203,9 @@ const EnrichmentProgressTracker = ({
 
       {/* Success Message */}
       {status === "completed" && (
-        <Alert className="bg-green-900/20 border-green-500/30">
+        <Alert className="bg-gradient-to-br from-green-900/20 to-green-800/10 border border-green-500/30">
           <CheckCircle2 className="w-4 h-4 text-green-400" />
-          <AlertDescription className="text-gray-300 text-sm">
+          <AlertDescription className="text-white/70 text-sm">
             <strong className="text-green-400">Success!</strong> Companies have
             been enriched with decision-makers. You can now view them in your
             companies list.
@@ -216,7 +216,7 @@ const EnrichmentProgressTracker = ({
       {/* Process Steps */}
       {status === "running" && (
         <div className="space-y-3">
-          <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+          <p className="text-xs font-medium text-white/50 uppercase tracking-wide">
             Processing Steps
           </p>
           <div className="space-y-2">
@@ -249,7 +249,7 @@ const EnrichmentProgressTracker = ({
         <div className="flex justify-center pt-4">
           <Button
             onClick={() => window.location.reload()}
-            className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700"
+            className="bg-gradient-to-r from-[#69B4B7] to-[#3E64B4] hover:from-[#69B4B7]/80 hover:to-[#3E64B4]/80"
           >
             <CheckCircle2 className="w-4 h-4 mr-2" />
             View Companies
@@ -273,11 +273,11 @@ const ProcessStep = ({
   const getStatusColor = () => {
     switch (status) {
       case "completed":
-        return "text-green-400 border-green-500/50 bg-green-900/20";
+        return "text-green-400 border border-green-500/30 bg-gradient-to-br from-green-900/20 to-green-800/10";
       case "running":
-        return "text-blue-400 border-blue-500/50 bg-blue-900/20";
+        return "text-[#69B4B7] border border-white/10 bg-gradient-to-br from-gray-800/30 to-gray-900/20";
       default:
-        return "text-gray-500 border-gray-700 bg-gray-800/20";
+        return "text-white/30 border border-white/5 bg-gradient-to-br from-gray-800/10 to-gray-900/5";
     }
   };
 
@@ -288,19 +288,19 @@ const ProcessStep = ({
       case "running":
         return (
           <motion.div
-            className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full"
+            className="w-4 h-4 border-2 border-[#69B4B7] border-t-transparent rounded-full"
             animate={{ rotate: 360 }}
             transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
           />
         );
       default:
-        return <Clock className="w-4 h-4 text-gray-500" />;
+        return <Clock className="w-4 h-4 text-white/30" />;
     }
   };
 
   return (
     <div
-      className={`flex items-center gap-3 p-3 rounded-lg border ${getStatusColor()}`}
+      className={`flex items-center gap-3 p-3 rounded-lg ${getStatusColor()}`}
     >
       <div className="flex-shrink-0">{icon}</div>
       <div className="flex-1 text-sm font-medium">{label}</div>

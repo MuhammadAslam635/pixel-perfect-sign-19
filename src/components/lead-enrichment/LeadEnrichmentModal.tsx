@@ -63,16 +63,16 @@ const LeadEnrichmentModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 border border-white/10">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0 bg-gradient-to-br from-gray-800/50 to-gray-900/30 border border-white/10 backdrop-blur-xl">
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-gray-900/95 backdrop-blur-sm border-b border-white/10 px-6 py-4">
+        <div className="sticky top-0 z-10 bg-gradient-to-br from-gray-800/50 to-gray-900/30 backdrop-blur-sm border-b border-white/10 px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                <Building2 className="w-6 h-6 text-blue-400" />
+                <Building2 className="w-6 h-6 text-[#69B4B7]" />
                 Lead Enrichment
               </h2>
-              <p className="text-sm text-gray-400 mt-1">
+              <p className="text-sm text-white/50 mt-1">
                 Discover and enrich company leads with decision-makers
               </p>
             </div>
@@ -81,7 +81,7 @@ const LeadEnrichmentModal = ({
               size="icon"
               onClick={handleClose}
               disabled={isEnriching}
-              className="text-gray-400 hover:text-white hover:bg-white/10"
+              className="text-white/50 hover:text-white hover:bg-white/5 rounded-full"
             >
               <X className="w-5 h-5" />
             </Button>
@@ -89,7 +89,7 @@ const LeadEnrichmentModal = ({
         </div>
 
         {/* Content */}
-        <div className="px-6 pb-6 overflow-y-auto max-h-[calc(90vh-100px)]">
+        <div className="px-6 pb-6 overflow-y-auto scrollbar-hide max-h-[calc(90vh-100px)]">
           {!isEnriching ? (
             <Tabs
               value={activeTab}
@@ -97,17 +97,17 @@ const LeadEnrichmentModal = ({
               className="w-full mt-4"
             >
               {/* Tab Selector */}
-              <TabsList className="grid w-full grid-cols-2 bg-gray-800/50 border border-white/10 p-1">
+              <TabsList className="grid w-full grid-cols-2 bg-gradient-to-br from-gray-800/50 to-gray-900/30 border border-white/10 p-1">
                 <TabsTrigger
                   value="domain"
-                  className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-gray-400 transition-all"
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#69B4B7] data-[state=active]:to-[#3E64B4] data-[state=active]:text-white text-white/50 transition-all"
                 >
                   <Building2 className="w-4 h-4 mr-2" />
                   Domain Specific
                 </TabsTrigger>
                 <TabsTrigger
                   value="query"
-                  className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-gray-400 transition-all"
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#69B4B7] data-[state=active]:to-[#3E64B4] data-[state=active]:text-white text-white/50 transition-all"
                 >
                   <SearchIcon className="w-4 h-4 mr-2" />
                   Advanced Query
@@ -148,18 +148,18 @@ const LeadEnrichmentModal = ({
 
         {/* Footer Info */}
         {!isEnriching && (
-          <div className="sticky bottom-0 bg-gradient-to-r from-blue-900/20 to-purple-900/20 border-t border-white/10 px-6 py-3">
-            <p className="text-xs text-gray-400 text-center">
+          <div className="sticky bottom-0 bg-gradient-to-br from-gray-800/50 to-gray-900/30 border-t border-white/10 px-6 py-3">
+            <p className="text-xs text-white/50 text-center">
               {activeTab === "domain" ? (
                 <>
-                  <span className="font-semibold text-blue-400">
+                  <span className="font-semibold text-[#69B4B7]">
                     Domain Specific:
                   </span>{" "}
                   Direct enrichment without AI search - faster processing
                 </>
               ) : (
                 <>
-                  <span className="font-semibold text-purple-400">
+                  <span className="font-semibold text-[#69B4B7]">
                     Advanced Query:
                   </span>{" "}
                   AI-powered company discovery with custom filters
