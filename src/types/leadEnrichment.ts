@@ -140,6 +140,7 @@ export type EnrichmentMode = "domain" | "query";
 
 export interface DomainEnrichmentRequest {
   domains: string[];
+  selectedSeniorities?: string[];
 }
 
 export interface DomainEnrichmentResponse {

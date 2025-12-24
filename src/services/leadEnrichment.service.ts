@@ -51,11 +51,16 @@ export const leadEnrichmentService = {
    * Bypasses Perplexity - directly sends domains to Apollo microservice
    *
    * @param domains - Array of company domains (e.g., ["microsoft.com", "apple.com"])
+   * @param selectedSeniorities - Optional array of seniority levels to filter by
    */
   enrichByDomain: async (
-    domains: string[]
+    domains: string[],
+    selectedSeniorities?: string[]
   ): Promise<DomainEnrichmentResponse> => {
-    const request: DomainEnrichmentRequest = { domains };
+    const request: DomainEnrichmentRequest = {
+      domains,
+      selectedSeniorities
+    };
     const response = await API.post("/leads/enrichment/domain", request);
     return response.data;
   },

@@ -20,6 +20,9 @@ import {
 } from "../shared/components";
 import { buildStats } from "../shared/hooks";
 import LeadEnrichmentModal from "@/components/lead-enrichment/LeadEnrichmentModal";
+import SeniorityQuickSelector from "@/components/lead-enrichment/SeniorityQuickSelector";
+import { useEnrichmentConfigs } from "@/hooks/useEnrichmentConfigs";
+import type { SeniorityLevel } from "@/types/leadEnrichment";
 
 const COMPANY_EMPLOYEE_RANGES = [
   { value: "all", label: "All company sizes" },
@@ -39,6 +42,10 @@ const index = () => {
   const [isMobileExecutivesView, setIsMobileExecutivesView] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>("detailed");
   const [enrichmentModalOpen, setEnrichmentModalOpen] = useState(false);
+  const [selectedSeniorities, setSelectedSeniorities] = useState<SeniorityLevel[]>([]);
+
+  // Fetch dynamic enrichment configs
+  const { seniorityOptions } = useEnrichmentConfigs();
 
   // Companies filters and pagination
   const [companiesPage, setCompaniesPage] = useState(1);
@@ -286,14 +293,24 @@ const index = () => {
               transition={{ duration: 0.6, ease: "easeOut", delay: 0.4 }}
               className="flex flex-col sm:flex-row justify-end items-stretch sm:items-center gap-1.5 sm:gap-2 md:gap-3"
             >
-              {/* Enrich Leads Button - Always visible */}
-            <Button
-              onClick={() => setEnrichmentModalOpen(true)}
-              className="bg-gradient-to-r from-[#69B4B7] to-[#3E64B4] hover:from-[#69B4B7]/80 hover:to-[#3E64B4]/80 text-white font-semibold rounded-full px-6 h-10 shadow-[0_5px_18px_rgba(103,176,183,0.35)] hover:shadow-[0_8px_24px_rgba(103,176,183,0.45)] transition-all"
-            >
-              <Sparkles className="w-4 h-4" />
-              Enrich Leads
-            </Button>
+              {/* Enrich Leads Section */}
+              <div className="flex items-center gap-2">
+                {/* Seniority Quick Selector */}
+                <SeniorityQuickSelector
+                  selectedSeniorities={selectedSeniorities}
+                  onChange={setSelectedSeniorities}
+                  seniorityOptions={seniorityOptions}
+                />
+
+                {/* Enrich Leads Button */}
+                <Button
+                  onClick={() => setEnrichmentModalOpen(true)}
+                  className="bg-gradient-to-r from-[#69B4B7] to-[#3E64B4] hover:from-[#69B4B7]/80 hover:to-[#3E64B4]/80 text-white font-semibold rounded-full px-6 h-10 shadow-[0_5px_18px_rgba(103,176,183,0.35)] hover:shadow-[0_8px_24px_rgba(103,176,183,0.45)] transition-all"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  Enrich Leads
+                </Button>
+              </div>
 
             {/* Controls Container */}
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2 md:gap-3 order-1 lg:order-2">
@@ -443,6 +460,7 @@ const index = () => {
             companiesQuery.refetch();
             setEnrichmentModalOpen(false);
           }}
+          selectedSeniorities={selectedSeniorities}
         />
       </motion.main>
     </DashboardLayout>
