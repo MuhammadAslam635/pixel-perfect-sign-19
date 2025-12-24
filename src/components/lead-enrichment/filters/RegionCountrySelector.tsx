@@ -145,7 +145,7 @@ const RegionCountrySelector = ({
       />
 
       {/* Regions & Countries List */}
-      <div className="max-h-[400px] overflow-y-auto bg-gray-800/20 rounded-lg border border-gray-700 p-2 space-y-1">
+      <div className="max-h-[400px] overflow-y-auto scrollbar-hide bg-gray-800/20 rounded-lg border border-gray-700 p-2 space-y-1">
         {searchQuery === "" ? (
           /* Show by Region */
           filteredRegions.map((region) => {

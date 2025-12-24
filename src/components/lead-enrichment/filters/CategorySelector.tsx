@@ -221,7 +221,7 @@ const CategorySelector = ({
       )}
 
       {/* Category Tree */}
-      <div className="max-h-[400px] overflow-y-auto bg-gray-800/20 rounded-lg border border-gray-700 p-2">
+      <div className="max-h-[400px] overflow-y-auto scrollbar-hide bg-gray-800/20 rounded-lg border border-gray-700 p-2">
         {categories.length > 0 ? (
           categories.map((category) => renderCategory(category, 0))
         ) : (

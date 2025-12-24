@@ -65,7 +65,7 @@ const LeadEnrichmentModal = ({
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent
         className="max-w-4xl max-h-[90vh] overflow-hidden p-0 bg-gradient-to-br from-gray-800/50 to-gray-900/30 border border-white/10 backdrop-blur-xl"
-        
+        hideCloseButton={true}
       >
         {/* Header */}
         <div className="sticky top-0 z-10 bg-gradient-to-br from-gray-800/50 to-gray-900/30 backdrop-blur-sm border-b border-white/10 px-6 py-4">
