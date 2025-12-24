@@ -208,7 +208,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
   const [isListening, setIsListening] = useState(false);
   const [interimTranscript, setInterimTranscript] = useState("");
   const scrollAreaRef = useRef<HTMLDivElement | null>(null);
-  const inputRef = useRef<HTMLInputElement | null>(null);
+  const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const isSendingRef = useRef(false);
   const streamingStartTimeRef = useRef<number | null>(null);
   const streamingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -273,13 +273,43 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
 
   const isSendingMessage = isCurrentChatSending;
 
-  // Auto-scroll input to show latest text
+  // Auto-resize textarea to fit content (max 5 lines)
+  const autoResizeTextarea = () => {
+    const textarea = inputRef.current;
+    if (!textarea) return;
+
+    // Reset height to calculate new height
+    textarea.style.height = "auto";
+
+    // Calculate max height for ~3 lines (approximately 24px per line)
+    // 24px is a rough estimate for existing font/line-height
+    const lineHeight = 24;
+    const maxLines = 3;
+    const maxHeight = lineHeight * maxLines;
+
+    // Set height based on content, capped at max
+    // If content is empty or short, ensure we maintain at least original height if needed, 
+    // but typically "auto" + scrollHeight handles it.
+    // The "assistant-composer__entry" css might constrain it, so we'll need to ensure that container grows too.
+    const newHeight = Math.min(textarea.scrollHeight, maxHeight);
+    textarea.style.height = `${newHeight}px`;
+  };
+
+  // Auto-scroll input to show latest text and resize
   useEffect(() => {
     if (inputRef.current) {
       // Scroll to the end of the input
       inputRef.current.scrollLeft = inputRef.current.scrollWidth;
+      autoResizeTextarea();
     }
   }, [message, interimTranscript]);
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      handleSendMessage();
+    }
+  };
 
   // Real-time transcription functions
   const startRealtimeTranscription = async () => {
@@ -955,11 +985,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      handleSendMessage();
-    }
-  };
+
 
   const hasActiveChat = activeChatId || selectedMessages.length > 0;
 
@@ -1245,12 +1271,16 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
         </div>
       )}
 
-      <div className="assistant-composer mt-auto">
-        <div className="assistant-composer__entry">
-          <input
+      <div 
+        className="assistant-composer mt-auto"
+        style={{ height: 'auto', minHeight: '85px', paddingBottom: '20px', paddingTop: '20px', alignItems: 'flex-end' }}
+      >
+        <div className="assistant-composer__entry" style={{ height: 'auto', minHeight: '44px' }}>
+          <textarea
             ref={inputRef}
-            className="assistant-composer__input font-poppins focus:outline-none"
-            type="text"
+            className="assistant-composer__input font-poppins focus:outline-none resize-none overflow-y-auto scrollbar-hide py-3"
+            rows={1}
+            style={{ minHeight: '24px', maxHeight: '72px' }}
             placeholder={
               isListening ? "Listening... Click mic to stop" : "Ask Skylar"
             }
@@ -1265,7 +1295,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
                 : e.target.value;
               dispatch(setComposerValue(valueWithoutInterim));
             }}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyDown}
             disabled={isSendingMessage || isListening}
           />
         </div>
@@ -1278,6 +1308,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
                 "opacity-50 cursor-not-allowed",
               !(isSendingMessage || isStreaming) && "cursor-pointer"
             )}
+            style={{ marginBottom: '5px' }}
             onClick={
               isSendingMessage || isStreaming ? undefined : handleMicClick
             }
@@ -1289,6 +1320,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
               "round-icon-btn cursor-pointer",
               isListening && "opacity-50 cursor-not-allowed"
             )}
+            style={{ marginBottom: '4px' }}
             onClick={handleSendMessage}
           >
             {isSendingMessage ? (

@@ -303,13 +303,14 @@ const LeadChat = ({
     const meetingBotAvailable = true; // Always available as it depends on meetings, not phone/email
 
     return [
+      { label: "Email", status: emailStatus, isAvailable: hasEmail },
       {
         label: "WhatsApp",
         status: whatsappStatus,
         isAvailable: whatsappAvailable,
       },
 
-      { label: "Email", status: emailStatus, isAvailable: hasEmail },
+      
       { label: "SMS", status: smsStatus, isAvailable: smsAvailable },
       { label: "Call", status: smsStatus, isAvailable: smsAvailable },
       {
