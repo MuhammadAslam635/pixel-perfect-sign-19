@@ -12,7 +12,9 @@ import {
   MapPin,
   Loader2,
 } from "lucide-react";
-import { Company, CompanyPerson } from "@/services/companies.service";
+import { useQuery } from "@tanstack/react-query";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Company, CompanyPerson, companiesService } from "@/services/companies.service";
 import { CompanyLogoFallback } from "@/components/ui/company-logo-fallback";
 import { Card } from "@/components/ui/card";
 
@@ -31,6 +33,8 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<TabType>("executives");
   const [showLeads, setShowLeads] = useState(false);
+  const [showLoadingSkeleton, setShowLoadingSkeleton] = useState(false);
+  const [mapLoaded, setMapLoaded] = useState(false);
 
   // Automatically show leads when a company is selected
   useEffect(() => {
@@ -39,6 +43,15 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
       setShowLeads(true);
     }
   }, [company?._id]);
+
+  // Fetch company details
+  const { data: latestCompany, isLoading: isCompanyLoading } = useQuery({
+    queryKey: ["company", company?._id],
+    queryFn: () => (company?._id ? companiesService.getCompanyById(company._id) : null),
+    enabled: !!company?._id,
+  });
+
+  const displayCompany = latestCompany || company;
 
   // Get company LinkedIn URL (from company data or first executive)
   const companyLinkedIn =
@@ -150,6 +163,13 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
           onClick={() => {
             setActiveTab("details");
             setShowLeads(false);
+            if (activeTab !== "details") {
+                setShowLoadingSkeleton(true);
+                setMapLoaded(false);
+                setTimeout(() => setShowLoadingSkeleton(false), 500);
+                // Safety timeout for map: maximum 3s waiting for map, then force show
+                setTimeout(() => setMapLoaded(true), 3000);
+            }
           }}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
@@ -172,19 +192,13 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
       </div>
 
       {/* Tab Content */}
-      <AnimatePresence mode="wait" initial={false}>
+      <div className="relative">
         {activeTab === "executives" && (
           <motion.div
             key="executives"
-            initial={{ opacity: 0, y: 20, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -20, scale: 0.97, x: -30 }}
-            transition={{
-              type: "spring",
-              stiffness: 350,
-              damping: 30,
-              mass: 0.6,
-            }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
             className="relative"
           >
             {showLeads && company ? (
@@ -317,174 +331,132 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
         )}
 
         {/* Company Details Tab Content */}
-        {activeTab === "details" && company && (
-          <motion.div
-            key="details"
-            initial={{ opacity: 0, y: 20, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -20, scale: 0.97, x: 30 }}
-            transition={{
-              type: "spring",
-              stiffness: 350,
-              damping: 30,
-              mass: 0.6,
-            }}
-          >
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.15, duration: 0.3 }}
-            >
-              <Card className="bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] border border-white/15 p-4">
+        {/* Company Details Tab Content */}
+        {/* Company Details Tab Content */}
+        {activeTab === "details" && (
+          <div className="pt-1 relative min-h-[400px]">
+             {/* Skeleton Overlay */}
+             {(isCompanyLoading || showLoadingSkeleton || (displayCompany?.address && !mapLoaded)) && (
+               <Card className="absolute inset-0 z-10 bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] border border-white/15 p-4 h-full">
+                 <div className="flex items-start gap-3 mb-4">
+                   <Skeleton className="h-12 w-12 rounded-lg bg-white/10" />
+                   <div className="flex-1 space-y-2">
+                     <Skeleton className="h-5 w-1/2 bg-white/10" />
+                     <Skeleton className="h-3 w-1/3 bg-white/5" />
+                   </div>
+                 </div>
+                 <div className="flex gap-3 mb-4">
+                   <Skeleton className="h-8 w-8 rounded-full bg-white/10" />
+                   <Skeleton className="h-8 w-8 rounded-full bg-white/10" />
+                 </div>
+                 <div className="space-y-2 mb-4">
+                   <Skeleton className="h-3 w-full bg-white/5" />
+                   <Skeleton className="h-3 w-5/6 bg-white/5" />
+                   <Skeleton className="h-3 w-4/6 bg-white/5" />
+                 </div>
+                 <div className="space-y-2">
+                   <Skeleton className="h-32 w-full rounded-lg bg-white/5" />
+                 </div>
+               </Card>
+             )}
+
+             {/* Actual Content (Hidden but rendered to trigger iframe load) */}
+             <div className={`${(isCompanyLoading || showLoadingSkeleton || (displayCompany?.address && !mapLoaded)) ? 'opacity-0 pointer-events-none absolute inset-0' : 'opacity-100 relative'}`}>
+               {displayCompany ? (
+                <Card className="bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] border border-white/15 p-4 h-full overflow-y-auto">
                 {/* Logo and Name in same row */}
-                <motion.div
-                  className="flex items-start gap-3 mb-4"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2, duration: 0.4 }}
-                >
-                  <motion.div
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ delay: 0.25, type: "spring", stiffness: 300 }}
-                  >
+                <div className="flex items-start gap-3 mb-4">
+                  <div>
                     <CompanyLogoFallback
-                      name={company.name}
-                      logo={company.logo}
+                      name={displayCompany.name}
+                      logo={displayCompany.logo}
                       size="md"
                     />
-                  </motion.div>
+                  </div>
                   <div className="flex-1">
                     <h3 className="text-lg font-semibold text-white mb-1">
-                      {company.name}
+                      {displayCompany.name}
                     </h3>
                     {/* Website below name */}
-                    {company.website && (
-                      <motion.div
-                        className="flex items-center gap-2 text-white/80"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.3, duration: 0.4 }}
-                      >
+                    {displayCompany.website && (
+                      <div className="flex items-center gap-2 text-white/80">
                         {/* <Globe className="w-4 h-4" /> */}
                         <a
-                          href={getFullUrl(company.website)}
+                          href={getFullUrl(displayCompany.website)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-sm hover:text-white hover:underline"
                         >
-                          {formatWebsiteUrl(company.website)}
+                          {formatWebsiteUrl(displayCompany.website)}
                         </a>
-                      </motion.div>
+                      </div>
                     )}
                   </div>
-                </motion.div>
+                </div>
 
                 {/* Social Icons */}
-                {(hasLinkedIn || hasFacebook || hasPhone) && (
-                  <motion.div
-                    className="flex items-center gap-3 mb-4"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.35, duration: 0.4 }}
-                  >
-                    {hasLinkedIn && (
-                      <motion.a
+                {(Boolean(companyLinkedIn) || Boolean(displayCompany.facebook) || Boolean(displayCompany.phone)) && (
+                  <div className="flex items-center gap-3 mb-4">
+                    {Boolean(companyLinkedIn) && (
+                      <a
                         href={getFullUrl(companyLinkedIn || undefined)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center justify-center w-8 h-8 rounded-full border border-white bg-white text-gray-900 transition-colors"
+                        className="flex items-center justify-center w-8 h-8 rounded-full border border-white bg-white text-gray-900 transition-colors hover:bg-white/90"
                         title="LinkedIn"
-                        whileHover={{ scale: 1.1, rotate: 5 }}
-                        whileTap={{ scale: 0.95 }}
-                        initial={{ scale: 0, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{
-                          delay: 0.4,
-                          type: "spring",
-                          stiffness: 400,
-                        }}
                       >
                         <Linkedin className="w-4 h-4" />
-                      </motion.a>
+                      </a>
                     )}
-                    {hasFacebook && (
-                      <motion.a
-                        href={getFullUrl(company.facebook || undefined)}
+                    {Boolean(displayCompany.facebook) && (
+                      <a
+                        href={getFullUrl(displayCompany.facebook || undefined)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center justify-center w-8 h-8 rounded-full border border-white bg-white text-gray-900 transition-colors"
+                        className="flex items-center justify-center w-8 h-8 rounded-full border border-white bg-white text-gray-900 transition-colors hover:bg-white/90"
                         title="Facebook"
-                        whileHover={{ scale: 1.1, rotate: -5 }}
-                        whileTap={{ scale: 0.95 }}
-                        initial={{ scale: 0, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{
-                          delay: 0.45,
-                          type: "spring",
-                          stiffness: 400,
-                        }}
                       >
                         <Facebook className="w-4 h-4" />
-                      </motion.a>
+                      </a>
                     )}
-                    {hasPhone && (
-                      <motion.a
-                        href={`tel:${company.phone}`}
-                        className="flex items-center justify-center w-8 h-8 rounded-full border border-white bg-white text-gray-900 transition-colors"
-                        title={company.phone || "Phone"}
-                        whileHover={{ scale: 1.1, rotate: 5 }}
-                        whileTap={{ scale: 0.95 }}
-                        initial={{ scale: 0, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{
-                          delay: 0.5,
-                          type: "spring",
-                          stiffness: 400,
-                        }}
+                    {Boolean(displayCompany.phone) && (
+                      <a
+                        href={`tel:${displayCompany.phone}`}
+                        className="flex items-center justify-center w-8 h-8 rounded-full border border-white bg-white text-gray-900 transition-colors hover:bg-white/90"
+                        title={displayCompany.phone || "Phone"}
                       >
                         <Phone className="w-4 h-4" />
-                      </motion.a>
+                      </a>
                     )}
-                  </motion.div>
+                  </div>
                 )}
 
                 {/* Description */}
-                {(company.description || company.about) && (
-                  <motion.div
-                    className="mb-4"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4, duration: 0.4 }}
-                  >
+                {(displayCompany.description || displayCompany.about) && (
+                  <div className="mb-4">
                     <p className="text-sm text-white/80 leading-relaxed">
-                      {company.description || company.about}
+                      {displayCompany.description || displayCompany.about}
                     </p>
-                  </motion.div>
+                  </div>
                 )}
 
                 {/* Address */}
-                {company.address && (
-                  <motion.div
-                    className="mb-4"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.45, duration: 0.4 }}
-                  >
+                {displayCompany.address && (
+                  <div className="mb-4">
                     <div className="flex items-start gap-2 mb-2">
                       <MapPin className="w-4 h-4 text-white/70 mt-0.5 flex-shrink-0" />
                       <div className="flex-1">
                         <p className="text-sm text-white/80 leading-relaxed">
-                          {company.address}
+                          {displayCompany.address}
                         </p>
                       </div>
                     </div>
                     {/* Google Maps Embed */}
-                    {getGoogleMapsEmbedUrl(company.address) && (
-                      <motion.div
-                        className="relative w-full h-32 rounded-lg overflow-hidden border border-white/10 cursor-pointer group"
+                    {getGoogleMapsEmbedUrl(displayCompany.address) && (
+                      <div
+                        className="relative w-full h-32 rounded-lg overflow-hidden border border-white/10 cursor-pointer group hover:scale-[1.02] transition-transform duration-200"
                         onClick={() => {
-                          const mapsUrl = getGoogleMapsUrl(company.address);
+                          const mapsUrl = getGoogleMapsUrl(displayCompany.address);
                           if (mapsUrl) {
                             window.open(mapsUrl, "_blank");
                           }
@@ -494,24 +466,16 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
                         onKeyDown={(e) => {
                           if (e.key === "Enter" || e.key === " ") {
                             e.preventDefault();
-                            const mapsUrl = getGoogleMapsUrl(company.address);
+                            const mapsUrl = getGoogleMapsUrl(displayCompany.address);
                             if (mapsUrl) {
                               window.open(mapsUrl, "_blank");
                             }
                           }
                         }}
                         title="Click to open in Google Maps"
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{
-                          delay: 0.5,
-                          type: "spring",
-                          stiffness: 300,
-                        }}
-                        whileHover={{ scale: 1.02 }}
                       >
                         <iframe
-                          src={getGoogleMapsEmbedUrl(company.address) || ""}
+                          src={getGoogleMapsEmbedUrl(displayCompany.address) || ""}
                           width="100%"
                           height="100%"
                           style={{ border: 0 }}
@@ -519,75 +483,55 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
                           loading="lazy"
                           referrerPolicy="no-referrer-when-downgrade"
                           className="pointer-events-none"
+                          onLoad={() => {
+                              console.log("Map loaded");
+                              setMapLoaded(true);
+                          }}
                         />
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
                           <span className="text-xs text-white/0 group-hover:text-white/80 font-medium bg-black/50 px-3 py-1.5 rounded-lg">
                             Click to open in Google Maps
                           </span>
                         </div>
-                      </motion.div>
+                      </div>
                     )}
-                  </motion.div>
+                  </div>
                 )}
 
                 {/* Additional Details */}
-                <motion.div
-                  className="space-y-2"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.55, duration: 0.4 }}
-                >
-                  {company.employees && (
-                    <motion.div
-                      className="flex items-center gap-2 text-sm text-white/70"
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.6, duration: 0.3 }}
-                    >
+                <div className="space-y-2">
+                  {displayCompany.employees && (
+                    <div className="flex items-center gap-2 text-sm text-white/70">
                       <Users className="w-4 h-4" />
-                      <span>{company.employees} employees</span>
-                    </motion.div>
+                      <span>{displayCompany.employees} employees</span>
+                    </div>
                   )}
 
-                  {company.foundedYear && (
-                    <motion.div
-                      className="flex items-center gap-2 text-sm text-white/70"
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.65, duration: 0.3 }}
-                    >
+                  {displayCompany.foundedYear && (
+                    <div className="flex items-center gap-2 text-sm text-white/70">
                       <Building2 className="w-4 h-4" />
-                      <span>Founded: {company.foundedYear}</span>
-                    </motion.div>
+                      <span>Founded: {displayCompany.foundedYear}</span>
+                    </div>
                   )}
 
-                  {company.marketCap && (
-                    <motion.div
-                      className="flex items-center gap-2 text-sm text-white/70"
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.7, duration: 0.3 }}
-                    >
-                      <span>Market Cap: {company.marketCap as string}</span>
-                    </motion.div>
+                  {displayCompany.marketCap && (
+                    <div className="flex items-center gap-2 text-sm text-white/70">
+                      <span>Market Cap: {displayCompany.marketCap as string}</span>
+                    </div>
                   )}
 
                   {getRevenue() && (
-                    <motion.div
-                      className="flex items-center gap-2 text-sm text-white/70"
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.75, duration: 0.3 }}
-                    >
+                    <div className="flex items-center gap-2 text-sm text-white/70">
                       <span>Revenue: {getRevenue()}</span>
-                    </motion.div>
+                    </div>
                   )}
-                </motion.div>
+                </div>
               </Card>
-            </motion.div>
-          </motion.div>
+             ) : null}
+             </div>
+          </div>
         )}
-      </AnimatePresence>
+      </div>
     </>
   );
 };
