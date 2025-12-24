@@ -110,7 +110,7 @@ export const companiesService = {
   getCompanyById: async (id: string): Promise<Company> => {
     try {
       const response = await API.get(`/companies/${id}`);
-      return response.data;
+      return response.data.data;
     } catch (error: any) {
       throw error;
     }

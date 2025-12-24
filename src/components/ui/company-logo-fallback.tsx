@@ -10,6 +10,7 @@ interface CompanyLogoFallbackProps {
 
 // Generate consistent color from company name
 const getColorFromName = (name: string): string => {
+  if (!name) return "from-gray-500 to-gray-600";
   const colors = [
     "from-blue-500 to-blue-600",
     "from-purple-500 to-purple-600",

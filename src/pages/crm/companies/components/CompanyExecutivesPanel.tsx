@@ -207,7 +207,7 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
                   const hasLinkedin = Boolean(exec.linkedin);
 
                   return (
-                    <motion.div
+                    <div
                       key={exec._id || exec.id || index}
                       role="button"
                       tabIndex={0}
@@ -218,22 +218,6 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
                           onExecutiveSelect?.(exec);
                         }
                       }}
-                      initial={{ opacity: 0, x: -40, scale: 0.93, y: 10 }}
-                      animate={{ opacity: 1, x: 0, scale: 1, y: 0 }}
-                      exit={{ opacity: 0, x: 40, scale: 0.93 }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 380,
-                        damping: 28,
-                        mass: 0.6,
-                        delay: index * 0.06,
-                      }}
-                      whileHover={{
-                        scale: 1.03,
-                        x: 4,
-                        transition: { duration: 0.2 },
-                      }}
-                      whileTap={{ scale: 0.97 }}
                       className="relative overflow-hidden rounded-xl sm:rounded-2xl border border-white/15 bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] px-2 sm:px-3 py-2 mb-2 max-w-sm h-14 transition-all duration-300 hover:shadow-[0_12px_32px_rgba(0,0,0,0.3)] sm:before:absolute sm:before:content-[''] sm:before:left-0 sm:before:top-1/2 sm:before:-translate-y-1/2 sm:before:h-[55%] sm:before:w-[3px] lg:before:w-[4px] sm:before:rounded-full sm:before:bg-white/70 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/60"
                     >
                       <div className="flex items-center justify-between gap-2 h-full">
@@ -279,7 +263,7 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
                           </button>
                         </div>
                       </div>
-                    </motion.div>
+                    </div>
                   );
                 })
               ) : (
@@ -335,8 +319,8 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
         {/* Company Details Tab Content */}
         {activeTab === "details" && (
           <div className="pt-1 relative min-h-[400px]">
-             {/* Skeleton Overlay */}
-             {(isCompanyLoading || showLoadingSkeleton || (displayCompany?.address && !mapLoaded)) && (
+             {/* Skeleton Overlay - Shows during initial load or forced 500ms delay only */}
+             {(isCompanyLoading || showLoadingSkeleton) && (
                <Card className="absolute inset-0 z-10 bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] border border-white/15 p-4 h-full">
                  <div className="flex items-start gap-3 mb-4">
                    <Skeleton className="h-12 w-12 rounded-lg bg-white/10" />
@@ -360,8 +344,8 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
                </Card>
              )}
 
-             {/* Actual Content (Hidden but rendered to trigger iframe load) */}
-             <div className={`${(isCompanyLoading || showLoadingSkeleton || (displayCompany?.address && !mapLoaded)) ? 'opacity-0 pointer-events-none absolute inset-0' : 'opacity-100 relative'}`}>
+             {/* Actual Content */}
+             <div className={`${(isCompanyLoading || showLoadingSkeleton) ? 'opacity-0 pointer-events-none absolute inset-0' : 'opacity-100 relative'}`}>
                {displayCompany ? (
                 <Card className="bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] border border-white/15 p-4 h-full overflow-y-auto">
                 {/* Logo and Name in same row */}
@@ -474,11 +458,15 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
                         }}
                         title="Click to open in Google Maps"
                       >
+                         {/* Map Loading Skeleton */}
+                         {!mapLoaded && (
+                             <Skeleton className="absolute inset-0 z-[5] w-full h-full bg-white/10 animate-pulse" />
+                         )}
                         <iframe
                           src={getGoogleMapsEmbedUrl(displayCompany.address) || ""}
                           width="100%"
                           height="100%"
-                          style={{ border: 0 }}
+                          style={{ border: 0, opacity: mapLoaded ? 1 : 0, transition: 'opacity 0.3s ease-in' }}
                           allowFullScreen
                           loading="lazy"
                           referrerPolicy="no-referrer-when-downgrade"
