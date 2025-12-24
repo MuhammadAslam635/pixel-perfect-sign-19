@@ -26,6 +26,7 @@ import {
   List,
   LayoutGrid,
   Trash2,
+  Loader2,
 } from "lucide-react";
 import { ActiveNavButton } from "@/components/ui/primary-btn";
 import {
@@ -451,6 +452,21 @@ const CompaniesList: FC<CompaniesListProps> = ({
                   NEW
                 </span>
               )}
+              {company.leadsGenerationStatus === 'in_progress' && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-gradient-to-r from-blue-500 to-cyan-500 text-white flex-shrink-0">
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      Generating Leads
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent sideOffset={8}>
+                    <p>
+                      {company.leadsGenerationProgress?.current || 0} / {company.leadsGenerationProgress?.total || 0} leads found
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
             </h3>
 
             {/* Second Row: Industry */}
@@ -530,6 +546,21 @@ const CompaniesList: FC<CompaniesListProps> = ({
               <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-gradient-to-r from-green-500 to-emerald-500 text-white">
                 NEW
               </span>
+            )}
+            {company.leadsGenerationStatus === 'in_progress' && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-gradient-to-r from-blue-500 to-cyan-500 text-white">
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    Generating Leads
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent sideOffset={8}>
+                  <p>
+                    {company.leadsGenerationProgress?.current || 0} / {company.leadsGenerationProgress?.total || 0} leads found
+                  </p>
+                </TooltipContent>
+              </Tooltip>
             )}
             {/* {company.industry && (
               <span className="text-xs text-white/70 font-medium">

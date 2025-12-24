@@ -123,6 +123,23 @@ const index = () => {
     totalCompanies: filteredTotalCompanies,
   } = useCompaniesData(companiesParams);
 
+  // Check if any company has leads being generated
+  const hasCompaniesGeneratingLeads = useMemo(
+    () => companies.some(company => company.leadsGenerationStatus === 'in_progress'),
+    [companies]
+  );
+
+  // Auto-refresh every 5 seconds if any company is generating leads
+  useEffect(() => {
+    if (!hasCompaniesGeneratingLeads) return;
+
+    const intervalId = setInterval(() => {
+      companiesQuery.refetch();
+    }, 5000); // Refresh every 5 seconds
+
+    return () => clearInterval(intervalId);
+  }, [hasCompaniesGeneratingLeads, companiesQuery]);
+
   // Filter-aware CRM stats for companies page
   const { stats: companyCrmStats } = useCompanyCrmStatsData(companiesParams);
 

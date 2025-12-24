@@ -42,6 +42,14 @@ export interface Company {
   phone?: string | null;
   tags?: string[];
   ownerId?: string;
+  // Lead generation status fields
+  leadsGenerationStatus?: 'idle' | 'pending' | 'in_progress' | 'completed' | 'failed';
+  leadsGenerationProgress?: {
+    current: number;
+    total: number;
+    lastUpdated: string | null;
+  };
+  leadsGenerationError?: string | null;
   [key: string]: unknown;
 }
 

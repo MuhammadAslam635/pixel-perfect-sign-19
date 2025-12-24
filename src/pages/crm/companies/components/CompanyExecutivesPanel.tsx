@@ -10,6 +10,7 @@ import {
   Info,
   Phone,
   MapPin,
+  Loader2,
 } from "lucide-react";
 import { Company, CompanyPerson } from "@/services/companies.service";
 import { CompanyLogoFallback } from "@/components/ui/company-logo-fallback";
@@ -268,9 +269,40 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
                   );
                 })
               ) : (
-                <p className="text-sm text-muted-foreground/60">
-                  No executives found for this company.
-                </p>
+                // Check if leads are being generated OR company was just created
+                (company.leadsGenerationStatus === 'in_progress' ||
+                 company.leadsGenerationStatus === 'pending' ||
+                 // Show loader for new companies (created in last 30 minutes) without leads AND not completed/failed
+                 (company.leadsGenerationStatus !== 'completed' &&
+                  company.leadsGenerationStatus !== 'failed' &&
+                  new Date().getTime() - new Date(company.createdAt).getTime() < 30 * 60 * 1000)) ? (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex flex-col items-center justify-center py-8 gap-3"
+                  >
+                    <div className="relative">
+                      <Loader2 className="w-12 h-12 text-primary animate-spin" />
+                      <div className="absolute inset-0 blur-xl bg-primary/30 animate-pulse" />
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm font-medium text-white mb-1">
+                        {company.leadsGenerationStatus === 'in_progress' || company.leadsGenerationStatus === 'pending'
+                          ? 'Generating Leads...'
+                          : 'Searching for Executives...'}
+                      </p>
+                      {company.leadsGenerationProgress && (
+                        <p className="text-xs text-white/60">
+                          {company.leadsGenerationProgress?.current || 0} / {company.leadsGenerationProgress?.total || 0} leads found
+                        </p>
+                      )}
+                    </div>
+                  </motion.div>
+                ) : (
+                  <p className="text-sm text-muted-foreground/60">
+                    No executives found for this company.
+                  </p>
+                )
               )
             ) : company ? (
               <p className="text-sm text-muted-foreground/60">
