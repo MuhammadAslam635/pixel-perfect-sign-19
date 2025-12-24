@@ -286,19 +286,19 @@ const index = () => {
               transition={{ duration: 0.6, ease: "easeOut", delay: 0.4 }}
               className="flex flex-col sm:flex-row justify-end items-stretch sm:items-center gap-1.5 sm:gap-2 md:gap-3"
             >
-              {/* Controls Container */}
+              {/* Enrich Leads Button - Always visible */}
+            <Button
+              onClick={() => setEnrichmentModalOpen(true)}
+              className="bg-gradient-to-r from-[#69B4B7] to-[#3E64B4] hover:from-[#69B4B7]/80 hover:to-[#3E64B4]/80 text-white font-semibold rounded-full px-6 h-10 shadow-[0_5px_18px_rgba(103,176,183,0.35)] hover:shadow-[0_8px_24px_rgba(103,176,183,0.45)] transition-all"
+            >
+              <Sparkles className="w-4 h-4" />
+              Enrich Leads
+            </Button>
+
+            {/* Controls Container */}
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2 md:gap-3 order-1 lg:order-2">
                 <div className="flex  flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2 flex-1 ">
                   <div className="flex w-full items-center justify-end gap-1.5 sm:gap-2 ">
-                    {!companyFiltersOpen && (
-                      <Button
-                        onClick={() => setEnrichmentModalOpen(true)}
-                        className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-medium px-4 h-9 shadow-lg"
-                      >
-                        <Sparkles className="w-4 h-4 mr-2" />
-                        Enrich Leads
-                      </Button>
-                    )}
                     <div className="flex items-center gap-2">
                       <AnimatePresence mode="wait">
                         {!companyFiltersOpen ? (

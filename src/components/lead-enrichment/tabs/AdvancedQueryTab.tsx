@@ -31,7 +31,7 @@ interface AdvancedQueryTabProps {
 
 const AdvancedQueryTab = ({ onEnrichmentStart }: AdvancedQueryTabProps) => {
   const [query, setQuery] = useState("");
-  const [maxCompanies, setMaxCompanies] = useState(20);
+  const [maxCompanies, setMaxCompanies] = useState(5);
   const [showFilters, setShowFilters] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -168,7 +168,7 @@ const AdvancedQueryTab = ({ onEnrichmentStart }: AdvancedQueryTabProps) => {
           min={1}
           max={50}
           value={maxCompanies}
-          onChange={(e) => setMaxCompanies(parseInt(e.target.value) || 20)}
+          onChange={(e) => setMaxCompanies(parseInt(e.target.value) || 5)}
           className="bg-gradient-to-br from-gray-800/50 to-gray-900/30 border border-white/10 text-white"
         />
         <p className="text-xs text-white/50">

@@ -63,13 +63,15 @@ const LeadEnrichmentModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0 bg-gradient-to-br from-gray-800/50 to-gray-900/30 border border-white/10 backdrop-blur-xl">
+      <DialogContent
+        className="max-w-4xl max-h-[90vh] overflow-hidden p-0 bg-gradient-to-br from-gray-800/50 to-gray-900/30 border border-white/10 backdrop-blur-xl"
+        
+      >
         {/* Header */}
         <div className="sticky top-0 z-10 bg-gradient-to-br from-gray-800/50 to-gray-900/30 backdrop-blur-sm border-b border-white/10 px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                <Building2 className="w-6 h-6 text-[#69B4B7]" />
+              <h2 className="text-2xl font-bold text-white">
                 Lead Enrichment
               </h2>
               <p className="text-sm text-white/50 mt-1">
@@ -89,7 +91,7 @@ const LeadEnrichmentModal = ({
         </div>
 
         {/* Content */}
-        <div className="px-6 pb-6 overflow-y-auto scrollbar-hide max-h-[calc(90vh-100px)]">
+        <div className="px-6 pb-20 overflow-y-auto scrollbar-hide max-h-[calc(90vh-100px)]">
           {!isEnriching ? (
             <Tabs
               value={activeTab}
@@ -102,14 +104,12 @@ const LeadEnrichmentModal = ({
                   value="domain"
                   className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#69B4B7] data-[state=active]:to-[#3E64B4] data-[state=active]:text-white text-white/50 transition-all"
                 >
-                  <Building2 className="w-4 h-4 mr-2" />
                   Domain Specific
                 </TabsTrigger>
                 <TabsTrigger
                   value="query"
                   className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#69B4B7] data-[state=active]:to-[#3E64B4] data-[state=active]:text-white text-white/50 transition-all"
                 >
-                  <SearchIcon className="w-4 h-4 mr-2" />
                   Advanced Query
                 </TabsTrigger>
               </TabsList>
@@ -148,7 +148,7 @@ const LeadEnrichmentModal = ({
 
         {/* Footer Info */}
         {!isEnriching && (
-          <div className="sticky bottom-0 bg-gradient-to-br from-gray-800/50 to-gray-900/30 border-t border-white/10 px-6 py-3">
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-br from-gray-800/95 to-gray-900/95 backdrop-blur-sm border-t border-white/10 px-6 py-3 z-20">
             <p className="text-xs text-white/50 text-center">
               {activeTab === "domain" ? (
                 <>
