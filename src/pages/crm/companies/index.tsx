@@ -200,6 +200,8 @@ const index = () => {
           totalResponse: companyCrmStats?.totalResponse,
           activeClients: companyCrmStats?.activeClients,
           messagesSent: companyCrmStats?.messagesSent,
+          totalCompaniesWithPeople: companyCrmStats?.totalCompaniesWithPeople,
+          totalCompaniesWithWebsite: companyCrmStats?.totalCompaniesWithWebsite,
         },
         "companies"
       ),
@@ -210,6 +212,8 @@ const index = () => {
       companyCrmStats?.totalResponse,
       companyCrmStats?.activeClients,
       companyCrmStats?.messagesSent,
+      companyCrmStats?.totalCompaniesWithPeople,
+      companyCrmStats?.totalCompaniesWithWebsite,
     ]
   );
 

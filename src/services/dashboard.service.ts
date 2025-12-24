@@ -99,6 +99,8 @@ export interface CrmStats {
 export interface CompanyCrmStats extends CrmStats {
   totalCompanies: number;
   totalLeads: number;
+  totalCompaniesWithPeople?: number;
+  totalCompaniesWithWebsite?: number;
 }
 
 export const dashboardService = {

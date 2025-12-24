@@ -21,6 +21,8 @@ export interface CrmStatsValues {
   totalResponse?: number;
   activeClients?: number;
   messagesSent?: number;
+  totalCompaniesWithPeople?: number;
+  totalCompaniesWithWebsite?: number;
 }
 
 export const defaultStatsCards: StatCard[] = [
@@ -67,13 +69,13 @@ export const buildStats = (
       },
       {
         title: "With People",
-        value: parseStatValue(overrides.totalOutreach, "0"),
+        value: parseStatValue(overrides.totalCompaniesWithPeople, "0"),
         icon: Users,
         link: "View All",
       },
       {
         title: "With Website",
-        value: parseStatValue(overrides.totalResponse, "0"),
+        value: parseStatValue(overrides.totalCompaniesWithWebsite, "0"),
         icon: Building2,
         link: "View All",
       },

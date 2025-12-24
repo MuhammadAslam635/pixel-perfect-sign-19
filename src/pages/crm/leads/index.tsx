@@ -631,12 +631,20 @@ const index = () => {
   // Fetch shared CRM stats for top cards (including companies and leads counts)
   const { stats: crmStats } = useCompanyCrmStatsData({});
 
+  // Calculate filtered counts for stats
+  const effectiveTotalLeads = totalFilteredLeads;
+  const effectiveTotalCompanies = useMemo(() => {
+    if (!filteredLeads) return 0;
+    const uniqueCompanyIds = new Set(filteredLeads.map(lead => lead.companyId).filter(Boolean));
+    return uniqueCompanyIds.size;
+  }, [filteredLeads]);
+
   const stats = useMemo(
     () =>
       buildStats(
         {
-          totalCompanies: crmStats?.totalCompanies ?? 0,
-          totalLeads: totalLeadsForStats,
+          totalCompanies: effectiveTotalCompanies,
+          totalLeads: effectiveTotalLeads,
           totalOutreach: crmStats?.totalOutreach,
           totalResponse: crmStats?.totalResponse,
           activeClients: crmStats?.activeClients,
@@ -645,8 +653,8 @@ const index = () => {
         "leads"
       ),
     [
-      crmStats?.totalCompanies,
-      totalLeadsForStats,
+      effectiveTotalCompanies,
+      effectiveTotalLeads,
       crmStats?.totalOutreach,
       crmStats?.totalResponse,
       crmStats?.activeClients,
