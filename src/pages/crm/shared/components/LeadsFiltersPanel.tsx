@@ -133,12 +133,12 @@ export const LeadsFiltersInline = ({
   );
 
   return (
-    <div className="flex flex-wrap flex-1 shrink-0  items-center gap-1.5">
+    <div className="flex flex-wrap items-center gap-1.5 min-w-0">
       <div className="flex items-center gap-1">
         <label className="text-[11px] uppercase tracking-[0.08em] text-gray-400 whitespace-nowrap">
           Country:
         </label>
-        <div className="w-32">
+        <div className="w-28">
           <MultiSelect
             options={countryOptions}
             value={countryFilter}
@@ -158,7 +158,7 @@ export const LeadsFiltersInline = ({
         <label className="text-[11px] uppercase tracking-[0.08em] text-gray-400 whitespace-nowrap">
           Stage:
         </label>
-        <div className="w-40">
+        <div className="w-32">
           <MultiSelect
             options={stageOptions}
             value={stageFilter}
@@ -178,7 +178,7 @@ export const LeadsFiltersInline = ({
         <label className="text-[11px] uppercase tracking-[0.08em] text-gray-400 whitespace-nowrap">
           Seniority:
         </label>
-        <div className="w-36">
+        <div className="w-32">
           <MultiSelect
             options={seniorityOptions}
             value={seniorityFilter}
@@ -214,7 +214,7 @@ export const LeadsFiltersInline = ({
       </div>
 
       {/* Checkboxes */}
-      <div className="flex items-center gap-1.5 ml-1 ml-auto">
+      <div className="flex flex-wrap items-center gap-1.5 ml-auto">
         <label className="flex items-center gap-1 cursor-pointer">
           <Checkbox
             checked={hasEmailFilter}

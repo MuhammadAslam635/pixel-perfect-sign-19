@@ -758,12 +758,13 @@ const index = () => {
           className="max-w-[1600px] mx-auto w-full flex flex-col flex-1 relative min-h-0"
         >
           {/* Wrapper with space-between */}
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between gap-4 mb-4">
             {/* Page Header with Companies Button */}
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, ease: "easeOut", delay: 0.4 }}
+              className="flex-shrink-0"
             >
               {/* <h1 className="text-2xl font-bold text-white">Leads</h1> */}
               <CrmNavigation />
@@ -774,7 +775,7 @@ const index = () => {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, ease: "easeOut", delay: 0.4 }}
-              className="flex flex-col sm:flex-row justify-end items-stretch sm:items-center gap-1.5 sm:gap-2 md:gap-3"
+              className="flex flex-col sm:flex-row justify-end items-stretch sm:items-center gap-1.5 sm:gap-2 md:gap-3 min-w-0 flex-1"
             >
               {/* Controls Container */}
               <div className="flex flex-col sm:flex-row flex-1 items-stretch sm:items-center gap-1.5 sm:gap-2 md:gap-3 order-1 lg:order-2">
