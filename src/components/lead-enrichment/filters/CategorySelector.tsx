@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ChevronRight, ChevronDown, Building2, Check } from "lucide-react";
+import { ChevronRight, ChevronDown, Building2, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -250,9 +250,9 @@ const CategorySelector = ({
                 variant="ghost"
                 size="icon"
                 onClick={() => toggleCategory(catId)}
-                className="ml-1 h-3 w-3 p-0 hover:bg-transparent"
+                className="ml-1 h-3 w-3 p-0 hover:bg-transparent hover:text-red-400"
               >
-                <Check className="w-3 h-3" />
+                <X className="w-3 h-3" />
               </Button>
             </Badge>
           ))}

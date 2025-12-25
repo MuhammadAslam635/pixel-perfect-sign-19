@@ -228,9 +228,9 @@ const DomainSpecificTab = ({ onEnrichmentStart }: DomainSpecificTabProps) => {
                   variant="ghost"
                   size="icon"
                   onClick={() => handleRemoveDomain(domain)}
-                  className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-white/50 hover:text-red-400"
+                  className="h-6 w-6 text-white/50 hover:text-red-400 transition-colors"
                 >
-                  <X className="w-3 h-3" />
+                  <X className="w-4 h-4" />
                 </Button>
               </motion.div>
             ))}

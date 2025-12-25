@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MapPin, Globe, Check, ChevronRight, ChevronDown } from "lucide-react";
+import { MapPin, Globe, X, ChevronRight, ChevronDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
@@ -138,9 +138,9 @@ const RegionCountrySelector = ({
                 variant="ghost"
                 size="icon"
                 onClick={() => toggleRegion(region)}
-                className="ml-1 h-3 w-3 p-0 hover:bg-transparent"
+                className="ml-1 h-3 w-3 p-0 hover:bg-transparent hover:text-red-400"
               >
-                <Check className="w-3 h-3" />
+                <X className="w-3 h-3" />
               </Button>
             </Badge>
           ))}
@@ -158,9 +158,9 @@ const RegionCountrySelector = ({
                   variant="ghost"
                   size="icon"
                   onClick={() => toggleCountry(country)}
-                  className="ml-1 h-3 w-3 p-0 hover:bg-transparent"
+                  className="ml-1 h-3 w-3 p-0 hover:bg-transparent hover:text-red-400"
                 >
-                  <Check className="w-3 h-3" />
+                  <X className="w-3 h-3" />
                 </Button>
               </Badge>
             );

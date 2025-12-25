@@ -1,4 +1,4 @@
-import { Users, Check } from "lucide-react";
+import { Users, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
@@ -71,9 +71,9 @@ const RoleSelector = ({ selectedRoles, onChange, seniorityOptions }: RoleSelecto
                   variant="ghost"
                   size="icon"
                   onClick={() => toggleRole(role)}
-                  className="ml-1 h-3 w-3 p-0 hover:bg-transparent"
+                  className="ml-1 h-3 w-3 p-0 hover:bg-transparent hover:text-red-400"
                 >
-                  <Check className="w-3 h-3" />
+                  <X className="w-3 h-3" />
                 </Button>
               </Badge>
             );

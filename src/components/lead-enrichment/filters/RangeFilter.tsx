@@ -1,4 +1,4 @@
-import { DollarSign, Users2, Check } from "lucide-react";
+import { DollarSign, Users2, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
@@ -102,9 +102,9 @@ const RangeFilter = ({ type, selectedRanges, onChange, ranges }: RangeFilterProp
                 variant="ghost"
                 size="icon"
                 onClick={() => toggleRange(range)}
-                className="ml-1 h-3 w-3 p-0 hover:bg-transparent"
+                className="ml-1 h-3 w-3 p-0 hover:bg-transparent hover:text-red-400"
               >
-                <Check className="w-3 h-3" />
+                <X className="w-3 h-3" />
               </Button>
             </Badge>
           ))}
