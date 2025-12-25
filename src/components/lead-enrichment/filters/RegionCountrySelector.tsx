@@ -59,14 +59,14 @@ const RegionCountrySelector = ({
   };
 
   const getCountriesByRegion = (region: string): CountryOption[] => {
-    return COUNTRIES.filter((c) => c.region === region);
+    return countries.filter((c) => c.region === region);
   };
 
-  const filteredRegions = REGIONS.filter((region) =>
+  const filteredRegions = regions.filter((region) =>
     region.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const filteredCountries = COUNTRIES.filter((country) =>
+  const filteredCountries = countries.filter((country) =>
     country.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -116,7 +116,7 @@ const RegionCountrySelector = ({
             </Badge>
           ))}
           {selectedCountries.map((country) => {
-            const countryData = COUNTRIES.find((c) => c.name === country);
+            const countryData = countries.find((c) => c.name === country);
             return (
               <Badge
                 key={country}
@@ -300,7 +300,7 @@ const RegionCountrySelector = ({
         <Button
           variant="outline"
           size="sm"
-          onClick={() => setExpandedRegions(new Set(REGIONS))}
+          onClick={() => setExpandedRegions(new Set(regions))}
           className="text-xs border-gray-700 text-gray-400"
         >
           Expand All
