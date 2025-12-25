@@ -192,7 +192,7 @@ export const ProfileTab = () => {
             </CardDescription>
           </motion.div>
         </CardHeader>
-        <CardContent className="space-y-4 pt-6 px-4 sm:px-6">
+        <CardContent className="space-y-4 pt-6 pb-6 px-4 sm:px-6">
           <div className="space-y-2">
             <Label htmlFor="name" className="text-white/80">
               Company Name
