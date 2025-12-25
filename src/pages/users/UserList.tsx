@@ -368,23 +368,29 @@ const UserList = () => {
     );
   };
 
-  const paginationPages = useMemo(() => {
+  const paginationPages = useMemo<(number | "ellipsis")[] | null>(() => {
     if (totalPages <= 1) return null;
 
-    const maxVisible = 5;
-    let startPage = Math.max(1, page - Math.floor(maxVisible / 2));
-    const endPage = Math.min(totalPages, startPage + maxVisible - 1);
+    const pagesToUse = totalPages;
+    let startPage = Math.max(1, page - 1);
+    let endPage = startPage + 2;
 
-    if (endPage - startPage < maxVisible - 1) {
-      startPage = Math.max(1, endPage - maxVisible + 1);
+    if (endPage > pagesToUse) {
+      endPage = pagesToUse;
+      startPage = Math.max(1, endPage - 2);
     }
 
-    const pages: number[] = [];
+    const pages: (number | "ellipsis")[] = [];
     for (let i = startPage; i <= endPage; i++) {
       pages.push(i);
     }
 
-    return { pages, startPage, endPage };
+    if (endPage < pagesToUse) {
+      if (endPage < pagesToUse - 1) pages.push("ellipsis");
+      pages.push(pagesToUse);
+    }
+
+    return pages;
   }, [page, totalPages]);
 
   // Don't render the page if user is CompanyUser
@@ -765,57 +771,43 @@ const UserList = () => {
             transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
             className="bg-[#222B2C]/40 py-3 px-4 sm:px-6 border border-white/10 rounded-2xl"
           >
-            <Pagination>
-              <PaginationContent className="gap-1">
-                <PaginationItem>
-                  <PaginationPrevious
-                    onClick={handlePrevious}
-                    className={
-                      page === 1
-                        ? "pointer-events-none opacity-50"
-                        : "cursor-pointer hover:bg-white/10 transition-colors"
-                    }
-                  />
-                </PaginationItem>
-                <div className="hidden sm:flex gap-2">
-                  {paginationPages?.pages.map((pageNum) => (
-                    <PaginationItem key={pageNum}>
-                      <PaginationLink
-                        isActive={page === pageNum}
-                        onClick={() => handlePageChange(pageNum)}
-                        className="cursor-pointer hover:bg-white/10 transition-colors"
-                      >
-                        {pageNum}
-                      </PaginationLink>
+            <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-full px-2 py-1 w-fit mx-auto">
+              <Pagination>
+                <PaginationContent className="gap-1">
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={handlePrevious}
+                      className={`cursor-pointer hover:bg-white/10 transition-colors h-7 w-7 p-0 flex items-center justify-center [&>span]:hidden ${
+                        page === 1 ? "opacity-50 cursor-not-allowed" : ""
+                      }`}
+                    />
+                  </PaginationItem>
+                  {paginationPages?.map((p, idx) => (
+                    <PaginationItem key={idx}>
+                      {p === "ellipsis" ? (
+                        <PaginationEllipsis />
+                      ) : (
+                        <PaginationLink
+                          isActive={page === p}
+                          onClick={() => handlePageChange(p as number)}
+                          className="cursor-pointer hover:bg-white/10 transition-colors h-7 w-7 text-xs"
+                        >
+                          {p}
+                        </PaginationLink>
+                      )}
                     </PaginationItem>
                   ))}
-                </div>
-                <div className="sm:hidden">
                   <PaginationItem>
-                    <PaginationLink isActive className="cursor-default">
-                      {page} / {totalPages}
-                    </PaginationLink>
+                    <PaginationNext
+                      onClick={handleNext}
+                      className={`cursor-pointer hover:bg-white/10 transition-colors h-7 w-7 p-0 flex items-center justify-center [&>span]:hidden ${
+                        page === totalPages ? "opacity-50 cursor-not-allowed" : ""
+                      }`}
+                    />
                   </PaginationItem>
-                </div>
-                {paginationPages &&
-                  page < paginationPages.endPage - 1 &&
-                  totalPages > paginationPages.endPage && (
-                    <PaginationItem className="hidden sm:block">
-                      <PaginationEllipsis />
-                    </PaginationItem>
-                  )}
-                <PaginationItem>
-                  <PaginationNext
-                    onClick={handleNext}
-                    className={
-                      page === totalPages
-                        ? "pointer-events-none opacity-50"
-                        : "cursor-pointer hover:bg-white/10 transition-colors"
-                    }
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
+                </PaginationContent>
+              </Pagination>
+            </div>
           </motion.div>
         )}
       </motion.main>

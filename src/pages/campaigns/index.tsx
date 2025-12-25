@@ -1351,122 +1351,76 @@ const CampaignsPage = () => {
           {/* Pagination */}
           {data?.data && data.data.totalPages > 1 && (
             <div className="mt-8 flex justify-center">
-              <Pagination>
-                <PaginationContent className="gap-1">
-                  <PaginationItem>
-                    <PaginationPrevious
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setCurrentPage((prev) => Math.max(prev - 1, 1));
-                      }}
-                      className={
-                        currentPage <= 1
-                          ? "pointer-events-none opacity-50"
-                          : "cursor-pointer hover:bg-white/10 transition-colors text-white"
+              <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-full px-2 py-1 w-fit">
+                <Pagination>
+                  <PaginationContent className="gap-1">
+                    <PaginationItem>
+                      <PaginationPrevious
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (currentPage > 1) setCurrentPage((prev) => Math.max(prev - 1, 1));
+                        }}
+                        className={`cursor-pointer hover:bg-white/10 transition-colors h-7 w-7 p-0 flex items-center justify-center [&>span]:hidden ${
+                          currentPage <= 1 ? "opacity-50 cursor-not-allowed" : ""
+                        }`}
+                      />
+                    </PaginationItem>
+
+                    {(() => {
+                      const totalPages = data.data.totalPages;
+                      let startPage = Math.max(1, currentPage - 1);
+                      let endPage = startPage + 2;
+
+                      if (endPage > totalPages) {
+                        endPage = totalPages;
+                        startPage = Math.max(1, endPage - 2);
                       }
-                    />
-                  </PaginationItem>
 
-                  {(() => {
-                    const totalPages = data.data.totalPages;
-                    const maxVisible = 5;
-                    let startPage = Math.max(
-                      1,
-                      currentPage - Math.floor(maxVisible / 2)
-                    );
-                    const endPage = Math.min(
-                      totalPages,
-                      startPage + maxVisible - 1
-                    );
+                      const pages: (number | "ellipsis")[] = [];
+                      for (let i = startPage; i <= endPage; i++) {
+                        pages.push(i);
+                      }
 
-                    if (endPage - startPage < maxVisible - 1) {
-                      startPage = Math.max(1, endPage - maxVisible + 1);
-                    }
+                      if (endPage < totalPages) {
+                        if (endPage < totalPages - 1) pages.push("ellipsis");
+                        pages.push(totalPages);
+                      }
 
-                    const pages = [];
-                    for (let i = startPage; i <= endPage; i++) {
-                      pages.push(i);
-                    }
-
-                    return (
-                      <>
-                        {startPage > 1 && (
-                          <>
-                            <PaginationItem>
-                              <PaginationLink
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  setCurrentPage(1);
-                                }}
-                                className="cursor-pointer hover:bg-white/10 transition-colors text-white"
-                              >
-                                1
-                              </PaginationLink>
-                            </PaginationItem>
-                            {startPage > 2 && (
-                              <PaginationItem>
-                                <PaginationEllipsis className="text-white/50" />
-                              </PaginationItem>
-                            )}
-                          </>
-                        )}
-
-                        {pages.map((pageNum) => (
-                          <PaginationItem key={pageNum}>
+                      return pages.map((p, idx) => (
+                        <PaginationItem key={idx}>
+                          {p === "ellipsis" ? (
+                            <PaginationEllipsis />
+                          ) : (
                             <PaginationLink
                               onClick={(e) => {
                                 e.preventDefault();
-                                setCurrentPage(pageNum);
+                                setCurrentPage(p as number);
                               }}
-                              isActive={pageNum === currentPage}
-                              className="cursor-pointer hover:bg-white/10 transition-colors text-white"
+                              isActive={p === currentPage}
+                              className="cursor-pointer hover:bg-white/10 transition-colors h-7 w-7 text-xs"
                             >
-                              {pageNum}
+                              {p}
                             </PaginationLink>
-                          </PaginationItem>
-                        ))}
+                          )}
+                        </PaginationItem>
+                      ));
+                    })()}
 
-                        {endPage < totalPages && (
-                          <>
-                            {endPage < totalPages - 1 && (
-                              <PaginationItem>
-                                <PaginationEllipsis className="text-white/50" />
-                              </PaginationItem>
-                            )}
-                            <PaginationItem>
-                              <PaginationLink
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  setCurrentPage(totalPages);
-                                }}
-                                className="cursor-pointer hover:bg-white/10 transition-colors text-white"
-                              >
-                                {totalPages}
-                              </PaginationLink>
-                            </PaginationItem>
-                          </>
-                        )}
-                      </>
-                    );
-                  })()}
-
-                  <PaginationItem>
-                    <PaginationNext
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setCurrentPage((prev) =>
-                          Math.min(prev + 1, data.data.totalPages)
-                        );
-                      }}
-                      className={
-                        currentPage >= (data.data.totalPages || 1)
-                          ? "pointer-events-none opacity-50"
-                          : "cursor-pointer hover:bg-white/10 transition-colors text-white"
-                      }
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (currentPage < data.data.totalPages)
+                            setCurrentPage((prev) => Math.min(prev + 1, data.data.totalPages));
+                        }}
+                        className={`cursor-pointer hover:bg-white/10 transition-colors h-7 w-7 p-0 flex items-center justify-center [&>span]:hidden ${
+                          currentPage >= data.data.totalPages ? "opacity-50 cursor-not-allowed" : ""
+                        }`}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
             </div>
           )}
         </div>

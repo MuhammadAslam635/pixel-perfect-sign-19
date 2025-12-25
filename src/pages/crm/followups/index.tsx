@@ -35,6 +35,7 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
+  PaginationEllipsis,
 } from "@/components/ui/pagination";
 import {
   Form,
@@ -684,132 +685,146 @@ const FollowupTemplatesPage = () => {
   const renderPagination = () => {
     if (!pagination || pagination.totalPages <= 1) return null;
 
-    const pages: number[] = [];
-    const maxVisible = 5;
-    let start = Math.max(1, page - Math.floor(maxVisible / 2));
-    const end = Math.min(pagination.totalPages, start + maxVisible - 1);
+    const pagesToUse = pagination.totalPages;
+    let startPage = Math.max(1, page - 1);
+    let endPage = startPage + 2;
 
-    if (end - start < maxVisible - 1) {
-      start = Math.max(1, end - maxVisible + 1);
+    if (endPage > pagesToUse) {
+      endPage = pagesToUse;
+      startPage = Math.max(1, endPage - 2);
     }
 
-    for (let i = start; i <= end; i += 1) {
+    const pages: (number | "ellipsis")[] = [];
+    for (let i = startPage; i <= endPage; i++) {
       pages.push(i);
     }
 
+    if (endPage < pagesToUse) {
+      if (endPage < pagesToUse - 1) pages.push("ellipsis");
+      pages.push(pagesToUse);
+    }
+
     return (
-      <Pagination>
-        <PaginationContent className="gap-1">
-          <PaginationItem>
-            <PaginationPrevious
-              className={
-                page <= 1
-                  ? "pointer-events-none opacity-50"
-                  : "cursor-pointer hover:bg-white/10 transition-colors text-white"
-              }
-              onClick={(event) => {
-                event.preventDefault();
-                setPage((prev) => Math.max(prev - 1, 1));
-              }}
-            />
-          </PaginationItem>
-          {pages.map((pageNumber) => (
-            <PaginationItem key={pageNumber}>
-              <PaginationLink
-                isActive={pageNumber === page}
-                className="cursor-pointer hover:bg-white/10 transition-colors text-white"
+      <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-full px-2 py-1 w-fit mt-4">
+        <Pagination>
+          <PaginationContent className="gap-1">
+            <PaginationItem>
+              <PaginationPrevious
+                className={`cursor-pointer hover:bg-white/10 transition-colors h-7 w-7 p-0 flex items-center justify-center [&>span]:hidden ${
+                  page <= 1 ? "opacity-50 cursor-not-allowed" : ""
+                }`}
                 onClick={(event) => {
                   event.preventDefault();
-                  setPage(pageNumber);
+                  if (page > 1) setPage((prev) => Math.max(prev - 1, 1));
                 }}
-              >
-                {pageNumber}
-              </PaginationLink>
+              />
             </PaginationItem>
-          ))}
-          <PaginationItem>
-            <PaginationNext
-              className={
-                page >= pagination.totalPages
-                  ? "pointer-events-none opacity-50"
-                  : "cursor-pointer hover:bg-white/10 transition-colors text-white"
-              }
-              onClick={(event) => {
-                event.preventDefault();
-                setPage((prev) =>
-                  Math.min(prev + 1, pagination.totalPages ?? prev + 1)
-                );
-              }}
-            />
-          </PaginationItem>
-        </PaginationContent>
-      </Pagination>
+            {pages.map((p, idx) => (
+              <PaginationItem key={idx}>
+                {p === "ellipsis" ? (
+                  <PaginationEllipsis />
+                ) : (
+                  <PaginationLink
+                    isActive={p === page}
+                    className="cursor-pointer hover:bg-white/10 transition-colors h-7 w-7 text-xs"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      setPage(p as number);
+                    }}
+                  >
+                    {p}
+                  </PaginationLink>
+                )}
+              </PaginationItem>
+            ))}
+            <PaginationItem>
+              <PaginationNext
+                className={`cursor-pointer hover:bg-white/10 transition-colors h-7 w-7 p-0 flex items-center justify-center [&>span]:hidden ${
+                  page >= pagesToUse ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+                onClick={(event) => {
+                  event.preventDefault();
+                  if (page < pagesToUse)
+                    setPage((prev) => Math.min(prev + 1, pagesToUse));
+                }}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      </div>
     );
   };
 
   const renderPlansPagination = () => {
     if (activePlansTotalPages <= 1) return null;
 
-    const pages: number[] = [];
-    const maxVisible = 5;
-    let start = Math.max(1, plansPage - Math.floor(maxVisible / 2));
-    const end = Math.min(activePlansTotalPages, start + maxVisible - 1);
+    const pagesToUse = activePlansTotalPages;
+    let startPage = Math.max(1, plansPage - 1);
+    let endPage = startPage + 2;
 
-    if (end - start < maxVisible - 1) {
-      start = Math.max(1, end - maxVisible + 1);
+    if (endPage > pagesToUse) {
+      endPage = pagesToUse;
+      startPage = Math.max(1, endPage - 2);
     }
 
-    for (let i = start; i <= end; i += 1) {
+    const pages: (number | "ellipsis")[] = [];
+    for (let i = startPage; i <= endPage; i++) {
       pages.push(i);
     }
 
+    if (endPage < pagesToUse) {
+      if (endPage < pagesToUse - 1) pages.push("ellipsis");
+      pages.push(pagesToUse);
+    }
+
     return (
-      <Pagination>
-        <PaginationContent className="gap-1">
-          <PaginationItem>
-            <PaginationPrevious
-              className={
-                plansPage <= 1
-                  ? "pointer-events-none opacity-50"
-                  : "cursor-pointer hover:bg-white/10 transition-colors text-white"
-              }
-              onClick={(event) => {
-                event.preventDefault();
-                setPlansPage((prev) => Math.max(prev - 1, 1));
-              }}
-            />
-          </PaginationItem>
-          {pages.map((pageNumber) => (
-            <PaginationItem key={pageNumber}>
-              <PaginationLink
-                isActive={pageNumber === plansPage}
-                className="cursor-pointer hover:bg-white/10 transition-colors text-white"
+      <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-full px-2 py-1 w-fit mt-4">
+        <Pagination>
+          <PaginationContent className="gap-1">
+            <PaginationItem>
+              <PaginationPrevious
+                className={`cursor-pointer hover:bg-white/10 transition-colors h-7 w-7 p-0 flex items-center justify-center [&>span]:hidden ${
+                  plansPage <= 1 ? "opacity-50 cursor-not-allowed" : ""
+                }`}
                 onClick={(event) => {
                   event.preventDefault();
-                  setPlansPage(pageNumber);
+                  if (plansPage > 1) setPlansPage((prev) => Math.max(prev - 1, 1));
                 }}
-              >
-                {pageNumber}
-              </PaginationLink>
+              />
             </PaginationItem>
-          ))}
-          <PaginationItem>
-            <PaginationNext
-              className={
-                plansPage >= activePlansTotalPages
-                  ? "pointer-events-none opacity-50"
-                  : "cursor-pointer hover:bg-white/10 transition-colors text-white"
-              }
-              onClick={(event) => {
-                event.preventDefault();
-                setPlansPage((prev) =>
-                  Math.min(prev + 1, activePlansTotalPages)
-                );
-              }}
-            />
-          </PaginationItem>
-        </PaginationContent>
-      </Pagination>
+            {pages.map((p, idx) => (
+              <PaginationItem key={idx}>
+                {p === "ellipsis" ? (
+                  <PaginationEllipsis />
+                ) : (
+                  <PaginationLink
+                    isActive={p === plansPage}
+                    className="cursor-pointer hover:bg-white/10 transition-colors h-7 w-7 text-xs"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      setPlansPage(p as number);
+                    }}
+                  >
+                    {p}
+                  </PaginationLink>
+                )}
+              </PaginationItem>
+            ))}
+            <PaginationItem>
+              <PaginationNext
+                className={`cursor-pointer hover:bg-white/10 transition-colors h-7 w-7 p-0 flex items-center justify-center [&>span]:hidden ${
+                  plansPage >= pagesToUse ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+                onClick={(event) => {
+                  event.preventDefault();
+                  if (plansPage < pagesToUse)
+                    setPlansPage((prev) => Math.min(prev + 1, pagesToUse));
+                }}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      </div>
     );
   };
 

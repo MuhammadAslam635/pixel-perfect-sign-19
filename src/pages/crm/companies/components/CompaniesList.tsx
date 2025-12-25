@@ -16,6 +16,8 @@ import {
   PaginationItem,
   PaginationLink,
   PaginationEllipsis,
+  PaginationNext,
+  PaginationPrevious,
 } from "@/components/ui/pagination";
 import {
   Linkedin,
@@ -250,28 +252,38 @@ const CompaniesList: FC<CompaniesListProps> = ({
   }, [totalCompanies, pageSize, totalPages]);
 
   // Calculate pagination page range
-  const paginationPages = useMemo<{
-    pages: number[];
-    startPage: number;
-    endPage: number;
-  } | null>(() => {
+  const paginationPages = useMemo<(number | "ellipsis")[] | null>(() => {
     const pagesToUse = calculatedTotalPages;
     if (pagesToUse <= 1) return null;
 
-    const maxVisible = 5;
-    let startPage = Math.max(1, page - Math.floor(maxVisible / 2));
-    const endPage = Math.min(pagesToUse, startPage + maxVisible - 1);
-
-    if (endPage - startPage < maxVisible - 1) {
-      startPage = Math.max(1, endPage - maxVisible + 1);
+    // If total pages are small, show all
+    if (pagesToUse <= 4) {
+      return Array.from({ length: pagesToUse }, (_, i) => i + 1);
     }
 
-    const pages: number[] = [];
+    let startPage = Math.max(1, page - 1);
+    let endPage = startPage + 2;
+
+    // Adjust if we are at the end
+    if (endPage > pagesToUse) {
+      endPage = pagesToUse;
+      startPage = endPage - 2;
+    }
+
+    const pages: (number | "ellipsis")[] = [];
     for (let i = startPage; i <= endPage; i++) {
       pages.push(i);
     }
 
-    return { pages, startPage, endPage };
+    // Add ellipsis and last page if needed
+    if (endPage < pagesToUse) {
+      if (endPage < pagesToUse - 1) {
+        pages.push("ellipsis");
+      }
+      pages.push(pagesToUse);
+    }
+
+    return pages;
   }, [page, calculatedTotalPages]);
 
   const handlePageChange = (newPage: number) => {
@@ -776,62 +788,49 @@ const CompaniesList: FC<CompaniesListProps> = ({
                 <div className="h-4 w-px bg-white/20 mx-1"></div>
                 <Pagination>
                   <PaginationContent className="gap-1">
-                    {paginationPages.startPage > 1 && (
-                      <>
-                        <PaginationItem>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (page > 1) handlePageChange(page - 1);
+                        }}
+                        className={`cursor-pointer hover:bg-white/10 transition-colors h-7 w-7 p-0 flex items-center justify-center [&>span]:hidden ${
+                          page <= 1 ? "opacity-50 cursor-not-allowed" : ""
+                        }`}
+                      />
+                    </PaginationItem>
+                    {paginationPages.map((p, idx) => (
+                      <PaginationItem key={idx}>
+                        {p === "ellipsis" ? (
+                          <PaginationEllipsis />
+                        ) : (
                           <PaginationLink
                             onClick={(e) => {
                               e.preventDefault();
-                              handlePageChange(1);
+                              handlePageChange(p);
                             }}
+                            isActive={p === page}
                             className="cursor-pointer hover:bg-white/10 transition-colors h-7 w-7 text-xs"
                           >
-                            1
+                            {p}
                           </PaginationLink>
-                        </PaginationItem>
-                        {paginationPages.startPage > 2 && (
-                          <PaginationItem>
-                            <PaginationEllipsis />
-                          </PaginationItem>
                         )}
-                      </>
-                    )}
-
-                    {paginationPages.pages.map((p) => (
-                      <PaginationItem key={p}>
-                        <PaginationLink
-                          onClick={(e) => {
-                            e.preventDefault();
-                            handlePageChange(p);
-                          }}
-                          isActive={p === page}
-                          className="cursor-pointer hover:bg-white/10 transition-colors h-7 w-7 text-xs"
-                        >
-                          {p}
-                        </PaginationLink>
                       </PaginationItem>
                     ))}
-
-                    {paginationPages.endPage < calculatedTotalPages && (
-                      <>
-                        {paginationPages.endPage < calculatedTotalPages - 1 && (
-                          <PaginationItem>
-                            <PaginationEllipsis />
-                          </PaginationItem>
-                        )}
-                        <PaginationItem>
-                          <PaginationLink
-                            onClick={(e) => {
-                              e.preventDefault();
-                              handlePageChange(calculatedTotalPages);
-                            }}
-                            className="cursor-pointer hover:bg-white/10 transition-colors h-7 w-7 text-xs"
-                          >
-                            {calculatedTotalPages}
-                          </PaginationLink>
-                        </PaginationItem>
-                      </>
-                    )}
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (page < calculatedTotalPages)
+                            handlePageChange(page + 1);
+                        }}
+                        className={`cursor-pointer hover:bg-white/10 transition-colors h-7 w-7 p-0 flex items-center justify-center [&>span]:hidden ${
+                          page >= calculatedTotalPages
+                            ? "opacity-50 cursor-not-allowed"
+                            : ""
+                        }`}
+                      />
+                    </PaginationItem>
                   </PaginationContent>
                 </Pagination>
               </>
