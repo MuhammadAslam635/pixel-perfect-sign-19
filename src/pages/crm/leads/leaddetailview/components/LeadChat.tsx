@@ -9,7 +9,9 @@ import {
   Trash2,
   Copy,
   Check,
+  Download,
 } from "lucide-react";
+import jsPDF from "jspdf";
 import { ActiveNavButton } from "@/components/ui/primary-btn";
 import { Button } from "@/components/ui/button";
 import { Lead, leadsService } from "@/services/leads.service";
@@ -1842,6 +1844,312 @@ const LeadChat = ({
     window.location.href = `${import.meta.env.VITE_APP_API_URL}/emails/compose`;
   };
 
+  const handleDownloadPDF = async (isDarkMode: boolean) => {
+    if (!proposalContent) {
+      toast.error("No proposal content to download");
+      return;
+    }
+
+    try {
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 20;
+      const contentWidth = pageWidth - 2 * margin;
+      const footerHeight = 20;
+
+      // Dynamic data from lead
+      const companyName =
+        lead?.company?.name ||
+        lead?.companyName ||
+        "TAMIMI PRE ENGINEERED BUILDINGS CO.";
+      const companyWebsite = lead?.company?.website || "www.tamimi-peb.com";
+      const companyLocation =
+        lead?.location ||
+        lead?.companyLocation ||
+        lead?.company?.address ||
+        lead?.country ||
+        "Saudi Arabia";
+      const companyWhatsApp =
+        whatsappNumber || phoneNumber || "+966 XXX XXX XXX";
+      const companyLogoUrl = lead?.company?.logo || null;
+
+      // Function to load image as base64
+      const loadImageAsBase64 = async (url: string): Promise<string | null> => {
+        try {
+          // Create a promise to load the image
+          return new Promise((resolve) => {
+            const img = new Image();
+            img.crossOrigin = "Anonymous"; // Handle CORS
+
+            img.onload = () => {
+              try {
+                const canvas = document.createElement("canvas");
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext("2d");
+                if (ctx) {
+                  ctx.drawImage(img, 0, 0);
+                  const dataURL = canvas.toDataURL("image/png");
+                  resolve(dataURL);
+                } else {
+                  resolve(null);
+                }
+              } catch (error) {
+                console.error("Canvas error:", error);
+                resolve(null);
+              }
+            };
+
+            img.onerror = () => {
+              console.error("Image load error");
+              resolve(null);
+            };
+
+            // Add timestamp to avoid cache issues
+            img.src = url.includes("?")
+              ? `${url}&t=${Date.now()}`
+              : `${url}?t=${Date.now()}`;
+          });
+        } catch (error) {
+          console.error("Failed to load image:", error);
+          return null;
+        }
+      };
+
+      // Load company logo if available
+      let logoBase64: string | null = null;
+      if (companyLogoUrl) {
+        logoBase64 = await loadImageAsBase64(companyLogoUrl);
+      }
+
+      // Text color
+      const textColor = isDarkMode ? [255, 255, 255] : [0, 0, 0];
+      const secondaryTextColor = isDarkMode ? [200, 200, 200] : [100, 100, 100];
+      const iconColor = isDarkMode ? [255, 255, 255] : [60, 60, 60];
+      const dividerColor = isDarkMode ? [100, 100, 100] : [180, 180, 180];
+
+      // Header height for content calculation
+      const headerHeight = 30;
+      const today = new Date().toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+
+      // Function to add header to current page
+      const addHeader = () => {
+        const logoSize = 10;
+        const logoX = margin;
+        const logoY = margin;
+
+        // Company Logo - display actual logo if available, otherwise show placeholder
+        if (logoBase64) {
+          try {
+            pdf.addImage(
+              logoBase64,
+              "PNG",
+              logoX,
+              logoY,
+              logoSize,
+              logoSize,
+              undefined,
+              "FAST"
+            );
+          } catch (error) {
+            // Fallback to placeholder if image fails
+            console.error("Failed to add logo to PDF:", error);
+            pdf.setFillColor(
+              isDarkMode ? 60 : 200,
+              isDarkMode ? 60 : 200,
+              isDarkMode ? 60 : 200
+            );
+            pdf.circle(
+              logoX + logoSize / 2,
+              logoY + logoSize / 2,
+              logoSize / 2,
+              "F"
+            );
+          }
+        } else {
+          // Placeholder circle
+          pdf.setFillColor(
+            isDarkMode ? 60 : 200,
+            isDarkMode ? 60 : 200,
+            isDarkMode ? 60 : 200
+          );
+          pdf.circle(
+            logoX + logoSize / 2,
+            logoY + logoSize / 2,
+            logoSize / 2,
+            "F"
+          );
+        }
+
+        // Company Name - adjusted position to account for logo
+        pdf.setFontSize(14);
+        pdf.setTextColor(...(textColor as [number, number, number]));
+        pdf.setFont("helvetica", "bold");
+        pdf.text(companyName.toUpperCase(), logoX + logoSize + 5, logoY + 7);
+
+        // Date
+        pdf.setFontSize(10);
+        pdf.setFont("helvetica", "normal");
+        pdf.text(`DATE: ${today}`, pageWidth - margin - 40, logoY + 7);
+
+        // Divider line
+        const dividerY = logoY + 15;
+        pdf.setDrawColor(...(dividerColor as [number, number, number]));
+        pdf.setLineWidth(0.5);
+        pdf.line(margin, dividerY, pageWidth - margin, dividerY);
+      };
+
+      // Function to add footer to current page
+      const addFooter = () => {
+        const footerY = pageHeight - footerHeight;
+        const footerBarHeight = 12;
+        const footerBarY = pageHeight - footerBarHeight;
+
+        // Footer background bar
+        if (isDarkMode) {
+          pdf.setFillColor(45, 45, 45);
+        } else {
+          pdf.setFillColor(255, 255, 255);
+        }
+        pdf.roundedRect(
+          margin,
+          footerBarY,
+          contentWidth,
+          footerBarHeight,
+          3,
+          3,
+          "F"
+        );
+
+        // Footer content
+        const sectionWidth = contentWidth / 3;
+        const iconY = footerBarY + 3.5;
+        const textY = footerBarY + 9;
+        const iconSize = 3;
+
+        pdf.setDrawColor(...(iconColor as [number, number, number]));
+        pdf.setFillColor(...(iconColor as [number, number, number]));
+
+        // WhatsApp icon (chat bubble)
+        const whatsappX = margin + sectionWidth * 0.5;
+        pdf.circle(whatsappX, iconY, iconSize / 2, "S");
+        pdf.setFontSize(7);
+        pdf.setTextColor(...(secondaryTextColor as [number, number, number]));
+        pdf.text(companyWhatsApp, whatsappX, textY, { align: "center" });
+
+        // Vertical divider 1
+        pdf.setDrawColor(...(dividerColor as [number, number, number]));
+        pdf.setLineWidth(0.3);
+        pdf.line(
+          margin + sectionWidth,
+          footerBarY + 2,
+          margin + sectionWidth,
+          footerBarY + footerBarHeight - 2
+        );
+
+        // Website icon (globe)
+        const websiteX = margin + sectionWidth * 1.5;
+        pdf.circle(websiteX, iconY, iconSize / 2, "S");
+        pdf.line(
+          websiteX - iconSize / 2,
+          iconY,
+          websiteX + iconSize / 2,
+          iconY
+        );
+        pdf.ellipse(websiteX, iconY, iconSize / 4, iconSize / 2, "S");
+        pdf.text(companyWebsite, websiteX, textY, { align: "center" });
+
+        // Vertical divider 2
+        pdf.line(
+          margin + sectionWidth * 2,
+          footerBarY + 2,
+          margin + sectionWidth * 2,
+          footerBarY + footerBarHeight - 2
+        );
+
+        // Location icon (pin)
+        const locationX = margin + sectionWidth * 2.5;
+        pdf.circle(locationX, iconY - 0.5, iconSize / 2.5, "S");
+        pdf.line(locationX, iconY + 0.5, locationX, iconY + 1.5);
+        pdf.text(companyLocation, locationX, textY, { align: "center" });
+      };
+
+      // Function to add background to page
+      const addBackground = () => {
+        if (isDarkMode) {
+          pdf.setFillColor(30, 30, 30);
+        } else {
+          pdf.setFillColor(240, 240, 240);
+        }
+        pdf.rect(0, 0, pageWidth, pageHeight, "F");
+      };
+
+      // Add background to first page
+      addBackground();
+
+      // Add header to first page
+      addHeader();
+
+      // Start content after header
+      let currentY = margin + headerHeight;
+
+      // Add footer to first page
+      addFooter();
+
+      // Convert markdown to plain text and format
+      const plainText = markdownToText(proposalContent);
+      const lines = pdf.splitTextToSize(plainText, contentWidth);
+
+      // Proposal content
+      pdf.setFontSize(11);
+      pdf.setTextColor(...(textColor as [number, number, number]));
+      pdf.setFont("helvetica", "normal");
+
+      const lineHeight = 7;
+      const maxContentY = pageHeight - footerHeight - 10;
+
+      for (let i = 0; i < lines.length; i++) {
+        if (currentY + lineHeight > maxContentY) {
+          // Add new page
+          pdf.addPage();
+          addBackground();
+          addHeader();
+          addFooter();
+
+          currentY = margin + headerHeight;
+          pdf.setFontSize(11);
+          pdf.setTextColor(...(textColor as [number, number, number]));
+          pdf.setFont("helvetica", "normal");
+        }
+        pdf.text(lines[i], margin, currentY);
+        currentY += lineHeight;
+      }
+
+      // Save PDF
+      const fileName = `Proposal_${displayName.replace(/\s+/g, "_")}_${
+        isDarkMode ? "Dark" : "Light"
+      }_${new Date().toISOString().split("T")[0]}.pdf`;
+      pdf.save(fileName);
+
+      toast.success(
+        `PDF downloaded successfully (${isDarkMode ? "Dark" : "Light"} mode)`
+      );
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      toast.error("Failed to generate PDF. Please try again.");
+    }
+  };
+
   return (
     <section
       className="flex flex-col font-poppins h-[calc(100vh-200px)] lg:p-7 p-6 max-w-full rounded-3xl"
@@ -2295,6 +2603,26 @@ const LeadChat = ({
                               Copy
                             </>
                           )}
+                        </button>
+                        <button
+                          type="button"
+                          className="flex items-center gap-2 rounded-lg border border-white/30 bg-white/10 px-4 py-2 text-xs font-medium text-white transition hover:bg-white/20 disabled:opacity-40"
+                          onClick={() => handleDownloadPDF(false)}
+                          disabled={!proposalContent}
+                          title="Download PDF (Light Mode)"
+                        >
+                          <Download className="h-4 w-4" />
+                          Light PDF
+                        </button>
+                        <button
+                          type="button"
+                          className="flex items-center gap-2 rounded-lg border border-white/30 bg-white/10 px-4 py-2 text-xs font-medium text-white transition hover:bg-white/20 disabled:opacity-40"
+                          onClick={() => handleDownloadPDF(true)}
+                          disabled={!proposalContent}
+                          title="Download PDF (Dark Mode)"
+                        >
+                          <Download className="h-4 w-4" />
+                          Dark PDF
                         </button>
                         <button
                           type="button"
