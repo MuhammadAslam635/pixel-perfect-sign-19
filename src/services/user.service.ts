@@ -249,6 +249,8 @@ export const userService = {
   updateCompanyProfile: async (data: {
     id: string;
     name?: string;
+    firstName?: string;
+    lastName?: string;
     email?: string;
     bio?: string;
   }): Promise<{ success: boolean; message: string; user: User }> => {

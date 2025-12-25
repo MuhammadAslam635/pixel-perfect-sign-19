@@ -23,12 +23,16 @@ import { userService } from "@/services/user.service";
 
 interface ProfileErrors {
   name: string;
+  firstName: string;
+  lastName: string;
   email: string;
 }
 
 interface ProfileFormState {
   id: string;
   name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   bio: string;
   token: string;
@@ -40,12 +44,16 @@ export const ProfileTab = () => {
   const user = useSelector((state: RootState) => state.auth.user);
   const [errors, setErrors] = useState<ProfileErrors>({
     name: "",
+    firstName: "",
+    lastName: "",
     email: "",
   });
 
   const [formState, setFormState] = useState<ProfileFormState>({
     id: "",
     name: "",
+    firstName: "",
+    lastName: "",
     email: "",
     bio: "",
     token: "",
@@ -56,6 +64,8 @@ export const ProfileTab = () => {
       setFormState({
         id: user._id ?? "",
         name: user.name ?? "",
+        firstName: user.firstName ?? "",
+        lastName: user.lastName ?? "",
         email: user.email ?? "",
         bio: user.bio ?? "",
         token: user.token ?? "",
@@ -82,12 +92,14 @@ export const ProfileTab = () => {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setErrors({ name: "", email: "" });
+    setErrors({ name: "", firstName: "", lastName: "", email: "" });
 
     try {
       const response = await userService.updateCompanyProfile({
         id: formState.id,
         name: formState.name,
+        firstName: formState.firstName,
+        lastName: formState.lastName,
         email: formState.email,
         bio: formState.bio,
       });
@@ -128,6 +140,8 @@ export const ProfileTab = () => {
         ) {
           const validationErrors: ProfileErrors = {
             name: "",
+            firstName: "",
+            lastName: "",
             email: "",
           };
           (
@@ -193,6 +207,40 @@ export const ProfileTab = () => {
             {errors.name ? (
               <p className="text-sm text-rose-400">{errors.name}</p>
             ) : null}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="firstName" className="text-white/80">
+                First Name
+              </Label>
+              <Input
+                id="firstName"
+                name="firstName"
+                value={formState.firstName}
+                onChange={handleInputChange}
+                className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40"
+              />
+              {errors.firstName ? (
+                <p className="text-sm text-rose-400">{errors.firstName}</p>
+              ) : null}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="lastName" className="text-white/80">
+                Last Name
+              </Label>
+              <Input
+                id="lastName"
+                name="lastName"
+                value={formState.lastName}
+                onChange={handleInputChange}
+                className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40"
+              />
+              {errors.lastName ? (
+                <p className="text-sm text-rose-400">{errors.lastName}</p>
+              ) : null}
+            </div>
           </div>
 
           <div className="space-y-2">
