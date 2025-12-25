@@ -193,3 +193,29 @@ export const getCachedICPSuggestions = (
 
   return cached.suggestions;
 };
+
+/**
+ * Clear website-specific cached data
+ * This should be called when the website URL changes to ensure
+ * new data is fetched for the new website
+ */
+export const clearWebsiteCache = (): void => {
+  try {
+    const cache = getOnboardingCache();
+    if (!cache) return;
+
+    // Remove website-related cached data
+    const updated: OnboardingCache = {
+      ...cache,
+      apolloData: undefined,
+      icpSuggestions: undefined,
+      coreOfferingsSuggestions: undefined,
+      lastUpdated: Date.now(),
+    };
+
+    localStorage.setItem(CACHE_KEY, JSON.stringify(updated));
+    console.log("[OnboardingCache] Website-specific cache cleared");
+  } catch (error) {
+    console.error("[OnboardingCache] Error clearing website cache:", error);
+  }
+};

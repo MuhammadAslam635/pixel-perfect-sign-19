@@ -12,6 +12,7 @@ import {
   updateOnboardingCache,
   getCachedApolloData,
   clearOnboardingCache,
+  clearWebsiteCache,
 } from "@/utils/onboardingCache";
 import {
   OnboardingData,
@@ -59,6 +60,9 @@ const OnboardingPage = () => {
 
   // Auto-save debouncing
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Track previous website to detect changes
+  const previousWebsiteRef = useRef<string | undefined>(undefined);
 
   // Scroll to top when step changes
   useEffect(() => {
@@ -107,6 +111,11 @@ const OnboardingPage = () => {
             };
 
             setFormData(formDataCopy);
+            
+            // Initialize the previous website ref with the loaded website
+            if (formDataCopy.website) {
+              previousWebsiteRef.current = formDataCopy.website;
+            }
 
             // Cache the data in sessionStorage for future navigation
             sessionStorage.setItem(
@@ -522,13 +531,46 @@ const OnboardingPage = () => {
 
     const currentWebsite = dataToSave.website;
 
+    // Check if website has changed to determine if we need to clear cached data
+    if (currentStep === 1 && currentWebsite) {
+      const normalizeUrl = (url: string | undefined) => {
+        if (!url) return '';
+        return url.replace(/^https?:\/\//, '').replace(/\/$/, '').toLowerCase();
+      };
+      
+      const normalizedCurrent = normalizeUrl(currentWebsite);
+      const normalizedPrevious = normalizeUrl(previousWebsiteRef.current);
+      
+      // If website changed and both have values, clear cached data
+      if (normalizedCurrent && normalizedPrevious && normalizedCurrent !== normalizedPrevious) {
+        console.log('[Onboarding] Website changed from', previousWebsiteRef.current, 'to', currentWebsite, '- clearing cached data');
+        clearWebsiteCache();
+        
+        // Clear company-related form fields since they're for the old website
+        formUpdates.companyName = '';
+        formUpdates.businessDescription = '';
+        formUpdates.coreOfferings = [];
+        formUpdates.idealCustomerProfile = '';
+        
+        dataToSave.companyName = '';
+        dataToSave.businessDescription = '';
+        dataToSave.coreOfferings = [];
+        dataToSave.idealCustomerProfile = '';
+        
+        toast.info('Website changed - fetching new company information...');
+      }
+      
+      // Update the previous website ref
+      previousWebsiteRef.current = currentWebsite;
+    }
+
     // If moving from step 1 to step 2, fetch company info from Apollo API
-    // BUT: Only fetch if user doesn't already have company data (to preserve existing data)
+    // Check dataToSave instead of formData since we may have just cleared it above
     const hasExistingCompanyData =
-      formData.companyName &&
-      formData.companyName.trim() !== "" &&
-      formData.businessDescription &&
-      formData.businessDescription.trim() !== "";
+      dataToSave.companyName &&
+      dataToSave.companyName.trim() !== "" &&
+      dataToSave.businessDescription &&
+      dataToSave.businessDescription.trim() !== "";
 
     if (currentStep === 1 && currentWebsite && !hasExistingCompanyData) {
       try {
