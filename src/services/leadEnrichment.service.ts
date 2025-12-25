@@ -137,11 +137,13 @@ export const leadEnrichmentService = {
 
   /**
    * Validate domain format
+   * Supports single and multi-part TLDs (e.g., .com, .co.uk, .com.au)
    * @param domain - Domain to validate
    */
   validateDomain: (domain: string): boolean => {
+    // Updated regex to support multi-part TLDs like .co.uk, .com.au
     const domainRegex =
-      /^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}$/;
+      /^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]?\.([a-zA-Z]{2,}\.)?[a-zA-Z]{2,}$/;
     return domainRegex.test(domain.trim());
   },
 
