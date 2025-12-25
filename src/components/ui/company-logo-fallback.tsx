@@ -74,12 +74,12 @@ export const CompanyLogoFallback: FC<CompanyLogoFallbackProps> = ({
   );
 
   return (
-    <div className={`${sizeClasses[size]} rounded-lg overflow-hidden border-2 border-primary/40 bg-white flex-shrink-0 ${className}`}>
+    <div className={`${sizeClasses[size]} rounded-lg overflow-hidden bg-white flex-shrink-0 flex items-center justify-center ${className}`}>
       {logo && !hasError ? (
         <img
           src={logo}
           alt={name}
-          className="w-full h-full object-contain p-1"
+          className="w-full h-full object-contain"
           onError={() => setHasError(true)}
         />
       ) : (

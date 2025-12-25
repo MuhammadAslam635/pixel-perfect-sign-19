@@ -444,7 +444,7 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
                 {/* Description */}
                 {(displayCompany.description || displayCompany.about) && (
                   <div className="mb-4">
-                    <p className="text-sm text-white/80 leading-relaxed">
+                    <p className="text-sm text-white/80 leading-relaxed line-clamp-3">
                       {displayCompany.description || displayCompany.about}
                     </p>
                   </div>

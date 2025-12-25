@@ -379,60 +379,87 @@ const CompanyTab: FC<CompanyTabProps> = ({ lead }) => {
                       navigate(`/leads/${companyLead._id}`);
                     }
                   }}
-                  className={`p-3 rounded-lg border transition-all ${
+                  className={`p-2 rounded-lg border transition-all ${
                     isCurrentLead
                       ? "bg-gradient-to-r from-[#67B0B7]/20 to-[#4066B3]/20 border-[#67B0B7]/40"
                       : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20 cursor-pointer"
                   }`}
                 >
-                  <div className="flex items-start gap-3">
+                  <div className="flex items-center gap-3">
                     <AvatarFallback
                       name={companyLead.name}
                       pictureUrl={companyLead.pictureUrl}
                       size="sm"
+                      className="flex-shrink-0"
                     />
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2">
                         <p className="text-xs font-medium text-white truncate">
                           {companyLead.name}
                         </p>
                         {isCurrentLead && (
-                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#67B0B7]/30 text-[#67B0B7] border border-[#67B0B7]/50">
+                          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[#67B0B7]/30 text-[#67B0B7] border border-[#67B0B7]/50 flex-shrink-0">
                             Current
                           </span>
                         )}
                       </div>
                       {companyLead.position && (
-                        <p className="text-[10px] text-white/60 mb-2">
+                        <p className="text-[10px] text-white/50 truncate mb-1.5">
                           {companyLead.position}
                         </p>
                       )}
-                      <div className="flex items-center gap-3 flex-wrap">
+                      
+                      <div className="flex items-center gap-2">
                         {companyLead.email && (
-                          <div className="flex items-center gap-1 text-[10px] text-white/60">
-                            <Mail className="w-3 h-3" />
-                            <span className="truncate max-w-[150px]">
-                              {companyLead.email}
-                            </span>
-                          </div>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div 
+                                className="p-1 rounded-md bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-colors cursor-help border border-white/5"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <Mail className="w-3 h-3" />
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Email: {companyLead.email}</p>
+                            </TooltipContent>
+                          </Tooltip>
                         )}
+                        
                         {companyLead.phone && (
-                          <div className="flex items-center gap-1 text-[10px] text-white/60">
-                            <Phone className="w-3 h-3" />
-                            <span>{companyLead.phone}</span>
-                          </div>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <a 
+                                href={`tel:${companyLead.phone}`}
+                                className="p-1 rounded-md bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-colors border border-white/5"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <Phone className="w-3 h-3" />
+                              </a>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Phone: {companyLead.phone}</p>
+                            </TooltipContent>
+                          </Tooltip>
                         )}
+
                         {companyLead.linkedinUrl && (
-                          <a
-                            href={companyLead.linkedinUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
-                            className="flex items-center gap-1 text-[10px] text-cyan-400 hover:text-cyan-300"
-                          >
-                            <Linkedin className="w-3 h-3" />
-                            <span>LinkedIn</span>
-                          </a>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <a
+                                href={companyLead.linkedinUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="p-1 rounded-md bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-colors border border-white/5"
+                              >
+                                <Linkedin className="w-3 h-3" />
+                              </a>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>LinkedIn Profile</p>
+                            </TooltipContent>
+                          </Tooltip>
                         )}
                       </div>
                     </div>

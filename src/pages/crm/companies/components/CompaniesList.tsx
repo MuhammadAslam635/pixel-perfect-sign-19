@@ -415,9 +415,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
       return (
         <Card
           key={company._id}
-          className={`relative flex items-center gap-2.5 overflow-hidden border-0 rounded-lg p-2.5 transition-all duration-300 hover:bg-white/5 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] cursor-pointer ${
-            selectedCompanyId ? "aspect-[3/1]" : "aspect-[4/1]"
-          } backdrop-blur-[22.6px]`}
+          className={`relative flex items-center gap-3 overflow-hidden border-0 rounded-xl p-2 pb-3 transition-all duration-300 hover:bg-white/5 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] cursor-pointer backdrop-blur-[22.6px]`}
           style={{
             background: `linear-gradient(180deg, rgba(104, 177, 184, 0.1) 0%, rgba(104, 177, 184, 0.08) 100%), radial-gradient(50% 100% at 50% 0%, rgba(104, 177, 184, 0.1) 0%, rgba(104, 177, 184, 0) 100%)`,
           }}
@@ -481,11 +479,11 @@ const CompaniesList: FC<CompaniesListProps> = ({
 
             {/* Second Row: Industry */}
             {company.industry && (
-              <span className="text-white/60 font-normal text-xs">
-                {" | "}
+              <span className="text-white/60 font-normal text-xs block truncate">
                 {company.industry}
               </span>
             )}
+
 
             {/* Third Row: Scraping Date */}
             {company.createdAt && (
