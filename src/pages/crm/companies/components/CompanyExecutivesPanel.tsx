@@ -38,6 +38,7 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
   const [showLeads, setShowLeads] = useState(false);
   const [showLoadingSkeleton, setShowLoadingSkeleton] = useState(false);
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [shouldPoll, setShouldPoll] = useState(false);
 
   // Automatically show leads when a company is selected
   useEffect(() => {
@@ -47,14 +48,25 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
     }
   }, [company?._id]);
 
-  // Fetch company details
+  // Fetch company details with conditional auto-refresh
   const { data: latestCompany, isLoading: isCompanyLoading } = useQuery({
     queryKey: ["company", company?._id],
     queryFn: () => (company?._id ? companiesService.getCompanyById(company._id) : null),
     enabled: !!company?._id,
+    refetchInterval: shouldPoll ? 5000 : false, // Poll every 5 seconds only when generating
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
   const displayCompany = latestCompany || company;
+
+  // Update polling state based on lead generation status
+  useEffect(() => {
+    const isGenerating =
+      displayCompany?.leadsGenerationStatus === 'in_progress' ||
+      displayCompany?.leadsGenerationStatus === 'pending';
+    setShouldPoll(isGenerating);
+  }, [displayCompany?.leadsGenerationStatus]);
 
   // Get company LinkedIn URL (from company data or first executive)
   const companyLinkedIn =
@@ -220,84 +232,123 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
             transition={{ duration: 0.2 }}
             className="relative"
           >
-            {showLeads && company ? (
-              company.people && company.people.length > 0 ? (
-                company.people.map((exec, index) => {
-                  const hasLinkedin = Boolean(exec.linkedin);
+            {showLeads && displayCompany ? (
+              <>
+                {/* Show leads in real-time as they're found */}
+                {displayCompany.people && displayCompany.people.length > 0 && (
+                  <div className="space-y-2 mb-3">
+                    {displayCompany.people.map((exec, index) => {
+                      const hasLinkedin = Boolean(exec.linkedin);
 
-                  return (
-                    <div
-                      key={exec._id || exec.id || index}
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => onExecutiveSelect?.(exec)}
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter" || event.key === " ") {
-                          event.preventDefault();
-                          onExecutiveSelect?.(exec);
-                        }
-                      }}
-                      className="relative overflow-hidden rounded-xl sm:rounded-2xl border border-white/15 bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] px-2 sm:px-3 py-2 mb-2 max-w-sm h-14 transition-all duration-300 hover:shadow-[0_12px_32px_rgba(0,0,0,0.3)] cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/60"
-                    >
-                      <div className="flex items-center justify-between gap-2 h-full">
-                        <AvatarFallback
-                          name={exec.name || "N/A"}
-                          pictureUrl={(exec.pictureUrl || exec.photo_url || exec.image) as string}
-                          size="xs"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-semibold text-white mb-0.5 truncate">
-                            {exec.name || "N/A"}
-                          </p>
-                          <p className="text-[10px] text-white/60 line-clamp-2">
-                            {exec.title || exec.position || "N/A"}
-                            {exec.email && (
-                              <>
-                                <span className="inline"> | </span>
-                                <span className="truncate">{exec.email}</span>
-                              </>
-                            )}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-1 flex-shrink-0">
-                          <button
-                            type="button"
-                            disabled={!hasLinkedin}
-                            className={`flex h-7 w-7 items-center justify-center rounded-full border border-white/15 transition-colors ${
-                              hasLinkedin
-                                ? "bg-white/15 text-white hover:bg-white/25"
-                                : "bg-white/10 text-white/40 cursor-not-allowed"
-                            }`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (!hasLinkedin) return;
-                              window.open(
-                                exec.linkedin!.startsWith("http")
-                                  ? exec.linkedin
-                                  : `https://${exec.linkedin}`,
-                                "_blank"
-                              );
-                            }}
-                          >
-                            <Linkedin
-                              className={`h-3 w-3 ${
-                                hasLinkedin ? "text-white" : "text-white/50"
-                              }`}
+                      return (
+                        <div
+                          key={exec._id || exec.id || index}
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => onExecutiveSelect?.(exec)}
+                          onKeyDown={(event) => {
+                            if (event.key === "Enter" || event.key === " ") {
+                              event.preventDefault();
+                              onExecutiveSelect?.(exec);
+                            }
+                          }}
+                          className="relative overflow-hidden rounded-xl sm:rounded-2xl border border-white/15 bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] px-2 sm:px-3 py-2 max-w-sm h-14 transition-all duration-300 hover:shadow-[0_12px_32px_rgba(0,0,0,0.3)] cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/60"
+                        >
+                          <div className="flex items-center justify-between gap-2 h-full">
+                            <AvatarFallback
+                              name={exec.name || "N/A"}
+                              pictureUrl={(exec.pictureUrl || exec.photo_url || exec.image) as string}
+                              size="xs"
                             />
-                          </button>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-semibold text-white mb-0.5 truncate">
+                                {exec.name || "N/A"}
+                              </p>
+                              <p className="text-[10px] text-white/60 line-clamp-2">
+                                {exec.title || exec.position || "N/A"}
+                                {exec.email && (
+                                  <>
+                                    <span className="inline"> | </span>
+                                    <span className="truncate">{exec.email}</span>
+                                  </>
+                                )}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-1 flex-shrink-0">
+                              <button
+                                type="button"
+                                disabled={!hasLinkedin}
+                                className={`flex h-7 w-7 items-center justify-center rounded-full border border-white/15 transition-colors ${
+                                  hasLinkedin
+                                    ? "bg-white/15 text-white hover:bg-white/25"
+                                    : "bg-white/10 text-white/40 cursor-not-allowed"
+                                }`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (!hasLinkedin) return;
+                                  window.open(
+                                    exec.linkedin!.startsWith("http")
+                                      ? exec.linkedin
+                                      : `https://${exec.linkedin}`,
+                                    "_blank"
+                                  );
+                                }}
+                              >
+                                <Linkedin
+                                  className={`h-3 w-3 ${
+                                    hasLinkedin ? "text-white" : "text-white/50"
+                                  }`}
+                                />
+                              </button>
+                            </div>
+                          </div>
                         </div>
-                      </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Show loading indicator at bottom if still generating */}
+                {(displayCompany.leadsGenerationStatus === 'in_progress' ||
+                  displayCompany.leadsGenerationStatus === 'pending') && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex items-center justify-center gap-3 py-4 px-3 rounded-lg bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20"
+                  >
+                    <Loader2 className="w-5 h-5 text-primary animate-spin flex-shrink-0" />
+                    <div className="text-left flex-1">
+                      <p className="text-sm font-medium text-white">
+                        {displayCompany.people && displayCompany.people.length > 0
+                          ? 'Still finding more executives...'
+                          : 'Searching for executives...'}
+                      </p>
+                      {displayCompany.leadsGenerationProgress && (
+                        <p className="text-xs text-white/60">
+                          {displayCompany.leadsGenerationProgress?.current || 0} / {displayCompany.leadsGenerationProgress?.total || 0} leads found
+                        </p>
+                      )}
                     </div>
-                  );
-                })
-              ) : (
-                // Check if leads are being generated OR company was just created
-                (company.leadsGenerationStatus === 'in_progress' ||
-                 company.leadsGenerationStatus === 'pending' ||
-                 // Show loader for new companies (created in last 30 minutes) without leads AND not completed/failed
-                 (company.leadsGenerationStatus !== 'completed' &&
-                  company.leadsGenerationStatus !== 'failed' &&
-                  new Date().getTime() - new Date(company.createdAt).getTime() < 30 * 60 * 1000)) ? (
+                  </motion.div>
+                )}
+
+                {/* Show "No executives" only if completed and no leads found */}
+                {displayCompany.leadsGenerationStatus === 'completed' &&
+                 (!displayCompany.people || displayCompany.people.length === 0) && (
+                  <div className="flex items-center justify-center h-32">
+                    <p className="text-sm text-muted-foreground/60">
+                      No executives found for this company.
+                    </p>
+                  </div>
+                )}
+
+                {/* Show initial loader for newly created companies without any leads yet */}
+                {(!displayCompany.people || displayCompany.people.length === 0) &&
+                 displayCompany.leadsGenerationStatus !== 'completed' &&
+                 displayCompany.leadsGenerationStatus !== 'failed' &&
+                 displayCompany.leadsGenerationStatus !== 'in_progress' &&
+                 displayCompany.leadsGenerationStatus !== 'pending' &&
+                 new Date().getTime() - new Date(displayCompany.createdAt).getTime() < 30 * 60 * 1000 && (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -309,26 +360,13 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
                     </div>
                     <div className="text-center">
                       <p className="text-sm font-medium text-white mb-1">
-                        {company.leadsGenerationStatus === 'in_progress' || company.leadsGenerationStatus === 'pending'
-                          ? 'Generating Leads...'
-                          : 'Searching for Executives...'}
+                        Searching for Executives...
                       </p>
-                      {company.leadsGenerationProgress && (
-                        <p className="text-xs text-white/60">
-                          {company.leadsGenerationProgress?.current || 0} / {company.leadsGenerationProgress?.total || 0} leads found
-                        </p>
-                      )}
                     </div>
                   </motion.div>
-                ) : (
-                  <div className="flex items-center justify-center h-32">
-                    <p className="text-sm text-muted-foreground/60">
-                      No executives found for this company.
-                    </p>
-                  </div>
-                )
-              )
-            ) : company ? (
+                )}
+              </>
+            ) : displayCompany ? (
               <p className="text-sm text-muted-foreground/60">
                 Click "Executives" tab to view leads.
               </p>

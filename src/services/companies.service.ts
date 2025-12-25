@@ -12,6 +12,9 @@ export interface CompanyPerson {
   linkedin?: string;
   phones?: string[];
   emails?: string[];
+  pictureUrl?: string;
+  photo_url?: string;
+  image?: string;
   [key: string]: unknown;
 }
 
@@ -35,6 +38,7 @@ export interface Company {
   organization_revenue?: string | number | null;
   organization_revenue_printed?: string | number | null;
   marketcap?: string | number | null;
+  marketCap?: string | number | null; // Alias for marketcap (camelCase)
   foundedYear?: string | number | null;
   facebook?: string | null;
   linkedinUrl?: string | null;
