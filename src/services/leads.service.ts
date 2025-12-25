@@ -23,6 +23,7 @@ export interface Lead {
   description?: string;
   location?: string;
   position?: string;
+  seniority?: string;
   pictureUrl?: string;
   linkedinUrl?: string;
   language?: string;

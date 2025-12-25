@@ -60,7 +60,7 @@ const index = () => {
   }, [viewMode]);
 
   const [leadsCountryFilter, setLeadsCountryFilter] = useState<string[]>([]);
-  const [leadsPositionFilter, setLeadsPositionFilter] = useState<string[]>([]);
+  const [leadsSeniorityFilter, setLeadsSeniorityFilter] = useState<string[]>([]);
   const [leadsCompanyFilter, setLeadsCompanyFilter] = useState<string[]>([]);
   const [leadsStageFilter, setLeadsStageFilter] = useState<string[]>([]);
   const [leadsHasEmailFilter, setLeadsHasEmailFilter] = useState(false);
@@ -72,7 +72,7 @@ const index = () => {
   // Reset filters
   const resetLeadAdvancedFilters = () => {
     setLeadsCountryFilter([]);
-    setLeadsPositionFilter([]);
+    setLeadsSeniorityFilter([]);
     setLeadsStageFilter([]);
     setLeadsHasEmailFilter(false);
     setLeadsHasPhoneFilter(false);
@@ -446,7 +446,7 @@ const index = () => {
   const hasLeadAdvancedFilters = useMemo(
     () =>
       leadsCountryFilter.length > 0 ||
-      leadsPositionFilter.length > 0 ||
+      leadsSeniorityFilter.length > 0 ||
       leadsCompanyFilter.length > 0 ||
       leadsStageFilter.length > 0 ||
       leadsHasEmailFilter ||
@@ -455,7 +455,7 @@ const index = () => {
       leadsHasFavouriteFilter,
     [
       leadsCountryFilter,
-      leadsPositionFilter,
+      leadsSeniorityFilter,
       leadsCompanyFilter,
       leadsStageFilter,
       leadsHasEmailFilter,
@@ -495,12 +495,12 @@ const index = () => {
     }
 
     // Position/Title filter (multi-select)
-    if (leadsPositionFilter.length > 0) {
+    if (leadsSeniorityFilter.length > 0) {
       result = result.filter(
         (lead) =>
-          lead.position &&
-          leadsPositionFilter.some((pos) =>
-            lead.position?.toLowerCase().includes(pos.toLowerCase())
+          lead.seniority &&
+          leadsSeniorityFilter.some((seniority) =>
+            lead.seniority?.toLowerCase().includes(seniority.toLowerCase())
           )
       );
     }
@@ -582,7 +582,7 @@ const index = () => {
     leadsSearch,
     leadsCompanyFilter,
     leadsCountryFilter,
-    leadsPositionFilter,
+    leadsSeniorityFilter,
     leadsStageFilter,
     leadsHasEmailFilter,
     leadsHasPhoneFilter,
@@ -676,7 +676,7 @@ const index = () => {
     leadsCompanyFilter,
     leadsLimit,
     leadsCountryFilter,
-    leadsPositionFilter,
+    leadsSeniorityFilter,
     leadsStageFilter,
     leadsHasEmailFilter,
     leadsHasPhoneFilter,
@@ -844,8 +844,8 @@ const index = () => {
                             <LeadsFiltersInline
                               countryFilter={leadsCountryFilter}
                               onCountryFilterChange={setLeadsCountryFilter}
-                              positionFilter={leadsPositionFilter}
-                              onPositionFilterChange={setLeadsPositionFilter}
+                              seniorityFilter={leadsSeniorityFilter}
+                              onSeniorityFilterChange={setLeadsSeniorityFilter}
                               stageFilter={leadsStageFilter}
                               onStageFilterChange={setLeadsStageFilter}
                               leads={allLeadsForCount}

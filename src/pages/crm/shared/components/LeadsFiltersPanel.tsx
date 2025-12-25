@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -14,24 +15,36 @@ import {
 } from "@/components/ui/multi-select";
 import { CountrySelect } from "@/components/ui/country-select";
 
-// Extract unique job titles from leads data
-const extractJobTitles = (leads?: any[]): MultiSelectOption[] => {
-  if (!leads || leads.length === 0) {
+// Extract unique seniority levels from leads data
+const extractSeniorityLevels = (leads?: any[]): MultiSelectOption[] => {
+  if (!leads || !Array.isArray(leads) || leads.length === 0) {
     return [];
   }
 
-  const titleSet = new Set<string>();
+  try {
+    const senioritySet = new Set<string>();
 
-  leads.forEach((lead) => {
-    const title = lead.position || lead.title;
-    if (title && typeof title === "string" && title.trim()) {
-      titleSet.add(title.trim());
+    leads.forEach((lead) => {
+      const seniority = lead?.seniority;
+      if (seniority && typeof seniority === "string" && seniority.trim()) {
+        senioritySet.add(seniority.trim().toLowerCase());
+      }
+    });
+
+    if (senioritySet.size === 0) {
+      return [];
     }
-  });
 
-  return Array.from(titleSet)
-    .sort()
-    .map((title) => ({ value: title, label: title }));
+    return Array.from(senioritySet)
+      .sort()
+      .map((seniority) => ({
+        value: seniority,
+        label: seniority.charAt(0).toUpperCase() + seniority.slice(1).replace(/_/g, ' ')
+      }));
+  } catch (error) {
+    console.error('Error extracting seniority levels:', error);
+    return [];
+  }
 };
 
 import countryList from "react-select-country-list";
@@ -41,15 +54,15 @@ interface LeadsFiltersInlineProps {
   countryFilter: string[];
   onCountryFilterChange: (value: string[]) => void;
 
-  // Position filter
-  positionFilter: string[];
-  onPositionFilterChange: (value: string[]) => void;
+  // Seniority filter
+  seniorityFilter: string[];
+  onSeniorityFilterChange: (value: string[]) => void;
 
   // Stage filter
   stageFilter: string[];
   onStageFilterChange: (value: string[]) => void;
 
-  leads?: any[]; // For extracting dynamic job titles
+  leads?: any[]; // For extracting dynamic seniority levels
 
   // Checkbox filters
   hasEmailFilter: boolean;
@@ -72,11 +85,13 @@ interface LeadsFiltersInlineProps {
   onHasFavouriteFilterChange: (checked: boolean) => void;
 }
 
+const EMPTY_ARRAY: MultiSelectOption[] = [];
+
 export const LeadsFiltersInline = ({
   countryFilter,
   onCountryFilterChange,
-  positionFilter,
-  onPositionFilterChange,
+  seniorityFilter,
+  onSeniorityFilterChange,
   stageFilter,
   onStageFilterChange,
   leads,
@@ -93,21 +108,29 @@ export const LeadsFiltersInline = ({
   hasFavouriteFilter,
   onHasFavouriteFilterChange,
 }: LeadsFiltersInlineProps) => {
-  const positionOptions = extractJobTitles(leads);
-  const countryOptions = countryList()
-    .getData()
-    .map((c) => ({ value: c.label, label: c.label })); // Using label as value for consistency with existing backend logic if needed, or stick to ISO codes if backend prefers. Assuming names based on previous implementation.
+  const seniorityOptions = useMemo(() => {
+    const options = extractSeniorityLevels(leads);
+    return options.length > 0 ? options : EMPTY_ARRAY;
+  }, [leads]);
+
+  const countryOptions = useMemo(
+    () => countryList().getData().map((c) => ({ value: c.label, label: c.label })),
+    []
+  );
 
   // Stage options based on lead stage definitions
-  const stageOptions = [
-    { value: "New", label: "New" },
-    { value: "Interested", label: "Interested" },
-    { value: "Follow-up", label: "Follow-up" },
-    { value: "Appointment Booked", label: "Appointment Booked" },
-    { value: "Proposal Sent", label: "Proposal Sent" },
-    { value: "Follow-up to Close", label: "Follow-up to Close" },
-    { value: "Deal Closed", label: "Deal Closed" },
-  ];
+  const stageOptions = useMemo(
+    () => [
+      { value: "New", label: "New" },
+      { value: "Interested", label: "Interested" },
+      { value: "Follow-up", label: "Follow-up" },
+      { value: "Appointment Booked", label: "Appointment Booked" },
+      { value: "Proposal Sent", label: "Proposal Sent" },
+      { value: "Follow-up to Close", label: "Follow-up to Close" },
+      { value: "Deal Closed", label: "Deal Closed" },
+    ],
+    []
+  );
 
   return (
     <div className="flex flex-wrap flex-1 shrink-0  items-center gap-1.5">
@@ -132,6 +155,9 @@ export const LeadsFiltersInline = ({
       </div>
 
       <div className="flex items-center gap-1">
+        <label className="text-[11px] uppercase tracking-[0.08em] text-gray-400 whitespace-nowrap">
+          Stage:
+        </label>
         <div className="w-40">
           <MultiSelect
             options={stageOptions}
@@ -150,16 +176,16 @@ export const LeadsFiltersInline = ({
 
       <div className="flex items-center gap-1">
         <label className="text-[11px] uppercase tracking-[0.08em] text-gray-400 whitespace-nowrap">
-          Title:
+          Seniority:
         </label>
-        <div className="w-32">
+        <div className="w-36">
           <MultiSelect
-            options={positionOptions}
-            value={positionFilter}
-            onChange={onPositionFilterChange}
-            placeholder="All titles"
-            searchPlaceholder="Search titles..."
-            emptyMessage="No titles found."
+            options={seniorityOptions}
+            value={seniorityFilter}
+            onChange={onSeniorityFilterChange}
+            placeholder="All seniorities"
+            searchPlaceholder="Search seniority..."
+            emptyMessage="No seniority levels found."
             className="h-8 text-xs"
             maxDisplayItems={1}
             popoverWidth="w-[280px]"
@@ -254,10 +280,10 @@ interface LeadsFiltersPanelProps {
   countryFilter: string;
   onCountryFilterChange: (value: string) => void;
 
-  // Position filter
-  positionFilter: string[];
-  onPositionFilterChange: (value: string[]) => void;
-  leads?: any[]; // For extracting dynamic job titles
+  // Seniority filter
+  seniorityFilter: string[];
+  onSeniorityFilterChange: (value: string[]) => void;
+  leads?: any[]; // For extracting dynamic seniority levels
 
   // Checkbox filters
   hasEmailFilter: boolean;
@@ -276,8 +302,8 @@ interface LeadsFiltersPanelProps {
 export const LeadsFiltersPanel = ({
   countryFilter,
   onCountryFilterChange,
-  positionFilter,
-  onPositionFilterChange,
+  seniorityFilter,
+  onSeniorityFilterChange,
   leads,
   hasEmailFilter,
   onHasEmailFilterChange,
@@ -289,7 +315,10 @@ export const LeadsFiltersPanel = ({
   onResetFilters,
   onClose,
 }: LeadsFiltersPanelProps) => {
-  const positionOptions = extractJobTitles(leads);
+  const seniorityOptions = useMemo(() => {
+    const options = extractSeniorityLevels(leads);
+    return options.length > 0 ? options : EMPTY_ARRAY;
+  }, [leads]);
   return (
     <div className="flex flex-col gap-3 text-gray-100 text-xs">
       <div>
@@ -305,15 +334,15 @@ export const LeadsFiltersPanel = ({
       </div>
       <div>
         <p className="text-[11px] uppercase tracking-[0.08em] text-gray-400 mb-2">
-          Title / Role
+          Seniority Level
         </p>
         <MultiSelect
-          options={positionOptions}
-          value={positionFilter}
-          onChange={onPositionFilterChange}
-          placeholder="All titles"
-          searchPlaceholder="Search titles..."
-          emptyMessage="No titles found."
+          options={seniorityOptions}
+          value={seniorityFilter}
+          onChange={onSeniorityFilterChange}
+          placeholder="All seniority levels"
+          searchPlaceholder="Search seniority..."
+          emptyMessage="No seniority levels found."
         />
       </div>
       <div className="flex flex-col gap-3">
