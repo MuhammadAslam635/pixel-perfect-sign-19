@@ -9,7 +9,11 @@ import { Company, CompanyPerson } from "@/services/companies.service";
 import { toast } from "sonner";
 import CompaniesList from "./components/CompaniesList";
 import { DetailsSidebar } from "../shared/components";
-import { useCompaniesData, useCompanyCrmStatsData } from "../shared/hooks";
+import {
+  useCompaniesData,
+  useCompanyCrmStatsData,
+  useCrmStatsData,
+} from "../shared/hooks";
 import { CompaniesQueryParams } from "@/services/companies.service";
 import {
   StatsCards,
@@ -42,7 +46,9 @@ const index = () => {
   const [isMobileExecutivesView, setIsMobileExecutivesView] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>("detailed");
   const [enrichmentModalOpen, setEnrichmentModalOpen] = useState(false);
-  const [selectedSeniorities, setSelectedSeniorities] = useState<SeniorityLevel[]>([]);
+  const [selectedSeniorities, setSelectedSeniorities] = useState<
+    SeniorityLevel[]
+  >([]);
 
   // Fetch dynamic enrichment configs
   const { seniorityOptions } = useEnrichmentConfigs();
@@ -134,7 +140,10 @@ const index = () => {
 
   // Check if any company has leads being generated
   const hasCompaniesGeneratingLeads = useMemo(
-    () => companies.some(company => company.leadsGenerationStatus === 'in_progress'),
+    () =>
+      companies.some(
+        (company) => company.leadsGenerationStatus === "in_progress"
+      ),
     [companies]
   );
 
@@ -151,6 +160,9 @@ const index = () => {
 
   // Filter-aware CRM stats for companies page
   const { stats: companyCrmStats } = useCompanyCrmStatsData(companiesParams);
+
+  // General CRM stats for outreach/response/active clients/messages sent
+  const { stats: crmStats } = useCrmStatsData();
 
   // Fallbacks if filtered stats are not yet available
   const { totalCompanies: totalCompaniesForStats } = useCompaniesData({
@@ -205,10 +217,10 @@ const index = () => {
         {
           totalCompanies: effectiveTotalCompanies,
           totalLeads: companyCrmStats?.totalLeads ?? 0,
-          totalOutreach: companyCrmStats?.totalOutreach,
-          totalResponse: companyCrmStats?.totalResponse,
-          activeClients: companyCrmStats?.activeClients,
-          messagesSent: companyCrmStats?.messagesSent,
+          totalOutreach: crmStats?.totalOutreach,
+          totalResponse: crmStats?.totalResponse,
+          activeClients: crmStats?.activeClients,
+          messagesSent: crmStats?.messagesSent,
           totalCompaniesWithPeople: companyCrmStats?.totalCompaniesWithPeople,
           totalCompaniesWithWebsite: companyCrmStats?.totalCompaniesWithWebsite,
         },
@@ -217,10 +229,10 @@ const index = () => {
     [
       effectiveTotalCompanies,
       companyCrmStats?.totalLeads,
-      companyCrmStats?.totalOutreach,
-      companyCrmStats?.totalResponse,
-      companyCrmStats?.activeClients,
-      companyCrmStats?.messagesSent,
+      crmStats?.totalOutreach,
+      crmStats?.totalResponse,
+      crmStats?.activeClients,
+      crmStats?.messagesSent,
       companyCrmStats?.totalCompaniesWithPeople,
       companyCrmStats?.totalCompaniesWithWebsite,
     ]
@@ -312,7 +324,7 @@ const index = () => {
                 </Button>
               </div>
 
-            {/* Controls Container */}
+              {/* Controls Container */}
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2 md:gap-3 order-1 lg:order-2">
                 <div className="flex  flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2 flex-1 ">
                   <div className="flex w-full items-center justify-end gap-1.5 sm:gap-2 ">
@@ -460,7 +472,6 @@ const index = () => {
             companiesQuery.refetch();
             setEnrichmentModalOpen(false);
           }}
-          selectedSeniorities={selectedSeniorities}
         />
       </motion.main>
     </DashboardLayout>

@@ -17,6 +17,7 @@ import { DetailsSidebar } from "../shared/components";
 import {
   useCompaniesData,
   useCompanyCrmStatsData,
+  useCrmStatsData,
   useLeadsData,
 } from "../shared/hooks";
 import { LeadsQueryParams } from "@/services/leads.service";
@@ -629,13 +630,18 @@ const index = () => {
   );
 
   // Fetch shared CRM stats for top cards (including companies and leads counts)
-  const { stats: crmStats } = useCompanyCrmStatsData({});
+  const { stats: companyFilteredStats } = useCompanyCrmStatsData({});
+
+  // General CRM stats for outreach/response/active clients/messages sent
+  const { stats: crmStats } = useCrmStatsData();
 
   // Calculate filtered counts for stats
   const effectiveTotalLeads = totalFilteredLeads;
   const effectiveTotalCompanies = useMemo(() => {
     if (!filteredLeads) return 0;
-    const uniqueCompanyIds = new Set(filteredLeads.map(lead => lead.companyId).filter(Boolean));
+    const uniqueCompanyIds = new Set(
+      filteredLeads.map((lead) => lead.companyId).filter(Boolean)
+    );
     return uniqueCompanyIds.size;
   }, [filteredLeads]);
 
