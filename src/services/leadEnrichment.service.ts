@@ -136,23 +136,50 @@ export const leadEnrichmentService = {
   },
 
   /**
+   * Extract clean domain from URL or domain string
+   * Handles: https://www.example.com/path -> example.com
+   * @param input - URL or domain string
+   */
+  extractDomain: (input: string): string => {
+    let cleaned = input.trim();
+
+    // Remove protocol (http://, https://)
+    cleaned = cleaned.replace(/^https?:\/\//i, "");
+
+    // Remove www.
+    cleaned = cleaned.replace(/^www\./i, "");
+
+    // Remove path, query, and fragment (everything after first /)
+    cleaned = cleaned.split("/")[0];
+
+    // Remove port if present
+    cleaned = cleaned.split(":")[0];
+
+    return cleaned;
+  },
+
+  /**
    * Validate domain format
    * Supports single and multi-part TLDs (e.g., .com, .co.uk, .com.au)
-   * @param domain - Domain to validate
+   * Automatically extracts domain from URLs
+   * @param input - Domain or URL to validate
    */
-  validateDomain: (domain: string): boolean => {
+  validateDomain: (input: string): boolean => {
+    // Extract clean domain from URL if needed
+    const domain = leadEnrichmentService.extractDomain(input);
+
     // Updated regex to support multi-part TLDs like .co.uk, .com.au
     const domainRegex =
       /^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]?\.([a-zA-Z]{2,}\.)?[a-zA-Z]{2,}$/;
-    return domainRegex.test(domain.trim());
+    return domainRegex.test(domain);
   },
 
   /**
    * Parse and validate multiple domains
-   * @param input - Comma or newline separated domains
+   * @param input - Comma or newline separated domains or URLs
    */
   parseDomains: (input: string): { valid: string[]; invalid: string[] } => {
-    const domains = input
+    const inputs = input
       .split(/[,\n]/)
       .map((d) => d.trim())
       .filter((d) => d.length > 0);
@@ -160,11 +187,17 @@ export const leadEnrichmentService = {
     const valid: string[] = [];
     const invalid: string[] = [];
 
-    domains.forEach((domain) => {
+    inputs.forEach((item) => {
+      // Extract clean domain
+      const domain = leadEnrichmentService.extractDomain(item);
+
       if (leadEnrichmentService.validateDomain(domain)) {
-        valid.push(domain);
+        // Avoid duplicates
+        if (!valid.includes(domain)) {
+          valid.push(domain);
+        }
       } else {
-        invalid.push(domain);
+        invalid.push(item); // Keep original input for error display
       }
     });
 

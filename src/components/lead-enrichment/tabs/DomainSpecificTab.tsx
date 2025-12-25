@@ -25,12 +25,15 @@ const DomainSpecificTab = ({ onEnrichmentStart }: DomainSpecificTabProps) => {
     const trimmed = domainInput.trim();
     if (!trimmed) return;
 
-    if (leadEnrichmentService.validateDomain(trimmed)) {
-      if (!domains.includes(trimmed)) {
-        setDomains([...domains, trimmed]);
+    // Extract clean domain from URL
+    const cleanDomain = leadEnrichmentService.extractDomain(trimmed);
+
+    if (leadEnrichmentService.validateDomain(cleanDomain)) {
+      if (!domains.includes(cleanDomain)) {
+        setDomains([...domains, cleanDomain]);
         setDomainInput("");
-        setInvalidDomains(invalidDomains.filter((d) => d !== trimmed));
-        toast.success(`Added ${trimmed}`);
+        setInvalidDomains(invalidDomains.filter((d) => d !== cleanDomain));
+        toast.success(`Added ${cleanDomain}`);
       } else {
         toast.error("Domain already added");
       }
