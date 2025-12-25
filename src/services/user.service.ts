@@ -91,6 +91,20 @@ export interface UserDetailResponse {
   message?: string;
 }
 
+export interface UserPreferences {
+  enrichment: {
+    selectedSeniorities: string[];
+  };
+}
+
+export interface UserPreferencesResponse {
+  success: boolean;
+  message: string;
+  data: {
+    preferences: UserPreferences;
+  };
+}
+
 export const userService = {
   /**
    * Get current user profile
@@ -256,6 +270,32 @@ export const userService = {
   }): Promise<{ success: boolean; message: string; user: User }> => {
     try {
       const response = await API.post("/admin/profile-update", data);
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  /**
+   * Get user preferences
+   */
+  getUserPreferences: async (): Promise<UserPreferencesResponse> => {
+    try {
+      const response = await API.get("/users/preferences");
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  /**
+   * Update user preferences
+   */
+  updateUserPreferences: async (data: {
+    selectedSeniorities: string[];
+  }): Promise<UserPreferencesResponse> => {
+    try {
+      const response = await API.put("/users/preferences", data);
       return response.data;
     } catch (error: any) {
       throw error;

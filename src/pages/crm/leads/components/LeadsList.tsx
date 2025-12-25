@@ -632,10 +632,7 @@ const LeadsList: FC<LeadsListProps> = ({
             )}
             {lead.companyName && (
               <span className="text-xs text-white/70 cursor-default">
-                |{" "}
-                {lead.companyName.length > 20
-                  ? `${lead.companyName.slice(0, 20)}...`
-                  : lead.companyName}
+                | {lead.companyName}
               </span>
             )}
           </div>

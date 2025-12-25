@@ -27,6 +27,7 @@ import LeadEnrichmentModal from "@/components/lead-enrichment/LeadEnrichmentModa
 import SeniorityQuickSelector from "@/components/lead-enrichment/SeniorityQuickSelector";
 import { useEnrichmentConfigs } from "@/hooks/useEnrichmentConfigs";
 import type { SeniorityLevel } from "@/types/leadEnrichment";
+import { userService } from "@/services/user.service";
 
 const COMPANY_EMPLOYEE_RANGES = [
   { value: "all", label: "All company sizes" },
@@ -52,6 +53,40 @@ const index = () => {
 
   // Fetch dynamic enrichment configs
   const { seniorityOptions } = useEnrichmentConfigs();
+
+  // Load user preferences on mount
+  useEffect(() => {
+    const loadPreferences = async () => {
+      try {
+        const response = await userService.getUserPreferences();
+        if (response.success && response.data.preferences?.enrichment?.selectedSeniorities) {
+          setSelectedSeniorities(response.data.preferences.enrichment.selectedSeniorities as SeniorityLevel[]);
+        }
+      } catch (error) {
+        console.error("Failed to load user preferences:", error);
+      }
+    };
+    loadPreferences();
+  }, []);
+
+  // Save user preferences when seniority selection changes
+  useEffect(() => {
+    const savePreferences = async () => {
+      try {
+        await userService.updateUserPreferences({
+          selectedSeniorities,
+        });
+      } catch (error) {
+        console.error("Failed to save user preferences:", error);
+      }
+    };
+
+    // Only save if we have loaded initial preferences (to avoid saving empty array on mount)
+    // We check if seniorityOptions are loaded to ensure configs are ready
+    if (seniorityOptions.length > 0) {
+      savePreferences();
+    }
+  }, [selectedSeniorities, seniorityOptions.length]);
 
   // Companies filters and pagination
   const [companiesPage, setCompaniesPage] = useState(1);
