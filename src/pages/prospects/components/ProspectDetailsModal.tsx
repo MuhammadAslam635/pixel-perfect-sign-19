@@ -10,6 +10,11 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   Building2,
   Globe,
   Users2,
@@ -21,6 +26,9 @@ import {
   Linkedin,
   Twitter,
   Facebook,
+  ExternalLink,
+  TrendingUp,
+  Briefcase,
 } from "lucide-react";
 import type { Client } from "@/services/clients.service";
 import { AvatarFallback } from "@/components/ui/avatar-fallback";
@@ -104,86 +112,98 @@ const ProspectDetailsModal: React.FC<ProspectDetailsModalProps> = ({
 
           <div className="space-y-6">
             {/* Company Overview */}
-            <Card className="bg-white/5 backdrop-blur-sm border-white/10 shadow-lg">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2 text-white drop-shadow-md">
-                  <Building2 className="w-5 h-5" />
-                  Company Overview
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex items-start gap-3">
-                    <Globe className="w-5 h-5 text-gray-400 mt-0.5" />
-                    <div className="flex-1">
-                      <p className="text-sm text-gray-300/80">Website</p>
-                      {prospect.companyWebsite ? (
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-white px-1">
+                Company Overview
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {prospect.companyWebsite && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-[#1a1a1a] border border-white/10 hover:bg-white/20 transition-colors cursor-pointer">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <Globe className="w-4 h-4 text-white/60 flex-shrink-0" />
+                          <span className="text-xs text-white truncate">{prospect.companyWebsite}</span>
+                        </div>
                         <a
                           href={`https://${prospect.companyWebsite}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-sm text-blue-400 hover:underline break-all"
+                          className="flex items-center gap-1 text-[10px] text-cyan-400 hover:text-cyan-300 transition-colors ml-2 flex-shrink-0"
+                          onClick={(e) => e.stopPropagation()}
                         >
-                          {prospect.companyWebsite}
+                          Visit <ExternalLink className="w-3 h-3" />
                         </a>
-                      ) : (
-                        <p className="text-sm text-white">N/A</p>
-                      )}
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Website: {prospect.companyWebsite}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#1a1a1a] border border-white/10 hover:bg-white/20 transition-colors">
+                      <Users2 className="w-4 h-4 text-white/60 flex-shrink-0" />
+                      <span className="text-xs text-white truncate">
+                        {prospect.people?.length || 0} People listed
+                      </span>
                     </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <Users2 className="w-5 h-5 text-gray-400 mt-0.5" />
-                    <div className="flex-1">
-                      <p className="text-sm text-gray-300/80">Number of People</p>
-                      <p className="text-sm text-white">{prospect.people?.length || 0}</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Total People found: {prospect.people?.length || 0}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            </div>
 
             {/* Contact Information */}
-            <Card className="bg-white/5 backdrop-blur-sm border-white/10 shadow-lg">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2 text-white drop-shadow-md">
-                  <Mail className="w-5 h-5" />
-                  Contact Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Mail className="w-4 h-4 text-gray-400" />
-                    <p className="text-sm text-gray-300/80">Company Emails ({validEmails.length})</p>
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-white px-1">
+                Contact Information
+              </h3>
+              <div className="space-y-2">
+                {validEmails.length > 0 && (
+                  <div className="space-y-1">
+                    {validEmails.map((email, idx) => (
+                      <Tooltip key={`email-${idx}`}>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-[#1a1a1a] border border-white/10 hover:bg-white/20 transition-colors">
+                            <Mail className="w-4 h-4 text-white/60 flex-shrink-0" />
+                            <span className="text-xs text-white truncate">{email}</span>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Company Email: {email}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    ))}
                   </div>
-                  {validEmails.length > 0 ? (
-                    <div className="space-y-1 ml-6">
-                      {validEmails.map((email, idx) => (
-                        <p key={idx} className="text-sm text-white break-all">{email}</p>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-gray-400 ml-6">No emails found</p>
-                  )}
-                </div>
-                <Separator className="bg-white/10" />
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Phone className="w-4 h-4 text-gray-400" />
-                    <p className="text-sm text-gray-300/80">Company Phones ({validPhones.length})</p>
+                )}
+                {validPhones.length > 0 && (
+                  <div className="space-y-1">
+                    {validPhones.map((phone, idx) => (
+                      <Tooltip key={`phone-${idx}`}>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-[#1a1a1a] border border-white/10 hover:bg-white/20 transition-colors">
+                            <Phone className="w-4 h-4 text-white/60 flex-shrink-0" />
+                            <span className="text-xs text-white truncate">{phone}</span>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Company Phone: {phone}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    ))}
                   </div>
-                  {validPhones.length > 0 ? (
-                    <div className="space-y-1 ml-6">
-                      {validPhones.map((phone, idx) => (
-                        <p key={idx} className="text-sm text-white">{phone}</p>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-gray-400 ml-6">No phones found</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+                )}
+                {validEmails.length === 0 && validPhones.length === 0 && (
+                  <div className="p-4 rounded-lg bg-[#1a1a1a] border border-white/10 text-center">
+                    <p className="text-xs text-white/40">No contact information found</p>
+                  </div>
+                )}
+              </div>
+            </div>
 
             {/* People */}
             {prospect.people && prospect.people.length > 0 && (
@@ -247,56 +267,96 @@ const ProspectDetailsModal: React.FC<ProspectDetailsModalProps> = ({
 
             {/* Organization Details (from primary person if available) */}
             {primaryPerson && (
-              <Card className="bg-white/5 backdrop-blur-sm border-white/10 shadow-lg">
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2 text-white drop-shadow-md">
-                    <Building2 className="w-5 h-5" />
-                    Organization Details
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {primaryPerson.estimated_num_employees && (
-                      <div>
-                        <p className="text-sm text-gray-300/80">Employees</p>
-                        <p className="text-sm text-white">{formatNumber(primaryPerson.estimated_num_employees)}</p>
-                      </div>
-                    )}
-                    {primaryPerson.organization_founded_year && (
-                      <div>
-                        <p className="text-sm text-gray-300/80">Founded</p>
-                        <p className="text-sm text-white">{primaryPerson.organization_founded_year}</p>
-                      </div>
-                    )}
-                    {primaryPerson.organization_annual_revenue && (
-                      <div>
-                        <p className="text-sm text-gray-300/80">Annual Revenue</p>
-                        <p className="text-sm text-white">{formatCurrency(primaryPerson.organization_annual_revenue)}</p>
-                      </div>
-                    )}
-                    {primaryPerson.organization_total_funding && (
-                      <div>
-                        <p className="text-sm text-gray-300/80">Total Funding</p>
-                        <p className="text-sm text-white">{formatCurrency(primaryPerson.organization_total_funding)}</p>
-                      </div>
-                    )}
-                    {primaryPerson.organization_city && primaryPerson.organization_country && (
-                      <div>
-                        <p className="text-sm text-gray-300/80">Location</p>
-                        <p className="text-sm text-white">
-                          {primaryPerson.organization_city}, {primaryPerson.organization_state && `${primaryPerson.organization_state}, `}{primaryPerson.organization_country}
-                        </p>
-                      </div>
-                    )}
-                    {primaryPerson.organization_seo_description && (
-                      <div className="md:col-span-2">
-                        <p className="text-sm text-gray-300/80">Description</p>
-                        <p className="text-sm text-white mt-1">{primaryPerson.organization_seo_description}</p>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-white px-1">
+                  Organization Details
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {primaryPerson.estimated_num_employees && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#1a1a1a] border border-white/10 hover:bg-white/20 transition-colors">
+                          <Users2 className="w-4 h-4 text-white/60 flex-shrink-0" />
+                          <span className="text-xs text-white truncate">
+                            {formatNumber(primaryPerson.estimated_num_employees)} employees
+                          </span>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Estimated Employees: {formatNumber(primaryPerson.estimated_num_employees)}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+                  {primaryPerson.organization_founded_year && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#1a1a1a] border border-white/10 hover:bg-white/20 transition-colors">
+                          <Calendar className="w-4 h-4 text-white/60 flex-shrink-0" />
+                          <span className="text-xs text-white truncate">
+                            Founded in {primaryPerson.organization_founded_year}
+                          </span>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Founded Year: {primaryPerson.organization_founded_year}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+                  {primaryPerson.organization_annual_revenue && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#1a1a1a] border border-white/10 hover:bg-white/20 transition-colors">
+                          <DollarSign className="w-4 h-4 text-white/60 flex-shrink-0" />
+                          <span className="text-xs text-white truncate">
+                            {formatCurrency(primaryPerson.organization_annual_revenue)} / year
+                          </span>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Annual Revenue: {formatCurrency(primaryPerson.organization_annual_revenue)}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+                  {primaryPerson.organization_total_funding && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#1a1a1a] border border-white/10 hover:bg-white/20 transition-colors">
+                          <TrendingUp className="w-4 h-4 text-white/60 flex-shrink-0" />
+                          <span className="text-xs text-white truncate">
+                            {formatCurrency(primaryPerson.organization_total_funding)} total funding
+                          </span>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Total Funding: {formatCurrency(primaryPerson.organization_total_funding)}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+                  {primaryPerson.organization_city && primaryPerson.organization_country && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#1a1a1a] border border-white/10 hover:bg-white/20 transition-colors md:col-span-2">
+                          <MapPin className="w-4 h-4 text-white/60 flex-shrink-0" />
+                          <span className="text-xs text-white truncate">
+                            {primaryPerson.organization_city}, {primaryPerson.organization_state && `${primaryPerson.organization_state}, `}{primaryPerson.organization_country}
+                          </span>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Location: {primaryPerson.organization_city}, {primaryPerson.organization_state && `${primaryPerson.organization_state}, `}{primaryPerson.organization_country}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+                  {primaryPerson.organization_seo_description && (
+                    <div className="md:col-span-2 p-3 rounded-lg bg-[#1a1a1a] border border-white/10">
+                      <p className="text-[10px] uppercase tracking-wider font-bold text-white/40 mb-1">Description</p>
+                      <p className="text-xs text-white leading-relaxed line-clamp-3">
+                        {primaryPerson.organization_seo_description}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
             )}
           </div>
         </div>

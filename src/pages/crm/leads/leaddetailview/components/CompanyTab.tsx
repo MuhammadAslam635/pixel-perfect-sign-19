@@ -12,9 +12,20 @@ import {
   Mail,
   Phone,
   Linkedin,
+  Facebook,
+  DollarSign,
+  TrendingUp,
+  Calendar,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AvatarFallback } from "@/components/ui/avatar-fallback";
+import { CompanyLogoFallback } from "@/components/ui/company-logo-fallback";
+import { companiesService } from "@/services/companies.service";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 type CompanyTabProps = {
   lead?: Lead;
@@ -52,6 +63,59 @@ const CompanyTab: FC<CompanyTabProps> = ({ lead }) => {
     ? allLeads.filter((l) => l.companyName === companyName)
     : allLeads;
 
+  // Fetch full company details
+  const { data: fullCompany } = useQuery({
+    queryKey: ["company-details", companyId],
+    queryFn: () => (companyId ? companiesService.getCompanyById(companyId) : null),
+    enabled: !!companyId,
+  });
+
+  const displayCompany = fullCompany || company;
+
+  // Helper function to format large financial numbers
+  const formatFinancialValue = (value: string | number | null | undefined): string => {
+    if (value === null || value === undefined) return "";
+    const num = typeof value === "string" ? parseFloat(value) : value;
+    if (isNaN(num)) return value.toString();
+
+    // If it's already a formatted string like "39.0B", just return it
+    if (typeof value === "string" && /[KMBT]$/i.test(value)) return value;
+
+    if (num >= 1e12) return (num / 1e12).toFixed(1) + "T";
+    if (num >= 1e9) return (num / 1e9).toFixed(1) + "B";
+    if (num >= 1e6) return (num / 1e6).toFixed(1) + "M";
+    if (num >= 1e3) return (num / 1e3).toFixed(1) + "K";
+    return num.toString();
+  };
+
+  // Helper function to get revenue with fallback
+  const getRevenue = () => {
+    const dc = displayCompany as any;
+    if (dc?.revenue) return dc.revenue;
+    if (dc?.organization_revenue_printed)
+      return dc.organization_revenue_printed;
+    if (dc?.organization_revenue) return dc.organization_revenue;
+    return null;
+  };
+
+  const revenue = getRevenue();
+  const dc = displayCompany as any;
+  const marketCap = dc?.marketcap;
+  const foundedYear = dc?.foundedYear;
+  const companyPhone = dc?.phone;
+
+  // Social Links
+  const linkedinUrl = dc?.linkedinUrl || dc?.linkedin_url;
+  const facebookUrl = dc?.facebook;
+
+  const getFullUrl = (url: string | null | undefined): string => {
+    if (!url) return "";
+    if (!url.startsWith("http://") && !url.startsWith("https://")) {
+      return `https://${url}`;
+    }
+    return url;
+  };
+
   if (!companyName && !company) {
     return (
       <div className="flex flex-col">
@@ -69,33 +133,66 @@ const CompanyTab: FC<CompanyTabProps> = ({ lead }) => {
   }
 
   return (
-    <div className="flex flex-col space-y-6">
+    <div className="flex flex-col space-y-4">
       {/* Company Header */}
-      <div className="flex items-start gap-4">
-        {company?.logo && (
-          <div className="w-16 h-16 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
-            <img
-              src={company.logo}
-              alt={`${companyName} logo`}
-              className="w-12 h-12 object-contain rounded"
-            />
-          </div>
-        )}
-        <div className="flex-1 min-w-0">
-          <h2 className="text-xs sm:text-sm font-semibold text-white mb-2">
+      <div className="flex items-start gap-4 mb-2">
+        <div className="flex flex-col gap-2">
+          <CompanyLogoFallback
+            name={companyName || ""}
+            logo={company?.logo}
+            size="md"
+            className="rounded-xl border border-white/10 shadow-sm"
+          />
+          
+          {(linkedinUrl || facebookUrl) && (
+            <div className="flex items-center gap-2 px-0.5">
+              {linkedinUrl && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <a
+                      href={getFullUrl(linkedinUrl)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center w-6 h-6 rounded-full border border-white bg-white text-gray-900 transition-colors hover:bg-white/90 shadow-sm"
+                    >
+                      <Linkedin className="w-3.5 h-3.5" />
+                    </a>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Company LinkedIn</p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
+              {facebookUrl && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <a
+                      href={getFullUrl(facebookUrl)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center w-6 h-6 rounded-full border border-white bg-white text-gray-900 transition-colors hover:bg-white/90 shadow-sm"
+                    >
+                      <Facebook className="w-3.5 h-3.5" />
+                    </a>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Company Facebook</p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="flex-1 min-w-0 py-1">
+          <h2 className="text-base font-bold text-white mb-1 truncate">
             {companyName}
           </h2>
-          <div className="flex flex-wrap items-center gap-4 text-xs text-white/60">
-            {companyLocation && (
-              <div className="flex items-center gap-1">
-                <MapPin className="w-4 h-4" />
-                <span>{companyLocation}</span>
-              </div>
-            )}
+          <div className="flex flex-col gap-1.5 min-w-0">
             {company?.industry && (
-              <div className="flex items-center gap-1">
-                <Briefcase className="w-4 h-4" />
-                <span>{company.industry}</span>
+              <div className="flex items-center gap-1.5 text-xs text-white/60">
+                <Briefcase className="w-3.5 h-3.5 flex-shrink-0" />
+                <span className="truncate">{company.industry}</span>
               </div>
             )}
           </div>
@@ -103,65 +200,150 @@ const CompanyTab: FC<CompanyTabProps> = ({ lead }) => {
       </div>
 
       {/* Company Details */}
-      <div className="space-y-4">
+      <div className="space-y-1.5">
         {company?.website && (
-          <div className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/10">
-            <div className="flex items-center gap-3">
-              <Globe className="w-5 h-5 text-white/60" />
-              <div>
-                <p className="text-xs font-medium text-white">Website</p>
-                <p className="text-xs text-white/60">{company.website}</p>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-[#1a1a1a] border border-white/10 hover:bg-white/20 transition-colors cursor-pointer">
+                <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                  <Globe className="w-3 h-3 text-white/60 flex-shrink-0" />
+                  <p className="text-[10px] text-white truncate">{company.website}</p>
+                </div>
+                <a
+                  href={
+                    company.website.startsWith("http")
+                      ? company.website
+                      : `https://${company.website}`
+                  }
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-[10px] text-cyan-400 hover:text-cyan-300 transition-colors ml-2 flex-shrink-0"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  Visit <ExternalLink className="w-2.5 h-2.5" />
+                </a>
               </div>
-            </div>
-            <a
-              href={
-                company.website.startsWith("http")
-                  ? company.website
-                  : `https://${company.website}`
-              }
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
-            >
-              Visit <ExternalLink className="w-3 h-3" />
-            </a>
-          </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{company.website}</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
+
+        {companyPhone && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1a1a] border border-white/10 hover:bg-white/20 transition-colors cursor-pointer">
+                <Phone className="w-3 h-3 text-white/60 flex-shrink-0" />
+                <a
+                  href={`tel:${companyPhone}`}
+                  className="text-[10px] text-white truncate hover:underline"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {companyPhone}
+                </a>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Phone: {companyPhone}</p>
+            </TooltipContent>
+          </Tooltip>
         )}
 
         {company?.employees && (
-          <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10">
-            <Users className="w-5 h-5 text-white/60" />
-            <div>
-              <p className="text-xs font-medium text-white">Company Size</p>
-              <p className="text-xs text-white/60">
-                {company.employees > 1000
-                  ? `${Math.floor(company.employees / 1000)}K+ employees`
-                  : `${company.employees} employees`}
-              </p>
-            </div>
-          </div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1a1a] border border-white/10 hover:bg-white/20 transition-colors">
+                <Users className="w-3 h-3 text-white/60 flex-shrink-0" />
+                <p className="text-[10px] text-white truncate">
+                  {company.employees > 1000
+                    ? `${Math.floor(company.employees / 1000)}K+ employees`
+                    : `${company.employees} employees`}
+                </p>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Company Size: {company.employees} employees</p>
+            </TooltipContent>
+          </Tooltip>
         )}
 
-        {company?.address && companyLocation !== company.address && (
-          <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10">
-            <MapPin className="w-5 h-5 text-white/60" />
-            <div>
-              <p className="text-xs font-medium text-white">Address</p>
-              <p className="text-xs text-white/60">{company.address}</p>
-            </div>
-          </div>
+        {companyLocation && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1a1a] border border-white/10 hover:bg-white/20 transition-colors">
+                <MapPin className="w-3 h-3 text-white/60 flex-shrink-0" />
+                <p className="text-[10px] text-white truncate">{companyLocation}</p>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{companyLocation}</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
+
+        {revenue && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1a1a] border border-white/10 hover:bg-white/20 transition-colors">
+                <DollarSign className="w-3 h-3 text-white/60 flex-shrink-0" />
+                <p className="text-[10px] text-white truncate">
+                  Revenue: ${formatFinancialValue(revenue)}
+                </p>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Annual Revenue: ${formatFinancialValue(revenue)}</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
+
+        {marketCap && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1a1a] border border-white/10 hover:bg-white/20 transition-colors">
+                <TrendingUp className="w-3 h-3 text-white/60 flex-shrink-0" />
+                <p className="text-[10px] text-white truncate">
+                  Market Cap: ${formatFinancialValue(marketCap)}
+                </p>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Market Capitalization: ${formatFinancialValue(marketCap)}</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
+
+        {foundedYear && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1a1a] border border-white/10 hover:bg-white/20 transition-colors">
+                <Calendar className="w-3 h-3 text-white/60 flex-shrink-0" />
+                <p className="text-[10px] text-white truncate">
+                  Founded: {foundedYear}
+                </p>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Founded: {foundedYear}</p>
+            </TooltipContent>
+          </Tooltip>
         )}
 
         {/* Lead's Position in Company */}
-        {lead?.position && (
-          <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10">
-            <Briefcase className="w-5 h-5 text-white/60" />
-            <div>
-              <p className="text-xs font-medium text-white">Position</p>
-              <p className="text-xs text-white/60">{lead.position}</p>
-            </div>
-          </div>
-        )}
+        {/* {lead?.position && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1a1a] border border-white/10 hover:bg-white/20 transition-colors">
+                <Briefcase className="w-3 h-3 text-white/60 flex-shrink-0" />
+                <p className="text-[10px] text-white truncate">{lead.position}</p>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Position: {lead.position}</p>
+            </TooltipContent>
+          </Tooltip>
+        )} */}
       </div>
 
       {/* Company Leads Section */}
