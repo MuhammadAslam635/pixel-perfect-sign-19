@@ -310,7 +310,6 @@ const LeadChat = ({
         isAvailable: whatsappAvailable,
       },
 
-      
       { label: "SMS", status: smsStatus, isAvailable: smsAvailable },
       { label: "Call", status: smsStatus, isAvailable: smsAvailable },
       {
@@ -2360,7 +2359,7 @@ const LeadChat = ({
                           onBlur={() => {
                             // Keep editable mode, but allow user to click outside
                           }}
-                          className="w-full min-h-[400px] bg-transparent text-white/90 outline-none resize-none font-sans text-sm leading-relaxed selection:bg-green-500/40"
+                          className="w-full min-h-[400px] bg-transparent text-white/90 outline-none resize-none font-sans text-sm leading-relaxed selection:bg-green-500/40 overflow-y-hidden"
                           style={{
                             fontFamily: "inherit",
                           }}
