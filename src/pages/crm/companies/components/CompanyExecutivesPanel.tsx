@@ -1,4 +1,4 @@
-import { FC, useState, useEffect } from "react";
+import { FC, useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import {
@@ -39,12 +39,17 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
   const [showLoadingSkeleton, setShowLoadingSkeleton] = useState(false);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [shouldPoll, setShouldPoll] = useState(false);
+  const previousCompanyId = useRef<string | undefined>(undefined);
 
-  // Automatically show leads when a company is selected
+  // Reset tabs only when switching to a DIFFERENT company
   useEffect(() => {
-    if (company?._id) {
+    const currentCompanyId = company?._id;
+
+    // Only reset if the company ID actually changed (not just a data refresh)
+    if (currentCompanyId && currentCompanyId !== previousCompanyId.current) {
       setActiveTab("details");
       setShowLeads(false);
+      previousCompanyId.current = currentCompanyId;
     }
   }, [company?._id]);
 
