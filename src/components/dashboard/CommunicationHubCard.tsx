@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { AvatarFallback } from "@/components/ui/avatar-fallback";
 import { Bell, Target } from "lucide-react";
 import {
   dashboardService,
@@ -71,18 +71,10 @@ export default function CommunicationHubCard() {
 
       <div className="space-y-1.5 lg:space-y-2">
         <div className="flex items-center gap-2 lg:gap-3 p-2 lg:p-3 teal-row transition-smooth">
-          <Avatar className="w-6 h-6 lg:w-8 lg:h-8 flex-shrink-0">
-            <AvatarFallback
-              className="text-[10px] lg:text-xs"
-              style={{
-                background:
-                  "linear-gradient(180deg, rgba(103,178,183,0.20) 0%, rgba(103,178,183,0.14) 100%)",
-                color: "#67B2B7",
-              }}
-            >
-              SJ
-            </AvatarFallback>
-          </Avatar>
+          <AvatarFallback
+            name="Sarah Johnson"
+            size="xs"
+          />
           <div className="flex-1 min-w-0">
             <p className="text-[10px] lg:text-sm font-normal text-foreground truncate leading-tight">
               Call with Sarah Johnson
@@ -94,18 +86,10 @@ export default function CommunicationHubCard() {
         </div>
 
         <div className="flex items-center gap-2 lg:gap-3 p-2 lg:p-3 teal-row transition-smooth">
-          <Avatar className="w-6 h-6 lg:w-8 lg:h-8 flex-shrink-0">
-            <AvatarFallback
-              className="text-[10px] lg:text-xs"
-              style={{
-                background:
-                  "linear-gradient(180deg, rgba(103,178,183,0.20) 0%, rgba(103,178,183,0.14) 100%)",
-                color: "#67B2B7",
-              }}
-            >
-              ME
-            </AvatarFallback>
-          </Avatar>
+          <AvatarFallback
+            name="Mark Evans"
+            size="xs"
+          />
           <div className="flex-1 min-w-0">
             <p className="text-[10px] lg:text-sm font-normal text-foreground truncate leading-tight">
               Email from Mark Evans

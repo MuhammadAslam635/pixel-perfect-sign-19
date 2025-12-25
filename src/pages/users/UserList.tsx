@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { AvatarFallback } from "@/components/ui/avatar-fallback";
 import { useSelector } from "react-redux";
 import { AnimatePresence, motion } from "framer-motion";
 import { RootState } from "@/store/store";
@@ -719,21 +720,12 @@ const UserList = () => {
                                     </div>
                                     <div className="flex items-center justify-center relative">
                                       <div className="flex-shrink-0">
-                                        {user.profileImage ? (
-                                          <img
-                                            src={user.profileImage}
-                                            alt={resolveUserDisplayName(user)}
-                                            className="w-14 h-14 rounded-full object-cover border-2 border-white/20"
-                                          />
-                                        ) : (
-                                          <div className="w-16 h-16 rounded-full bg-[#222B2C]/95 backdrop-blur-sm flex items-center justify-center">
-                                            <span className="text-white font-semibold text-sm">
-                                              {resolveUserDisplayName(user)
-                                                .charAt(0)
-                                                .toUpperCase()}
-                                            </span>
-                                          </div>
-                                        )}
+                                        <AvatarFallback
+                                          name={resolveUserDisplayName(user)}
+                                          pictureUrl={user.profileImage}
+                                          size="md"
+                                          className="border-2 border-white/20"
+                                        />
                                       </div>
                                     </div>
                                     <div className="flex-1 text-left">

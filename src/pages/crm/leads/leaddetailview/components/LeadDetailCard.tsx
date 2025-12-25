@@ -18,7 +18,7 @@ const getTimezoneAbbreviation = (timezone: string): string => {
     return timezone;
   }
 };
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { AvatarFallback } from "@/components/ui/avatar-fallback";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Phone,
@@ -583,12 +583,12 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
         <CardContent className="p-4 flex-1 min-h-0 overflow-y-auto scrollbar-hide">
           {/* Profile Section */}
           <div className="flex flex-col items-center mb-6">
-            <Avatar className="h-20 w-20 mb-3 border-2 border-white/20">
-              <AvatarImage src={avatarSrc} alt={lead.name} />
-              <AvatarFallback className="bg-[#3d4f51] text-white text-2xl">
-                {avatarLetter}
-              </AvatarFallback>
-            </Avatar>
+            <AvatarFallback
+              name={lead.name}
+              pictureUrl={avatarSrc}
+              size="lg"
+              className="mb-3 border-2 border-white/20"
+            />
             <h2 className="text-xs sm:text-sm font-semibold text-white mb-1 text-center break-words">
               {lead.name}
             </h2>

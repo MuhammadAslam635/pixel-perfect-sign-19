@@ -1,9 +1,9 @@
-import { FC } from "react";
+import { FC, useState } from "react";
 
 interface AvatarFallbackProps {
   name: string;
   pictureUrl?: string;
-  size?: "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg";
   className?: string;
 }
 
@@ -46,7 +46,10 @@ export const AvatarFallback: FC<AvatarFallbackProps> = ({
   size = "md",
   className = "",
 }) => {
+  const [hasError, setHasError] = useState(false);
+
   const sizeClasses = {
+    xs: "w-8 h-8 text-[10px]",
     sm: "w-8 h-8 sm:w-10 sm:h-10 text-xs",
     md: "w-12 h-12 sm:w-14 sm:h-14 text-sm sm:text-base",
     lg: "w-16 h-16 sm:w-20 sm:h-20 text-base sm:text-lg",
@@ -55,36 +58,24 @@ export const AvatarFallback: FC<AvatarFallbackProps> = ({
   const initials = getInitials(name);
   const gradientColor = getColorFromName(name);
 
-  if (pictureUrl) {
-    return (
-      <div className={`${sizeClasses[size]} rounded-full overflow-hidden border-2 border-primary/40 bg-white/5 flex-shrink-0 ${className}`}>
+  const renderFallback = () => (
+    <div className={`w-full h-full bg-gradient-to-br ${gradientColor} flex items-center justify-center font-semibold text-white`}>
+      {initials}
+    </div>
+  );
+
+  return (
+    <div className={`${sizeClasses[size]} rounded-full overflow-hidden border-2 border-primary/40 bg-white/5 flex-shrink-0 ${className}`}>
+      {pictureUrl && !hasError ? (
         <img
           src={pictureUrl}
           alt={name}
           className="w-full h-full object-cover"
-          onError={(e) => {
-            // Replace with initials fallback on error
-            const target = e.target as HTMLImageElement;
-            target.style.display = "none";
-            const parent = target.parentElement;
-            if (parent) {
-              parent.innerHTML = `
-                <div class="w-full h-full bg-gradient-to-br ${gradientColor} flex items-center justify-center font-semibold text-white">
-                  ${initials}
-                </div>
-              `;
-            }
-          }}
+          onError={() => setHasError(true)}
         />
-      </div>
-    );
-  }
-
-  return (
-    <div className={`${sizeClasses[size]} rounded-full overflow-hidden border-2 border-primary/40 flex-shrink-0 ${className}`}>
-      <div className={`w-full h-full bg-gradient-to-br ${gradientColor} flex items-center justify-center font-semibold text-white`}>
-        {initials}
-      </div>
+      ) : (
+        renderFallback()
+      )}
     </div>
   );
 };

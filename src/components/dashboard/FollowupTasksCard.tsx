@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { AvatarFallback } from "@/components/ui/avatar-fallback";
 import {
   CheckSquare,
   ArrowRight,
@@ -123,16 +123,10 @@ export default function FollowupTasksCard() {
                     <span className="text-[10px] lg:text-sm font-normal text-foreground leading-tight">
                       {task.leadName}
                     </span>
-                    <Avatar className="w-4 h-4 lg:w-5 lg:h-5 flex-shrink-0">
-                      <AvatarFallback className="bg-primary/20 text-primary text-[8px] lg:text-[10px]">
-                        {task.leadName
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")
-                          .toUpperCase()
-                          .slice(0, 2)}
-                      </AvatarFallback>
-                    </Avatar>
+                    <AvatarFallback
+                      name={task.leadName}
+                      size="xs"
+                    />
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-[9px] lg:text-xs text-muted-foreground/70 capitalize">

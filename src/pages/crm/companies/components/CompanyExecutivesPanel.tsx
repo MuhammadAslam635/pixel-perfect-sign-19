@@ -19,6 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Company, CompanyPerson, companiesService } from "@/services/companies.service";
 import { CompanyLogoFallback } from "@/components/ui/company-logo-fallback";
 import { Card } from "@/components/ui/card";
+import { AvatarFallback } from "@/components/ui/avatar-fallback";
 
 type CompanyExecutivesPanelProps = {
   company?: Company;
@@ -239,6 +240,11 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
                       className="relative overflow-hidden rounded-xl sm:rounded-2xl border border-white/15 bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] px-2 sm:px-3 py-2 mb-2 max-w-sm h-14 transition-all duration-300 hover:shadow-[0_12px_32px_rgba(0,0,0,0.3)] cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/60"
                     >
                       <div className="flex items-center justify-between gap-2 h-full">
+                        <AvatarFallback
+                          name={exec.name || "N/A"}
+                          pictureUrl={(exec.pictureUrl || exec.photo_url || exec.image) as string}
+                          size="xs"
+                        />
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-semibold text-white mb-0.5 truncate">
                             {exec.name || "N/A"}
@@ -369,7 +375,7 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
                {displayCompany ? (
                 <Card className="bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] border border-white/15 p-4 h-full overflow-y-auto">
                 {/* Logo and Name in same row */}
-                <div className="flex items-start gap-3 mb-4">
+                <div className="flex items-center gap-3 mb-4">
                   <div>
                     <CompanyLogoFallback
                       name={displayCompany.name}
@@ -378,7 +384,7 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
                     />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-white mb-1">
+                    <h3 className="text-lg font-semibold text-white -mb-1">
                       {displayCompany.name}
                     </h3>
                     {/* Website below name */}
@@ -423,7 +429,7 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
                         <Facebook className="w-3.5 h-3.5" />
                       </a>
                     )}
-                    {Boolean(displayCompany.phone) && (
+                    {/* {Boolean(displayCompany.phone) && (
                       <a
                         href={`tel:${displayCompany.phone}`}
                         className="flex items-center justify-center w-6 h-6 rounded-full border border-white bg-white text-gray-900 transition-colors hover:bg-white/90"
@@ -431,7 +437,7 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
                       >
                         <Phone className="w-3.5 h-3.5" />
                       </a>
-                    )}
+                    )} */}
                   </div>
                 )}
 
@@ -446,6 +452,21 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
 
                 {/* Details List */}
                 <div className="space-y-3.5">
+                  {/* Phone Number before address as requested */}
+                  {displayCompany.phone && (
+                    <div className="flex items-center gap-2">
+                      <Phone className="w-4 h-4 text-white/70 flex-shrink-0" />
+                      <div className="flex-1">
+                        <a
+                          href={`tel:${displayCompany.phone}`}
+                          className="text-sm text-white/80 hover:text-white hover:underline transition-colors"
+                        >
+                          {displayCompany.phone}
+                        </a>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Address */}
                   {displayCompany.address && (
                     <div className="space-y-2">
@@ -508,20 +529,6 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
                     </div>
                   )}
 
-                  {/* Phone Number */}
-                  {displayCompany.phone && (
-                    <div className="flex items-center gap-2">
-                      <Phone className="w-4 h-4 text-white/70 flex-shrink-0" />
-                      <div className="flex-1">
-                        <a
-                          href={`tel:${displayCompany.phone}`}
-                          className="text-sm text-white/80 hover:text-white hover:underline transition-colors"
-                        >
-                          {displayCompany.phone}
-                        </a>
-                      </div>
-                    </div>
-                  )}
 
                   {displayCompany.employees && (
                     <div className="flex items-center gap-2 text-sm text-white/70">

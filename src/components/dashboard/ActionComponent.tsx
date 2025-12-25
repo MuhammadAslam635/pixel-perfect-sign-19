@@ -11,6 +11,7 @@ import {
   useMarkNotificationAsRead,
 } from "@/hooks/useNotifications";
 import LongRunningTasksButton from "@/components/navigation/LongRunningTasksButton";
+import { AvatarFallback } from "@/components/ui/avatar-fallback";
 
 export const ActionComponent = () => {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -188,15 +189,12 @@ export const ActionComponent = () => {
           aria-expanded={profileOpen}
         >
           <div className="h-8 w-8 flex items-center justify-center overflow-hidden rounded-full border border-white/25 bg-gradient-to-br from-cyan-500/20 to-blue-600/20">
-            {currentUser?.profileImage ? (
-              <img
-                src={currentUser.profileImage}
-                alt={currentUser?.name || currentUser?.email || "User"}
-                className="h-8 w-8 object-cover"
-              />
-            ) : (
-              <UserIcon className="h-4 w-4 text-white/70" />
-            )}
+            <AvatarFallback
+              name={currentUser?.name || currentUser?.email || "User"}
+              pictureUrl={currentUser?.profileImage}
+              size="xs"
+              className="border-none"
+            />
           </div>
           <div className="hidden lg:flex flex-col text-left text-xs leading-tight text-white/70">
             <span className="font-medium text-white">

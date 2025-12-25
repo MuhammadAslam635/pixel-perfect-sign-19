@@ -23,6 +23,7 @@ import {
   Facebook,
 } from "lucide-react";
 import type { Client } from "@/services/clients.service";
+import { AvatarFallback } from "@/components/ui/avatar-fallback";
 
 interface ProspectDetailsModalProps {
   prospect: Client | null;
@@ -198,13 +199,11 @@ const ProspectDetailsModal: React.FC<ProspectDetailsModalProps> = ({
                     {prospect.people.map((person, idx) => (
                       <div key={idx} className="p-4 bg-white/5 border border-white/10 rounded-lg">
                         <div className="flex items-start gap-4">
-                          {person.photo_url && (
-                            <img
-                              src={person.photo_url}
-                              alt={person.name}
-                              className="w-16 h-16 rounded-full object-cover"
+                            <AvatarFallback
+                              name={person.name}
+                              pictureUrl={person.photo_url}
+                              size="md"
                             />
-                          )}
                           <div className="flex-1 min-w-0">
                             <h4 className="text-base font-semibold text-white">{person.name}</h4>
                             {person.title && (

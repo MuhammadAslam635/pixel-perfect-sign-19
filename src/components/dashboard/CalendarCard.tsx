@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { AvatarFallback } from "@/components/ui/avatar-fallback";
 import { Calendar, ArrowRight, Loader2 } from "lucide-react";
 import { dashboardService, CalendarEvent } from "@/services/dashboard.service";
 
@@ -106,16 +106,10 @@ export default function CalendarCard() {
                         {event.subject}
                       </p>
                       <div className="flex items-center gap-1.5 lg:gap-2 mt-0.5 lg:mt-1">
-                        <Avatar className="w-4 h-4 lg:w-5 lg:h-5 flex-shrink-0">
-                          <AvatarFallback className="bg-primary/20 text-primary text-[8px] lg:text-[10px]">
-                            {event.leadName
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")
-                              .toUpperCase()
-                              .slice(0, 2)}
-                          </AvatarFallback>
-                        </Avatar>
+                        <AvatarFallback
+                          name={event.leadName}
+                          size="xs"
+                        />
                         <span className="text-[9px] lg:text-xs text-muted-foreground/60">
                           {timeString}
                         </span>

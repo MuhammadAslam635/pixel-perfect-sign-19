@@ -28,7 +28,7 @@ import { SelectedCallLogView } from "../index";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { AvatarFallback } from "@/components/ui/avatar-fallback";
 
 type LeadChatProps = {
   lead?: Lead;
@@ -2010,16 +2010,11 @@ const LeadChat = ({
                     >
                       {!isOutbound && (
                         <div className="h-10 w-10 flex-shrink-0">
-                          <Avatar className="h-full w-full">
-                            <AvatarImage
-                              src={avatarSrc}
-                              alt={`${displayName} avatar`}
-                              className="object-cover"
-                            />
-                            <AvatarFallback className="bg-[#3d4f51] text-white text-lg">
-                              {avatarLetter}
-                            </AvatarFallback>
-                          </Avatar>
+                          <AvatarFallback
+                            name={displayName}
+                            pictureUrl={avatarSrc}
+                            size="sm"
+                          />
                         </div>
                       )}
                       <div
