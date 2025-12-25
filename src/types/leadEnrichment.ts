@@ -61,8 +61,8 @@ export interface EnrichmentFilters {
   roles?: SeniorityLevel[]; // Seniority levels
   regions?: string[]; // Geographic regions
   countries?: string[]; // Specific countries
-  revenueRange?: RevenueRange; // Revenue in millions (USD)
-  employeeRange?: EmployeeRange; // Number of employees
+  revenueRanges?: RangeOption[]; // Multiple revenue ranges (OR condition)
+  employeeRanges?: RangeOption[]; // Multiple employee ranges (OR condition)
 }
 
 // ========================================
@@ -158,7 +158,7 @@ export interface DomainEnrichmentResponse {
 // ========================================
 
 export interface QueryEnrichmentRequest {
-  query?: string;
+  query?: string; // Optional - query is auto-generated from filters
   filters?: EnrichmentFilters;
   maxCompanies?: number;
   usePerplexity?: boolean;

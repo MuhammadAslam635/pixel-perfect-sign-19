@@ -1,16 +1,11 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import {
-  Search,
   Sparkles,
   AlertCircle,
-  Filter,
-  ChevronDown,
-  ChevronUp,
   Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
@@ -43,9 +38,7 @@ const AdvancedQueryTab = ({ onEnrichmentStart }: AdvancedQueryTabProps) => {
     error: configsError,
   } = useEnrichmentConfigs();
 
-  const [query, setQuery] = useState("");
-  const [maxCompanies, setMaxCompanies] = useState(5);
-  const [showFilters, setShowFilters] = useState(false);
+  const [maxCompanies, setMaxCompanies] = useState(3);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Filters
@@ -54,8 +47,8 @@ const AdvancedQueryTab = ({ onEnrichmentStart }: AdvancedQueryTabProps) => {
     roles: [],
     regions: [],
     countries: [],
-    revenueRange: undefined,
-    employeeRange: undefined,
+    revenueRanges: [],
+    employeeRanges: [],
   });
 
   const updateFilters = (key: keyof EnrichmentFilters, value: any) => {
@@ -68,19 +61,15 @@ const AdvancedQueryTab = ({ onEnrichmentStart }: AdvancedQueryTabProps) => {
       (filters.roles?.length || 0) > 0 ||
       (filters.regions?.length || 0) > 0 ||
       (filters.countries?.length || 0) > 0 ||
-      (filters.revenueRange &&
-        (filters.revenueRange.min !== undefined ||
-          filters.revenueRange.max !== undefined)) ||
-      (filters.employeeRange &&
-        (filters.employeeRange.min !== undefined ||
-          filters.employeeRange.max !== undefined))
+      (filters.revenueRanges?.length || 0) > 0 ||
+      (filters.employeeRanges?.length || 0) > 0
     );
   };
 
   const handleEnrich = async () => {
     // Validation
-    if (!query.trim() && !hasActiveFilters()) {
-      toast.error("Please enter a search query or select filters");
+    if (!hasActiveFilters()) {
+      toast.error("Please select at least one filter");
       return;
     }
 
@@ -93,7 +82,6 @@ const AdvancedQueryTab = ({ onEnrichmentStart }: AdvancedQueryTabProps) => {
 
     try {
       const request: QueryEnrichmentRequest = {
-        query: query.trim() || undefined,
         filters,
         maxCompanies,
         usePerplexity: true,
@@ -128,8 +116,8 @@ const AdvancedQueryTab = ({ onEnrichmentStart }: AdvancedQueryTabProps) => {
       roles: [],
       regions: [],
       countries: [],
-      revenueRange: undefined,
-      employeeRange: undefined,
+      revenueRanges: [],
+      employeeRanges: [],
     });
     toast.info("All filters cleared");
   };
@@ -146,30 +134,9 @@ const AdvancedQueryTab = ({ onEnrichmentStart }: AdvancedQueryTabProps) => {
         <Sparkles className="w-4 h-4 text-[#69B4B7]" />
         <AlertDescription className="text-white/70 text-sm">
           <strong className="text-[#69B4B7]">AI-Powered Discovery:</strong>{" "}
-          Describe what you're looking for and use filters to narrow down
-          results. Perplexity AI will discover companies matching your criteria,
-          then enrich them with decision-makers.
+          Use filters to define your ideal companies. Our AI will discover companies matching your criteria and enrich them with decision-makers.
         </AlertDescription>
       </Alert>
-
-      {/* Search Query */}
-      <div className="space-y-3">
-        <label className="text-sm font-medium text-white/70 flex items-center gap-2">
-          <Search className="w-4 h-4 text-[#69B4B7]" />
-          Search Query
-        </label>
-        <Textarea
-          placeholder="e.g., Top 20 construction companies in the Middle East with revenue above $100M"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          rows={3}
-          className="bg-gradient-to-br from-gray-800/50 to-gray-900/30 border border-white/10 text-white placeholder:text-white/30 scrollbar-hide"
-        />
-        <p className="text-xs text-white/50">
-          Describe companies you want to find. Be specific about industry,
-          location, and size.
-        </p>
-      </div>
 
       {/* Max Companies */}
       <div className="space-y-3">
@@ -181,7 +148,7 @@ const AdvancedQueryTab = ({ onEnrichmentStart }: AdvancedQueryTabProps) => {
           min={1}
           max={50}
           value={maxCompanies}
-          onChange={(e) => setMaxCompanies(parseInt(e.target.value) || 5)}
+          onChange={(e) => setMaxCompanies(parseInt(e.target.value) || 3)}
           className="bg-gradient-to-br from-gray-800/50 to-gray-900/30 border border-white/10 text-white"
         />
         <p className="text-xs text-white/50">
@@ -192,28 +159,10 @@ const AdvancedQueryTab = ({ onEnrichmentStart }: AdvancedQueryTabProps) => {
 
       <Separator className="bg-white/10" />
 
-      {/* Filters Section */}
+      {/* Filters Section - Always Expanded */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <Button
-            variant="outline"
-            onClick={() => setShowFilters(!showFilters)}
-            className="border border-white/10 text-white/70 hover:bg-white/5"
-          >
-            <Filter className="w-4 h-4 mr-2" />
-            Advanced Filters
-            {hasActiveFilters() && (
-              <span className="ml-2 text-xs bg-gradient-to-r from-[#69B4B7] to-[#3E64B4] text-white px-2 py-0.5 rounded-full">
-                Active
-              </span>
-            )}
-            {showFilters ? (
-              <ChevronUp className="w-4 h-4 ml-2" />
-            ) : (
-              <ChevronDown className="w-4 h-4 ml-2" />
-            )}
-          </Button>
-
+          <h3 className="text-sm font-medium text-white/70">Filter Criteria</h3>
           {hasActiveFilters() && (
             <Button
               variant="ghost"
@@ -226,83 +175,76 @@ const AdvancedQueryTab = ({ onEnrichmentStart }: AdvancedQueryTabProps) => {
           )}
         </div>
 
-        {showFilters && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="space-y-6 p-4 bg-gradient-to-br from-gray-800/20 to-gray-900/10 rounded-lg border border-white/10"
-          >
-            {configsLoading ? (
-              <div className="flex items-center justify-center py-8 text-white/50">
-                <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                Loading filter options...
-              </div>
-            ) : configsError ? (
-              <Alert className="border-red-500/20 bg-red-500/10">
-                <AlertCircle className="h-4 w-4 text-red-500" />
-                <AlertDescription className="text-white/70">
-                  {configsError}
-                </AlertDescription>
-              </Alert>
-            ) : (
-              <>
-                {/* Industry Categories */}
-                <CategorySelector
-                  selectedCategories={filters.categories || []}
-                  onChange={(categories) => updateFilters("categories", categories)}
-                />
+        <div className="space-y-6 p-4 bg-gradient-to-br from-gray-800/20 to-gray-900/10 rounded-lg border border-white/10">
+          {configsLoading ? (
+            <div className="flex items-center justify-center py-8 text-white/50">
+              <Loader2 className="w-5 h-5 animate-spin mr-2" />
+              Loading filter options...
+            </div>
+          ) : configsError ? (
+            <Alert className="border-red-500/20 bg-red-500/10">
+              <AlertCircle className="h-4 w-4 text-red-500" />
+              <AlertDescription className="text-white/70">
+                {configsError}
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <>
+              {/* Industry Categories */}
+              <CategorySelector
+                selectedCategories={filters.categories || []}
+                onChange={(categories) => updateFilters("categories", categories)}
+              />
 
-                <Separator className="bg-white/10" />
+              <Separator className="bg-white/10" />
 
-                {/* Seniority Levels */}
-                <RoleSelector
-                  selectedRoles={filters.roles || []}
-                  onChange={(roles) => updateFilters("roles", roles)}
-                  seniorityOptions={seniorityOptions}
-                />
+              {/* Seniority Levels */}
+              <RoleSelector
+                selectedRoles={filters.roles || []}
+                onChange={(roles) => updateFilters("roles", roles)}
+                seniorityOptions={seniorityOptions}
+              />
 
-                <Separator className="bg-white/10" />
+              <Separator className="bg-white/10" />
 
-                {/* Regions & Countries */}
-                <RegionCountrySelector
-                  selectedRegions={filters.regions || []}
-                  selectedCountries={filters.countries || []}
-                  onRegionsChange={(regions) => updateFilters("regions", regions)}
-                  onCountriesChange={(countries) =>
-                    updateFilters("countries", countries)
-                  }
-                  regions={regions}
-                  countries={countries}
-                />
+              {/* Regions & Countries */}
+              <RegionCountrySelector
+                selectedRegions={filters.regions || []}
+                selectedCountries={filters.countries || []}
+                onRegionsChange={(regions) => updateFilters("regions", regions)}
+                onCountriesChange={(countries) =>
+                  updateFilters("countries", countries)
+                }
+                regions={regions}
+                countries={countries}
+              />
 
-                <Separator className="bg-white/10" />
+              <Separator className="bg-white/10" />
 
-                {/* Revenue Range */}
-                <RangeFilter
-                  type="revenue"
-                  value={filters.revenueRange}
-                  onChange={(range) => updateFilters("revenueRange", range)}
-                  ranges={revenueRanges}
-                />
+              {/* Revenue Ranges */}
+              <RangeFilter
+                type="revenue"
+                selectedRanges={filters.revenueRanges || []}
+                onChange={(ranges) => updateFilters("revenueRanges", ranges)}
+                ranges={revenueRanges}
+              />
 
-                <Separator className="bg-white/10" />
+              <Separator className="bg-white/10" />
 
-                {/* Employee Range */}
-                <RangeFilter
-                  type="employee"
-                  value={filters.employeeRange}
-                  onChange={(range) => updateFilters("employeeRange", range)}
-                  ranges={employeeRanges}
-                />
-              </>
-            )}
-          </motion.div>
-        )}
+              {/* Employee Ranges */}
+              <RangeFilter
+                type="employee"
+                selectedRanges={filters.employeeRanges || []}
+                onChange={(ranges) => updateFilters("employeeRanges", ranges)}
+                ranges={employeeRanges}
+              />
+            </>
+          )}
+        </div>
       </div>
 
       {/* Active Filters Summary */}
-      {hasActiveFilters() && !showFilters && (
+      {hasActiveFilters() && (
         <div className="p-3 bg-gradient-to-br from-gray-800/30 to-gray-900/20 border border-white/10 rounded-lg">
           <p className="text-xs text-white/70">
             <strong className="text-[#69B4B7]">Active Filters:</strong>
@@ -320,14 +262,12 @@ const AdvancedQueryTab = ({ onEnrichmentStart }: AdvancedQueryTabProps) => {
             {(filters.countries?.length || 0) > 0 && (
               <span className="ml-2">{filters.countries?.length} countries</span>
             )}
-            {filters.revenueRange &&
-              (filters.revenueRange.min || filters.revenueRange.max) && (
-                <span className="ml-2">revenue</span>
-              )}
-            {filters.employeeRange &&
-              (filters.employeeRange.min || filters.employeeRange.max) && (
-                <span className="ml-2">company size</span>
-              )}
+            {(filters.revenueRanges?.length || 0) > 0 && (
+              <span className="ml-2">{filters.revenueRanges?.length} revenue ranges</span>
+            )}
+            {(filters.employeeRanges?.length || 0) > 0 && (
+              <span className="ml-2">{filters.employeeRanges?.length} company sizes</span>
+            )}
           </p>
         </div>
       )}
@@ -337,12 +277,12 @@ const AdvancedQueryTab = ({ onEnrichmentStart }: AdvancedQueryTabProps) => {
         <Button
           onClick={handleEnrich}
           disabled={
-            (!query.trim() && !hasActiveFilters()) ||
+            !hasActiveFilters() ||
             isSubmitting ||
             maxCompanies < 1 ||
             maxCompanies > 50
           }
-          className="bg-gradient-to-r from-[#69B4B7] to-[#3E64B4] hover:from-[#69B4B7]/80 hover:to-[#3E64B4]/80 px-8"
+          className="bg-gradient-to-r from-[#69B4B7] via-[#5486D0] to-[#3E64B3] hover:brightness-110 px-8"
         >
           {isSubmitting ? (
             <>

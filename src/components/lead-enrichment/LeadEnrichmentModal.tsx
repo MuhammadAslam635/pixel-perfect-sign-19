@@ -72,7 +72,7 @@ const LeadEnrichmentModal = ({
         <VisuallyHidden>
           <DialogTitle>Lead Enrichment</DialogTitle>
           <DialogDescription>
-            Discover and enrich company leads with decision-makers using domain-specific or advanced query methods
+            Discover and enrich company leads with decision-makers using domain-specific or advanced filter methods
           </DialogDescription>
         </VisuallyHidden>
 
@@ -111,15 +111,15 @@ const LeadEnrichmentModal = ({
               <TabsList className="grid w-full grid-cols-2 bg-gradient-to-br from-gray-800/50 to-gray-900/30 border border-white/10 p-1">
                 <TabsTrigger
                   value="domain"
-                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#69B4B7] data-[state=active]:to-[#3E64B4] data-[state=active]:text-white text-white/50 transition-all"
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#69B4B7] data-[state=active]:via-[#5486D0] data-[state=active]:to-[#3E64B3] data-[state=active]:text-white text-white/50 transition-all"
                 >
                   Domain Specific
                 </TabsTrigger>
                 <TabsTrigger
                   value="query"
-                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#69B4B7] data-[state=active]:to-[#3E64B4] data-[state=active]:text-white text-white/50 transition-all"
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#69B4B7] data-[state=active]:via-[#5486D0] data-[state=active]:to-[#3E64B3] data-[state=active]:text-white text-white/50 transition-all"
                 >
-                  Advanced Query
+                  Advanced Filters
                 </TabsTrigger>
               </TabsList>
 
@@ -169,7 +169,7 @@ const LeadEnrichmentModal = ({
               ) : (
                 <>
                   <span className="font-semibold text-[#69B4B7]">
-                    Advanced Query:
+                    Advanced Filters:
                   </span>{" "}
                   AI-powered company discovery with custom filters
                 </>

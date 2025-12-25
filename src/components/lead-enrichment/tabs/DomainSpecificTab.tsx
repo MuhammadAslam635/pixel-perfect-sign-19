@@ -136,7 +136,7 @@ const DomainSpecificTab = ({ onEnrichmentStart }: DomainSpecificTabProps) => {
           <Button
             onClick={handleAddDomain}
             disabled={!domainInput.trim()}
-            className="bg-gradient-to-r from-[#69B4B7] to-[#3E64B4] hover:from-[#69B4B7]/80 hover:to-[#3E64B4]/80"
+            className="bg-gradient-to-r from-[#69B4B7] via-[#5486D0] to-[#3E64B3] hover:brightness-110"
           >
             <Plus className="w-4 h-4 mr-2" />
             Add
@@ -170,7 +170,7 @@ const DomainSpecificTab = ({ onEnrichmentStart }: DomainSpecificTabProps) => {
                 onClick={handleBulkAdd}
                 disabled={!bulkInput.trim()}
                 size="sm"
-                className="bg-gradient-to-r from-[#69B4B7] to-[#3E64B4] hover:from-[#69B4B7]/80 hover:to-[#3E64B4]/80"
+                className="bg-gradient-to-r from-[#69B4B7] via-[#5486D0] to-[#3E64B3] hover:brightness-110"
               >
                 <CheckCircle2 className="w-4 h-4 mr-2" />
                 Add All
@@ -263,7 +263,7 @@ const DomainSpecificTab = ({ onEnrichmentStart }: DomainSpecificTabProps) => {
         <Button
           onClick={handleEnrich}
           disabled={domains.length === 0 || isSubmitting}
-          className="bg-gradient-to-r from-[#69B4B7] to-[#3E64B4] hover:from-[#69B4B7]/80 hover:to-[#3E64B4]/80 px-8"
+          className="bg-gradient-to-r from-[#69B4B7] via-[#5486D0] to-[#3E64B3] hover:brightness-110 px-8"
         >
           {isSubmitting ? (
             <>

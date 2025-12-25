@@ -30,7 +30,7 @@ const RoleSelector = ({ selectedRoles, onChange, seniorityOptions }: RoleSelecto
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <label className="text-sm font-medium text-gray-200 flex items-center gap-2">
-          <Users className="w-4 h-4 text-purple-400" />
+          <Users className="w-4 h-4 text-blue-400" />
           Seniority Levels
         </label>
         <div className="flex gap-2">
@@ -64,7 +64,7 @@ const RoleSelector = ({ selectedRoles, onChange, seniorityOptions }: RoleSelecto
               <Badge
                 key={role}
                 variant="secondary"
-                className="bg-purple-900/40 text-purple-300 border-purple-500/30"
+                className="bg-blue-900/40 text-blue-300 border-blue-500/30"
               >
                 {option?.label}
                 <Button
@@ -91,15 +91,15 @@ const RoleSelector = ({ selectedRoles, onChange, seniorityOptions }: RoleSelecto
               onClick={() => toggleRole(option.value)}
               className={`p-3 rounded-lg border cursor-pointer transition-all ${
                 isSelected
-                  ? "bg-purple-900/30 border-purple-500/50"
-                  : "bg-gray-800/30 border-gray-700 hover:border-purple-500/30 hover:bg-gray-800/50"
+                  ? "bg-blue-900/30 border-blue-500/50"
+                  : "bg-gray-800/30 border-gray-700 hover:border-blue-500/30 hover:bg-gray-800/50"
               }`}
             >
               <div className="flex items-start gap-3">
                 <Checkbox
                   checked={isSelected}
                   onCheckedChange={() => toggleRole(option.value)}
-                  className="mt-0.5 border-gray-600 data-[state=checked]:bg-purple-600"
+                  className="mt-0.5 border-gray-600 data-[state=checked]:bg-blue-600"
                 />
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium text-gray-200">

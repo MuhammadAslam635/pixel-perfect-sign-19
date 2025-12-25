@@ -28,24 +28,53 @@ const RegionCountrySelector = ({
   const [searchQuery, setSearchQuery] = useState("");
 
   const toggleRegion = (region: string) => {
-    const newRegions = selectedRegions.includes(region)
+    const isCurrentlySelected = selectedRegions.includes(region);
+
+    // Toggle region selection
+    const newRegions = isCurrentlySelected
       ? selectedRegions.filter((r) => r !== region)
       : [...selectedRegions, region];
     onRegionsChange(newRegions);
 
-    // Auto-expand region when selected
-    if (!selectedRegions.includes(region)) {
+    // Get all countries in this region
+    const countriesInRegion = getCountriesByRegion(region).map((c) => c.name);
+
+    // Auto-select/deselect all countries in this region
+    let newCountries: string[];
+    if (isCurrentlySelected) {
+      // Deselect all countries in this region
+      newCountries = selectedCountries.filter(
+        (c) => !countriesInRegion.includes(c)
+      );
+    } else {
+      // Select all countries in this region
+      const uniqueCountries = new Set([...selectedCountries, ...countriesInRegion]);
+      newCountries = Array.from(uniqueCountries);
+
+      // Auto-expand region when selected
       const newExpanded = new Set(expandedRegions);
       newExpanded.add(region);
       setExpandedRegions(newExpanded);
     }
+
+    onCountriesChange(newCountries);
   };
 
   const toggleCountry = (country: string) => {
-    const newCountries = selectedCountries.includes(country)
+    const isCurrentlySelected = selectedCountries.includes(country);
+
+    const newCountries = isCurrentlySelected
       ? selectedCountries.filter((c) => c !== country)
       : [...selectedCountries, country];
     onCountriesChange(newCountries);
+
+    // If deselecting a country, also deselect its parent region if selected
+    if (isCurrentlySelected) {
+      const countryData = countries.find((c) => c.name === country);
+      if (countryData && selectedRegions.includes(countryData.region)) {
+        onRegionsChange(selectedRegions.filter((r) => r !== countryData.region));
+      }
+    }
   };
 
   const toggleRegionExpand = (region: string) => {
@@ -79,7 +108,7 @@ const RegionCountrySelector = ({
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <label className="text-sm font-medium text-gray-200 flex items-center gap-2">
-          <Globe className="w-4 h-4 text-green-400" />
+          <Globe className="w-4 h-4 text-blue-400" />
           Regions & Countries
         </label>
         {(selectedRegions.length > 0 || selectedCountries.length > 0) && (
@@ -101,7 +130,7 @@ const RegionCountrySelector = ({
             <Badge
               key={region}
               variant="secondary"
-              className="bg-green-900/40 text-green-300 border-green-500/30"
+              className="bg-blue-900/40 text-blue-300 border-blue-500/30"
             >
               <Globe className="w-3 h-3 mr-1" />
               {region}
@@ -161,7 +190,7 @@ const RegionCountrySelector = ({
               <div key={region} className="w-full">
                 <div
                   className={`flex items-center gap-2 py-2 px-3 rounded-lg hover:bg-gray-800/50 transition-colors ${
-                    isSelected ? "bg-green-900/30" : ""
+                    isSelected ? "bg-blue-900/30" : ""
                   }`}
                 >
                   {/* Expand/Collapse */}
@@ -182,12 +211,12 @@ const RegionCountrySelector = ({
                   <Checkbox
                     checked={isSelected}
                     onCheckedChange={() => toggleRegion(region)}
-                    className="border-gray-600 data-[state=checked]:bg-green-600"
+                    className="border-gray-600 data-[state=checked]:bg-blue-600"
                   />
 
                   {/* Region Name */}
                   <div className="flex-1 flex items-center gap-2">
-                    <Globe className="w-4 h-4 text-green-400" />
+                    <Globe className="w-4 h-4 text-blue-400" />
                     <span
                       className={`text-sm ${
                         isSelected ? "text-white font-medium" : "text-gray-300"

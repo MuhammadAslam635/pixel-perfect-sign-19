@@ -47,10 +47,49 @@ const CategorySelector = ({
     setExpandedCategories(newExpanded);
   };
 
+  const getAllChildIds = (category: IndustryCategoryTree): string[] => {
+    let ids = [category._id];
+    if (category.children && category.children.length > 0) {
+      category.children.forEach((child) => {
+        ids = [...ids, ...getAllChildIds(child)];
+      });
+    }
+    return ids;
+  };
+
   const toggleCategory = (categoryId: string) => {
-    const newSelected = selectedCategories.includes(categoryId)
-      ? selectedCategories.filter((id) => id !== categoryId)
-      : [...selectedCategories, categoryId];
+    // Find the category
+    const findCategory = (
+      cats: IndustryCategoryTree[]
+    ): IndustryCategoryTree | null => {
+      for (const cat of cats) {
+        if (cat._id === categoryId) return cat;
+        if (cat.children) {
+          const found = findCategory(cat.children);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+
+    const category = findCategory(categories);
+    if (!category) return;
+
+    // Get all IDs to toggle (category + all descendants)
+    const allIds = getAllChildIds(category);
+
+    const isCurrentlySelected = selectedCategories.includes(categoryId);
+
+    let newSelected: string[];
+    if (isCurrentlySelected) {
+      // Deselect this category and all its children
+      newSelected = selectedCategories.filter((id) => !allIds.includes(id));
+    } else {
+      // Select this category and all its children
+      const uniqueIds = new Set([...selectedCategories, ...allIds]);
+      newSelected = Array.from(uniqueIds);
+    }
+
     onChange(newSelected);
   };
 
