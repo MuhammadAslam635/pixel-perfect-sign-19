@@ -9,6 +9,11 @@ import { onboardingService } from "@/services/onboarding.service";
 import { apolloService } from "@/services/apollo.service";
 import { fetchAndSyncUser } from "@/utils/authSync";
 import {
+  updateOnboardingCache,
+  getCachedApolloData,
+  clearOnboardingCache,
+} from "@/utils/onboardingCache";
+import {
   OnboardingData,
   OnboardingQuestions,
   ONBOARDING_STEPS,
@@ -23,8 +28,8 @@ import Logo from "@/components/Logo";
 
 // Validation rules matching backend Zod schema
 const FIELD_VALIDATION_RULES: Record<string, { min: number; max: number }> = {
-  // Length validations removed as per user request
-  // Backend consistency should be verified if these are enforced there
+  // Differentiators is optional, but if provided, must be at least 10 characters
+  differentiators: { min: 10, max: 500 },
 };
 
 const FIELD_LABELS: Record<string, string> = {
@@ -61,7 +66,7 @@ const OnboardingPage = () => {
   }, [currentStep]);
 
   // Fetch existing onboarding data on mount - only run once
-  // Check sessionStorage first to avoid unnecessary API calls
+  // Always verify with API to ensure data still exists in DB
   useEffect(() => {
     let isMounted = true;
 
@@ -69,27 +74,8 @@ const OnboardingPage = () => {
       try {
         setLoading(true);
 
-        // Check if we have cached data in sessionStorage
-        const cachedData = sessionStorage.getItem("onboarding_data");
-        if (cachedData) {
-          try {
-            const parsedData = JSON.parse(cachedData);
-            console.log("[Onboarding] Using cached data from sessionStorage");
-            
-            if (isMounted) {
-              setOnboardingData(parsedData.onboardingData);
-              setFormData(parsedData.formData);
-              setLoading(false);
-            }
-            return; // Exit early, don't fetch from API
-          } catch (e) {
-            console.error("[Onboarding] Error parsing cached data:", e);
-            // If parsing fails, continue to fetch from API
-            sessionStorage.removeItem("onboarding_data");
-          }
-        }
-
-        // No cached data, fetch from API
+        // Always fetch from API to verify data exists in DB
+        // This ensures we detect when data has been deleted
         const response = await onboardingService.getOnboarding();
         console.log("[Onboarding] Fetched data from API:", response);
 
@@ -121,13 +107,16 @@ const OnboardingPage = () => {
             };
 
             setFormData(formDataCopy);
-            
+
             // Cache the data in sessionStorage for future navigation
-            sessionStorage.setItem("onboarding_data", JSON.stringify({
-              onboardingData: response.data,
-              formData: formDataCopy
-            }));
-            
+            sessionStorage.setItem(
+              "onboarding_data",
+              JSON.stringify({
+                onboardingData: response.data,
+                formData: formDataCopy,
+              })
+            );
+
             console.log(
               "[Onboarding] Form data set successfully and cached:",
               formDataCopy
@@ -149,6 +138,9 @@ const OnboardingPage = () => {
           console.log(
             "[Onboarding] No onboarding record found (404), starting fresh"
           );
+          // Clear cache since no data exists in DB
+          clearOnboardingCache();
+          sessionStorage.removeItem("onboarding_data");
           // Silently ignore 404 errors for new users
           return;
         }
@@ -235,7 +227,10 @@ const OnboardingPage = () => {
           const parsedCache = JSON.parse(cachedData);
           // Update the formData in cache
           parsedCache.formData = dataToUse;
-          sessionStorage.setItem("onboarding_data", JSON.stringify(parsedCache));
+          sessionStorage.setItem(
+            "onboarding_data",
+            JSON.stringify(parsedCache)
+          );
           console.log("[Onboarding] sessionStorage cache updated after save");
         }
       } catch (e) {
@@ -453,22 +448,14 @@ const OnboardingPage = () => {
         if (trimmed === "" && !isStep4Optional) {
           newErrors[field] = `${label}: Required`;
           isValid = false;
-        } else if (rules && trimmed !== "" && !isStep4Optional) {
-          // Only validate min/max if field is not optional and has content
+        } else if (rules && trimmed !== "") {
+          // Validate min/max if field has content (both required and optional fields)
           if (trimmed.length < rules.min) {
             newErrors[
               field
             ] = `${label}: Minimum ${rules.min} characters required`;
             isValid = false;
           } else if (trimmed.length > rules.max) {
-            newErrors[
-              field
-            ] = `${label}: Maximum ${rules.max} characters allowed`;
-            isValid = false;
-          }
-        } else if (rules && trimmed !== "" && isStep4Optional) {
-          // For optional fields, only validate max length if provided
-          if (trimmed.length > rules.max) {
             newErrors[
               field
             ] = `${label}: Maximum ${rules.max} characters allowed`;
@@ -536,10 +523,52 @@ const OnboardingPage = () => {
     const currentWebsite = dataToSave.website;
 
     // If moving from step 1 to step 2, fetch company info from Apollo API
-    if (currentStep === 1 && currentWebsite) {
+    // BUT: Only fetch if user doesn't already have company data (to preserve existing data)
+    const hasExistingCompanyData =
+      formData.companyName &&
+      formData.companyName.trim() !== "" &&
+      formData.businessDescription &&
+      formData.businessDescription.trim() !== "";
+
+    if (currentStep === 1 && currentWebsite && !hasExistingCompanyData) {
       try {
         setFetchingCompanyInfo(true);
-        const result = await apolloService.lookupCompany(currentWebsite);
+
+        // Check cache first to avoid re-fetching
+        const cachedApollo = getCachedApolloData(currentWebsite);
+        let result;
+
+        if (cachedApollo) {
+          console.log(
+            "[Onboarding] Using cached Apollo data for",
+            currentWebsite
+          );
+          result = {
+            success: true,
+            data: {
+              companyName: cachedApollo.companyName,
+              description: cachedApollo.description,
+            },
+          };
+        } else {
+          console.log(
+            "[Onboarding] Fetching fresh Apollo data for",
+            currentWebsite
+          );
+          result = await apolloService.lookupCompany(currentWebsite);
+
+          // Cache the fetched data
+          if (result.success && result.data) {
+            updateOnboardingCache({
+              apolloData: {
+                website: currentWebsite,
+                companyName: result.data.companyName,
+                description: result.data.description,
+                fetchedAt: Date.now(),
+              },
+            });
+          }
+        }
 
         if (result.success && result.data) {
           // Auto-fill company name and description - always update when new data is fetched
@@ -552,11 +581,37 @@ const OnboardingPage = () => {
 
           if (result.data.description) {
             // Truncate description to max 1000 characters to match textarea maxLength
+            // Ensure truncation happens at complete sentence boundaries
             const maxLength = 1000; // Match the maxLength in CompanyInfoStep textarea
-            const truncatedDescription =
-              result.data.description.length > maxLength
-                ? result.data.description.substring(0, maxLength).trim() + "..."
-                : result.data.description;
+            let truncatedDescription = result.data.description;
+
+            if (result.data.description.length > maxLength) {
+              // Find the last complete sentence within the character limit
+              const text = result.data.description.substring(0, maxLength);
+
+              // Look for sentence endings: period, exclamation, question mark followed by space or end
+              const sentenceEndings = [". ", "! ", "? ", ".\n", "!\n", "?\n"];
+              let lastSentenceEnd = -1;
+
+              for (const ending of sentenceEndings) {
+                const index = text.lastIndexOf(ending);
+                if (index > lastSentenceEnd) {
+                  lastSentenceEnd = index + ending.length - 1; // Include the punctuation
+                }
+              }
+
+              // If we found a sentence ending, truncate there
+              if (lastSentenceEnd > maxLength * 0.7) {
+                // Only use if we're keeping at least 70% of max length
+                truncatedDescription = result.data.description
+                  .substring(0, lastSentenceEnd + 1)
+                  .trim();
+              } else {
+                // Fallback: truncate at maxLength and add ellipsis
+                truncatedDescription = text.trim() + "...";
+              }
+            }
+
             formUpdates.businessDescription = truncatedDescription;
             dataToSave.businessDescription = truncatedDescription;
             console.log(
@@ -587,6 +642,10 @@ const OnboardingPage = () => {
       } finally {
         setFetchingCompanyInfo(false);
       }
+    } else if (currentStep === 1 && hasExistingCompanyData) {
+      console.log(
+        "[Onboarding] Skipping Apollo API fetch - user already has company data"
+      );
     }
 
     // Update form data before saving (to ensure immediate UI update)
@@ -650,10 +709,17 @@ const OnboardingPage = () => {
 
       const response = await onboardingService.completeOnboarding();
       if (response.success) {
-        // Clear sessionStorage cache since onboarding is now complete
-        sessionStorage.removeItem("onboarding_data");
-        console.log("[Onboarding] Cache cleared after completion");
-        
+        // Don't clear sessionStorage cache - keep it so users can return and see their data
+        // The cache will be naturally cleared on logout or browser close
+        console.log(
+          "[Onboarding] Onboarding completed, keeping cache for future edits"
+        );
+
+        // Set a flag to indicate onboarding was just completed
+        // This prevents the ProtectedRoute from redirecting back to onboarding
+        // before the backend status is fully synced
+        sessionStorage.setItem("onboarding_just_completed", "true");
+
         // Refresh canonical user data from server and sync localStorage + redux
         try {
           const synced = await fetchAndSyncUser();
@@ -703,19 +769,22 @@ const OnboardingPage = () => {
       console.log("[Onboarding] updateFormData called with:", updates);
       setFormData((prev) => {
         const newFormData = { ...prev, ...updates };
-        
+
         // Update sessionStorage cache immediately with the new form data
         try {
           const cachedData = sessionStorage.getItem("onboarding_data");
           if (cachedData) {
             const parsedCache = JSON.parse(cachedData);
             parsedCache.formData = newFormData;
-            sessionStorage.setItem("onboarding_data", JSON.stringify(parsedCache));
+            sessionStorage.setItem(
+              "onboarding_data",
+              JSON.stringify(parsedCache)
+            );
           }
         } catch (e) {
           console.error("[Onboarding] Error updating sessionStorage cache:", e);
         }
-        
+
         return newFormData;
       });
 
@@ -757,6 +826,7 @@ const OnboardingPage = () => {
           <CompanyInfoStep
             formData={formData}
             updateFormData={updateFormData}
+            website={formData.website}
             errors={errors}
           />
         );
@@ -779,6 +849,7 @@ const OnboardingPage = () => {
                 prev ? { ...prev, supportingDocuments: docs } : null
               );
             }}
+            errors={errors}
           />
         );
       default:

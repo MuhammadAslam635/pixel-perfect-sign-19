@@ -1,4 +1,5 @@
 // Helper functions for authentication token management
+import { clearOnboardingCache } from "./onboardingCache";
 
 /**
  * Get the authentication token from localStorage
@@ -40,6 +41,14 @@ export const clearAuthData = (): void => {
   // Clear chat-related localStorage keys to prevent showing chats from previous users/companies
   localStorage.removeItem("assistant_panel_chat_history");
   localStorage.removeItem("assistant_panel_current_chat");
+
+  // Clear onboarding-related sessionStorage to prevent showing data from previous users
+  sessionStorage.removeItem("onboarding_data");
+  sessionStorage.removeItem("onboarding_skipped");
+  sessionStorage.removeItem("onboarding_just_completed");
+
+  // Clear onboarding cache from localStorage
+  clearOnboardingCache();
 };
 
 /**

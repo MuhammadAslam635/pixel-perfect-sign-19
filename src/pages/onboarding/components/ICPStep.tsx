@@ -1,10 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { OnboardingQuestions, ICPSuggestion } from "@/types/onboarding.types";
 import { onboardingService } from "@/services/onboarding.service";
 import { Loader2, User } from "lucide-react";
 import { toast } from "sonner";
+import {
+  updateOnboardingCache,
+  getCachedICPSuggestions,
+} from "@/utils/onboardingCache";
 
 interface ICPStepProps {
   formData: OnboardingQuestions;
@@ -19,6 +23,15 @@ const ICPStep = ({ formData, updateFormData, errors = {} }: ICPStepProps) => {
     null
   );
   const [hasFetched, setHasFetched] = useState(false);
+  const lastWebsiteRef = useRef<string>("");
+
+  // Reset fetch flag when website changes
+  useEffect(() => {
+    if (formData.website && formData.website !== lastWebsiteRef.current) {
+      setHasFetched(false);
+      lastWebsiteRef.current = formData.website;
+    }
+  }, [formData.website]);
 
   // Fetch ICP suggestions when component mounts if website is available
   useEffect(() => {
@@ -29,7 +42,23 @@ const ICPStep = ({ formData, updateFormData, errors = {} }: ICPStepProps) => {
 
       setLoading(true);
       setHasFetched(true);
+
       try {
+        // Check cache first
+        const cachedSuggestions = getCachedICPSuggestions(
+          formData.website,
+          formData.companyName,
+          formData.businessDescription
+        );
+
+        if (cachedSuggestions && cachedSuggestions.length > 0) {
+          console.log("[ICPStep] Using cached ICP suggestions");
+          setSuggestions(cachedSuggestions);
+          setLoading(false);
+          return;
+        }
+
+        console.log("[ICPStep] Fetching fresh ICP suggestions");
         const response = await onboardingService.generateICPSuggestions({
           website: formData.website,
           companyName: formData.companyName,
@@ -38,6 +67,17 @@ const ICPStep = ({ formData, updateFormData, errors = {} }: ICPStepProps) => {
 
         if (response.success && response.data?.suggestions) {
           setSuggestions(response.data.suggestions);
+
+          // Cache the fetched suggestions
+          updateOnboardingCache({
+            icpSuggestions: {
+              website: formData.website,
+              companyName: formData.companyName,
+              businessDescription: formData.businessDescription,
+              suggestions: response.data.suggestions,
+              fetchedAt: Date.now(),
+            },
+          });
         } else {
           // If API fails, show empty cards
           setSuggestions([]);

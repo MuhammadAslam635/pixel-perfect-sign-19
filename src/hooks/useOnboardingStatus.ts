@@ -28,6 +28,10 @@ export const useOnboardingStatus = (
   // Check if user has skipped onboarding in this session
   // This allows skipping in current session, but will be cleared on next login
   const hasSkippedThisSession = sessionStorage.getItem('onboarding_skipped') === 'true';
+  
+  // Check if user just completed onboarding
+  // This prevents race condition where ProtectedRoute checks status before backend updates
+  const justCompletedOnboarding = sessionStorage.getItem('onboarding_just_completed') === 'true';
 
   const fetchStatus = async () => {
     if (!shouldCheck) {
@@ -41,6 +45,13 @@ export const useOnboardingStatus = (
     if (hasSkippedThisSession) {
       setLoading(false);
       setStatus(null);
+      return;
+    }
+    
+    // If user just completed onboarding, skip the check to prevent race condition
+    if (justCompletedOnboarding) {
+      setLoading(false);
+      setStatus("completed");
       return;
     }
 
@@ -68,13 +79,15 @@ export const useOnboardingStatus = (
 
   useEffect(() => {
     fetchStatus();
-  }, [shouldCheck, hasSkippedThisSession]);
+  }, [shouldCheck, hasSkippedThisSession, justCompletedOnboarding]);
 
   // Requires onboarding if status is not completed
   // BUT: Allow skipping in current session (hasSkippedThisSession)
+  // OR: Allow if user just completed onboarding (justCompletedOnboarding)
   // On next login, sessionStorage will be cleared and they'll be redirected
   const requiresOnboarding = shouldCheck && 
     !hasSkippedThisSession &&
+    !justCompletedOnboarding &&
     (status === "not_started" || status === "draft" || status === "in_progress");
 
   return {

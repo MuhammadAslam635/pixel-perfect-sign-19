@@ -16,6 +16,10 @@ import {
 import { onboardingService } from "@/services/onboarding.service";
 import { toast } from "sonner";
 import { getCountryOptions } from "@/utils/countries";
+import {
+  updateOnboardingCache,
+  getCachedCoreOfferings,
+} from "@/utils/onboardingCache";
 
 interface CompanyInfoStepProps {
   formData: OnboardingQuestions;
@@ -85,6 +89,20 @@ const CompanyInfoStep = ({
         setIsGenerating(true);
         hasGeneratedRef.current = true;
 
+        // Check cache first
+        const cachedOfferings = getCachedCoreOfferings(
+          companyName,
+          description
+        );
+
+        if (cachedOfferings && cachedOfferings.length > 0) {
+          console.log("[CompanyInfoStep] Using cached core offerings");
+          updateFormData({ coreOfferings: cachedOfferings });
+          toast.success("Core offerings loaded from cache!");
+          return;
+        }
+
+        console.log("[CompanyInfoStep] Fetching fresh core offerings");
         const result = await onboardingService.suggestCoreOfferings(
           companyName,
           description
@@ -92,6 +110,17 @@ const CompanyInfoStep = ({
 
         if (result.success && result.data?.coreOfferings) {
           updateFormData({ coreOfferings: result.data.coreOfferings });
+
+          // Cache the generated offerings
+          updateOnboardingCache({
+            coreOfferingsSuggestions: {
+              companyName,
+              description,
+              offerings: result.data.coreOfferings,
+              fetchedAt: Date.now(),
+            },
+          });
+
           toast.success("Core offerings generated successfully!");
         } else {
           // Don't show error toast - user can still fill manually

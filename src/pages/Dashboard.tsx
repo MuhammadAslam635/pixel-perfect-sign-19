@@ -35,6 +35,16 @@ const Dashboard = () => {
     }
   }, [userRole, navigate]);
 
+  // Clear the onboarding_just_completed flag when dashboard loads
+  // This flag is only needed for the initial navigation after completing onboarding
+  useEffect(() => {
+    const flag = sessionStorage.getItem("onboarding_just_completed");
+    if (flag === "true") {
+      sessionStorage.removeItem("onboarding_just_completed");
+      console.log("[Dashboard] Cleared onboarding_just_completed flag");
+    }
+  }, []);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
 

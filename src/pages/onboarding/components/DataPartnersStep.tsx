@@ -21,6 +21,7 @@ interface DataPartnersStepProps {
   updateFormData: (updates: Partial<OnboardingQuestions>) => void;
   documents: SupportingDocument[];
   onDocumentsChange: (documents: SupportingDocument[]) => void;
+  errors?: Record<string, string>;
 }
 
 const DataPartnersStep = ({
@@ -28,6 +29,7 @@ const DataPartnersStep = ({
   updateFormData,
   documents,
   onDocumentsChange,
+  errors = {},
 }: DataPartnersStepProps) => {
   const [uploading, setUploading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -128,10 +130,21 @@ const DataPartnersStep = ({
           id="differentiators"
           value={formData.differentiators || ""}
           onChange={(e) => updateFormData({ differentiators: e.target.value })}
-          placeholder="What key advantages or differentiators set you apart from competitors? (Optional)"
-          maxLength={1000}
-          className="bg-white/[0.06] border-cyan-400/50 text-white placeholder:text-white/40 min-h-[120px] scrollbar-hide text-sm rounded-lg"
+          placeholder="What key advantages or differentiators set you apart from competitors? (Optional - min 10 characters if provided)"
+          minLength={10}
+          maxLength={500}
+          className={`bg-white/[0.06] text-white placeholder:text-white/40 min-h-[120px] scrollbar-hide text-sm rounded-lg ${
+            errors.differentiators
+              ? "border-red-500 ring-offset-red-500"
+              : "border-cyan-400/50"
+          }`}
         />
+        {errors.differentiators && (
+          <p className="text-red-500 text-sm mt-1">{errors.differentiators}</p>
+        )}
+        <p className="text-xs text-white/40">
+          Optional field. If you choose to fill this, please provide at least 10 characters.
+        </p>
       </div>
 
       {/* Supporting Documents */}
