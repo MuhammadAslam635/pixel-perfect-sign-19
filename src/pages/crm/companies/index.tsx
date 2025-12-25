@@ -322,26 +322,27 @@ const index = () => {
           transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
           className="max-w-[1600px] mx-auto w-full flex flex-col flex-1 relative min-h-0"
         >
-          {/* Wrapper with space-between */}
-          <div className="flex items-center justify-between mb-4">
+          {/* Single Line Header - Navigation, Enrich Section, and Filters */}
+          <div className="flex items-center justify-between gap-2 sm:gap-3 mb-4 flex-wrap">
             {/* Page Header with Navigation */}
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, ease: "easeOut", delay: 0.4 }}
+              className="flex-shrink-0"
             >
               <CrmNavigation />
             </motion.div>
 
-            {/* Filters Bar */}
+            {/* Right Side Container: Enrich Leads + Filters */}
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, ease: "easeOut", delay: 0.4 }}
-              className="flex flex-col sm:flex-row justify-end items-stretch sm:items-center gap-1.5 sm:gap-2 md:gap-3"
+              className="flex items-center gap-2 flex-1 justify-end min-w-0"
             >
-              {/* Enrich Leads Section */}
-              <div className="flex items-center gap-2">
+              {/* Enrich Leads Section - Always Visible */}
+              <div className="flex items-center gap-2 flex-shrink-0">
                 {/* Seniority Quick Selector */}
                 <SeniorityQuickSelector
                   selectedSeniorities={selectedSeniorities}
@@ -352,103 +353,99 @@ const index = () => {
                 {/* Enrich Leads Button */}
                 <Button
                   onClick={() => setEnrichmentModalOpen(true)}
-                  className="bg-gradient-to-r from-[#69B4B7] to-[#3E64B4] hover:from-[#69B4B7]/80 hover:to-[#3E64B4]/80 text-white font-semibold rounded-full px-6 h-10 shadow-[0_5px_18px_rgba(103,176,183,0.35)] hover:shadow-[0_8px_24px_rgba(103,176,183,0.45)] transition-all"
+                  className="bg-gradient-to-r from-[#69B4B7] to-[#3E64B4] hover:from-[#69B4B7]/80 hover:to-[#3E64B4]/80 text-white font-semibold rounded-full px-4 sm:px-6 h-10 shadow-[0_5px_18px_rgba(103,176,183,0.35)] hover:shadow-[0_8px_24px_rgba(103,176,183,0.45)] transition-all whitespace-nowrap"
                 >
                   <Sparkles className="w-4 h-4" />
-                  Enrich Leads
+                  <span className="hidden sm:inline">Enrich Leads</span>
+                  <span className="sm:hidden">Enrich</span>
                 </Button>
               </div>
 
-              {/* Controls Container */}
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2 md:gap-3 order-1 lg:order-2">
-                <div className="flex  flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2 flex-1 ">
-                  <div className="flex w-full items-center justify-end gap-1.5 sm:gap-2 ">
-                    <div className="flex items-center gap-2">
-                      <AnimatePresence mode="wait">
-                        {!companyFiltersOpen ? (
-                          <motion.div
-                            key="filter-button"
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            transition={{ duration: 0.15 }}
-                            className="flex items-center gap-2"
+              {/* Filters Section - Scrollable when expanded */}
+              <div className="flex items-center min-w-0 flex-1 justify-end">
+                <AnimatePresence mode="wait">
+                  {!companyFiltersOpen ? (
+                    <motion.div
+                      key="filter-button"
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ duration: 0.15 }}
+                      className="flex items-center gap-2 flex-shrink-0"
+                    >
+                      <SearchInput
+                        placeholder="Search companies..."
+                        value={companiesSearch}
+                        onChange={setCompaniesSearch}
+                      />
+                      <FilterButton
+                        hasFilters={hasCompanyAdvancedFilters}
+                        onClick={() => setCompanyFiltersOpen(true)}
+                      />
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="filters-inline"
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.2, ease: "easeOut" }}
+                      className="flex items-center gap-2 overflow-x-auto scrollbar-hide max-w-full"
+                    >
+                      <CompanyFiltersInline
+                        search={companiesSearch}
+                        onSearchChange={setCompaniesSearch}
+                        industries={industryOptions}
+                        industryFilter={companiesIndustryFilter}
+                        onIndustryFilterChange={
+                          setCompaniesIndustryFilter
+                        }
+                        employeeRanges={COMPANY_EMPLOYEE_RANGES}
+                        employeeRange={companiesEmployeeRange}
+                        onEmployeeRangeChange={setCompaniesEmployeeRange}
+                        locationFilter={companiesCountryFilter}
+                        onLocationFilterChange={setCompaniesCountryFilter}
+                        hasPeopleFilter={companiesHasPeopleFilter}
+                        onHasPeopleFilterChange={
+                          setCompaniesHasPeopleFilter
+                        }
+                        hasWebsiteFilter={companiesHasWebsiteFilter}
+                        onHasWebsiteFilterChange={
+                          setCompaniesHasWebsiteFilter
+                        }
+                        hasFilters={hasCompanyAdvancedFilters}
+                        onResetFilters={resetCompanyAdvancedFilters}
+                      />
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.1, duration: 0.15 }}
+                        className="flex-shrink-0"
+                      >
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0 bg-accent text-white hover:bg-accent/80 rounded-full flex items-center justify-center"
+                          onClick={() => setCompanyFiltersOpen(false)}
+                        >
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
                           >
-                            <SearchInput
-                              placeholder="Search companies..."
-                              value={companiesSearch}
-                              onChange={setCompaniesSearch}
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
                             />
-                            <FilterButton
-                              hasFilters={hasCompanyAdvancedFilters}
-                              onClick={() => setCompanyFiltersOpen(true)}
-                            />
-                          </motion.div>
-                        ) : (
-                          <motion.div
-                            key="filters-inline"
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                            transition={{ duration: 0.2, ease: "easeOut" }}
-                            className="flex items-center gap-2"
-                          >
-                            <CompanyFiltersInline
-                              search={companiesSearch}
-                              onSearchChange={setCompaniesSearch}
-                              industries={industryOptions}
-                              industryFilter={companiesIndustryFilter}
-                              onIndustryFilterChange={
-                                setCompaniesIndustryFilter
-                              }
-                              employeeRanges={COMPANY_EMPLOYEE_RANGES}
-                              employeeRange={companiesEmployeeRange}
-                              onEmployeeRangeChange={setCompaniesEmployeeRange}
-                              locationFilter={companiesCountryFilter}
-                              onLocationFilterChange={setCompaniesCountryFilter}
-                              hasPeopleFilter={companiesHasPeopleFilter}
-                              onHasPeopleFilterChange={
-                                setCompaniesHasPeopleFilter
-                              }
-                              hasWebsiteFilter={companiesHasWebsiteFilter}
-                              onHasWebsiteFilterChange={
-                                setCompaniesHasWebsiteFilter
-                              }
-                              hasFilters={hasCompanyAdvancedFilters}
-                              onResetFilters={resetCompanyAdvancedFilters}
-                            />
-                            <motion.div
-                              initial={{ opacity: 0, scale: 0.8 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              transition={{ delay: 0.1, duration: 0.15 }}
-                            >
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-8 w-8 p-0 bg-accent text-white hover:bg-accent/80 rounded-full flex items-center justify-center"
-                                onClick={() => setCompanyFiltersOpen(false)}
-                              >
-                                <svg
-                                  className="w-4 h-4"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M6 18L18 6M6 6l12 12"
-                                  />
-                                </svg>
-                              </Button>
-                            </motion.div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  </div>
-                </div>
+                          </svg>
+                        </Button>
+                      </motion.div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </motion.div>
           </div>
