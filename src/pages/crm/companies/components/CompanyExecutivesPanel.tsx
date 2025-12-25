@@ -315,9 +315,11 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
                     </div>
                   </motion.div>
                 ) : (
-                  <p className="text-sm text-muted-foreground/60">
-                    No executives found for this company.
-                  </p>
+                  <div className="flex items-center justify-center h-32">
+                    <p className="text-sm text-muted-foreground/60">
+                      No executives found for this company.
+                    </p>
+                  </div>
                 )
               )
             ) : company ? (
