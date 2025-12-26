@@ -21,7 +21,6 @@ import { logout, updateUser } from "@/store/slices/authSlice";
 
 interface CompanyInfo {
   name?: string;
-  email?: string;
 }
 
 interface UserFormState {
@@ -45,7 +44,6 @@ export const ProfileTabCompanyUser = () => {
 
   const [companyInfo, setCompanyInfo] = useState<CompanyInfo>({
     name: "",
-    email: "",
   });
 
   const [errors, setErrors] = useState<ProfileErrors>({
@@ -80,13 +78,13 @@ export const ProfileTabCompanyUser = () => {
       try {
         const response = await API.get("/company-info");
         if (response.data?.success) {
-          setCompanyInfo(response.data.data ?? {});
+          setCompanyInfo({ name: response.data.data?.name || "" });
         } else {
-          setCompanyInfo({ name: "", email: "" });
+          setCompanyInfo({ name: "" });
         }
       } catch (error: unknown) {
         // console.error("Failed to fetch company info", error);
-        setCompanyInfo({ name: "", email: "" });
+        setCompanyInfo({ name: "" });
         if (
           axios.isAxiosError(error) &&
           (error.response?.status === 401 || error.response?.status === 404)
@@ -134,6 +132,7 @@ export const ProfileTabCompanyUser = () => {
         const existing = getUserData();
         const token = user?.token || existing?.token;
         const updatedUser = {
+          ...existing,
           ...response.data.user,
           token,
         };
@@ -199,6 +198,8 @@ export const ProfileTabCompanyUser = () => {
     }
   };
 
+  const isViewer = user?.role === "CompanyViewer";
+
   return (
     <form onSubmit={handleSubmit}>
       <Card className="mb-6 border-white/10 bg-white/[0.035] backdrop-blur-xl text-white">
@@ -240,7 +241,8 @@ export const ProfileTabCompanyUser = () => {
                 name="firstName"
                 value={formState.firstName}
                 onChange={handleInputChange}
-                className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40"
+                disabled={isViewer}
+                className={`bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 ${isViewer ? 'opacity-50 cursor-not-allowed' : ''}`}
               />
               {errors.firstName ? (
                 <p className="text-sm text-rose-400">{errors.firstName}</p>
@@ -255,7 +257,8 @@ export const ProfileTabCompanyUser = () => {
                 name="lastName"
                 value={formState.lastName}
                 onChange={handleInputChange}
-                className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40"
+                disabled={isViewer}
+                className={`bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 ${isViewer ? 'opacity-50 cursor-not-allowed' : ''}`}
               />
               {errors.lastName ? (
                 <p className="text-sm text-rose-400">{errors.lastName}</p>
@@ -279,18 +282,20 @@ export const ProfileTabCompanyUser = () => {
             ) : null}
           </div>
         </CardContent>
-        <CardFooter className="justify-end border-t border-white/10 bg-white/[0.02] p-6">
-          <Button
-            type="submit"
-            className="bg-gradient-to-r from-cyan-500/70 via-sky-500 to-indigo-500 text-white hover:from-cyan-400 hover:to-indigo-400"
-            style={{
-              boxShadow:
-                "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
-            }}
-          >
-            Save Changes
-          </Button>
-        </CardFooter>
+        {!isViewer && (
+          <CardFooter className="justify-end border-t border-white/10 bg-white/[0.02] p-6">
+            <Button
+              type="submit"
+              className="bg-gradient-to-r from-cyan-500/70 via-sky-500 to-indigo-500 text-white hover:from-cyan-400 hover:to-indigo-400"
+              style={{
+                boxShadow:
+                  "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+              }}
+            >
+              Save Changes
+            </Button>
+          </CardFooter>
+        )}
       </Card>
     </form>
   );

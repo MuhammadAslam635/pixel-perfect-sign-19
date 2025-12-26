@@ -28,7 +28,7 @@ const SettingsPage = () => {
   const canManagePerplexityPrompt = ["Company", "CompanyAdmin"].includes(
     userRole ?? ""
   );
-  const isCompanyUser = ["CompanyAdmin", "CompanyUser"].includes(
+  const isCompanyUser = ["CompanyAdmin", "CompanyUser", "CompanyViewer"].includes(
     userRole ?? ""
   );
 
