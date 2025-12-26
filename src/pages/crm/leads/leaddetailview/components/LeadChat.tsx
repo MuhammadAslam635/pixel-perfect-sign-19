@@ -1147,7 +1147,7 @@ const LeadChat = ({
   // Helper function to convert HTML back to markdown
   const htmlToMarkdown = (html: string): string => {
     if (!html) return "";
-    
+
     let markdown = html
       // Headers
       .replace(/<h1>(.*?)<\/h1>/gi, "# $1\n\n")
@@ -1184,7 +1184,7 @@ const LeadChat = ({
       // Clean up multiple newlines
       .replace(/\n{3,}/g, "\n\n")
       .trim();
-    
+
     return markdown;
   };
 
@@ -1920,7 +1920,9 @@ const LeadChat = ({
     } catch (error) {
       console.error("Error converting icon to base64:", error);
       // Return a simple placeholder icon as fallback
-      const fallbackSvg = `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg"><circle cx="${size/2}" cy="${size/2}" r="${size/3}" fill="${color}"/></svg>`;
+      const fallbackSvg = `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg"><circle cx="${
+        size / 2
+      }" cy="${size / 2}" r="${size / 3}" fill="${color}"/></svg>`;
       return `data:image/svg+xml;base64,${btoa(fallbackSvg)}`;
     }
   };
@@ -1933,7 +1935,7 @@ const LeadChat = ({
 
     try {
       console.log("Starting PDF generation...");
-      
+
       const pdf = new jsPDF({
         orientation: "portrait",
         unit: "mm",
@@ -1964,7 +1966,11 @@ const LeadChat = ({
         whatsappNumber || phoneNumber || "+966 XXX XXX XXX";
       const companyLogoUrl = lead?.company?.logo || null;
 
-      console.log("Company data prepared:", { companyName, companyWebsite, companyLocation });
+      console.log("Company data prepared:", {
+        companyName,
+        companyWebsite,
+        companyLocation,
+      });
 
       // Function to load image as base64
       const loadImageAsBase64 = async (url: string): Promise<string | null> => {
@@ -2027,7 +2033,11 @@ const LeadChat = ({
       const iconColor = isDarkMode ? [255, 255, 255] : [60, 60, 60];
       const dividerColor = isDarkMode ? [100, 100, 100] : [180, 180, 180];
 
-      console.log("Colors configured for", isDarkMode ? "dark" : "light", "mode");
+      console.log(
+        "Colors configured for",
+        isDarkMode ? "dark" : "light",
+        "mode"
+      );
 
       // Header height for content calculation
       const headerHeight = 30;
@@ -2135,30 +2145,33 @@ const LeadChat = ({
         pdf.setDrawColor(...(iconColor as [number, number, number]));
         pdf.setFillColor(...(iconColor as [number, number, number]));
         pdf.setLineWidth(0.3);
-        
+
         // Draw WhatsApp phone icon
         pdf.circle(whatsappX, iconY, iconSize / 2.2, "S");
         // Phone receiver shape
         const phoneScale = iconSize / 8;
         pdf.setLineWidth(0.5);
         pdf.line(
-          whatsappX - phoneScale * 0.8, 
+          whatsappX - phoneScale * 0.8,
           iconY + phoneScale * 0.8,
           whatsappX - phoneScale * 0.3,
           iconY + phoneScale * 0.3
         );
         pdf.line(
-          whatsappX + phoneScale * 0.3, 
+          whatsappX + phoneScale * 0.3,
           iconY - phoneScale * 0.3,
           whatsappX + phoneScale * 0.8,
           iconY - phoneScale * 0.8
         );
-        
+
         pdf.setFontSize(7);
         pdf.setTextColor(...(secondaryTextColor as [number, number, number]));
-        const whatsappLines = pdf.splitTextToSize(companyWhatsApp, sectionWidth - 4);
+        const whatsappLines = pdf.splitTextToSize(
+          companyWhatsApp,
+          sectionWidth - 4
+        );
         whatsappLines.forEach((line: string, idx: number) => {
-          pdf.text(line, whatsappX, textY + (idx * 3), { align: "center" });
+          pdf.text(line, whatsappX, textY + idx * 3, { align: "center" });
         });
 
         // Vertical divider 1
@@ -2185,10 +2198,13 @@ const LeadChat = ({
         );
         // Longitude (vertical ellipse)
         pdf.ellipse(websiteX, iconY, iconSize / 5, iconSize / 2.2, "S");
-        
-        const websiteLines = pdf.splitTextToSize(companyWebsite, sectionWidth - 4);
+
+        const websiteLines = pdf.splitTextToSize(
+          companyWebsite,
+          sectionWidth - 4
+        );
         websiteLines.forEach((line: string, idx: number) => {
-          pdf.text(line, websiteX, textY + (idx * 3), { align: "center" });
+          pdf.text(line, websiteX, textY + idx * 3, { align: "center" });
         });
 
         // Vertical divider 2
@@ -2204,7 +2220,7 @@ const LeadChat = ({
         pdf.setDrawColor(...(iconColor as [number, number, number]));
         pdf.setFillColor(...(iconColor as [number, number, number]));
         pdf.setLineWidth(0.3);
-        
+
         // Draw location pin
         const pinRadius = iconSize / 3;
         pdf.circle(locationX, iconY - 0.8, pinRadius, "FD");
@@ -2219,12 +2235,19 @@ const LeadChat = ({
           "F"
         );
         // Inner circle (hole in pin)
-        pdf.setFillColor(isDarkMode ? 45 : 255, isDarkMode ? 45 : 255, isDarkMode ? 45 : 255);
+        pdf.setFillColor(
+          isDarkMode ? 45 : 255,
+          isDarkMode ? 45 : 255,
+          isDarkMode ? 45 : 255
+        );
         pdf.circle(locationX, iconY - 0.8, pinRadius * 0.4, "F");
-        
-        const locationLines = pdf.splitTextToSize(companyLocation, sectionWidth - 4);
+
+        const locationLines = pdf.splitTextToSize(
+          companyLocation,
+          sectionWidth - 4
+        );
         locationLines.forEach((line: string, idx: number) => {
-          pdf.text(line, locationX, textY + (idx * 3), { align: "center" });
+          pdf.text(line, locationX, textY + idx * 3, { align: "center" });
         });
       };
 
@@ -2251,10 +2274,10 @@ const LeadChat = ({
       addFooter();
 
       console.log("Converting proposal content to text...");
-      
+
       // Parse markdown content into structured elements
-      const markdownLines = proposalContent.split('\n');
-      
+      const markdownLines = proposalContent.split("\n");
+
       console.log(`Processing ${markdownLines.length} lines of markdown...`);
 
       const lineHeight = 6;
@@ -2263,7 +2286,7 @@ const LeadChat = ({
 
       for (let i = 0; i < markdownLines.length; i++) {
         const line = markdownLines[i].trim();
-        
+
         // Skip empty lines but add spacing
         if (!line) {
           currentY += lineHeight * 0.5;
@@ -2280,7 +2303,7 @@ const LeadChat = ({
         }
 
         // Handle different markdown elements
-        if (line.startsWith('# ')) {
+        if (line.startsWith("# ")) {
           // H1
           pdf.setFontSize(16);
           pdf.setFont("helvetica", "bold");
@@ -2299,7 +2322,7 @@ const LeadChat = ({
             currentY += lineHeight + 2;
           });
           currentY += 2;
-        } else if (line.startsWith('## ')) {
+        } else if (line.startsWith("## ")) {
           // H2
           pdf.setFontSize(14);
           pdf.setFont("helvetica", "bold");
@@ -2318,7 +2341,7 @@ const LeadChat = ({
             currentY += lineHeight + 1;
           });
           currentY += 2;
-        } else if (line.startsWith('### ')) {
+        } else if (line.startsWith("### ")) {
           // H3
           pdf.setFontSize(12);
           pdf.setFont("helvetica", "bold");
@@ -2337,7 +2360,7 @@ const LeadChat = ({
             currentY += lineHeight + 1;
           });
           currentY += 1;
-        } else if (line.startsWith('- ') || line.startsWith('* ')) {
+        } else if (line.startsWith("- ") || line.startsWith("* ")) {
           // Bullet list
           pdf.setFontSize(11);
           pdf.setFont("helvetica", "normal");
@@ -2353,7 +2376,7 @@ const LeadChat = ({
               currentY = margin + headerHeight;
             }
             if (index === 0) {
-              pdf.text('• ' + textLine, margin + 2, currentY);
+              pdf.text("• " + textLine, margin + 2, currentY);
             } else {
               pdf.text(textLine, margin + 5, currentY);
             }
@@ -2378,14 +2401,14 @@ const LeadChat = ({
                 currentY = margin + headerHeight;
               }
               if (index === 0) {
-                pdf.text(number + ' ' + textLine, margin + 2, currentY);
+                pdf.text(number + " " + textLine, margin + 2, currentY);
               } else {
                 pdf.text(textLine, margin + 8, currentY);
               }
               currentY += lineHeight;
             });
           }
-        } else if (line.startsWith('---') || line.startsWith('***')) {
+        } else if (line.startsWith("---") || line.startsWith("***")) {
           // Horizontal rule
           pdf.setDrawColor(...(textColor as [number, number, number]));
           pdf.setLineWidth(0.5);
@@ -2396,13 +2419,13 @@ const LeadChat = ({
           pdf.setFontSize(11);
           pdf.setFont("helvetica", "normal");
           pdf.setTextColor(...(textColor as [number, number, number]));
-          
+
           // Simple bold handling - split by ** markers
           let processedText = line;
           // Remove markdown bold markers for now (jsPDF doesn't support inline formatting easily)
-          processedText = processedText.replace(/\*\*(.+?)\*\*/g, '$1');
-          processedText = processedText.replace(/\*(.+?)\*/g, '$1');
-          
+          processedText = processedText.replace(/\*\*(.+?)\*\*/g, "$1");
+          processedText = processedText.replace(/\*(.+?)\*/g, "$1");
+
           const textLines = pdf.splitTextToSize(processedText, maxWidth);
           textLines.forEach((textLine: string) => {
             if (currentY + lineHeight > maxContentY) {
@@ -2419,13 +2442,16 @@ const LeadChat = ({
       }
 
       console.log("Saving PDF...");
-      
-      const fileName = `Proposal_${(displayName || "Lead").replace(/\s+/g, "_")}_${
-        isDarkMode ? "Dark" : "Light"
-      }_${new Date().toISOString().split("T")[0]}.pdf`;
-      
+
+      const fileName = `Proposal_${(displayName || "Lead").replace(
+        /\s+/g,
+        "_"
+      )}_${isDarkMode ? "Dark" : "Light"}_${
+        new Date().toISOString().split("T")[0]
+      }.pdf`;
+
       console.log("PDF filename:", fileName);
-      
+
       pdf.save(fileName);
 
       console.log("PDF saved successfully!");
@@ -2435,8 +2461,15 @@ const LeadChat = ({
       );
     } catch (error) {
       console.error("Error generating PDF:", error);
-      console.error("Error stack:", error instanceof Error ? error.stack : "No stack trace");
-      toast.error(`Failed to generate PDF: ${error instanceof Error ? error.message : "Unknown error"}`);
+      console.error(
+        "Error stack:",
+        error instanceof Error ? error.stack : "No stack trace"
+      );
+      toast.error(
+        `Failed to generate PDF: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
     }
   };
 
