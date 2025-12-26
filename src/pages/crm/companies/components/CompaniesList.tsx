@@ -716,19 +716,14 @@ const CompaniesList: FC<CompaniesListProps> = ({
           position === "top" ? "mb-4" : "mt-4"
         }`}
       >
-        <p className="text-xs text-white/60">
-          {hasData
-            ? `Showing ${start}-${end} of ${totalCount} companies`
-            : "No companies to display"}
-        </p>
-        <div className="flex items-center gap-3">
+        <div>
           {position === "top" && onViewModeChange && (
             <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-full p-1">
               <Button
                 variant={viewMode === "compact" ? "default" : "ghost"}
                 size="sm"
                 onClick={() => onViewModeChange("compact")}
-                className={`h-7 px-3 rounded-full text-xs font-medium transition-all ${
+                className={`h-9 px-3 rounded-full text-xs font-medium transition-all ${
                   viewMode === "compact"
                     ? "bg-primary text-white shadow-sm"
                     : "text-white/70 hover:text-white hover:bg-white/10"
@@ -741,7 +736,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
                 variant={viewMode === "card" ? "default" : "ghost"}
                 size="sm"
                 onClick={() => onViewModeChange("card")}
-                className={`h-7 px-3 rounded-full text-xs font-medium transition-all ${
+                className={`h-9 px-3 rounded-full text-xs font-medium transition-all ${
                   viewMode === "card"
                     ? "bg-primary text-white shadow-sm"
                     : "text-white/70 hover:text-white hover:bg-white/10"
@@ -754,7 +749,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
                 variant={viewMode === "detailed" ? "default" : "ghost"}
                 size="sm"
                 onClick={() => onViewModeChange("detailed")}
-                className={`h-7 px-3 rounded-full text-xs font-medium transition-all ${
+                className={`h-9 px-3 rounded-full text-xs font-medium transition-all ${
                   viewMode === "detailed"
                     ? "bg-primary text-white shadow-sm"
                     : "text-white/70 hover:text-white hover:bg-white/10"
@@ -765,6 +760,14 @@ const CompaniesList: FC<CompaniesListProps> = ({
               </Button>
             </div>
           )}
+        </div>
+
+        <div className="flex flex-col items-end gap-2">
+          <p className="text-xs text-white/60 pr-5">
+            {hasData
+              ? `Showing ${start}-${end} of ${totalCount} companies`
+              : "No companies to display"}
+          </p>
           <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-full px-2 py-1">
             <Select
               value={String(pageSize)}
