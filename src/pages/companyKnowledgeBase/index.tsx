@@ -67,7 +67,9 @@ const CompanyKnowledgePage = () => {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
-  const [onboardingData, setOnboardingData] = useState<OnboardingData | null>(null);
+  const [onboardingData, setOnboardingData] = useState<OnboardingData | null>(
+    null
+  );
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -157,11 +159,11 @@ const CompanyKnowledgePage = () => {
   const handleKnowledgeDocumentClick = (doc: any) => {
     try {
       const token = getAuthToken();
-      const baseURL = API.defaults.baseURL || '';
+      const baseURL = API.defaults.baseURL || "";
       const documentUrl = `${baseURL}/company-knowledge/files/${doc._id}/view?token=${token}`;
-      window.open(documentUrl, '_blank');
+      window.open(documentUrl, "_blank");
     } catch (error) {
-      console.error('Error opening document:', error);
+      console.error("Error opening document:", error);
       toast({
         title: "Error",
         description: "Could not open document",
