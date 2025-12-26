@@ -7,6 +7,8 @@ import { getUserData, setAuthToken } from "@/utils/authHelpers";
  */
 export const fetchAndSyncUser = async (): Promise<any | null> => {
   try {
+    const existing = getUserData();
+    if (!existing?.token) return null;
     const response = await authService.getMe();
     if (response?.success && response.data) {
       const existing = getUserData();

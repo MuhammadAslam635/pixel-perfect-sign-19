@@ -60,7 +60,9 @@ const createApiClient = (): AxiosInstance => {
 
         // Real authentication failure - log out
         clearAuthData();
-        window.location.href = "/login";
+        if (window.location.pathname !== "/login" && window.location.pathname !== "/") {
+          window.location.href = "/login";
+        }
       }
 
       // Handle network errors
