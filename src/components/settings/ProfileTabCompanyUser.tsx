@@ -210,17 +210,11 @@ export const ProfileTabCompanyUser = () => {
             Details provided by your organisation
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-2 pt-6">
+        <CardContent className="space-y-2 pt-6 pb-6">
           <div>
             <Label className="text-white/70">Company Name</Label>
             <div className="mt-1 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-white/90">
-              {companyInfo.name || "N/A"}
-            </div>
-          </div>
-          <div>
-            <Label className="text-white/70">Email</Label>
-            <div className="mt-1 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-white/70">
-              {companyInfo.email || "N/A"}
+              {companyInfo.name || user?.name || "N/A"}
             </div>
           </div>
         </CardContent>
@@ -235,7 +229,7 @@ export const ProfileTabCompanyUser = () => {
             Update your account details
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4 pt-6">
+        <CardContent className="space-y-4 pt-6 pb-6">
           <div className="flex gap-4">
             <div className="space-y-2 w-1/2">
               <Label htmlFor="firstName" className="text-white/80">
@@ -285,10 +279,10 @@ export const ProfileTabCompanyUser = () => {
             ) : null}
           </div>
         </CardContent>
-        <CardFooter className="justify-end border-t border-white/10 bg-white/[0.02]">
+        <CardFooter className="justify-end border-t border-white/10 bg-white/[0.02] p-6">
           <Button
             type="submit"
-            className="mt-4 bg-gradient-to-r from-cyan-500/70 via-sky-500 to-indigo-500 text-white hover:from-cyan-400 hover:to-indigo-400"
+            className="bg-gradient-to-r from-cyan-500/70 via-sky-500 to-indigo-500 text-white hover:from-cyan-400 hover:to-indigo-400"
             style={{
               boxShadow:
                 "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",

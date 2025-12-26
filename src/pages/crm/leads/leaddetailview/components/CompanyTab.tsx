@@ -191,7 +191,7 @@ const CompanyTab: FC<CompanyTabProps> = ({ lead }) => {
           <div className="flex flex-col gap-1.5 min-w-0">
             {company?.industry && (
               <div className="flex items-center gap-1.5 text-xs text-white/60">
-                <Briefcase className="w-3.5 h-3.5 flex-shrink-0" />
+                {/* <Briefcase className="w-3.5 h-3.5 flex-shrink-0" /> */}
                 <span className="truncate">{company.industry}</span>
               </div>
             )}
