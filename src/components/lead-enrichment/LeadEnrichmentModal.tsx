@@ -7,7 +7,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import DomainSpecificTab from "./tabs/DomainSpecificTab";
 import AdvancedQueryTab from "./tabs/AdvancedQueryTab";
-import EnrichmentProgressTracker from "./EnrichmentProgressTracker";
 import type {
   EnrichmentMode,
   EnrichmentFilters,
@@ -41,8 +40,16 @@ const LeadEnrichmentModal = ({
   ) => {
     setSearchId(searchId);
     setEstimatedTime(estimatedTime);
-    setIsEnriching(true);
     onEnrichmentStart?.(searchId, mode);
+    // Close modal immediately after starting enrichment
+    onClose();
+    // Reset state after modal closes
+    setTimeout(() => {
+      setActiveTab("domain");
+      setSearchId(null);
+      setEstimatedTime(null);
+      setIsEnriching(false);
+    }, 300);
   };
 
   const handleEnrichmentComplete = () => {
@@ -50,19 +57,17 @@ const LeadEnrichmentModal = ({
     if (searchId) {
       onEnrichmentComplete?.(searchId);
     }
-    // Keep modal open to show results
   };
 
   const handleClose = () => {
-    if (!isEnriching) {
-      onClose();
-      // Reset state after modal closes
-      setTimeout(() => {
-        setActiveTab("domain");
-        setSearchId(null);
-        setEstimatedTime(null);
-      }, 300);
-    }
+    onClose();
+    // Reset state after modal closes
+    setTimeout(() => {
+      setActiveTab("domain");
+      setSearchId(null);
+      setEstimatedTime(null);
+      setIsEnriching(false);
+    }, 300);
   };
 
   return (
@@ -94,7 +99,6 @@ const LeadEnrichmentModal = ({
               variant="ghost"
               size="icon"
               onClick={handleClose}
-              disabled={isEnriching}
               className="text-white/50 hover:text-white hover:bg-white/5 rounded-full"
             >
               <X className="w-5 h-5" />
@@ -104,84 +108,70 @@ const LeadEnrichmentModal = ({
 
         {/* Content */}
         <div className="px-6 pb-20 overflow-y-auto scrollbar-hide max-h-[calc(90vh-100px)]">
-          {!isEnriching ? (
-            <Tabs
-              value={activeTab}
-              onValueChange={(value) => setActiveTab(value as EnrichmentMode)}
-              className="w-full mt-4"
-            >
-              {/* Tab Selector */}
-              <TabsList className="grid w-full grid-cols-2 bg-gradient-to-br from-gray-800/50 to-gray-900/30 border border-white/10 p-1">
-                <TabsTrigger
-                  value="domain"
-                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#69B4B7] data-[state=active]:via-[#5486D0] data-[state=active]:to-[#3E64B3] data-[state=active]:text-white text-white/50 transition-all"
-                >
-                  Domain Specific
-                </TabsTrigger>
-                <TabsTrigger
-                  value="query"
-                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#69B4B7] data-[state=active]:via-[#5486D0] data-[state=active]:to-[#3E64B3] data-[state=active]:text-white text-white/50 transition-all"
-                >
-                  Advanced Filters
-                </TabsTrigger>
-              </TabsList>
+          <Tabs
+            value={activeTab}
+            onValueChange={(value) => setActiveTab(value as EnrichmentMode)}
+            className="w-full mt-4"
+          >
+            {/* Tab Selector */}
+            <TabsList className="grid w-full grid-cols-2 bg-gradient-to-br from-gray-800/50 to-gray-900/30 border border-white/10 p-1">
+              <TabsTrigger
+                value="domain"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#69B4B7] data-[state=active]:via-[#5486D0] data-[state=active]:to-[#3E64B3] data-[state=active]:text-white text-white/50 transition-all"
+              >
+                Domain Specific
+              </TabsTrigger>
+              <TabsTrigger
+                value="query"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#69B4B7] data-[state=active]:via-[#5486D0] data-[state=active]:to-[#3E64B3] data-[state=active]:text-white text-white/50 transition-all"
+              >
+                Advanced Filters
+              </TabsTrigger>
+            </TabsList>
 
-              {/* Tab Content */}
-              <div className="mt-6">
-                <TabsContent value="domain" className="mt-0">
-                  <DomainSpecificTab
-                    selectedSeniorities={selectedSeniorities}
-                    onEnrichmentStart={(searchId, estimatedTime) =>
-                      handleEnrichmentStart(searchId, estimatedTime, "domain")
-                    }
-                  />
-                </TabsContent>
+            {/* Tab Content */}
+            <div className="mt-6">
+              <TabsContent value="domain" className="mt-0">
+                <DomainSpecificTab
+                  selectedSeniorities={selectedSeniorities}
+                  onEnrichmentStart={(searchId, estimatedTime) =>
+                    handleEnrichmentStart(searchId, estimatedTime, "domain")
+                  }
+                />
+              </TabsContent>
 
-                <TabsContent value="query" className="mt-0">
-                  <AdvancedQueryTab
-                    selectedSeniorities={selectedSeniorities}
-                    onEnrichmentStart={(searchId, estimatedTime) =>
-                      handleEnrichmentStart(searchId, estimatedTime, "query")
-                    }
-                  />
-                </TabsContent>
-              </div>
-            </Tabs>
-          ) : (
-            /* Enrichment in Progress */
-            <div className="py-8">
-              <EnrichmentProgressTracker
-                searchId={searchId!}
-                estimatedTime={estimatedTime!}
-                mode={activeTab}
-                onComplete={handleEnrichmentComplete}
-              />
+              <TabsContent value="query" className="mt-0">
+                <AdvancedQueryTab
+                  selectedSeniorities={selectedSeniorities}
+                  onEnrichmentStart={(searchId, estimatedTime) =>
+                    handleEnrichmentStart(searchId, estimatedTime, "query")
+                  }
+                />
+              </TabsContent>
             </div>
-          )}
+          </Tabs>
         </div>
 
         {/* Footer Info */}
-        {!isEnriching && (
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-br from-gray-800/95 to-gray-900/95 backdrop-blur-sm border-t border-white/10 px-6 py-3 z-20">
-            <p className="text-xs text-white/50 text-center">
-              {activeTab === "domain" ? (
-                <>
-                  <span className="font-semibold text-[#69B4B7]">
-                    Domain Specific:
-                  </span>{" "}
-                  Direct enrichment without AI search - faster processing
-                </>
-              ) : (
-                <>
-                  <span className="font-semibold text-[#69B4B7]">
-                    Advanced Filters:
-                  </span>{" "}
-                  AI-powered company discovery with custom filters
-                </>
-              )}
-            </p>
-          </div>
-        )}
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-br from-gray-800/95 to-gray-900/95 backdrop-blur-sm border-t border-white/10 px-6 py-3 z-20">
+          <p className="text-xs text-white/50 text-center">
+            {activeTab === "domain" ? (
+              <>
+                <span className="font-semibold text-[#69B4B7]">
+                  Domain Specific:
+                </span>{" "}
+                Direct enrichment without AI search - faster processing
+              </>
+            ) : (
+              <>
+                <span className="font-semibold text-[#69B4B7]">
+                  Advanced Filters:
+                </span>{" "}
+                AI-powered company discovery with custom filters
+              </>
+            )}
+          </p>
+        </div>
       </DialogContent>
     </Dialog>
   );
