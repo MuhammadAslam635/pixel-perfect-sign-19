@@ -324,14 +324,14 @@ const LeadChat = ({
         isAvailable: aiCallAvailable,
       },
       {
-        label: "Proposal",
-        status: "Ready",
-        isAvailable: true,
-      },
-      {
         label: "Meetings",
         status: "Ready",
         isAvailable: meetingBotAvailable,
+      },
+      {
+        label: "Proposal",
+        status: "Ready",
+        isAvailable: true,
       },
     ];
   }, [

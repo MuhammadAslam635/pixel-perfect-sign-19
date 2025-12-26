@@ -73,6 +73,7 @@ import {
 import { SelectedCallLogView } from "../index";
 import CompanyTab from "./CompanyTab";
 import CallScriptTab from "./CallScriptTab";
+import NotesTab from "./NotesTab";
 import AgentResearchTab from "./AgentResearchTab";
 import API from "@/utils/api";
 
@@ -1007,7 +1008,7 @@ const Activity: FC<ActivityProps> = ({
                 >
                   Agent Research
                   <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white hidden group-data-[state=active]:block" />
-                  </TabsTrigger> 
+                </TabsTrigger>
               </TabsList>
             </div>
 
@@ -1041,6 +1042,13 @@ const Activity: FC<ActivityProps> = ({
                     className="px-0 py-2 text-xs font-medium sm:text-sm text-white/40 data-[state=active]:text-white data-[state=active]:font-semibold data-[state=active]:bg-transparent data-[state=active]:shadow-none border-none rounded-none relative group"
                   >
                     Follow-up
+                    <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white hidden group-data-[state=active]:block" />
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="notes"
+                    className="px-0 py-2 text-xs font-medium sm:text-sm text-white/40 data-[state=active]:text-white data-[state=active]:font-semibold data-[state=active]:bg-transparent data-[state=active]:shadow-none border-none rounded-none relative group"
+                  >
+                    Notes
                     <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white hidden group-data-[state=active]:block" />
                   </TabsTrigger>
                 </TabsList>
@@ -1838,6 +1846,11 @@ const Activity: FC<ActivityProps> = ({
                       </div>
                     </div>
                   </div>
+                </TabsContent>
+
+                {/* Notes Tab Content */}
+                <TabsContent value="notes" className="mt-6">
+                  <NotesTab lead={lead} />
                 </TabsContent>
               </Tabs>
             </TabsContent>
