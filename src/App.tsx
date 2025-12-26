@@ -9,6 +9,10 @@ import AppRoutes from "./AppRoutes";
 import { AdminLayout } from "./components/dashboard/DashboardLayout";
 import SkylarFloatingWidget from "@/components/SkylarFloatingWidget";
 import "./App.css";
+import { useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { updateUser } from "./store/slices/authSlice";
+import { fetchAndSyncUser } from "./utils/authSync";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -22,10 +26,28 @@ const queryClient = new QueryClient({
   },
 });
 
+// Component to sync auth state on app load
+const AuthSynchronizer = () => {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    const syncUser = async () => {
+      const user = await fetchAndSyncUser();
+      if (user) {
+        dispatch(updateUser(user));
+      }
+    };
+    syncUser();
+  }, [dispatch]);
+
+  return null;
+};
+
 const App = () => (
   <Provider store={store}>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
+        <AuthSynchronizer />
         <Toaster />
         <Sonner />
         <BrowserRouter
