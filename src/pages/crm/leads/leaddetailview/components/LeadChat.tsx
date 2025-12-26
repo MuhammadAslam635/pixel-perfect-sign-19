@@ -1,4 +1,5 @@
 import { RefObject, useEffect, useMemo, useRef, useState } from "react";
+import ReactDOMServer from "react-dom/server";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ChevronDown,
@@ -10,7 +11,10 @@ import {
   Copy,
   Check,
   Download,
+  MessageCircle,
+  MapPin,
 } from "lucide-react";
+import { IoLogoWhatsapp, IoLocationSharp } from "react-icons/io5";
 import jsPDF from "jspdf";
 import { ActiveNavButton } from "@/components/ui/primary-btn";
 import { Button } from "@/components/ui/button";
@@ -1844,6 +1848,21 @@ const LeadChat = ({
     window.location.href = `${import.meta.env.VITE_APP_API_URL}/emails/compose`;
   };
 
+  // Function to convert React icon to base64 image
+  const convertIconToBase64 = (
+    IconComponent: any,
+    size: number = 16,
+    color: string = "#000000"
+  ): string => {
+    const svgString = ReactDOMServer.renderToString(
+      <IconComponent size={size} color={color} />
+    );
+
+    // Create a data URL from the SVG string
+    const svgDataUrl = `data:image/svg+xml;base64,${btoa(svgString)}`;
+    return svgDataUrl;
+  };
+
   const handleDownloadPDF = async (isDarkMode: boolean) => {
     if (!proposalContent) {
       toast.error("No proposal content to download");
@@ -2033,16 +2052,35 @@ const LeadChat = ({
 
         // Footer content
         const sectionWidth = contentWidth / 3;
-        const iconY = footerBarY + 3.5;
+        const iconY = footerBarY + 2;
         const textY = footerBarY + 9;
-        const iconSize = 3;
+        const iconSize = 4;
 
-        pdf.setDrawColor(...(iconColor as [number, number, number]));
-        pdf.setFillColor(...(iconColor as [number, number, number]));
+        // Convert icons to base64 images
+        const iconColorHex = isDarkMode ? "#FFFFFF" : "#3C3C3C";
+        const whatsappIconBase64 = convertIconToBase64(
+          IoLogoWhatsapp,
+          iconSize * 3,
+          iconColorHex
+        );
+        const locationIconBase64 = convertIconToBase64(
+          IoLocationSharp,
+          iconSize * 3,
+          iconColorHex
+        );
 
-        // WhatsApp icon (chat bubble)
+        // WhatsApp icon
         const whatsappX = margin + sectionWidth * 0.5;
-        pdf.circle(whatsappX, iconY, iconSize / 2, "S");
+        pdf.addImage(
+          whatsappIconBase64,
+          "PNG",
+          whatsappX - iconSize / 2,
+          iconY,
+          iconSize,
+          iconSize,
+          undefined,
+          "FAST"
+        );
         pdf.setFontSize(7);
         pdf.setTextColor(...(secondaryTextColor as [number, number, number]));
         pdf.text(companyWhatsApp, whatsappX, textY, { align: "center" });
@@ -2077,10 +2115,18 @@ const LeadChat = ({
           footerBarY + footerBarHeight - 2
         );
 
-        // Location icon (pin)
+        // Location icon
         const locationX = margin + sectionWidth * 2.5;
-        pdf.circle(locationX, iconY - 0.5, iconSize / 2.5, "S");
-        pdf.line(locationX, iconY + 0.5, locationX, iconY + 1.5);
+        pdf.addImage(
+          locationIconBase64,
+          "PNG",
+          locationX - iconSize / 2,
+          iconY,
+          iconSize,
+          iconSize,
+          undefined,
+          "FAST"
+        );
         pdf.text(companyLocation, locationX, textY, { align: "center" });
       };
 

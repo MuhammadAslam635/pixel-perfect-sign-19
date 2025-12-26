@@ -30,7 +30,10 @@ export interface SupportingDocument {
   _id?: string;
   fileName: string;
   filePath: string;
+  fileSize?: number;
+  fileType?: string;
   uploadedAt: string;
+  updatedAt?: string;
 }
 
 export interface OnboardingData {

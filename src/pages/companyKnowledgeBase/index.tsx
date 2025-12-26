@@ -7,6 +7,7 @@ import {
   Loader2,
   ChevronLeft,
   ChevronRight,
+  ExternalLink,
 } from "lucide-react";
 import KnowledgeLayout from "@/components/layout/KnowledgeLayout";
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,10 @@ import { useToast } from "@/components/ui/use-toast";
 import { companyKnowledgeService } from "@/services/companyKnowledge.service";
 import { useCompanyKnowledgeData } from "./hooks";
 import OnboardingPanel from "@/components/knowledge/OnboardingPanel";
+import { onboardingService } from "@/services/onboarding.service";
+import { OnboardingData } from "@/types/onboarding.types";
+import { getAuthToken } from "@/utils/authHelpers";
+import API from "@/utils/api";
 
 const formatFileSize = (bytes?: number) => {
   if (!bytes) return "Unknown size";
@@ -62,6 +67,7 @@ const CompanyKnowledgePage = () => {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [onboardingData, setOnboardingData] = useState<OnboardingData | null>(null);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -70,6 +76,36 @@ const CompanyKnowledgePage = () => {
     page,
     limit,
   });
+
+  // Fetch onboarding data for supporting documents
+  useEffect(() => {
+    const fetchOnboardingData = async () => {
+      try {
+        const response = await onboardingService.getOnboarding();
+        if (response.success && response.data) {
+          setOnboardingData(response.data);
+        }
+      } catch (err: any) {
+        // If 404, it means no onboarding exists yet - that's okay
+        if (err?.response?.status !== 404) {
+          console.error("Error fetching onboarding data:", err);
+        }
+      }
+    };
+
+    fetchOnboardingData();
+
+    // Listen for custom event to refresh data when onboarding is updated
+    const handleOnboardingUpdate = () => {
+      fetchOnboardingData();
+    };
+
+    window.addEventListener("onboarding_updated", handleOnboardingUpdate);
+
+    return () => {
+      window.removeEventListener("onboarding_updated", handleOnboardingUpdate);
+    };
+  }, []);
 
   useEffect(() => {
     if (query.error) {
@@ -118,6 +154,22 @@ const CompanyKnowledgePage = () => {
     setPage(1);
   };
 
+  const handleKnowledgeDocumentClick = (doc: any) => {
+    try {
+      const token = getAuthToken();
+      const baseURL = API.defaults.baseURL || '';
+      const documentUrl = `${baseURL}/company-knowledge/files/${doc._id}/view?token=${token}`;
+      window.open(documentUrl, '_blank');
+    } catch (error) {
+      console.error('Error opening document:', error);
+      toast({
+        title: "Error",
+        description: "Could not open document",
+        variant: "destructive",
+      });
+    }
+  };
+
   const renderContent = () => {
     if (loading) {
       return (
@@ -157,10 +209,11 @@ const CompanyKnowledgePage = () => {
           {files.map((file) => (
             <Card
               key={file._id}
-              className="border border-white/10 bg-transparent text-white"
+              className="border border-white/10 bg-transparent text-white cursor-pointer hover:border-cyan-500/30 transition-all"
+              onClick={() => handleKnowledgeDocumentClick(file)}
             >
               <CardHeader className="flex flex-row items-start justify-between space-y-0">
-                <div className="space-y-1">
+                <div className="space-y-1 flex-1">
                   <CardTitle className="text-lg font-semibold text-white">
                     {file.fileName}
                   </CardTitle>
@@ -168,18 +221,22 @@ const CompanyKnowledgePage = () => {
                     {file.fileType || "File"}
                   </CardDescription>
                 </div>
-                <Button
-                  disabled={deleteMutation.isPending}
-                  size="icon"
-                  variant="ghost"
-                  className="text-white/60 hover:text-red-300"
-                  onClick={() => {
-                    setDeleteId(file._id);
-                    setDeleteOpen(true);
-                  }}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                <div className="flex items-center gap-2">
+                  <ExternalLink className="h-4 w-4 text-white/40" />
+                  <Button
+                    disabled={deleteMutation.isPending}
+                    size="icon"
+                    variant="ghost"
+                    className="text-white/60 hover:text-red-300"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDeleteId(file._id);
+                      setDeleteOpen(true);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent className="px-6 pb-6 space-y-3 text-sm text-white/70">
                 <div className="flex justify-between">
@@ -246,6 +303,9 @@ const CompanyKnowledgePage = () => {
     <KnowledgeLayout
       initialTab="company-knowledge"
       onboardingContent={<OnboardingPanel />}
+      supportingDocuments={onboardingData?.supportingDocuments || []}
+      knowledgeDocuments={files || []}
+      onKnowledgeDocumentClick={handleKnowledgeDocumentClick}
     >
       <div className="flex flex-col gap-6 text-white">
         <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">

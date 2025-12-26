@@ -1,12 +1,30 @@
 import { ReactNode, useState } from "react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookOpen, FileCheck } from "lucide-react";
+import { BookOpen, FileCheck, File, FileText, ExternalLink } from "lucide-react";
+import { SupportingDocument } from "@/types/onboarding.types";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import API from "@/utils/api";
+import { getAuthToken } from "@/utils/authHelpers";
+
+type KnowledgeFile = {
+  _id: string;
+  fileName: string;
+  fileSize?: number;
+  fileType?: string;
+  fileUrl?: string;
+  filePath?: string;
+  uploadedAt?: string;
+  updatedAt?: string;
+};
 
 type KnowledgeLayoutProps = {
   children: ReactNode;
   onboardingContent?: ReactNode;
   initialTab?: "company-knowledge" | "onboarding";
+  supportingDocuments?: SupportingDocument[];
+  knowledgeDocuments?: KnowledgeFile[];
+  onKnowledgeDocumentClick?: (doc: KnowledgeFile) => void;
 };
 
 const tabItems = [
@@ -28,18 +46,66 @@ const KnowledgeLayout = ({
   children,
   onboardingContent,
   initialTab = "company-knowledge",
+  supportingDocuments = [],
+  knowledgeDocuments = [],
+  onKnowledgeDocumentClick,
 }: KnowledgeLayoutProps) => {
   const [tabValue, setTabValue] = useState<"company-knowledge" | "onboarding">(
     initialTab
   );
+  const [docsView, setDocsView] = useState<"knowledge" | "onboarding">("knowledge");
+
+  const formatFileSize = (bytes?: number) => {
+    if (!bytes || bytes === 0) return "—";
+    const k = 1024;
+    const units = ["Bytes", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return `${Math.round((bytes / Math.pow(k, i)) * 100) / 100} ${units[i]}`;
+  };
+
+  const formatDate = (value?: string) => {
+    if (!value) return "—";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "—";
+    return date.toLocaleDateString();
+  };
+
+  const handleOnboardingDocumentClick = async (doc: SupportingDocument) => {
+    try {
+      const token = getAuthToken();
+      const baseURL = API.defaults.baseURL || '';
+      const documentUrl = `${baseURL}/onboarding/documents/${doc._id}/view?token=${token}`;
+      
+      // Open in a new tab with token in URL
+      window.open(documentUrl, '_blank');
+    } catch (error) {
+      console.error('Error opening document:', error);
+    }
+  };
+
+  const handleKnowledgeDocumentClick = (doc: KnowledgeFile) => {
+    if (onKnowledgeDocumentClick) {
+      onKnowledgeDocumentClick(doc);
+    } else if (doc.fileUrl || doc.filePath) {
+      const token = getAuthToken();
+      const baseURL = API.defaults.baseURL || '';
+      const fileId = doc._id;
+      const documentUrl = `${baseURL}/company-knowledge/files/${fileId}/view?token=${token}`;
+      window.open(documentUrl, '_blank');
+    }
+  };
 
   return (
     <DashboardLayout>
       <div className="relative flex-1 px-6 pb-12 pt-28 sm:px-10 md:px-14 lg:px-20">
         <div className="relative z-10 mx-auto flex w-full max-w-[1400px] flex-col gap-8">
-          <header className="rounded-3xl border border-white/10 p-8 text-white" style={{
-            background: "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0) 38.08%, rgba(255, 255, 255, 0) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)"
-          }}>
+          <header
+            className="rounded-3xl border border-white/10 p-8 text-white"
+            style={{
+              background:
+                "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0) 38.08%, rgba(255, 255, 255, 0) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
+            }}
+          >
             <span className="inline-flex w-fit items-center rounded-full border border-white/20 bg-white/10 px-3 py-0.5 text-[9px] font-semibold uppercase  text-white/60">
               Knowledge Base
             </span>
@@ -60,9 +126,13 @@ const KnowledgeLayout = ({
             className="grid gap-6 lg:grid-cols-[260px,1fr]"
             orientation="vertical"
           >
-            <div className="rounded-3xl border border-white/10 p-4" style={{
-              background: "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0) 38.08%, rgba(255, 255, 255, 0) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)"
-            }}>
+            <div
+              className="rounded-3xl border border-white/10 p-4"
+              style={{
+                background:
+                  "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0) 38.08%, rgba(255, 255, 255, 0) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
+              }}
+            >
               <TabsList className="flex w-full flex-col gap-3 bg-transparent p-0">
                 {tabItems.map((tab) => {
                   const Icon = tab.icon;
@@ -86,11 +156,106 @@ const KnowledgeLayout = ({
                 })}
               </TabsList>
             </div>
-            <div className="rounded-3xl border border-white/10 p-8" style={{
-              background: "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0) 38.08%, rgba(255, 255, 255, 0) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)"
-            }}>
+            <div
+              className="rounded-3xl border border-white/10 p-8"
+              style={{
+                background:
+                  "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0) 38.08%, rgba(255, 255, 255, 0) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
+              }}
+            >
               <TabsContent value="company-knowledge" className="m-0">
-                {children}
+                <div className="flex flex-col gap-6">
+                  {/* Document Viewer Tabs */}
+                  <div className="flex gap-2 border-b border-white/10 pb-2">
+                    <button
+                      onClick={() => setDocsView("knowledge")}
+                      className={`px-4 py-2 text-xs font-medium rounded-lg transition ${
+                        docsView === "knowledge"
+                          ? "bg-cyan-600/60 text-white border border-cyan-500/30"
+                          : "bg-white/5 text-white/70 hover:bg-white/10 border border-white/10"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <BookOpen className="h-3.5 w-3.5" />
+                        Knowledge Documents
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => setDocsView("onboarding")}
+                      className={`px-4 py-2 text-xs font-medium rounded-lg transition ${
+                        docsView === "onboarding"
+                          ? "bg-cyan-600/60 text-white border border-cyan-500/30"
+                          : "bg-white/5 text-white/70 hover:bg-white/10 border border-white/10"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <File className="h-3.5 w-3.5" />
+                        Onboarding Documents
+                      </div>
+                    </button>
+                  </div>
+
+                  {/* Content Area */}
+                  {docsView === "knowledge" ? (
+                    <div>{children}</div>
+                  ) : (
+                    <div className="flex flex-col gap-6">
+                      {supportingDocuments && supportingDocuments.length > 0 ? (
+                        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+                          {supportingDocuments.map((doc, index) => (
+                            <Card
+                              key={doc._id || index}
+                              className="border border-white/10 bg-transparent text-white cursor-pointer hover:border-cyan-500/30 transition-all"
+                              onClick={() => handleOnboardingDocumentClick(doc)}
+                            >
+                              <CardHeader className="flex flex-row items-start justify-between space-y-0">
+                                <div className="space-y-1 flex-1">
+                                  <CardTitle className="text-lg font-semibold text-white">
+                                    {doc.fileName}
+                                  </CardTitle>
+                                  <CardDescription className="text-xs text-white/60">
+                                    {doc.fileType || "application/pdf"}
+                                  </CardDescription>
+                                </div>
+                                <ExternalLink className="h-4 w-4 text-white/40" />
+                              </CardHeader>
+                              <CardContent className="px-6 pb-6 space-y-3 text-sm text-white/70">
+                                <div className="flex justify-between">
+                                  <span>Size</span>
+                                  <span>{formatFileSize(doc.fileSize)}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Uploaded</span>
+                                  <span>{formatDate(doc.uploadedAt)}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Last updated</span>
+                                  <span>{formatDate(doc.updatedAt || doc.uploadedAt)}</span>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      ) : (
+                        <Card className="border border-white/10 bg-transparent text-white">
+                          <CardContent className="p-8 text-center">
+                            <div className="flex flex-col items-center gap-3">
+                              <div className="rounded-full bg-white/10 p-4">
+                                <File className="h-8 w-8 text-white/40" />
+                              </div>
+                              <div>
+                                <h3 className="text-sm font-semibold mb-1">No supporting documents</h3>
+                                <p className="text-xs text-white/60">
+                                  Upload documents in the onboarding process to see them here.
+                                </p>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )}
+                    </div>
+                  )}
+                </div>
               </TabsContent>
               {onboardingContent && (
                 <TabsContent value="onboarding" className="m-0">

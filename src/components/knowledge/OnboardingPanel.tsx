@@ -237,36 +237,6 @@ const OnboardingPanel = () => {
                     </div>
                   </div>
                 )}
-
-                {/* Supporting Documents */}
-                {onboardingData.supportingDocuments && onboardingData.supportingDocuments.length > 0 && (
-                  <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                    <div className="flex items-start gap-3">
-                      <div className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-cyan-200 flex-shrink-0">
-                        <File className="h-3.5 w-3.5" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-xs sm:text-sm font-semibold mb-2">Supporting Documents</h3>
-                        <div className="space-y-2">
-                          {onboardingData.supportingDocuments.map((doc, index) => (
-                            <div 
-                              key={doc._id || index}
-                              className="flex items-center gap-2 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
-                            >
-                              <FileText className="h-3.5 w-3.5 text-cyan-400 flex-shrink-0" />
-                              <span className="text-[10px] text-white/70 truncate flex-1">
-                                {doc.fileName}
-                              </span>
-                              <span className="text-[9px] text-white/40 flex-shrink-0">
-                                {new Date(doc.uploadedAt).toLocaleDateString()}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             </>
           ) : (
