@@ -344,11 +344,11 @@ const index = () => {
               {/* Enrich Leads Section - Always Visible */}
               <div className="flex items-center gap-2 flex-shrink-0">
                 {/* Seniority Quick Selector */}
-                <SeniorityQuickSelector
+                {/* <SeniorityQuickSelector
                   selectedSeniorities={selectedSeniorities}
                   onChange={setSelectedSeniorities}
                   seniorityOptions={seniorityOptions}
-                />
+                /> */}
 
                 {/* Enrich Leads Button */}
                 <Button
@@ -356,8 +356,8 @@ const index = () => {
                   className="bg-gradient-to-r from-[#69B4B7] to-[#3E64B4] hover:from-[#69B4B7]/80 hover:to-[#3E64B4]/80 text-white font-semibold rounded-full px-4 sm:px-6 h-10 shadow-[0_5px_18px_rgba(103,176,183,0.35)] hover:shadow-[0_8px_24px_rgba(103,176,183,0.45)] transition-all whitespace-nowrap"
                 >
                   <Sparkles className="w-4 h-4" />
-                  <span className="hidden sm:inline">Enrich Leads</span>
-                  <span className="sm:hidden">Enrich</span>
+                  <span className="hidden sm:inline">Find Leads</span>
+                  <span className="sm:hidden">Find</span>
                 </Button>
               </div>
 
