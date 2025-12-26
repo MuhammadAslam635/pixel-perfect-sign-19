@@ -16,7 +16,6 @@ const SignUp = () => {
   const [lastName, setLastName] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [email, setEmail] = useState("");
-  const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -26,7 +25,6 @@ const SignUp = () => {
     firstName: "",
     lastName: "",
     companyName: "",
-    fullName: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -96,9 +94,6 @@ const SignUp = () => {
       case "email":
         setEmail(value);
         break;
-      case "fullName":
-        setFullName(value);
-        break;
       case "password":
         setPassword(value);
         break;
@@ -117,7 +112,6 @@ const SignUp = () => {
       firstName: "",
       lastName: "",
       companyName: "",
-      fullName: "",
       email: "",
       password: "",
       confirmPassword: "",
@@ -128,7 +122,6 @@ const SignUp = () => {
       firstName: "",
       lastName: "",
       companyName: "",
-      fullName: "",
       email: "",
       password: "",
       confirmPassword: "",
@@ -136,8 +129,12 @@ const SignUp = () => {
     let hasError = false;
 
     if (isInviteFlow) {
-      if (!fullName.trim()) {
-        newErrors.fullName = "Full name is required";
+      if (!firstName.trim()) {
+        newErrors.firstName = "First name is required";
+        hasError = true;
+      }
+      if (!lastName.trim()) {
+        newErrors.lastName = "Last name is required";
         hasError = true;
       }
       if (!password) {
@@ -174,7 +171,8 @@ const SignUp = () => {
       try {
         const response = await authService.acceptInvitation({
           token: inviteToken,
-          name: fullName.trim(),
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
           password,
           confirm_password: confirmPassword,
         });
@@ -183,7 +181,8 @@ const SignUp = () => {
           toast.success(
             response.message || "Invitation accepted successfully. You can now log in."
           );
-          setFullName("");
+          setFirstName("");
+          setLastName("");
           setPassword("");
           setConfirmPassword("");
           setTimeout(() => {
@@ -325,12 +324,14 @@ const SignUp = () => {
                       {invitationDetails?.companyName}
                     </span>
                   </p>
-                  <p className="text-sm text-white/70">
-                    Role:&nbsp;
-                    <span className="text-white font-semibold">
-                      {invitationDetails?.role}
-                    </span>
-                  </p>
+                  {invitationDetails?.role && (
+                    <p className="text-sm text-white/70">
+                      Role:&nbsp;
+                      <span className="text-white font-semibold">
+                        {invitationDetails.role}
+                      </span>
+                    </p>
+                  )}
                   <p className="text-sm text-white/70">
                     Invited by{" "}
                     <span className="text-white">
@@ -344,23 +345,49 @@ const SignUp = () => {
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="fullName" className="text-base font-light text-white">
-                Full name
-              </Label>
-              <AuthInput
-                id="fullName"
-                type="text"
-                name="fullName"
-                placeholder="Enter your full name"
-                value={fullName}
-                onChange={(e) => handleChange(e, "fullName")}
-                className="text-base font-normal text-white/70"
-                disabled={isFormDisabled}
-              />
-              {errors.fullName && (
-                <p className="text-sm text-red-400">{errors.fullName}</p>
-              )}
+            <div className="flex gap-4">
+              <div className="space-y-2 w-1/2">
+                <Label
+                  htmlFor="firstName"
+                  className="text-base font-light text-white"
+                >
+                  First Name
+                </Label>
+                <AuthInput
+                  id="firstName"
+                  type="text"
+                  name="firstName"
+                  placeholder="First Name"
+                  value={firstName}
+                  onChange={(e) => handleChange(e, "firstName")}
+                  className="text-base font-normal text-white/70"
+                  disabled={isFormDisabled}
+                />
+                {errors.firstName && (
+                  <p className="text-sm text-red-400">{errors.firstName}</p>
+                )}
+              </div>
+              <div className="space-y-2 w-1/2">
+                <Label
+                  htmlFor="lastName"
+                  className="text-base font-light text-white"
+                >
+                  Last Name
+                </Label>
+                <AuthInput
+                  id="lastName"
+                  type="text"
+                  name="lastName"
+                  placeholder="Last Name"
+                  value={lastName}
+                  onChange={(e) => handleChange(e, "lastName")}
+                  className="text-base font-normal text-white/70"
+                  disabled={isFormDisabled}
+                />
+                {errors.lastName && (
+                  <p className="text-sm text-red-400">{errors.lastName}</p>
+                )}
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -449,8 +476,6 @@ const SignUp = () => {
                 <p className="text-sm text-red-400">{errors.companyName}</p>
               )}
             </div>
-
-
 
             <div className="space-y-2">
               <Label htmlFor="email" className="text-base font-light text-white">

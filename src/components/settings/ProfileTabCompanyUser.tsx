@@ -26,13 +26,15 @@ interface CompanyInfo {
 
 interface UserFormState {
   id: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   token: string;
 }
 
 interface ProfileErrors {
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
 }
 
@@ -47,13 +49,15 @@ export const ProfileTabCompanyUser = () => {
   });
 
   const [errors, setErrors] = useState<ProfileErrors>({
-    name: "",
+    firstName: "",
+    lastName: "",
     email: "",
   });
 
   const [formState, setFormState] = useState<UserFormState>({
     id: "",
-    name: "",
+    firstName: "",
+    lastName: "",
     email: "",
     token: "",
   });
@@ -62,7 +66,8 @@ export const ProfileTabCompanyUser = () => {
     if (user) {
       setFormState({
         id: user._id ?? "",
-        name: user.name ?? "",
+        firstName: user.firstName ?? "",
+        lastName: user.lastName ?? "",
         email: user.email ?? "",
         token: user.token ?? "",
       });
@@ -80,6 +85,7 @@ export const ProfileTabCompanyUser = () => {
           setCompanyInfo({ name: "", email: "" });
         }
       } catch (error: unknown) {
+        // console.error("Failed to fetch company info", error);
         setCompanyInfo({ name: "", email: "" });
         if (
           axios.isAxiosError(error) &&
@@ -111,7 +117,7 @@ export const ProfileTabCompanyUser = () => {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setErrors({ name: "", email: "" });
+    setErrors({ firstName: "", lastName: "", email: "" });
 
     if (!user?.token) {
       handleUnauthorized();
@@ -157,7 +163,11 @@ export const ProfileTabCompanyUser = () => {
           error.response.status === 422 &&
           Array.isArray((error.response.data as { errors?: unknown }).errors)
         ) {
-          const validationErrors: ProfileErrors = { name: "", email: "" };
+          const validationErrors: ProfileErrors = {
+            firstName: "",
+            lastName: "",
+            email: "",
+          };
           (
             (
               error.response.data as {
@@ -226,20 +236,37 @@ export const ProfileTabCompanyUser = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4 pt-6">
-          <div className="space-y-2">
-            <Label htmlFor="name" className="text-white/80">
-              Name
-            </Label>
-            <Input
-              id="name"
-              name="name"
-              value={formState.name}
-              onChange={handleInputChange}
-              className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40"
-            />
-            {errors.name ? (
-              <p className="text-sm text-rose-400">{errors.name}</p>
-            ) : null}
+          <div className="flex gap-4">
+            <div className="space-y-2 w-1/2">
+              <Label htmlFor="firstName" className="text-white/80">
+                First Name
+              </Label>
+              <Input
+                id="firstName"
+                name="firstName"
+                value={formState.firstName}
+                onChange={handleInputChange}
+                className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40"
+              />
+              {errors.firstName ? (
+                <p className="text-sm text-rose-400">{errors.firstName}</p>
+              ) : null}
+            </div>
+            <div className="space-y-2 w-1/2">
+              <Label htmlFor="lastName" className="text-white/80">
+                Last Name
+              </Label>
+              <Input
+                id="lastName"
+                name="lastName"
+                value={formState.lastName}
+                onChange={handleInputChange}
+                className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40"
+              />
+              {errors.lastName ? (
+                <p className="text-sm text-rose-400">{errors.lastName}</p>
+              ) : null}
+            </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="email" className="text-white/80">

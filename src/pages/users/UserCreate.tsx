@@ -343,6 +343,15 @@ const UserCreate = () => {
         if (error.response.status === 401) {
           toast.error("Session expired. Please log in again.");
           navigate("/");
+        } else if (error.response.status === 409) {
+           // Handle duplicate user error
+           const errorMessage = error.response.data.message || "User with this email already exists";
+           toast.error(errorMessage);
+           setErrors((prev) => ({
+             ...prev,
+             email: errorMessage,
+             mailgunEmail: errorMessage 
+           }));
         } else if (
           error.response.status === 422 &&
           Array.isArray(error.response.data.errors)
@@ -362,7 +371,13 @@ const UserCreate = () => {
           });
           setErrors(newErrors);
         } else {
-          toast.error(error.response?.data?.message || "An error occurred");
+          // Fallback for other errors, including the "duplicate key" message if backend wasn't updated perfectly or for other collections
+          const errorMessage = error.response?.data?.message || "An error occurred";
+          if (error.response?.data?.error?.includes("duplicate key")) {
+             toast.error("User with this email or data already exists");
+          } else {
+             toast.error(errorMessage);
+          }
         }
       } else {
         toast.error("Network error. Please try again.");

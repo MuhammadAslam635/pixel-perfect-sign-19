@@ -229,7 +229,10 @@ const UserList = () => {
 
       if (roleObject) {
         roleName = roleObject.displayName;
-      } else if (user.role === "CompanyAdmin") {
+      } else if (
+        user.role === "CompanyAdmin" ||
+        user.role === "Company"
+      ) {
         roleName = "Company Admin";
       } else if (user.role === "CompanyUser") {
         roleName = "Company User";
@@ -338,7 +341,7 @@ const UserList = () => {
     }
 
     // Fallback to legacy roles
-    if (userData.role === "CompanyAdmin") {
+    if (userData.role === "CompanyAdmin" || userData.role === "Company") {
       return (
         <Badge className="bg-purple-600/20 text-purple-400 border border-purple-600/30 rounded-full px-3 py-1 text-xs">
           Company Admin
@@ -812,7 +815,7 @@ const UserList = () => {
           }
         }}
       >
-        <DialogContent className="w-[92vw] max-w-xl sm:max-w-lg bg-[#121826] text-white border border-white/10 rounded-2xl sm:rounded-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6 space-y-5">
+      <DialogContent className="w-[92vw] max-w-xl sm:max-w-2xl bg-[linear-gradient(173.83deg,_rgba(255,255,255,0.08)_4.82%,_rgba(255,255,255,0)_38.08%,_rgba(255,255,255,0)_56.68%,_rgba(255,255,255,0.02)_95.1%)] text-white border border-white/10 rounded-2xl sm:rounded-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6 space-y-5 backdrop-blur-md scrollbar-hide">
           <DialogHeader className="space-y-2">
             <DialogTitle className="text-2xl font-semibold text-white">
               Invite a teammate
@@ -824,7 +827,7 @@ const UserList = () => {
           </DialogHeader>
           <form className="space-y-4" onSubmit={handleInviteSubmit}>
             <div className="space-y-2">
-              <Label htmlFor="invite-email" className="text-sm text-white/80">
+              <Label htmlFor="invite-email" className="text-sm text-white/90 font-medium">
                 Email address
               </Label>
               <Input
@@ -835,7 +838,7 @@ const UserList = () => {
                   handleInviteFieldChange("email", e.target.value)
                 }
                 placeholder="teammate@example.com"
-                className="bg-[#0b0f1c] border-white/10 text-white placeholder:text-white/40"
+                className="bg-[#222B2C]/40 border-white/10 text-white placeholder:text-white/50 h-10 rounded-lg focus:ring-2 focus:ring-cyan-400/40 focus:border-cyan-400/40"
               />
               {inviteErrors.email && (
                 <p className="text-xs text-red-400">{inviteErrors.email}</p>
@@ -843,7 +846,7 @@ const UserList = () => {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-sm text-white/80">Role (optional)</Label>
+              <Label className="text-sm text-white/90 font-medium">Role (optional)</Label>
               <Select
                 value={inviteForm.roleId || "none"}
                 onValueChange={(value) =>
@@ -853,13 +856,13 @@ const UserList = () => {
                   )
                 }
               >
-                <SelectTrigger className="bg-[#0b0f1c] border-white/10 text-white">
+                <SelectTrigger className="bg-[#222B2C]/40 border-white/10 text-white h-10 rounded-lg focus:ring-2 focus:ring-cyan-400/40">
                   <SelectValue placeholder="Select a role (optional)" />
                 </SelectTrigger>
-                <SelectContent className="bg-[#0b0f1c] text-white border-white/10">
-                  <SelectItem value="none">No role specified</SelectItem>
+                <SelectContent className="bg-[#1B1B1B] text-white border-white/10 backdrop-blur">
+                  <SelectItem value="none" className="hover:bg-white/10 focus:bg-white/10">No role specified</SelectItem>
                   {availableRoles.map((role) => (
-                    <SelectItem key={role._id} value={role._id}>
+                    <SelectItem key={role._id} value={role._id} className="hover:bg-white/10 focus:bg-white/10">
                       {role.displayName}
                     </SelectItem>
                   ))}
@@ -868,7 +871,7 @@ const UserList = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="invite-expiry" className="text-sm text-white/80">
+              <Label htmlFor="invite-expiry" className="text-sm text-white/90 font-medium">
                 Expires in (days)
               </Label>
               <Input
@@ -880,7 +883,7 @@ const UserList = () => {
                 onChange={(e) =>
                   handleInviteFieldChange("expiresInDays", e.target.value)
                 }
-                className="bg-[#0b0f1c] border-white/10 text-white"
+                className="bg-[#222B2C]/40 border-white/10 text-white h-10 rounded-lg focus:ring-2 focus:ring-cyan-400/40 focus:border-cyan-400/40 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
               {inviteErrors.expiresInDays && (
                 <p className="text-xs text-red-400">
@@ -890,7 +893,7 @@ const UserList = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="invite-message" className="text-sm text-white/80">
+              <Label htmlFor="invite-message" className="text-sm text-white/90 font-medium">
                 Personal message (optional)
               </Label>
               <Textarea
@@ -900,7 +903,7 @@ const UserList = () => {
                   handleInviteFieldChange("message", e.target.value)
                 }
                 placeholder="Add context for your teammate..."
-                className="bg-[#0b0f1c] border-white/10 text-white placeholder:text-white/40 min-h-[90px]"
+                className="bg-[#222B2C]/40 border-white/10 text-white placeholder:text-white/50 min-h-[90px] rounded-lg focus:ring-2 focus:ring-cyan-400/40 focus:border-cyan-400/40"
               />
             </div>
 
@@ -912,14 +915,14 @@ const UserList = () => {
                   resetInviteForm();
                   setInviteDialogOpen(false);
                 }}
-                className="border-white/30 text-white hover:bg-white/10 w-full sm:w-auto"
+                className="w-full sm:w-auto rounded-lg border border-white/20 bg-white/5 hover:bg-white/10 text-white transition-colors"
                 disabled={inviteSubmitting}
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                className="bg-gradient-to-r from-[#69B4B7] via-[#5486D0] to-[#3E64B3] text-white hover:brightness-110 w-full sm:w-auto"
+                className="w-full sm:w-auto rounded-lg bg-gradient-to-r from-[#69B4B7] via-[#5486D0] to-[#3E64B3] text-white hover:brightness-110 transition-all"
                 disabled={inviteSubmitting}
               >
                 {inviteSubmitting ? "Sending..." : "Send invitation"}

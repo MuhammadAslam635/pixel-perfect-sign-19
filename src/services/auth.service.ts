@@ -55,7 +55,8 @@ export interface InvitationDetailsResponse {
 
 export interface AcceptInvitationData {
   token: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   password: string;
   confirm_password: string;
 }
