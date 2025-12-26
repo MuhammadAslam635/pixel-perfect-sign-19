@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Plus, Edit2, Trash2, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
+import ConfirmDialog from "@/components/ui/confirm-dialog";
 
 interface NotesTabProps {
   lead: Lead;
@@ -19,6 +20,7 @@ const NotesTab: FC<NotesTabProps> = ({ lead }) => {
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
   const [isAddingNote, setIsAddingNote] = useState(false);
+  const [notePendingDelete, setNotePendingDelete] = useState<Note | null>(null);
 
   // Fetch notes for this lead
   const {
@@ -81,6 +83,7 @@ const NotesTab: FC<NotesTabProps> = ({ lead }) => {
   const deleteNoteMutation = useMutation({
     mutationFn: (noteId: string) => notesService.deleteNote(noteId),
     onSuccess: () => {
+      setNotePendingDelete(null);
       queryClient.invalidateQueries({ queryKey: ["notes", lead._id] });
       toast.success("Note deleted successfully");
     },
@@ -105,10 +108,17 @@ const NotesTab: FC<NotesTabProps> = ({ lead }) => {
     updateNoteMutation.mutate({ noteId, content: editContent });
   };
 
-  const handleDeleteNote = (noteId: string) => {
-    if (window.confirm("Are you sure you want to delete this note?")) {
-      deleteNoteMutation.mutate(noteId);
-    }
+  const handleDeleteNote = (note: Note) => {
+    setNotePendingDelete(note);
+  };
+
+  const handleConfirmDelete = () => {
+    if (!notePendingDelete) return;
+    deleteNoteMutation.mutate(notePendingDelete._id);
+  };
+
+  const handleCancelDelete = () => {
+    setNotePendingDelete(null);
   };
 
   const startEditing = (note: Note) => {
@@ -300,14 +310,14 @@ const NotesTab: FC<NotesTabProps> = ({ lead }) => {
                         <Edit2 className="w-3 h-3" />
                       </Button>
                       <Button
-                        onClick={() => handleDeleteNote(note._id)}
+                        onClick={() => handleDeleteNote(note)}
                         variant="ghost"
                         size="sm"
                         className="h-7 px-2 text-red-400/60 hover:text-red-400 hover:bg-red-500/10"
                         disabled={deleteNoteMutation.isPending}
                       >
                         {deleteNoteMutation.isPending &&
-                        deleteNoteMutation.variables === note._id ? (
+                        notePendingDelete?._id === note._id ? (
                           <Loader2 className="w-3 h-3 animate-spin" />
                         ) : (
                           <Trash2 className="w-3 h-3" />
@@ -321,6 +331,18 @@ const NotesTab: FC<NotesTabProps> = ({ lead }) => {
           ))
         )}
       </div>
+
+      <ConfirmDialog
+        open={Boolean(notePendingDelete)}
+        title="Delete Note"
+        description="Are you sure you want to delete this note? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        confirmVariant="destructive"
+        isPending={deleteNoteMutation.isPending}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+      />
     </div>
   );
 };

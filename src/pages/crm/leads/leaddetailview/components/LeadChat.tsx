@@ -165,6 +165,7 @@ const LeadChat = ({
   const [isEmailEditorExpanded, setIsEmailEditorExpanded] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [proposalContent, setProposalContent] = useState<string>("");
+  const [proposalHtmlContent, setProposalHtmlContent] = useState<string>("");
   const [isGeneratingProposal, setIsGeneratingProposal] = useState(false);
   const [proposalCopied, setProposalCopied] = useState(false);
   const [isUpdatingStage, setIsUpdatingStage] = useState(false);
@@ -384,6 +385,7 @@ const LeadChat = ({
 
   useEffect(() => {
     setProposalContent("");
+    setProposalHtmlContent("");
     setProposalCopied(false);
     setIsProposalEditable(false);
     setSelectedText("");
@@ -1142,6 +1144,50 @@ const LeadChat = ({
     return html;
   };
 
+  // Helper function to convert HTML back to markdown
+  const htmlToMarkdown = (html: string): string => {
+    if (!html) return "";
+    
+    let markdown = html
+      // Headers
+      .replace(/<h1>(.*?)<\/h1>/gi, "# $1\n\n")
+      .replace(/<h2>(.*?)<\/h2>/gi, "## $1\n\n")
+      .replace(/<h3>(.*?)<\/h3>/gi, "### $1\n\n")
+      .replace(/<h4>(.*?)<\/h4>/gi, "#### $1\n\n")
+      // Bold and italic
+      .replace(/<strong>(.*?)<\/strong>/gi, "**$1**")
+      .replace(/<b>(.*?)<\/b>/gi, "**$1**")
+      .replace(/<em>(.*?)<\/em>/gi, "*$1*")
+      .replace(/<i>(.*?)<\/i>/gi, "*$1*")
+      // Lists
+      .replace(/<ul>(.*?)<\/ul>/gis, (match, content) => {
+        return content.replace(/<li>(.*?)<\/li>/gi, "- $1\n");
+      })
+      .replace(/<ol>(.*?)<\/ol>/gis, (match, content) => {
+        let counter = 1;
+        return content.replace(/<li>(.*?)<\/li>/gi, () => `${counter++}. $1\n`);
+      })
+      // Links
+      .replace(/<a[^>]*href="([^"]*)"[^>]*>(.*?)<\/a>/gi, "[$2]($1)")
+      // Code
+      .replace(/<code>(.*?)<\/code>/gi, "`$1`")
+      .replace(/<pre><code>(.*?)<\/code><\/pre>/gis, "\n```\n$1\n```\n")
+      // Blockquotes
+      .replace(/<blockquote>(.*?)<\/blockquote>/gi, "> $1\n")
+      // Horizontal rules
+      .replace(/<hr\s*\/?>/gi, "\n---\n")
+      // Paragraphs and line breaks
+      .replace(/<p>(.*?)<\/p>/gi, "$1\n\n")
+      .replace(/<br\s*\/?>/gi, "\n")
+      // Remove remaining HTML tags
+      .replace(/<[^>]+>/g, "")
+      // Clean up multiple newlines
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+    
+    return markdown;
+  };
+
   // Helper function to convert markdown to plain text
   const markdownToText = (markdown: string): string => {
     if (!markdown) return "";
@@ -1531,6 +1577,7 @@ const LeadChat = ({
         setSelectedText("");
         setSelectionRange(null);
         // Switch to editable mode to show the changes
+        setProposalHtmlContent(markdownToHtml(proposalContent));
         setIsProposalEditable(true);
       } else {
         toast.error("No edited content was generated. Try again.");
@@ -1545,6 +1592,13 @@ const LeadChat = ({
       setIsEditingWithAI(false);
     }
   };
+
+  // Sync HTML content when entering edit mode
+  useEffect(() => {
+    if (isProposalEditable && proposalContent && !proposalHtmlContent) {
+      setProposalHtmlContent(markdownToHtml(proposalContent));
+    }
+  }, [isProposalEditable, proposalContent, proposalHtmlContent]);
 
   // Listen for selection changes in view mode only
   // Edit mode handles selection via inline handlers on textarea
@@ -1854,13 +1908,21 @@ const LeadChat = ({
     size: number = 16,
     color: string = "#000000"
   ): string => {
-    const svgString = ReactDOMServer.renderToString(
-      <IconComponent size={size} color={color} />
-    );
+    try {
+      const svgString = ReactDOMServer.renderToString(
+        <IconComponent size={size} color={color} />
+      );
 
-    // Create a data URL from the SVG string
-    const svgDataUrl = `data:image/svg+xml;base64,${btoa(svgString)}`;
-    return svgDataUrl;
+      // Properly encode the SVG string to handle Unicode characters
+      const base64 = btoa(unescape(encodeURIComponent(svgString)));
+      const svgDataUrl = `data:image/svg+xml;base64,${base64}`;
+      return svgDataUrl;
+    } catch (error) {
+      console.error("Error converting icon to base64:", error);
+      // Return a simple placeholder icon as fallback
+      const fallbackSvg = `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg"><circle cx="${size/2}" cy="${size/2}" r="${size/3}" fill="${color}"/></svg>`;
+      return `data:image/svg+xml;base64,${btoa(fallbackSvg)}`;
+    }
   };
 
   const handleDownloadPDF = async (isDarkMode: boolean) => {
@@ -1870,11 +1932,15 @@ const LeadChat = ({
     }
 
     try {
+      console.log("Starting PDF generation...");
+      
       const pdf = new jsPDF({
         orientation: "portrait",
         unit: "mm",
         format: "a4",
       });
+
+      console.log("jsPDF initialized");
 
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
@@ -1897,6 +1963,8 @@ const LeadChat = ({
       const companyWhatsApp =
         whatsappNumber || phoneNumber || "+966 XXX XXX XXX";
       const companyLogoUrl = lead?.company?.logo || null;
+
+      console.log("Company data prepared:", { companyName, companyWebsite, companyLocation });
 
       // Function to load image as base64
       const loadImageAsBase64 = async (url: string): Promise<string | null> => {
@@ -1944,7 +2012,13 @@ const LeadChat = ({
       // Load company logo if available
       let logoBase64: string | null = null;
       if (companyLogoUrl) {
-        logoBase64 = await loadImageAsBase64(companyLogoUrl);
+        try {
+          console.log("Loading company logo...");
+          logoBase64 = await loadImageAsBase64(companyLogoUrl);
+          console.log("Logo loaded:", logoBase64 ? "success" : "failed");
+        } catch (error) {
+          console.error("Error loading logo:", error);
+        }
       }
 
       // Text color
@@ -1952,6 +2026,8 @@ const LeadChat = ({
       const secondaryTextColor = isDarkMode ? [200, 200, 200] : [100, 100, 100];
       const iconColor = isDarkMode ? [255, 255, 255] : [60, 60, 60];
       const dividerColor = isDarkMode ? [100, 100, 100] : [180, 180, 180];
+
+      console.log("Colors configured for", isDarkMode ? "dark" : "light", "mode");
 
       // Header height for content calculation
       const headerHeight = 30;
@@ -2033,6 +2109,10 @@ const LeadChat = ({
         const footerY = pageHeight - footerHeight;
         const footerBarHeight = 12;
         const footerBarY = pageHeight - footerBarHeight;
+        const iconSize = 4;
+        const sectionWidth = contentWidth / 3;
+        const iconY = footerBarY + 4;
+        const textY = footerBarY + 9;
 
         // Footer background bar
         if (isDarkMode) {
@@ -2050,40 +2130,36 @@ const LeadChat = ({
           "F"
         );
 
-        // Footer content
-        const sectionWidth = contentWidth / 3;
-        const iconY = footerBarY + 2;
-        const textY = footerBarY + 9;
-        const iconSize = 4;
-
-        // Convert icons to base64 images
-        const iconColorHex = isDarkMode ? "#FFFFFF" : "#3C3C3C";
-        const whatsappIconBase64 = convertIconToBase64(
-          IoLogoWhatsapp,
-          iconSize * 3,
-          iconColorHex
-        );
-        const locationIconBase64 = convertIconToBase64(
-          IoLocationSharp,
-          iconSize * 3,
-          iconColorHex
-        );
-
-        // WhatsApp icon
+        // WhatsApp icon - improved design
         const whatsappX = margin + sectionWidth * 0.5;
-        pdf.addImage(
-          whatsappIconBase64,
-          "PNG",
-          whatsappX - iconSize / 2,
-          iconY,
-          iconSize,
-          iconSize,
-          undefined,
-          "FAST"
+        pdf.setDrawColor(...(iconColor as [number, number, number]));
+        pdf.setFillColor(...(iconColor as [number, number, number]));
+        pdf.setLineWidth(0.3);
+        
+        // Draw WhatsApp phone icon
+        pdf.circle(whatsappX, iconY, iconSize / 2.2, "S");
+        // Phone receiver shape
+        const phoneScale = iconSize / 8;
+        pdf.setLineWidth(0.5);
+        pdf.line(
+          whatsappX - phoneScale * 0.8, 
+          iconY + phoneScale * 0.8,
+          whatsappX - phoneScale * 0.3,
+          iconY + phoneScale * 0.3
         );
+        pdf.line(
+          whatsappX + phoneScale * 0.3, 
+          iconY - phoneScale * 0.3,
+          whatsappX + phoneScale * 0.8,
+          iconY - phoneScale * 0.8
+        );
+        
         pdf.setFontSize(7);
         pdf.setTextColor(...(secondaryTextColor as [number, number, number]));
-        pdf.text(companyWhatsApp, whatsappX, textY, { align: "center" });
+        const whatsappLines = pdf.splitTextToSize(companyWhatsApp, sectionWidth - 4);
+        whatsappLines.forEach((line: string, idx: number) => {
+          pdf.text(line, whatsappX, textY + (idx * 3), { align: "center" });
+        });
 
         // Vertical divider 1
         pdf.setDrawColor(...(dividerColor as [number, number, number]));
@@ -2095,17 +2171,25 @@ const LeadChat = ({
           footerBarY + footerBarHeight - 2
         );
 
-        // Website icon (globe)
+        // Website icon (globe) - improved design
         const websiteX = margin + sectionWidth * 1.5;
-        pdf.circle(websiteX, iconY, iconSize / 2, "S");
+        pdf.setDrawColor(...(iconColor as [number, number, number]));
+        pdf.setLineWidth(0.3);
+        pdf.circle(websiteX, iconY, iconSize / 2.2, "S");
+        // Latitude lines
         pdf.line(
-          websiteX - iconSize / 2,
+          websiteX - iconSize / 2.2,
           iconY,
-          websiteX + iconSize / 2,
+          websiteX + iconSize / 2.2,
           iconY
         );
-        pdf.ellipse(websiteX, iconY, iconSize / 4, iconSize / 2, "S");
-        pdf.text(companyWebsite, websiteX, textY, { align: "center" });
+        // Longitude (vertical ellipse)
+        pdf.ellipse(websiteX, iconY, iconSize / 5, iconSize / 2.2, "S");
+        
+        const websiteLines = pdf.splitTextToSize(companyWebsite, sectionWidth - 4);
+        websiteLines.forEach((line: string, idx: number) => {
+          pdf.text(line, websiteX, textY + (idx * 3), { align: "center" });
+        });
 
         // Vertical divider 2
         pdf.line(
@@ -2115,19 +2199,33 @@ const LeadChat = ({
           footerBarY + footerBarHeight - 2
         );
 
-        // Location icon
+        // Location icon - improved pin design
         const locationX = margin + sectionWidth * 2.5;
-        pdf.addImage(
-          locationIconBase64,
-          "PNG",
-          locationX - iconSize / 2,
-          iconY,
-          iconSize,
-          iconSize,
-          undefined,
-          "FAST"
+        pdf.setDrawColor(...(iconColor as [number, number, number]));
+        pdf.setFillColor(...(iconColor as [number, number, number]));
+        pdf.setLineWidth(0.3);
+        
+        // Draw location pin
+        const pinRadius = iconSize / 3;
+        pdf.circle(locationX, iconY - 0.8, pinRadius, "FD");
+        // Pin bottom point
+        pdf.triangle(
+          locationX - pinRadius * 0.4,
+          iconY - 0.8 + pinRadius * 0.7,
+          locationX + pinRadius * 0.4,
+          iconY - 0.8 + pinRadius * 0.7,
+          locationX,
+          iconY + iconSize / 2.5,
+          "F"
         );
-        pdf.text(companyLocation, locationX, textY, { align: "center" });
+        // Inner circle (hole in pin)
+        pdf.setFillColor(isDarkMode ? 45 : 255, isDarkMode ? 45 : 255, isDarkMode ? 45 : 255);
+        pdf.circle(locationX, iconY - 0.8, pinRadius * 0.4, "F");
+        
+        const locationLines = pdf.splitTextToSize(companyLocation, sectionWidth - 4);
+        locationLines.forEach((line: string, idx: number) => {
+          pdf.text(line, locationX, textY + (idx * 3), { align: "center" });
+        });
       };
 
       // Function to add background to page
@@ -2152,47 +2250,193 @@ const LeadChat = ({
       // Add footer to first page
       addFooter();
 
-      // Convert markdown to plain text and format
-      const plainText = markdownToText(proposalContent);
-      const lines = pdf.splitTextToSize(plainText, contentWidth);
+      console.log("Converting proposal content to text...");
+      
+      // Parse markdown content into structured elements
+      const markdownLines = proposalContent.split('\n');
+      
+      console.log(`Processing ${markdownLines.length} lines of markdown...`);
 
-      // Proposal content
-      pdf.setFontSize(11);
-      pdf.setTextColor(...(textColor as [number, number, number]));
-      pdf.setFont("helvetica", "normal");
-
-      const lineHeight = 7;
+      const lineHeight = 6;
       const maxContentY = pageHeight - footerHeight - 10;
+      const maxWidth = contentWidth;
 
-      for (let i = 0; i < lines.length; i++) {
+      for (let i = 0; i < markdownLines.length; i++) {
+        const line = markdownLines[i].trim();
+        
+        // Skip empty lines but add spacing
+        if (!line) {
+          currentY += lineHeight * 0.5;
+          continue;
+        }
+
+        // Check if we need a new page
         if (currentY + lineHeight > maxContentY) {
-          // Add new page
           pdf.addPage();
           addBackground();
           addHeader();
           addFooter();
-
           currentY = margin + headerHeight;
-          pdf.setFontSize(11);
-          pdf.setTextColor(...(textColor as [number, number, number]));
-          pdf.setFont("helvetica", "normal");
         }
-        pdf.text(lines[i], margin, currentY);
-        currentY += lineHeight;
+
+        // Handle different markdown elements
+        if (line.startsWith('# ')) {
+          // H1
+          pdf.setFontSize(16);
+          pdf.setFont("helvetica", "bold");
+          pdf.setTextColor(...(textColor as [number, number, number]));
+          const text = line.substring(2);
+          const textLines = pdf.splitTextToSize(text, maxWidth);
+          textLines.forEach((textLine: string) => {
+            if (currentY + lineHeight > maxContentY) {
+              pdf.addPage();
+              addBackground();
+              addHeader();
+              addFooter();
+              currentY = margin + headerHeight;
+            }
+            pdf.text(textLine, margin, currentY);
+            currentY += lineHeight + 2;
+          });
+          currentY += 2;
+        } else if (line.startsWith('## ')) {
+          // H2
+          pdf.setFontSize(14);
+          pdf.setFont("helvetica", "bold");
+          pdf.setTextColor(...(textColor as [number, number, number]));
+          const text = line.substring(3);
+          const textLines = pdf.splitTextToSize(text, maxWidth);
+          textLines.forEach((textLine: string) => {
+            if (currentY + lineHeight > maxContentY) {
+              pdf.addPage();
+              addBackground();
+              addHeader();
+              addFooter();
+              currentY = margin + headerHeight;
+            }
+            pdf.text(textLine, margin, currentY);
+            currentY += lineHeight + 1;
+          });
+          currentY += 2;
+        } else if (line.startsWith('### ')) {
+          // H3
+          pdf.setFontSize(12);
+          pdf.setFont("helvetica", "bold");
+          pdf.setTextColor(...(textColor as [number, number, number]));
+          const text = line.substring(4);
+          const textLines = pdf.splitTextToSize(text, maxWidth);
+          textLines.forEach((textLine: string) => {
+            if (currentY + lineHeight > maxContentY) {
+              pdf.addPage();
+              addBackground();
+              addHeader();
+              addFooter();
+              currentY = margin + headerHeight;
+            }
+            pdf.text(textLine, margin, currentY);
+            currentY += lineHeight + 1;
+          });
+          currentY += 1;
+        } else if (line.startsWith('- ') || line.startsWith('* ')) {
+          // Bullet list
+          pdf.setFontSize(11);
+          pdf.setFont("helvetica", "normal");
+          pdf.setTextColor(...(textColor as [number, number, number]));
+          const text = line.substring(2);
+          const textLines = pdf.splitTextToSize(text, maxWidth - 5);
+          textLines.forEach((textLine: string, index: number) => {
+            if (currentY + lineHeight > maxContentY) {
+              pdf.addPage();
+              addBackground();
+              addHeader();
+              addFooter();
+              currentY = margin + headerHeight;
+            }
+            if (index === 0) {
+              pdf.text('• ' + textLine, margin + 2, currentY);
+            } else {
+              pdf.text(textLine, margin + 5, currentY);
+            }
+            currentY += lineHeight;
+          });
+        } else if (line.match(/^\d+\.\s/)) {
+          // Numbered list
+          pdf.setFontSize(11);
+          pdf.setFont("helvetica", "normal");
+          pdf.setTextColor(...(textColor as [number, number, number]));
+          const match = line.match(/^(\d+\.)\s(.+)/);
+          if (match) {
+            const number = match[1];
+            const text = match[2];
+            const textLines = pdf.splitTextToSize(text, maxWidth - 8);
+            textLines.forEach((textLine: string, index: number) => {
+              if (currentY + lineHeight > maxContentY) {
+                pdf.addPage();
+                addBackground();
+                addHeader();
+                addFooter();
+                currentY = margin + headerHeight;
+              }
+              if (index === 0) {
+                pdf.text(number + ' ' + textLine, margin + 2, currentY);
+              } else {
+                pdf.text(textLine, margin + 8, currentY);
+              }
+              currentY += lineHeight;
+            });
+          }
+        } else if (line.startsWith('---') || line.startsWith('***')) {
+          // Horizontal rule
+          pdf.setDrawColor(...(textColor as [number, number, number]));
+          pdf.setLineWidth(0.5);
+          pdf.line(margin, currentY, pageWidth - margin, currentY);
+          currentY += lineHeight;
+        } else {
+          // Regular paragraph - handle bold text
+          pdf.setFontSize(11);
+          pdf.setFont("helvetica", "normal");
+          pdf.setTextColor(...(textColor as [number, number, number]));
+          
+          // Simple bold handling - split by ** markers
+          let processedText = line;
+          // Remove markdown bold markers for now (jsPDF doesn't support inline formatting easily)
+          processedText = processedText.replace(/\*\*(.+?)\*\*/g, '$1');
+          processedText = processedText.replace(/\*(.+?)\*/g, '$1');
+          
+          const textLines = pdf.splitTextToSize(processedText, maxWidth);
+          textLines.forEach((textLine: string) => {
+            if (currentY + lineHeight > maxContentY) {
+              pdf.addPage();
+              addBackground();
+              addHeader();
+              addFooter();
+              currentY = margin + headerHeight;
+            }
+            pdf.text(textLine, margin, currentY);
+            currentY += lineHeight;
+          });
+        }
       }
 
-      // Save PDF
-      const fileName = `Proposal_${displayName.replace(/\s+/g, "_")}_${
+      console.log("Saving PDF...");
+      
+      const fileName = `Proposal_${(displayName || "Lead").replace(/\s+/g, "_")}_${
         isDarkMode ? "Dark" : "Light"
       }_${new Date().toISOString().split("T")[0]}.pdf`;
+      
+      console.log("PDF filename:", fileName);
+      
       pdf.save(fileName);
+
+      console.log("PDF saved successfully!");
 
       toast.success(
         `PDF downloaded successfully (${isDarkMode ? "Dark" : "Light"} mode)`
       );
     } catch (error) {
       console.error("Error generating PDF:", error);
-      toast.error("Failed to generate PDF. Please try again.");
+      console.error("Error stack:", error instanceof Error ? error.stack : "No stack trace");
+      toast.error(`Failed to generate PDF: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
   };
 
@@ -2722,44 +2966,18 @@ const LeadChat = ({
                       onClick={handleProposalClick}
                     >
                       {isProposalEditable ? (
-                        <textarea
-                          value={proposalContent}
-                          onChange={(e) => setProposalContent(e.target.value)}
-                          onBlur={() => {
-                            // Keep editable mode, but allow user to click outside
-                          }}
-                          className="w-full min-h-[400px] bg-transparent text-white/90 outline-none resize-none font-sans text-sm leading-relaxed selection:bg-green-500/40 overflow-y-hidden"
-                          style={{
-                            fontFamily: "inherit",
-                          }}
-                          onSelect={(e) => {
-                            handleTextareaSelection(
-                              e.target as HTMLTextAreaElement
-                            );
-                          }}
-                          onMouseUp={(e) => {
-                            // Handle mouse up for better selection detection
-                            setTimeout(() => {
-                              handleTextareaSelection(
-                                e.target as HTMLTextAreaElement
-                              );
-                            }, 10);
-                          }}
-                          onKeyUp={(e) => {
-                            // Handle keyboard selection (Shift+Arrow keys)
-                            if (
-                              e.shiftKey ||
-                              e.key === "ArrowLeft" ||
-                              e.key === "ArrowRight" ||
-                              e.key === "ArrowUp" ||
-                              e.key === "ArrowDown"
-                            ) {
-                              handleTextareaSelection(
-                                e.target as HTMLTextAreaElement
-                              );
-                            }
-                          }}
-                        />
+                        <div className="w-full min-h-[400px] [&_.ql-toolbar]:!bg-white/10 [&_.ql-toolbar]:!border-white/20 [&_.ql-toolbar_.ql-stroke]:!stroke-white/80 [&_.ql-toolbar_.ql-fill]:!fill-white/80 [&_.ql-toolbar_.ql-picker-label]:!text-white/80 [&_.ql-toolbar_button:hover]:!bg-white/20 [&_.ql-container]:!bg-white/5 [&_.ql-container]:!border-white/20 [&_.ql-editor]:!text-white/90 [&_.ql-editor]:!min-h-[400px] [&_.ql-editor_p]:!text-white/90 [&_.ql-editor_h1]:!text-white [&_.ql-editor_h2]:!text-white [&_.ql-editor_h3]:!text-white [&_.ql-editor_strong]:!text-white [&_.ql-snow_.ql-picker]:!text-white/80">
+                          <RichTextEditor
+                            value={proposalHtmlContent}
+                            onChange={(html) => {
+                              setProposalHtmlContent(html);
+                              setProposalContent(htmlToMarkdown(html));
+                            }}
+                            placeholder="Edit your proposal here..."
+                            height="400px"
+                            toolbar={true}
+                          />
+                        </div>
                       ) : (
                         <div
                           className="prose prose-invert prose-sm max-w-none cursor-text select-text"
