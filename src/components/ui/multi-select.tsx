@@ -146,19 +146,23 @@ export function MultiSelect({
         </Button>
       </PopoverTrigger>
       <PopoverContent className={cn("p-0 bg-[#1a1a1a] border-[#2a2a2a] rounded-xl", popoverWidth || "w-[--radix-popover-trigger-width]")}>
-        <Command>
+        <Command shouldFilter={false}>{/* Disable cmdk filtering to prevent event interference */}
           <CommandInput
             placeholder={searchPlaceholder}
             className="text-white placeholder:text-gray-400 h-9"
             value={searchValue}
             onValueChange={setSearchValue}
           />
-          <CommandList className="scrollbar-hide">
+          <CommandList>
             <CommandEmpty className="p-4 text-sm text-gray-400">
               {emptyMessage}
             </CommandEmpty>
-            <CommandGroup className="max-h-40 overflow-y-auto scrollbar-hide">
-              {options.map((option) => {
+            <CommandGroup className="max-h-[200px] overflow-y-auto scrollbar-hide" onWheel={(e) => e.stopPropagation()}>{/* scrollbar-hide hides scrollbar visually, onWheel enables mouse wheel scrolling */}
+              {options
+                .filter((option) =>
+                  option.label.toLowerCase().includes(searchValue.toLowerCase())
+                )
+                .map((option) => {
                 const isSelected = selectedValues.has(option.value);
                 return (
                   <CommandItem

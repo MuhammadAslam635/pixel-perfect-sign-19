@@ -59,7 +59,7 @@ export interface EnrichmentFilters {
   categories?: string[]; // Category IDs
   subCategories?: string[]; // Sub-category IDs
   roles?: SeniorityLevel[]; // Seniority levels
-  regions?: string[]; // Geographic regions
+  // regions?: string[]; // Geographic regions - Commented out, using countries only
   countries?: string[]; // Specific countries
   revenueRanges?: RangeOption[]; // Multiple revenue ranges (OR condition)
   employeeRanges?: RangeOption[]; // Multiple employee ranges (OR condition)

@@ -4,17 +4,20 @@ import {
   Sparkles,
   AlertCircle,
   Loader2,
+  Globe,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
+import { MultiSelect } from "@/components/ui/multi-select";
 import CategorySelector from "../filters/CategorySelector";
 import RoleSelector from "../filters/RoleSelector";
-import RegionCountrySelector from "../filters/RegionCountrySelector";
+// import RegionCountrySelector from "../filters/RegionCountrySelector"; // Commented out - using simple country selector instead
 import RangeFilter from "../filters/RangeFilter";
 import leadEnrichmentService from "@/services/leadEnrichment.service";
 import { useEnrichmentConfigs } from "@/hooks/useEnrichmentConfigs";
+import { getCountryOptions } from "@/utils/countries";
 import { toast } from "sonner";
 import type {
   EnrichmentFilters,
@@ -46,7 +49,7 @@ const AdvancedQueryTab = ({ selectedSeniorities = [], onEnrichmentStart }: Advan
   const [filters, setFilters] = useState<EnrichmentFilters>({
     categories: [],
     roles: [],
-    regions: [],
+    // regions: [], // Commented out - no longer using region filtering
     countries: [],
     revenueRanges: [],
     employeeRanges: [],
@@ -60,7 +63,7 @@ const AdvancedQueryTab = ({ selectedSeniorities = [], onEnrichmentStart }: Advan
     return (
       (filters.categories?.length || 0) > 0 ||
       (filters.roles?.length || 0) > 0 ||
-      (filters.regions?.length || 0) > 0 ||
+      // (filters.regions?.length || 0) > 0 || // Commented out - no longer using region filtering
       (filters.countries?.length || 0) > 0 ||
       (filters.revenueRanges?.length || 0) > 0 ||
       (filters.employeeRanges?.length || 0) > 0
@@ -124,7 +127,7 @@ const AdvancedQueryTab = ({ selectedSeniorities = [], onEnrichmentStart }: Advan
     setFilters({
       categories: [],
       roles: [],
-      regions: [],
+      // regions: [], // Commented out - no longer using region filtering
       countries: [],
       revenueRanges: [],
       employeeRanges: [],
@@ -217,8 +220,26 @@ const AdvancedQueryTab = ({ selectedSeniorities = [], onEnrichmentStart }: Advan
 
               <Separator className="bg-white/10" />
 
-              {/* Regions & Countries */}
-              <RegionCountrySelector
+              {/* Countries - Simplified selector (region logic commented out) */}
+              <div className="space-y-3">
+                <label className="text-sm font-medium text-gray-200 flex items-center gap-2">
+                  <Globe className="w-4 h-4 text-blue-400" />
+                  Countries
+                </label>
+                <MultiSelect
+                  options={getCountryOptions()}
+                  value={filters.countries || []}
+                  onChange={(countries) => updateFilters("countries", countries)}
+                  placeholder="Select countries"
+                  searchPlaceholder="Search countries..."
+                  emptyMessage="No countries found."
+                  className="bg-gray-800/50 border-gray-700 text-white"
+                  maxDisplayItems={3}
+                />
+              </div>
+
+              {/* Old Region & Country Selector - Commented out */}
+              {/* <RegionCountrySelector
                 selectedRegions={filters.regions || []}
                 selectedCountries={filters.countries || []}
                 onRegionsChange={(regions) => updateFilters("regions", regions)}
@@ -227,7 +248,7 @@ const AdvancedQueryTab = ({ selectedSeniorities = [], onEnrichmentStart }: Advan
                 }
                 regions={regions}
                 countries={countries}
-              />
+              /> */}
 
               <Separator className="bg-white/10" />
 
@@ -266,9 +287,9 @@ const AdvancedQueryTab = ({ selectedSeniorities = [], onEnrichmentStart }: Advan
             {(filters.roles?.length || 0) > 0 && (
               <span className="ml-2">{filters.roles?.length} roles</span>
             )}
-            {(filters.regions?.length || 0) > 0 && (
+            {/* {(filters.regions?.length || 0) > 0 && (
               <span className="ml-2">{filters.regions?.length} regions</span>
-            )}
+            )} */}
             {(filters.countries?.length || 0) > 0 && (
               <span className="ml-2">{filters.countries?.length} countries</span>
             )}
