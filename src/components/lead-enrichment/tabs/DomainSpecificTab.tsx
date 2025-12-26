@@ -8,12 +8,14 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import leadEnrichmentService from "@/services/leadEnrichment.service";
 import { toast } from "sonner";
+import type { SeniorityLevel } from "@/types/leadEnrichment";
 
 interface DomainSpecificTabProps {
+  selectedSeniorities?: SeniorityLevel[];
   onEnrichmentStart: (searchId: string, estimatedTime: string) => void;
 }
 
-const DomainSpecificTab = ({ onEnrichmentStart }: DomainSpecificTabProps) => {
+const DomainSpecificTab = ({ selectedSeniorities = [], onEnrichmentStart }: DomainSpecificTabProps) => {
   const [domains, setDomains] = useState<string[]>([]);
   const [domainInput, setDomainInput] = useState("");
   const [bulkInput, setBulkInput] = useState("");
@@ -82,7 +84,10 @@ const DomainSpecificTab = ({ onEnrichmentStart }: DomainSpecificTabProps) => {
     setIsSubmitting(true);
 
     try {
-      const response = await leadEnrichmentService.enrichByDomain(domains);
+      const response = await leadEnrichmentService.enrichByDomain(
+        domains,
+        selectedSeniorities.length > 0 ? selectedSeniorities : undefined
+      );
 
       if (response.success) {
         toast.success(response.message);

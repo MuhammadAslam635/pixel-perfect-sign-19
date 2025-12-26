@@ -496,6 +496,7 @@ const index = () => {
         <LeadEnrichmentModal
           isOpen={enrichmentModalOpen}
           onClose={() => setEnrichmentModalOpen(false)}
+          selectedSeniorities={selectedSeniorities}
           onEnrichmentStart={(searchId, mode) => {
             toast.success(`Enrichment started! Tracking ID: ${searchId}`);
           }}

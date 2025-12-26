@@ -239,6 +239,25 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
           >
             {showLeads && displayCompany ? (
               <>
+                {/* Show loading indicator at top if still generating */}
+                {(displayCompany.leadsGenerationStatus === 'in_progress' ||
+                  displayCompany.leadsGenerationStatus === 'pending') && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex items-center justify-center gap-3 py-4 px-3 rounded-lg bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 mb-3"
+                  >
+                    <Loader2 className="w-5 h-5 text-primary animate-spin flex-shrink-0" />
+                    <div className="text-left flex-1">
+                      <p className="text-sm font-medium text-white">
+                        {displayCompany.people && displayCompany.people.length > 0
+                          ? 'Still finding more executives...'
+                          : 'Searching for executives...'}
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+
                 {/* Show leads in real-time as they're found */}
                 {displayCompany.people && displayCompany.people.length > 0 && (
                   <div className="space-y-2 mb-3">
@@ -311,30 +330,6 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
                       );
                     })}
                   </div>
-                )}
-
-                {/* Show loading indicator at bottom if still generating */}
-                {(displayCompany.leadsGenerationStatus === 'in_progress' ||
-                  displayCompany.leadsGenerationStatus === 'pending') && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="flex items-center justify-center gap-3 py-4 px-3 rounded-lg bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20"
-                  >
-                    <Loader2 className="w-5 h-5 text-primary animate-spin flex-shrink-0" />
-                    <div className="text-left flex-1">
-                      <p className="text-sm font-medium text-white">
-                        {displayCompany.people && displayCompany.people.length > 0
-                          ? 'Still finding more executives...'
-                          : 'Searching for executives...'}
-                      </p>
-                      {displayCompany.leadsGenerationProgress && (
-                        <p className="text-xs text-white/60">
-                          {displayCompany.leadsGenerationProgress?.current || 0} / {displayCompany.leadsGenerationProgress?.total || 0} leads found
-                        </p>
-                      )}
-                    </div>
-                  </motion.div>
                 )}
 
                 {/* Show "No executives" only if completed and no leads found */}

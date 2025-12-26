@@ -23,10 +23,11 @@ import type {
 } from "@/types/leadEnrichment";
 
 interface AdvancedQueryTabProps {
+  selectedSeniorities?: SeniorityLevel[];
   onEnrichmentStart: (searchId: string, estimatedTime: string) => void;
 }
 
-const AdvancedQueryTab = ({ onEnrichmentStart }: AdvancedQueryTabProps) => {
+const AdvancedQueryTab = ({ selectedSeniorities = [], onEnrichmentStart }: AdvancedQueryTabProps) => {
   // Fetch dynamic enrichment configs
   const {
     regions,
@@ -81,10 +82,19 @@ const AdvancedQueryTab = ({ onEnrichmentStart }: AdvancedQueryTabProps) => {
     setIsSubmitting(true);
 
     try {
+      // Use filter-specific roles if set, otherwise use global selectedSeniorities
+      const effectiveRoles = (filters.roles && filters.roles.length > 0)
+        ? filters.roles
+        : selectedSeniorities;
+
       const request: QueryEnrichmentRequest = {
-        filters,
+        filters: {
+          ...filters,
+          roles: effectiveRoles.length > 0 ? effectiveRoles : undefined,
+        },
         maxCompanies,
         usePerplexity: true,
+        selectedSeniorities: effectiveRoles.length > 0 ? effectiveRoles : undefined,
       };
 
       const response = await leadEnrichmentService.enrichByQuery(request);

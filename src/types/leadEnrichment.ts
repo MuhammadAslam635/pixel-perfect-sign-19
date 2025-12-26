@@ -162,6 +162,7 @@ export interface QueryEnrichmentRequest {
   filters?: EnrichmentFilters;
   maxCompanies?: number;
   usePerplexity?: boolean;
+  selectedSeniorities?: SeniorityLevel[];
 }
 
 export interface QueryEnrichmentResponse {

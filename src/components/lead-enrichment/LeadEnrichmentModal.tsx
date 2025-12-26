@@ -11,11 +11,13 @@ import EnrichmentProgressTracker from "./EnrichmentProgressTracker";
 import type {
   EnrichmentMode,
   EnrichmentFilters,
+  SeniorityLevel,
 } from "@/types/leadEnrichment";
 
 interface LeadEnrichmentModalProps {
   isOpen: boolean;
   onClose: () => void;
+  selectedSeniorities?: SeniorityLevel[];
   onEnrichmentStart?: (searchId: string, mode: EnrichmentMode) => void;
   onEnrichmentComplete?: (searchId: string) => void;
 }
@@ -23,6 +25,7 @@ interface LeadEnrichmentModalProps {
 const LeadEnrichmentModal = ({
   isOpen,
   onClose,
+  selectedSeniorities = [],
   onEnrichmentStart,
   onEnrichmentComplete,
 }: LeadEnrichmentModalProps) => {
@@ -127,6 +130,7 @@ const LeadEnrichmentModal = ({
               <div className="mt-6">
                 <TabsContent value="domain" className="mt-0">
                   <DomainSpecificTab
+                    selectedSeniorities={selectedSeniorities}
                     onEnrichmentStart={(searchId, estimatedTime) =>
                       handleEnrichmentStart(searchId, estimatedTime, "domain")
                     }
@@ -135,6 +139,7 @@ const LeadEnrichmentModal = ({
 
                 <TabsContent value="query" className="mt-0">
                   <AdvancedQueryTab
+                    selectedSeniorities={selectedSeniorities}
                     onEnrichmentStart={(searchId, estimatedTime) =>
                       handleEnrichmentStart(searchId, estimatedTime, "query")
                     }
