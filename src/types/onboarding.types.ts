@@ -1,6 +1,12 @@
 // Onboarding Types
 
-export type OnboardingStatus = 'not_started' | 'draft' | 'in_progress' | 'completed' | 'approved' | 'rejected';
+export type OnboardingStatus =
+  | "not_started"
+  | "draft"
+  | "in_progress"
+  | "completed"
+  | "approved"
+  | "rejected";
 
 export interface OnboardingQuestions {
   // Step 1: Company website
@@ -105,26 +111,32 @@ export interface OnboardingStep {
 export const ONBOARDING_STEPS: OnboardingStep[] = [
   {
     id: 1,
-    title: 'Company website',
-    description: 'Enter your website link',
-    fields: ['website'],
+    title: "Company website",
+    description: "Enter your website link",
+    fields: ["website"],
   },
   {
     id: 2,
-    title: 'Company Info',
-    description: 'Tell us about your company',
-    fields: ['companyName', 'businessDescription', 'coreOfferings', 'preferredCountries'],
+    title: "Company Info",
+    description: "Tell us about your company",
+    fields: [
+      "companyName",
+      "businessDescription",
+      "coreOfferings",
+      "preferredCountries",
+    ],
   },
   {
     id: 3,
-    title: 'ICP',
-    description: 'Define your Ideal Customer Profile',
-    fields: ['idealCustomerProfile'],
+    title: "ICP",
+    description: "Define your Ideal Customer Profile",
+    fields: ["idealCustomerProfile"],
   },
   {
     id: 4,
-    title: 'Data & Partners',
-    description: 'Tell us what makes you different and upload supporting documents',
-    fields: ['differentiators'],
+    title: "Data & Partners",
+    description:
+      "Tell us what makes you different and upload supporting documents",
+    fields: ["differentiators"],
   },
 ];

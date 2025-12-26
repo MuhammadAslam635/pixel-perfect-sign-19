@@ -2,18 +2,18 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { 
-  ClipboardCheck, 
-  FileText, 
-  MessageSquare, 
-  Building2, 
-  Globe, 
-  Target, 
+import {
+  ClipboardCheck,
+  FileText,
+  MessageSquare,
+  Building2,
+  Globe,
+  Target,
   Package,
   MapPin,
   Loader2,
   AlertCircle,
-  File
+  File,
 } from "lucide-react";
 import { onboardingService } from "@/services/onboarding.service";
 import { OnboardingData } from "@/types/onboarding.types";
@@ -41,7 +41,9 @@ const onboardingSteps = [
 
 const OnboardingPanel = () => {
   const navigate = useNavigate();
-  const [onboardingData, setOnboardingData] = useState<OnboardingData | null>(null);
+  const [onboardingData, setOnboardingData] = useState<OnboardingData | null>(
+    null
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -95,10 +97,9 @@ const OnboardingPanel = () => {
             Company Onboarding
           </CardTitle>
           <p className="text-[10px] text-white/70">
-            {hasData 
+            {hasData
               ? "Your onboarding information is displayed below. Click 'Talk to onboarding' to make changes."
-              : "Follow these steps so we can activate your account and calibrate the right AI copilots for your team."
-            }
+              : "Follow these steps so we can activate your account and calibrate the right AI copilots for your team."}
           </p>
         </CardHeader>
         <CardContent className="space-y-4 p-0">
@@ -125,8 +126,12 @@ const OnboardingPanel = () => {
                         <Building2 className="h-3.5 w-3.5" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-xs sm:text-sm font-semibold mb-1">Company Name</h3>
-                        <p className="text-[10px] text-white/70">{questions.companyName}</p>
+                        <h3 className="text-xs sm:text-sm font-semibold mb-1">
+                          Company Name
+                        </h3>
+                        <p className="text-[10px] text-white/70">
+                          {questions.companyName}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -140,10 +145,12 @@ const OnboardingPanel = () => {
                         <Globe className="h-3.5 w-3.5" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-xs sm:text-sm font-semibold mb-1">Website</h3>
-                        <a 
-                          href={questions.website} 
-                          target="_blank" 
+                        <h3 className="text-xs sm:text-sm font-semibold mb-1">
+                          Website
+                        </h3>
+                        <a
+                          href={questions.website}
+                          target="_blank"
                           rel="noopener noreferrer"
                           className="text-[10px] text-cyan-400 hover:text-cyan-300 break-all"
                         >
@@ -162,36 +169,43 @@ const OnboardingPanel = () => {
                         <FileText className="h-3.5 w-3.5" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-xs sm:text-sm font-semibold mb-1">Business Description</h3>
-                        <p className="text-[10px] text-white/70 whitespace-pre-wrap">{questions.businessDescription}</p>
+                        <h3 className="text-xs sm:text-sm font-semibold mb-1">
+                          Business Description
+                        </h3>
+                        <p className="text-[10px] text-white/70 whitespace-pre-wrap">
+                          {questions.businessDescription}
+                        </p>
                       </div>
                     </div>
                   </div>
                 )}
 
                 {/* Core Offerings */}
-                {questions.coreOfferings && questions.coreOfferings.length > 0 && (
-                  <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                    <div className="flex items-start gap-3">
-                      <div className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-cyan-200 flex-shrink-0">
-                        <Package className="h-3.5 w-3.5" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-xs sm:text-sm font-semibold mb-2">Core Offerings</h3>
-                        <div className="flex flex-wrap gap-2">
-                          {questions.coreOfferings.map((offering, index) => (
-                            <span 
-                              key={index}
-                              className="inline-flex items-center px-2 py-1 rounded-lg bg-cyan-500/20 text-cyan-200 text-[10px]"
-                            >
-                              {offering}
-                            </span>
-                          ))}
+                {questions.coreOfferings &&
+                  questions.coreOfferings.length > 0 && (
+                    <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                      <div className="flex items-start gap-3">
+                        <div className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-cyan-200 flex-shrink-0">
+                          <Package className="h-3.5 w-3.5" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-xs sm:text-sm font-semibold mb-2">
+                            Core Offerings
+                          </h3>
+                          <div className="flex flex-wrap gap-2">
+                            {questions.coreOfferings.map((offering, index) => (
+                              <span
+                                key={index}
+                                className="inline-flex items-center px-2 py-1 rounded-lg bg-cyan-500/20 text-cyan-200 text-[10px]"
+                              >
+                                {offering}
+                              </span>
+                            ))}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
                 {/* Preferred Countries */}
                 {questions.preferredCountries && (
@@ -201,8 +215,12 @@ const OnboardingPanel = () => {
                         <MapPin className="h-3.5 w-3.5" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-xs sm:text-sm font-semibold mb-1">Preferred Countries</h3>
-                        <p className="text-[10px] text-white/70">{questions.preferredCountries}</p>
+                        <h3 className="text-xs sm:text-sm font-semibold mb-1">
+                          Preferred Countries
+                        </h3>
+                        <p className="text-[10px] text-white/70">
+                          {questions.preferredCountries}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -216,8 +234,12 @@ const OnboardingPanel = () => {
                         <Target className="h-3.5 w-3.5" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-xs sm:text-sm font-semibold mb-1">Ideal Customer Profile</h3>
-                        <p className="text-[10px] text-white/70 whitespace-pre-wrap">{questions.idealCustomerProfile}</p>
+                        <h3 className="text-xs sm:text-sm font-semibold mb-1">
+                          Ideal Customer Profile
+                        </h3>
+                        <p className="text-[10px] text-white/70 whitespace-pre-wrap">
+                          {questions.idealCustomerProfile}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -231,8 +253,12 @@ const OnboardingPanel = () => {
                         <ClipboardCheck className="h-3.5 w-3.5" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-xs sm:text-sm font-semibold mb-1">Differentiators</h3>
-                        <p className="text-[10px] text-white/70 whitespace-pre-wrap">{questions.differentiators}</p>
+                        <h3 className="text-xs sm:text-sm font-semibold mb-1">
+                          Differentiators
+                        </h3>
+                        <p className="text-[10px] text-white/70 whitespace-pre-wrap">
+                          {questions.differentiators}
+                        </p>
                       </div>
                     </div>
                   </div>

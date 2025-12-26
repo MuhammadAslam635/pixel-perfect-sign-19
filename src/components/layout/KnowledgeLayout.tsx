@@ -1,9 +1,21 @@
 import { ReactNode, useState } from "react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookOpen, FileCheck, File, FileText, ExternalLink } from "lucide-react";
+import {
+  BookOpen,
+  FileCheck,
+  File,
+  FileText,
+  ExternalLink,
+} from "lucide-react";
 import { SupportingDocument } from "@/types/onboarding.types";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import API from "@/utils/api";
 import { getAuthToken } from "@/utils/authHelpers";
 
@@ -53,7 +65,9 @@ const KnowledgeLayout = ({
   const [tabValue, setTabValue] = useState<"company-knowledge" | "onboarding">(
     initialTab
   );
-  const [docsView, setDocsView] = useState<"knowledge" | "onboarding">("knowledge");
+  const [docsView, setDocsView] = useState<"knowledge" | "onboarding">(
+    "knowledge"
+  );
 
   const formatFileSize = (bytes?: number) => {
     if (!bytes || bytes === 0) return "—";
@@ -73,13 +87,13 @@ const KnowledgeLayout = ({
   const handleOnboardingDocumentClick = async (doc: SupportingDocument) => {
     try {
       const token = getAuthToken();
-      const baseURL = API.defaults.baseURL || '';
+      const baseURL = API.defaults.baseURL || "";
       const documentUrl = `${baseURL}/onboarding/documents/${doc._id}/view?token=${token}`;
-      
+
       // Open in a new tab with token in URL
-      window.open(documentUrl, '_blank');
+      window.open(documentUrl, "_blank");
     } catch (error) {
-      console.error('Error opening document:', error);
+      console.error("Error opening document:", error);
     }
   };
 
@@ -88,10 +102,10 @@ const KnowledgeLayout = ({
       onKnowledgeDocumentClick(doc);
     } else if (doc.fileUrl || doc.filePath) {
       const token = getAuthToken();
-      const baseURL = API.defaults.baseURL || '';
+      const baseURL = API.defaults.baseURL || "";
       const fileId = doc._id;
       const documentUrl = `${baseURL}/company-knowledge/files/${fileId}/view?token=${token}`;
-      window.open(documentUrl, '_blank');
+      window.open(documentUrl, "_blank");
     }
   };
 
@@ -230,7 +244,11 @@ const KnowledgeLayout = ({
                                 </div>
                                 <div className="flex justify-between">
                                   <span>Last updated</span>
-                                  <span>{formatDate(doc.updatedAt || doc.uploadedAt)}</span>
+                                  <span>
+                                    {formatDate(
+                                      doc.updatedAt || doc.uploadedAt
+                                    )}
+                                  </span>
                                 </div>
                               </CardContent>
                             </Card>
@@ -244,9 +262,12 @@ const KnowledgeLayout = ({
                                 <File className="h-8 w-8 text-white/40" />
                               </div>
                               <div>
-                                <h3 className="text-sm font-semibold mb-1">No supporting documents</h3>
+                                <h3 className="text-sm font-semibold mb-1">
+                                  No supporting documents
+                                </h3>
                                 <p className="text-xs text-white/60">
-                                  Upload documents in the onboarding process to see them here.
+                                  Upload documents in the onboarding process to
+                                  see them here.
                                 </p>
                               </div>
                             </div>
