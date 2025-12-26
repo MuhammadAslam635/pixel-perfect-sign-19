@@ -51,9 +51,13 @@ const authSlice = createSlice({
       state.error = action.payload;
     },
     logout: (state) => {
+      // 1. Reset Redux State
       state.isAuthenticated = false;
       state.user = null;
+      state.loading = false;
       state.error = null;
+      
+      // 2. Clear Persistence
       clearAuthData();
     },
     updateUser: (state, action: PayloadAction<Partial<User>>) => {

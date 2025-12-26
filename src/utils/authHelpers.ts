@@ -36,19 +36,26 @@ export const setAuthToken = (token: string, userData?: any): void => {
  * Clear all authentication data from localStorage
  * Also clears chat-related localStorage to prevent showing chats from previous users
  */
+/**
+ * Clear all authentication data from localStorage
+ * Also clears chat-related localStorage to prevent showing chats from previous users
+ * NOW: Performing a deep clean of all storage to ensure no data leakage.
+ */
 export const clearAuthData = (): void => {
-  localStorage.removeItem("user");
-  // Clear chat-related localStorage keys to prevent showing chats from previous users/companies
-  localStorage.removeItem("assistant_panel_chat_history");
-  localStorage.removeItem("assistant_panel_current_chat");
+  try {
+    // 1. Clear Local Storage
+    // We want to be aggressive here. If there are keys that MUST persist across users (like theme preference debugging?),
+    // we should whitelist them. For now, wiping clean is safer for data privacy.
+    localStorage.clear();
 
-  // Clear onboarding-related sessionStorage to prevent showing data from previous users
-  sessionStorage.removeItem("onboarding_data");
-  sessionStorage.removeItem("onboarding_skipped");
-  sessionStorage.removeItem("onboarding_just_completed");
+    // 2. Clear Session Storage
+    sessionStorage.clear();
 
-  // Clear onboarding cache from localStorage
-  clearOnboardingCache();
+    // 3. Clear any specific caches if needed (though localStorage.clear() covers most)
+    clearOnboardingCache();
+  } catch (error) {
+    console.error("Error clearing auth data:", error);
+  }
 };
 
 /**
