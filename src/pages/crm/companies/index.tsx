@@ -344,11 +344,11 @@ const index = () => {
               {/* Enrich Leads Section - Always Visible */}
               <div className="flex items-center gap-2 flex-shrink-0">
                 {/* Seniority Quick Selector */}
-                {/* <SeniorityQuickSelector
+                <SeniorityQuickSelector
                   selectedSeniorities={selectedSeniorities}
                   onChange={setSelectedSeniorities}
                   seniorityOptions={seniorityOptions}
-                /> */}
+                />
 
                 {/* Enrich Leads Button */}
                 <Button
