@@ -20,6 +20,7 @@ import { Company, CompanyPerson, companiesService } from "@/services/companies.s
 import { CompanyLogoFallback } from "@/components/ui/company-logo-fallback";
 import { Card } from "@/components/ui/card";
 import { AvatarFallback } from "@/components/ui/avatar-fallback";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 type CompanyExecutivesPanelProps = {
   company?: Company;
@@ -146,29 +147,7 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
 
   return (
     <>
-      {/* Company Header with LinkedIn */}
-      {company && (
-        <div className="mb-4 pb-3 border-b border-white/10">
-          <div className="flex items-start justify-between gap-1">
-            <div className="flex-1 min-w-0">
-              <h2 className="text-base sm:text-lg font-semibold text-white truncate">
-                {company.name}
-              </h2>
-              <p className="text-xs text-white/60 line-clamp-2">
-                {company.description ||
-                  company.about ||
-                  "No description available"}
-              </p>
-            </div>
-            {/* {hasLinkedIn && (
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#0A66C2] text-white text-xs font-medium flex-shrink-0">
-                <Linkedin className="w-3.5 h-3.5" />
-                <span className="hidden lg:inline">LinkedIn</span>
-              </div>
-            )} */}
-          </div>
-        </div>
-      )}
+      {/* Company Header removed - name and description now only in Company Details tab */}
 
       {/* Tabs */}
       <div className="flex items-center gap-2 mb-4 pb-3 border-b border-white/10">
@@ -479,12 +458,27 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
                   </div>
                 )}
 
-                {/* Description */}
+                {/* Description with Popover */}
                 {(displayCompany.description || displayCompany.about) && (
                   <div className="mb-4">
-                    <p className="text-sm text-white/80 leading-relaxed line-clamp-3">
-                      {displayCompany.description || displayCompany.about}
-                    </p>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <p className="text-sm text-white/80 leading-relaxed line-clamp-3 cursor-pointer hover:text-white transition-colors">
+                          {displayCompany.description || displayCompany.about}
+                        </p>
+                      </PopoverTrigger>
+                      <PopoverContent 
+                        className="w-[400px] max-h-[300px] overflow-y-auto bg-[#1a1a1a] border-[#2a2a2a] rounded-xl p-4 scrollbar-hide"
+                        align="start"
+                      >
+                        <div className="space-y-2">
+                          {/* <h4 className="text-sm font-semibold text-white">Company Description</h4> */}
+                          <p className="text-sm text-white/80 leading-relaxed">
+                            {displayCompany.description || displayCompany.about}
+                          </p>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
                   </div>
                 )}
 

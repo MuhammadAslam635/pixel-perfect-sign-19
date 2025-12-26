@@ -69,7 +69,7 @@ const SeniorityQuickSelector = ({
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
-        className="w-[280px] bg-gradient-to-br from-gray-900 to-gray-800 border border-white/10"
+        className="w-[280px] bg-[#1a1a1a] border-[#2a2a2a]"
       >
         <DropdownMenuLabel className="text-white/70 flex items-center justify-between">
           <span>Filter by Seniority</span>

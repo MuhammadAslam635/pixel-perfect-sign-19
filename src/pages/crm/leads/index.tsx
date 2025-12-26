@@ -637,8 +637,14 @@ const index = () => {
 
   // Calculate filtered counts for stats
   const effectiveTotalLeads = totalFilteredLeads;
-  // Use backend company count for consistency with Companies page
-  const effectiveTotalCompanies = companyFilteredStats?.totalCompanies ?? 0;
+  
+  // Calculate unique companies from filtered leads (respects all filters)
+  const effectiveTotalCompanies = useMemo(() => {
+    const uniqueCompanyIds = new Set(
+      filteredLeads.map((lead) => lead.companyId).filter(Boolean)
+    );
+    return uniqueCompanyIds.size;
+  }, [filteredLeads]);
 
   const stats = useMemo(
     () =>
