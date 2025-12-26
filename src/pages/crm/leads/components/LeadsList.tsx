@@ -13,6 +13,8 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import {
+  ChevronsLeft,
+  ChevronsRight,
   ArrowRight,
   Linkedin,
   Mail,
@@ -960,6 +962,20 @@ const LeadsList: FC<LeadsListProps> = ({
                 <Pagination>
                   <PaginationContent className="gap-1">
                     <PaginationItem>
+                      <PaginationLink
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (page > 1) handlePageChange(1);
+                        }}
+                        className={`cursor-pointer hover:bg-white/10 transition-colors h-7 w-7 p-0 flex items-center justify-center ${
+                          page <= 1 ? "opacity-50 cursor-not-allowed" : ""
+                        }`}
+                        aria-label="Go to first page"
+                      >
+                        <ChevronsLeft className="h-4 w-4" />
+                      </PaginationLink>
+                    </PaginationItem>
+                    <PaginationItem>
                       <PaginationPrevious
                         onClick={(e) => {
                           e.preventDefault();
@@ -1001,6 +1017,23 @@ const LeadsList: FC<LeadsListProps> = ({
                             : ""
                         }`}
                       />
+                    </PaginationItem>
+                    <PaginationItem>
+                      <PaginationLink
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (page < calculatedTotalPages)
+                            handlePageChange(calculatedTotalPages);
+                        }}
+                        className={`cursor-pointer hover:bg-white/10 transition-colors h-7 w-7 p-0 flex items-center justify-center ${
+                          page >= calculatedTotalPages
+                            ? "opacity-50 cursor-not-allowed"
+                            : ""
+                        }`}
+                        aria-label="Go to last page"
+                      >
+                        <ChevronsRight className="h-4 w-4" />
+                      </PaginationLink>
                     </PaginationItem>
                   </PaginationContent>
                 </Pagination>
