@@ -144,9 +144,7 @@ const CalendarPage: FC = () => {
         endDate: calendarRangeEndIso,
         durationMinutes: 30,
         intervalMinutes: 30,
-        workingHours: "9,17",
-        weekdaysOnly: "true",
-        workingHoursTimeZone: userTimeZone,
+        weekdaysOnly: "false",
       });
     },
     staleTime: 60 * 1000,
@@ -219,11 +217,7 @@ const CalendarPage: FC = () => {
     const slots = availableSlotsResponse?.data ?? [];
     return slots.filter((slot) => {
       const startDate = new Date(slot.start);
-      if (Number.isNaN(startDate.getTime())) {
-        return false;
-      }
-      const weekday = startDate.getDay();
-      return weekday >= 1 && weekday <= 5;
+      return !Number.isNaN(startDate.getTime());
     });
   }, [availableSlotsResponse]);
 

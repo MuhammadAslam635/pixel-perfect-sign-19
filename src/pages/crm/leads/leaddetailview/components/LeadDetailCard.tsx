@@ -18,6 +18,235 @@ const getTimezoneAbbreviation = (timezone: string): string => {
     return timezone;
   }
 };
+
+/**
+ * Converts a datetime-local value from lead's timezone to user's timezone for display
+ * @param datetimeLocal - The datetime-local string (YYYY-MM-DDTHH:mm) representing time in lead's timezone
+ * @param leadTimezone - The lead's timezone (source timezone)
+ * @returns Formatted time string in the user's local timezone
+ */
+const convertLeadTimeToUserTime = (datetimeLocal: string, leadTimezone: string): string => {
+  if (!datetimeLocal || !leadTimezone) return '';
+
+  const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  if (userTimezone === leadTimezone) return '';
+
+  try {
+    // Parse datetime-local components (YYYY-MM-DDTHH:mm)
+    const [datePart, timePart] = datetimeLocal.split('T');
+    if (!datePart || !timePart) return '';
+
+    const [year, month, day] = datePart.split('-').map(Number);
+    const [hour, minute] = timePart.split(':').map(Number);
+
+    // Create a Date object - JavaScript interprets this as user's local time
+    const localInterpretedDate = new Date(year, month - 1, day, hour, minute);
+
+    // Format this date in the lead's timezone to see what wall time it shows there
+    const leadFormatter = new Intl.DateTimeFormat('en-CA', {
+      timeZone: leadTimezone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
+    const leadParts = leadFormatter.formatToParts(localInterpretedDate);
+    const getLead = (type: string) => Number(leadParts.find(p => p.type === type)?.value || 0);
+
+    // Calculate the offset needed to adjust the date
+    // We want lead timezone to show: day hour:minute
+    // It currently shows: getLead('day') getLead('hour'):getLead('minute')
+    const targetMinutesOfDay = hour * 60 + minute;
+    const leadMinutesOfDay = getLead('hour') * 60 + getLead('minute');
+    const dayDiff = day - getLead('day');
+
+    // Total minutes difference
+    const totalMinutesDiff = (dayDiff * 24 * 60) + (targetMinutesOfDay - leadMinutesOfDay);
+
+    // Adjust the date to get the correct UTC instant
+    const correctedDate = new Date(localInterpretedDate.getTime() + totalMinutesDiff * 60 * 1000);
+
+    // Format in user's timezone
+    const userFormatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: userTimezone,
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+      month: 'short',
+      day: 'numeric',
+    });
+
+    return userFormatter.format(correctedDate);
+  } catch {
+    return '';
+  }
+};
+
+// Helper function to get current time in a specific timezone
+const getCurrentTimeInTimezone = (timezone: string): string => {
+  try {
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+    return formatter.format(now);
+  } catch {
+    return '';
+  }
+};
+
+// Helper to validate and get effective timezone
+const getEffectiveTimezone = (timezone: string | undefined | null): string => {
+  const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  if (!timezone || timezone.trim() === '') {
+    return userTimezone;
+  }
+  // Validate the timezone by trying to use it
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone: timezone });
+    return timezone;
+  } catch {
+    return userTimezone;
+  }
+};
+
+// Helper function to format a date for datetime-local input in a specific timezone
+const formatDateTimeLocalInTimezone = (date: Date, timezone: string): string => {
+  const effectiveTimezone = getEffectiveTimezone(timezone);
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: effectiveTimezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+  const parts = formatter.formatToParts(date);
+  const get = (type: string) => parts.find(p => p.type === type)?.value || '00';
+  return `${get('year')}-${get('month')}-${get('day')}T${get('hour')}:${get('minute')}`;
+};
+
+// Helper function to get the end of the search window (11:59 PM of lead's current day) in a specific timezone
+const getDefaultSearchEndInTimezone = (date: Date, timezone: string): string => {
+  const effectiveTimezone = getEffectiveTimezone(timezone);
+  // Use the same day (current day in lead's timezone), ending at 11:59 PM
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: effectiveTimezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+  const parts = formatter.formatToParts(date);
+  const get = (type: string) => parts.find(p => p.type === type)?.value || '00';
+  return `${get('year')}-${get('month')}-${get('day')}T23:59`;
+};
+
+/**
+ * Converts a datetime-local string from a source timezone to a UTC Date object.
+ * This is needed because new Date() interprets datetime-local strings as the user's local timezone,
+ * but we need to interpret them as the lead's timezone.
+ *
+ * @param datetimeLocal - The datetime-local string (YYYY-MM-DDTHH:mm) in the source timezone
+ * @param sourceTimezone - The timezone the datetime-local string represents
+ * @returns A Date object representing the correct UTC instant
+ */
+const convertTimezoneLocalToUTC = (datetimeLocal: string, sourceTimezone: string): Date => {
+  if (!datetimeLocal) return new Date();
+
+  const effectiveTimezone = getEffectiveTimezone(sourceTimezone);
+
+  // Parse the datetime-local components
+  const [datePart, timePart] = datetimeLocal.split('T');
+  if (!datePart || !timePart) return new Date();
+
+  const [year, month, day] = datePart.split('-').map(Number);
+  const [hour, minute] = timePart.split(':').map(Number);
+
+  // Create a date interpreted as user's local time (this is what new Date() does)
+  const localInterpretedDate = new Date(year, month - 1, day, hour, minute);
+
+  // Format this date in the SOURCE timezone to see what wall time it shows there
+  const sourceFormatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: effectiveTimezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+  const sourceParts = sourceFormatter.formatToParts(localInterpretedDate);
+  const getSource = (type: string) => Number(sourceParts.find(p => p.type === type)?.value || 0);
+
+  // Calculate the offset needed to adjust the date
+  // We want source timezone to show: year-month-day hour:minute
+  // It currently shows: getSource values
+  const targetMinutesOfDay = hour * 60 + minute;
+  const sourceMinutesOfDay = getSource('hour') * 60 + getSource('minute');
+
+  // Handle day difference (can happen around midnight with large timezone offsets)
+  const targetDay = day;
+  const sourceDay = getSource('day');
+  const dayDiff = targetDay - sourceDay;
+
+  // Total minutes difference
+  const totalMinutesDiff = (dayDiff * 24 * 60) + (targetMinutesOfDay - sourceMinutesOfDay);
+
+  // Adjust the date to get the correct UTC instant
+  return new Date(localInterpretedDate.getTime() + totalMinutesDiff * 60 * 1000);
+};
+
+/**
+ * Converts a datetime-local string from user's browser timezone to lead's timezone.
+ * The datetime-local input always captures user's local time, but we need to send
+ * the time as it should appear in lead's timezone.
+ *
+ * @param userLocalDatetime - The datetime-local string (YYYY-MM-DDTHH:mm) in user's browser timezone
+ * @param targetTimezone - The lead's timezone to convert to
+ * @returns A datetime-local string representing the same instant in lead's timezone
+ */
+const convertUserLocalToLeadTimezone = (userLocalDatetime: string, targetTimezone: string): string => {
+  if (!userLocalDatetime) return '';
+
+  const effectiveTimezone = getEffectiveTimezone(targetTimezone);
+  const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+  // If same timezone, no conversion needed
+  if (effectiveTimezone === userTimezone) {
+    return userLocalDatetime;
+  }
+
+  // Parse the datetime-local and interpret as user's local time
+  const [datePart, timePart] = userLocalDatetime.split('T');
+  if (!datePart || !timePart) return userLocalDatetime;
+
+  const [year, month, day] = datePart.split('-').map(Number);
+  const [hour, minute] = timePart.split(':').map(Number);
+
+  // Create Date object (interprets as user's local time, gives us UTC internally)
+  const userLocalDate = new Date(year, month - 1, day, hour, minute);
+
+  // Format this UTC instant in lead's timezone
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: effectiveTimezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+  const parts = formatter.formatToParts(userLocalDate);
+  const get = (type: string) => parts.find(p => p.type === type)?.value || '00';
+
+  return `${get('year')}-${get('month')}-${get('day')}T${get('hour')}:${get('minute')}`;
+};
 import { AvatarFallback } from "@/components/ui/avatar-fallback";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -83,16 +312,6 @@ type LeadDetailCardProps = {
 
 const MAX_SEARCH_RANGE_MS = 62 * 24 * 60 * 60 * 1000; // 62 days
 
-const formatDateTimeLocal = (date: Date) => {
-  const pad = (num: number) => String(num).padStart(2, "0");
-  const year = date.getFullYear();
-  const month = pad(date.getMonth() + 1);
-  const day = pad(date.getDate());
-  const hours = pad(date.getHours());
-  const minutes = pad(date.getMinutes());
-  return `${year}-${month}-${day}T${hours}:${minutes}`;
-};
-
 const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
   const queryClient = useQueryClient();
   const [fillingData, setFillingData] = useState(false);
@@ -125,8 +344,8 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
   const createInitialScheduleForm = useMemo<() => ScheduleMeetingForm>(() => {
     return () => {
       const now = new Date();
-      const endOfDay = new Date(now);
-      endOfDay.setHours(23, 59, 0, 0);
+      // Use lead's timezone - helper functions will validate and fallback if needed
+      const targetTimezone = lead?.timezone || '';
 
       return {
         subject: lead?.name ? `Meeting with ${lead.name}` : "Meeting",
@@ -135,12 +354,12 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
         findAvailableSlot: true,
         startDateTime: "",
         endDateTime: "",
-        startDate: formatDateTimeLocal(now),
-        endDate: formatDateTimeLocal(endOfDay),
+        startDate: formatDateTimeLocalInTimezone(now, targetTimezone),
+        endDate: getDefaultSearchEndInTimezone(now, targetTimezone),
         durationMinutes: 30,
       };
     };
-  }, [lead?.name]);
+  }, [lead?.name, lead?.timezone]);
 
   const [scheduleForm, setScheduleForm] = useState<ScheduleMeetingForm>(
     createInitialScheduleForm
@@ -179,8 +398,9 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
       return undefined;
     }
     const max = new Date(start.getTime() + MAX_SEARCH_RANGE_MS);
-    return formatDateTimeLocal(max);
-  }, [scheduleForm.startDate]);
+    // Use lead's timezone - helper function will validate and fallback if needed
+    return formatDateTimeLocalInTimezone(max, lead?.timezone || '');
+  }, [scheduleForm.startDate, lead?.timezone]);
 
   useEffect(() => {
     if (!scheduleDialogOpen) {
@@ -458,24 +678,29 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
       }
     }
 
+    // Use lead's timezone if available, otherwise fall back to user's timezone
+    const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const schedulingTimezone = lead.timezone || userTimezone;
+
+    // Convert datetime-local strings from lead's timezone to proper UTC Date objects
+    // This fixes the bug where new Date() would interpret the string as user's local timezone
     const autoModeStart = scheduleForm.startDate
-      ? new Date(scheduleForm.startDate)
+      ? convertTimezoneLocalToUTC(scheduleForm.startDate, schedulingTimezone)
       : new Date();
 
     let autoModeEnd: Date | undefined;
     if (scheduleForm.findAvailableSlot) {
       if (scheduleForm.endDate) {
-        autoModeEnd = new Date(scheduleForm.endDate);
+        autoModeEnd = convertTimezoneLocalToUTC(scheduleForm.endDate, schedulingTimezone);
       } else {
         autoModeEnd = new Date(autoModeStart);
         autoModeEnd.setHours(23, 59, 59, 999);
       }
     }
 
-    // Get user's timezone
-    const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-    // NO CONVERSIONS - use raw values exactly as entered
+    // For manual mode: Send the raw datetime-local value as-is
+    // The user enters times in lead's timezone (as indicated by the label),
+    // so we send the literal value without conversion
     const rawStartDateTime = scheduleForm.startDateTime?.trim() || '';
     const rawEndDateTime = scheduleForm.endDateTime?.trim() || '';
 
@@ -489,12 +714,12 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
         ? scheduleForm.durationMinutes
         : undefined,
       startDateTime: !scheduleForm.findAvailableSlot && rawStartDateTime
-        ? rawStartDateTime // Send RAW value - NO CONVERSIONS, NO PROCESSING
+        ? rawStartDateTime // Raw value - user entered in lead's timezone
         : undefined,
       endDateTime: !scheduleForm.findAvailableSlot && rawEndDateTime
-        ? rawEndDateTime // Send RAW value - NO CONVERSIONS, NO PROCESSING
+        ? rawEndDateTime // Raw value - user entered in lead's timezone
         : undefined,
-      timezone: userTimezone, // Send user's timezone
+      timezone: schedulingTimezone, // Send lead's timezone (or user's if lead has none)
       startDate:
         scheduleForm.findAvailableSlot && autoModeStart
           ? autoModeStart.toISOString()
@@ -513,11 +738,12 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
       if (response.success) {
         if (response.data?.leadMeetingId) {
           // Full success - meeting saved to both Microsoft Calendar and database
-          const timezoneInfo = response.data?.timezone && response.data.timezone !== "UTC"
-            ? ` (${getTimezoneAbbreviation(response.data.timezone)})`
+          const usedTimezone = response.data?.timezone || schedulingTimezone;
+          const timezoneInfo = usedTimezone && usedTimezone !== "UTC"
+            ? ` in ${lead.name?.split(' ')[0] || 'lead'}'s timezone (${getTimezoneAbbreviation(usedTimezone)})`
             : "";
           toast.success(
-            `${response?.message || "Meeting scheduled successfully in Microsoft Calendar"}${timezoneInfo}`
+            `${response?.message || "Meeting scheduled successfully"}${timezoneInfo}`
           );
           setScheduleDialogOpen(false);
           resetScheduleForm();
@@ -1115,6 +1341,35 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
                 </Alert>
               )}
 
+            {/* Timezone Info Banner */}
+            {lead.timezone && (
+              <div className="rounded-lg border border-blue-500/30 bg-blue-500/10 px-3 py-2.5">
+                <div className="flex items-start gap-2">
+                  <Clock className="h-4 w-4 text-blue-300 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-blue-200">
+                      Scheduling in {lead.name?.split(' ')[0] || 'lead'}'s timezone
+                    </p>
+                    <p className="text-xs text-blue-200/70 mt-0.5">
+                      {lead.timezone} ({getTimezoneAbbreviation(lead.timezone)}) — Currently {getCurrentTimeInTimezone(lead.timezone)}
+                    </p>
+                    <p className="text-xs text-white/50 mt-1">
+                      Your time: {Intl.DateTimeFormat().resolvedOptions().timeZone} ({getTimezoneAbbreviation(Intl.DateTimeFormat().resolvedOptions().timeZone)}) — {getCurrentTimeInTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {!lead.timezone && (
+              <Alert className="bg-amber-500/10 border-amber-500/30 text-white">
+                <AlertTriangle className="h-4 w-4 text-amber-300" />
+                <AlertDescription className="text-xs text-amber-200/80">
+                  Lead's timezone is not set. Meeting will be scheduled in your local timezone.
+                </AlertDescription>
+              </Alert>
+            )}
+
             <div className="space-y-2">
               <Label className="text-xs text-white/70">Subject</Label>
               <Input
@@ -1182,7 +1437,7 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label className="text-xs text-white/70">
-                    Start date & time
+                    Start date & time {lead.timezone && `(${getTimezoneAbbreviation(lead.timezone)})`}
                   </Label>
                   <Input
                     type="datetime-local"
@@ -1191,15 +1446,20 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
                       const rawValue = e.target.value;
                       setScheduleForm((prev) => ({
                         ...prev,
-                        startDateTime: rawValue, // Use RAW value - NO CONVERSIONS
+                        startDateTime: rawValue,
                       }));
                     }}
                     className="bg-white/5 border-white/10 text-white text-xs [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert"
                   />
+                  {scheduleForm.startDateTime && lead.timezone && lead.timezone !== Intl.DateTimeFormat().resolvedOptions().timeZone && (
+                    <p className="text-[10px] text-white/50">
+                      Your time: {convertLeadTimeToUserTime(scheduleForm.startDateTime, lead.timezone || '')} ({getTimezoneAbbreviation(Intl.DateTimeFormat().resolvedOptions().timeZone)})
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label className="text-xs text-white/70">
-                    End date & time
+                    End date & time {lead.timezone && `(${getTimezoneAbbreviation(lead.timezone)})`}
                   </Label>
                   <Input
                     type="datetime-local"
@@ -1208,11 +1468,16 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
                       const rawValue = e.target.value;
                       setScheduleForm((prev) => ({
                         ...prev,
-                        endDateTime: rawValue, // Use RAW value - NO CONVERSIONS
+                        endDateTime: rawValue,
                       }));
                     }}
                     className="bg-white/5 border-white/10 text-white text-xs [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert"
                   />
+                  {scheduleForm.endDateTime && lead.timezone && lead.timezone !== Intl.DateTimeFormat().resolvedOptions().timeZone && (
+                    <p className="text-[10px] text-white/50">
+                      Your time: {convertLeadTimeToUserTime(scheduleForm.endDateTime, lead.timezone || '')} ({getTimezoneAbbreviation(Intl.DateTimeFormat().resolvedOptions().timeZone)})
+                    </p>
+                  )}
                 </div>
               </div>
             )}
@@ -1222,18 +1487,25 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label className="text-xs text-white/70">
-                      Start of search window
+                      Start of search window {lead.timezone && `(${getTimezoneAbbreviation(lead.timezone)})`}
                     </Label>
                     <Input
                       type="datetime-local"
                       value={scheduleForm.startDate}
-                      disabled
-                      className="bg-white/10 border-white/10 text-white text-xs cursor-not-allowed opacity-70 [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert"
+                      onChange={(e) =>
+                        setScheduleForm({ ...scheduleForm, startDate: e.target.value })
+                      }
+                      className="bg-white/10 border-white/10 text-white text-xs [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert"
                     />
+                    {scheduleForm.startDate && lead.timezone && lead.timezone !== Intl.DateTimeFormat().resolvedOptions().timeZone && (
+                      <p className="text-[10px] text-white/50">
+                        Your time: {convertLeadTimeToUserTime(scheduleForm.startDate, lead.timezone || '')} ({getTimezoneAbbreviation(Intl.DateTimeFormat().resolvedOptions().timeZone)})
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label className="text-xs text-white/70">
-                      End of search window
+                      End of search window {lead.timezone && `(${getTimezoneAbbreviation(lead.timezone)})`}
                     </Label>
                     <Input
                       type="datetime-local"
@@ -1252,6 +1524,11 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
                       <p className="text-xs text-red-400">
                         Search window must be less than 62 days from the start
                         date.
+                      </p>
+                    )}
+                    {scheduleForm.endDate && lead.timezone && lead.timezone !== Intl.DateTimeFormat().resolvedOptions().timeZone && !isSearchRangeTooLarge && (
+                      <p className="text-[10px] text-white/50">
+                        Your time: {convertLeadTimeToUserTime(scheduleForm.endDate, lead.timezone || '')} ({getTimezoneAbbreviation(Intl.DateTimeFormat().resolvedOptions().timeZone)})
                       </p>
                     )}
                   </div>

@@ -366,9 +366,7 @@ const Activity: FC<ActivityProps> = ({
         endDate: calendarRangeEndIso,
         durationMinutes: 30,
         intervalMinutes: 30,
-        workingHours: "9,17",
-        weekdaysOnly: "true",
-        workingHoursTimeZone: userTimeZone,
+        weekdaysOnly: "false",
       }),
     enabled: isCalendarTabActive,
     staleTime: 60 * 1000,
@@ -383,11 +381,7 @@ const Activity: FC<ActivityProps> = ({
     const slots = availableSlotsResponse?.data ?? [];
     return slots.filter((slot) => {
       const startDate = new Date(slot.start);
-      if (Number.isNaN(startDate.getTime())) {
-        return false;
-      }
-      const weekday = startDate.getDay(); // 0 = Sun, 6 = Sat
-      return weekday >= 1 && weekday <= 5;
+      return !Number.isNaN(startDate.getTime());
     });
   }, [availableSlotsResponse]);
   const isLeadMeetingsBusy = isLeadMeetingsLoading || isLeadMeetingsFetching;
