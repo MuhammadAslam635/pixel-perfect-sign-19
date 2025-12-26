@@ -6,7 +6,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
 import leadEnrichmentService from "@/services/leadEnrichment.service";
+import RoleSelector from "../filters/RoleSelector";
+import { useEnrichmentConfigs } from "@/hooks/useEnrichmentConfigs";
 import { toast } from "sonner";
 import type { SeniorityLevel } from "@/types/leadEnrichment";
 
@@ -15,7 +18,13 @@ interface DomainSpecificTabProps {
   onEnrichmentStart: (searchId: string, estimatedTime: string) => void;
 }
 
-const DomainSpecificTab = ({ selectedSeniorities = [], onEnrichmentStart }: DomainSpecificTabProps) => {
+const DomainSpecificTab = ({ 
+  selectedSeniorities = [], 
+  onEnrichmentStart 
+}: DomainSpecificTabProps) => {
+  const { seniorityOptions } = useEnrichmentConfigs();
+  const [localSelectedSeniorities, setLocalSelectedSeniorities] = useState<SeniorityLevel[]>(selectedSeniorities);
+  
   const [domains, setDomains] = useState<string[]>([]);
   const [domainInput, setDomainInput] = useState("");
   const [bulkInput, setBulkInput] = useState("");
@@ -86,7 +95,7 @@ const DomainSpecificTab = ({ selectedSeniorities = [], onEnrichmentStart }: Doma
     try {
       const response = await leadEnrichmentService.enrichByDomain(
         domains,
-        selectedSeniorities.length > 0 ? selectedSeniorities : undefined
+        localSelectedSeniorities.length > 0 ? localSelectedSeniorities : undefined
       );
 
       if (response.success) {
@@ -125,6 +134,17 @@ const DomainSpecificTab = ({ selectedSeniorities = [], onEnrichmentStart }: Doma
           microservice for faster processing.
         </AlertDescription>
       </Alert>
+
+      {/* Seniority Levels */}
+      <div className="bg-gradient-to-br from-gray-800/20 to-gray-900/10 rounded-lg border border-white/10 p-4">
+        <RoleSelector
+          selectedRoles={localSelectedSeniorities}
+          onChange={setLocalSelectedSeniorities}
+          seniorityOptions={seniorityOptions}
+        />
+      </div>
+
+      <Separator className="bg-white/10" />
 
       {/* Domain Input */}
       <div className="space-y-3">
