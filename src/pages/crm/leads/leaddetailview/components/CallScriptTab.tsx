@@ -350,7 +350,7 @@ const CallScriptTab: FC<CallScriptTabProps> = ({ lead }) => {
                   ),
                   p: ({ node, ...props }) => (
                     <p
-                      className="text-white/80 mb-2 leading-relaxed"
+                      className="text-white/80 mb-2 leading-relaxed whitespace-pre-line"
                       {...props}
                     />
                   ),
@@ -371,7 +371,9 @@ const CallScriptTab: FC<CallScriptTabProps> = ({ lead }) => {
                   ),
                 }}
               >
-                {script}
+                {script
+                  .replace(/\s*(Speaker|Listener):\s*/g, "\n\n**$1:** ")
+                  .trim()}
               </ReactMarkdown>
             </div>
           ) : (
