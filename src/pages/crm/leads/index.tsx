@@ -438,7 +438,7 @@ const index = () => {
   });
 
   // Fetch all leads (without pagination) to count leads per company
-  const { leads: allLeadsForCount } = useLeadsData(
+  const { leads: allLeadsForCount, query: leadsQuery } = useLeadsData(
     { page: 1, limit: 10000 },
     { enabled: true }
   );
@@ -607,7 +607,7 @@ const index = () => {
   }, [filteredLeads, leadsPage, leadsLimit]);
 
   // Use local data instead of server query for the list
-  const leadsLoading = !allLeadsForCount; // Simplistic loading check
+  const leadsLoading = leadsQuery.isLoading; // Correct loading check
 
   // Create pagination object matching the expected interface
   const clientPagination = {
