@@ -1296,9 +1296,9 @@ const CampaignsPage = () => {
                         <div
                           className="flex items-center justify-center gap-1.5 flex-shrink-0"
                           style={{
-                            width: "95px",
-                            height: "28px",
-                            borderRadius: "6px",
+                            width: "105px",
+                            height: "38px",
+                            borderRadius: "8px",
                             opacity: 1,
                             background: "#66AFB74D",
                           }}
@@ -1358,10 +1358,13 @@ const CampaignsPage = () => {
                       <PaginationPrevious
                         onClick={(e) => {
                           e.preventDefault();
-                          if (currentPage > 1) setCurrentPage((prev) => Math.max(prev - 1, 1));
+                          if (currentPage > 1)
+                            setCurrentPage((prev) => Math.max(prev - 1, 1));
                         }}
                         className={`cursor-pointer hover:bg-white/10 transition-colors h-7 w-7 p-0 flex items-center justify-center [&>span]:hidden ${
-                          currentPage <= 1 ? "opacity-50 cursor-not-allowed" : ""
+                          currentPage <= 1
+                            ? "opacity-50 cursor-not-allowed"
+                            : ""
                         }`}
                       />
                     </PaginationItem>
@@ -1411,10 +1414,14 @@ const CampaignsPage = () => {
                         onClick={(e) => {
                           e.preventDefault();
                           if (currentPage < data.data.totalPages)
-                            setCurrentPage((prev) => Math.min(prev + 1, data.data.totalPages));
+                            setCurrentPage((prev) =>
+                              Math.min(prev + 1, data.data.totalPages)
+                            );
                         }}
                         className={`cursor-pointer hover:bg-white/10 transition-colors h-7 w-7 p-0 flex items-center justify-center [&>span]:hidden ${
-                          currentPage >= data.data.totalPages ? "opacity-50 cursor-not-allowed" : ""
+                          currentPage >= data.data.totalPages
+                            ? "opacity-50 cursor-not-allowed"
+                            : ""
                         }`}
                       />
                     </PaginationItem>
