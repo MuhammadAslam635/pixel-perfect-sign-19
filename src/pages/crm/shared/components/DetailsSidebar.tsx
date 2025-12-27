@@ -34,6 +34,7 @@ const DetailsSidebar: FC<DetailsSidebarProps> = ({
       duration-300
       ease-in-out
       h-full
+      overflow-hidden
       ${
         isOpen
           ? "opacity-100 translate-x-0 pointer-events-auto w-[280px] lg:w-[320px] xl:w-[360px] 2xl:w-[400px]"

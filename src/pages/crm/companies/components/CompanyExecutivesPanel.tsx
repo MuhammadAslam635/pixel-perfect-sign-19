@@ -20,7 +20,6 @@ import { Company, CompanyPerson, companiesService } from "@/services/companies.s
 import { CompanyLogoFallback } from "@/components/ui/company-logo-fallback";
 import { Card } from "@/components/ui/card";
 import { AvatarFallback } from "@/components/ui/avatar-fallback";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 type CompanyExecutivesPanelProps = {
   company?: Company;
@@ -40,6 +39,7 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
   const [showLoadingSkeleton, setShowLoadingSkeleton] = useState(false);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [shouldPoll, setShouldPoll] = useState(false);
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const previousCompanyId = useRef<string | undefined>(undefined);
 
   // Reset tabs only when switching to a DIFFERENT company
@@ -50,6 +50,7 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
     if (currentCompanyId && currentCompanyId !== previousCompanyId.current) {
       setActiveTab("details");
       setShowLeads(false);
+      setIsDescriptionExpanded(false); // Reset description expansion
       previousCompanyId.current = currentCompanyId;
     }
   }, [company?._id]);
@@ -458,27 +459,17 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
                   </div>
                 )}
 
-                {/* Description with Popover */}
+                {/* Description - Click to expand/collapse */}
                 {(displayCompany.description || displayCompany.about) && (
                   <div className="mb-4">
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <p className="text-sm text-white/80 leading-relaxed line-clamp-3 cursor-pointer hover:text-white transition-colors">
-                          {displayCompany.description || displayCompany.about}
-                        </p>
-                      </PopoverTrigger>
-                      <PopoverContent 
-                        className="w-[400px] max-h-[300px] overflow-y-auto bg-[#1a1a1a] border-[#2a2a2a] rounded-xl p-4 scrollbar-hide"
-                        align="start"
-                      >
-                        <div className="space-y-2">
-                          {/* <h4 className="text-sm font-semibold text-white">Company Description</h4> */}
-                          <p className="text-sm text-white/80 leading-relaxed">
-                            {displayCompany.description || displayCompany.about}
-                          </p>
-                        </div>
-                      </PopoverContent>
-                    </Popover>
+                    <p 
+                      className={`text-sm text-white/80 leading-relaxed cursor-pointer hover:text-white transition-colors ${
+                        isDescriptionExpanded ? '' : 'line-clamp-3'
+                      }`}
+                      onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                    >
+                      {displayCompany.description || displayCompany.about}
+                    </p>
                   </div>
                 )}
 
