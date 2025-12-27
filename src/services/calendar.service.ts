@@ -34,6 +34,11 @@ export interface ScheduleMeetingResponse {
     followupPlansStopped?: string[];
     followupPlansStoppedCount?: number;
     leadMeetingId?: string | null;
+    recall?: {
+      status?: string;
+      sessionId?: string | null;
+      webhookUrl?: string | null;
+    };
   };
 }
 
