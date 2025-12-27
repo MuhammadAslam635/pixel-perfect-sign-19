@@ -20,6 +20,8 @@ import { getUserData } from "@/utils/authHelpers";
 import { RootState } from "@/store/store";
 import { logout, updateUser } from "@/store/slices/authSlice";
 import { userService } from "@/services/user.service";
+import { rbacService } from "@/services/rbac.service";
+import { Role } from "@/types/rbac.types";
 
 interface ProfileErrors {
   name: string;
@@ -42,6 +44,8 @@ export const ProfileTab = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const user = useSelector((state: RootState) => state.auth.user);
+  const [availableRoles, setAvailableRoles] = useState<Role[]>([]);
+  
   const [errors, setErrors] = useState<ProfileErrors>({
     name: "",
     firstName: "",
@@ -58,6 +62,21 @@ export const ProfileTab = () => {
     bio: "",
     token: "",
   });
+
+  // Fetch roles on mount to ensure we can resolve role IDs
+  useEffect(() => {
+    const fetchRoles = async () => {
+      try {
+        const response = await rbacService.getAllRoles();
+        if (response.success && response.data) {
+          setAvailableRoles(response.data);
+        }
+      } catch (error) {
+        console.error("Failed to load roles:", error);
+      }
+    };
+    fetchRoles();
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -175,6 +194,36 @@ export const ProfileTab = () => {
     }
   };
 
+  // Get user's role name - prioritize roleId over legacy role
+  // This logic must match UserList/AppRoutes to ensure consistency
+  // CompanyAdmin MUST be allowed to edit Company Name
+  const getUserRoleName = (): string | null => {
+    if (!user) return null;
+    
+    // PRIORITY 1: Check populated roleId (new RBAC system)
+    if (user.roleId && typeof user.roleId === "object") {
+      // @ts-ignore
+      return (user.roleId as any).name;
+    }
+    
+    // PRIORITY 2: Check string roleId against fetched roles
+    if (user.roleId && typeof user.roleId === "string") {
+      const foundRole = availableRoles.find(r => r._id === user.roleId);
+      if (foundRole) return foundRole.name;
+    }
+
+    // PRIORITY 3: Fallback to legacy role string
+    if (user.role && typeof user.role === "string") {
+      return user.role;
+    }
+    return null;
+  };
+
+  const userRoleName = getUserRoleName();
+  // Allow edit if Admin, Company, or CompanyAdmin
+  // Deny if CompanyUser or CompanyViewer
+  const canEditCompanyName = ["Company", "CompanyAdmin", "Admin"].includes(userRoleName || "");
+
   return (
     <form onSubmit={handleSubmit}>
       <Card className="border-white/10 bg-white/[0.04] backdrop-blur-xl text-white">
@@ -202,18 +251,14 @@ export const ProfileTab = () => {
               name="name"
               value={formState.name}
               onChange={handleInputChange}
-              disabled={
-                !["Company", "CompanyAdmin", "Admin"].includes(user?.role || "")
-              }
+              disabled={!canEditCompanyName}
               className={`bg-white/[0.04] border-white/10 text-white ${
-                !["Company", "CompanyAdmin", "Admin"].includes(user?.role || "")
+                !canEditCompanyName
                   ? "opacity-60 cursor-not-allowed"
                   : ""
               } placeholder:text-white/40`}
             />
-            {!["Company", "CompanyAdmin", "Admin"].includes(
-              user?.role || ""
-            ) && (
+            {!canEditCompanyName && (
               <p className="text-xs text-white/50">
                 Company name is protected and cannot be changed here.
               </p>
