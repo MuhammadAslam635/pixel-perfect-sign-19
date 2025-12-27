@@ -203,7 +203,9 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
           >
             <Users className="w-4 h-4" />
           </motion.div>
-          <span className="text-sm font-medium">Executives</span>
+          <span className="text-sm font-medium">
+            Executives {displayCompany?.people?.length ? `(${displayCompany.people.length})` : ""}
+          </span>
         </motion.button>
       </div>
 
