@@ -290,7 +290,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -298,9 +297,7 @@ type ScheduleMeetingForm = {
   subject: string;
   body: string;
   location: string;
-  findAvailableSlot: boolean;
-  startDateTime: string;
-  endDateTime: string;
+  findAvailableSlot: boolean; // Always true for automatic scheduling
   startDate: string;
   endDate: string;
   durationMinutes: number;
@@ -351,9 +348,7 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
         subject: lead?.name ? `Meeting with ${lead.name}` : "Meeting",
         body: "",
         location: "",
-        findAvailableSlot: true,
-        startDateTime: "",
-        endDateTime: "",
+        findAvailableSlot: true, // Always use automatic scheduling
         startDate: formatDateTimeLocalInTimezone(now, targetTimezone),
         endDate: getDefaultSearchEndInTimezone(now, targetTimezone),
         durationMinutes: 30,
@@ -666,16 +661,9 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
       return;
     }
 
-    if (!scheduleForm.findAvailableSlot) {
-      if (!scheduleForm.startDateTime || !scheduleForm.endDateTime) {
-        toast.error("Start and end date/time are required");
-        return;
-      }
-    } else {
-      if (!scheduleForm.startDate) {
-        toast.error("Start search date is required");
-        return;
-      }
+    if (!scheduleForm.startDate) {
+      toast.error("Start search date is required");
+      return;
     }
 
     // Use lead's timezone if available, otherwise fall back to user's timezone
@@ -698,36 +686,16 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
       }
     }
 
-    // For manual mode: Send the raw datetime-local value as-is
-    // The user enters times in lead's timezone (as indicated by the label),
-    // so we send the literal value without conversion
-    const rawStartDateTime = scheduleForm.startDateTime?.trim() || '';
-    const rawEndDateTime = scheduleForm.endDateTime?.trim() || '';
-
     const payload = {
       personId: lead._id,
       subject: scheduleForm.subject?.trim() || undefined,
       body: scheduleForm.body?.trim() || undefined,
       location: scheduleForm.location?.trim() || undefined,
-      findAvailableSlot: scheduleForm.findAvailableSlot,
-      durationMinutes: scheduleForm.findAvailableSlot
-        ? scheduleForm.durationMinutes
-        : undefined,
-      startDateTime: !scheduleForm.findAvailableSlot && rawStartDateTime
-        ? rawStartDateTime // Raw value - user entered in lead's timezone
-        : undefined,
-      endDateTime: !scheduleForm.findAvailableSlot && rawEndDateTime
-        ? rawEndDateTime // Raw value - user entered in lead's timezone
-        : undefined,
+      findAvailableSlot: true, // Always use automatic scheduling
+      durationMinutes: scheduleForm.durationMinutes,
       timezone: schedulingTimezone, // Send lead's timezone (or user's if lead has none)
-      startDate:
-        scheduleForm.findAvailableSlot && autoModeStart
-          ? autoModeStart.toISOString()
-          : undefined,
-      endDate:
-        scheduleForm.findAvailableSlot && autoModeEnd
-          ? autoModeEnd.toISOString()
-          : undefined,
+      startDate: autoModeStart.toISOString(),
+      endDate: autoModeEnd.toISOString(),
     };
 
     setSchedulingMeeting(true);
@@ -1415,72 +1383,7 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
               />
             </div>
 
-            <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-3 py-2">
-              <div>
-                <p className="text-xs font-medium text-white">Auto find slot</p>
-                <p className="text-xs text-white/60">
-                  Let Microsoft calendar choose the first available time
-                </p>
-              </div>
-              <Switch
-                checked={scheduleForm.findAvailableSlot}
-                onCheckedChange={(checked) =>
-                  setScheduleForm((prev) => ({
-                    ...prev,
-                    findAvailableSlot: checked,
-                  }))
-                }
-              />
-            </div>
 
-            {!scheduleForm.findAvailableSlot && (
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label className="text-xs text-white/70">
-                    Start date & time {lead.timezone && `(${getTimezoneAbbreviation(lead.timezone)})`}
-                  </Label>
-                  <Input
-                    type="datetime-local"
-                    value={scheduleForm.startDateTime}
-                    onChange={(e) => {
-                      const rawValue = e.target.value;
-                      setScheduleForm((prev) => ({
-                        ...prev,
-                        startDateTime: rawValue,
-                      }));
-                    }}
-                    className="bg-white/5 border-white/10 text-white text-xs [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert"
-                  />
-                  {scheduleForm.startDateTime && lead.timezone && lead.timezone !== Intl.DateTimeFormat().resolvedOptions().timeZone && (
-                    <p className="text-[10px] text-white/50">
-                      Your time: {convertLeadTimeToUserTime(scheduleForm.startDateTime, lead.timezone || '')} ({getTimezoneAbbreviation(Intl.DateTimeFormat().resolvedOptions().timeZone)})
-                    </p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs text-white/70">
-                    End date & time {lead.timezone && `(${getTimezoneAbbreviation(lead.timezone)})`}
-                  </Label>
-                  <Input
-                    type="datetime-local"
-                    value={scheduleForm.endDateTime}
-                    onChange={(e) => {
-                      const rawValue = e.target.value;
-                      setScheduleForm((prev) => ({
-                        ...prev,
-                        endDateTime: rawValue,
-                      }));
-                    }}
-                    className="bg-white/5 border-white/10 text-white text-xs [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert"
-                  />
-                  {scheduleForm.endDateTime && lead.timezone && lead.timezone !== Intl.DateTimeFormat().resolvedOptions().timeZone && (
-                    <p className="text-[10px] text-white/50">
-                      Your time: {convertLeadTimeToUserTime(scheduleForm.endDateTime, lead.timezone || '')} ({getTimezoneAbbreviation(Intl.DateTimeFormat().resolvedOptions().timeZone)})
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
 
             {scheduleForm.findAvailableSlot && (
               <>
