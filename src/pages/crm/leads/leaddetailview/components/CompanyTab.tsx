@@ -349,7 +349,7 @@ const CompanyTab: FC<CompanyTabProps> = ({ lead }) => {
       {/* Company Leads Section */}
       <div className="mt-6 pt-6 border-t border-white/10">
         <h3 className="text-sm font-semibold text-white mb-4">
-          People at {companyName}
+          People at {companyName} ({companyLeadsResponse?.pagination?.totalDocs || companyLeads.length})
         </h3>
 
         {isLoadingLeads ? (
