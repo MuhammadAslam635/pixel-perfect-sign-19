@@ -91,7 +91,7 @@ export type DashboardPeriod = "all" | "7d" | "30d" | "90d" | "1y";
 
 export interface CrmStats {
   totalOutreach: number;
-  totalResponse: number;
+  totalDealsClosed: number;
   activeClients: number;
   messagesSent: number;
 }

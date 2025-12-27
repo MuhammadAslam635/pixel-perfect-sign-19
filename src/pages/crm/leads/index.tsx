@@ -653,7 +653,7 @@ const index = () => {
           totalCompanies: effectiveTotalCompanies,
           totalLeads: effectiveTotalLeads,
           totalOutreach: crmStats?.totalOutreach,
-          totalResponse: crmStats?.totalResponse,
+          totalDealsClosed: crmStats?.totalDealsClosed,
           activeClients: crmStats?.activeClients,
           messagesSent: crmStats?.messagesSent,
         },
@@ -663,7 +663,7 @@ const index = () => {
       effectiveTotalCompanies,
       effectiveTotalLeads,
       crmStats?.totalOutreach,
-      crmStats?.totalResponse,
+      crmStats?.totalDealsClosed,
       crmStats?.activeClients,
       crmStats?.messagesSent,
     ]

@@ -2,7 +2,7 @@ import {
   Building2,
   Users,
   Send,
-  MessageSquare,
+  CheckCircle2,
   UserCheck,
   MessageCircle,
 } from "lucide-react";
@@ -18,7 +18,7 @@ export interface CrmStatsValues {
   totalCompanies?: number;
   totalLeads?: number;
   totalOutreach?: number;
-  totalResponse?: number;
+  totalDealsClosed?: number;
   activeClients?: number;
   messagesSent?: number;
   totalCompaniesWithPeople?: number;
@@ -35,9 +35,9 @@ export const defaultStatsCards: StatCard[] = [
   { title: "Total leads", value: "0", icon: Users, link: "View All" },
   { title: "Total Outreach", value: "0", icon: Send, link: "View All" },
   {
-    title: "Total Response",
+    title: "Deal Closed",
     value: "0",
-    icon: MessageSquare,
+    icon: CheckCircle2,
     link: "View All",
   },
   { title: "Active Clients", value: "0", icon: UserCheck, link: "View All" },
@@ -113,9 +113,9 @@ export const buildStats = (
         link: "View All",
       },
       {
-        title: "Total Response",
-        value: parseStatValue(overrides.totalResponse, baseCards[3].value),
-        icon: MessageSquare,
+        title: "Deal Closed",
+        value: parseStatValue(overrides.totalDealsClosed, baseCards[3].value),
+        icon: CheckCircle2,
         link: "View All",
       },
       {
