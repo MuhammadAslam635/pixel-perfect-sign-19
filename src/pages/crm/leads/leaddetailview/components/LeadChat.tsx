@@ -185,10 +185,11 @@ const LeadChat = ({
   const [editAIQuery, setEditAIQuery] = useState<string>("");
   const [isEditingWithAI, setIsEditingWithAI] = useState(false);
   const proposalContentRef = useRef<HTMLDivElement>(null);
-  
+
   // Email Edit with AI states
   const [emailSelectedText, setEmailSelectedText] = useState<string>("");
-  const [emailLockedSelectedText, setEmailLockedSelectedText] = useState<string>("");
+  const [emailLockedSelectedText, setEmailLockedSelectedText] =
+    useState<string>("");
   const [emailSelectionRange, setEmailSelectionRange] = useState<{
     start: number;
     end: number;
@@ -202,7 +203,7 @@ const LeadChat = ({
   const [emailEditAIQuery, setEmailEditAIQuery] = useState<string>("");
   const [isEditingEmailWithAI, setIsEditingEmailWithAI] = useState(false);
   const emailEditorRef = useRef<HTMLDivElement>(null);
-  
+
   const [messageToDelete, setMessageToDelete] = useState<string | null>(null);
   const [openMessageMenu, setOpenMessageMenu] = useState<string | null>(null);
   const [twilioConnection, setTwilioConnection] = useState<{
@@ -1493,15 +1494,17 @@ const LeadChat = ({
     if (isProposalEditable) {
       // In edit mode with RichTextEditor (Quill), find the position in HTML content
       const htmlContent = proposalHtmlContent;
-      
+
       // Try to find the selected text in the HTML content
       // Strip HTML tags to get text content for matching
-      const tempDiv = document.createElement('div');
+      const tempDiv = document.createElement("div");
       tempDiv.innerHTML = htmlContent;
-      const textContent = tempDiv.textContent || tempDiv.innerText || '';
-      
-      const textStart = textContent.toLowerCase().indexOf(selectedText.toLowerCase());
-      
+      const textContent = tempDiv.textContent || tempDiv.innerText || "";
+
+      const textStart = textContent
+        .toLowerCase()
+        .indexOf(selectedText.toLowerCase());
+
       if (textStart !== -1) {
         setSelectionRange({
           start: textStart,
@@ -1570,10 +1573,10 @@ const LeadChat = ({
       const selectedTextLower = lockedSelectedText.toLowerCase().trim();
       const contentLower = proposalContent.toLowerCase();
       const foundIndex = contentLower.indexOf(selectedTextLower);
-      
+
       let actualStart = 0;
       let actualEnd = lockedSelectedText.length;
-      
+
       if (foundIndex !== -1) {
         actualStart = foundIndex;
         actualEnd = foundIndex + lockedSelectedText.length;
@@ -1618,12 +1621,12 @@ const LeadChat = ({
 
         const newContent = beforeSelection + editedPart + afterSelection;
         setProposalContent(newContent);
-        
+
         // If in edit mode, also update the HTML content
         if (isProposalEditable) {
           setProposalHtmlContent(markdownToHtml(newContent));
         }
-        
+
         toast.success("Proposal section updated successfully!");
         setShowEditAIModal(false);
         setEditAIQuery("");
@@ -1755,12 +1758,14 @@ const LeadChat = ({
     setShowEmailEditWithAI(true);
 
     // Store selection range
-    const tempDiv = document.createElement('div');
+    const tempDiv = document.createElement("div");
     tempDiv.innerHTML = emailInput;
-    const textContent = tempDiv.textContent || tempDiv.innerText || '';
-    
-    const textStart = textContent.toLowerCase().indexOf(selectedText.toLowerCase());
-    
+    const textContent = tempDiv.textContent || tempDiv.innerText || "";
+
+    const textStart = textContent
+      .toLowerCase()
+      .indexOf(selectedText.toLowerCase());
+
     if (textStart !== -1) {
       setEmailSelectionRange({
         start: textStart,
@@ -1801,17 +1806,17 @@ const LeadChat = ({
     setIsEditingEmailWithAI(true);
     try {
       // Find the text in the content
-      const tempDiv = document.createElement('div');
+      const tempDiv = document.createElement("div");
       tempDiv.innerHTML = emailInput;
-      const textContent = tempDiv.textContent || tempDiv.innerText || '';
-      
+      const textContent = tempDiv.textContent || tempDiv.innerText || "";
+
       const selectedTextLower = emailLockedSelectedText.toLowerCase().trim();
       const contentLower = textContent.toLowerCase();
       const foundIndex = contentLower.indexOf(selectedTextLower);
-      
+
       let actualStart = 0;
       let actualEnd = emailLockedSelectedText.length;
-      
+
       if (foundIndex !== -1) {
         actualStart = foundIndex;
         actualEnd = foundIndex + emailLockedSelectedText.length;
@@ -1839,7 +1844,9 @@ const LeadChat = ({
 
         if (foundIndex !== -1) {
           beforeSelection = textContent.substring(0, foundIndex);
-          afterSelection = textContent.substring(foundIndex + emailLockedSelectedText.length);
+          afterSelection = textContent.substring(
+            foundIndex + emailLockedSelectedText.length
+          );
         } else if (emailSelectionRange) {
           beforeSelection = textContent.substring(0, emailSelectionRange.start);
           afterSelection = textContent.substring(emailSelectionRange.end);
@@ -1849,11 +1856,14 @@ const LeadChat = ({
         }
 
         const newContent = beforeSelection + editedPart + afterSelection;
-        
+
         // Convert back to HTML (simple text to HTML)
-        const newHtml = newContent.split('\n').map(line => `<p>${line}</p>`).join('');
+        const newHtml = newContent
+          .split("\n")
+          .map((line) => `<p>${line}</p>`)
+          .join("");
         setEmailInput(newHtml);
-        
+
         toast.success("Email content updated successfully!");
         setShowEmailEditAIModal(false);
         setEmailEditAIQuery("");
@@ -3647,31 +3657,33 @@ const LeadChat = ({
                   </div>
 
                   {/* Edit with AI Button for Email - appears when text is selected */}
-                  {showEmailEditWithAI && emailEditWithAIPosition && emailSelectedText && (
-                    <button
-                      type="button"
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                      }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        e.preventDefault();
-                        handleEditEmailWithAI();
-                      }}
-                      className="absolute flex items-center gap-2 rounded-lg bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] px-4 py-2 text-xs font-semibold text-white shadow-xl transition-all hover:opacity-90 hover:scale-105 border border-white/20"
-                      style={{
-                        top: `${emailEditWithAIPosition.top}px`,
-                        left: `${emailEditWithAIPosition.left}px`,
-                        transform: "translateX(-50%)",
-                        animation: "fadeIn 0.2s ease-in",
-                        zIndex: 9999,
-                        pointerEvents: "auto",
-                      }}
-                    >
-                      <Sparkles className="h-4 w-4" />
-                      Edit with AI
-                    </button>
-                  )}
+                  {showEmailEditWithAI &&
+                    emailEditWithAIPosition &&
+                    emailSelectedText && (
+                      <button
+                        type="button"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          handleEditEmailWithAI();
+                        }}
+                        className="absolute flex items-center gap-2 rounded-lg bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] px-4 py-2 text-xs font-semibold text-white shadow-xl transition-all hover:opacity-90 hover:scale-105 border border-white/20"
+                        style={{
+                          top: `${emailEditWithAIPosition.top}px`,
+                          left: `${emailEditWithAIPosition.left}px`,
+                          transform: "translateX(-50%)",
+                          animation: "fadeIn 0.2s ease-in",
+                          zIndex: 9999,
+                          pointerEvents: "auto",
+                        }}
+                      >
+                        <Sparkles className="h-4 w-4" />
+                        Edit with AI
+                      </button>
+                    )}
                 </div>
 
                 {/* Action Buttons */}
@@ -3762,7 +3774,9 @@ const LeadChat = ({
                     <button
                       type="button"
                       onClick={handleEmailEditAI}
-                      disabled={isEditingEmailWithAI || !emailEditAIQuery.trim()}
+                      disabled={
+                        isEditingEmailWithAI || !emailEditAIQuery.trim()
+                      }
                       className="rounded-lg bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] px-4 py-2 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-50 flex items-center gap-2"
                     >
                       {isEditingEmailWithAI ? (
