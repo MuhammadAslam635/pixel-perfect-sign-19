@@ -129,12 +129,9 @@ export const ActionComponent = () => {
     },
     { title: "Sign out", meta: "Log out of EmpaTech OS", route: null },
   ].filter((item) => {
-    // Hide "Team" for CompanyUser and Admin
-    if (
-      item.title === "Team" &&
-      (userRoleName === "CompanyUser" || userRoleName === "Admin")
-    ) {
-      return false;
+    // Show "Team" only for Company, CompanyAdmin, and Admin roles
+    if (item.title === "Team") {
+      return userRoleName === "Company" || userRoleName === "CompanyAdmin" || userRoleName === "Admin";
     }
     // Hide "Knowledge Base" for Admin
     if (item.title === "Knowledge Base" && userRoleName === "Admin") {

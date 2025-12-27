@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 import { motion } from "framer-motion";
+import { RootState } from "@/store/store";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +29,7 @@ type TwilioCapability = (typeof TWILIO_CAPABILITIES)[number];
 
 const UserCreate = () => {
   const navigate = useNavigate();
+  const currentUser = useSelector((state: RootState) => state.auth.user);
 
   const [errors, setErrors] = useState({
     email: "",
@@ -77,9 +80,27 @@ const UserCreate = () => {
         const response = await rbacService.getAllRoles();
         if (response.success && response.data) {
           setAvailableRoles(response.data);
+          
+          // Debug logging for empty role list
+          if (response.data.length === 0) {
+            console.warn("No roles returned from API");
+            toast.warning("No roles available. Please contact your administrator.");
+          }
+        } else {
+          console.error("Failed to load roles:", response);
+          toast.error("Failed to load roles");
         }
       } catch (error: any) {
         console.error("Error fetching roles:", error);
+        
+        // Show user-friendly error messages
+        if (error.response?.status === 403) {
+          toast.error("You don't have permission to view roles. Please contact your administrator.");
+        } else if (error.response?.status === 401) {
+          toast.error("Session expired. Please log in again.");
+        } else {
+          toast.error("Failed to load roles. Please try again.");
+        }
       } finally {
         setLoadingRoles(false);
       }
@@ -100,20 +121,22 @@ const UserCreate = () => {
     !twilioStatusLoading &&
     !twilioCredentialStatus.hasAllCredentials;
 
-  // Fetch Mailgun domain and Company Name (current user name)
+
+  // Set company name from Redux store
+  useEffect(() => {
+    if (currentUser?.name) {
+      console.log("Setting company name from Redux:", currentUser.name);
+      setUser((prev) => ({ ...prev, name: currentUser.name }));
+    }
+  }, [currentUser]);
+
+  // Fetch Mailgun domain
   useEffect(() => {
     const fetchData = async () => {
       const userData = getUserData();
       if (!userData?.token) return;
 
-      // Set Company Name from logged-in user
-      if (userData.name) {
-        setUser((prev) => ({ ...prev, name: userData.name }));
-      } else if (userData.firstName && userData.lastName) {
-        // Fallback if name is not set but first/last are
-         setUser((prev) => ({ ...prev, name: `${userData.firstName} ${userData.lastName}` }));
-      }
-
+      // Fetch Mailgun domain
       try {
         const response = await mailgunService.getIntegrationStatus();
         const domain =
@@ -128,6 +151,8 @@ const UserCreate = () => {
 
     fetchData();
   }, []);
+
+
 
   useEffect(() => {
     const fetchTwilioStatus = async () => {
@@ -333,7 +358,25 @@ const UserCreate = () => {
       const response = await userService.createUser(payload);
 
       if (response.success) {
-        toast.success("User created successfully");
+        // Check if email was sent successfully
+        if (response.data?.credentialsSent === false && response.data?.temporaryPassword) {
+          // Email failed - show warning with temporary password
+          toast.warning(
+            `User created but email failed to send. Temporary password: ${response.data.temporaryPassword}`,
+            {
+              duration: 15000, // Show for 15 seconds
+              description: response.warning || "Please share these credentials with the user manually.",
+            }
+          );
+        } else if (response.warning) {
+          // Show warning if present
+          toast.warning(response.warning, {
+            description: "User was created successfully but there was an issue.",
+          });
+        } else {
+          // Normal success
+          toast.success(response.message || "User created successfully");
+        }
         navigate("/users");
       } else {
         toast.error("User creation failed");

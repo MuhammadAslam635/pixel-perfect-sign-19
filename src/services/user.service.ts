@@ -19,7 +19,18 @@ export interface User {
 
 export interface UserResponse {
   success: boolean;
-  user: User;
+  user?: User;
+  message?: string;
+  warning?: string | null;
+  data?: {
+    userId?: string;
+    name?: string;
+    email?: string;
+    credentialsSent?: boolean;
+    temporaryPassword?: string;
+    inboxEmail?: string;
+    twilio?: any;
+  };
 }
 
 export interface UserListResponse {
