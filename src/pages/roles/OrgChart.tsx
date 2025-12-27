@@ -190,7 +190,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
     <div className="flex flex-col items-center transition-all duration-300">
       {/* Role Node */}
       <div
-        className={`rounded-xl border-2 p-4 sm:p-6 min-w-[250px] sm:min-w-[280px] shadow-2xl backdrop-blur cursor-pointer transition-all hover:scale-105 relative ${getRoleColor()}`}
+        className={`rounded-xl border-2 p-4 sm:p-6 w-[380px] sm:w-[420px] shadow-2xl backdrop-blur cursor-pointer transition-all hover:scale-105 relative ${getRoleColor()}`}
         onClick={handleClick}
       >
         <div className="flex items-center justify-between mb-4">

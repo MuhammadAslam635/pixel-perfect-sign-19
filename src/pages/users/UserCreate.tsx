@@ -279,7 +279,12 @@ const UserCreate = () => {
     setErrors((prev) => ({ ...prev, [name]: "" }));
     
     if (name === "mailgunEmail") {
-      setIsMailgunManual(true);
+      // If user clears the field, allow auto-generation to take over again
+      if (value === "") {
+        setIsMailgunManual(false);
+      } else {
+        setIsMailgunManual(true);
+      }
     }
   };
 
@@ -650,59 +655,66 @@ const UserCreate = () => {
                     </p>
                   </div>
 
-                  {/* Mailgun Email Field */}
-                  {mailgunDomain && (
+                  {/* Mailgun Email Field - Always visible */}
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="mailgunEmail"
+                      className="text-white/90 text-sm font-medium"
+                    >
+                      Mailgun Email
+                    </Label>
                     <div className="space-y-2">
-                      <Label
-                        htmlFor="mailgunEmail"
-                        className="text-white/90 text-sm font-medium"
-                      >
-                        Mailgun Email
-                      </Label>
-                      <div className="space-y-2">
-                        <div className="flex gap-2">
-                          <Input
-                            id="mailgunEmail"
-                            type="email"
-                            name="mailgunEmail"
-                            value={user.mailgunEmail || ""}
-                            onChange={(e) => {
-                              setUser((prev) => ({
-                                ...prev,
-                                mailgunEmail: e.target.value,
-                              }));
-                              setErrors((prev) => ({
-                                ...prev,
-                                mailgunEmail: "",
-                              }));
+                      <div className="flex gap-2">
+                        <Input
+                          id="mailgunEmail"
+                          type="email"
+                          name="mailgunEmail"
+                          value={user.mailgunEmail || ""}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            setUser((prev) => ({
+                              ...prev,
+                              mailgunEmail: value,
+                            }));
+                            setErrors((prev) => ({
+                              ...prev,
+                              mailgunEmail: "",
+                            }));
+                            if (value === "") {
+                              setIsMailgunManual(false);
+                            } else {
                               setIsMailgunManual(true);
-                              setEmailUnique(null);
-                            }}
-                            className="h-10 rounded-lg bg-[#222B2C]/40 border border-white/10 text-white placeholder:text-white/50 focus:ring-2 focus:ring-cyan-400/40 focus:border-cyan-400/40"
-                            placeholder={`Enter email (e.g., ${
-                              suggestedEmail || `user@${mailgunDomain}`
-                            })`}
-                          />
-                        </div>
-                        {/* Suggested UI removed */}
-                        {isCheckingEmail && (
-                          <p className="text-xs text-white/60">
-                            Checking availability...
-                          </p>
-                        )}
-                        {user.mailgunEmail && emailUnique === false && (
-                          <p className="text-xs text-red-400">
-                            This email is already in use
-                          </p>
-                        )}
+                            }
+                            setEmailUnique(null);
+                          }}
+                          className="h-10 rounded-lg bg-[#222B2C]/40 border border-white/10 text-white placeholder:text-white/50 focus:ring-2 focus:ring-cyan-400/40 focus:border-cyan-400/40"
+                          placeholder={
+                            mailgunDomain
+                              ? `Enter email (e.g., ${
+                                  suggestedEmail || `user@${mailgunDomain}`
+                                })`
+                              : "Enter email (e.g., user@example.com)"
+                          }
+                        />
                       </div>
-                      {errors.mailgunEmail && (
-                        <p className="text-red-400 text-sm mt-1">
-                          {errors.mailgunEmail}
+                      {/* Suggested UI removed */}
+                      {isCheckingEmail && (
+                        <p className="text-xs text-white/60">
+                          Checking availability...
+                        </p>
+                      )}
+                      {user.mailgunEmail && emailUnique === false && (
+                        <p className="text-xs text-red-400">
+                          This email is already in use
                         </p>
                       )}
                     </div>
-                  )}
+                    {errors.mailgunEmail && (
+                      <p className="text-red-400 text-sm mt-1">
+                        {errors.mailgunEmail}
+                      </p>
+                    )}
+                  </div>
                 </motion.div>
 
                 {/* Twilio Provisioning */}
