@@ -36,6 +36,10 @@ import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import { AvatarFallback } from "@/components/ui/avatar-fallback";
 
+// Import Tamimi logos
+import tamimiLogoLight from "@/assets/tamimi-logo-light.png";
+import tamimiLogoDark from "@/assets/tamimi-logo-dark.png";
+
 type LeadChatProps = {
   lead?: Lead;
   selectedCallLogView: SelectedCallLogView;
@@ -2204,9 +2208,10 @@ const LeadChat = ({
     } catch (error) {
       console.error("Error converting icon to base64:", error);
       // Return a simple placeholder icon as fallback
-      const fallbackSvg = `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg"><circle cx="${
-        size / 2
-      }" cy="${size / 2}" r="${size / 3}" fill="${color}"/></svg>`;
+      const centerX = size / 2;
+      const centerY = size / 2;
+      const radius = size / 3;
+      const fallbackSvg = `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg"><circle cx="${centerX}" cy="${centerY}" r="${radius}" fill="${color}"/></svg>`;
       return `data:image/svg+xml;base64,${btoa(fallbackSvg)}`;
     }
   };
@@ -2234,21 +2239,19 @@ const LeadChat = ({
       const contentWidth = pageWidth - 2 * margin;
       const footerHeight = 20;
 
-      // Dynamic data from lead
-      const companyName =
-        lead?.company?.name ||
-        lead?.companyName ||
-        "TAMIMI PRE ENGINEERED BUILDINGS CO.";
-      const companyWebsite = lead?.company?.website || "www.tamimi-peb.com";
-      const companyLocation =
-        lead?.location ||
-        lead?.companyLocation ||
-        lead?.company?.address ||
-        lead?.country ||
-        "Saudi Arabia";
-      const companyWhatsApp =
-        whatsappNumber || phoneNumber || "+966 XXX XXX XXX";
-      const companyLogoUrl = lead?.company?.logo || null;
+      // ====================================================================
+      // TAMIMI GROUP BRANDING - Consistent across all PDF downloads
+      // ====================================================================
+      // Company information is hardcoded to ensure consistent branding
+      // Only the DATE field changes for each proposal download
+      const companyName = "TAMIMI PRE ENGINEERED BUILDINGS CO.";
+      const companyWebsite = "www.tamimi-peb.com";
+      const companyLocation = "Saudi Arabia";
+      const companyWhatsApp = "+966 50 123 4567"; // TODO: Update with actual Tamimi WhatsApp number
+
+      // Tamimi logo - Use the appropriate logo based on dark/light mode
+      const companyLogoUrl = isDarkMode ? tamimiLogoDark : tamimiLogoLight;
+      // ====================================================================
 
       console.log("Company data prepared:", {
         companyName,
@@ -2311,11 +2314,11 @@ const LeadChat = ({
         }
       }
 
-      // Text color
+      // Color scheme for consistent design across light and dark modes
       const textColor = isDarkMode ? [255, 255, 255] : [0, 0, 0];
-      const secondaryTextColor = isDarkMode ? [200, 200, 200] : [100, 100, 100];
-      const iconColor = isDarkMode ? [255, 255, 255] : [60, 60, 60];
-      const dividerColor = isDarkMode ? [100, 100, 100] : [180, 180, 180];
+      const secondaryTextColor = isDarkMode ? [180, 180, 180] : [80, 80, 80];
+      const iconColor = isDarkMode ? [218, 165, 32] : [218, 165, 32]; // Gold color for icons
+      const dividerColor = isDarkMode ? [80, 80, 80] : [200, 200, 200];
 
       console.log(
         "Colors configured for",
@@ -2333,7 +2336,8 @@ const LeadChat = ({
 
       // Function to add header to current page
       const addHeader = () => {
-        const logoSize = 10;
+        const logoHeight = 12; // Height in mm for the rectangular logo
+        const logoWidth = 60; // Width in mm to maintain aspect ratio of the logo
         const logoX = margin;
         const logoY = margin;
 
@@ -2345,8 +2349,8 @@ const LeadChat = ({
               "PNG",
               logoX,
               logoY,
-              logoSize,
-              logoSize,
+              logoWidth,
+              logoHeight,
               undefined,
               "FAST"
             );
@@ -2358,44 +2362,51 @@ const LeadChat = ({
               isDarkMode ? 60 : 200,
               isDarkMode ? 60 : 200
             );
-            pdf.circle(
-              logoX + logoSize / 2,
-              logoY + logoSize / 2,
-              logoSize / 2,
-              "F"
-            );
+            pdf.rect(logoX, logoY, logoWidth, logoHeight, "F");
           }
         } else {
-          // Placeholder circle
-          pdf.setFillColor(
-            isDarkMode ? 60 : 200,
-            isDarkMode ? 60 : 200,
-            isDarkMode ? 60 : 200
-          );
-          pdf.circle(
-            logoX + logoSize / 2,
-            logoY + logoSize / 2,
-            logoSize / 2,
-            "F"
-          );
+          // Text-based logo when image is not available
+          // Draw a border rectangle
+          pdf.setDrawColor(218, 165, 32); // Gold color
+          pdf.setLineWidth(0.5);
+          pdf.rect(logoX, logoY, logoWidth, logoHeight);
+
+          // Add company name as text logo
+          pdf.setFontSize(16);
+          pdf.setFont("helvetica", "bold");
+          pdf.setTextColor(218, 165, 32); // Gold color
+          const logoText = "TAMIMI";
+          const textWidth = pdf.getTextWidth(logoText);
+          const textX = logoX + (logoWidth - textWidth) / 2;
+          const textY = logoY + logoHeight / 2 - 2;
+          pdf.text(logoText, textX, textY);
+
+          // Add "PRE ENGINEERED BUILDINGS" below in smaller text
+          pdf.setFontSize(7);
+          pdf.setFont("helvetica", "normal");
+          const subText = "PRE ENGINEERED BUILDINGS CO.";
+          const subTextWidth = pdf.getTextWidth(subText);
+          const subTextX = logoX + (logoWidth - subTextWidth) / 2;
+          const subTextY = logoY + logoHeight / 2 + 4;
+          pdf.text(subText, subTextX, subTextY);
         }
 
-        // Company Name - adjusted position to account for logo
-        pdf.setFontSize(14);
-        pdf.setTextColor(...(textColor as [number, number, number]));
-        pdf.setFont("helvetica", "bold");
-        pdf.text(companyName.toUpperCase(), logoX + logoSize + 5, logoY + 7);
-
-        // Date
+        // Date - positioned on the right
         pdf.setFontSize(10);
         pdf.setFont("helvetica", "normal");
-        pdf.text(`DATE: ${today}`, pageWidth - margin - 40, logoY + 7);
+        pdf.setTextColor(...(textColor as [number, number, number]));
+        pdf.text(`DATE: ${today}`, pageWidth - margin - 40, logoY + 6);
 
-        // Divider line
-        const dividerY = logoY + 15;
-        pdf.setDrawColor(...(dividerColor as [number, number, number]));
-        pdf.setLineWidth(0.5);
+        // Divider line with gold accent (matching Tamimi design)
+        const dividerY = logoY + logoHeight + 3;
+        // Gold/yellow accent line
+        pdf.setDrawColor(218, 165, 32); // Gold color
+        pdf.setLineWidth(1);
         pdf.line(margin, dividerY, pageWidth - margin, dividerY);
+        // Secondary darker line below
+        pdf.setDrawColor(...(dividerColor as [number, number, number]));
+        pdf.setLineWidth(0.3);
+        pdf.line(margin, dividerY + 1, pageWidth - margin, dividerY + 1);
       };
 
       // Function to add footer to current page
@@ -2408,11 +2419,13 @@ const LeadChat = ({
         const iconY = footerBarY + 4;
         const textY = footerBarY + 9;
 
-        // Footer background bar
+        // Footer background bar with consistent styling
         if (isDarkMode) {
-          pdf.setFillColor(45, 45, 45);
+          // Dark mode: darker footer background
+          pdf.setFillColor(35, 35, 35);
         } else {
-          pdf.setFillColor(255, 255, 255);
+          // Light mode: light footer background
+          pdf.setFillColor(245, 245, 245);
         }
         pdf.roundedRect(
           margin,
@@ -2424,28 +2437,65 @@ const LeadChat = ({
           "F"
         );
 
-        // WhatsApp icon - improved design
+        // Add border to footer bar for better definition
+        if (isDarkMode) {
+          pdf.setDrawColor(80, 80, 80);
+        } else {
+          pdf.setDrawColor(200, 200, 200);
+        }
+        pdf.setLineWidth(0.5);
+        pdf.roundedRect(
+          margin,
+          footerBarY,
+          contentWidth,
+          footerBarHeight,
+          3,
+          3,
+          "S"
+        );
+
+        // WhatsApp icon - modern filled design
         const whatsappX = margin + sectionWidth * 0.5;
         pdf.setDrawColor(...(iconColor as [number, number, number]));
         pdf.setFillColor(...(iconColor as [number, number, number]));
-        pdf.setLineWidth(0.3);
-
-        // Draw WhatsApp phone icon
-        pdf.circle(whatsappX, iconY, iconSize / 2.2, "S");
-        // Phone receiver shape
-        const phoneScale = iconSize / 8;
         pdf.setLineWidth(0.5);
-        pdf.line(
-          whatsappX - phoneScale * 0.8,
-          iconY + phoneScale * 0.8,
-          whatsappX - phoneScale * 0.3,
-          iconY + phoneScale * 0.3
+
+        // Draw filled circle
+        pdf.circle(whatsappX, iconY, iconSize / 2.5, "F");
+
+        // Draw white chat bubble/phone icon inside
+        pdf.setFillColor(
+          isDarkMode ? 35 : 255,
+          isDarkMode ? 35 : 255,
+          isDarkMode ? 35 : 255
+        );
+        const bubbleSize = iconSize / 5;
+        // Simple phone receiver representation
+        pdf.circle(
+          whatsappX - bubbleSize * 0.6,
+          iconY + bubbleSize * 0.4,
+          bubbleSize * 0.35,
+          "F"
+        );
+        pdf.circle(
+          whatsappX + bubbleSize * 0.6,
+          iconY - bubbleSize * 0.4,
+          bubbleSize * 0.35,
+          "F"
+        );
+
+        // Connection line
+        pdf.setLineWidth(bubbleSize * 0.4);
+        pdf.setDrawColor(
+          isDarkMode ? 35 : 255,
+          isDarkMode ? 35 : 255,
+          isDarkMode ? 35 : 255
         );
         pdf.line(
-          whatsappX + phoneScale * 0.3,
-          iconY - phoneScale * 0.3,
-          whatsappX + phoneScale * 0.8,
-          iconY - phoneScale * 0.8
+          whatsappX - bubbleSize * 0.3,
+          iconY + bubbleSize * 0.2,
+          whatsappX + bubbleSize * 0.3,
+          iconY - bubbleSize * 0.2
         );
 
         pdf.setFontSize(7);
@@ -2468,20 +2518,36 @@ const LeadChat = ({
           footerBarY + footerBarHeight - 2
         );
 
-        // Website icon (globe) - improved design
+        // Website icon (globe) - modern filled design
         const websiteX = margin + sectionWidth * 1.5;
         pdf.setDrawColor(...(iconColor as [number, number, number]));
-        pdf.setLineWidth(0.3);
-        pdf.circle(websiteX, iconY, iconSize / 2.2, "S");
-        // Latitude lines
+        pdf.setFillColor(...(iconColor as [number, number, number]));
+        pdf.setLineWidth(0.5);
+
+        // Draw filled circle
+        pdf.circle(websiteX, iconY, iconSize / 2.5, "F");
+
+        // Draw white globe lines inside
+        pdf.setDrawColor(
+          isDarkMode ? 35 : 255,
+          isDarkMode ? 35 : 255,
+          isDarkMode ? 35 : 255
+        );
+        pdf.setLineWidth(0.4);
+
+        // Outline circle
+        pdf.circle(websiteX, iconY, iconSize / 3.2, "S");
+
+        // Horizontal latitude line
         pdf.line(
-          websiteX - iconSize / 2.2,
+          websiteX - iconSize / 3.2,
           iconY,
-          websiteX + iconSize / 2.2,
+          websiteX + iconSize / 3.2,
           iconY
         );
-        // Longitude (vertical ellipse)
-        pdf.ellipse(websiteX, iconY, iconSize / 5, iconSize / 2.2, "S");
+
+        // Vertical meridian (ellipse)
+        pdf.ellipse(websiteX, iconY, iconSize / 7, iconSize / 3.2, "S");
 
         const websiteLines = pdf.splitTextToSize(
           companyWebsite,
@@ -2499,32 +2565,36 @@ const LeadChat = ({
           footerBarY + footerBarHeight - 2
         );
 
-        // Location icon - improved pin design
+        // Location icon - modern filled pin design
         const locationX = margin + sectionWidth * 2.5;
         pdf.setDrawColor(...(iconColor as [number, number, number]));
         pdf.setFillColor(...(iconColor as [number, number, number]));
-        pdf.setLineWidth(0.3);
+        pdf.setLineWidth(0.5);
 
-        // Draw location pin
-        const pinRadius = iconSize / 3;
-        pdf.circle(locationX, iconY - 0.8, pinRadius, "FD");
-        // Pin bottom point
+        // Draw location pin - teardrop shape
+        const pinRadius = iconSize / 3.5;
+
+        // Top circle part of pin (filled)
+        pdf.circle(locationX, iconY - pinRadius * 0.5, pinRadius, "F");
+
+        // Bottom pointed part of pin (triangle)
         pdf.triangle(
-          locationX - pinRadius * 0.4,
-          iconY - 0.8 + pinRadius * 0.7,
-          locationX + pinRadius * 0.4,
-          iconY - 0.8 + pinRadius * 0.7,
+          locationX - pinRadius * 0.5,
+          iconY + pinRadius * 0.3,
+          locationX + pinRadius * 0.5,
+          iconY + pinRadius * 0.3,
           locationX,
-          iconY + iconSize / 2.5,
+          iconY + pinRadius * 1.8,
           "F"
         );
-        // Inner circle (hole in pin)
+
+        // Inner circle (white dot in pin)
         pdf.setFillColor(
-          isDarkMode ? 45 : 255,
-          isDarkMode ? 45 : 255,
-          isDarkMode ? 45 : 255
+          isDarkMode ? 35 : 255,
+          isDarkMode ? 35 : 255,
+          isDarkMode ? 35 : 255
         );
-        pdf.circle(locationX, iconY - 0.8, pinRadius * 0.4, "F");
+        pdf.circle(locationX, iconY - pinRadius * 0.5, pinRadius * 0.45, "F");
 
         const locationLines = pdf.splitTextToSize(
           companyLocation,
@@ -2538,9 +2608,11 @@ const LeadChat = ({
       // Function to add background to page
       const addBackground = () => {
         if (isDarkMode) {
-          pdf.setFillColor(30, 30, 30);
+          // Dark mode: charcoal/near-black background
+          pdf.setFillColor(15, 15, 15); // #0F0F0F similar to design
         } else {
-          pdf.setFillColor(240, 240, 240);
+          // Light mode: white/light gray background
+          pdf.setFillColor(250, 250, 250);
         }
         pdf.rect(0, 0, pageWidth, pageHeight, "F");
       };
@@ -2645,13 +2717,108 @@ const LeadChat = ({
           });
           currentY += 1;
         } else if (line.startsWith("- ") || line.startsWith("* ")) {
-          // Bullet list
+          // Bullet list - handle bold text in bullets
           pdf.setFontSize(11);
-          pdf.setFont("helvetica", "normal");
           pdf.setTextColor(...(textColor as [number, number, number]));
           const text = line.substring(2);
-          const textLines = pdf.splitTextToSize(text, maxWidth - 5);
-          textLines.forEach((textLine: string, index: number) => {
+
+          // Parse bold text
+          const segments = [];
+          let currentText = text;
+          const boldRegex = /\*\*(.+?)\*\*/;
+          let match;
+
+          while ((match = boldRegex.exec(currentText)) !== null) {
+            if (match.index > 0) {
+              segments.push({
+                text: currentText.substring(0, match.index),
+                bold: false,
+              });
+            }
+            segments.push({ text: match[1], bold: true });
+            currentText = currentText.substring(match.index + match[0].length);
+          }
+          if (currentText.length > 0) {
+            segments.push({ text: currentText, bold: false });
+          }
+
+          // Render the line with bold handling and proper wrapping
+          if (currentY + lineHeight > maxContentY) {
+            pdf.addPage();
+            addBackground();
+            addHeader();
+            addFooter();
+            currentY = margin + headerHeight;
+          }
+
+          const bulletIndent = margin + 5;
+          let xOffset = margin + 2;
+          pdf.setFont("helvetica", "normal");
+          pdf.text("• ", xOffset, currentY);
+          xOffset = bulletIndent;
+
+          segments.forEach((segment) => {
+            pdf.setFont("helvetica", segment.bold ? "bold" : "normal");
+            const words = segment.text.split(" ");
+
+            words.forEach((word, idx) => {
+              const wordWithSpace = idx < words.length - 1 ? word + " " : word;
+              const wordWidth = pdf.getTextWidth(wordWithSpace);
+
+              // Check if we need to wrap to next line
+              if (
+                xOffset + wordWidth > pageWidth - margin &&
+                xOffset > bulletIndent
+              ) {
+                currentY += lineHeight;
+                if (currentY + lineHeight > maxContentY) {
+                  pdf.addPage();
+                  addBackground();
+                  addHeader();
+                  addFooter();
+                  currentY = margin + headerHeight;
+                }
+                xOffset = bulletIndent; // Indent continuation
+              }
+
+              pdf.text(wordWithSpace, xOffset, currentY);
+              xOffset += wordWidth;
+            });
+          });
+
+          currentY += lineHeight;
+        } else if (line.match(/^\d+\.\s/)) {
+          // Numbered list - handle bold text
+          pdf.setFontSize(11);
+          pdf.setTextColor(...(textColor as [number, number, number]));
+          const match = line.match(/^(\d+\.)\s(.+)/);
+          if (match) {
+            const number = match[1];
+            const text = match[2];
+
+            // Parse bold text
+            const segments = [];
+            let currentText = text;
+            const boldRegex = /\*\*(.+?)\*\*/;
+            let boldMatch;
+
+            while ((boldMatch = boldRegex.exec(currentText)) !== null) {
+              if (boldMatch.index > 0) {
+                segments.push({
+                  text: currentText.substring(0, boldMatch.index),
+                  bold: false,
+                });
+              }
+              segments.push({ text: boldMatch[1], bold: true });
+              currentText = currentText.substring(
+                boldMatch.index + boldMatch[0].length
+              );
+            }
+            if (currentText.length > 0) {
+              segments.push({ text: currentText, bold: false });
+            }
+
+            // Render the line with bold handling and proper wrapping
             if (currentY + lineHeight > maxContentY) {
               pdf.addPage();
               addBackground();
@@ -2659,39 +2826,49 @@ const LeadChat = ({
               addFooter();
               currentY = margin + headerHeight;
             }
-            if (index === 0) {
-              pdf.text("• " + textLine, margin + 2, currentY);
-            } else {
-              pdf.text(textLine, margin + 5, currentY);
-            }
-            currentY += lineHeight;
-          });
-        } else if (line.match(/^\d+\.\s/)) {
-          // Numbered list
-          pdf.setFontSize(11);
-          pdf.setFont("helvetica", "normal");
-          pdf.setTextColor(...(textColor as [number, number, number]));
-          const match = line.match(/^(\d+\.)\s(.+)/);
-          if (match) {
-            const number = match[1];
-            const text = match[2];
-            const textLines = pdf.splitTextToSize(text, maxWidth - 8);
-            textLines.forEach((textLine: string, index: number) => {
-              if (currentY + lineHeight > maxContentY) {
-                pdf.addPage();
-                addBackground();
-                addHeader();
-                addFooter();
-                currentY = margin + headerHeight;
-              }
-              if (index === 0) {
-                pdf.text(number + " " + textLine, margin + 2, currentY);
-              } else {
-                pdf.text(textLine, margin + 8, currentY);
-              }
-              currentY += lineHeight;
+
+            let xOffset = margin;
+            pdf.setFont("helvetica", "normal");
+            pdf.text(number + " ", xOffset, currentY);
+            const numberWidth = pdf.getTextWidth(number + " ");
+            xOffset += numberWidth;
+            const numberIndent = margin + numberWidth;
+
+            segments.forEach((segment) => {
+              pdf.setFont("helvetica", segment.bold ? "bold" : "normal");
+              const words = segment.text.split(" ");
+
+              words.forEach((word, idx) => {
+                const wordWithSpace =
+                  idx < words.length - 1 ? word + " " : word;
+                const wordWidth = pdf.getTextWidth(wordWithSpace);
+
+                // Check if we need to wrap to next line
+                if (
+                  xOffset + wordWidth > pageWidth - margin &&
+                  xOffset > numberIndent
+                ) {
+                  currentY += lineHeight;
+                  if (currentY + lineHeight > maxContentY) {
+                    pdf.addPage();
+                    addBackground();
+                    addHeader();
+                    addFooter();
+                    currentY = margin + headerHeight;
+                  }
+                  xOffset = numberIndent; // Indent continuation to align with text
+                }
+
+                pdf.text(wordWithSpace, xOffset, currentY);
+                xOffset += wordWidth;
+              });
             });
+
+            currentY += lineHeight;
           }
+        } else if (line.startsWith("")) {
+          // Empty line - add spacing
+          currentY += lineHeight / 2;
         } else if (line.startsWith("---") || line.startsWith("***")) {
           // Horizontal rule
           pdf.setDrawColor(...(textColor as [number, number, number]));
