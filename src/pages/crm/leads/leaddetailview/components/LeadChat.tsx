@@ -171,6 +171,7 @@ const LeadChat = ({
   const [isUpdatingStage, setIsUpdatingStage] = useState(false);
   const [isProposalEditable, setIsProposalEditable] = useState(false);
   const [selectedText, setSelectedText] = useState<string>("");
+  const [lockedSelectedText, setLockedSelectedText] = useState<string>(""); // Locked version for modal
   const [selectionRange, setSelectionRange] = useState<{
     start: number;
     end: number;
@@ -184,6 +185,24 @@ const LeadChat = ({
   const [editAIQuery, setEditAIQuery] = useState<string>("");
   const [isEditingWithAI, setIsEditingWithAI] = useState(false);
   const proposalContentRef = useRef<HTMLDivElement>(null);
+  
+  // Email Edit with AI states
+  const [emailSelectedText, setEmailSelectedText] = useState<string>("");
+  const [emailLockedSelectedText, setEmailLockedSelectedText] = useState<string>("");
+  const [emailSelectionRange, setEmailSelectionRange] = useState<{
+    start: number;
+    end: number;
+  } | null>(null);
+  const [showEmailEditWithAI, setShowEmailEditWithAI] = useState(false);
+  const [emailEditWithAIPosition, setEmailEditWithAIPosition] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
+  const [showEmailEditAIModal, setShowEmailEditAIModal] = useState(false);
+  const [emailEditAIQuery, setEmailEditAIQuery] = useState<string>("");
+  const [isEditingEmailWithAI, setIsEditingEmailWithAI] = useState(false);
+  const emailEditorRef = useRef<HTMLDivElement>(null);
+  
   const [messageToDelete, setMessageToDelete] = useState<string | null>(null);
   const [openMessageMenu, setOpenMessageMenu] = useState<string | null>(null);
   const [twilioConnection, setTwilioConnection] = useState<{
@@ -1472,12 +1491,28 @@ const LeadChat = ({
 
     // Store selection range for later replacement
     if (isProposalEditable) {
-      // In textarea, we can get the selection start/end directly
-      const textarea = proposalContentRef.current?.querySelector("textarea");
-      if (textarea) {
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        setSelectionRange({ start, end });
+      // In edit mode with RichTextEditor (Quill), find the position in HTML content
+      const htmlContent = proposalHtmlContent;
+      
+      // Try to find the selected text in the HTML content
+      // Strip HTML tags to get text content for matching
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = htmlContent;
+      const textContent = tempDiv.textContent || tempDiv.innerText || '';
+      
+      const textStart = textContent.toLowerCase().indexOf(selectedText.toLowerCase());
+      
+      if (textStart !== -1) {
+        setSelectionRange({
+          start: textStart,
+          end: textStart + selectedText.length,
+        });
+      } else {
+        // Fallback: approximate position
+        setSelectionRange({
+          start: 0,
+          end: selectedText.length,
+        });
       }
     } else {
       // For markdown view, find the text in the original markdown
@@ -1506,79 +1541,95 @@ const LeadChat = ({
 
   const handleEditWithAI = () => {
     if (selectedText && selectionRange) {
+      // Lock the selected text so it won't be cleared
+      setLockedSelectedText(selectedText);
       setShowEditAIModal(true);
       setShowEditWithAI(false);
     }
   };
 
   const handleEditAI = async () => {
-    if (
-      !lead?.companyId ||
-      !lead?._id ||
-      !selectedText ||
-      !selectionRange ||
-      !editAIQuery.trim()
-    ) {
+    if (!lead?.companyId || !lead?._id) {
+      toast.error("Lead information is missing.");
+      return;
+    }
+
+    if (!lockedSelectedText) {
+      toast.error("No text selected. Please select text first.");
+      return;
+    }
+
+    if (!editAIQuery.trim()) {
       toast.error("Please provide instructions for editing.");
       return;
     }
 
     setIsEditingWithAI(true);
     try {
+      // Find the text in the content to get accurate position
+      const selectedTextLower = lockedSelectedText.toLowerCase().trim();
+      const contentLower = proposalContent.toLowerCase();
+      const foundIndex = contentLower.indexOf(selectedTextLower);
+      
+      let actualStart = 0;
+      let actualEnd = lockedSelectedText.length;
+      
+      if (foundIndex !== -1) {
+        actualStart = foundIndex;
+        actualEnd = foundIndex + lockedSelectedText.length;
+      } else if (selectionRange) {
+        actualStart = selectionRange.start;
+        actualEnd = selectionRange.end;
+      }
+
       // Call API to edit the selected part
       const response = await connectionMessagesService.editProposalPart({
         companyId: lead.companyId,
         personId: lead._id,
         originalProposal: proposalContent,
-        selectedText: selectedText,
-        selectionStart: selectionRange.start,
-        selectionEnd: selectionRange.end,
+        selectedText: lockedSelectedText,
+        selectionStart: actualStart,
+        selectionEnd: actualEnd,
         instructions: editAIQuery.trim(),
       });
 
       const editedPart = response.data?.editedPart || response.data?.proposal;
       if (editedPart) {
         // Replace the selected part with the edited version
-        // For better accuracy, try to find the exact selected text in the content
+        // Try to find the exact selected text in the content
         let beforeSelection = "";
         let afterSelection = "";
 
-        if (isProposalEditable) {
-          // In textarea mode, use the exact range
+        if (foundIndex !== -1) {
+          // Use the found position
+          beforeSelection = proposalContent.substring(0, foundIndex);
+          afterSelection = proposalContent.substring(
+            foundIndex + lockedSelectedText.length
+          );
+        } else if (selectionRange) {
+          // Fallback to using the range if we have it
           beforeSelection = proposalContent.substring(0, selectionRange.start);
           afterSelection = proposalContent.substring(selectionRange.end);
         } else {
-          // In markdown view, try to find the exact text
-          const selectedTextLower = selectedText.toLowerCase().trim();
-          const contentLower = proposalContent.toLowerCase();
-          const foundIndex = contentLower.indexOf(selectedTextLower);
-
-          if (foundIndex !== -1) {
-            // Use the found position
-            beforeSelection = proposalContent.substring(0, foundIndex);
-            afterSelection = proposalContent.substring(
-              foundIndex + selectedText.length
-            );
-          } else {
-            // Fallback to using the range
-            beforeSelection = proposalContent.substring(
-              0,
-              selectionRange.start
-            );
-            afterSelection = proposalContent.substring(selectionRange.end);
-          }
+          // Last resort: just append
+          beforeSelection = proposalContent;
+          afterSelection = "";
         }
 
         const newContent = beforeSelection + editedPart + afterSelection;
         setProposalContent(newContent);
+        
+        // If in edit mode, also update the HTML content
+        if (isProposalEditable) {
+          setProposalHtmlContent(markdownToHtml(newContent));
+        }
+        
         toast.success("Proposal section updated successfully!");
         setShowEditAIModal(false);
         setEditAIQuery("");
         setSelectedText("");
+        setLockedSelectedText("");
         setSelectionRange(null);
-        // Switch to editable mode to show the changes
-        setProposalHtmlContent(markdownToHtml(proposalContent));
-        setIsProposalEditable(true);
       } else {
         toast.error("No edited content was generated. Try again.");
       }
@@ -1600,10 +1651,9 @@ const LeadChat = ({
     }
   }, [isProposalEditable, proposalContent, proposalHtmlContent]);
 
-  // Listen for selection changes in view mode only
-  // Edit mode handles selection via inline handlers on textarea
+  // Listen for selection changes in both view and edit modes
   useEffect(() => {
-    if (!isProposalEditable && proposalContent && proposalContentRef.current) {
+    if (proposalContent && proposalContentRef.current) {
       const handleSelection = () => {
         // Small delay to ensure selection is complete
         setTimeout(() => {
@@ -1612,9 +1662,12 @@ const LeadChat = ({
           if (selectedText && selectedText.length > 0) {
             handleProposalSelection();
           } else {
-            setShowEditWithAI(false);
-            setSelectedText("");
-            setSelectionRange(null);
+            // Only clear selection state if modal is not open
+            if (!showEditAIModal) {
+              setShowEditWithAI(false);
+              setSelectedText("");
+              setSelectionRange(null);
+            }
           }
         }, 10);
       };
@@ -1628,7 +1681,7 @@ const LeadChat = ({
         container.removeEventListener("keyup", handleSelection);
       };
     }
-  }, [isProposalEditable, proposalContent]);
+  }, [isProposalEditable, proposalContent, showEditAIModal]);
 
   // Close edit menu when clicking outside
   useEffect(() => {
@@ -1648,6 +1701,227 @@ const LeadChat = ({
       };
     }
   }, [showEditWithAI]);
+
+  // Email Edit with AI handlers
+  const handleEmailSelection = () => {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) {
+      return;
+    }
+
+    const selectedText = selection.toString().trim();
+    if (selectedText.length === 0) {
+      setShowEmailEditWithAI(false);
+      setEmailSelectedText("");
+      setEmailSelectionRange(null);
+      return;
+    }
+
+    // Check if selection is within the email editor container
+    const anchorNode = selection.anchorNode;
+    const isWithinEmailEditor = emailEditorRef.current?.contains(anchorNode);
+
+    if (!isWithinEmailEditor) {
+      setShowEmailEditWithAI(false);
+      setEmailSelectedText("");
+      setEmailSelectionRange(null);
+      return;
+    }
+
+    const range = selection.getRangeAt(0);
+    const rect = range.getBoundingClientRect();
+    const containerRect = emailEditorRef.current?.getBoundingClientRect();
+
+    if (!containerRect) {
+      return;
+    }
+
+    // Calculate position for the "Edit with AI" button
+    const spaceAbove = rect.top - containerRect.top;
+    const spaceBelow = containerRect.bottom - rect.bottom;
+    const buttonHeight = 40;
+
+    let top: number;
+    if (spaceAbove > buttonHeight + 10) {
+      top = rect.top - containerRect.top - buttonHeight - 10;
+    } else {
+      top = rect.top - containerRect.top + rect.height + 10;
+    }
+
+    const left = rect.left - containerRect.left + rect.width / 2;
+
+    setEmailSelectedText(selectedText);
+    setEmailEditWithAIPosition({ top, left });
+    setShowEmailEditWithAI(true);
+
+    // Store selection range
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = emailInput;
+    const textContent = tempDiv.textContent || tempDiv.innerText || '';
+    
+    const textStart = textContent.toLowerCase().indexOf(selectedText.toLowerCase());
+    
+    if (textStart !== -1) {
+      setEmailSelectionRange({
+        start: textStart,
+        end: textStart + selectedText.length,
+      });
+    } else {
+      setEmailSelectionRange({
+        start: 0,
+        end: selectedText.length,
+      });
+    }
+  };
+
+  const handleEditEmailWithAI = () => {
+    if (emailSelectedText && emailSelectionRange) {
+      setEmailLockedSelectedText(emailSelectedText);
+      setShowEmailEditAIModal(true);
+      setShowEmailEditWithAI(false);
+    }
+  };
+
+  const handleEmailEditAI = async () => {
+    if (!lead?.companyId || !lead?._id) {
+      toast.error("Lead information is missing.");
+      return;
+    }
+
+    if (!emailLockedSelectedText) {
+      toast.error("No text selected. Please select text first.");
+      return;
+    }
+
+    if (!emailEditAIQuery.trim()) {
+      toast.error("Please provide instructions for editing.");
+      return;
+    }
+
+    setIsEditingEmailWithAI(true);
+    try {
+      // Find the text in the content
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = emailInput;
+      const textContent = tempDiv.textContent || tempDiv.innerText || '';
+      
+      const selectedTextLower = emailLockedSelectedText.toLowerCase().trim();
+      const contentLower = textContent.toLowerCase();
+      const foundIndex = contentLower.indexOf(selectedTextLower);
+      
+      let actualStart = 0;
+      let actualEnd = emailLockedSelectedText.length;
+      
+      if (foundIndex !== -1) {
+        actualStart = foundIndex;
+        actualEnd = foundIndex + emailLockedSelectedText.length;
+      } else if (emailSelectionRange) {
+        actualStart = emailSelectionRange.start;
+        actualEnd = emailSelectionRange.end;
+      }
+
+      // Call API to edit the selected part
+      const response = await connectionMessagesService.editProposalPart({
+        companyId: lead.companyId,
+        personId: lead._id,
+        originalProposal: textContent,
+        selectedText: emailLockedSelectedText,
+        selectionStart: actualStart,
+        selectionEnd: actualEnd,
+        instructions: emailEditAIQuery.trim(),
+      });
+
+      const editedPart = response.data?.editedPart || response.data?.proposal;
+      if (editedPart) {
+        // Replace the selected part with the edited version
+        let beforeSelection = "";
+        let afterSelection = "";
+
+        if (foundIndex !== -1) {
+          beforeSelection = textContent.substring(0, foundIndex);
+          afterSelection = textContent.substring(foundIndex + emailLockedSelectedText.length);
+        } else if (emailSelectionRange) {
+          beforeSelection = textContent.substring(0, emailSelectionRange.start);
+          afterSelection = textContent.substring(emailSelectionRange.end);
+        } else {
+          beforeSelection = textContent;
+          afterSelection = "";
+        }
+
+        const newContent = beforeSelection + editedPart + afterSelection;
+        
+        // Convert back to HTML (simple text to HTML)
+        const newHtml = newContent.split('\n').map(line => `<p>${line}</p>`).join('');
+        setEmailInput(newHtml);
+        
+        toast.success("Email content updated successfully!");
+        setShowEmailEditAIModal(false);
+        setEmailEditAIQuery("");
+        setEmailSelectedText("");
+        setEmailLockedSelectedText("");
+        setEmailSelectionRange(null);
+      } else {
+        toast.error("No edited content was generated. Try again.");
+      }
+    } catch (error: any) {
+      const friendlyMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to edit email content.";
+      toast.error(friendlyMessage);
+    } finally {
+      setIsEditingEmailWithAI(false);
+    }
+  };
+
+  // Listen for selection changes in email editor
+  useEffect(() => {
+    if (emailInput && emailEditorRef.current) {
+      const handleSelection = () => {
+        setTimeout(() => {
+          const selection = window.getSelection();
+          const selectedText = selection?.toString().trim();
+          if (selectedText && selectedText.length > 0) {
+            handleEmailSelection();
+          } else {
+            if (!showEmailEditAIModal) {
+              setShowEmailEditWithAI(false);
+              setEmailSelectedText("");
+              setEmailSelectionRange(null);
+            }
+          }
+        }, 10);
+      };
+
+      const container = emailEditorRef.current;
+      container.addEventListener("mouseup", handleSelection);
+      container.addEventListener("keyup", handleSelection);
+
+      return () => {
+        container.removeEventListener("mouseup", handleSelection);
+        container.removeEventListener("keyup", handleSelection);
+      };
+    }
+  }, [emailInput, showEmailEditAIModal]);
+
+  // Close email edit menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        emailEditorRef.current &&
+        !emailEditorRef.current.contains(event.target as Node)
+      ) {
+        setShowEmailEditWithAI(false);
+      }
+    };
+
+    if (showEmailEditWithAI) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [showEmailEditWithAI]);
 
   const handleDeleteWhatsAppConversation = () => {
     if (
@@ -3123,8 +3397,13 @@ const LeadChat = ({
                       {showEditWithAI && editWithAIPosition && selectedText && (
                         <button
                           type="button"
+                          onMouseDown={(e) => {
+                            // Prevent the mousedown from clearing the selection
+                            e.preventDefault();
+                          }}
                           onClick={(e) => {
                             e.stopPropagation();
+                            e.preventDefault();
                             handleEditWithAI();
                           }}
                           className="absolute flex items-center gap-2 rounded-lg bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] px-4 py-2 text-xs font-semibold text-white shadow-xl transition-all hover:opacity-90 hover:scale-105 border border-white/20"
@@ -3168,8 +3447,8 @@ const LeadChat = ({
                       <p className="text-xs text-white/70 mb-4">
                         Selected text:{" "}
                         <span className="text-white/90 italic">
-                          "{selectedText.substring(0, 100)}
-                          {selectedText.length > 100 ? "..." : ""}"
+                          "{lockedSelectedText.substring(0, 100)}
+                          {lockedSelectedText.length > 100 ? "..." : ""}"
                         </span>
                       </p>
                       <div className="mb-4">
@@ -3190,6 +3469,7 @@ const LeadChat = ({
                           onClick={() => {
                             setShowEditAIModal(false);
                             setEditAIQuery("");
+                            setLockedSelectedText("");
                           }}
                           disabled={isEditingWithAI}
                           className="rounded-lg border border-white/30 px-4 py-2 text-xs text-white transition hover:bg-white/10 disabled:opacity-50"
@@ -3328,31 +3608,70 @@ const LeadChat = ({
               ref={emailComposerRef}
             >
               <div
-                className={`flex gap-2 bg-white/10 px-4 py-3 mx-1 mb-1 transition-all duration-200 ${
+                className={`flex gap-2 bg-white/10 px-4 py-3 mx-1 mb-1 transition-all duration-200 relative ${
                   isEmailEditorExpanded
                     ? "rounded-2xl items-end"
                     : "rounded-2xl items-center"
                 }`}
               >
                 {/* Rich Text Editor */}
-                <div className="flex-1 relative">
-                  <RichTextEditor
-                    value={emailInput}
-                    onChange={setEmailInput}
-                    placeholder={
-                      !emailAddress
-                        ? "Add an email address to send emails"
-                        : "Write your email message..."
+                <div className="flex-1 relative" ref={emailEditorRef}>
+                  <style>{`
+                    .email-editor-content ::selection {
+                      background-color: rgba(34, 197, 94, 0.4) !important;
+                      color: inherit;
                     }
-                    height={isEmailEditorExpanded ? "80px" : "20px"}
-                    toolbar={true}
-                    onFocus={() => setIsEmailEditorExpanded(true)}
-                    className={`text-xs w-full transition-all duration-200 ${
-                      !isEmailEditorExpanded
-                        ? "[&_.ql-toolbar]:hidden [&_.ql-container]:border-none [&_.ql-editor]:!p-0 [&_.ql-editor]:!min-h-0 [&_.ql-editor]:!pb-0"
-                        : ""
-                    }`}
-                  />
+                    .email-editor-content ::-moz-selection {
+                      background-color: rgba(34, 197, 94, 0.4) !important;
+                      color: inherit;
+                    }
+                  `}</style>
+                  <div className="email-editor-content">
+                    <RichTextEditor
+                      value={emailInput}
+                      onChange={setEmailInput}
+                      placeholder={
+                        !emailAddress
+                          ? "Add an email address to send emails"
+                          : "Write your email message..."
+                      }
+                      height={isEmailEditorExpanded ? "80px" : "20px"}
+                      toolbar={true}
+                      onFocus={() => setIsEmailEditorExpanded(true)}
+                      className={`text-xs w-full transition-all duration-200 ${
+                        !isEmailEditorExpanded
+                          ? "[&_.ql-toolbar]:hidden [&_.ql-container]:border-none [&_.ql-editor]:!p-0 [&_.ql-editor]:!min-h-0 [&_.ql-editor]:!pb-0"
+                          : ""
+                      }`}
+                    />
+                  </div>
+
+                  {/* Edit with AI Button for Email - appears when text is selected */}
+                  {showEmailEditWithAI && emailEditWithAIPosition && emailSelectedText && (
+                    <button
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        handleEditEmailWithAI();
+                      }}
+                      className="absolute flex items-center gap-2 rounded-lg bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] px-4 py-2 text-xs font-semibold text-white shadow-xl transition-all hover:opacity-90 hover:scale-105 border border-white/20"
+                      style={{
+                        top: `${emailEditWithAIPosition.top}px`,
+                        left: `${emailEditWithAIPosition.left}px`,
+                        transform: "translateX(-50%)",
+                        animation: "fadeIn 0.2s ease-in",
+                        zIndex: 9999,
+                        pointerEvents: "auto",
+                      }}
+                    >
+                      <Sparkles className="h-4 w-4" />
+                      Edit with AI
+                    </button>
+                  )}
                 </div>
 
                 {/* Action Buttons */}
@@ -3400,6 +3719,68 @@ const LeadChat = ({
                 </p>
               )}
             </div>
+
+            {/* Email Edit with AI Modal */}
+            {showEmailEditAIModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                <div className="rounded-lg bg-[#1a1a1a] border border-white/20 p-6 max-w-2xl w-full mx-4">
+                  <h3 className="text-sm sm:text-base font-semibold text-white mb-2">
+                    Edit with AI
+                  </h3>
+                  <p className="text-xs text-white/70 mb-4">
+                    Selected text:{" "}
+                    <span className="text-white/90 italic">
+                      "{emailLockedSelectedText.substring(0, 100)}
+                      {emailLockedSelectedText.length > 100 ? "..." : ""}"
+                    </span>
+                  </p>
+                  <div className="mb-4">
+                    <label className="block text-xs font-medium text-white/90 mb-2">
+                      How would you like AI to rewrite this section?
+                    </label>
+                    <textarea
+                      value={emailEditAIQuery}
+                      onChange={(e) => setEmailEditAIQuery(e.target.value)}
+                      placeholder="e.g., Make it more professional, add more technical details, simplify the language..."
+                      className="w-full min-h-[120px] rounded-lg bg-white/10 border border-white/20 px-4 py-3 text-sm text-white placeholder:text-white/40 outline-none focus:border-white/40 transition-colors resize-none"
+                      autoFocus
+                    />
+                  </div>
+                  <div className="flex items-center gap-3 justify-end">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowEmailEditAIModal(false);
+                        setEmailEditAIQuery("");
+                        setEmailLockedSelectedText("");
+                      }}
+                      disabled={isEditingEmailWithAI}
+                      className="rounded-lg border border-white/30 px-4 py-2 text-xs text-white transition hover:bg-white/10 disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleEmailEditAI}
+                      disabled={isEditingEmailWithAI || !emailEditAIQuery.trim()}
+                      className="rounded-lg bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] px-4 py-2 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-50 flex items-center gap-2"
+                    >
+                      {isEditingEmailWithAI ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Editing...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="h-4 w-4" />
+                          Edit with AI
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         ) : activeTab === "SMS" ? (
           <div className="flex flex-1 flex-col min-h-0 relative">
