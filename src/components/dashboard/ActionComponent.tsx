@@ -187,7 +187,7 @@ export const ActionComponent = () => {
         >
           <div className="h-8 w-8 flex items-center justify-center overflow-hidden rounded-full border border-white/25 bg-gradient-to-br from-cyan-500/20 to-blue-600/20">
             <AvatarFallback
-              name={currentUser?.name || currentUser?.email || "User"}
+              name={`${currentUser?.firstName || ''} ${currentUser?.lastName || ''}`.trim() || currentUser?.email || "User"}
               pictureUrl={currentUser?.profileImage}
               size="xs"
               className="border-none"
@@ -195,7 +195,7 @@ export const ActionComponent = () => {
           </div>
           <div className="hidden lg:flex flex-col text-left text-xs leading-tight text-white/70">
             <span className="font-medium text-white">
-              {currentUser?.name || currentUser?.email?.split("@")[0] || "User"}
+              {`${currentUser?.firstName || ''} ${currentUser?.lastName || ''}`.trim() || currentUser?.email?.split("@")[0] || "User"}
             </span>
             <span className="text-white/50">{currentUser?.email || ""}</span>
           </div>

@@ -202,8 +202,12 @@ export const ProfileTab = () => {
               name="name"
               value={formState.name}
               onChange={handleInputChange}
-              className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40"
+              disabled={true}
+              className="bg-white/[0.04] border-white/10 text-white/60 cursor-not-allowed"
             />
+            <p className="text-xs text-white/50">
+              Company name is protected and cannot be changed here.
+            </p>
             {errors.name ? (
               <p className="text-sm text-rose-400">{errors.name}</p>
             ) : null}
