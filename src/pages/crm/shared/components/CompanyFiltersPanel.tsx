@@ -143,7 +143,13 @@ export const CompanyFiltersInline = ({
         </label>
         <div className="w-32">
           <MultiSelect
-            options={countryList().getData().map((c) => ({ value: c.label, label: c.label }))}
+            options={countryList().getData().map((c) => ({ value: c.label, label: c.label })).sort((a, b) => {
+              const aSelected = locationFilter.includes(a.value);
+              const bSelected = locationFilter.includes(b.value);
+              if (aSelected && !bSelected) return -1;
+              if (!aSelected && bSelected) return 1;
+              return a.label.localeCompare(b.label);
+            })}
             value={locationFilter}
             onChange={onLocationFilterChange}
             placeholder="All countries"
@@ -280,7 +286,13 @@ export const CompanyFiltersPanel = ({
           Country
         </p>
         <MultiSelect
-          options={countryList().getData().map((c) => ({ value: c.label, label: c.label }))}
+          options={countryList().getData().map((c) => ({ value: c.label, label: c.label })).sort((a, b) => {
+            const aSelected = locationFilter.includes(a.value);
+            const bSelected = locationFilter.includes(b.value);
+            if (aSelected && !bSelected) return -1;
+            if (!aSelected && bSelected) return 1;
+            return a.label.localeCompare(b.label);
+          })}
           value={locationFilter}
           onChange={onLocationFilterChange}
           placeholder="All countries"

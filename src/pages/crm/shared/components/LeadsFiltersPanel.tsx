@@ -114,8 +114,14 @@ export const LeadsFiltersInline = ({
   }, [leads]);
 
   const countryOptions = useMemo(
-    () => countryList().getData().map((c) => ({ value: c.label, label: c.label })),
-    []
+    () => countryList().getData().map((c) => ({ value: c.label, label: c.label })).sort((a, b) => {
+      const aSelected = countryFilter.includes(a.value);
+      const bSelected = countryFilter.includes(b.value);
+      if (aSelected && !bSelected) return -1;
+      if (!aSelected && bSelected) return 1;
+      return a.label.localeCompare(b.label);
+    }),
+    [countryFilter]
   );
 
   // Stage options based on lead stage definitions
