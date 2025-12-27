@@ -276,17 +276,22 @@ const Activity: FC<ActivityProps> = ({
       return leadSummaryService.getSummary(leadId);
     },
     enabled: Boolean(leadId),
-    // Only refetch when pending to check if generation completed
+    // Poll when pending, otherwise refresh every 30 seconds when tab is active
     refetchInterval: (query) => {
       if (query.state.data?.data?.status === "pending") {
         return 5000; // Poll every 5 seconds when pending
       }
+      if (topLevelTab === "activity" && activeTab === "summary") {
+        return 30000; // Refetch every 30 seconds when summary tab is active
+      }
       return false; // Don't auto-refetch otherwise
     },
-    // Prevent aggressive background refetching
-    refetchOnWindowFocus: false,
-    // Keep data fresh for 30 seconds
-    staleTime: 30000,
+    // Refetch on window focus when summary tab is active
+    refetchOnWindowFocus: topLevelTab === "activity" && activeTab === "summary",
+    // Mark as stale immediately so it refetches when tab becomes active
+    staleTime: 0,
+    // Always refetch when component mounts or tab becomes active
+    refetchOnMount: true,
   });
 
   const leadSummary = leadSummaryResponse?.data ?? null;
@@ -441,6 +446,13 @@ const Activity: FC<ActivityProps> = ({
     }
     setWeekDates(dates);
   }, [currentWeekStart]);
+
+  // Auto-refetch summary when navigating to Summary tab
+  useEffect(() => {
+    if (topLevelTab === "activity" && activeTab === "summary" && leadId) {
+      refetchLeadSummary();
+    }
+  }, [topLevelTab, activeTab, leadId, refetchLeadSummary]);
 
   const handlePrevWeek = () => {
     const prevWeek = new Date(currentWeekStart);
@@ -1192,7 +1204,6 @@ const Activity: FC<ActivityProps> = ({
                             {monthNames[currentWeekStart.getMonth()]}{" "}
                             {currentWeekStart.getFullYear()}
                           </div>
-
                           <button
                             onClick={handleNextWeek}
                             className="p-1 rounded-full hover:bg-white/10 text-white/70 hover:text-white transition-colors"
