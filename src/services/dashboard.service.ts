@@ -229,6 +229,18 @@ export const dashboardService = {
   },
 
   /**
+   * Get activity breakdown counts
+   */
+  getActivityBreakdown: async (): Promise<DashboardResponse<any>> => {
+    try {
+      const response = await API.get("/dashboard/activity-breakdown");
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  /**
    * Get total count of all leads from all companies
    */
   getTotalLeadsCount: async (

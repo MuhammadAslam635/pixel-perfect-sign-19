@@ -4,9 +4,10 @@ import { Loader2, Target, Calendar, Filter, Users, ChevronDown, Clock } from "lu
 import { PieChart, Pie, Cell } from "recharts";
 import { dashboardService, DashboardPeriod, TopLead } from "@/services/dashboard.service";
 import { calendarService, LeadMeetingRecord } from "@/services/calendar.service";
+import { useActivityBreakdown } from "@/hooks/useDashboard";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 
-type ActivityFilter = 
+type ActivityFilter =
   | "all"
   | "message_sent"
   | "email_sent"
@@ -25,17 +26,19 @@ const LeadsScoreDistributionCard = () => {
   const [totalLeadsLoading, setTotalLeadsLoading] = useState(true);
   const [totalLeadsPeriod, setTotalLeadsPeriod] = useState<DashboardPeriod>("all");
   const [showTotalLeadsPeriodDropdown, setShowTotalLeadsPeriodDropdown] = useState(false);
-  const [activityBreakdown, setActivityBreakdown] = useState<Record<ActivityBreakdownKey, number>>({
+  // Activity Breakdown Query
+  const { data: activityBreakdownData, isLoading: activityBreakdownLoading } = useActivityBreakdown();
+
+  const activityBreakdown: Record<ActivityBreakdownKey, number> = activityBreakdownData || {
     message_sent: 0,
     email_sent: 0,
     outbound_calls: 0,
     inbound_calls: 0,
     whatsapp_sent: 0,
     sms_sent: 0,
-  });
-  const [activityBreakdownLoading, setActivityBreakdownLoading] = useState(true);
+  };
   const totalLeadsPeriodDropdownRef = useRef<HTMLDivElement>(null);
-  
+
   // Meetings state
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [meetings, setMeetings] = useState<LeadMeetingRecord[]>([]);
@@ -51,7 +54,7 @@ const LeadsScoreDistributionCard = () => {
     const daysFromMonday = currentDay === 0 ? 6 : currentDay - 1; // If Sunday, go back 6 days
     monday.setDate(today.getDate() - daysFromMonday);
     monday.setHours(0, 0, 0, 0);
-    
+
     const dates: Date[] = [];
     for (let i = 0; i < 7; i++) {
       const date = new Date(monday);
@@ -148,58 +151,7 @@ const LeadsScoreDistributionCard = () => {
     fetchTotalLeads();
   }, [totalLeadsPeriod]);
 
-  // Fetch activity breakdown counts (for Leads Filter tile)
-  useEffect(() => {
-    const fetchActivityBreakdown = async () => {
-      try {
-        setActivityBreakdownLoading(true);
 
-        const keys: ActivityBreakdownKey[] = [
-          "message_sent",
-          "email_sent",
-          "outbound_calls",
-          "inbound_calls",
-          "whatsapp_sent",
-          "sms_sent",
-        ];
-
-        const results = await Promise.all(
-          keys.map(async (key) => {
-            const response = await dashboardService.getLeadsCountByActivity(key);
-            return { key, count: response.data.count || 0 };
-          })
-        );
-
-        const next: Record<ActivityBreakdownKey, number> = {
-          message_sent: 0,
-          email_sent: 0,
-          outbound_calls: 0,
-          inbound_calls: 0,
-          whatsapp_sent: 0,
-          sms_sent: 0,
-        };
-        results.forEach(({ key, count }) => {
-          next[key] = count;
-        });
-
-        setActivityBreakdown(next);
-      } catch (err: any) {
-        console.error("Error fetching activity breakdown:", err);
-        setActivityBreakdown({
-          message_sent: 0,
-          email_sent: 0,
-          outbound_calls: 0,
-          inbound_calls: 0,
-          whatsapp_sent: 0,
-          sms_sent: 0,
-        });
-      } finally {
-        setActivityBreakdownLoading(false);
-      }
-    };
-
-    fetchActivityBreakdown();
-  }, []);
 
   const totalLeadsPeriodOptions: { value: DashboardPeriod; label: string }[] = [
     { value: "all", label: "All time" },
@@ -230,13 +182,13 @@ const LeadsScoreDistributionCard = () => {
     label: string;
     color: string;
   }> = [
-    { key: "message_sent", label: "Messages", color: activityPalette.message_sent },
-    { key: "email_sent", label: "Email", color: activityPalette.email_sent },
-    { key: "sms_sent", label: "SMS", color: activityPalette.sms_sent },
-    { key: "whatsapp_sent", label: "WhatsApp", color: activityPalette.whatsapp_sent },
-    { key: "outbound_calls", label: "Out Calls", color: activityPalette.outbound_calls },
-    { key: "inbound_calls", label: "In Calls", color: activityPalette.inbound_calls },
-  ];
+      { key: "message_sent", label: "Messages", color: activityPalette.message_sent },
+      { key: "email_sent", label: "Email", color: activityPalette.email_sent },
+      { key: "sms_sent", label: "SMS", color: activityPalette.sms_sent },
+      { key: "whatsapp_sent", label: "WhatsApp", color: activityPalette.whatsapp_sent },
+      { key: "outbound_calls", label: "Out Calls", color: activityPalette.outbound_calls },
+      { key: "inbound_calls", label: "In Calls", color: activityPalette.inbound_calls },
+    ];
 
   const donutData = activityOptions.map((opt) => ({
     key: opt.key,
@@ -247,7 +199,7 @@ const LeadsScoreDistributionCard = () => {
 
   // Check if all values are zero
   const allValuesZero = donutData.every((d) => d.value === 0);
-  
+
   // If all values are zero, use equal values (1) to ensure chart renders as equal segments
   const chartData = allValuesZero
     ? donutData.map((d) => ({ ...d, value: 1 }))
@@ -256,10 +208,10 @@ const LeadsScoreDistributionCard = () => {
   // Custom tooltip that shows 0 when all values are zero
   const CustomTooltip = ({ active, payload }: any) => {
     if (!active || !payload || !payload.length) return null;
-    
+
     const data = payload[0].payload;
     const displayValue = allValuesZero ? 0 : data.value;
-    
+
     return (
       <div className="rounded-lg bg-[#212121] px-4 py-2 text-center text-white shadow-lg border border-white/10">
         <p className="text-xs text-[#7A7A7A] font-medium mb-1">{data.name}</p>
@@ -317,7 +269,7 @@ const LeadsScoreDistributionCard = () => {
           <Calendar className="w-4 h-4 text-white/70" />
           <h3 className="text-white text-sm font-medium">Upcoming Meetings</h3>
         </div>
-        
+
         {/* Week dates selector */}
         <div className="flex items-center justify-center gap-1.5 mb-2">
           {weekDates.map((date, index) => {
@@ -334,11 +286,10 @@ const LeadsScoreDistributionCard = () => {
               <button
                 key={index}
                 onClick={() => setSelectedDate(date)}
-                className={`flex flex-col items-center justify-center w-9 h-9 rounded-lg transition-all duration-200 relative overflow-hidden ${
-                  isSelected
-                    ? "border-2 border-primary"
-                    : "border border-white/10 hover:border-white/20"
-                }`}
+                className={`flex flex-col items-center justify-center w-9 h-9 rounded-lg transition-all duration-200 relative overflow-hidden ${isSelected
+                  ? "border-2 border-primary"
+                  : "border border-white/10 hover:border-white/20"
+                  }`}
                 style={{
                   background: isSelected
                     ? `linear-gradient(180deg, rgba(104, 177, 184, 0.25) 0%, rgba(104, 177, 184, 0.1) 100%)`
@@ -349,9 +300,8 @@ const LeadsScoreDistributionCard = () => {
                   {dayName}
                 </span>
                 <span
-                  className={`text-xs font-semibold ${
-                    isSelected ? "text-white" : isToday ? "text-primary" : "text-white/80"
-                  }`}
+                  className={`text-xs font-semibold ${isSelected ? "text-white" : isToday ? "text-primary" : "text-white/80"
+                    }`}
                 >
                   {dayNumber}
                 </span>
@@ -365,7 +315,7 @@ const LeadsScoreDistributionCard = () => {
           {meetingsLoading ? (
             <div className="flex items-center justify-center h-full">
               <Loader2 className="w-3 h-3 animate-spin text-white/70" />
-          </div>
+            </div>
           ) : meetings.length === 0 ? (
             <p className="text-[10px] text-white/50 text-center">No meetings</p>
           ) : (
@@ -396,16 +346,17 @@ const LeadsScoreDistributionCard = () => {
                       <span>{timeStr}</span>
                     </div>
                   </div>
-                  );
-                })}
+                );
+              })}
             </div>
-        )}
+          )}
         </div>
       </div>
 
       {/* Tile 3: Activity Breakdown */}
       <div className="relative overflow-hidden rounded-[36px] border border-white/10 bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] p-4 lg:p-5 h-[140px] lg:h-[170px] flex flex-col transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-white/5 hover:scale-[1.01]">
         <div className="flex items-center gap-2 mb-2">
+
           <Filter className="w-4 h-4 text-white/70" />
           <h3 className="text-white text-sm font-medium">Activity Breakdown</h3>
         </div>
@@ -441,9 +392,9 @@ const LeadsScoreDistributionCard = () => {
                       strokeWidth={0}
                     >
                       {chartData.map((entry) => (
-                        <Cell 
-                          key={entry.key} 
-                          fill={entry.fill} 
+                        <Cell
+                          key={entry.key}
+                          fill={entry.fill}
                           fillOpacity={allValuesZero ? 0.3 : 0.9}
                         />
                       ))}
@@ -494,9 +445,8 @@ const LeadsScoreDistributionCard = () => {
                   ?.label || "All time"}
               </span>
               <ChevronDown
-                className={`w-3 h-3 text-white/60 transition-transform ${
-                  showTotalLeadsPeriodDropdown ? "rotate-180" : ""
-                }`}
+                className={`w-3 h-3 text-white/60 transition-transform ${showTotalLeadsPeriodDropdown ? "rotate-180" : ""
+                  }`}
               />
             </button>
             {showTotalLeadsPeriodDropdown && (
@@ -508,11 +458,10 @@ const LeadsScoreDistributionCard = () => {
                       setTotalLeadsPeriod(option.value);
                       setShowTotalLeadsPeriodDropdown(false);
                     }}
-                    className={`w-full text-left px-3 py-2 text-xs transition-colors ${
-                      totalLeadsPeriod === option.value
-                        ? "bg-white/10 text-white"
-                        : "text-white/70 hover:bg-white/5"
-                    }`}
+                    className={`w-full text-left px-3 py-2 text-xs transition-colors ${totalLeadsPeriod === option.value
+                      ? "bg-white/10 text-white"
+                      : "text-white/70 hover:bg-white/5"
+                      }`}
                   >
                     {option.label}
                   </button>
