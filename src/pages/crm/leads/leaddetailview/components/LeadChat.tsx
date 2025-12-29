@@ -13,6 +13,8 @@ import {
   Download,
   MessageCircle,
   MapPin,
+  X,
+  ArrowLeft,
 } from "lucide-react";
 import { IoLogoWhatsapp, IoLocationSharp } from "react-icons/io5";
 import jsPDF from "jspdf";
@@ -35,6 +37,7 @@ import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import { AvatarFallback } from "@/components/ui/avatar-fallback";
+import { proposalService, Proposal } from "@/services/proposal.service";
 
 // Import Tamimi logos
 import tamimiLogoLight from "@/assets/tamimi-logo-light.png";
@@ -189,6 +192,12 @@ const LeadChat = ({
   const [editAIQuery, setEditAIQuery] = useState<string>("");
   const [isEditingWithAI, setIsEditingWithAI] = useState(false);
   const proposalContentRef = useRef<HTMLDivElement>(null);
+
+  // Proposal list view states
+  const [showProposalList, setShowProposalList] = useState(false);
+  const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(
+    null
+  );
 
   // Email Edit with AI states
   const [emailSelectedText, setEmailSelectedText] = useState<string>("");
@@ -616,6 +625,36 @@ const LeadChat = ({
         "Twilio is not configured. Please contact your administrator."
       : null;
   const smsInputsDisabled = Boolean(smsUnavailableMessage) || !phoneNumber;
+
+  // Fetch proposals for this lead
+  const {
+    data: proposalsResponse,
+    isLoading: isProposalsLoading,
+    refetch: refetchProposals,
+    error: proposalsError,
+  } = useQuery({
+    queryKey: ["proposals", leadId],
+    queryFn: () => proposalService.getProposalsByLead(leadId as string),
+    enabled: Boolean(leadId) && activeTab === "Proposal",
+    staleTime: 30_000,
+  });
+
+  const sentProposals: Proposal[] = proposalsResponse?.data?.proposals || [];
+
+  // Log proposals error if any
+  useEffect(() => {
+    if (proposalsError) {
+      console.error("Error fetching proposals:", proposalsError);
+    }
+  }, [proposalsError]);
+
+  // Log proposals data when it changes
+  useEffect(() => {
+    if (proposalsResponse) {
+      console.log("Proposals response:", proposalsResponse);
+      console.log("Sent proposals count:", sentProposals.length);
+    }
+  }, [proposalsResponse, sentProposals]);
 
   useEffect(() => {
     if (!whatsappUnavailableMessage && whatsappSendError) {
@@ -1229,6 +1268,8 @@ const LeadChat = ({
 
     setIsUpdatingStage(true);
     try {
+      let emailSentSuccessfully = false;
+
       // Send proposal via email if email address exists and proposal content is available
       if (emailAddress && proposalContent) {
         try {
@@ -1241,6 +1282,8 @@ const LeadChat = ({
             html: proposalHtml,
             text: proposalText,
           });
+
+          emailSentSuccessfully = true;
 
           // Invalidate email queries to refresh the conversation
           queryClient.invalidateQueries({
@@ -1260,6 +1303,42 @@ const LeadChat = ({
         );
       }
 
+      // Save proposal to database
+      if (proposalContent) {
+        try {
+          const saveResult = await proposalService.saveProposal({
+            leadId: lead._id,
+            content: proposalContent,
+            htmlContent: proposalHtmlContent,
+            emailSent: emailSentSuccessfully,
+            emailAddress: emailAddress || undefined,
+          });
+
+          console.log("Proposal saved successfully:", saveResult);
+
+          // Refresh proposals list immediately
+          await refetchProposals();
+          
+          // Also invalidate the query to ensure fresh data
+          queryClient.invalidateQueries({ queryKey: ["proposals", lead._id] });
+        } catch (proposalError: any) {
+          console.error("Failed to save proposal:", proposalError);
+          console.error("Error details:", {
+            message: proposalError?.message,
+            response: proposalError?.response?.data,
+            status: proposalError?.response?.status,
+          });
+          // Show error to user so they know the proposal wasn't saved
+          toast.error(
+            `Proposal not saved: ${
+              proposalError?.response?.data?.message ||
+              proposalError?.message ||
+              "Unknown error"
+            }`
+          );
+        }
+      }
+
       // Update lead stage
       await leadsService.markProposalSent(lead._id);
       toast.success(
@@ -1275,6 +1354,12 @@ const LeadChat = ({
 
       // Invalidate queries to refresh lead data
       queryClient.invalidateQueries({ queryKey: ["lead", lead._id] });
+      
+      // Clear proposal content and show the list
+      setProposalContent("");
+      setProposalHtmlContent("");
+      setShowProposalList(true);
+      setSelectedProposal(null);
     } catch (error: any) {
       const friendlyMessage =
         error?.response?.data?.message ||
@@ -3335,7 +3420,24 @@ const LeadChat = ({
               <div className="flex flex-1 flex-col min-h-0">
                 {/* Header with Generate and Copy buttons */}
                 <div className="flex items-center justify-between gap-3 mb-4 px-1">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap flex-1">
+                    {/* Show back button if viewing a previously sent proposal */}
+                    {selectedProposal && (
+                      <button
+                        type="button"
+                        className="flex items-center gap-2 rounded-lg border border-white/30 bg-white/10 px-4 py-2 text-xs font-medium text-white transition hover:bg-white/20"
+                        onClick={() => {
+                          setProposalContent("");
+                          setProposalHtmlContent("");
+                          setShowProposalList(true);
+                          setSelectedProposal(null);
+                        }}
+                      >
+                        <ArrowLeft className="h-4 w-4" />
+                        Back to List
+                      </button>
+                    )}
+
                     <button
                       type="button"
                       className="flex items-center gap-2 rounded-lg bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] px-4 py-2 text-xs font-medium text-white transition hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
@@ -3426,7 +3528,56 @@ const LeadChat = ({
                       </>
                     )}
                   </div>
+
+                  {/* Close button on the right - more prominent */}
+                  {proposalContent && !selectedProposal && (
+                    <button
+                      type="button"
+                      className="flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2 text-xs font-medium text-red-400 transition hover:bg-red-500/20 hover:border-red-500/50 flex-shrink-0"
+                      onClick={() => {
+                        setProposalContent("");
+                        setProposalHtmlContent("");
+                        setShowProposalList(true);
+                        setSelectedProposal(null);
+                      }}
+                      title="Close and view all proposals"
+                    >
+                      <X className="h-4 w-4" />
+                      Close
+                    </button>
+                  )}
                 </div>
+
+                {/* Show proposal info if it's a previously sent proposal */}
+                {selectedProposal && proposalContent && (
+                  <div className="mb-4 px-1">
+                    <div className="rounded-lg border border-white/20 bg-white/5 p-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold text-white/90">
+                            Sent by {selectedProposal.sentBy.name}
+                          </p>
+                          <p className="text-xs text-white/60 mt-0.5">
+                            {new Date(
+                              selectedProposal.sentAt
+                            ).toLocaleDateString("en-US", {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </p>
+                        </div>
+                        {selectedProposal.emailSent && (
+                          <span className="flex-shrink-0 text-[10px] px-2 py-1 rounded bg-green-500/20 text-green-300 border border-green-500/30">
+                            ✓ Email Sent
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Proposal Content */}
                 {proposalContent ? (
@@ -3605,6 +3756,77 @@ const LeadChat = ({
                         </button>
                       )}
                     </div>
+                  </div>
+                ) : showProposalList ||
+                  (!proposalContent && sentProposals.length > 0) ? (
+                  <div className="flex w-full flex-1 flex-col min-h-0">
+                    <div className="flex items-center justify-between mb-4 px-1">
+                      <h3 className="text-sm font-semibold text-white">
+                        Previously Sent Proposals ({sentProposals.length})
+                      </h3>
+                    </div>
+
+                    {isProposalsLoading ? (
+                      <div className="flex flex-1 items-center justify-center">
+                        <Loader2 className="h-6 w-6 animate-spin text-white/70" />
+                      </div>
+                    ) : sentProposals.length === 0 ? (
+                      <div className="flex w-full flex-1 items-center justify-center py-20 text-center text-white/70">
+                        <div className="flex flex-col items-center gap-3">
+                          <Sparkles className="h-12 w-12 text-white/30" />
+                          <p>No proposals sent yet</p>
+                          <p className="text-xs text-white/50">
+                            Click "Generate with AI" to create your first
+                            proposal
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex-1 overflow-y-auto scrollbar-hide space-y-2 px-1">
+                        {sentProposals.map((proposal) => (
+                          <div
+                            key={proposal._id}
+                            onClick={() => {
+                              setProposalContent(proposal.content);
+                              setProposalHtmlContent(
+                                proposal.htmlContent || ""
+                              );
+                              setShowProposalList(false);
+                              setSelectedProposal(proposal);
+                            }}
+                            className="group cursor-pointer rounded-lg border border-white/20 bg-white/5 p-4 transition hover:bg-white/10 hover:border-white/30"
+                          >
+                            <div className="flex items-start justify-between gap-3 mb-2">
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-semibold text-white truncate">
+                                  Proposal sent by {proposal.sentBy.name}
+                                </p>
+                                <p className="text-xs text-white/60 mt-0.5">
+                                  {new Date(proposal.sentAt).toLocaleDateString(
+                                    "en-US",
+                                    {
+                                      year: "numeric",
+                                      month: "short",
+                                      day: "numeric",
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    }
+                                  )}
+                                </p>
+                              </div>
+                              {proposal.emailSent && (
+                                <span className="flex-shrink-0 text-[10px] px-2 py-1 rounded bg-green-500/20 text-green-300 border border-green-500/30">
+                                  Email Sent
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-white/70 line-clamp-2">
+                              {proposal.content.substring(0, 150)}...
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="flex w-full flex-1 items-center justify-center py-20 text-center text-white/70">
