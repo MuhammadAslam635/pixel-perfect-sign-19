@@ -369,10 +369,7 @@ const LeadChat = ({
     twilioStatusLoading,
   ]);
 
-  const firstAvailableTab =
-    channelTabs.find((tab) => tab.isAvailable)?.label ||
-    channelTabs[0]?.label ||
-    "WhatsApp";
+  const firstAvailableTab = "Email";
 
   // Determine the preferred initial tab (e.g. force "Call" when coming from Companies -> Call Now)
   const preferredInitialTab = useMemo(() => {
