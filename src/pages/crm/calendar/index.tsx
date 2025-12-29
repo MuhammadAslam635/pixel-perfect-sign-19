@@ -16,6 +16,9 @@ import {
 import { format } from "date-fns";
 import ConfirmDialog from "@/components/ui/confirm-dialog";
 import { CrmNavigation } from "@/pages/crm/shared/components/CrmNavigation";
+import ReactMarkdown from "react-markdown";
+import rehypeRaw from "rehype-raw";
+import rehypeSanitize from "rehype-sanitize";
 
 const formatDateTimeRange = (start?: string, end?: string, timezone?: string) => {
   if (!start || !end) {
@@ -750,11 +753,17 @@ const CalendarPage: FC = () => {
                               </div>
                             </div>
                             {meeting.body && (
-                              <p className="text-xs text-white/70 mt-2">
-                                {meeting.body.length > 200
-                                  ? `${meeting.body.substring(0, 200)}...`
-                                  : meeting.body}
-                              </p>
+                              <div className="text-xs text-white/70 mt-2 line-clamp-3 prose prose-invert prose-p:my-0 prose-pre:my-0 prose-ul:my-0 prose-li:my-0 max-w-none">
+                                <ReactMarkdown
+                                  rehypePlugins={[rehypeRaw, rehypeSanitize]}
+                                  components={{
+                                    p: ({node, ...props}) => <span {...props} />,
+                                    a: ({node, ...props}) => <a {...props} className="text-indigo-300 hover:text-indigo-200 underline" target="_blank" rel="noopener noreferrer" />,
+                                  }}
+                                >
+                                  {meeting.body}
+                                </ReactMarkdown>
+                              </div>
                             )}
                             <div className="flex gap-2 mt-3">
                               {meeting.webLink && (
