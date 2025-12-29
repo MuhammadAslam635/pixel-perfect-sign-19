@@ -630,7 +630,15 @@ const index = () => {
   );
 
   // Fetch shared CRM stats for top cards (including companies and leads counts)
-  const { stats: companyFilteredStats } = useCompanyCrmStatsData({});
+  const { stats: companyFilteredStats } = useCompanyCrmStatsData({
+    stage: leadsStageFilter.length > 0 ? leadsStageFilter : undefined,
+    seniority: leadsSeniorityFilter.length > 0 ? leadsSeniorityFilter : undefined,
+    country: leadsCountryFilter.length > 0 ? leadsCountryFilter.join(",") : undefined,
+    hasEmail: leadsHasEmailFilter || undefined,
+    hasPhone: leadsHasPhoneFilter || undefined,
+    hasLinkedin: leadsHasLinkedinFilter || undefined,
+    hasFavourite: leadsHasFavouriteFilter || undefined,
+  });
 
   // General CRM stats for outreach/response/active clients/messages sent
   const { stats: crmStats } = useCrmStatsData();
@@ -651,21 +659,19 @@ const index = () => {
       buildStats(
         {
           totalCompanies: effectiveTotalCompanies,
-          totalLeads: effectiveTotalLeads,
-          totalOutreach: crmStats?.totalOutreach,
-          totalDealsClosed: crmStats?.totalDealsClosed,
-          activeClients: crmStats?.activeClients,
-          messagesSent: crmStats?.messagesSent,
+          totalLeads: companyFilteredStats?.totalLeads ?? effectiveTotalLeads,
+          totalOutreach: companyFilteredStats?.totalOutreach ?? crmStats?.totalOutreach,
+          totalDealsClosed: companyFilteredStats?.totalDealsClosed ?? crmStats?.totalDealsClosed,
+          activeClients: companyFilteredStats?.activeClients ?? crmStats?.activeClients,
+          messagesSent: companyFilteredStats?.messagesSent ?? crmStats?.messagesSent,
         },
         "leads"
       ),
     [
       effectiveTotalCompanies,
       effectiveTotalLeads,
-      crmStats?.totalOutreach,
-      crmStats?.totalDealsClosed,
-      crmStats?.activeClients,
-      crmStats?.messagesSent,
+      companyFilteredStats,
+      crmStats,
     ]
   );
 

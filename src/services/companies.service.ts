@@ -89,6 +89,12 @@ export interface CompaniesQueryParams {
   hasWebsite?: boolean;
   location?: string;
   country?: string;
+  stage?: string[];
+  seniority?: string[];
+  hasEmail?: boolean;
+  hasPhone?: boolean;
+  hasLinkedin?: boolean;
+  hasFavourite?: boolean;
 }
 
 export const companiesService = {
