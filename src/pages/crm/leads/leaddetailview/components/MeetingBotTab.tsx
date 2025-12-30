@@ -1,4 +1,5 @@
 import { FC, useMemo, useState, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Lead } from "@/services/leads.service";
 import { calendarService } from "@/services/calendar.service";
@@ -976,15 +977,16 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
       </div>
 
       {/* Notes Detail Modal */}
-      {showNotesDetailModal && selectedMeeting && (
-        <div
-          className="fixed inset-0 bg-black/50 z-[9999] flex items-center justify-center p-4"
-          onClick={() => setShowNotesDetailModal(false)}
-        >
+      {showNotesDetailModal && selectedMeeting && typeof window !== "undefined" &&
+        createPortal(
           <div
-            className="bg-[#1a1d24] rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col"
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 bg-black/50 z-[9999] flex items-center justify-center p-4"
+            onClick={() => setShowNotesDetailModal(false)}
           >
+            <div
+              className="bg-[#1a1d24] rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+            >
             {/* Modal Header */}
             <div className="flex items-center justify-between p-6 border-b border-white/10">
               <div>
@@ -1167,8 +1169,10 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
               })()}
             </div>
           </div>
-        </div>
-      )}
+        </div>,
+          document.body
+        )
+      }
     </div>
   );
 };
