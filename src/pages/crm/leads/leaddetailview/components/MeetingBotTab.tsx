@@ -184,6 +184,7 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
   const [notesErrors, setNotesErrors] = useState<
     Record<string, string | null>
   >({});
+  const [showNotesDetailModal, setShowNotesDetailModal] = useState(false);
 
   const fetchRecordingData = async (meetingId: string) => {
     // Don't fetch if already loading
@@ -734,7 +735,7 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
                       : "text-white/60 hover:text-white/80"
                   }`}
                 >
-                  Meeting Notes
+                  Notes
                   {activeTab === "notes" && (
                     <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400" />
                   )}
@@ -857,7 +858,7 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
                   </div>
                 ) : (
                   <div className="flex flex-col gap-4">
-                    {/* Meeting Notes */}
+                    {/* Notes Preview */}
                     {(() => {
                       const notes = meetingNotes[selectedMeeting._id];
                       const isLoading = loadingNotes[selectedMeeting._id];
@@ -918,155 +919,42 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
                         );
                       } else {
                         return (
-                          <div className="flex flex-col gap-4 text-left">
-                            {/* Summary */}
+                          <div
+                            className="flex flex-col gap-4 text-left cursor-pointer hover:bg-white/5 p-4 rounded-lg transition-colors border border-white/10"
+                            onClick={() => setShowNotesDetailModal(true)}
+                          >
+                            {/* Preview Summary */}
                             <div>
-                              <h4 className="text-sm font-semibold text-white/90 mb-2">
-                                Summary
-                              </h4>
-                              <p className="text-sm text-white/70 leading-relaxed">
+                              <div className="flex items-center justify-between mb-2">
+                                <h4 className="text-sm font-semibold text-white/90">
+                                  Meeting Notes Summary
+                                </h4>
+                                <FileText className="w-4 h-4 text-cyan-400" />
+                              </div>
+                              <p className="text-sm text-white/70 leading-relaxed line-clamp-3">
                                 {notes.summary}
                               </p>
                             </div>
 
-                            {/* Key Points */}
-                            {notes.keyPoints && notes.keyPoints.length > 0 && (
-                              <div>
-                                <h4 className="text-sm font-semibold text-white/90 mb-2">
-                                  Key Points
-                                </h4>
-                                <ul className="list-disc list-inside space-y-1">
-                                  {notes.keyPoints.map((point, i) => (
-                                    <li key={i} className="text-sm text-white/70">
-                                      {point}
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-
-                            {/* Action Items */}
-                            {notes.actionItems && notes.actionItems.length > 0 && (
-                              <div>
-                                <h4 className="text-sm font-semibold text-white/90 mb-2">
-                                  Action Items
-                                </h4>
-                                <div className="space-y-2">
-                                  {notes.actionItems.map((item, i) => (
-                                    <div
-                                      key={i}
-                                      className="p-2 rounded bg-white/5 border border-white/10"
-                                    >
-                                      <p className="text-sm text-white/80">
-                                        {item.description}
-                                      </p>
-                                      {item.assignee && (
-                                        <p className="text-xs text-white/50 mt-1">
-                                          Assignee: {item.assignee}
-                                        </p>
-                                      )}
-                                      {item.dueDate && (
-                                        <p className="text-xs text-white/50">
-                                          Due: {new Date(item.dueDate).toLocaleDateString()}
-                                        </p>
-                                      )}
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-
-                            {/* Decisions */}
-                            {notes.decisions && notes.decisions.length > 0 && (
-                              <div>
-                                <h4 className="text-sm font-semibold text-white/90 mb-2">
-                                  Decisions Made
-                                </h4>
-                                <div className="space-y-2">
-                                  {notes.decisions.map((decision, i) => (
-                                    <div
-                                      key={i}
-                                      className="p-2 rounded bg-white/5 border border-white/10"
-                                    >
-                                      <p className="text-sm text-white/80">
-                                        {decision.description}
-                                      </p>
-                                      <p className="text-xs text-white/50 mt-1">
-                                        Impact: {decision.impact}
-                                      </p>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-
-                            {/* Next Steps */}
-                            {notes.nextSteps && notes.nextSteps.length > 0 && (
-                              <div>
-                                <h4 className="text-sm font-semibold text-white/90 mb-2">
-                                  Next Steps
-                                </h4>
-                                <ul className="list-disc list-inside space-y-1">
-                                  {notes.nextSteps.map((step, i) => (
-                                    <li key={i} className="text-sm text-white/70">
-                                      {step}
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-
-                            {/* Insights */}
-                            {notes.insights && (
-                              <div>
-                                <h4 className="text-sm font-semibold text-white/90 mb-2">
-                                  AI Insights
-                                </h4>
-                                <p className="text-sm text-white/70 leading-relaxed">
-                                  {notes.insights}
-                                </p>
-                              </div>
-                            )}
-
-                            {/* Topics & Sentiment */}
-                            <div className="flex gap-4 pt-2 border-t border-white/10">
+                            {/* Quick stats */}
+                            <div className="flex gap-4 text-xs text-white/60 pt-2 border-t border-white/10">
+                              {notes.keyPoints && notes.keyPoints.length > 0 && (
+                                <span>{notes.keyPoints.length} Key Points</span>
+                              )}
+                              {notes.actionItems && notes.actionItems.length > 0 && (
+                                <span>• {notes.actionItems.length} Action Items</span>
+                              )}
+                              {notes.decisions && notes.decisions.length > 0 && (
+                                <span>• {notes.decisions.length} Decisions</span>
+                              )}
                               {notes.sentiment && (
-                                <div>
-                                  <h4 className="text-xs font-semibold text-white/60 mb-1">
-                                    Sentiment
-                                  </h4>
-                                  <Badge
-                                    variant={
-                                      notes.sentiment === "positive"
-                                        ? "default"
-                                        : notes.sentiment === "negative"
-                                        ? "destructive"
-                                        : "secondary"
-                                    }
-                                    className="capitalize"
-                                  >
-                                    {notes.sentiment}
-                                  </Badge>
-                                </div>
+                                <span>• Sentiment: {notes.sentiment}</span>
                               )}
-                              {notes.topics && notes.topics.length > 0 && (
-                                <div className="flex-1">
-                                  <h4 className="text-xs font-semibold text-white/60 mb-1">
-                                    Topics
-                                  </h4>
-                                  <div className="flex flex-wrap gap-1">
-                                    {notes.topics.map((topic, i) => (
-                                      <Badge
-                                        key={i}
-                                        variant="outline"
-                                        className="text-xs"
-                                      >
-                                        {topic}
-                                      </Badge>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
+                            </div>
+
+                            {/* Click to view indicator */}
+                            <div className="flex items-center justify-center text-xs text-cyan-400 font-medium">
+                              Click to view full details →
                             </div>
                           </div>
                         );
@@ -1086,6 +974,201 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
           )}
         </div>
       </div>
+
+      {/* Notes Detail Modal */}
+      {showNotesDetailModal && selectedMeeting && (
+        <div
+          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+          onClick={() => setShowNotesDetailModal(false)}
+        >
+          <div
+            className="bg-[#1a1d24] rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-white/10">
+              <div>
+                <h2 className="text-lg font-semibold text-white">
+                  Meeting Notes
+                </h2>
+                <p className="text-sm text-white/60 mt-1">
+                  {selectedMeeting.subject} •{" "}
+                  {formatDate(selectedMeeting.startDateTime)}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowNotesDetailModal(false)}
+                className="text-white/60 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="flex-1 overflow-y-auto p-6">
+              {(() => {
+                const notes = meetingNotes[selectedMeeting._id];
+                if (!notes) return null;
+
+                return (
+                  <div className="flex flex-col gap-6 text-left">
+                    {/* Summary */}
+                    <div>
+                      <h4 className="text-sm font-semibold text-white/90 mb-2">
+                        Summary
+                      </h4>
+                      <p className="text-sm text-white/70 leading-relaxed">
+                        {notes.summary}
+                      </p>
+                    </div>
+
+                    {/* Key Points */}
+                    {notes.keyPoints && notes.keyPoints.length > 0 && (
+                      <div>
+                        <h4 className="text-sm font-semibold text-white/90 mb-2">
+                          Key Points
+                        </h4>
+                        <ul className="list-disc list-inside space-y-1">
+                          {notes.keyPoints.map((point, i) => (
+                            <li key={i} className="text-sm text-white/70">
+                              {point}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Action Items */}
+                    {notes.actionItems && notes.actionItems.length > 0 && (
+                      <div>
+                        <h4 className="text-sm font-semibold text-white/90 mb-2">
+                          Action Items
+                        </h4>
+                        <div className="space-y-2">
+                          {notes.actionItems.map((item, i) => (
+                            <div
+                              key={i}
+                              className="p-3 rounded bg-white/5 border border-white/10"
+                            >
+                              <p className="text-sm text-white/80">
+                                {item.description}
+                              </p>
+                              {item.assignee && (
+                                <p className="text-xs text-white/50 mt-1">
+                                  Assignee: {item.assignee}
+                                </p>
+                              )}
+                              {item.dueDate && (
+                                <p className="text-xs text-white/50">
+                                  Due:{" "}
+                                  {new Date(item.dueDate).toLocaleDateString()}
+                                </p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Decisions */}
+                    {notes.decisions && notes.decisions.length > 0 && (
+                      <div>
+                        <h4 className="text-sm font-semibold text-white/90 mb-2">
+                          Decisions Made
+                        </h4>
+                        <div className="space-y-2">
+                          {notes.decisions.map((decision, i) => (
+                            <div
+                              key={i}
+                              className="p-3 rounded bg-white/5 border border-white/10"
+                            >
+                              <p className="text-sm text-white/80">
+                                {decision.description}
+                              </p>
+                              <p className="text-xs text-white/50 mt-1">
+                                Impact: {decision.impact}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Next Steps */}
+                    {notes.nextSteps && notes.nextSteps.length > 0 && (
+                      <div>
+                        <h4 className="text-sm font-semibold text-white/90 mb-2">
+                          Next Steps
+                        </h4>
+                        <ul className="list-disc list-inside space-y-1">
+                          {notes.nextSteps.map((step, i) => (
+                            <li key={i} className="text-sm text-white/70">
+                              {step}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Insights */}
+                    {notes.insights && (
+                      <div>
+                        <h4 className="text-sm font-semibold text-white/90 mb-2">
+                          AI Insights
+                        </h4>
+                        <p className="text-sm text-white/70 leading-relaxed">
+                          {notes.insights}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Topics & Sentiment */}
+                    <div className="flex gap-4 pt-2 border-t border-white/10">
+                      {notes.sentiment && (
+                        <div>
+                          <h4 className="text-xs font-semibold text-white/60 mb-1">
+                            Sentiment
+                          </h4>
+                          <Badge
+                            variant={
+                              notes.sentiment === "positive"
+                                ? "default"
+                                : notes.sentiment === "negative"
+                                ? "destructive"
+                                : "secondary"
+                            }
+                            className="capitalize"
+                          >
+                            {notes.sentiment}
+                          </Badge>
+                        </div>
+                      )}
+                      {notes.topics && notes.topics.length > 0 && (
+                        <div className="flex-1">
+                          <h4 className="text-xs font-semibold text-white/60 mb-1">
+                            Topics
+                          </h4>
+                          <div className="flex flex-wrap gap-1">
+                            {notes.topics.map((topic, i) => (
+                              <Badge
+                                key={i}
+                                variant="outline"
+                                className="text-xs"
+                              >
+                                {topic}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
