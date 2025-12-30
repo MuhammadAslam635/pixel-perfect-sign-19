@@ -247,60 +247,6 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
     }
   }, [transcripts, loadingTranscripts]);
 
-  const handleOpenMeetingDetails = useCallback(
-    async (meeting: LeadMeetingRecord) => {
-      setSelectedMeeting(meeting);
-      setActiveTab("recording");
-      setRecordingAudioUrl(null);
-      setRecordingError(null);
-      setRecordingLoading(false);
-
-      // Fetch recording data if not already loaded
-      if (!recordingData[meeting._id]) {
-        await fetchRecordingData(meeting._id);
-      }
-
-      // Fetch meeting notes if not already loaded
-      if (!meetingNotes[meeting._id] && meeting.recall?.transcriptText) {
-        await fetchMeetingNotes(meeting._id);
-      }
-
-      const storedData = recordingData[meeting._id];
-      const recordingUrl =
-        meeting.recall?.recordingUrl || storedData?.recordingUrl;
-
-      // Load recording if available
-      if (recordingUrl) {
-        setRecordingLoading(true);
-        try {
-          // For Recall recordings, we can use the URL directly or fetch via backend
-          // Using the URL directly for now since it's a pre-signed S3 URL
-          setRecordingAudioUrl(recordingUrl);
-        } catch (err: any) {
-          console.error("Failed to load recording", err);
-          setRecordingError(
-            err?.response?.data?.error ||
-              err?.message ||
-              "Unable to load meeting recording."
-          );
-        } finally {
-          setRecordingLoading(false);
-        }
-      }
-    },
-    [recordingData, meetingNotes, fetchMeetingNotes]
-  );
-
-  const handleCloseMeetingDetails = useCallback(() => {
-    setSelectedMeeting(null);
-    if (recordingAudioUrl) {
-      URL.revokeObjectURL(recordingAudioUrl);
-      setRecordingAudioUrl(null);
-    }
-    setRecordingError(null);
-    setRecordingLoading(false);
-  }, [recordingAudioUrl]);
-
   // Fetch meeting notes
   const fetchMeetingNotes = useCallback(
     async (meetingId: string) => {
@@ -389,6 +335,60 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
     },
     []
   );
+
+  const handleOpenMeetingDetails = useCallback(
+    async (meeting: LeadMeetingRecord) => {
+      setSelectedMeeting(meeting);
+      setActiveTab("recording");
+      setRecordingAudioUrl(null);
+      setRecordingError(null);
+      setRecordingLoading(false);
+
+      // Fetch recording data if not already loaded
+      if (!recordingData[meeting._id]) {
+        await fetchRecordingData(meeting._id);
+      }
+
+      // Fetch meeting notes if not already loaded
+      if (!meetingNotes[meeting._id] && meeting.recall?.transcriptText) {
+        await fetchMeetingNotes(meeting._id);
+      }
+
+      const storedData = recordingData[meeting._id];
+      const recordingUrl =
+        meeting.recall?.recordingUrl || storedData?.recordingUrl;
+
+      // Load recording if available
+      if (recordingUrl) {
+        setRecordingLoading(true);
+        try {
+          // For Recall recordings, we can use the URL directly or fetch via backend
+          // Using the URL directly for now since it's a pre-signed S3 URL
+          setRecordingAudioUrl(recordingUrl);
+        } catch (err: any) {
+          console.error("Failed to load recording", err);
+          setRecordingError(
+            err?.response?.data?.error ||
+              err?.message ||
+              "Unable to load meeting recording."
+          );
+        } finally {
+          setRecordingLoading(false);
+        }
+      }
+    },
+    [recordingData, meetingNotes, fetchMeetingNotes]
+  );
+
+  const handleCloseMeetingDetails = useCallback(() => {
+    setSelectedMeeting(null);
+    if (recordingAudioUrl) {
+      URL.revokeObjectURL(recordingAudioUrl);
+      setRecordingAudioUrl(null);
+    }
+    setRecordingError(null);
+    setRecordingLoading(false);
+  }, [recordingAudioUrl]);
 
   // Pre-fetch recording data for all meetings - ALWAYS fetch to get latest data from Recall API
   useEffect(() => {
