@@ -215,22 +215,35 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
   };
 
   const fetchTranscript = useCallback(
-    async (meetingId: string, transcriptUrl: string) => {
+    async (meetingId: string, transcriptUrl: string, sessionId?: string) => {
       if (transcripts[meetingId] || loadingTranscripts[meetingId]) {
         return;
       }
 
     setLoadingTranscripts((prev) => ({ ...prev, [meetingId]: true }));
     try {
-      // Try to get transcript from backend API first (it should have downloaded it)
+      // Priority 1: Try local storage if we have sessionId (fastest)
+      if (sessionId) {
+        try {
+          const text = await calendarService.getTranscriptTextLocal(sessionId);
+          if (text && text.length > 0) {
+            setTranscripts((prev) => ({ ...prev, [meetingId]: text }));
+            return;
+          }
+        } catch (localError) {
+          console.log("Local storage transcript not available, trying backend API:", localError);
+        }
+      }
+
+      // Priority 2: Try to get transcript from backend API (it should have downloaded it)
       const apiResponse = await calendarService.getMeetingRecording(meetingId);
       const recordingData = apiResponse.data;
       if (recordingData.transcriptText) {
         setTranscripts((prev) => ({ ...prev, [meetingId]: recordingData.transcriptText! }));
         return;
       }
-      
-      // Fallback: try to fetch directly from URL (may fail due to CORS)
+
+      // Priority 3: Fallback to fetch directly from URL (may fail due to CORS)
       const response = await fetch(transcriptUrl);
       if (response.ok) {
         const text = await response.text();
@@ -359,14 +372,21 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
       const storedData = recordingData[meeting._id];
       const recordingUrl =
         meeting.recall?.recordingUrl || storedData?.recordingUrl;
+      const sessionId = meeting.recall?.sessionId || storedData?.sessionId;
 
-      // Load recording if available
-      if (recordingUrl) {
+      // Load recording if available - prefer local storage for better performance
+      if (recordingUrl || sessionId) {
         setRecordingLoading(true);
         try {
-          // For Recall recordings, we can use the URL directly or fetch via backend
-          // Using the URL directly for now since it's a pre-signed S3 URL
-          setRecordingAudioUrl(recordingUrl);
+          // Prefer local storage URL if we have sessionId (faster, no expiration)
+          // Fallback to Recall CDN URL if local storage isn't available
+          if (sessionId) {
+            const localUrl = calendarService.getRecordingLocalUrl(sessionId);
+            setRecordingAudioUrl(localUrl);
+          } else if (recordingUrl) {
+            // Use Recall CDN URL as fallback
+            setRecordingAudioUrl(recordingUrl);
+          }
         } catch (err: any) {
           console.error("Failed to load recording", err);
           setRecordingError(
@@ -485,9 +505,10 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
       storedData?.transcriptText ||
       transcripts[selectedMeeting._id];
     const isLoading = loadingTranscripts[selectedMeeting._id];
+    const sessionId = selectedMeeting.recall?.sessionId || storedData?.sessionId;
 
     if (transcriptUrl && !transcriptText && !isLoading) {
-      fetchTranscript(selectedMeeting._id, transcriptUrl);
+      fetchTranscript(selectedMeeting._id, transcriptUrl, sessionId);
     }
   }, [
     selectedMeeting,
@@ -787,7 +808,13 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
                               />
                             </div>
                             <p className="text-xs text-white/40 text-center">
-                              Playback is streamed securely from Recall.ai.
+                              {(() => {
+                                const storedData = recordingData[selectedMeeting._id];
+                                const sessionId = selectedMeeting.recall?.sessionId || storedData?.sessionId;
+                                return sessionId
+                                  ? "Playback from local storage (faster loading)."
+                                  : "Playback is streamed securely from Recall.ai.";
+                              })()}
                             </p>
                           </div>
                         );

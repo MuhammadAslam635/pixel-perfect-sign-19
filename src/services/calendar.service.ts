@@ -271,6 +271,37 @@ export const calendarService = {
     );
     return response.data;
   },
+  /**
+   * Get recording file URL from local storage (faster than Recall CDN)
+   * @param sessionId Recall session ID
+   * @returns Local recording URL
+   */
+  getRecordingLocalUrl: (sessionId: string): string => {
+    return `/api/recall/recording/${sessionId}`;
+  },
+  /**
+   * Get transcript text from local storage
+   * @param sessionId Recall session ID
+   * @returns Promise with transcript text
+   */
+  getTranscriptTextLocal: async (sessionId: string): Promise<string> => {
+    const response = await API.get(`/recall/transcript/${sessionId}/text`, {
+      responseType: 'text',
+    });
+    return response.data;
+  },
+  /**
+   * Get transcript JSON from local storage
+   * @param sessionId Recall session ID
+   * @returns Promise with transcript JSON data
+   */
+  getTranscriptJsonLocal: async (sessionId: string): Promise<{
+    success: boolean;
+    data: unknown;
+  }> => {
+    const response = await API.get(`/recall/transcript/${sessionId}/json`);
+    return response.data;
+  },
 };
 
 export default calendarService;
