@@ -33,7 +33,8 @@ type KnowledgeFile = {
 type KnowledgeLayoutProps = {
   children: ReactNode;
   onboardingContent?: ReactNode;
-  initialTab?: "company-knowledge" | "onboarding";
+  proposalExamplesContent?: ReactNode;
+  initialTab?: "company-knowledge" | "proposal-examples" | "onboarding";
   supportingDocuments?: SupportingDocument[];
   knowledgeDocuments?: KnowledgeFile[];
   onKnowledgeDocumentClick?: (doc: KnowledgeFile) => void;
@@ -47,6 +48,12 @@ const tabItems = [
     description: "Upload files to train your AI copilots",
   },
   {
+    id: "proposal-examples" as const,
+    label: "Proposals",
+    icon: FileText,
+    description: "Upload winning proposals",
+  },
+  {
     id: "onboarding" as const,
     label: "Onboarding",
     icon: FileCheck,
@@ -57,12 +64,13 @@ const tabItems = [
 const KnowledgeLayout = ({
   children,
   onboardingContent,
+  proposalExamplesContent,
   initialTab = "company-knowledge",
   supportingDocuments = [],
   knowledgeDocuments = [],
   onKnowledgeDocumentClick,
 }: KnowledgeLayoutProps) => {
-  const [tabValue, setTabValue] = useState<"company-knowledge" | "onboarding">(
+  const [tabValue, setTabValue] = useState<"company-knowledge" | "proposal-examples" | "onboarding">(
     initialTab
   );
   const [docsView, setDocsView] = useState<"knowledge" | "onboarding">(
@@ -278,6 +286,11 @@ const KnowledgeLayout = ({
                   )}
                 </div>
               </TabsContent>
+              {proposalExamplesContent && (
+                <TabsContent value="proposal-examples" className="m-0">
+                  {proposalExamplesContent}
+                </TabsContent>
+              )}
               {onboardingContent && (
                 <TabsContent value="onboarding" className="m-0">
                   {onboardingContent}

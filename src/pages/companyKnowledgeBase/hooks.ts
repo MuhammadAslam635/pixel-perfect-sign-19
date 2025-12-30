@@ -6,6 +6,12 @@ import {
   CompanyKnowledgeListParams,
   CompanyKnowledgeListResponse,
 } from "@/services/companyKnowledge.service";
+import {
+  proposalExampleService,
+  ProposalExample,
+  ProposalExampleListParams,
+  ProposalExampleListResponse,
+} from "@/services/proposalExample.service";
 
 export type UseCompanyKnowledgeParams = CompanyKnowledgeListParams;
 
@@ -26,6 +32,29 @@ export const useCompanyKnowledgeData = (params: UseCompanyKnowledgeParams) => {
   return {
     query,
     files,
+    pagination,
+  };
+};
+
+export type UseProposalExamplesParams = ProposalExampleListParams;
+
+export const useProposalExamplesData = (params: UseProposalExamplesParams) => {
+  const query = useQuery<ProposalExampleListResponse, Error>({
+    queryKey: ["proposal-examples", params],
+    queryFn: () => proposalExampleService.listExamples(params),
+    staleTime: 1000 * 60 * 2,
+  });
+
+  const examples = useMemo<ProposalExample[]>(
+    () => query.data?.data.examples ?? [],
+    [query.data?.data.examples]
+  );
+
+  const pagination = query.data?.data.pagination;
+
+  return {
+    query,
+    examples,
     pagination,
   };
 };

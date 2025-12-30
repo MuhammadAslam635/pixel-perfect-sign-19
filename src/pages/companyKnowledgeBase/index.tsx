@@ -39,6 +39,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { companyKnowledgeService } from "@/services/companyKnowledge.service";
 import { useCompanyKnowledgeData } from "./hooks";
 import OnboardingPanel from "@/components/knowledge/OnboardingPanel";
+import ProposalExamplesPanel from "@/components/knowledge/ProposalExamplesPanel";
 import { onboardingService } from "@/services/onboarding.service";
 import { OnboardingData } from "@/types/onboarding.types";
 import { getAuthToken } from "@/utils/authHelpers";
@@ -305,6 +306,7 @@ const CompanyKnowledgePage = () => {
     <KnowledgeLayout
       initialTab="company-knowledge"
       onboardingContent={<OnboardingPanel />}
+      proposalExamplesContent={<ProposalExamplesPanel />}
       supportingDocuments={onboardingData?.supportingDocuments || []}
       knowledgeDocuments={files || []}
       onKnowledgeDocumentClick={handleKnowledgeDocumentClick}
