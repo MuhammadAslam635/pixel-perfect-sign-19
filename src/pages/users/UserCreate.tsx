@@ -125,7 +125,6 @@ const UserCreate = () => {
   // Set company name from Redux store
   useEffect(() => {
     if (currentUser?.name) {
-      console.log("Setting company name from Redux:", currentUser.name);
       setUser((prev) => ({ ...prev, name: currentUser.name }));
     }
   }, [currentUser]);

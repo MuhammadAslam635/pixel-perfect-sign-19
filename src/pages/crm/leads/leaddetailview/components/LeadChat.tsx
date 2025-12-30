@@ -648,14 +648,6 @@ const LeadChat = ({
     }
   }, [proposalsError]);
 
-  // Log proposals data when it changes
-  useEffect(() => {
-    if (proposalsResponse) {
-      console.log("Proposals response:", proposalsResponse);
-      console.log("Sent proposals count:", sentProposals.length);
-    }
-  }, [proposalsResponse, sentProposals]);
-
   useEffect(() => {
     if (!whatsappUnavailableMessage && whatsappSendError) {
       setWhatsappSendError(null);
@@ -1313,8 +1305,6 @@ const LeadChat = ({
             emailSent: emailSentSuccessfully,
             emailAddress: emailAddress || undefined,
           });
-
-          console.log("Proposal saved successfully:", saveResult);
 
           // Refresh proposals list immediately
           await refetchProposals();
@@ -2305,15 +2295,11 @@ const LeadChat = ({
     }
 
     try {
-      console.log("Starting PDF generation...");
-
       const pdf = new jsPDF({
         orientation: "portrait",
         unit: "mm",
         format: "a4",
       });
-
-      console.log("jsPDF initialized");
 
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
@@ -2329,17 +2315,11 @@ const LeadChat = ({
       const companyName = "TAMIMI PRE ENGINEERED BUILDINGS CO.";
       const companyWebsite = "www.tamimi-peb.com";
       const companyLocation = "Saudi Arabia";
-      const companyWhatsApp = "+966 50 123 4567"; // TODO: Update with actual Tamimi WhatsApp number
+      const companyWhatsApp = "+966 50 123 4567"; 
 
       // Tamimi logo - Use the appropriate logo based on dark/light mode
       const companyLogoUrl = isDarkMode ? tamimiLogoDark : tamimiLogoLight;
       // ====================================================================
-
-      console.log("Company data prepared:", {
-        companyName,
-        companyWebsite,
-        companyLocation,
-      });
 
       // Function to load image as base64
       const loadImageAsBase64 = async (url: string): Promise<string | null> => {
@@ -2388,7 +2368,6 @@ const LeadChat = ({
       let logoBase64: string | null = null;
       if (companyLogoUrl) {
         try {
-          console.log("Loading company logo...");
           logoBase64 = await loadImageAsBase64(companyLogoUrl);
           console.log("Logo loaded:", logoBase64 ? "success" : "failed");
         } catch (error) {
@@ -2711,13 +2690,8 @@ const LeadChat = ({
       // Add footer to first page
       addFooter();
 
-      console.log("Converting proposal content to text...");
-
       // Parse markdown content into structured elements
       const markdownLines = proposalContent.split("\n");
-
-      console.log(`Processing ${markdownLines.length} lines of markdown...`);
-
       const lineHeight = 6;
       const maxContentY = pageHeight - footerHeight - 10;
       const maxWidth = contentWidth;
@@ -2984,8 +2958,6 @@ const LeadChat = ({
         }
       }
 
-      console.log("Saving PDF...");
-
       const fileName = `Proposal_${(displayName || "Lead").replace(
         /\s+/g,
         "_"
@@ -2993,11 +2965,7 @@ const LeadChat = ({
         new Date().toISOString().split("T")[0]
       }.pdf`;
 
-      console.log("PDF filename:", fileName);
-
       pdf.save(fileName);
-
-      console.log("PDF saved successfully!");
 
       toast.success(
         `PDF downloaded successfully (${isDarkMode ? "Dark" : "Light"} mode)`

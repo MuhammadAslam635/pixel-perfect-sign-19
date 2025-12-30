@@ -52,13 +52,11 @@ const ICPStep = ({ formData, updateFormData, errors = {} }: ICPStepProps) => {
         );
 
         if (cachedSuggestions && cachedSuggestions.length > 0) {
-          console.log("[ICPStep] Using cached ICP suggestions");
           setSuggestions(cachedSuggestions);
           setLoading(false);
           return;
         }
 
-        console.log("[ICPStep] Fetching fresh ICP suggestions");
         const response = await onboardingService.generateICPSuggestions({
           website: formData.website,
           companyName: formData.companyName,

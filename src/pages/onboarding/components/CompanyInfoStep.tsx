@@ -62,11 +62,6 @@ const CompanyInfoStep = ({
         .filter(Boolean)
     : [];
 
-  console.log(
-    "[CompanyInfoStep] formData.businessDescription:",
-    formData.businessDescription
-  );
-
   const handleCountriesChange = (selectedCountries: string[]) => {
     // Convert array back to comma-separated string for backend
     updateFormData({ preferredCountries: selectedCountries.join(", ") });
@@ -96,13 +91,11 @@ const CompanyInfoStep = ({
         );
 
         if (cachedOfferings && cachedOfferings.length > 0) {
-          console.log("[CompanyInfoStep] Using cached core offerings");
           updateFormData({ coreOfferings: cachedOfferings });
           toast.success("Core offerings loaded from cache!");
           return;
         }
 
-        console.log("[CompanyInfoStep] Fetching fresh core offerings");
         const result = await onboardingService.suggestCoreOfferings(
           companyName,
           description

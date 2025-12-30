@@ -55,7 +55,6 @@ export const getOnboardingCache = (): OnboardingCache | null => {
 
     // Check if cache is expired (older than 24 hours)
     if (Date.now() - data.lastUpdated > CACHE_EXPIRY_MS) {
-      console.log("[OnboardingCache] Cache expired, clearing...");
       clearOnboardingCache();
       return null;
     }
@@ -83,7 +82,6 @@ export const updateOnboardingCache = (
     };
 
     localStorage.setItem(CACHE_KEY, JSON.stringify(updated));
-    console.log("[OnboardingCache] Cache updated:", updates);
   } catch (error) {
     console.error("[OnboardingCache] Error updating cache:", error);
   }
@@ -99,7 +97,6 @@ export const updateOnboardingCache = (
 export const clearOnboardingCache = (): void => {
   try {
     localStorage.removeItem(CACHE_KEY);
-    console.log("[OnboardingCache] Cache cleared");
   } catch (error) {
     console.error("[OnboardingCache] Error clearing cache:", error);
   }
@@ -214,7 +211,6 @@ export const clearWebsiteCache = (): void => {
     };
 
     localStorage.setItem(CACHE_KEY, JSON.stringify(updated));
-    console.log("[OnboardingCache] Website-specific cache cleared");
   } catch (error) {
     console.error("[OnboardingCache] Error clearing website cache:", error);
   }

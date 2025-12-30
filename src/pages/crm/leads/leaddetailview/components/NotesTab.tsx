@@ -30,10 +30,8 @@ const NotesTab: FC<NotesTabProps> = ({ lead }) => {
   } = useQuery({
     queryKey: ["notes", lead._id],
     queryFn: async () => {
-      console.log("Fetching notes for lead:", lead._id);
       try {
         const result = await notesService.getNotesByLeadId(lead._id);
-        console.log("Notes fetched successfully:", result);
         return result;
       } catch (err) {
         console.error("Error fetching notes:", err);

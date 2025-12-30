@@ -81,7 +81,6 @@ const OnboardingPage = () => {
         // Always fetch from API to verify data exists in DB
         // This ensures we detect when data has been deleted
         const response = await onboardingService.getOnboarding();
-        console.log("[Onboarding] Fetched data from API:", response);
 
         if (!isMounted) return;
 
@@ -90,7 +89,6 @@ const OnboardingPage = () => {
 
           // Ensure we properly load all question data
           const questions = response.data.questions || {};
-          console.log("[Onboarding] Loading questions:", questions);
 
           // Set form data with all existing values - ensure we preserve all fields
           // Make sure to handle all data types correctly (strings, arrays, etc.)
@@ -124,11 +122,6 @@ const OnboardingPage = () => {
                 onboardingData: response.data,
                 formData: formDataCopy,
               })
-            );
-
-            console.log(
-              "[Onboarding] Form data set successfully and cached:",
-              formDataCopy
             );
           } else {
             console.log("[Onboarding] No questions found in response");
@@ -240,7 +233,6 @@ const OnboardingPage = () => {
             "onboarding_data",
             JSON.stringify(parsedCache)
           );
-          console.log("[Onboarding] sessionStorage cache updated after save");
         }
       } catch (e) {
         console.error("[Onboarding] Error updating sessionStorage cache:", e);
@@ -371,7 +363,6 @@ const OnboardingPage = () => {
         }
       }
 
-      console.log("[Auto-save] Form data saved successfully");
     } catch (error: any) {
       // Silently handle auto-save errors - don't show toasts for background saves
       console.error("Auto-save error (silent):", error);
@@ -543,7 +534,6 @@ const OnboardingPage = () => {
       
       // If website changed and both have values, clear cached data
       if (normalizedCurrent && normalizedPrevious && normalizedCurrent !== normalizedPrevious) {
-        console.log('[Onboarding] Website changed from', previousWebsiteRef.current, 'to', currentWebsite, '- clearing cached data');
         clearWebsiteCache();
         
         // Clear company-related form fields since they're for the old website
@@ -581,10 +571,6 @@ const OnboardingPage = () => {
         let result;
 
         if (cachedApollo) {
-          console.log(
-            "[Onboarding] Using cached Apollo data for",
-            currentWebsite
-          );
           result = {
             success: true,
             data: {
@@ -656,10 +642,6 @@ const OnboardingPage = () => {
 
             formUpdates.businessDescription = truncatedDescription;
             dataToSave.businessDescription = truncatedDescription;
-            console.log(
-              "[Onboarding] Setting businessDescription:",
-              truncatedDescription
-            );
           }
 
           // Clear core offerings and preferred countries when fetching new company data
@@ -808,7 +790,6 @@ const OnboardingPage = () => {
 
   const updateFormData = useCallback(
     (updates: Partial<OnboardingQuestions>) => {
-      console.log("[Onboarding] updateFormData called with:", updates);
       setFormData((prev) => {
         const newFormData = { ...prev, ...updates };
 
