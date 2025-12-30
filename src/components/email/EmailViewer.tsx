@@ -1,5 +1,4 @@
 import { Email } from "@/types/email.types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -15,7 +14,6 @@ import {
   Clock,
   Users,
   User,
-  ArrowRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -92,7 +90,6 @@ export const EmailViewer = ({
   const ccRecipients = email.cc?.map((r) => r.name || r.email).join(", ");
   const bccRecipients = email.bcc?.map((r) => r.name || r.email).join(", ");
 
-  // Generate initials for avatar
   const getInitials = (name: string) => {
     return name
       .split(" ")
@@ -102,7 +99,6 @@ export const EmailViewer = ({
       .slice(0, 2);
   };
 
-  // Use primary color for avatar to match Reply button
   const getAvatarStyle = () => {
     return "bg-primary";
   };

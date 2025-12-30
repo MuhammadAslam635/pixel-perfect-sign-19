@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { RefreshCw, Save, Settings, Mail } from "lucide-react";
+import { RefreshCw, Save, Mail } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { getUserData } from "@/utils/authHelpers";
 import { adminService } from "@/services/admin.service";

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { AxiosError } from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams, useLocation } from "react-router-dom";
@@ -32,21 +32,14 @@ import {
   setDeletingChatId,
   addOptimisticMessage,
   removeOptimisticMessages,
-  setStreamingEvents,
   addStreamingEvent,
   clearStreamingEvents,
   setIsStreaming,
-  setChatList,
-  setIsChatListLoading,
-  setIsChatDetailLoading,
-  setSelectedChatDetail,
-  addChatToList,
   createTemporaryChat,
   addMessageToTemporaryChat,
   clearTemporaryChat,
   convertTemporaryChat,
   handleUrlMessage,
-  resetChatState,
 } from "@/store/slices/chatSlice";
 import {
   startStreamingTask,

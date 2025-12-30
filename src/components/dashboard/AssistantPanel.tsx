@@ -1,4 +1,4 @@
-import { List, Pencil, Plus } from "lucide-react";
+import { List, Plus } from "lucide-react";
 import { FC, useState, useEffect, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useDispatch, useSelector } from "react-redux";
@@ -8,7 +8,7 @@ import { ChatMessage, ChatSummary } from "@/types/chat.types";
 import ChatInterface from "./ChatInterface";
 import ChatHistoryList from "./ChatHistoryList";
 import { toast } from "sonner";
-import { getUserData, getAuthToken } from "@/utils/authHelpers";
+import { getAuthToken } from "@/utils/authHelpers";
 import {
   setSelectedChatId,
   setDeletingChatId,
@@ -40,22 +40,8 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
     return getAuthToken();
   };
 
-  // Get current user ID from auth data (for query key)
-  const getCurrentUserId = (): string | null => {
-    const userData = getUserData();
-    // Try to get user ID from various possible fields
-    return (
-      userData?.userId ||
-      userData?.user?._id ||
-      userData?._id ||
-      userData?.id ||
-      null
-    );
-  };
-
   // Use auth token as the identifier since it changes when users switch
   const currentAuthToken = getCurrentAuthToken();
-  const currentUserId = getCurrentUserId();
 
   // Fetch chat list from API (always from database, filtered by userId)
   // Include auth token in query key to ensure different users get different cache entries

@@ -2,7 +2,6 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Send } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { useEffect, useRef } from "react";
 
 const SkylarFloatingWidget = () => {
   const navigate = useNavigate();

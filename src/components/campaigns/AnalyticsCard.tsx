@@ -12,7 +12,6 @@ import {
   RefreshCw,
   AlertCircle,
 } from 'lucide-react';
-import { CampaignAnalytics } from '@/services/analytics.service';
 import { useLatestCampaignAnalytics, useSyncCampaignAnalytics } from '@/hooks/useAnalytics';
 import { Skeleton } from '@/components/ui/skeleton';
 

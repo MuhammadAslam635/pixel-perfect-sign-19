@@ -26,10 +26,12 @@ const transformCompanyTable = (content: string): string => {
       .split("|")
       .map((cell) => cell.trim())
       .filter((cell) => cell);
-    
+
     // Find Website or Domain column index
-    const websiteIndex = headerRow.findIndex((header) =>
-      header.toLowerCase().includes("website") || header.toLowerCase().includes("domain")
+    const websiteIndex = headerRow.findIndex(
+      (header) =>
+        header.toLowerCase().includes("website") ||
+        header.toLowerCase().includes("domain")
     );
 
     // If no Website/Domain column found, return original table
@@ -58,11 +60,11 @@ const transformCompanyTable = (content: string): string => {
       if (domainUrl) {
         // Check if it's already a markdown link
         const isAlreadyLink = /\[([^\]]+)\]\(([^)]+)\)/.test(domainUrl);
-        
+
         if (!isAlreadyLink) {
           // Clean the domain URL
           let cleanUrl = domainUrl.trim();
-          
+
           // Remove any existing markdown link syntax if present
           const urlMatch = cleanUrl.match(/\[([^\]]+)\]\(([^)]+)\)/);
           if (urlMatch) {
@@ -136,7 +138,7 @@ const ChatMessages = ({
       scale: 1,
       transition: {
         duration: 0.4,
-        ease: [0.25, 0.46, 0.45, 0.94], // Custom easing for smooth animation
+        ease: [0.25, 0.46, 0.45, 0.94] as any, // Custom easing for smooth animation
       },
     },
     exit: {
@@ -160,7 +162,7 @@ const ChatMessages = ({
       y: 0,
       transition: {
         duration: 0.3,
-        ease: "easeOut",
+        ease: "easeOut" as any,
       },
     },
   };
@@ -172,7 +174,7 @@ const ChatMessages = ({
       transition: {
         duration: 0.8,
         repeat: Infinity,
-        ease: "easeInOut",
+        ease: "easeInOut" as any,
       },
     },
   };
@@ -183,7 +185,7 @@ const ChatMessages = ({
       transition: {
         duration: 0.8,
         repeat: Infinity,
-        ease: "easeInOut",
+        ease: "easeInOut" as any,
         delay: 0.2,
       },
     },
@@ -195,7 +197,7 @@ const ChatMessages = ({
       transition: {
         duration: 0.8,
         repeat: Infinity,
-        ease: "easeInOut",
+        ease: "easeInOut" as any,
         delay: 0.4,
       },
     },
@@ -427,7 +429,10 @@ const ChatMessages = ({
                         <thead className="bg-white/10" {...props} />
                       ),
                       tbody: ({ node, ...props }) => (
-                        <tbody className="divide-y divide-white/10" {...props} />
+                        <tbody
+                          className="divide-y divide-white/10"
+                          {...props}
+                        />
                       ),
                       tr: ({ node, ...props }) => (
                         <tr
@@ -439,10 +444,10 @@ const ChatMessages = ({
                         <th
                           className="break-words border border-white/20 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-white align-top"
                           style={{
-                            wordBreak: 'break-word',
-                            overflowWrap: 'break-word',
-                            whiteSpace: 'normal',
-                            maxWidth: '400px'
+                            wordBreak: "break-word",
+                            overflowWrap: "break-word",
+                            whiteSpace: "normal",
+                            maxWidth: "400px",
                           }}
                           {...props}
                         />
@@ -451,10 +456,10 @@ const ChatMessages = ({
                         <td
                           className="break-words border border-white/20 px-4 py-3 text-sm text-white/90 align-top"
                           style={{
-                            wordBreak: 'break-word',
-                            overflowWrap: 'break-word',
-                            whiteSpace: 'normal',
-                            maxWidth: '400px'
+                            wordBreak: "break-word",
+                            overflowWrap: "break-word",
+                            whiteSpace: "normal",
+                            maxWidth: "400px",
                           }}
                           {...props}
                         />
@@ -531,7 +536,9 @@ const ChatMessages = ({
                     >
                       <Loader2 className="w-3 h-3 animate-spin" />
                       <span>
-                        {streamingEvents[streamingEvents.length - 1]?.step?.replace(/^[^\w\s]+/, '').trim() || 'Processing...'}
+                        {streamingEvents[streamingEvents.length - 1]?.step
+                          ?.replace(/^[^\w\s]+/, "")
+                          .trim() || "Processing..."}
                       </span>
                     </motion.div>
                   )}
