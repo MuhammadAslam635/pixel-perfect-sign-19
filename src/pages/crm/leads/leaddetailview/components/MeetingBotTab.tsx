@@ -162,14 +162,28 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
   >({});
   const [selectedMeeting, setSelectedMeeting] =
     useState<LeadMeetingRecord | null>(null);
-  const [activeTab, setActiveTab] = useState<"recording" | "transcript">(
-    "recording"
-  );
+  const [activeTab, setActiveTab] = useState<
+    "recording" | "transcript" | "notes"
+  >("recording");
   const [recordingAudioUrl, setRecordingAudioUrl] = useState<string | null>(
     null
   );
   const [recordingLoading, setRecordingLoading] = useState(false);
   const [recordingError, setRecordingError] = useState<string | null>(null);
+
+  // Meeting notes state
+  const [meetingNotes, setMeetingNotes] = useState<
+    Record<
+      string,
+      import("@/services/calendar.service").EnhancedMeetingNotes | null
+    >
+  >({});
+  const [loadingNotes, setLoadingNotes] = useState<Record<string, boolean>>(
+    {}
+  );
+  const [notesErrors, setNotesErrors] = useState<
+    Record<string, string | null>
+  >({});
 
   const fetchRecordingData = async (meetingId: string) => {
     // Don't fetch if already loading
@@ -246,6 +260,11 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
         await fetchRecordingData(meeting._id);
       }
 
+      // Fetch meeting notes if not already loaded
+      if (!meetingNotes[meeting._id] && meeting.recall?.transcriptText) {
+        await fetchMeetingNotes(meeting._id);
+      }
+
       const storedData = recordingData[meeting._id];
       const recordingUrl =
         meeting.recall?.recordingUrl || storedData?.recordingUrl;
@@ -269,7 +288,7 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
         }
       }
     },
-    [recordingData]
+    [recordingData, meetingNotes, fetchMeetingNotes]
   );
 
   const handleCloseMeetingDetails = useCallback(() => {
@@ -281,6 +300,95 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
     setRecordingError(null);
     setRecordingLoading(false);
   }, [recordingAudioUrl]);
+
+  // Fetch meeting notes
+  const fetchMeetingNotes = useCallback(
+    async (meetingId: string) => {
+      if (loadingNotes[meetingId]) return;
+
+      setLoadingNotes((prev) => ({ ...prev, [meetingId]: true }));
+      setNotesErrors((prev) => ({ ...prev, [meetingId]: null }));
+
+      try {
+        const response = await calendarService.getMeetingNotes(meetingId);
+        if (response.data.enhancedNotes) {
+          setMeetingNotes((prev) => ({
+            ...prev,
+            [meetingId]: response.data.enhancedNotes!,
+          }));
+        }
+        if (response.data.error) {
+          setNotesErrors((prev) => ({
+            ...prev,
+            [meetingId]: response.data.error,
+          }));
+        }
+      } catch (error: any) {
+        console.error("Failed to fetch meeting notes:", error);
+        setNotesErrors((prev) => ({
+          ...prev,
+          [meetingId]:
+            error?.response?.data?.message ||
+            error?.message ||
+            "Failed to load notes",
+        }));
+      } finally {
+        setLoadingNotes((prev) => ({ ...prev, [meetingId]: false }));
+      }
+    },
+    [loadingNotes]
+  );
+
+  // Generate meeting notes
+  const handleGenerateNotes = useCallback(
+    async (meetingId: string) => {
+      setLoadingNotes((prev) => ({ ...prev, [meetingId]: true }));
+      setNotesErrors((prev) => ({ ...prev, [meetingId]: null }));
+
+      try {
+        await calendarService.generateMeetingNotes(meetingId);
+
+        // Start polling for notes (check every 3 seconds for up to 30 seconds)
+        let attempts = 0;
+        const maxAttempts = 10;
+        const pollInterval = setInterval(async () => {
+          attempts++;
+          try {
+            const response = await calendarService.getMeetingNotes(meetingId);
+            if (response.data.enhancedNotes) {
+              setMeetingNotes((prev) => ({
+                ...prev,
+                [meetingId]: response.data.enhancedNotes!,
+              }));
+              setLoadingNotes((prev) => ({ ...prev, [meetingId]: false }));
+              clearInterval(pollInterval);
+            } else if (attempts >= maxAttempts) {
+              // Stop polling after max attempts
+              setLoadingNotes((prev) => ({ ...prev, [meetingId]: false }));
+              clearInterval(pollInterval);
+            }
+          } catch (error) {
+            console.error("Polling error:", error);
+            if (attempts >= maxAttempts) {
+              setLoadingNotes((prev) => ({ ...prev, [meetingId]: false }));
+              clearInterval(pollInterval);
+            }
+          }
+        }, 3000);
+      } catch (error: any) {
+        console.error("Failed to generate notes:", error);
+        setNotesErrors((prev) => ({
+          ...prev,
+          [meetingId]:
+            error?.response?.data?.message ||
+            error?.message ||
+            "Failed to generate notes",
+        }));
+        setLoadingNotes((prev) => ({ ...prev, [meetingId]: false }));
+      }
+    },
+    []
+  );
 
   // Pre-fetch recording data for all meetings - ALWAYS fetch to get latest data from Recall API
   useEffect(() => {
@@ -329,6 +437,39 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
 
     return () => clearInterval(interval);
   }, [meetingsWithRecordings, recordingData, loadingRecordings, transcripts]);
+
+  // Poll for meeting notes generation
+  useEffect(() => {
+    const meetingsNeedingNotes = meetingsWithRecordings.filter((meeting) => {
+      const storedData = recordingData[meeting._id];
+      const hasTranscript = Boolean(
+        meeting.recall?.transcriptText || storedData?.transcriptText
+      );
+      const hasNotes = Boolean(meetingNotes[meeting._id]);
+      const isLoadingNotes = loadingNotes[meeting._id];
+
+      // Poll if: has transcript but no notes and not currently loading
+      return hasTranscript && !hasNotes && !isLoadingNotes;
+    });
+
+    if (meetingsNeedingNotes.length === 0) return;
+
+    const interval = setInterval(() => {
+      meetingsNeedingNotes.forEach((meeting) => {
+        if (!loadingNotes[meeting._id]) {
+          fetchMeetingNotes(meeting._id);
+        }
+      });
+    }, 10000); // Check every 10 seconds
+
+    return () => clearInterval(interval);
+  }, [
+    meetingsWithRecordings,
+    recordingData,
+    meetingNotes,
+    loadingNotes,
+    fetchMeetingNotes,
+  ]);
 
   // Load transcript if we have URL but not text (moved from IIFE to fix hooks violation)
   useEffect(() => {
@@ -585,6 +726,19 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
                     <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400" />
                   )}
                 </button>
+                <button
+                  onClick={() => setActiveTab("notes")}
+                  className={`px-4 py-2 text-sm font-medium transition-colors relative ${
+                    activeTab === "notes"
+                      ? "text-cyan-400"
+                      : "text-white/60 hover:text-white/80"
+                  }`}
+                >
+                  Meeting Notes
+                  {activeTab === "notes" && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400" />
+                  )}
+                </button>
               </div>
 
               {/* Tab Content */}
@@ -647,7 +801,7 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
                       }
                     })()}
                   </div>
-                ) : (
+                ) : activeTab === "transcript" ? (
                   <div className="flex flex-col gap-4">
                     {/* Transcript */}
                     <div className="flex flex-col gap-2">
@@ -700,6 +854,224 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
                         }
                       })()}
                     </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-4">
+                    {/* Meeting Notes */}
+                    {(() => {
+                      const notes = meetingNotes[selectedMeeting._id];
+                      const isLoading = loadingNotes[selectedMeeting._id];
+                      const error = notesErrors[selectedMeeting._id];
+                      const storedData = recordingData[selectedMeeting._id];
+                      const transcriptAvailable = Boolean(
+                        selectedMeeting.recall?.transcriptText ||
+                        storedData?.transcriptText
+                      );
+
+                      if (isLoading) {
+                        return (
+                          <div className="flex flex-col items-center gap-2 py-8">
+                            <Loader2 className="w-6 h-6 text-cyan-400 animate-spin" />
+                            <span className="text-sm text-white/60">
+                              Generating meeting notes...
+                            </span>
+                          </div>
+                        );
+                      } else if (!transcriptAvailable) {
+                        return (
+                          <div className="py-4 px-4 rounded-lg bg-white/5 border border-white/10 text-center">
+                            <p className="text-sm text-white/40">
+                              Transcript not available yet. Notes will be generated once the transcript is ready.
+                            </p>
+                          </div>
+                        );
+                      } else if (error) {
+                        return (
+                          <div className="flex flex-col items-center gap-4 py-8">
+                            <div className="py-4 px-4 rounded-lg bg-red-500/10 border border-red-500/20 text-center">
+                              <p className="text-sm text-red-300">{error}</p>
+                            </div>
+                            <Button
+                              onClick={() => handleGenerateNotes(selectedMeeting._id)}
+                              size="sm"
+                              className="bg-cyan-500 hover:bg-cyan-600"
+                            >
+                              Retry
+                            </Button>
+                          </div>
+                        );
+                      } else if (!notes) {
+                        return (
+                          <div className="flex flex-col items-center gap-4 py-8">
+                            <FileText className="w-12 h-12 text-white/30" />
+                            <p className="text-sm text-white/60 text-center">
+                              Enhanced meeting notes not generated yet
+                            </p>
+                            <Button
+                              onClick={() => handleGenerateNotes(selectedMeeting._id)}
+                              size="sm"
+                              className="bg-cyan-500 hover:bg-cyan-600"
+                            >
+                              Generate Notes
+                            </Button>
+                          </div>
+                        );
+                      } else {
+                        return (
+                          <div className="flex flex-col gap-4 text-left">
+                            {/* Summary */}
+                            <div>
+                              <h4 className="text-sm font-semibold text-white/90 mb-2">
+                                Summary
+                              </h4>
+                              <p className="text-sm text-white/70 leading-relaxed">
+                                {notes.summary}
+                              </p>
+                            </div>
+
+                            {/* Key Points */}
+                            {notes.keyPoints && notes.keyPoints.length > 0 && (
+                              <div>
+                                <h4 className="text-sm font-semibold text-white/90 mb-2">
+                                  Key Points
+                                </h4>
+                                <ul className="list-disc list-inside space-y-1">
+                                  {notes.keyPoints.map((point, i) => (
+                                    <li key={i} className="text-sm text-white/70">
+                                      {point}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+
+                            {/* Action Items */}
+                            {notes.actionItems && notes.actionItems.length > 0 && (
+                              <div>
+                                <h4 className="text-sm font-semibold text-white/90 mb-2">
+                                  Action Items
+                                </h4>
+                                <div className="space-y-2">
+                                  {notes.actionItems.map((item, i) => (
+                                    <div
+                                      key={i}
+                                      className="p-2 rounded bg-white/5 border border-white/10"
+                                    >
+                                      <p className="text-sm text-white/80">
+                                        {item.description}
+                                      </p>
+                                      {item.assignee && (
+                                        <p className="text-xs text-white/50 mt-1">
+                                          Assignee: {item.assignee}
+                                        </p>
+                                      )}
+                                      {item.dueDate && (
+                                        <p className="text-xs text-white/50">
+                                          Due: {new Date(item.dueDate).toLocaleDateString()}
+                                        </p>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Decisions */}
+                            {notes.decisions && notes.decisions.length > 0 && (
+                              <div>
+                                <h4 className="text-sm font-semibold text-white/90 mb-2">
+                                  Decisions Made
+                                </h4>
+                                <div className="space-y-2">
+                                  {notes.decisions.map((decision, i) => (
+                                    <div
+                                      key={i}
+                                      className="p-2 rounded bg-white/5 border border-white/10"
+                                    >
+                                      <p className="text-sm text-white/80">
+                                        {decision.description}
+                                      </p>
+                                      <p className="text-xs text-white/50 mt-1">
+                                        Impact: {decision.impact}
+                                      </p>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Next Steps */}
+                            {notes.nextSteps && notes.nextSteps.length > 0 && (
+                              <div>
+                                <h4 className="text-sm font-semibold text-white/90 mb-2">
+                                  Next Steps
+                                </h4>
+                                <ul className="list-disc list-inside space-y-1">
+                                  {notes.nextSteps.map((step, i) => (
+                                    <li key={i} className="text-sm text-white/70">
+                                      {step}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+
+                            {/* Insights */}
+                            {notes.insights && (
+                              <div>
+                                <h4 className="text-sm font-semibold text-white/90 mb-2">
+                                  AI Insights
+                                </h4>
+                                <p className="text-sm text-white/70 leading-relaxed">
+                                  {notes.insights}
+                                </p>
+                              </div>
+                            )}
+
+                            {/* Topics & Sentiment */}
+                            <div className="flex gap-4 pt-2 border-t border-white/10">
+                              {notes.sentiment && (
+                                <div>
+                                  <h4 className="text-xs font-semibold text-white/60 mb-1">
+                                    Sentiment
+                                  </h4>
+                                  <Badge
+                                    variant={
+                                      notes.sentiment === "positive"
+                                        ? "default"
+                                        : notes.sentiment === "negative"
+                                        ? "destructive"
+                                        : "secondary"
+                                    }
+                                    className="capitalize"
+                                  >
+                                    {notes.sentiment}
+                                  </Badge>
+                                </div>
+                              )}
+                              {notes.topics && notes.topics.length > 0 && (
+                                <div className="flex-1">
+                                  <h4 className="text-xs font-semibold text-white/60 mb-1">
+                                    Topics
+                                  </h4>
+                                  <div className="flex flex-wrap gap-1">
+                                    {notes.topics.map((topic, i) => (
+                                      <Badge
+                                        key={i}
+                                        variant="outline"
+                                        className="text-xs"
+                                      >
+                                        {topic}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      }
+                    })()}
                   </div>
                 )}
               </div>

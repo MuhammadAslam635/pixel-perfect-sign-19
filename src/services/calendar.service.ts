@@ -161,6 +161,55 @@ export interface SyncMeetingsResponse {
   };
 }
 
+export interface EnhancedMeetingNotes {
+  summary: string;
+  keyPoints: string[];
+  actionItems: Array<{
+    description: string;
+    assignee: string | null;
+    dueDate: string | null;
+    priority: "high" | "medium" | "low";
+  }>;
+  decisions: Array<{
+    description: string;
+    impact: string;
+    participants: string[];
+  }>;
+  nextSteps: string[];
+  insights: string;
+  participants: Array<{
+    name: string;
+    role: string | null;
+    keyContributions: string[];
+  }>;
+  sentiment: "positive" | "neutral" | "negative" | "mixed";
+  topics: string[];
+}
+
+export interface MeetingNotesResponse {
+  success: boolean;
+  data: {
+    enhancedNotes: EnhancedMeetingNotes | null;
+    processed: boolean;
+    processedAt: string | null;
+    error: string | null;
+    hasTranscript: boolean;
+  };
+}
+
+export interface GenerateMeetingNotesPayload {
+  force?: boolean;
+}
+
+export interface GenerateMeetingNotesResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    enhancedNotes?: EnhancedMeetingNotes;
+    processedAt?: string;
+  };
+}
+
 export const calendarService = {
   scheduleMeeting: async (
     payload: ScheduleMeetingPayload
@@ -206,6 +255,20 @@ export const calendarService = {
     };
   }> => {
     const response = await API.get(`/recall/meeting/${meetingId}/recording`);
+    return response.data;
+  },
+  getMeetingNotes: async (meetingId: string): Promise<MeetingNotesResponse> => {
+    const response = await API.get(`/recall/meeting/${meetingId}/notes`);
+    return response.data;
+  },
+  generateMeetingNotes: async (
+    meetingId: string,
+    payload: GenerateMeetingNotesPayload = {}
+  ): Promise<GenerateMeetingNotesResponse> => {
+    const response = await API.post(
+      `/recall/meeting/${meetingId}/generate-notes`,
+      payload
+    );
     return response.data;
   },
 };
