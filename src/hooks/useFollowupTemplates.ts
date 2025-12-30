@@ -19,8 +19,7 @@ export const useFollowupTemplates = (
 ) => {
   return useQuery({
     queryKey: followupTemplateKeys.list(params),
-    queryFn: () => followupTemplatesService.getTemplates(params),
-    keepPreviousData: true,
+    queryFn: () => followupTemplatesService.getTemplates(params)
   });
 };
 

@@ -1,20 +1,10 @@
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   MultiSelect,
   type MultiSelectOption,
 } from "@/components/ui/multi-select";
-import { CountrySelect } from "@/components/ui/country-select";
 import countryList from "react-select-country-list";
-import { SearchInput } from "./SearchInput";
 
 interface CompanyFiltersInlineProps {
   // Industry filter

@@ -8,7 +8,6 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import {
   Tooltip,
   TooltipContent,
@@ -24,11 +23,8 @@ import {
   DollarSign,
   Calendar,
   Linkedin,
-  Twitter,
-  Facebook,
   ExternalLink,
   TrendingUp,
-  Briefcase,
 } from "lucide-react";
 import type { Client } from "@/services/clients.service";
 import { AvatarFallback } from "@/components/ui/avatar-fallback";

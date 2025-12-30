@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import { enrichmentConfigService } from "@/services/enrichmentConfig.service";
-import type { CountryOption, SeniorityOption, RangeOption } from "@/types/leadEnrichment";
+import type {
+  CountryOption,
+  SeniorityOption,
+  SeniorityLevel,
+  RangeOption,
+} from "@/types/leadEnrichment";
 
 interface UseEnrichmentConfigsReturn {
   regions: string[];
@@ -19,7 +24,9 @@ interface UseEnrichmentConfigsReturn {
 export const useEnrichmentConfigs = (): UseEnrichmentConfigsReturn => {
   const [regions, setRegions] = useState<string[]>([]);
   const [countries, setCountries] = useState<CountryOption[]>([]);
-  const [seniorityOptions, setSeniorityOptions] = useState<SeniorityOption[]>([]);
+  const [seniorityOptions, setSeniorityOptions] = useState<SeniorityOption[]>(
+    []
+  );
   const [revenueRanges, setRevenueRanges] = useState<RangeOption[]>([]);
   const [employeeRanges, setEmployeeRanges] = useState<RangeOption[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,7 +39,13 @@ export const useEnrichmentConfigs = (): UseEnrichmentConfigsReturn => {
 
       try {
         // Fetch all config types in parallel
-        const [regionsRes, countriesRes, seniorityRes, revenueRes, employeeRes] = await Promise.all([
+        const [
+          regionsRes,
+          countriesRes,
+          seniorityRes,
+          revenueRes,
+          employeeRes,
+        ] = await Promise.all([
           enrichmentConfigService.getRegions(),
           enrichmentConfigService.getCountries(),
           enrichmentConfigService.getSeniorityLevels(),
@@ -60,7 +73,7 @@ export const useEnrichmentConfigs = (): UseEnrichmentConfigsReturn => {
         if (seniorityRes.success && seniorityRes.data) {
           setSeniorityOptions(
             seniorityRes.data.map((s) => ({
-              value: s.metadata?.value || s.name,
+              value: (s.metadata?.value || s.name) as SeniorityLevel,
               label: s.label,
               description: s.description || "",
             }))
@@ -90,7 +103,10 @@ export const useEnrichmentConfigs = (): UseEnrichmentConfigsReturn => {
         }
       } catch (err: any) {
         console.error("Error fetching enrichment configs:", err);
-        setError(err?.response?.data?.message || "Failed to fetch enrichment configurations");
+        setError(
+          err?.response?.data?.message ||
+            "Failed to fetch enrichment configurations"
+        );
 
         // Fallback to empty arrays on error
         setRegions([]);

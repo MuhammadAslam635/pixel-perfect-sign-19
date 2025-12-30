@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { MultiSelect } from "@/components/ui/multi-select";
-import { Layers, Grid3X3, List, LayoutGrid, Building2 } from "lucide-react";
+import { Layers } from "lucide-react";
 import { CompanyPerson } from "@/services/companies.service";
 import { CrmNavigation } from "../shared/components/CrmNavigation";
 import { Lead } from "@/services/leads.service";
@@ -20,7 +20,6 @@ import {
   useCrmStatsData,
   useLeadsData,
 } from "../shared/hooks";
-import { LeadsQueryParams } from "@/services/leads.service";
 import {
   connectionMessagesService,
   EmailMessage,
@@ -33,7 +32,6 @@ import {
   StatsCards,
   SearchInput,
   FilterButton,
-  LeadsFiltersPanel,
   LeadsFiltersInline,
 } from "../shared/components";
 import { buildStats } from "../shared/hooks";

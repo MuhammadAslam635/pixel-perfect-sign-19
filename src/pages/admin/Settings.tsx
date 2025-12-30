@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,7 +9,6 @@ import { IntegrationsTab } from "@/components/settings/IntegrationsTab";
 import { NotificationsTab } from "@/components/settings/NotificationsTab";
 import { AdminGlobalIntegrationsTab } from "@/components/admin/integrations/AdminGlobalIntegrationsTab";
 import { AdminCompanyMailgunTab } from "@/components/admin/integrations/AdminCompanyMailgunTab";
-import { RootState } from "@/store/store";
 import {
   Lock,
   Plug,
@@ -22,8 +20,6 @@ import {
 
 const AdminSettings = () => {
   const location = useLocation();
-  const authState = useSelector((state: RootState) => state.auth);
-  const userRole = authState.user?.role;
   const [activeTab, setActiveTab] = useState("profile");
 
   const canAccessIntegrations = true;

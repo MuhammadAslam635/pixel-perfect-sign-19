@@ -1,5 +1,5 @@
-import { FC, useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { FC } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,7 +27,6 @@ type AgentResearchTabProps = {
 };
 
 const AgentResearchTab: FC<AgentResearchTabProps> = ({ lead }) => {
-  const queryClient = useQueryClient();
   const leadId = lead?._id;
 
   // Fetch research data

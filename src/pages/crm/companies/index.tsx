@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Building2, Users, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { CrmNavigation } from "../shared/components/CrmNavigation";
@@ -19,7 +19,6 @@ import {
   StatsCards,
   SearchInput,
   FilterButton,
-  CompanyFiltersPanel,
   CompanyFiltersInline,
 } from "../shared/components";
 import { buildStats } from "../shared/hooks";

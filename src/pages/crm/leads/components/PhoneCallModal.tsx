@@ -14,7 +14,6 @@ import {
   RefreshCcw,
   Edit,
   Sparkles,
-  X,
 } from "lucide-react";
 import { PhoneScriptMetadata } from "@/services/connectionMessages.service";
 import ReactMarkdown from "react-markdown";

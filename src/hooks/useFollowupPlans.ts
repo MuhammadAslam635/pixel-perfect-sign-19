@@ -5,7 +5,6 @@ import {
   UpdateFollowupPlanPayload,
   followupPlansService,
   FollowupPlansQueryParams,
-  FollowupPlanScheduleResponse,
 } from "@/services/followupPlans.service";
 
 export const followupPlanKeys = {

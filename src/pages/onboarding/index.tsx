@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useDispatch } from "react-redux";
 import { updateUser } from "@/store/slices/authSlice";
-import { ChevronRight, ChevronLeft, Check, Loader2 } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { onboardingService } from "@/services/onboarding.service";
 import { apolloService } from "@/services/apollo.service";

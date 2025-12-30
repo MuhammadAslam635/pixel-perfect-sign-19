@@ -4,7 +4,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { OnboardingQuestions, ICPSuggestion } from "@/types/onboarding.types";
 import { onboardingService } from "@/services/onboarding.service";
 import { Loader2, User } from "lucide-react";
-import { toast } from "sonner";
 import {
   updateOnboardingCache,
   getCachedICPSuggestions,

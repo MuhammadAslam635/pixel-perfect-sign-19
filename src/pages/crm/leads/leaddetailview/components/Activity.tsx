@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { FC, useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -31,7 +31,6 @@ import {
   MoveRight,
   ChevronLeft,
   ChevronRight,
-  Check,
   Info,
   RefreshCcw,
   Trash2,
@@ -49,7 +48,6 @@ import {
   useDeleteFollowupPlan,
   useFollowupPlans,
 } from "@/hooks/useFollowupPlans";
-import EditableFollowupSuggestion from "@/components/followups/EditableFollowupSuggestion";
 import { useLeadsData } from "@/pages/crm/shared/hooks";
 import { Lead } from "@/services/leads.service";
 import { FollowupPlan } from "@/services/followupPlans.service";
@@ -58,10 +56,9 @@ import {
   leadSummaryService,
   LeadSummaryResponse,
 } from "@/services/leadSummary.service";
-import { format, formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 import {
   formatFollowupTaskTime,
-  getNextUpMessage,
 } from "@/utils/followupTaskTime";
 import ConfirmDialog from "@/components/ui/confirm-dialog";
 import {
@@ -78,7 +75,6 @@ import CompanyTab from "./CompanyTab";
 import CallScriptTab from "./CallScriptTab";
 import NotesTab from "./NotesTab";
 import AgentResearchTab from "./AgentResearchTab";
-import API from "@/utils/api";
 
 type ActivityProps = {
   lead?: Lead;

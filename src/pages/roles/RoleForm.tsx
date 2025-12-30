@@ -10,7 +10,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { rbacService } from "@/services/rbac.service";
 import {
   Module,
-  Role,
   PermissionAction,
   RolePermission,
 } from "@/types/rbac.types";

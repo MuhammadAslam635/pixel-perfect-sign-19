@@ -10,9 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Loader2,
   RefreshCcw,
-  Edit,
   Sparkles,
-  Phone,
   AlertCircle,
 } from "lucide-react";
 import { toast } from "sonner";

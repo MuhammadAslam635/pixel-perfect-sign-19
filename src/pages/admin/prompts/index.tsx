@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { AdminLayout } from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,7 +10,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Settings, MessageSquare, Phone, Mail, Activity } from "lucide-react";
+import { Settings, MessageSquare, Phone, Mail } from "lucide-react";
 import {
   connectionMessagesService,
   type Prompt,
@@ -21,13 +20,6 @@ import { adminService, type Company } from "@/services/admin.service";
 import { toast } from "sonner";
 import { PromptManagement } from "./components/PromptManagement";
 import { PromptForm } from "./components/PromptForm";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 const PromptsPage = () => {
   const [prompts, setPrompts] = useState<Prompt[]>([]);
@@ -48,7 +40,6 @@ const PromptsPage = () => {
     phonePrompts: 0,
     whatsappPrompts: 0,
   });
-  const [statisticsLoading, setStatisticsLoading] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({

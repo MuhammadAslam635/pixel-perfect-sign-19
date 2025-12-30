@@ -6,7 +6,6 @@ import {
   MapPin,
   Globe,
   Users,
-  Briefcase,
   ExternalLink,
   Loader2,
   Mail,
