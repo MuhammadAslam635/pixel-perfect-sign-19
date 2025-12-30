@@ -1308,7 +1308,7 @@ const LeadChat = ({
 
           // Refresh proposals list immediately
           await refetchProposals();
-          
+
           // Also invalidate the query to ensure fresh data
           queryClient.invalidateQueries({ queryKey: ["proposals", lead._id] });
         } catch (proposalError: any) {
@@ -1344,7 +1344,7 @@ const LeadChat = ({
 
       // Invalidate queries to refresh lead data
       queryClient.invalidateQueries({ queryKey: ["lead", lead._id] });
-      
+
       // Clear proposal content and show the list
       setProposalContent("");
       setProposalHtmlContent("");
@@ -1362,7 +1362,8 @@ const LeadChat = ({
   };
 
   const handleProposalClick = () => {
-    if (proposalContent && !isProposalEditable) {
+    // Only allow editing for new proposals, not for previously sent ones
+    if (proposalContent && !isProposalEditable && !selectedProposal) {
       setIsProposalEditable(true);
     }
   };
@@ -3410,7 +3411,12 @@ const LeadChat = ({
                       type="button"
                       className="flex items-center gap-2 rounded-lg bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] px-4 py-2 text-xs font-medium text-white transition hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
                       onClick={handleGenerateProposal}
-                      disabled={isGeneratingProposal}
+                      disabled={isGeneratingProposal || !!selectedProposal}
+                      title={
+                        selectedProposal
+                          ? "Cannot regenerate a sent proposal"
+                          : ""
+                      }
                     >
                       {isGeneratingProposal ? (
                         <>
@@ -3428,15 +3434,41 @@ const LeadChat = ({
                     </button>
                     {proposalContent && (
                       <>
-                        <button
-                          type="button"
-                          className="flex items-center gap-2 rounded-lg border border-white/30 bg-white/10 px-4 py-2 text-xs font-medium text-white transition hover:bg-white/20 disabled:opacity-40"
-                          onClick={() =>
-                            setIsProposalEditable(!isProposalEditable)
-                          }
-                        >
-                          {isProposalEditable ? "View" : "Edit"}
-                        </button>
+                        {/* Show View-Only indicator for sent proposals, or Edit/View button for new proposals */}
+                        {selectedProposal ? (
+                          <div className="flex items-center gap-2 rounded-lg border border-blue-500/30 bg-blue-500/10 px-4 py-2 text-xs font-medium text-blue-400">
+                            <svg
+                              className="h-4 w-4"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                              />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                              />
+                            </svg>
+                            View-Only Mode
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            className="flex items-center gap-2 rounded-lg border border-white/30 bg-white/10 px-4 py-2 text-xs font-medium text-white transition hover:bg-white/20 disabled:opacity-40"
+                            onClick={() =>
+                              setIsProposalEditable(!isProposalEditable)
+                            }
+                          >
+                            {isProposalEditable ? "View" : "Edit"}
+                          </button>
+                        )}
                         <button
                           type="button"
                           className="flex items-center gap-2 rounded-lg border border-white/30 bg-white/10 px-4 py-2 text-xs font-medium text-white transition hover:bg-white/20 disabled:opacity-40"
@@ -3479,12 +3511,26 @@ const LeadChat = ({
                           type="button"
                           className="flex items-center gap-2 rounded-lg bg-gradient-to-br from-[#68B3B7] to-[#3E65B4] px-4 py-2 text-xs font-medium text-white transition hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
                           onClick={handleUpdateStage}
-                          disabled={isUpdatingStage || !proposalContent}
+                          disabled={
+                            isUpdatingStage ||
+                            !proposalContent ||
+                            !!selectedProposal
+                          }
+                          title={
+                            selectedProposal
+                              ? "This proposal has already been sent"
+                              : ""
+                          }
                         >
                           {isUpdatingStage ? (
                             <>
                               <Loader2 className="h-4 w-4 animate-spin" />
                               Updating...
+                            </>
+                          ) : selectedProposal ? (
+                            <>
+                              <Check className="h-4 w-4" />
+                              Already Sent
                             </>
                           ) : (
                             <>
@@ -3550,6 +3596,36 @@ const LeadChat = ({
                 {/* Proposal Content */}
                 {proposalContent ? (
                   <div className="flex-1 overflow-y-auto scrollbar-hide pb-4 relative">
+                    {/* View-Only Banner for sent proposals */}
+                    {selectedProposal && (
+                      <div className="mb-4 px-1">
+                        <div className="flex items-center gap-2 rounded-lg border border-blue-500/40 bg-blue-500/10 p-3 text-xs text-blue-300">
+                          <svg
+                            className="h-5 w-5 flex-shrink-0"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                          <div>
+                            <p className="font-semibold">
+                              This is a previously sent proposal in view-only
+                              mode.
+                            </p>
+                            <p className="text-blue-200/80 mt-0.5">
+                              You cannot edit or resend this proposal. Create a
+                              new proposal to make changes.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     <style>{`
                       .proposal-content ::selection {
                         background-color: rgba(34, 197, 94, 0.4) !important;
@@ -3697,32 +3773,35 @@ const LeadChat = ({
                       {(() => {
                         return null;
                       })()}
-                      {showEditWithAI && editWithAIPosition && selectedText && (
-                        <button
-                          type="button"
-                          onMouseDown={(e) => {
-                            // Prevent the mousedown from clearing the selection
-                            e.preventDefault();
-                          }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            e.preventDefault();
-                            handleEditWithAI();
-                          }}
-                          className="absolute flex items-center gap-2 rounded-lg bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] px-4 py-2 text-xs font-semibold text-white shadow-xl transition-all hover:opacity-90 hover:scale-105 border border-white/20"
-                          style={{
-                            top: `${editWithAIPosition.top}px`,
-                            left: `${editWithAIPosition.left}px`,
-                            transform: "translateX(-50%)",
-                            animation: "fadeIn 0.2s ease-in",
-                            zIndex: 9999,
-                            pointerEvents: "auto",
-                          }}
-                        >
-                          <Sparkles className="h-4 w-4" />
-                          Edit with AI
-                        </button>
-                      )}
+                      {showEditWithAI &&
+                        editWithAIPosition &&
+                        selectedText &&
+                        !selectedProposal && (
+                          <button
+                            type="button"
+                            onMouseDown={(e) => {
+                              // Prevent the mousedown from clearing the selection
+                              e.preventDefault();
+                            }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              e.preventDefault();
+                              handleEditWithAI();
+                            }}
+                            className="absolute flex items-center gap-2 rounded-lg bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] px-4 py-2 text-xs font-semibold text-white shadow-xl transition-all hover:opacity-90 hover:scale-105 border border-white/20"
+                            style={{
+                              top: `${editWithAIPosition.top}px`,
+                              left: `${editWithAIPosition.left}px`,
+                              transform: "translateX(-50%)",
+                              animation: "fadeIn 0.2s ease-in",
+                              zIndex: 9999,
+                              pointerEvents: "auto",
+                            }}
+                          >
+                            <Sparkles className="h-4 w-4" />
+                            Edit with AI
+                          </button>
+                        )}
                     </div>
                   </div>
                 ) : showProposalList ||
@@ -3755,12 +3834,15 @@ const LeadChat = ({
                           <div
                             key={proposal._id}
                             onClick={() => {
+                              // Set proposal content
                               setProposalContent(proposal.content);
                               setProposalHtmlContent(
                                 proposal.htmlContent || ""
                               );
                               setShowProposalList(false);
                               setSelectedProposal(proposal);
+                              // Enforce view-only mode for sent proposals
+                              setIsProposalEditable(false);
                             }}
                             className="group cursor-pointer rounded-lg border border-white/20 bg-white/5 p-4 transition hover:bg-white/10 hover:border-white/30"
                           >
