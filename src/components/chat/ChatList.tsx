@@ -65,7 +65,7 @@ const ChatList = ({
       scale: 1,
       transition: {
         duration: 0.3,
-        ease: [0.25, 0.46, 0.45, 0.94],
+        ease: [0.25, 0.46, 0.45, 0.94] as any,
       },
     },
     exit: {
@@ -82,11 +82,11 @@ const ChatList = ({
     idle: { scale: 1 },
     hover: {
       scale: 1.02,
-      transition: { duration: 0.2, ease: "easeOut" }
+      transition: { duration: 0.2, ease: "easeOut" as any },
     },
     tap: {
       scale: 0.98,
-      transition: { duration: 0.1 }
+      transition: { duration: 0.1 },
     },
   };
 
@@ -194,72 +194,72 @@ const ChatList = ({
                           : "hover:border-white/30 hover:bg-white/12 hover:shadow-[0_0_90px_rgba(0,0,0,0.12)]"
                       )}
                     >
-                    <button
-                      type="button"
-                      onClick={() => onSelectChat(chat._id)}
-                      className="flex min-w-0 flex-1 flex-col text-left"
-                    >
-                      <div className="flex items-center gap-2">
-                        <p
-                          className="flex-1 truncate text-sm font-semibold text-white"
-                          title={chat.title || "Untitled Conversation"}
-                        >
-                          {truncatedTitle}
-                        </p>
-                      </div>
-                      {lastMessage ? (
-                        <p
-                          className="mt-1 truncate text-[12px] text-white/60"
-                          title={lastMessage.content}
-                        >
-                          {truncateText(lastMessage.content, 25)}
-                        </p>
-                      ) : (
-                        <p className="mt-1 text-[12px] text-white/45">
-                          No messages yet
-                        </p>
-                      )}
-                    </button>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button
-                          type="button"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            handleChatOptions(chat._id);
-                          }}
-                          className={cn(
-                            "ml-3 flex size-7 items-center justify-center rounded-full border border-transparent transition",
-                            selectedChatId === chat._id
-                              ? "bg-white/20"
-                              : "hover:bg-white/10"
-                          )}
-                          aria-label="Chat options"
-                          disabled={isDeletingThisChat}
-                        >
-                          {isDeletingThisChat ? (
-                            <Loader2 className="size-4 animate-spin text-white" />
-                          ) : (
-                            <EllipsisVertical className="size-4 text-white " />
-                          )}
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-44">
-                        <DropdownMenuItem
-                          className="text-red-400 focus:text-red-300"
-                          onSelect={(event) => {
-                            event.preventDefault();
-                            event.stopPropagation();
-                            if (!isDeletingThisChat) {
-                              onDeleteChat?.(chat._id);
-                            }
-                          }}
-                        >
-                          <Trash2 className="mr-2 size-4" />
-                          Delete chat
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                      <button
+                        type="button"
+                        onClick={() => onSelectChat(chat._id)}
+                        className="flex min-w-0 flex-1 flex-col text-left"
+                      >
+                        <div className="flex items-center gap-2">
+                          <p
+                            className="flex-1 truncate text-sm font-semibold text-white"
+                            title={chat.title || "Untitled Conversation"}
+                          >
+                            {truncatedTitle}
+                          </p>
+                        </div>
+                        {lastMessage ? (
+                          <p
+                            className="mt-1 truncate text-[12px] text-white/60"
+                            title={lastMessage.content}
+                          >
+                            {truncateText(lastMessage.content, 25)}
+                          </p>
+                        ) : (
+                          <p className="mt-1 text-[12px] text-white/45">
+                            No messages yet
+                          </p>
+                        )}
+                      </button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              handleChatOptions(chat._id);
+                            }}
+                            className={cn(
+                              "ml-3 flex size-7 items-center justify-center rounded-full border border-transparent transition",
+                              selectedChatId === chat._id
+                                ? "bg-white/20"
+                                : "hover:bg-white/10"
+                            )}
+                            aria-label="Chat options"
+                            disabled={isDeletingThisChat}
+                          >
+                            {isDeletingThisChat ? (
+                              <Loader2 className="size-4 animate-spin text-white" />
+                            ) : (
+                              <EllipsisVertical className="size-4 text-white " />
+                            )}
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-44">
+                          <DropdownMenuItem
+                            className="text-red-400 focus:text-red-300"
+                            onSelect={(event) => {
+                              event.preventDefault();
+                              event.stopPropagation();
+                              if (!isDeletingThisChat) {
+                                onDeleteChat?.(chat._id);
+                              }
+                            }}
+                          >
+                            <Trash2 className="mr-2 size-4" />
+                            Delete chat
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </motion.div>
                   );
                 })}
