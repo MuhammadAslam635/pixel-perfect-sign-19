@@ -103,6 +103,84 @@ export interface CompanyCrmStats extends CrmStats {
   totalCompaniesWithWebsite?: number;
 }
 
+// New Analytics Cards Interfaces
+export interface ActiveQualifiedLeadsData {
+  activeLeads: number;
+  totalLeads: number;
+  percentage: number;
+}
+
+export interface WinRateData {
+  closedLeads: number;
+  totalLeads: number;
+  winRate: number;
+  period: string;
+}
+
+export interface SpeedToLeadData {
+  activeLeads: number;
+}
+
+export interface LeadAtRiskDetails {
+  _id: string;
+  name: string;
+  companyName: string;
+  stage: string;
+  lastContact: string | null;
+  daysSinceContact: number;
+  email?: string;
+  phone?: string;
+}
+
+export interface RevenueAtRiskData {
+  leadsAtRisk: number;
+  threshold: string;
+  leadsDetails: LeadAtRiskDetails[];
+}
+
+export interface ChannelExecutionRate {
+  total: number;
+  completed: number;
+  rate: number;
+}
+
+export interface FollowupExecutionData {
+  overall: ChannelExecutionRate;
+  byChannel: {
+    email: ChannelExecutionRate;
+    call: ChannelExecutionRate;
+    whatsapp: ChannelExecutionRate;
+  };
+}
+
+export interface ProposalThroughputData {
+  rfpsReceived: number;
+  proposalsSubmitted: number;
+  avgCycleTimeDays: number;
+  complianceScore: number | null;
+  period: string;
+}
+
+export interface DealAtRisk {
+  _id: string;
+  name: string;
+  companyName: string;
+  stage: string;
+  lastContact: string | null;
+  daysSinceContact: number;
+  daysSinceProposal: number | null;
+  riskReason: "proposal_stalled" | "no_followup" | "no_response";
+  recommendedAction: string;
+  riskScore: number;
+  email?: string;
+  phone?: string;
+}
+
+export interface DealsAtRiskData {
+  dealsAtRisk: DealAtRisk[];
+  threshold: string;
+}
+
 export const dashboardService = {
   /**
    * Get high-level CRM statistics (outreach, responses, active clients, messages)
@@ -248,6 +326,104 @@ export const dashboardService = {
   ): Promise<DashboardResponse<{ count: number }>> => {
     try {
       const response = await API.get("/dashboard/total-leads-count", { params });
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  // New Analytics Cards API Methods
+
+  /**
+   * Get active qualified leads count and percentage
+   */
+  getActiveQualifiedLeads: async (): Promise<
+    DashboardResponse<ActiveQualifiedLeadsData>
+  > => {
+    try {
+      const response = await API.get("/dashboard/active-qualified-leads");
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  /**
+   * Get win rate metrics with optional period filter
+   */
+  getWinRate: async (params?: {
+    period?: "30d" | "90d" | "all";
+  }): Promise<DashboardResponse<WinRateData>> => {
+    try {
+      const response = await API.get("/dashboard/win-rate", { params });
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  /**
+   * Get speed to lead metric (active leads count)
+   */
+  getSpeedToLead: async (): Promise<DashboardResponse<SpeedToLeadData>> => {
+    try {
+      const response = await API.get("/dashboard/speed-to-lead");
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  /**
+   * Get revenue at risk (leads not contacted in 7+ days)
+   */
+  getRevenueAtRisk: async (): Promise<
+    DashboardResponse<RevenueAtRiskData>
+  > => {
+    try {
+      const response = await API.get("/dashboard/revenue-at-risk");
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  /**
+   * Get follow-up execution rate by channel
+   */
+  getFollowupExecutionRate: async (): Promise<
+    DashboardResponse<FollowupExecutionData>
+  > => {
+    try {
+      const response = await API.get("/dashboard/followup-execution-rate");
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  /**
+   * Get proposal throughput metrics with optional period filter
+   */
+  getProposalThroughput: async (params?: {
+    period?: "30d" | "90d" | "all";
+  }): Promise<DashboardResponse<ProposalThroughputData>> => {
+    try {
+      const response = await API.get("/dashboard/proposal-throughput", {
+        params,
+      });
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  /**
+   * Get deals at risk (no activity in 2+ days)
+   */
+  getDealsAtRisk: async (): Promise<DashboardResponse<DealsAtRiskData>> => {
+    try {
+      const response = await API.get("/dashboard/deals-at-risk");
       return response.data;
     } catch (error: any) {
       throw error;
