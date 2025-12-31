@@ -65,7 +65,7 @@ IMPORTANT:
 
 export const PerplexityPromptTab = () => {
   const user = getUserData();
-  const canManage = user?.role === "Company" || user?.role === "CompanyAdmin";
+  const canManage = user?.role === "Company" || user?.role === "CompanyAdmin" || user?.role === "Admin";
 
   const [prompt, setPrompt] = useState<string>("");
   const [isSaving, setIsSaving] = useState(false);
@@ -147,7 +147,7 @@ export const PerplexityPromptTab = () => {
       toast({
         title: "Access restricted",
         description:
-          "Only company owners or company admins can manage Perplexity prompts.",
+          "Only system admins, company owners or company admins can manage Perplexity prompts.",
         variant: "destructive",
       });
       return;

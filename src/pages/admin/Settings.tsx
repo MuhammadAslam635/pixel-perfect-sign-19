@@ -9,6 +9,7 @@ import { IntegrationsTab } from "@/components/settings/IntegrationsTab";
 import { NotificationsTab } from "@/components/settings/NotificationsTab";
 import { AdminGlobalIntegrationsTab } from "@/components/admin/integrations/AdminGlobalIntegrationsTab";
 import { AdminCompanyMailgunTab } from "@/components/admin/integrations/AdminCompanyMailgunTab";
+import { PerplexityPromptTab } from "@/components/settings/PerplexityPromptTab";
 import {
   Lock,
   Plug,
@@ -16,6 +17,7 @@ import {
   User,
   Shield,
   Database,
+  Sparkles,
 } from "lucide-react";
 
 const AdminSettings = () => {
@@ -57,6 +59,12 @@ const AdminSettings = () => {
         label: "Company Mailgun",
         icon: Database,
         hidden: !canAccessIntegrations,
+      },
+      {
+        value: "ai-research-prompt",
+        label: "AI Research Prompt",
+        icon: Sparkles,
+        hidden: false,
       },
     ];
 
@@ -296,6 +304,19 @@ const AdminSettings = () => {
                       </motion.div>
                     </TabsContent>
                   )}
+
+                  <TabsContent
+                    value="ai-research-prompt"
+                    className="mt-0 space-y-6"
+                  >
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.2, ease: "easeOut" }}
+                    >
+                      <PerplexityPromptTab />
+                    </motion.div>
+                  </TabsContent>
                 </motion.div>
               </AnimatePresence>
             </div>
