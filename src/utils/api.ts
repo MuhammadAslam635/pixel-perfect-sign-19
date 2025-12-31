@@ -34,6 +34,12 @@ const createApiClient = (): AxiosInstance => {
     (error) => {
       // Handle 401 unauthorized - token might be expired
       if (error.response?.status === 401) {
+        // Don't redirect to login if user is on the onboarding page
+        // This prevents interrupting the onboarding flow
+        if (window.location.pathname === "/onboarding") {
+          return Promise.reject(error);
+        }
+
         // Check if it's a real auth error or business logic error
         const errorMessage = error.response?.data?.message || "";
 
@@ -46,6 +52,7 @@ const createApiClient = (): AxiosInstance => {
           "company",
           "integration owner",
           "reconnect",
+          "onboarding",
         ];
 
         const isBusinessError = businessErrorKeywords.some((keyword) =>
@@ -60,7 +67,10 @@ const createApiClient = (): AxiosInstance => {
 
         // Real authentication failure - log out
         clearAuthData();
-        if (window.location.pathname !== "/login" && window.location.pathname !== "/") {
+        if (
+          window.location.pathname !== "/login" &&
+          window.location.pathname !== "/"
+        ) {
           window.location.href = "/login";
         }
       }
