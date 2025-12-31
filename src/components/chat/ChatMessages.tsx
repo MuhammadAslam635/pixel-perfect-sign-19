@@ -62,8 +62,8 @@ const transformCompanyTable = (content: string): string => {
         const isAlreadyLink = /\[([^\]]+)\]\(([^)]+)\)/.test(domainUrl);
 
         if (!isAlreadyLink) {
-          // Clean the domain URL
-          let cleanUrl = domainUrl.trim();
+          // Clean the domain URL and remove backticks
+          let cleanUrl = domainUrl.replace(/`/g, "").trim();
 
           // Remove any existing markdown link syntax if present
           const urlMatch = cleanUrl.match(/\[([^\]]+)\]\(([^)]+)\)/);
@@ -82,7 +82,9 @@ const transformCompanyTable = (content: string): string => {
 
           // Replace domain with markdown link
           if (cleanUrl) {
-            cells[websiteIndex] = `[${domainUrl}](${cleanUrl})`;
+            // Use cleanUrl for display text too (without backticks) so it doesn't render as code
+            const displayText = domainUrl.replace(/`/g, "").trim();
+            cells[websiteIndex] = `[${displayText}](${cleanUrl})`;
           }
         }
       }
@@ -466,7 +468,7 @@ const ChatMessages = ({
                       ),
                       a: ({ node, ...props }) => (
                         <a
-                          className="max-w-full break-all text-blue-400 underline hover:text-blue-300"
+                          className="break-all text-inherit hover:text-blue-300 hover:underline underline-offset-2 transition-colors duration-200 cursor-pointer"
                           target="_blank"
                           rel="noopener noreferrer"
                           {...props}
@@ -475,7 +477,7 @@ const ChatMessages = ({
                       code: ({ node, inline, ...props }: any) =>
                         inline ? (
                           <code
-                            className="max-w-full break-all rounded bg-white/10 px-1 py-0.5 text-xs"
+                            className="break-all rounded bg-white/10 px-1 py-0.5 text-inherit"
                             {...props}
                           />
                         ) : (

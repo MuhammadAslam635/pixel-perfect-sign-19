@@ -98,8 +98,8 @@ const transformCompanyTable = (content: string): string => {
         const isAlreadyLink = /\[([^\]]+)\]\(([^)]+)\)/.test(domainUrl);
 
         if (!isAlreadyLink) {
-          // Clean the domain URL
-          let cleanUrl = domainUrl.trim();
+          // Clean the domain URL and remove backticks
+          let cleanUrl = domainUrl.replace(/`/g, "").trim();
 
           // Remove any existing markdown link syntax if present
           const urlMatch = cleanUrl.match(/\[([^\]]+)\]\(([^)]+)\)/);
@@ -118,7 +118,9 @@ const transformCompanyTable = (content: string): string => {
 
           // Replace domain with markdown link
           if (cleanUrl) {
-            cells[websiteIndex] = `[${domainUrl}](${cleanUrl})`;
+            // Use cleanUrl for display text too (without backticks) so it doesn't render as code
+            const displayText = domainUrl.replace(/`/g, "").trim();
+            cells[websiteIndex] = `[${displayText}](${cleanUrl})`;
           }
         }
       }
@@ -1077,7 +1079,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
                         // Links with better styling
                         a: ({ node, ...props }) => (
                           <a
-                            className="text-blue-400 hover:text-blue-300 underline underline-offset-2 transition-colors duration-200 break-all"
+                            className="text-inherit hover:text-blue-300 hover:underline underline-offset-2 transition-colors duration-200 break-all cursor-pointer"
                             target="_blank"
                             rel="noopener noreferrer"
                             {...props}
@@ -1087,7 +1089,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
                         code: ({ node, inline, className, ...props }: any) => {
                           return inline ? (
                             <code
-                              className="bg-white/15 text-blue-300 rounded px-1.5 py-0.5 text-xs font-mono break-all"
+                              className="bg-white/10 text-inherit rounded px-1.5 py-0.5 break-all"
                               {...props}
                             />
                           ) : (
@@ -1119,7 +1121,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
                         ),
                         li: ({ node, ...props }) => (
                           <li
-                            className="pl-1 break-words leading-relaxed"
+                            className="pl-1 break-words leading-relaxed text-inherit"
                             style={{ overflowWrap: "anywhere" }}
                             {...props}
                           />
