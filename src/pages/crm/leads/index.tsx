@@ -467,7 +467,7 @@ const index = () => {
   const filteredLeads = useMemo(() => {
     let result = [...(allLeadsForCount || [])];
 
-    // Text search (name or email)
+    // Text search (name, email, or company name)
     if (leadsSearch) {
       const searchLower = leadsSearch.toLowerCase();
       result = result.filter(
@@ -788,7 +788,7 @@ const index = () => {
                   <div className="flex w-full flex-wrap items-center justify-end gap-1.5 sm:gap-2">
                     {/* Search Input */}
                     <SearchInput
-                      placeholder="Search leads..."
+                      placeholder="Search leads by name, email, or company..."
                       value={leadsSearch}
                       onChange={setLeadsSearch}
                     />
