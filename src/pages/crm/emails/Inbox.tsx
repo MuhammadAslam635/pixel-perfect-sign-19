@@ -130,6 +130,17 @@ const InboxPage = () => {
     queryFn: () => emailService.getEmailStats(),
   });
 
+  const { data: sentStarredData } = useQuery({
+    queryKey: ["sentStarred", page],
+    queryFn: () =>
+      emailService.getSentEmails({
+        page,
+        limit,
+        starred: true,
+      }),
+    enabled: filter === "starred",
+  });
+
   const markReadMutation = useMutation({
     mutationFn: ({ emailId, isRead }: { emailId: string; isRead: boolean }) =>
       emailService.markEmailRead(emailId, { isRead }),
@@ -149,6 +160,8 @@ const InboxPage = () => {
     }) => emailService.starEmail(emailId, { isStarred }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["inbox"] });
+      queryClient.invalidateQueries({ queryKey: ["emailStats"] });
+      queryClient.invalidateQueries({ queryKey: ["sentStarred"] });
     },
   });
 
@@ -171,20 +184,33 @@ const InboxPage = () => {
     },
   });
 
+  const baseEmails =
+    filter === "starred"
+      ? [
+          ...(inboxData?.data?.emails || []),
+          ...(sentStarredData?.data?.emails || []),
+        ]
+      : inboxData?.data?.emails || [];
+
   const filteredEmails =
-    inboxData?.data?.emails?.filter((email) => {
-      if (!searchTerm) return true;
-      const searchLower = searchTerm.toLowerCase();
-      const cleanedBodyText = email.body.text
-        ? stripQuotedEmailContent(email.body.text)
-        : "";
-      return (
-        email.subject?.toLowerCase().includes(searchLower) ||
-        email.from.email.toLowerCase().includes(searchLower) ||
-        email.from.name?.toLowerCase().includes(searchLower) ||
-        cleanedBodyText.toLowerCase().includes(searchLower)
-      );
-    }) || [];
+    baseEmails
+      ?.filter((email) => {
+        if (!searchTerm) return true;
+        const searchLower = searchTerm.toLowerCase();
+        const cleanedBodyText = email.body.text
+          ? stripQuotedEmailContent(email.body.text)
+          : "";
+        return (
+          email.subject?.toLowerCase().includes(searchLower) ||
+          email.from.email.toLowerCase().includes(searchLower) ||
+          email.from.name?.toLowerCase().includes(searchLower) ||
+          cleanedBodyText.toLowerCase().includes(searchLower)
+        );
+      })
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      ) || [];
 
   const handleEmailClick = (email: Email) => {
     setSelectedEmail(email);
@@ -342,6 +368,9 @@ const InboxPage = () => {
                       <InboxIcon className="h-4 w-4 mr-2" />
                       Inbox
                       <div className="ml-auto flex items-center gap-1">
+                        <Badge className="bg-white/15 text-white border-white/20">
+                          {statsData?.data?.receivedEmails ?? 0}
+                        </Badge>
                         {showCategories ? (
                           <ChevronDown className="h-3.5 w-3.5" />
                         ) : (
@@ -425,6 +454,9 @@ const InboxPage = () => {
                     >
                       <Send className="h-4 w-4 mr-2" />
                       Sent
+                      <Badge className="ml-auto bg-white/15 text-white border-white/20">
+                        {statsData?.data?.sentEmails ?? 0}
+                      </Badge>
                     </Button>
                     <Button
                       variant={filter === "starred" ? "default" : "ghost"}
@@ -440,11 +472,9 @@ const InboxPage = () => {
                     >
                       <Star className="h-4 w-4 mr-2" />
                       Starred
-                      {statsData?.data?.starredEmails ? (
-                        <Badge className="ml-auto bg-white/15 text-white border-white/20">
-                          {statsData.data.starredEmails}
-                        </Badge>
-                      ) : null}
+                      <Badge className="ml-auto bg-white/15 text-white border-white/20">
+                        {statsData?.data?.starredEmails ?? 0}
+                      </Badge>
                     </Button>
                   </CardContent>
                 </Card>
