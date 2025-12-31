@@ -170,7 +170,7 @@ const SettingsPage = () => {
                     >
                       {isAdmin ? (
                         <AdminProfileTab />
-                      ) : isCompany ? (
+                      ) : isCompany || userRole === "CompanyAdmin" ? (
                         <CompanyProfileTab />
                       ) : isCompanyUser ? (
                         <ProfileTabCompanyUser />
