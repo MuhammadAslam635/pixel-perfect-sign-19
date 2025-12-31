@@ -446,6 +446,21 @@ const Activity: FC<ActivityProps> = ({
     setWeekDates(dates);
   }, [currentWeekStart]);
 
+  // Sync currentDate (query month) with selectedWeekDate
+  // This ensures that if the user selects a date in a different month (e.g. next month via week view),
+  // the query fetches data for that new month.
+  useEffect(() => {
+    if (
+      selectedWeekDate.getMonth() !== currentDate.getMonth() ||
+      selectedWeekDate.getFullYear() !== currentDate.getFullYear()
+    ) {
+      const newDate = new Date(selectedWeekDate);
+      // Set to 1st of month to avoid edge cases with varying days in months
+      newDate.setDate(1); 
+      setCurrentDate(newDate);
+    }
+  }, [selectedWeekDate, currentDate]);
+
   // Auto-refetch summary when navigating to Summary tab
   useEffect(() => {
     if (topLevelTab === "activity" && activeTab === "summary" && leadId) {
