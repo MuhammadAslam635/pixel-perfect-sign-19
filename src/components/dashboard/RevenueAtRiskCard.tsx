@@ -35,7 +35,7 @@ export const RevenueAtRiskCard = () => {
 
   return (
     <div className="relative overflow-hidden rounded-[36px] border border-white/10 bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] p-4 lg:p-5 h-[140px] lg:h-[170px] flex flex-col transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-white/5 hover:scale-[1.01]">
-      <div className="flex items-center gap-2 mb-3">
+      <div className="flex items-center gap-2 mb-2">
         <AlertTriangle className="w-4 h-4 text-white/70" />
         <h3 className="text-white text-sm font-medium">Revenue at Risk</h3>
       </div>
@@ -47,17 +47,17 @@ export const RevenueAtRiskCard = () => {
       ) : error ? (
         <p className="text-xs text-red-400">{error}</p>
       ) : data ? (
-        <div className="flex flex-col gap-1 mt-2">
+        <div className="flex-1 flex flex-col justify-center gap-1">
           {/* Main metric */}
           <div className="flex items-center gap-2">
             {data.leadsAtRisk > 0 && (
-              <AlertTriangle className="w-5 h-5 text-yellow-400" />
+              <AlertTriangle className="w-4 h-4 text-yellow-400" />
             )}
             <div className="flex items-baseline gap-1">
-              <span className="text-3xl sm:text-4xl font-normal text-white">
+              <span className="text-2xl sm:text-3xl font-normal text-white">
                 {data.leadsAtRisk}
               </span>
-              <span className="text-sm text-white/60">at risk</span>
+              <span className="text-[10px] text-white/60">at risk</span>
             </div>
           </div>
 
@@ -65,7 +65,7 @@ export const RevenueAtRiskCard = () => {
           {data.leadsAtRisk > 0 && data.leadsDetails.length > 0 && (
             <button
               onClick={() => setExpanded(!expanded)}
-              className="flex items-center gap-1 text-xs text-white/60 hover:text-white transition-colors mt-1"
+              className="flex items-center gap-1 text-[10px] text-white/60 hover:text-white transition-colors"
             >
               {expanded ? (
                 <>
@@ -82,11 +82,11 @@ export const RevenueAtRiskCard = () => {
           )}
 
           {expanded && data.leadsDetails.length > 0 && (
-            <div className="mt-2 space-y-1 max-h-40 overflow-y-auto">
+            <div className="mt-1 space-y-1 max-h-24 overflow-y-auto scrollbar-hide">
               {data.leadsDetails.map((lead) => (
                 <div
                   key={lead._id}
-                  className="p-2 bg-white/5 rounded-lg border border-white/10 text-xs"
+                  className="p-1.5 bg-white/5 rounded-lg border border-white/10 text-[10px]"
                 >
                   <div className="flex justify-between">
                     <span className="text-white font-medium">{lead.name}</span>

@@ -75,11 +75,11 @@ export const DealsAtRiskCard = () => {
 
   return (
     <div className="relative overflow-hidden rounded-[36px] border border-white/10 bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] p-4 lg:p-5 h-[200px] lg:h-[240px] flex flex-col transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-white/5 hover:scale-[1.01]">
-      <div className="flex items-center gap-2 mb-3">
+      <div className="flex items-center gap-2 mb-2">
         <AlertCircle className="w-4 h-4 text-white/70" />
         <h3 className="text-white text-sm font-medium">Deals at Risk</h3>
         {!loading && !error && data && data.dealsAtRisk.length > 0 && (
-          <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-red-400/10 text-red-400 border border-red-400/20">
+          <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-red-400/10 text-red-400 border border-red-400/20">
             {data.dealsAtRisk.length}
           </span>
         )}
@@ -94,30 +94,30 @@ export const DealsAtRiskCard = () => {
       ) : data ? (
         <>
           {data.dealsAtRisk.length === 0 ? (
-            <div className="flex items-center justify-center h-full min-h-[100px] text-center">
+            <div className="flex items-center justify-center flex-1 text-center">
               <p className="text-sm text-green-400">All deals on track</p>
             </div>
           ) : (
-            <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+            <div className="flex-1 overflow-y-auto scrollbar-hide space-y-1.5">
               {data.dealsAtRisk.map((deal: DealAtRisk) => (
                 <div
                   key={deal._id}
-                  className="p-2 bg-white/5 rounded-lg border border-white/10 hover:border-white/20 transition-all"
+                  className="p-1.5 bg-white/5 rounded-lg border border-white/10 hover:border-white/20 transition-all"
                 >
                   {/* Header */}
                   <div className="flex justify-between items-start mb-1">
-                    <h4 className="text-xs font-medium text-white">
+                    <h4 className="text-[10px] font-medium text-white truncate pr-2">
                       {deal.name}
                     </h4>
-                    <span className="text-[10px] text-white/40">
+                    <span className="text-[9px] text-white/40 shrink-0">
                       {Math.floor(deal.daysSinceContact)}d
                     </span>
                   </div>
 
                   {/* Risk badge */}
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1">
                     <span
-                      className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium border ${getRiskColor(
+                      className={`inline-flex items-center gap-0.5 px-1 py-0.5 rounded text-[9px] font-medium border ${getRiskColor(
                         deal.riskReason
                       )}`}
                     >
@@ -127,7 +127,7 @@ export const DealsAtRiskCard = () => {
                   </div>
 
                   {/* Recommended action */}
-                  <p className="text-[10px] text-blue-400 mt-1">
+                  <p className="text-[9px] text-blue-400 mt-1 truncate">
                     {deal.recommendedAction}
                   </p>
                 </div>

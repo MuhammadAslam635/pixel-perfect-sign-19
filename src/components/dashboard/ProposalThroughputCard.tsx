@@ -65,7 +65,7 @@ export const ProposalThroughputCard = () => {
 
   return (
     <div className="relative overflow-hidden rounded-[36px] border border-white/10 bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] p-4 lg:p-5 h-[140px] lg:h-[170px] flex flex-col transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-white/5 hover:scale-[1.01]">
-      <div className="flex justify-between items-start mb-3">
+      <div className="flex justify-between items-start mb-2">
         <div className="flex items-center gap-2">
           <FileText className="w-4 h-4 text-white/70" />
           <h3 className="text-white text-sm font-medium">Proposal Throughput</h3>
@@ -116,34 +116,34 @@ export const ProposalThroughputCard = () => {
       ) : error ? (
         <p className="text-xs text-red-400">{error}</p>
       ) : data ? (
-        <div className="grid grid-cols-2 gap-2 mt-2">
+        <div className="grid grid-cols-2 gap-2 flex-1">
           {/* RFPs Received */}
-          <div className="flex flex-col gap-0.5 p-2 bg-white/5 rounded-lg border border-white/10">
+          <div className="flex flex-col gap-0.5 p-1.5 bg-white/5 rounded-lg border border-white/10">
             <span className="text-[10px] text-white/60">RFPs</span>
-            <span className="text-xl sm:text-2xl font-normal text-white">
+            <span className="text-lg sm:text-xl font-normal text-white">
               {data.rfpsReceived.toLocaleString()}
             </span>
           </div>
 
           {/* Proposals Submitted */}
-          <div className="flex flex-col gap-0.5 p-2 bg-white/5 rounded-lg border border-white/10">
+          <div className="flex flex-col gap-0.5 p-1.5 bg-white/5 rounded-lg border border-white/10">
             <span className="text-[10px] text-white/60">Sent</span>
-            <span className="text-xl sm:text-2xl font-normal text-white">
+            <span className="text-lg sm:text-xl font-normal text-white">
               {data.proposalsSubmitted.toLocaleString()}
             </span>
           </div>
 
           {/* Avg Cycle Time */}
-          <div className="flex flex-col gap-0.5 p-2 bg-white/5 rounded-lg border border-white/10 col-span-2">
+          <div className="flex flex-col gap-0.5 p-1.5 bg-white/5 rounded-lg border border-white/10 col-span-2">
             <span className="text-[10px] text-white/60">Avg Cycle Time</span>
             <div className="flex items-baseline gap-1">
-              <span className="text-2xl sm:text-3xl font-normal text-white">
+              <span className="text-xl sm:text-2xl font-normal text-white">
                 {data.avgCycleTimeDays > 0
                   ? data.avgCycleTimeDays.toFixed(1)
                   : "—"}
               </span>
               {data.avgCycleTimeDays > 0 && (
-                <span className="text-sm text-white/60">days</span>
+                <span className="text-[10px] text-white/60">days</span>
               )}
             </div>
           </div>
