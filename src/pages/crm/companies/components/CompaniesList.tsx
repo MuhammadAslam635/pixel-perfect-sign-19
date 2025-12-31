@@ -48,6 +48,9 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
+import { usePermissions } from "@/hooks/usePermissions";
 
 type ViewMode = "compact" | "detailed" | "card";
 
@@ -97,6 +100,8 @@ const CompaniesList: FC<CompaniesListProps> = ({
   onViewModeChange,
 }) => {
   const queryClient = useQueryClient();
+  const { user } = useSelector((state: RootState) => state.auth);
+  const { canDelete } = usePermissions();
   const [companyToDelete, setCompanyToDelete] = useState<Company | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
@@ -502,6 +507,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
           </div>
 
           {/* Delete Button */}
+          {canDelete("companies") && (
           <Tooltip>
             <TooltipTrigger asChild>
               <button
@@ -516,6 +522,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
               <p>Delete company</p>
             </TooltipContent>
           </Tooltip>
+          )}
         </Card>
       );
     }
@@ -668,6 +675,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
             </p>
           )}
           <div className="flex items-center gap-1.5">
+            {canDelete("companies") && (
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
@@ -682,6 +690,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
                 <p>Delete company</p>
               </TooltipContent>
             </Tooltip>
+            )}
             <ActiveNavButton
               icon={Users}
               text={isActive ? "Close Details" : "View Details"}

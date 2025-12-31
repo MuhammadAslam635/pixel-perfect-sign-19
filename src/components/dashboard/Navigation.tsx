@@ -19,6 +19,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 
+import { usePermissions } from "@/hooks/usePermissions";
+
 type NavLink = {
   id: string;
   label: string;
@@ -26,6 +28,7 @@ type NavLink = {
   path: string;
   match?: (pathname: string) => boolean;
   roles?: string[];
+  moduleName?: string; // New RBAC: module name to check permissions for
 };
 
 const contactRoles = ["CompanyUser"];
@@ -44,6 +47,7 @@ const navLinks: NavLink[] = [
     label: "CRM",
     icon: BarChart3,
     path: "/companies",
+    moduleName: "companies", // Protected by 'companies' module
     match: (pathname: string) =>
       pathname.startsWith("/companies") ||
       pathname.startsWith("/leads") ||
@@ -56,6 +60,7 @@ const navLinks: NavLink[] = [
     label: "Customer Support",
     icon: ClientsIcon as typeof Home,
     path: "/prospects",
+    moduleName: "prospects", // Protected by 'prospects' module
     match: (pathname: string) => pathname.startsWith("/prospects"),
   },
   {
@@ -63,18 +68,21 @@ const navLinks: NavLink[] = [
     label: "Skylar",
     icon: ChatIcon as typeof Home,
     path: "/chat",
+    moduleName: "chat", // Protected by 'chat' module
   },
   {
     id: "agents",
     label: "Agents",
     icon: Bot,
     path: "/agents",
+    moduleName: "agents", // Protected by 'agents' module
   },
   {
     id: "campaigns",
     label: "Campaigns",
     icon: Megaphone,
     path: "/campaigns",
+    moduleName: "campaigns", // Protected by 'campaigns' module
     match: (pathname: string) => pathname.startsWith("/campaigns"),
   },
   {
@@ -144,6 +152,9 @@ export const Navigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useSelector((state: RootState) => state.auth);
+  // Permission hook
+  const { canView } = usePermissions();
+  
   const sessionUser = user || getUserData();
 
   // Get user's role name - prioritize roleId over legacy role
@@ -168,6 +179,17 @@ export const Navigation = () => {
 
   const filteredNavLinks = useMemo(() => {
     return navLinks.filter((link) => {
+      // 1. Check Module Permissions (New RBAC)
+      if (link.moduleName) {
+         // Admin can always view
+         if (userRole === 'Admin') return true;
+         
+         if (!canView(link.moduleName)) {
+           return false;
+         }
+      }
+
+      // 2. Check Legacy Roles
       if (!link.roles || link.roles.length === 0) {
         return true;
       }
@@ -176,7 +198,7 @@ export const Navigation = () => {
       }
       return link.roles.includes(userRole);
     });
-  }, [userRole]);
+  }, [userRole, canView]);
   const [activeNav, setActiveNav] = useState(
     resolveActiveNav(location.pathname, filteredNavLinks)
   );

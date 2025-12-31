@@ -10,6 +10,7 @@ import {
   useNotifications,
   useMarkNotificationAsRead,
 } from "@/hooks/useNotifications";
+import { usePermissions } from "@/hooks/usePermissions";
 import LongRunningTasksButton from "@/components/navigation/LongRunningTasksButton";
 import { AvatarFallback } from "@/components/ui/avatar-fallback";
 
@@ -58,6 +59,9 @@ export const ActionComponent = () => {
       fetchUserProfile();
     }
   }, [dispatch]);
+
+  // Permission hook
+  const { canView } = usePermissions();
 
   // Use custom hook for notifications with real-time updates
   const {
@@ -133,9 +137,12 @@ export const ActionComponent = () => {
     if (item.title === "Team") {
       return userRoleName === "Company" || userRoleName === "CompanyAdmin" || userRoleName === "Admin";
     }
-    // Hide "Knowledge Base" for Admin
-    if (item.title === "Knowledge Base" && userRoleName === "Admin") {
-      return false;
+    // "Knowledge Base" Visibility Logic:
+    // 1. Hide for Admin (as per original logic)
+    // 2. Hide for anyone who doesn't have "view" permission for "company-knowledge"
+    if (item.title === "Knowledge Base") {
+      if (userRoleName === "Admin") return false;
+      return canView("company-knowledge");
     }
     return true;
   });

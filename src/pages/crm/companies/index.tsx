@@ -27,6 +27,7 @@ import SeniorityQuickSelector from "@/components/lead-enrichment/SeniorityQuickS
 import { useEnrichmentConfigs } from "@/hooks/useEnrichmentConfigs";
 import type { SeniorityLevel } from "@/types/leadEnrichment";
 import { userService } from "@/services/user.service";
+import { usePermissions } from "@/hooks/usePermissions";
 
 const COMPANY_EMPLOYEE_RANGES = [
   { value: "all", label: "All company sizes" },
@@ -39,6 +40,7 @@ const COMPANY_EMPLOYEE_RANGES = [
 type ViewMode = "compact" | "detailed" | "card";
 
 const index = () => {
+  const { canCreate } = usePermissions();
   const navigate = useNavigate();
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(
     null
@@ -350,6 +352,7 @@ const index = () => {
                 />
 
                 {/* Enrich Leads Button */}
+                {canCreate("companies") && (
                 <Button
                   onClick={() => setEnrichmentModalOpen(true)}
                   className="bg-gradient-to-r from-[#69B4B7] to-[#3E64B4] hover:from-[#69B4B7]/80 hover:to-[#3E64B4]/80 text-white font-semibold rounded-full px-4 sm:px-6 h-10 shadow-[0_5px_18px_rgba(103,176,183,0.35)] hover:shadow-[0_8px_24px_rgba(103,176,183,0.45)] transition-all whitespace-nowrap"
@@ -358,6 +361,7 @@ const index = () => {
                   <span className="hidden sm:inline">Find Leads</span>
                   <span className="sm:hidden">Find</span>
                 </Button>
+                )}
               </div>
 
               {/* Filters Section - Scrollable when expanded */}

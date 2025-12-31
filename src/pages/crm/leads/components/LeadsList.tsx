@@ -50,6 +50,9 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { AvatarFallback } from "@/components/ui/avatar-fallback";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
+import { usePermissions } from "@/hooks/usePermissions";
 
 type ViewMode = "compact" | "detailed" | "card";
 
@@ -112,6 +115,7 @@ const LeadsList: FC<LeadsListProps> = ({
 }) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { canDelete } = usePermissions();
   const [fillingLeads, setFillingLeads] = useState<Record<string, boolean>>({});
   const [leadToDelete, setLeadToDelete] = useState<Lead | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -591,6 +595,7 @@ const LeadsList: FC<LeadsListProps> = ({
           </div>
 
           {/* Delete Icon - Bottom Right */}
+          {canDelete("leads") && (
           <Tooltip>
             <TooltipTrigger asChild>
               <button
@@ -605,6 +610,7 @@ const LeadsList: FC<LeadsListProps> = ({
               <p>Delete lead</p>
             </TooltipContent>
           </Tooltip>
+          )}
         </Card>
       );
     }
@@ -846,7 +852,7 @@ const LeadsList: FC<LeadsListProps> = ({
             </div>
           )}
           <div className="flex items-center gap-1.5">
-            {viewMode === "compact" && (
+            {viewMode === "compact" && canDelete("leads") && (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button

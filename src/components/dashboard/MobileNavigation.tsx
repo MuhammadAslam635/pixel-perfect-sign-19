@@ -24,6 +24,8 @@ import {
   X,
 } from "lucide-react";
 
+import { usePermissions } from "@/hooks/usePermissions";
+
 type NavLink = {
   id: string;
   label: string;
@@ -31,6 +33,7 @@ type NavLink = {
   path: string;
   match?: (pathname: string) => boolean;
   roles?: string[];
+  moduleName?: string; // New RBAC: module name
 };
 
 const contactRoles = ["CompanyUser"];
@@ -94,29 +97,33 @@ const navLinks: NavLink[] = [
     label: "Companies",
     icon: BarChart3,
     path: "/companies",
+    moduleName: "companies",
     match: (pathname: string) => pathname.startsWith("/companies"),
   },
   {
     id: "prospects",
-    label: "Prospects",
+    label: "Customer Support",
     icon: ClientsIcon as typeof Home,
     path: "/prospects",
+    moduleName: "prospects",
     match: (pathname: string) => pathname.startsWith("/prospects"),
   },
-  { id: "chat", label: "Chat", icon: MessageSquare, path: "/chat" },
+  { id: "chat", label: "Chat", icon: MessageSquare, path: "/chat", moduleName: "chat" },
   {
     id: "emails",
     label: "Emails",
     icon: Mail,
     path: "/emails/inbox",
+    moduleName: "emails", // Assuming 'emails' module exists, need to verify
     match: (pathname: string) => pathname.startsWith("/emails"),
   },
-  { id: "agents", label: "Agents", icon: Bot, path: "/agents" },
+  { id: "agents", label: "Agents", icon: Bot, path: "/agents", moduleName: "agents" },
   {
     id: "campaigns",
     label: "Campaigns",
     icon: Megaphone,
     path: "/campaigns",
+    moduleName: "campaigns",
     match: (pathname: string) => pathname.startsWith("/campaigns"),
   },
   {
@@ -124,6 +131,7 @@ const navLinks: NavLink[] = [
     label: "FollowUp",
     icon: CalendarDays,
     path: "/followups",
+    moduleName: "followups", // Assuming 'followups' module exists
     match: (pathname: string) => pathname.startsWith("/followups"),
   },
   {
@@ -142,6 +150,8 @@ export const MobileNavigation = () => {
   const panelRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.auth);
+  // Permission hook
+  const { canView } = usePermissions();
   const sessionUser = user || getUserData();
 
   // Get user's role name - prioritize roleId over legacy role
@@ -172,6 +182,17 @@ export const MobileNavigation = () => {
   const linksToUse = isAdmin && isAdminPage ? adminNavLinks : navLinks;
 
   const filteredNavLinks = linksToUse.filter((link) => {
+    // 1. Check Module Permissions (New RBAC)
+    if (link.moduleName) {
+         // Admin can always view
+         if (userRole === 'Admin') return true;
+         
+         if (!canView(link.moduleName)) {
+           return false;
+         }
+    }
+
+    // 2. Check Legacy Roles
     if (!link.roles || link.roles.length === 0) {
       return true;
     }
