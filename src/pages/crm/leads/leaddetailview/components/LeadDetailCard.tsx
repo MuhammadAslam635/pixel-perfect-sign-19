@@ -303,6 +303,21 @@ type ScheduleMeetingForm = {
   durationMinutes: number;
 };
 
+// Helper function to get timezone offset in minutes for a given timezone and date
+const getTimezoneOffset = (timezone: string, date: Date): number => {
+  try {
+    // Get the timezone offset by comparing local time vs UTC time for the same moment
+    // If we have a date representing 12:00 UTC, and we format it in the target timezone,
+    // the difference tells us the offset
+    const utcTime = date.getTime();
+    const tzTime = new Date(date.toLocaleString('en-US', { timeZone: timezone })).getTime();
+    return (tzTime - utcTime) / (1000 * 60);
+  } catch {
+    return 0;
+  }
+};
+
+
 type LeadDetailCardProps = {
   lead: Lead;
 };
@@ -706,13 +721,101 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
       if (response.success) {
         if (response.data?.leadMeetingId) {
           // Full success - meeting saved to both Microsoft Calendar and database
-          const usedTimezone = response.data?.timezone || schedulingTimezone;
-          const timezoneInfo = usedTimezone && usedTimezone !== "UTC"
-            ? ` in ${lead.name?.split(' ')[0] || 'lead'}'s timezone (${getTimezoneAbbreviation(usedTimezone)})`
+          const leadTimezone = response.data?.timezone || schedulingTimezone;
+          const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+          const timezoneAbbrev = userTimezone !== "UTC"
+            ? ` (${getTimezoneAbbreviation(userTimezone)})`
             : "";
-          toast.success(
-            `${response?.message || "Meeting scheduled successfully"}${timezoneInfo}`
-          );
+
+          // Format meeting date and time
+          let meetingDateTime = "";
+          if (response.data?.startTime) {
+            try {
+              // Microsoft Calendar API returns start/end as objects with dateTime property
+              const startTimeObj = response.data.startTime as any;
+              const endTimeObj = response.data.endTime as any;
+
+              // Microsoft API returns dateTime in lead's timezone, but as ISO strings without timezone suffix
+              // We need to treat these as local times in the lead's timezone
+              const startTimeStr = startTimeObj?.dateTime || String(startTimeObj);
+              const endTimeStr = endTimeObj?.dateTime || String(endTimeObj);
+
+              console.log('Meeting time debugging:', {
+                startTimeObj,
+                endTimeObj,
+                startTimeStr,
+                endTimeStr,
+                leadTimezone,
+                userTimezone
+              });
+
+              // The dateTime from Microsoft API represents time in the lead's timezone
+              // We need to convert this to the correct UTC time, then to user's timezone
+
+              // Create Date objects from the ISO strings - JavaScript interprets these as UTC
+              const startDateUtc = new Date(startTimeStr);
+              const endDateUtc = endTimeStr ? new Date(endTimeStr) : null;
+
+              // But these represent times in lead's timezone, not UTC
+              // So we need to convert: lead time -> UTC -> user timezone
+
+              // Get the offset between lead timezone and UTC
+              const leadOffsetMinutes = getTimezoneOffset(leadTimezone, startDateUtc);
+
+              // The startDateUtc currently represents "lead time interpreted as UTC"
+              // To get the correct UTC time, we need to subtract the lead's timezone offset
+              const startDate = new Date(startDateUtc.getTime() - (leadOffsetMinutes * 60 * 1000));
+              const endDate = endDateUtc ? new Date(endDateUtc.getTime() - (leadOffsetMinutes * 60 * 1000)) : null;
+
+              console.log('Date objects:', {
+                startDateUtc: startDateUtc.toISOString(),
+                endDateUtc: endDateUtc?.toISOString(),
+                startDate: startDate.toISOString(),
+                endDate: endDate?.toISOString(),
+                startDateLocal: startDate.toString(),
+                endDateLocal: endDate?.toString(),
+                leadOffsetMinutes
+              });
+
+              // Format in user's timezone
+              const timeFormatter = new Intl.DateTimeFormat('en-US', {
+                weekday: 'short',
+                month: 'short',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true,
+                timeZone: userTimezone
+              });
+
+              meetingDateTime = `${timeFormatter.format(startDate)}`;
+              if (endDate) {
+                const endTimeFormatted = new Intl.DateTimeFormat('en-US', {
+                  hour: 'numeric',
+                  minute: '2-digit',
+                  hour12: true,
+                  timeZone: userTimezone
+                }).format(endDate);
+                meetingDateTime += ` - ${endTimeFormatted}`;
+              }
+
+              console.log('Final formatted time:', {
+                meetingDateTime,
+                userTimezone,
+                timezoneAbbrev
+              });
+            } catch (error) {
+              console.error('Error formatting meeting time:', error);
+            }
+          }
+
+          // Create simple toast message with just the meeting time
+          const toastMessage = meetingDateTime
+            ? `Meeting scheduled for ${meetingDateTime}${timezoneAbbrev}`
+            : "Meeting scheduled successfully";
+
+          toast.success(toastMessage);
+
           setScheduleDialogOpen(false);
           resetScheduleForm();
           await Promise.all([
