@@ -16,6 +16,7 @@ export interface FollowupTemplate {
   numberOfCalls: string;
   numberOfWhatsappMessages: string;
   timeOfDayToRun: string;
+  startDate?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -106,9 +107,7 @@ export const followupTemplatesService = {
     return response.data;
   },
 
-  duplicateTemplate: async (
-    id: string
-  ): Promise<FollowupTemplateResponse> => {
+  duplicateTemplate: async (id: string): Promise<FollowupTemplateResponse> => {
     const response = await API.post(`/followup/templates/${id}/duplicate`);
     return response.data;
   },
@@ -118,4 +117,3 @@ export type {
   FollowupTemplate as FollowupTemplateDto,
   FollowupTemplatesQueryParams as FollowupTemplateFilters,
 };
-

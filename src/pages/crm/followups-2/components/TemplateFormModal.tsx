@@ -31,10 +31,24 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { isAxiosError } from "axios";
 import { convertLocalTimeToUTC, convertUTCToLocalTime } from "@/utils/timezone";
-import { Mail, MessageSquare, Phone, Calendar } from "lucide-react";
+import {
+  Mail,
+  MessageSquare,
+  Phone,
+  Calendar as CalendarIcon,
+} from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 const followupTemplateSchema = z.object({
   title: z.string().min(1, "Title is required"),
+  startDate: z.date().optional(),
   numberOfDaysToRun: z
     .string()
     .min(1, "Number of days is required")
@@ -63,6 +77,7 @@ type FollowupTemplateFormValues = z.infer<typeof followupTemplateSchema>;
 
 const defaultFormValues: FollowupTemplateFormValues = {
   title: "",
+  startDate: undefined,
   numberOfDaysToRun: "5",
   numberOfEmails: "3",
   numberOfCalls: "2",
@@ -115,6 +130,9 @@ const TemplateFormModal = ({
     if (mode === "edit" && template) {
       form.reset({
         title: template.title,
+        startDate: template.startDate
+          ? new Date(template.startDate)
+          : undefined,
         numberOfDaysToRun: template.numberOfDaysToRun,
         numberOfEmails: template.numberOfEmails,
         numberOfCalls: template.numberOfCalls,
@@ -134,6 +152,7 @@ const TemplateFormModal = ({
   const handleSubmitForm = (values: FollowupTemplateFormValues) => {
     const payload: FollowupTemplatePayload = {
       title: values.title,
+      startDate: values.startDate ? values.startDate.toISOString() : undefined,
       numberOfDaysToRun: values.numberOfDaysToRun,
       numberOfEmails: values.numberOfEmails,
       numberOfCalls: values.numberOfCalls,
@@ -185,20 +204,21 @@ const TemplateFormModal = ({
 
   return (
     <Dialog open={open} onOpenChange={(open) => !open && closeForm()}>
-      <DialogContent 
+      <DialogContent
         className="max-w-2xl max-h-[90vh] flex flex-col p-0 text-white border border-white/10 overflow-hidden rounded-[32px] shadow-[0_25px_60px_rgba(0,0,0,0.55)]"
         style={{
-          background: "#0a0a0a"
+          background: "#0a0a0a",
         }}
       >
         {/* Gradient overlay */}
-        <div 
+        <div
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0) 38.08%, rgba(255, 255, 255, 0) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)"
+            background:
+              "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0) 38.08%, rgba(255, 255, 255, 0) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
           }}
         />
-        
+
         <div className="relative z-10 flex flex-col h-full min-h-0">
           <DialogHeader className="px-6 pt-6 pb-4 flex-shrink-0 border-b border-white/10">
             <DialogTitle className="text-xs sm:text-sm font-semibold text-white drop-shadow-lg -mb-1">
@@ -294,9 +314,54 @@ const TemplateFormModal = ({
                               disabled={isCreating || isUpdating}
                               className="pl-10 bg-white/5 backdrop-blur-sm border-white/20 text-white text-xs placeholder:text-gray-400 focus:bg-white/10 focus:border-white/30 transition-all"
                             />
-                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/80 pointer-events-none" />
+                            <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/80 pointer-events-none" />
                           </div>
                         </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="startDate"
+                    render={({ field }) => (
+                      <FormItem className="space-y-2">
+                        <FormLabel className={formLabelClasses}>
+                          Start Date
+                        </FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                disabled={isCreating || isUpdating}
+                                variant={"outline"}
+                                className={cn(
+                                  "w-full pl-3 text-left font-normal bg-white/5 backdrop-blur-sm border-white/20 text-white text-xs hover:bg-white/10 hover:text-white transition-all",
+                                  !field.value && "text-gray-400"
+                                )}
+                              >
+                                {field.value ? (
+                                  format(field.value, "PPP")
+                                ) : (
+                                  <span>Pick a date</span>
+                                )}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={field.value}
+                              onSelect={field.onChange}
+                              disabled={(date) =>
+                                date < new Date(new Date().setHours(0, 0, 0, 0))
+                              }
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
                         <FormMessage />
                       </FormItem>
                     )}
