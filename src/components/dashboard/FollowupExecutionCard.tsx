@@ -1,12 +1,7 @@
 import { useEffect, useState } from "react";
-import { Mail, Phone, MessageCircle } from "lucide-react";
-import {
-  MetricCard,
-  CardLoadingState,
-  CardErrorState,
-  MetricHeader,
-  MetricBadge,
-} from "./index";
+import { Mail, Phone, MessageCircle, Loader2, CheckCircle2 } from "lucide-react";
+import { PieChart, Pie, Cell } from "recharts";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import {
   dashboardService,
   FollowupExecutionData,
@@ -14,7 +9,7 @@ import {
 
 /**
  * Follow-up Execution Rate Card
- * Shows overall execution rate with breakdown by channel
+ * Shows overall execution rate with breakdown by channel as pie chart
  */
 export const FollowupExecutionCard = () => {
   const [data, setData] = useState<FollowupExecutionData | null>(null);
@@ -41,93 +36,114 @@ export const FollowupExecutionCard = () => {
     fetchData();
   }, []);
 
-  const getChannelIcon = (channel: string) => {
-    switch (channel) {
-      case "email":
-        return <Mail className="w-4 h-4" />;
-      case "call":
-        return <Phone className="w-4 h-4" />;
-      case "whatsapp":
-        return <MessageCircle className="w-4 h-4" />;
-      default:
-        return null;
-    }
+  const channelPalette: Record<string, string> = {
+    email: "#68B1B8",
+    call: "#3B82F6",
+    whatsapp: "#2B6CB0",
   };
 
-  const getChannelLabel = (channel: string) => {
-    switch (channel) {
-      case "email":
-        return "Email";
-      case "call":
-        return "Call";
-      case "whatsapp":
-        return "WhatsApp";
-      default:
-        return channel;
-    }
-  };
+  const channelOptions = [
+    { key: "email", label: "Email", color: channelPalette.email },
+    { key: "call", label: "Call", color: channelPalette.call },
+    { key: "whatsapp", label: "WhatsApp", color: channelPalette.whatsapp },
+  ];
 
-  const getRateVariant = (rate: number) => {
-    if (rate >= 80) return "success";
-    if (rate >= 60) return "warning";
-    return "danger";
+  const chartData = data
+    ? channelOptions.map((opt) => ({
+        key: opt.key,
+        name: opt.label,
+        value: data.byChannel[opt.key as keyof typeof data.byChannel]?.completed || 0,
+        fill: opt.color,
+      }))
+    : [];
+
+  const allValuesZero = chartData.every((d) => d.value === 0);
+  const displayChartData = allValuesZero
+    ? chartData.map((d) => ({ ...d, value: 1 }))
+    : chartData;
+
+  const CustomTooltip = ({ active, payload }: any) => {
+    if (!active || !payload || !payload.length) return null;
+    const data = payload[0].payload;
+    const displayValue = allValuesZero ? 0 : data.value;
+
+    return (
+      <div className="rounded-lg bg-[#212121] px-4 py-2 text-center text-white shadow-lg border border-white/10">
+        <p className="text-xs text-[#7A7A7A] font-medium mb-1">{data.name}</p>
+        <p className="text-base font-normal">{displayValue.toLocaleString()}</p>
+      </div>
+    );
   };
 
   return (
-    <MetricCard>
-      <MetricHeader
-        title="Follow-up Execution Rate"
-        badge={
-          !loading && !error && data ? (
-            <MetricBadge variant={getRateVariant(data.overall.rate)}>
-              {data.overall.rate.toFixed(0)}%
-            </MetricBadge>
-          ) : undefined
-        }
-      />
+    <div className="relative overflow-hidden rounded-[36px] border border-white/10 bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] p-4 lg:p-5 min-h-[140px] lg:min-h-[170px] flex flex-col transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-white/5 hover:scale-[1.01]">
+      <div className="flex items-center gap-2 mb-2">
+        <CheckCircle2 className="w-4 h-4 text-white/70" />
+        <h3 className="text-white text-sm font-medium">Follow-up Execution</h3>
+      </div>
 
       {loading ? (
-        <CardLoadingState />
+        <div className="flex items-center justify-center flex-1">
+          <Loader2 className="w-4 h-4 animate-spin text-white/70" />
+        </div>
       ) : error ? (
-        <CardErrorState message={error} onRetry={fetchData} />
+        <p className="text-xs text-red-400">{error}</p>
       ) : data ? (
-        <div className="flex flex-col gap-2 mt-2">
-          {/* Overall rate */}
-          <div className="text-3xl sm:text-4xl font-normal text-white">
-            {data.overall.rate.toFixed(0)}
-            <span className="text-xl sm:text-2xl text-white/60">%</span>
+        <div className="flex-1 flex items-center gap-3 min-h-0">
+          <div className="w-[88px] h-[88px] lg:w-[104px] lg:h-[104px] shrink-0">
+            <ChartContainer
+              config={{
+                email: { label: "Email", color: channelPalette.email },
+                call: { label: "Call", color: channelPalette.call },
+                whatsapp: { label: "WhatsApp", color: channelPalette.whatsapp },
+              }}
+              className="h-full w-full aspect-square"
+            >
+              <PieChart>
+                <ChartTooltip cursor={false} content={<CustomTooltip />} />
+                <Pie
+                  data={displayChartData}
+                  dataKey="value"
+                  nameKey="name"
+                  innerRadius={0}
+                  outerRadius={44}
+                  strokeWidth={0}
+                >
+                  {displayChartData.map((entry) => (
+                    <Cell
+                      key={entry.key}
+                      fill={entry.fill}
+                      fillOpacity={allValuesZero ? 0.3 : 0.9}
+                    />
+                  ))}
+                </Pie>
+              </PieChart>
+            </ChartContainer>
           </div>
 
-          {/* Overall stats */}
-          <div className="text-xs text-white/60">
-            {data.overall.completed} / {data.overall.total} tasks
-          </div>
-
-          {/* Channel breakdown */}
-          <div className="space-y-1.5 mt-2">
-            {Object.entries(data.byChannel).map(([channel, stats]) => (
-              <div key={channel} className="space-y-0.5">
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-white/60">{getChannelIcon(channel)}</span>
-                    <span className="text-white/70">{getChannelLabel(channel)}</span>
+          <div className="flex-1 min-w-0">
+            <div className="space-y-1.5">
+              {channelOptions.map((opt) => {
+                const stats = data.byChannel[opt.key as keyof typeof data.byChannel];
+                return (
+                  <div key={opt.key} className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span
+                        className="h-2 w-2 rounded-[2px] shrink-0"
+                        style={{ backgroundColor: opt.color }}
+                      />
+                      <span className="text-[10px] text-white/70 truncate">{opt.label}</span>
+                    </div>
+                    <span className="text-[10px] font-mono tabular-nums text-white/90">
+                      {stats?.rate.toFixed(0) || 0}%
+                    </span>
                   </div>
-                  <span className="text-white font-medium">
-                    {stats.rate.toFixed(0)}%
-                  </span>
-                </div>
-                {/* Progress bar */}
-                <div className="h-1 bg-white/10 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-[#68B3B7] to-[#3E65B4] transition-all duration-300"
-                    style={{ width: `${stats.rate}%` }}
-                  />
-                </div>
-              </div>
-            ))}
+                );
+              })}
+            </div>
           </div>
         </div>
       ) : null}
-    </MetricCard>
+    </div>
   );
 };

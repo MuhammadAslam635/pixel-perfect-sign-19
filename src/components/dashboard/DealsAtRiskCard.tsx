@@ -1,12 +1,5 @@
 import { useEffect, useState } from "react";
-import { AlertCircle, TrendingDown, Clock, Mail } from "lucide-react";
-import {
-  MetricCard,
-  CardLoadingState,
-  CardErrorState,
-  MetricHeader,
-  MetricBadge,
-} from "./index";
+import { AlertCircle, TrendingDown, Clock, Mail, Loader2 } from "lucide-react";
 import {
   dashboardService,
   DealsAtRiskData,
@@ -80,31 +73,24 @@ export const DealsAtRiskCard = () => {
     }
   };
 
-  const getStatusVariant = (count: number) => {
-    if (count === 0) return "success";
-    if (count <= 3) return "warning";
-    return "danger";
-  };
-
   return (
-    <MetricCard minHeight="min-h-[180px]">
-      <div className="flex justify-between items-start mb-2">
-        <MetricHeader
-          title="Deals at Risk"
-          badge={
-            !loading && !error && data ? (
-              <MetricBadge variant={getStatusVariant(data.dealsAtRisk.length)}>
-                {data.dealsAtRisk.length}
-              </MetricBadge>
-            ) : undefined
-          }
-        />
+    <div className="relative overflow-hidden rounded-[36px] border border-white/10 bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] p-4 lg:p-5 min-h-[200px] lg:min-h-[240px] flex flex-col transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-white/5 hover:scale-[1.01]">
+      <div className="flex items-center gap-2 mb-3">
+        <AlertCircle className="w-4 h-4 text-white/70" />
+        <h3 className="text-white text-sm font-medium">Deals at Risk</h3>
+        {!loading && !error && data && data.dealsAtRisk.length > 0 && (
+          <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-red-400/10 text-red-400 border border-red-400/20">
+            {data.dealsAtRisk.length}
+          </span>
+        )}
       </div>
 
       {loading ? (
-        <CardLoadingState />
+        <div className="flex items-center justify-center flex-1">
+          <Loader2 className="w-4 h-4 animate-spin text-white/70" />
+        </div>
       ) : error ? (
-        <CardErrorState message={error} onRetry={fetchData} />
+        <p className="text-xs text-red-400">{error}</p>
       ) : data ? (
         <>
           {data.dealsAtRisk.length === 0 ? (
@@ -150,6 +136,6 @@ export const DealsAtRiskCard = () => {
           )}
         </>
       ) : null}
-    </MetricCard>
+    </div>
   );
 };

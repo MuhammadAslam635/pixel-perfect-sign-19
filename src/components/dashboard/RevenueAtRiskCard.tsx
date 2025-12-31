@@ -1,12 +1,5 @@
 import { useEffect, useState } from "react";
-import { AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
-import {
-  MetricCard,
-  CardLoadingState,
-  CardErrorState,
-  MetricHeader,
-  MetricBadge,
-} from "./index";
+import { AlertTriangle, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import {
   dashboardService,
   RevenueAtRiskData,
@@ -40,29 +33,19 @@ export const RevenueAtRiskCard = () => {
     fetchData();
   }, []);
 
-  const getStatusVariant = (count: number) => {
-    if (count === 0) return "success";
-    if (count <= 5) return "warning";
-    return "danger";
-  };
-
   return (
-    <MetricCard>
-      <MetricHeader
-        title="Revenue at Risk"
-        badge={
-          !loading && !error && data ? (
-            <MetricBadge variant={getStatusVariant(data.leadsAtRisk)}>
-              {data.leadsAtRisk === 0 ? "On Track" : `${data.leadsAtRisk} at risk`}
-            </MetricBadge>
-          ) : undefined
-        }
-      />
+    <div className="relative overflow-hidden rounded-[36px] border border-white/10 bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] p-4 lg:p-5 min-h-[140px] lg:min-h-[170px] flex flex-col transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-white/5 hover:scale-[1.01]">
+      <div className="flex items-center gap-2 mb-3">
+        <AlertTriangle className="w-4 h-4 text-white/70" />
+        <h3 className="text-white text-sm font-medium">Revenue at Risk</h3>
+      </div>
 
       {loading ? (
-        <CardLoadingState />
+        <div className="flex items-center justify-center flex-1">
+          <Loader2 className="w-4 h-4 animate-spin text-white/70" />
+        </div>
       ) : error ? (
-        <CardErrorState message={error} onRetry={fetchData} />
+        <p className="text-xs text-red-400">{error}</p>
       ) : data ? (
         <div className="flex flex-col gap-1 mt-2">
           {/* Main metric */}
@@ -117,6 +100,6 @@ export const RevenueAtRiskCard = () => {
           )}
         </div>
       ) : null}
-    </MetricCard>
+    </div>
   );
 };

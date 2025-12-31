@@ -1,10 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  MetricCard,
-  CardLoadingState,
-  CardErrorState,
-  MetricHeader,
-} from "./index";
+import { Target, Loader2 } from "lucide-react";
 import {
   dashboardService,
   ActiveQualifiedLeadsData,
@@ -40,23 +35,28 @@ export const ActiveQualifiedLeadsCard = () => {
   }, []);
 
   return (
-    <MetricCard>
-      <MetricHeader title="Active Qualified Leads" />
+    <div className="relative overflow-hidden rounded-[36px] border border-white/10 bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] p-4 lg:p-5 min-h-[140px] lg:min-h-[170px] flex flex-col transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-white/5 hover:scale-[1.01]">
+      <div className="flex items-center gap-2 mb-3">
+        <Target className="w-4 h-4 text-white/70" />
+        <h3 className="text-white text-sm font-medium">Active Qualified Leads</h3>
+      </div>
 
       {loading ? (
-        <CardLoadingState />
+        <div className="flex items-center justify-center flex-1">
+          <Loader2 className="w-4 h-4 animate-spin text-white/70" />
+        </div>
       ) : error ? (
-        <CardErrorState message={error} onRetry={fetchData} />
+        <p className="text-xs text-red-400">{error}</p>
       ) : data ? (
-        <div className="flex flex-col gap-1 mt-2">
+        <div className="flex flex-col gap-2 flex-1 justify-center">
           {/* Percentage */}
-          <div className="text-3xl sm:text-4xl font-normal text-white">
+          <div className="text-4xl sm:text-5xl font-semibold text-white">
             {data.percentage.toFixed(1)}
-            <span className="text-xl sm:text-2xl text-white/60">%</span>
+            <span className="text-2xl sm:text-3xl text-white/60">%</span>
           </div>
 
           {/* Ratio display */}
-          <div className="flex items-baseline gap-1 text-xs text-white/60">
+          <div className="flex items-baseline gap-1 text-xs text-white/50">
             <span>{data.activeLeads.toLocaleString()}</span>
             <span>/</span>
             <span>{data.totalLeads.toLocaleString()}</span>
@@ -64,6 +64,6 @@ export const ActiveQualifiedLeadsCard = () => {
           </div>
         </div>
       ) : null}
-    </MetricCard>
+    </div>
   );
 };

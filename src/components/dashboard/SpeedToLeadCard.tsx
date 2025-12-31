@@ -1,10 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  MetricCard,
-  CardLoadingState,
-  CardErrorState,
-  MetricHeader,
-} from "./index";
+import { Zap, Loader2 } from "lucide-react";
 import {
   dashboardService,
   SpeedToLeadData,
@@ -38,22 +33,27 @@ export const SpeedToLeadCard = () => {
   }, []);
 
   return (
-    <MetricCard>
-      <MetricHeader title="Active Leads" />
+    <div className="relative overflow-hidden rounded-[36px] border border-white/10 bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] p-4 lg:p-5 min-h-[140px] lg:min-h-[170px] flex flex-col transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-white/5 hover:scale-[1.01]">
+      <div className="flex items-center gap-2 mb-3">
+        <Zap className="w-4 h-4 text-white/70" />
+        <h3 className="text-white text-sm font-medium">Active Leads</h3>
+      </div>
 
       {loading ? (
-        <CardLoadingState />
+        <div className="flex items-center justify-center flex-1">
+          <Loader2 className="w-4 h-4 animate-spin text-white/70" />
+        </div>
       ) : error ? (
-        <CardErrorState message={error} onRetry={fetchData} />
+        <p className="text-xs text-red-400">{error}</p>
       ) : data ? (
-        <div className="flex flex-col gap-1 mt-2">
+        <div className="flex flex-col gap-2 flex-1 justify-center">
           {/* Main metric */}
-          <div className="text-3xl sm:text-4xl font-normal text-white">
+          <div className="text-4xl sm:text-5xl font-semibold text-white">
             {data.activeLeads.toLocaleString()}
           </div>
-          <p className="text-xs text-white/60">in progress</p>
+          <p className="text-xs text-white/50">in progress</p>
         </div>
       ) : null}
-    </MetricCard>
+    </div>
   );
 };

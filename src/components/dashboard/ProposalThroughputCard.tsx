@@ -1,11 +1,5 @@
-import { useEffect, useState } from "react";
-import { FileText, Send, Clock } from "lucide-react";
-import {
-  MetricCard,
-  CardLoadingState,
-  CardErrorState,
-  MetricHeader,
-} from "./index";
+import { useEffect, useState, useRef } from "react";
+import { FileText, Send, Clock, ChevronDown, Loader2 } from "lucide-react";
 import {
   dashboardService,
   ProposalThroughputData,
@@ -22,6 +16,8 @@ export const ProposalThroughputCard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [period, setPeriod] = useState<Period>("30d");
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const fetchData = async (selectedPeriod: Period) => {
     try {
@@ -45,47 +41,80 @@ export const ProposalThroughputCard = () => {
     fetchData(period);
   }, [period]);
 
-  const getPeriodLabel = (p: Period) => {
-    switch (p) {
-      case "30d":
-        return "30 Days";
-      case "90d":
-        return "90 Days";
-      case "all":
-        return "All Time";
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+
+    if (showDropdown) {
+      document.addEventListener("mousedown", handleClickOutside);
     }
-  };
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showDropdown]);
+
+  const periodOptions = [
+    { value: "30d" as Period, label: "Last 30 days" },
+    { value: "90d" as Period, label: "Last 90 days" },
+    { value: "all" as Period, label: "All time" },
+  ];
 
   return (
-    <MetricCard>
-      <div className="flex justify-between items-start mb-2">
-        <MetricHeader title="Proposal Throughput" />
+    <div className="relative overflow-hidden rounded-[36px] border border-white/10 bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] p-4 lg:p-5 min-h-[140px] lg:min-h-[170px] flex flex-col transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-white/5 hover:scale-[1.01]">
+      <div className="flex justify-between items-start mb-3">
+        <div className="flex items-center gap-2">
+          <FileText className="w-4 h-4 text-white/70" />
+          <h3 className="text-white text-sm font-medium">Proposal Throughput</h3>
+        </div>
 
-        {/* Period Selector */}
-        <div className="flex gap-0.5 bg-[#FFFFFF0A] rounded-full p-0.5">
-          {(["30d", "90d", "all"] as Period[]).map((p) => (
-            <button
-              key={p}
-              onClick={() => setPeriod(p)}
-              className={`
-                px-2 py-0.5 text-[10px] font-medium rounded-full transition-all duration-200
-                ${
-                  period === p
-                    ? "bg-white/20 text-white"
-                    : "text-white/50 hover:text-white/80"
-                }
-              `}
-            >
-              {getPeriodLabel(p)}
-            </button>
-          ))}
+        {/* Period Selector Dropdown */}
+        <div className="relative" ref={dropdownRef}>
+          <button
+            onClick={() => setShowDropdown(!showDropdown)}
+            className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors text-left"
+          >
+            <span className="text-[10px] text-white/80">
+              {periodOptions.find((opt) => opt.value === period)?.label || "Last 30 days"}
+            </span>
+            <ChevronDown
+              className={`w-3 h-3 text-white/60 transition-transform ${
+                showDropdown ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+          {showDropdown && (
+            <div className="absolute top-full right-0 mt-1 rounded-lg bg-[#1a1a1a] border border-white/10 shadow-lg z-10 max-h-40 overflow-y-auto scrollbar-hide min-w-[140px]">
+              {periodOptions.map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => {
+                    setPeriod(option.value);
+                    setShowDropdown(false);
+                  }}
+                  className={`w-full text-left px-3 py-2 text-xs transition-colors ${
+                    period === option.value
+                      ? "bg-white/10 text-white"
+                      : "text-white/70 hover:bg-white/5"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
       {loading ? (
-        <CardLoadingState />
+        <div className="flex items-center justify-center flex-1">
+          <Loader2 className="w-4 h-4 animate-spin text-white/70" />
+        </div>
       ) : error ? (
-        <CardErrorState message={error} onRetry={() => fetchData(period)} />
+        <p className="text-xs text-red-400">{error}</p>
       ) : data ? (
         <div className="grid grid-cols-2 gap-2 mt-2">
           {/* RFPs Received */}
@@ -120,6 +149,6 @@ export const ProposalThroughputCard = () => {
           </div>
         </div>
       ) : null}
-    </MetricCard>
+    </div>
   );
 };
