@@ -188,7 +188,7 @@ export class EmailTemplates {
         /* Email container */
         .email-container {
             max-width: 600px;
-            margin: 0 auto;
+            margin: 0;
             background-color: #ffffff;
             padding: 20px;
             text-align: left;
@@ -276,7 +276,7 @@ export class EmailTemplates {
     </style>
 </head>
 <body style="text-align: left; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; line-height: 1.6; color: #333; background-color: #ffffff;">
-    <div class="email-container" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px; text-align: left;">
+    <div class="email-container" style="max-width: 600px; margin: 0; background-color: #ffffff; padding: 20px; text-align: left;">
         <div class="email-content" style="font-size: 16px; line-height: 1.6; color: #333; text-align: left;">
             ${cleanHtml}
         </div>
@@ -350,7 +350,7 @@ export class EmailTemplates {
         /* Email container */
         .email-container {
             max-width: 600px;
-            margin: 0 auto;
+            margin: 0;
             background-color: #ffffff;
             padding: 20px;
             text-align: left;
@@ -397,7 +397,7 @@ export class EmailTemplates {
     </style>
 </head>
 <body style="text-align: left; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; line-height: 1.6; color: #333; background-color: #ffffff;">
-    <div class="email-container" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px; text-align: left;">
+    <div class="email-container" style="max-width: 600px; margin: 0; background-color: #ffffff; padding: 20px; text-align: left;">
         <div class="email-content" style="font-size: 16px; line-height: 1.6; color: #333; text-align: left;">
             ${formattedParagraphs}
         </div>
