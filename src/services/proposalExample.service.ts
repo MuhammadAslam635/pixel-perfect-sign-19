@@ -43,6 +43,7 @@ export type ProposalExampleListResponse = {
 };
 
 export type ProposalExampleUploadMetadata = {
+  name: string;
   industry?: string;
   clientType?: string;
   projectType?: string;
@@ -67,6 +68,7 @@ export const proposalExampleService = {
     formData.append("file", file);
 
     if (metadata) {
+      formData.append("name", metadata.name);
       if (metadata.industry) formData.append("industry", metadata.industry);
       if (metadata.clientType)
         formData.append("clientType", metadata.clientType);

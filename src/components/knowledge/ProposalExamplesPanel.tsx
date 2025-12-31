@@ -73,6 +73,7 @@ const ProposalExamplesPanel = () => {
 
   const [tagInput, setTagInput] = useState("");
   const [tags, setTags] = useState<string[]>([]);
+  const [documentName, setDocumentName] = useState("");
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -159,10 +160,20 @@ const ProposalExamplesPanel = () => {
 
   const handleUpload = async () => {
     if (!selectedFile) return;
+    
+    if (!documentName.trim()) {
+      toast({
+        title: "Name required",
+        description: "Please enter a document name before uploading.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setUploading(true);
     try {
       const uploadMetadata: ProposalExampleUploadMetadata = {
+        name: documentName.trim(),
         tags: tags.length > 0 ? tags : undefined,
       };
 
@@ -177,6 +188,7 @@ const ProposalExamplesPanel = () => {
       setUploadOpen(false);
       setSelectedFile(null);
       setTags([]);
+      setDocumentName("");
       setPage(1);
     } catch (error: any) {
       toast({
@@ -433,6 +445,16 @@ const ProposalExamplesPanel = () => {
               )}
             </div>
             <div>
+              <Label htmlFor="documentName">Document Name *</Label>
+              <Input
+                id="documentName"
+                value={documentName}
+                onChange={(e) => setDocumentName(e.target.value)}
+                placeholder="Enter document name"
+                required
+              />
+            </div>
+            <div>
               <Label htmlFor="tags">Tags (Optional)</Label>
               <div className="flex gap-2">
                 <Input
@@ -470,6 +492,7 @@ const ProposalExamplesPanel = () => {
                 setUploadOpen(false);
                 setSelectedFile(null);
                 setTags([]);
+                setDocumentName("");
               }}
               className="w-full sm:w-auto"
             >
@@ -477,7 +500,7 @@ const ProposalExamplesPanel = () => {
             </Button>
             <Button
               onClick={handleUpload}
-              disabled={!selectedFile || uploading}
+              disabled={!selectedFile || !documentName.trim() || uploading}
               className="w-full sm:w-auto"
             >
               {uploading ? (
