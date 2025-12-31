@@ -65,7 +65,10 @@ IMPORTANT:
 
 export const PerplexityPromptTab = () => {
   const user = getUserData();
-  const canManage = user?.role === "Company" || user?.role === "CompanyAdmin" || user?.role === "Admin";
+  const canManage =
+    user?.role === "Company" ||
+    user?.role === "CompanyAdmin" ||
+    user?.role === "Admin";
 
   const [prompt, setPrompt] = useState<string>("");
   const [isSaving, setIsSaving] = useState(false);

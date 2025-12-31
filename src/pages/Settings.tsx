@@ -24,9 +24,11 @@ const SettingsPage = () => {
   const canAccessIntegrations = ["Company", "CompanyAdmin"].includes(
     userRole ?? ""
   );
-  const isCompanyUser = ["CompanyAdmin", "CompanyUser", "CompanyViewer"].includes(
-    userRole ?? ""
-  );
+  const isCompanyUser = [
+    "CompanyAdmin",
+    "CompanyUser",
+    "CompanyViewer",
+  ].includes(userRole ?? "");
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
