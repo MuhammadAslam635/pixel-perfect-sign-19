@@ -166,7 +166,7 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
   const [activeTab, setActiveTab] = useState<
     "recording" | "transcript" | "notes"
   >("recording");
-  const [recordingAudioUrl, setRecordingAudioUrl] = useState<string | null>(
+  const [recordingVideoUrl, setRecordingVideoUrl] = useState<string | null>(
     null
   );
   const [recordingLoading, setRecordingLoading] = useState(false);
@@ -355,7 +355,7 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
     async (meeting: LeadMeetingRecord) => {
       setSelectedMeeting(meeting);
       setActiveTab("recording");
-      setRecordingAudioUrl(null);
+      setRecordingVideoUrl(null);
       setRecordingError(null);
       setRecordingLoading(false);
 
@@ -374,19 +374,12 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
         meeting.recall?.recordingUrl || storedData?.recordingUrl;
       const sessionId = meeting.recall?.sessionId || storedData?.sessionId;
 
-      // Load recording if available - prefer local storage for better performance
-      if (recordingUrl || sessionId) {
+      // Load recording if available - use Recall CDN URL directly
+      if (recordingUrl) {
         setRecordingLoading(true);
         try {
-          // Prefer local storage URL if we have sessionId (faster, no expiration)
-          // Fallback to Recall CDN URL if local storage isn't available
-          if (sessionId) {
-            const localUrl = calendarService.getRecordingLocalUrl(sessionId);
-            setRecordingAudioUrl(localUrl);
-          } else if (recordingUrl) {
-            // Use Recall CDN URL as fallback
-            setRecordingAudioUrl(recordingUrl);
-          }
+          // Use Recall CDN URL directly for video playback
+          setRecordingVideoUrl(recordingUrl);
         } catch (err: any) {
           console.error("Failed to load recording", err);
           setRecordingError(
@@ -404,13 +397,11 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
 
   const handleCloseMeetingDetails = useCallback(() => {
     setSelectedMeeting(null);
-    if (recordingAudioUrl) {
-      URL.revokeObjectURL(recordingAudioUrl);
-      setRecordingAudioUrl(null);
-    }
+    // Note: No need to revoke URLs since we're using direct Recall CDN URLs now
+    setRecordingVideoUrl(null);
     setRecordingError(null);
     setRecordingLoading(false);
-  }, [recordingAudioUrl]);
+  }, []);
 
   // Pre-fetch recording data for all meetings - ALWAYS fetch to get latest data from Recall API
   useEffect(() => {
@@ -794,14 +785,14 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
                             <p className="text-sm text-red-300 text-center">{recordingError}</p>
                           </div>
                         );
-                      } else if (recordingAudioUrl) {
+                      } else if (recordingVideoUrl) {
                         return (
                           <div className="flex flex-col gap-3">
                             <div className="rounded-lg bg-white/5 p-4 border border-white/10">
-                              <audio
+                              <video
                                 controls
-                                src={recordingAudioUrl}
-                                className="w-full"
+                                src={recordingVideoUrl}
+                                className="w-full rounded"
                                 style={{
                                   filter: "invert(1) hue-rotate(180deg)",
                                 }}
