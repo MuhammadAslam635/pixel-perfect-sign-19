@@ -4,10 +4,11 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
 import { Provider } from "react-redux";
+import { Suspense, lazy } from "react";
 import { store } from "./store/store";
 import AppRoutes from "./AppRoutes";
 import { AdminLayout } from "./components/dashboard/DashboardLayout";
-import SkylarFloatingWidget from "@/components/SkylarFloatingWidget";
+const SkylarFloatingWidget = lazy(() => import("@/components/SkylarFloatingWidget"));
 import "./App.css";
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
@@ -57,7 +58,9 @@ const App = () => (
           }}
         >
           <AppRoutes />
-          <SkylarFloatingWidget />
+          <Suspense fallback={null}>
+            <SkylarFloatingWidget />
+          </Suspense>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>

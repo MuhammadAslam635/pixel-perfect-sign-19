@@ -1,56 +1,64 @@
 import { Routes, Route } from "react-router-dom";
+import { Suspense, lazy } from "react";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import PublicRoute from "@/components/PublicRoute";
-import Index from "@/pages/auth/Index";
-import SignUpPage from "@/pages/auth/SignUpPage";
-import ForgotPassword from "@/pages/auth/ForgotPassword";
-import ResetPassword from "@/pages/auth/ResetPassword";
-import ChangePassword from "@/pages/auth/ChangePassword";
-import VerifyEmail from "@/pages/auth/VerifyEmail";
-import ResendEmail from "@/pages/auth/ResendEmail";
-import Dashboard from "@/pages/Dashboard";
-import CompanyDetail from "@/pages/crm/companies";
-import ChatPage from "@/pages/Chat";
-import AgentsPage from "@/pages/agents";
-import NotFound from "@/pages/NotFound";
-import SettingsPage from "@/pages/Settings";
-import CompanyKnowledge from "@/pages/companyKnowledgeBase";
-import CampaignsPage from "@/pages/campaigns";
-import ProspectsPage from "@/pages/prospects";
-import UserList from "@/pages/users/UserList";
-import UserCreate from "@/pages/users/UserCreate";
-import UserEdit from "@/pages/users/UserEdit";
-import ContactNow from "@/pages/twilio-calling/ContactNow";
-import FollowupTemplatesPage from "@/pages/crm/followups";
-import FollowUp2Page from "@/pages/crm/followups-2";
-import LeadDetailView, {
-  SelectedCallLogView,
-} from "@/pages/crm/leads/leaddetailview";
-import RoleList from "@/pages/roles/RoleList";
-import RoleForm from "@/pages/roles/RoleForm";
-import ModuleList from "@/pages/modules/ModuleList";
-import {
-  InboxPage,
-  ThreadsPage,
-  ComposePage,
-  EmailDetailPage,
-  ThreadDetailPage,
-  StatsPage,
-} from "@/pages/crm/emails";
-import LeadChat from "@/pages/crm/leads/leaddetailview/components/LeadChat";
-import LeadsPage from "@/pages/crm/leads";
-import CalendarPage from "@/pages/crm/calendar";
-import OnboardingPage from "@/pages/onboarding";
-import AdminDashboard from "@/pages/admin/Dashboard";
-import AdminPrompts from "@/pages/admin/prompts";
-import AdminSettings from "@/pages/admin/Settings";
-import AdminUsers from "@/pages/admin/Users";
-import AdminIndustryCategories from "@/pages/admin/IndustryCategories";
-import AdminEnrichmentConfigs from "@/pages/admin/EnrichmentConfigs";
+import type { SelectedCallLogView } from "@/pages/crm/leads/leaddetailview";
+
+// Lazy load all page components
+const Index = lazy(() => import("@/pages/auth/Index"));
+const SignUpPage = lazy(() => import("@/pages/auth/SignUpPage"));
+const ForgotPassword = lazy(() => import("@/pages/auth/ForgotPassword"));
+const ResetPassword = lazy(() => import("@/pages/auth/ResetPassword"));
+const ChangePassword = lazy(() => import("@/pages/auth/ChangePassword"));
+const VerifyEmail = lazy(() => import("@/pages/auth/VerifyEmail"));
+const ResendEmail = lazy(() => import("@/pages/auth/ResendEmail"));
+const Dashboard = lazy(() => import("@/pages/Dashboard"));
+const CompanyDetail = lazy(() => import("@/pages/crm/companies"));
+const ChatPage = lazy(() => import("@/pages/Chat"));
+const AgentsPage = lazy(() => import("@/pages/agents"));
+const NotFound = lazy(() => import("@/pages/NotFound"));
+const SettingsPage = lazy(() => import("@/pages/Settings"));
+const CompanyKnowledge = lazy(() => import("@/pages/companyKnowledgeBase"));
+const CampaignsPage = lazy(() => import("@/pages/campaigns"));
+const ProspectsPage = lazy(() => import("@/pages/prospects"));
+const UserList = lazy(() => import("@/pages/users/UserList"));
+const UserCreate = lazy(() => import("@/pages/users/UserCreate"));
+const UserEdit = lazy(() => import("@/pages/users/UserEdit"));
+const ContactNow = lazy(() => import("@/pages/twilio-calling/ContactNow"));
+const FollowupTemplatesPage = lazy(() => import("@/pages/crm/followups"));
+const FollowUp2Page = lazy(() => import("@/pages/crm/followups-2"));
+const LeadDetailView = lazy(() => import("@/pages/crm/leads/leaddetailview"));
+const RoleList = lazy(() => import("@/pages/roles/RoleList"));
+const RoleForm = lazy(() => import("@/pages/roles/RoleForm"));
+const ModuleList = lazy(() => import("@/pages/modules/ModuleList"));
+const InboxPage = lazy(() => import("@/pages/crm/emails").then(module => ({ default: module.InboxPage })));
+const ThreadsPage = lazy(() => import("@/pages/crm/emails").then(module => ({ default: module.ThreadsPage })));
+const ComposePage = lazy(() => import("@/pages/crm/emails").then(module => ({ default: module.ComposePage })));
+const EmailDetailPage = lazy(() => import("@/pages/crm/emails").then(module => ({ default: module.EmailDetailPage })));
+const ThreadDetailPage = lazy(() => import("@/pages/crm/emails").then(module => ({ default: module.ThreadDetailPage })));
+const StatsPage = lazy(() => import("@/pages/crm/emails").then(module => ({ default: module.StatsPage })));
+const LeadChat = lazy(() => import("@/pages/crm/leads/leaddetailview/components/LeadChat"));
+const LeadsPage = lazy(() => import("@/pages/crm/leads"));
+const CalendarPage = lazy(() => import("@/pages/crm/calendar"));
+const OnboardingPage = lazy(() => import("@/pages/onboarding"));
+const AdminDashboard = lazy(() => import("@/pages/admin/Dashboard"));
+const AdminPrompts = lazy(() => import("@/pages/admin/prompts"));
+const AdminSettings = lazy(() => import("@/pages/admin/Settings"));
+const AdminUsers = lazy(() => import("@/pages/admin/Users"));
+const AdminIndustryCategories = lazy(() => import("@/pages/admin/IndustryCategories"));
+const AdminEnrichmentConfigs = lazy(() => import("@/pages/admin/EnrichmentConfigs"));
+
+// Loading component for suspense fallback
+const PageLoadingFallback = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+  </div>
+);
 
 const AppRoutes = () => {
   return (
-    <Routes>
+    <Suspense fallback={<PageLoadingFallback />}>
+      <Routes>
       {/* Public Routes - Redirect to dashboard if already logged in */}
       <Route
         path="/"
@@ -414,6 +422,7 @@ const AppRoutes = () => {
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
     </Routes>
+    </Suspense>
   );
 };
 
