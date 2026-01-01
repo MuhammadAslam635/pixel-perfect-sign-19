@@ -235,7 +235,7 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
         }
       }
 
-      // Priority 2: Try to get transcript from backend API (it should have downloaded it)
+      // Priority 2: Try to get transcript from backend API (it should have downloaded it and return local URL)
       const apiResponse = await calendarService.getMeetingRecording(meetingId);
       const recordingData = apiResponse.data;
       if (recordingData.transcriptText) {
@@ -243,19 +243,27 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
         return;
       }
 
-      // Priority 3: Fallback to fetch directly from URL (may fail due to CORS)
-      const response = await fetch(transcriptUrl);
-      if (response.ok) {
-        const text = await response.text();
-        setTranscripts((prev) => ({ ...prev, [meetingId]: text }));
-      } else {
-        throw new Error("Failed to fetch transcript");
+      // Priority 3: If backend returns a local URL, try fetching from it
+      if (recordingData.transcriptUrl && recordingData.transcriptUrl.includes('/api/recall/')) {
+        try {
+          const response = await fetch(recordingData.transcriptUrl);
+          if (response.ok) {
+            const text = await response.text();
+            setTranscripts((prev) => ({ ...prev, [meetingId]: text }));
+            return;
+          }
+        } catch (fetchError) {
+          console.log("Failed to fetch from local backend URL:", fetchError);
+        }
       }
+
+      // If no transcript available through backend, show message
+      throw new Error("Transcript not available");
     } catch (error) {
       console.error("Failed to fetch transcript:", error);
       setTranscripts((prev) => ({
         ...prev,
-        [meetingId]: "Failed to load transcript",
+        [meetingId]: "Transcript not available. It may still be processing or failed to download.",
       }));
     } finally {
       setLoadingTranscripts((prev) => ({ ...prev, [meetingId]: false }));
@@ -374,11 +382,30 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
         meeting.recall?.recordingUrl || storedData?.recordingUrl;
       const sessionId = meeting.recall?.sessionId || storedData?.sessionId;
 
-      // Load recording if available - use Recall CDN URL directly
-      if (recordingUrl) {
+      // Load recording if available - prefer backend endpoint over direct URLs
+      if (sessionId) {
+        // Use backend endpoint for consistent access and caching
+        // Use the same base URL logic as the API client
+        const backendBaseUrl = import.meta.env.VITE_APP_BACKEND_URL || `${window.location.origin}/api`;
+        const backendRecordingUrl = `${backendBaseUrl}/recall/recording/${sessionId}`;
+        console.log('Constructing recording URL:', { backendBaseUrl, backendRecordingUrl, envVar: import.meta.env.VITE_APP_BACKEND_URL });
         setRecordingLoading(true);
         try {
-          // Use Recall CDN URL directly for video playback
+          setRecordingVideoUrl(backendRecordingUrl);
+        } catch (err: any) {
+          console.error("Failed to load recording", err);
+          setRecordingError(
+            err?.response?.data?.error ||
+              err?.message ||
+              "Unable to load meeting recording."
+          );
+        } finally {
+          setRecordingLoading(false);
+        }
+      } else if (recordingUrl && recordingUrl.includes('/api/recall/')) {
+        // Fallback to backend URL if available
+        setRecordingLoading(true);
+        try {
           setRecordingVideoUrl(recordingUrl);
         } catch (err: any) {
           console.error("Failed to load recording", err);
@@ -799,13 +826,7 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
                               />
                             </div>
                             <p className="text-xs text-white/40 text-center">
-                              {(() => {
-                                const storedData = recordingData[selectedMeeting._id];
-                                const sessionId = selectedMeeting.recall?.sessionId || storedData?.sessionId;
-                                return sessionId
-                                  ? "Playback from local storage (faster loading)."
-                                  : "Playback is streamed securely from Recall.ai.";
-                              })()}
+                              Playback served securely through our backend.
                             </p>
                           </div>
                         );
