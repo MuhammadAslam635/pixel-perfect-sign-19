@@ -105,7 +105,7 @@ export interface CreateCampaignData {
 }
 
 export interface RegenerateCampaignData {
-  type: "content" | "media" | "both";
+  type: "content" | "media" | "research" | "both";
   userGuidelines?: string;
   fileURL?: string;
   fileMimeType?: string;

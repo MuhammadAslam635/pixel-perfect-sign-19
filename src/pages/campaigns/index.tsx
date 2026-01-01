@@ -10,21 +10,18 @@ import {
   Search,
   Calendar as CalendarIcon,
   Clock,
-  Calendar,
   FileText,
   Image as ImageIcon,
   RotateCcw,
-  Upload,
   Circle as CircleIcon,
+  Circle,
   RefreshCw,
-  CheckCircle2,
   Trash2,
   Edit2,
   Save,
   X,
-  ChevronLeft,
-  ChevronRight,
-  MoveRight,
+  Loader2,
+  ArrowRight as ArrowRightIcon,
 } from "lucide-react";
 import {
   Select,
@@ -56,8 +53,10 @@ import {
   useCampaignSuggestions,
   useRegenerateCampaignSuggestions,
   campaignKeys,
+  prefetchCampaign,
 } from "@/hooks/useCampaigns";
-import { useQueryClient } from "@tanstack/react-query";
+import { campaignsService } from "@/services/campaigns.service";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Dialog,
   DialogContent,
@@ -66,7 +65,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
@@ -84,7 +82,6 @@ import {
 import ImageCarousel from "@/components/campaigns/ImageCarousel";
 import CreateCampaignModal from "@/components/campaigns/CreateCampaignModal";
 import FacebookIcon from "@/components/icons/FacebookIcon";
-import { ArrowRight as ArrowRightIcon } from "lucide-react";
 import AnalyticsCard from "@/components/campaigns/AnalyticsCard";
 import { useUserAggregatedAnalytics } from "@/hooks/useAnalytics";
 
@@ -102,9 +99,10 @@ const CampaignsPage = () => {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [editedCampaign, setEditedCampaign] = useState<Campaign | null>(null);
+  const [viewingCampaignId, setViewingCampaignId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
   const [regenerateType, setRegenerateType] = useState<
-    "content" | "media" | "both" | null
+    "content" | "media" | "research" | "both" | null
   >(null);
   const [regenerateDialogOpen, setRegenerateDialogOpen] =
     useState<boolean>(false);
@@ -136,6 +134,45 @@ const CampaignsPage = () => {
 
   const { data, isLoading, error, refetch } = useCampaigns(queryParams);
   const { mutate: updateCampaign, isPending: isUpdating } = useUpdateCampaign();
+
+  // Get fresh campaign data when modal is open
+  const { data: freshCampaignData, isLoading: isLoadingCampaignDetails } = useQuery({
+    queryKey: campaignKeys.detail(viewingCampaignId || ''),
+    queryFn: () => campaignsService.getCampaignById(viewingCampaignId || ''),
+    enabled: isModalOpen && !!viewingCampaignId,
+    staleTime: 0, // Always refetch when modal opens
+    refetchOnMount: true,
+    retry: (failureCount, error: any) => {
+      if (error?.response?.status >= 400 && error?.response?.status < 500) {
+        return false;
+      }
+      return failureCount < 2;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 15000),
+    // Add polling when campaign has processing status in progress
+    refetchInterval: (data) => {
+      if (data?.data) {
+        const hasProcessingStatus = data.data.processingStatus?.content?.status === 'in-progress' ||
+          data.data.processingStatus?.media?.status === 'in-progress' ||
+          data.data.processingStatus?.research?.status === 'in-progress';
+        return hasProcessingStatus ? 5000 : false; // Poll every 5 seconds if processing
+      }
+      return false;
+    },
+    refetchIntervalInBackground: true, // Continue polling even when tab is not active
+  });
+
+  // Update selectedCampaign and editedCampaign when fresh data arrives
+  React.useEffect(() => {
+    if (freshCampaignData?.data && isModalOpen) {
+      setSelectedCampaign(freshCampaignData.data);
+      // Only update edited campaign if we are NOT currently editing to prevent overwriting user input
+      if (!isEditing) {
+        setEditedCampaign(freshCampaignData.data);
+      }
+    }
+  }, [freshCampaignData, isModalOpen, isEditing]);
+  
   const { mutate: deleteCampaign, isPending: isDeleting } = useDeleteCampaign();
 
   // Campaign Suggestions hooks
@@ -168,23 +205,36 @@ const CampaignsPage = () => {
     return data.data.docs;
   }, [data]);
 
-  useEffect(() => {
-    if (selectedCampaign) {
-      setEditedCampaign(selectedCampaign);
-    }
-  }, [selectedCampaign]);
-
   // Sync selectedCampaign with updated campaigns list when it changes
+  // FIX: Added !isEditing check to prevent overwriting user work
+  // FIX: Don't override completed processing status with in-progress status from list polling
   useEffect(() => {
-    if (selectedCampaign && campaigns.length > 0) {
+    if (selectedCampaign && campaigns.length > 0 && !isModalOpen) {
       const updatedCampaign = campaigns.find(
         (campaign) => campaign._id === selectedCampaign._id
       );
-      if (updatedCampaign && updatedCampaign !== selectedCampaign) {
-        setSelectedCampaign(updatedCampaign);
+      if (updatedCampaign) {
+        // Don't override if current selectedCampaign has completed status but updated has in-progress
+        const shouldUpdate =
+          JSON.stringify(updatedCampaign) !== JSON.stringify(selectedCampaign) &&
+          !(
+            selectedCampaign.processingStatus?.content?.status === 'completed' &&
+            updatedCampaign.processingStatus?.content?.status === 'in-progress'
+          ) &&
+          !(
+            selectedCampaign.processingStatus?.media?.status === 'completed' &&
+            updatedCampaign.processingStatus?.media?.status === 'in-progress'
+          );
+
+        if (shouldUpdate) {
+          setSelectedCampaign(updatedCampaign);
+          if (!isEditing) {
+             setEditedCampaign(updatedCampaign);
+          }
+        }
       }
     }
-  }, [campaigns, selectedCampaign]);
+  }, [campaigns, selectedCampaign, isEditing, isModalOpen]);
 
   useEffect(() => {
     const debounceTimer = setTimeout(() => {
@@ -194,20 +244,14 @@ const CampaignsPage = () => {
     return () => clearTimeout(debounceTimer);
   }, [searchInput]);
 
-  const getMediaUrl = (mediaFilename: string): string => {
-    const backendUrl =
-      import.meta.env.VITE_APP_BACKEND_URL || "http://localhost:3000";
-    // Remove /api from backend URL if present, as uploads are served from root
-    // Also ensure we don't have trailing slashes
-    const baseUrl = backendUrl.replace("/api", "").replace(/\/$/, "");
-    return `${baseUrl}/uploads/${mediaFilename}`;
-  };
-
   const handleViewDetails = (campaign: Campaign) => {
-    setSelectedCampaign(campaign);
-    setEditedCampaign(campaign);
+    // Clear existing data first to ensure loading state shows
+    setSelectedCampaign(null);
+    setEditedCampaign(null);
+    setViewingCampaignId(campaign._id);
     setIsModalOpen(true);
     setIsEditing(false);
+    // Fresh data will be loaded automatically via useQuery and useEffect
   };
 
   const formatDate = (dateString: string) => {
@@ -1266,13 +1310,24 @@ const CampaignsPage = () => {
               <div className="text-gray-400">Loading campaigns...</div>
             </div>
           ) : error ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="text-red-400">
-                Error:{" "}
-                {error instanceof Error
-                  ? error.message
-                  : "Failed to load campaigns"}
+            <div className="flex flex-col items-center justify-center py-12 space-y-4">
+              <div className="text-red-400 text-center">
+                <p className="font-medium">Failed to load campaigns</p>
+                <p className="text-sm text-gray-400 mt-1">
+                  {error instanceof Error
+                    ? error.message
+                    : "An unexpected error occurred"}
+                </p>
               </div>
+              <Button
+                onClick={() => refetch()}
+                variant="outline"
+                size="sm"
+                className="bg-white/5 backdrop-blur-sm border-white/20 text-gray-300 hover:bg-white/10 hover:border-white/30 transition-all"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Try Again
+              </Button>
             </div>
           ) : campaigns.length === 0 ? (
             <div className="flex items-center justify-center py-12">
@@ -1283,11 +1338,14 @@ const CampaignsPage = () => {
               {campaigns.map((campaign) => (
                 <Card
                   key={campaign._id}
-                  className="border-[#FFFFFF0D] hover:border-[#3a3a3a] transition-all duration-200"
+                  className="border-[#FFFFFF0D] hover:border-[#3a3a3a] transition-all duration-200 cursor-pointer"
                   style={{
                     background:
                       "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
                   }}
+                  onMouseEnter={() =>
+                    prefetchCampaign(queryClient, campaign._id)
+                  }
                 >
                   <CardContent className="p-4 sm:p-5 flex flex-col h-full">
                     <div className="flex items-start justify-between mb-3 sm:mb-4">
@@ -1439,6 +1497,7 @@ const CampaignsPage = () => {
             setIsModalOpen(open);
             if (!open) {
               setIsEditing(false);
+              setViewingCampaignId(null);
               if (selectedCampaign) {
                 setEditedCampaign(selectedCampaign);
               }
@@ -1461,7 +1520,26 @@ const CampaignsPage = () => {
             />
 
             <div className="relative z-10 flex flex-col h-full min-h-0">
-              {selectedCampaign && editedCampaign && (
+              {isLoadingCampaignDetails ||
+              !selectedCampaign ||
+              !editedCampaign ? (
+                <>
+                  <DialogHeader className="px-6 pt-6 pb-4 flex-shrink-0 border-b border-white/10">
+                    <DialogTitle className="text-xs sm:text-sm font-semibold text-white drop-shadow-lg">
+                      Loading Campaign Details
+                    </DialogTitle>
+                    <DialogDescription className="text-xs text-white/70">
+                      Please wait while we fetch the latest campaign information
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4 px-6">
+                    <Loader2 className="w-8 h-8 animate-spin text-blue-400" />
+                    <p className="text-sm text-gray-300">
+                      Loading campaign details...
+                    </p>
+                  </div>
+                </>
+              ) : selectedCampaign && editedCampaign ? (
                 <>
                   <DialogHeader className="px-6 pt-6 pb-4 flex-shrink-0 border-b border-white/10">
                     <div className="flex items-start justify-between">
@@ -1641,6 +1719,20 @@ const CampaignsPage = () => {
                       </CardContent>
                     </Card>
 
+                    {/* Research Generation Indicator */}
+                    {selectedCampaign.processingStatus?.research?.status === "in-progress" && (
+                      <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 mb-4">
+                        <div className="flex items-center gap-2 text-blue-400">
+                          <Search className="w-4 h-4" />
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span className="text-sm font-medium">Generating research documents...</span>
+                        </div>
+                        <p className="text-xs text-blue-300/70 mt-1 ml-6">
+                          This may take a few moments
+                        </p>
+                      </div>
+                    )}
+
                     {/* Content */}
                     <Card className="bg-white/5 backdrop-blur-sm border-white/10 shadow-lg">
                       <CardHeader className="px-4 py-3">
@@ -1648,6 +1740,13 @@ const CampaignsPage = () => {
                           <CardTitle className="text-xs flex items-center gap-2 text-white drop-shadow-md">
                             <FileText className="w-5 h-5" />
                             Content
+                            {selectedCampaign.processingStatus?.content
+                              ?.status === "in-progress" && (
+                              <div className="flex items-center gap-1 text-blue-400">
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                                <span className="text-xs">Generating...</span>
+                              </div>
+                            )}
                           </CardTitle>
                           <div className="flex items-center gap-2">
                             {!isEditing && (
@@ -1659,7 +1758,11 @@ const CampaignsPage = () => {
                                     setRegenerateType("content");
                                     setRegenerateDialogOpen(true);
                                   }}
-                                  disabled={isRegenerating}
+                                  disabled={
+                                    isRegenerating ||
+                                    selectedCampaign.processingStatus?.content
+                                      ?.status === "in-progress"
+                                  }
                                   className="bg-white/5 backdrop-blur-sm border-white/20 text-gray-300 hover:bg-white/10 hover:border-white/30 transition-all text-xs h-7 px-3 py-1"
                                 >
                                   <RefreshCw className="w-3 h-3 mr-1.5" />
@@ -1669,7 +1772,11 @@ const CampaignsPage = () => {
                                   variant="outline"
                                   size="sm"
                                   onClick={handleResetContent}
-                                  disabled={isResettingContent}
+                                  disabled={
+                                    isResettingContent ||
+                                    selectedCampaign.processingStatus?.content
+                                      ?.status === "in-progress"
+                                  }
                                   className="bg-white/5 backdrop-blur-sm border-white/20 text-gray-300 hover:bg-white/10 hover:border-white/30 transition-all text-xs h-7 px-3 py-1"
                                 >
                                   <RotateCcw className="w-3 h-3 mr-1.5" />
@@ -1681,7 +1788,18 @@ const CampaignsPage = () => {
                         </div>
                       </CardHeader>
                       <CardContent className="px-4 pb-4">
-                        {isEditing ? (
+                        {selectedCampaign.processingStatus?.content?.status ===
+                        "in-progress" ? (
+                          <div className="flex flex-col items-center justify-center py-8 text-center">
+                            <Loader2 className="w-8 h-8 animate-spin text-blue-400 mb-3" />
+                            <p className="text-sm text-blue-300 font-medium">
+                              Generating content...
+                            </p>
+                            <p className="text-xs text-gray-400 mt-1">
+                              This may take a few moments
+                            </p>
+                          </div>
+                        ) : isEditing ? (
                           <Textarea
                             value={editedCampaign.content || ""}
                             onChange={(e) =>
@@ -1715,6 +1833,13 @@ const CampaignsPage = () => {
                               ? editedCampaign.media.length
                               : selectedCampaign.media.length}
                             )
+                            {selectedCampaign.processingStatus?.media
+                              ?.status === "in-progress" && (
+                              <div className="flex items-center gap-1 text-blue-400">
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                                <span className="text-xs">Generating...</span>
+                              </div>
+                            )}
                           </CardTitle>
                           <div className="flex items-center gap-2">
                             {!isEditing && (
@@ -1726,7 +1851,11 @@ const CampaignsPage = () => {
                                     setRegenerateType("media");
                                     setRegenerateDialogOpen(true);
                                   }}
-                                  disabled={isRegenerating}
+                                  disabled={
+                                    isRegenerating ||
+                                    selectedCampaign.processingStatus?.media
+                                      ?.status === "in-progress"
+                                  }
                                   className="bg-white/5 backdrop-blur-sm border-white/20 text-gray-300 hover:bg-white/10 hover:border-white/30 transition-all text-xs h-7 px-3 py-1"
                                 >
                                   <RefreshCw className="w-3 h-3 mr-1.5" />
@@ -1736,7 +1865,11 @@ const CampaignsPage = () => {
                                   variant="outline"
                                   size="sm"
                                   onClick={handleResetMedia}
-                                  disabled={isResettingMedia}
+                                  disabled={
+                                    isResettingMedia ||
+                                    selectedCampaign.processingStatus?.media
+                                      ?.status === "in-progress"
+                                  }
                                   className="bg-white/5 backdrop-blur-sm border-white/20 text-gray-300 hover:bg-white/10 hover:border-white/30 transition-all text-xs h-7 px-3 py-1"
                                 >
                                   <RotateCcw className="w-3 h-3 mr-1.5" />
@@ -1748,7 +1881,18 @@ const CampaignsPage = () => {
                         </div>
                       </CardHeader>
                       <CardContent className="px-4 pb-4">
-                        {isEditing ? (
+                        {selectedCampaign.processingStatus?.media?.status ===
+                        "in-progress" ? (
+                          <div className="flex flex-col items-center justify-center py-8 text-center">
+                            <Loader2 className="w-8 h-8 animate-spin text-blue-400 mb-3" />
+                            <p className="text-sm text-blue-300 font-medium">
+                              Generating media...
+                            </p>
+                            <p className="text-xs text-gray-400 mt-1">
+                              This may take a few moments
+                            </p>
+                          </div>
+                        ) : isEditing ? (
                           editedCampaign.media.length > 0 ? (
                             <ImageCarousel
                               images={editedCampaign.media}
@@ -1790,7 +1934,7 @@ const CampaignsPage = () => {
                     <Card className="bg-white/5 backdrop-blur-sm border-white/10 shadow-lg">
                       <CardHeader className="px-4 py-3">
                         <CardTitle className="text-xs flex items-center gap-2 text-white drop-shadow-md">
-                          <Calendar className="w-5 h-5" />
+                          <CalendarIcon className="w-5 h-5" />
                           Campaign Details
                         </CardTitle>
                       </CardHeader>
@@ -1950,7 +2094,7 @@ const CampaignsPage = () => {
                     <Card className="bg-white/5 backdrop-blur-sm border-white/10 shadow-lg">
                       <CardHeader className="px-4 py-3">
                         <CardTitle className="text-xs flex items-center gap-2 text-white drop-shadow-md">
-                          <Calendar className="w-5 h-5" />
+                          <CalendarIcon className="w-5 h-5" />
                           Timeline
                         </CardTitle>
                       </CardHeader>
@@ -1983,7 +2127,7 @@ const CampaignsPage = () => {
                     </Card>
                   </div>
                 </>
-              )}
+              ) : null}
             </div>
           </DialogContent>
         </Dialog>
@@ -2089,10 +2233,9 @@ const CampaignsPage = () => {
               setDebouncedSearch("");
             }
 
-            // Refetch campaigns list after successful creation
-            // The mutation's onSuccess already invalidates queries,
-            // so we just need to explicitly refetch to ensure immediate update
-            await refetch();
+            // Invalidate campaigns list after successful creation
+            // Since the modal uses streaming API, we need to manually invalidate
+            queryClient.invalidateQueries({ queryKey: campaignKeys.all });
           }}
         />
       </main>
