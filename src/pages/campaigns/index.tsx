@@ -1352,10 +1352,10 @@ const CampaignsPage = () => {
                       {getPlatformIcon(campaign.platform || [])}
                       {campaign.location && (
                         <div
-                          className="flex items-center justify-center gap-1.5 flex-shrink-0"
+                          className="flex items-center justify-center gap-1.5 flex-shrink-0 px-2 py-1"
                           style={{
-                            width: "105px",
-                            height: "38px",
+                            minWidth: "60px",
+                            maxWidth: "120px",
                             borderRadius: "8px",
                             opacity: 1,
                             background: "#66AFB74D",
