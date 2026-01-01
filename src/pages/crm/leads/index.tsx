@@ -657,7 +657,7 @@ const index = () => {
       buildStats(
         {
           totalCompanies: effectiveTotalCompanies,
-          totalLeads: companyFilteredStats?.totalLeads ?? effectiveTotalLeads,
+          totalLeads: effectiveTotalLeads,
           totalOutreach: companyFilteredStats?.totalOutreach ?? crmStats?.totalOutreach,
           totalDealsClosed: companyFilteredStats?.totalDealsClosed ?? crmStats?.totalDealsClosed,
           activeClients: companyFilteredStats?.activeClients ?? crmStats?.activeClients,
