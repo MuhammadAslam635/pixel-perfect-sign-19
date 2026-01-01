@@ -23,14 +23,23 @@ import {
 const AdminSettings = () => {
   const location = useLocation();
   const [activeTab, setActiveTab] = useState("profile");
-
+  const [companyId, setCompanyId] = useState<string | null>(null);
+  const [companyName, setCompanyName] = useState<string | null>(null);
   const canAccessIntegrations = true;
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const tabParam = params.get("tab");
+    const companyIdParam = params.get("companyId");
+    const companyNameParam = params.get("companyName");
     if (tabParam) {
       setActiveTab(tabParam);
+    }
+    if (companyIdParam) {
+      setCompanyId(companyIdParam);
+    }
+    if (companyNameParam) {
+      setCompanyName(decodeURIComponent(companyNameParam));
     }
   }, [location.search]);
 
@@ -314,7 +323,10 @@ const AdminSettings = () => {
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.2, ease: "easeOut" }}
                     >
-                      <PerplexityPromptTab />
+                      <PerplexityPromptTab 
+                        companyId={companyId || undefined} 
+                        companyName={companyName || undefined} 
+                      />
                     </motion.div>
                   </TabsContent>
                 </motion.div>

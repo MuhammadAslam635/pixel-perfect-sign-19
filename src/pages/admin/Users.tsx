@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { AdminLayout } from "@/components/dashboard/DashboardLayout";
@@ -25,6 +26,7 @@ import {
   XCircle,
   X,
   UserCog,
+  Sparkles,
 } from "lucide-react";
 import { adminService, CompanyAdmin, Company } from "@/services/admin.service";
 import { rbacService } from "@/services/rbac.service";
@@ -38,6 +40,7 @@ interface UserWithCompany extends CompanyAdmin {
 }
 
 const AdminUsers = () => {
+  const navigate = useNavigate();
   const authState = useSelector((state: RootState) => state.auth);
 
   // Get user's role name
@@ -868,37 +871,53 @@ const AdminUsers = () => {
                                     )}
                                   </td>
                                   <td className="py-4 px-4">
-                                    {/* Show button for all users except system admins without company */}
-                                    {(user.companyId || user.role === "Company") && (
-                                      <Button
-                                        onClick={() =>
-                                          handleStatusToggle(
-                                            // For company owners, use their own ID as companyId
-                                            user.role === "Company" ? user._id : user.companyId!,
-                                            user._id,
-                                            user.status || "inactive"
-                                          )
-                                        }
-                                        className={`${
-                                          user.status === "active"
-                                            ? "bg-red-600/20 text-red-400 border border-red-600/30 hover:bg-red-600/30"
-                                            : "bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30"
-                                        } rounded-full px-4 py-2 text-xs`}
-                                        size="sm"
-                                      >
-                                        {user.status === "active" ? (
-                                          <>
-                                            <XCircle className="h-4 w-4 mr-2" />
-                                            Deactivate
-                                          </>
-                                        ) : (
-                                          <>
-                                            <CheckCircle2 className="h-4 w-4 mr-2" />
-                                            Activate
-                                          </>
-                                        )}
-                                      </Button>
-                                    )}
+                                    <div className="flex items-center gap-2">
+                                      {/* Show AI Prompt button for company owners */}
+                                      {user.role === "Company" && (
+                                        <Button
+                                          onClick={() => {
+                                            const companyName = user.name || `${user.firstName || ""} ${user.lastName || ""}`.trim() || user.email?.split("@")[0] || "Company";
+                                            navigate(`/admin/settings?tab=ai-research-prompt&companyId=${user._id}&companyName=${encodeURIComponent(companyName)}`);
+                                          }}
+                                          className="bg-purple-500/20 text-purple-400 border border-purple-500/30 hover:bg-purple-500/30 rounded-full px-4 py-2 text-xs"
+                                          size="sm"
+                                        >
+                                          <Sparkles className="h-4 w-4 mr-2" />
+                                          AI Prompt
+                                        </Button>
+                                      )}
+                                      {/* Show status toggle button for all users except system admins without company */}
+                                      {(user.companyId || user.role === "Company") && (
+                                        <Button
+                                          onClick={() =>
+                                            handleStatusToggle(
+                                              // For company owners, use their own ID as companyId
+                                              user.role === "Company" ? user._id : user.companyId!,
+                                              user._id,
+                                              user.status || "inactive"
+                                            )
+                                          }
+                                          className={`${
+                                            user.status === "active"
+                                              ? "bg-red-600/20 text-red-400 border border-red-600/30 hover:bg-red-600/30"
+                                              : "bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30"
+                                          } rounded-full px-4 py-2 text-xs`}
+                                          size="sm"
+                                        >
+                                          {user.status === "active" ? (
+                                            <>
+                                              <XCircle className="h-4 w-4 mr-2" />
+                                              Deactivate
+                                            </>
+                                          ) : (
+                                            <>
+                                              <CheckCircle2 className="h-4 w-4 mr-2" />
+                                              Activate
+                                            </>
+                                          )}
+                                        </Button>
+                                      )}
+                                    </div>
                                   </td>
                                 </tr>
                               ))}

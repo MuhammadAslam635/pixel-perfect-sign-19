@@ -63,12 +63,21 @@ IMPORTANT:
 - Be specific and factual, avoid generic statements
 - For pain points and opportunities, consider the industry context and current market trends`;
 
-export const PerplexityPromptTab = () => {
+interface PerplexityPromptTabProps {
+  companyId?: string;
+  companyName?: string;
+}
+
+export const PerplexityPromptTab = ({ companyId, companyName }: PerplexityPromptTabProps) => {
   const user = getUserData();
-  const canManage =
+  // Allow access if admin is managing another company or if user is Company/CompanyAdmin
+  const isAdminManagingCompany = Boolean(user?.role === "Admin" && companyId);
+  const canManage = Boolean(
+    isAdminManagingCompany ||
     user?.role === "Company" ||
     user?.role === "CompanyAdmin" ||
-    user?.role === "Admin";
+    user?.role === "Admin"
+  );
 
   const [prompt, setPrompt] = useState<string>("");
   const [isSaving, setIsSaving] = useState(false);
@@ -120,8 +129,10 @@ export const PerplexityPromptTab = () => {
     isLoading,
     refetch,
   } = useQuery({
-    queryKey: ["company-config"],
-    queryFn: () => companyConfigService.getConfig(),
+    queryKey: companyId ? ["company-config", companyId] : ["company-config"],
+    queryFn: () => companyId 
+      ? companyConfigService.getConfigByCompanyId(companyId)
+      : companyConfigService.getConfig(),
     enabled: canManage,
     staleTime: 0,
   });
@@ -158,9 +169,12 @@ export const PerplexityPromptTab = () => {
 
     setIsSaving(true);
     try {
-      const response = await companyConfigService.updateConfig({
+      const updatePayload = {
         perplexityPrompt: prompt === DEFAULT_PROMPT ? null : prompt,
-      });
+      };
+      const response = companyId 
+        ? await companyConfigService.updateConfigByCompanyId(companyId, updatePayload)
+        : await companyConfigService.updateConfig(updatePayload);
 
       if (response.success) {
         toast({
@@ -241,10 +255,13 @@ export const PerplexityPromptTab = () => {
           transition={{ duration: 0.4, delay: 0.2 }}
         >
           <CardTitle className="text-white text-lg font-semibold">
-            Perplexity Research Prompt
+            Perplexity Research Prompt {companyName && <span className="text-cyan-400">- {companyName}</span>}
           </CardTitle>
           <CardDescription className="text-white/60">
-            Customize the prompt used for AI-powered lead research. Use
+            {companyName 
+              ? `Customize the AI research prompt for ${companyName}. Use`
+              : "Customize the prompt used for AI-powered lead research. Use"
+            }
             placeholders like{" "}
             <code className="text-cyan-400">{"{{name}}"}</code>,{" "}
             <code className="text-cyan-400">{"{{position}}"}</code>,{" "}

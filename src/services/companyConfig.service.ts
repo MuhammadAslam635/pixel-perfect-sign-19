@@ -58,5 +58,37 @@ export const companyConfigService = {
       throw error;
     }
   },
+
+  /**
+   * Get company configuration by company ID (Admin only)
+   * @param companyId - The company ID to fetch config for
+   * @returns Promise with company config data
+   */
+  getConfigByCompanyId: async (companyId: string): Promise<CompanyConfigResponse & { company?: { _id: string; name: string; email: string } }> => {
+    try {
+      const response = await API.get(`/admin/company-config/${companyId}`);
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  /**
+   * Update company configuration by company ID (Admin only)
+   * @param companyId - The company ID to update config for
+   * @param config - Configuration data to update
+   * @returns Promise with updated config data
+   */
+  updateConfigByCompanyId: async (
+    companyId: string,
+    config: UpdateCompanyConfigRequest
+  ): Promise<CompanyConfigResponse & { company?: { _id: string; name: string; email: string } }> => {
+    try {
+      const response = await API.put(`/admin/company-config/${companyId}`, config);
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
 };
 
