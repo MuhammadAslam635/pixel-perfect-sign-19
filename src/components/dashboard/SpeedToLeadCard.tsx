@@ -33,29 +33,36 @@ export const SpeedToLeadCard = () => {
   }, []);
 
   return (
-    <div className="relative overflow-hidden rounded-[36px] border border-white/10 bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] p-4 lg:p-5 h-[140px] lg:h-[170px] flex flex-col transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-white/5 hover:scale-[1.01]">
-      <div className="flex items-center gap-2 mb-2">
-        <Zap className="w-4 h-4 text-white/70" />
-        <h3 className="text-white text-sm font-medium">Active Leads</h3>
-      </div>
+    <div className="relative overflow-hidden rounded-[20px] border border-white/10 bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] p-3 transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-white/5 hover:scale-[1.01]">
+      <div className="flex items-center gap-3">
+        {/* Left Icon */}
+        <div>
+          <Zap className="w-10 h-10" stroke="url(#dashboard-icon-gradient)" />
+        </div>
 
-      {loading ? (
-        <div className="flex items-center justify-center flex-1">
-          <Loader2 className="w-4 h-4 animate-spin text-white/70" />
-        </div>
-      ) : error ? (
-        <p className="text-xs text-red-400">{error}</p>
-      ) : data ? (
-        <div className="flex-1 flex items-center">
-          <div className="flex flex-col gap-1">
-            {/* Main metric */}
-            <div className="text-3xl sm:text-4xl font-semibold text-white">
-              {data.activeLeads.toLocaleString()}
-            </div>
-            <p className="text-[10px] text-white/50">in progress</p>
+        {/* Right Content */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-0.5">
+            <h3 className="text-white text-sm font-medium truncate">Active Leads</h3>
           </div>
+
+          {loading ? (
+            <div className="flex items-center justify-center py-2">
+              <Loader2 className="w-4 h-4 animate-spin text-white/70" />
+            </div>
+          ) : error ? (
+            <p className="text-xs text-red-400">{error}</p>
+          ) : data ? (
+            <div className="flex flex-col">
+              {/* Main metric */}
+              <div className="text-xl font-semibold text-white">
+                {data.activeLeads.toLocaleString()}
+              </div>
+              <p className="text-[10px] text-white/50">in progress</p>
+            </div>
+          ) : null}
         </div>
-      ) : null}
+      </div>
     </div>
   );
 };

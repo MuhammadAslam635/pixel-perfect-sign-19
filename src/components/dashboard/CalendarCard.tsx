@@ -33,8 +33,8 @@ export default function CalendarCard() {
     <Card className="solid-card p-3 lg:p-5 transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-white/5 hover:scale-[1.02]">
       <div className="flex items-center justify-between mb-2 lg:mb-4">
         <div className="flex items-center gap-1.5 lg:gap-2">
-          <Calendar className="w-3 h-3 lg:w-4 lg:h-4 text-foreground/50" />
-          <h3 className="font-medium text-[10px] lg:text-sm text-foreground leading-tight">
+          <Calendar className="w-3 h-3 lg:w-4 lg:h-4" stroke="url(#dashboard-icon-gradient)" />
+          <h3 className="text-white text-sm font-medium leading-tight">
             Calendar
           </h3>
         </div>

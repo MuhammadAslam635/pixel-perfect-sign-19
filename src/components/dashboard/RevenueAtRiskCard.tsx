@@ -34,72 +34,83 @@ export const RevenueAtRiskCard = () => {
   }, []);
 
   return (
-    <div className="relative overflow-hidden rounded-[36px] border border-white/10 bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] p-4 lg:p-5 h-[140px] lg:h-[170px] flex flex-col transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-white/5 hover:scale-[1.01]">
-      <div className="flex items-center gap-2 mb-2">
-        <AlertTriangle className="w-4 h-4 text-white/70" />
-        <h3 className="text-white text-sm font-medium">Revenue at Risk</h3>
-      </div>
-
-      {loading ? (
-        <div className="flex items-center justify-center flex-1">
-          <Loader2 className="w-4 h-4 animate-spin text-white/70" />
+    <div className="relative overflow-hidden rounded-[20px] border border-white/10 bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] p-3 transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-white/5 hover:scale-[1.01]">
+      <div className="flex items-start gap-3">
+        {/* Left Icon */}
+        <div className="mt-1">
+          <AlertTriangle className="w-10 h-10" stroke="url(#dashboard-icon-gradient)" />
         </div>
-      ) : error ? (
-        <p className="text-xs text-red-400">{error}</p>
-      ) : data ? (
-        <div className="flex-1 flex flex-col justify-center gap-1">
-          {/* Main metric */}
-          <div className="flex items-center gap-2">
-            {data.leadsAtRisk > 0 && (
-              <AlertTriangle className="w-4 h-4 text-yellow-400" />
+
+        {/* Right Content */}
+        <div className="flex-1 min-w-0">
+          <div className="flex justify-between items-start mb-0.5">
+            <h3 className="text-white text-sm font-medium truncate">Revenue at Risk</h3>
+            
+            {/* Expand Toggle */}
+            {data && data.leadsAtRisk > 0 && data.leadsDetails.length > 0 && (
+              <button
+                onClick={() => setExpanded(!expanded)}
+                className="flex items-center gap-1 text-[9px] text-white/60 hover:text-white transition-colors"
+              >
+                {expanded ? (
+                  <>
+                    <ChevronUp className="w-2.5 h-2.5" />
+                    Hide
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="w-2.5 h-2.5" />
+                    View
+                  </>
+                )}
+              </button>
             )}
-            <div className="flex items-baseline gap-1">
-              <span className="text-2xl sm:text-3xl font-normal text-white">
-                {data.leadsAtRisk}
-              </span>
-              <span className="text-[10px] text-white/60">at risk</span>
-            </div>
           </div>
 
-          {/* Expandable list */}
-          {data.leadsAtRisk > 0 && data.leadsDetails.length > 0 && (
-            <button
-              onClick={() => setExpanded(!expanded)}
-              className="flex items-center gap-1 text-[10px] text-white/60 hover:text-white transition-colors"
-            >
-              {expanded ? (
-                <>
-                  <ChevronUp className="w-3 h-3" />
-                  Hide
-                </>
-              ) : (
-                <>
-                  <ChevronDown className="w-3 h-3" />
-                  View details
-                </>
-              )}
-            </button>
-          )}
-
-          {expanded && data.leadsDetails.length > 0 && (
-            <div className="mt-1 space-y-1 max-h-24 overflow-y-auto scrollbar-hide">
-              {data.leadsDetails.map((lead) => (
-                <div
-                  key={lead._id}
-                  className="p-1.5 bg-white/5 rounded-lg border border-white/10 text-[10px]"
-                >
-                  <div className="flex justify-between">
-                    <span className="text-white font-medium">{lead.name}</span>
-                    <span className="text-yellow-400">
-                      {Math.floor(lead.daysSinceContact)}d
-                    </span>
-                  </div>
-                </div>
-              ))}
+          {loading ? (
+            <div className="flex items-center justify-center py-2">
+              <Loader2 className="w-4 h-4 animate-spin text-white/70" />
             </div>
-          )}
+          ) : error ? (
+            <p className="text-xs text-red-400">{error}</p>
+          ) : data ? (
+            <div className="flex flex-col gap-1.5">
+              {/* Main metric */}
+              <div className="flex flex-col">
+                {/* Main metric */}
+                <div className="flex items-center gap-2">
+                  <div className="text-xl font-semibold text-white">
+                    {data.leadsAtRisk}
+                  </div>
+                  {data.leadsAtRisk > 0 && (
+                    <AlertTriangle className="w-3.5 h-3.5 text-yellow-400" />
+                  )}
+                </div>
+                <span className="text-[10px] text-white/50">leads at risk</span>
+              </div>
+
+              {/* Expandable list */}
+              {expanded && data.leadsDetails.length > 0 && (
+                <div className="mt-1 space-y-1 max-h-32 overflow-y-auto scrollbar-hide w-full">
+                  {data.leadsDetails.map((lead) => (
+                    <div
+                      key={lead._id}
+                      className="p-1 bg-white/5 rounded-md border border-white/10 text-[9px]"
+                    >
+                      <div className="flex justify-between items-center">
+                        <span className="text-white font-medium truncate max-w-[60%]">{lead.name}</span>
+                        <span className="text-yellow-400 whitespace-nowrap">
+                          {Math.floor(lead.daysSinceContact)}d ago
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : null}
         </div>
-      ) : null}
+      </div>
     </div>
   );
 };

@@ -225,7 +225,7 @@ const LeadsScoreDistributionCard = () => {
       {/* Tile 1: Top Leads */}
       <div className="relative overflow-hidden rounded-[36px] border border-white/10 bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] p-4 lg:p-5 h-[140px] lg:h-[170px] flex flex-col transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-white/5 hover:scale-[1.01]">
         <div className="flex items-center gap-2 mb-2">
-          <Target className="w-4 h-4 text-white/70" />
+          <Target className="w-4 h-4" stroke="url(#dashboard-icon-gradient)" />
           <h3 className="text-white text-sm font-medium">Top Leads</h3>
         </div>
         <div className="flex-1 overflow-y-auto scrollbar-hide">
@@ -266,7 +266,7 @@ const LeadsScoreDistributionCard = () => {
       {/* Tile 2: Upcoming Meetings */}
       <div className="relative overflow-hidden rounded-[36px] border border-white/10 bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] p-4 lg:p-5 h-[140px] lg:h-[170px] flex flex-col transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-white/5 hover:scale-[1.01]">
         <div className="flex items-center gap-2 mb-2">
-          <Calendar className="w-4 h-4 text-white/70" />
+          <Calendar className="w-4 h-4" stroke="url(#dashboard-icon-gradient)" />
           <h3 className="text-white text-sm font-medium">Upcoming Meetings</h3>
         </div>
 
@@ -357,7 +357,7 @@ const LeadsScoreDistributionCard = () => {
       <div className="relative overflow-hidden rounded-[36px] border border-white/10 bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] p-4 lg:p-5 h-[140px] lg:h-[170px] flex flex-col transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-white/5 hover:scale-[1.01]">
         <div className="flex items-center gap-2 mb-2">
 
-          <Filter className="w-4 h-4 text-white/70" />
+          <Filter className="w-4 h-4" stroke="url(#dashboard-icon-gradient)" />
           <h3 className="text-white text-sm font-medium">Activity Breakdown</h3>
         </div>
 
@@ -430,7 +430,7 @@ const LeadsScoreDistributionCard = () => {
       <div className="relative overflow-hidden rounded-[36px] border border-white/10 bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] p-4 lg:p-5 h-[140px] lg:h-[170px] flex flex-col transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-white/5 hover:scale-[1.01]">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <Users className="w-4 h-4 text-white/70" />
+            <Users className="w-4 h-4" stroke="url(#dashboard-icon-gradient)" />
             <h3 className="text-white text-sm font-medium">Total Leads</h3>
           </div>
           <div className="relative" ref={totalLeadsPeriodDropdownRef}>
@@ -438,19 +438,19 @@ const LeadsScoreDistributionCard = () => {
               onClick={() =>
                 setShowTotalLeadsPeriodDropdown(!showTotalLeadsPeriodDropdown)
               }
-              className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors text-left"
+              className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-white/5 border border-white/10 hover:bg-white/10 transition-colors text-left"
             >
-              <span className="text-[10px] text-white/80">
+              <span className="text-[9px] text-white/80 whitespace-nowrap">
                 {totalLeadsPeriodOptions.find((opt) => opt.value === totalLeadsPeriod)
                   ?.label || "All time"}
               </span>
               <ChevronDown
-                className={`w-3 h-3 text-white/60 transition-transform ${showTotalLeadsPeriodDropdown ? "rotate-180" : ""
+                className={`w-2.5 h-2.5 text-white/60 transition-transform ${showTotalLeadsPeriodDropdown ? "rotate-180" : ""
                   }`}
               />
             </button>
             {showTotalLeadsPeriodDropdown && (
-              <div className="absolute top-full right-0 mt-1 rounded-lg bg-[#1a1a1a] border border-white/10 shadow-lg z-10 max-h-40 overflow-y-auto scrollbar-hide min-w-[140px]">
+              <div className="absolute top-full right-0 mt-1 rounded-lg bg-[#1a1a1a]/95 backdrop-blur-xl border border-white/20 shadow-xl z-50 max-h-40 overflow-y-auto scrollbar-hide min-w-[100px]">
                 {totalLeadsPeriodOptions.map((option) => (
                   <button
                     key={option.value}
@@ -458,7 +458,7 @@ const LeadsScoreDistributionCard = () => {
                       setTotalLeadsPeriod(option.value);
                       setShowTotalLeadsPeriodDropdown(false);
                     }}
-                    className={`w-full text-left px-3 py-2 text-xs transition-colors ${totalLeadsPeriod === option.value
+                    className={`w-full text-left px-3 py-1.5 text-[10px] transition-colors ${totalLeadsPeriod === option.value
                       ? "bg-white/10 text-white"
                       : "text-white/70 hover:bg-white/5"
                       }`}

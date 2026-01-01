@@ -88,11 +88,23 @@ const Dashboard = () => {
 
   const desktopLayout = (
     <main className="relative px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] mt-20 sm:mt-20 lg:mt-24 xl:mt-28 mb-0 flex flex-col lg:flex-row items-stretch gap-5 md:gap-6 lg:gap-8 text-white flex-1 min-h-0 max-w-full">
-      <div className="w-full lg:basis-1/2 lg:min-w-0 flex-1 min-h-0 overflow-hidden animate-in fade-in slide-in-from-left-8 duration-700">
+      {/* Global Gradient Definition */}
+      <svg width="0" height="0" className="absolute pointer-events-none">
+        <defs>
+          <linearGradient id="dashboard-icon-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#69B4B7" />
+            <stop offset="15.87%" stopColor="#66AFB7" />
+            <stop offset="35.04%" stopColor="#5EA0B6" />
+            <stop offset="55.91%" stopColor="#5188B6" />
+            <stop offset="77.95%" stopColor="#3F66B4" />
+            <stop offset="100%" stopColor="#283CB3" />
+          </linearGradient>
+        </defs>
+      </svg>      <div className="w-full lg:basis-1/2 lg:min-w-0 flex-1 min-h-0 overflow-hidden animate-in fade-in slide-in-from-left-8 duration-700 p-1">
         <AssistantPanel isDesktop={isDesktop} />
       </div>
 
-      <div className="scrollbar-hide lg:flex w-full flex-col gap-4 overflow-y-auto pr-1 md:gap-5 lg:basis-1/2 lg:min-w-0 lg:pr-3 max-h-[calc(100vh-8rem)] bg-transparent animate-in fade-in slide-in-from-right-8 duration-700">
+      <div className="scrollbar-hide lg:flex w-full flex-col gap-4 overflow-y-auto pr-1 md:gap-5 lg:basis-1/2 lg:min-w-0 lg:pr-3 max-h-[calc(100vh-8rem)] bg-transparent animate-in fade-in slide-in-from-right-8 duration-700 p-1">
         {/* Row 1 - Analytics Cards (Above StatsCard) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <ActiveQualifiedLeadsCard />
@@ -173,19 +185,17 @@ const Dashboard = () => {
       </div>
 
       <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-[600ms]">
-          <CommunicationHubCard />
-          <ProposalsToSendCard />
-        </div>
-
         <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-[750ms]">
-          <TopLeadsCard />
-          <CalendarCard />
+          <LeadsScoreDistributionCard />
         </div>
 
         <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-[900ms]">
-          <FollowupTasksCard />
-          <div></div> {/* Empty space for balance */}
+          {/* <TopLeadsCard />
+          <CalendarCard /> */}
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-[1050ms]">
+          {/* <FollowupTasksCard /> */}
         </div>
       </div>
 
