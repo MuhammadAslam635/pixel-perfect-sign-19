@@ -36,7 +36,7 @@ const StatsCard = () => {
       <section className="stats-card relative w-full overflow-hidden rounded-[36px] border border-white/10 p-3 lg:p-4 max-h-[200px] min-h-[100px] lg:min-h-[130px] transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-white/5 hover:scale-[1.01]">
         <div className="relative z-10 flex h-full flex-col sm:flex-row sm:items-start gap-4">
         {/* Left Section - Text Metrics - Takes less width on desktop to give more space to chart */}
-        <div className="flex flex-col gap-2 sm:w-2/5 sm:flex-shrink-0">
+        <div className="flex flex-col justify-between gap-2 sm:w-2/5 sm:flex-shrink-0 h-full">
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-2">
               <Megaphone className="w-4 h-4" stroke="url(#dashboard-icon-gradient)" />
@@ -76,7 +76,7 @@ const StatsCard = () => {
           ) : error ? (
             <p className="text-sm text-red-400 mt-2">{error}</p>
           ) : (
-            <p className="text-3xl lg:text-4xl font-normal tracking-tight text-white mt-1">
+            <p className="text-3xl lg:text-4xl font-normal tracking-tight text-white">
               {campaignsStats?.totalCampaigns.toLocaleString() || "0"}
             </p>
           )}

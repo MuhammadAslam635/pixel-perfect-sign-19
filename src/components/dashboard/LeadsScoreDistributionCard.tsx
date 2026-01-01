@@ -427,13 +427,13 @@ const LeadsScoreDistributionCard = () => {
       </div>
 
       {/* Tile 4: Total Leads */}
-      <div className="relative overflow-hidden rounded-[36px] border border-white/10 bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] p-4 lg:p-5 h-[140px] lg:h-[170px] flex flex-col transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-white/5 hover:scale-[1.01]">
+      <div className={`relative rounded-[36px] border border-white/10 bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] p-4 lg:p-5 h-[140px] lg:h-[170px] flex flex-col transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-white/5 hover:scale-[1.01] ${showTotalLeadsPeriodDropdown ? "z-50" : "hover:z-50"}`}>
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <Users className="w-4 h-4" stroke="url(#dashboard-icon-gradient)" />
             <h3 className="text-white text-sm font-medium">Total Leads</h3>
           </div>
-          <div className="relative" ref={totalLeadsPeriodDropdownRef}>
+          <div className="relative shrink-0" ref={totalLeadsPeriodDropdownRef}>
             <button
               onClick={() =>
                 setShowTotalLeadsPeriodDropdown(!showTotalLeadsPeriodDropdown)

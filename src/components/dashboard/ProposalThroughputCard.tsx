@@ -118,7 +118,7 @@ export const ProposalThroughputCard = () => {
       ) : data ? (
         <div className="grid grid-cols-2 gap-1.5 flex-1">
           {/* RFPs Received */}
-          <div className="flex items-center justify-between gap-0 p-1.5 bg-white/5 rounded-lg border border-white/10">
+          <div className="flex items-center justify-between gap-0 px-3 py-1.5 bg-white/5 rounded-lg border border-white/10">
             <span className="text-[9px] text-white/60">RFPs</span>
             <span className="text-base sm:text-lg font-medium text-white">
               {data.rfpsReceived.toLocaleString()}
@@ -126,7 +126,7 @@ export const ProposalThroughputCard = () => {
           </div>
 
           {/* Proposals Submitted */}
-          <div className="flex items-center justify-between gap-0 p-1.5 bg-white/5 rounded-lg border border-white/10">
+          <div className="flex items-center justify-between gap-0 px-3 py-1.5 bg-white/5 rounded-lg border border-white/10">
             <span className="text-[9px] text-white/60">Sent</span>
             <span className="text-base sm:text-lg font-medium text-white">
               {data.proposalsSubmitted.toLocaleString()}
@@ -134,7 +134,7 @@ export const ProposalThroughputCard = () => {
           </div>
 
           {/* Avg Cycle Time */}
-          <div className="flex items-center justify-between gap-0 p-1.5 bg-white/5 rounded-lg border border-white/10 col-span-2">
+          <div className="flex items-center justify-between gap-0 px-3 py-1.5 bg-white/5 rounded-lg border border-white/10 col-span-2">
             <span className="text-[9px] text-white/60">Avg Cycle Time</span>
             <div className="flex items-baseline gap-1">
               <span className="text-lg sm:text-xl font-medium text-white">
