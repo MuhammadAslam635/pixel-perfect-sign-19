@@ -439,6 +439,7 @@ const ProposalExamplesPanel = () => {
                 accept=".pdf"
                 onChange={handleFileSelect}
                 className="cursor-pointer"
+
               />
               {selectedFile && (
                 <p className="mt-1 text-xs text-white/70">{selectedFile.name}</p>

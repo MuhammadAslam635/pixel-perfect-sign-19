@@ -38,6 +38,22 @@ import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import { AvatarFallback } from "@/components/ui/avatar-fallback";
 import { proposalService, Proposal } from "@/services/proposal.service";
+import { proposalExampleService } from "@/services/proposalExample.service";
+import { useProposalExamplesData } from "@/pages/companyKnowledgeBase/hooks";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { cn } from "@/lib/utils";
 
 // Import Tamimi logos
 import tamimiLogoLight from "@/assets/tamimi-logo-light.png";
@@ -173,6 +189,8 @@ const LeadChat = ({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [proposalContent, setProposalContent] = useState<string>("");
   const [proposalHtmlContent, setProposalHtmlContent] = useState<string>("");
+  const [selectedExampleId, setSelectedExampleId] = useState<string>("");
+  const [openExampleSelector, setOpenExampleSelector] = useState(false);
   const [isGeneratingProposal, setIsGeneratingProposal] = useState(false);
   const [proposalCopied, setProposalCopied] = useState(false);
   const [isUpdatingStage, setIsUpdatingStage] = useState(false);
@@ -418,6 +436,7 @@ const LeadChat = ({
     setProposalHtmlContent("");
     setProposalCopied(false);
     setIsProposalEditable(false);
+    setSelectedExampleId("");
     setSelectedText("");
     setSelectionRange(null);
     setShowEditWithAI(false);
@@ -588,6 +607,13 @@ const LeadChat = ({
       (emailConversationError as Error)?.message ||
       "Failed to load email conversation. Please try again later."
     : null;
+
+  const { 
+    examples: proposalExamples, 
+    query: proposalExamplesQuery 
+  } = useProposalExamplesData({ limit: 100 });
+
+  const isProposalExamplesLoading = proposalExamplesQuery.isLoading;
 
   const smsQueryEnabled =
     activeTab === "SMS" && Boolean(leadId && phoneNumber) && twilioReady;
@@ -1068,6 +1094,7 @@ const LeadChat = ({
         companyId: lead.companyId,
         personId: lead._id,
         regenerate: proposalContent ? true : false,
+        proposalExampleId: selectedExampleId || undefined,
       });
 
       const generated =
@@ -3407,14 +3434,92 @@ const LeadChat = ({
                       </button>
                     )}
 
+                    {/* Proposal Template Selector */}
+                    {!selectedProposal && (
+                      <Popover
+                        open={openExampleSelector}
+                        onOpenChange={setOpenExampleSelector}
+                      >
+                        <PopoverTrigger asChild>
+                          <button
+                            type="button"
+                            className="flex h-[34px] w-[200px] items-center justify-between rounded-lg border border-white/30 bg-white/10 px-3 py-2 text-xs font-medium text-white transition hover:bg-white/20 disabled:opacity-40"
+                            disabled={isGeneratingProposal}
+                          >
+                            <span className="truncate">
+                              {selectedExampleId
+                                ? proposalExamples.find(
+                                    (ex: any) => ex._id === selectedExampleId
+                                  )?.fileName
+                                : "Select Template..."}
+                            </span>
+                            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent
+                          className="w-[200px] p-0 bg-[#1a1a1a] border-white/20 shadow-2xl z-[60]"
+                          align="start"
+                        >
+                          <Command className="bg-transparent">
+                            <CommandInput
+                              placeholder="Search templates..."
+                              className="h-8 text-xs text-white"
+                            />
+                            <CommandList className="max-h-[200px] overflow-y-auto scrollbar-hide">
+                              {isProposalExamplesLoading ? (
+                                <div className="flex items-center justify-center py-6">
+                                  <Loader2 className="h-4 w-4 animate-spin text-white/50" />
+                                </div>
+                              ) : (
+                                <>
+                                  <CommandEmpty className="py-2 text-center text-xs text-white/50">
+                                    No template found.
+                                  </CommandEmpty>
+                                  <CommandGroup>
+                                    {proposalExamples.map((example: any) => (
+                                      <CommandItem
+                                        key={example._id}
+                                        value={example.fileName}
+                                        onSelect={() => {
+                                          setSelectedExampleId(example._id);
+                                          setOpenExampleSelector(false);
+                                        }}
+                                        className="text-xs text-white hover:bg-white/10 cursor-pointer flex items-center px-2 py-1.5"
+                                      >
+                                        <Check
+                                          className={cn(
+                                            "mr-2 h-3 w-3",
+                                            selectedExampleId === example._id
+                                              ? "opacity-100"
+                                              : "opacity-0"
+                                          )}
+                                        />
+                                        {example.fileName}
+                                      </CommandItem>
+                                    ))}
+                                  </CommandGroup>
+                                </>
+                              )}
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                    )}
+
                     <button
                       type="button"
-                      className="flex items-center gap-2 rounded-lg bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] px-4 py-2 text-xs font-medium text-white transition hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+                      className="flex items-center gap-2 rounded-lg bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] px-4 py-2 text-xs font-medium text-white transition hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed h-[34px]"
                       onClick={handleGenerateProposal}
-                      disabled={isGeneratingProposal || !!selectedProposal}
+                      disabled={
+                        isGeneratingProposal ||
+                        !!selectedProposal ||
+                        !selectedExampleId
+                      }
                       title={
                         selectedProposal
                           ? "Cannot regenerate a sent proposal"
+                          : !selectedExampleId
+                          ? "Please select a template first"
                           : ""
                       }
                     >

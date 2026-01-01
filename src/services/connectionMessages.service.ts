@@ -98,6 +98,7 @@ export interface GenerateProposalInput {
   companyId: string;
   personId: string;
   regenerate?: boolean;
+  proposalExampleId?: string;
 }
 
 export interface EditProposalPartInput {
