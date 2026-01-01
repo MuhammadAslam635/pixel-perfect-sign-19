@@ -3481,6 +3481,11 @@ const LeadChat = ({
                                         key={example._id}
                                         value={example.fileName}
                                         onSelect={() => {
+                                          // Clear existing proposal when changing template
+                                          if (selectedExampleId !== example._id) {
+                                            setProposalContent("");
+                                            setProposalHtmlContent("");
+                                          }
                                           setSelectedExampleId(example._id);
                                           setOpenExampleSelector(false);
                                         }}
