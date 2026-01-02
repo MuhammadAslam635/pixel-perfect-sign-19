@@ -1,6 +1,7 @@
 import { Building2, Users, CalendarDays, Clock, Mail } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { usePermissions } from "@/hooks/usePermissions";
 
 type CrmNavLink = {
   id: string;
@@ -8,6 +9,7 @@ type CrmNavLink = {
   icon: typeof Building2;
   path: string;
   match?: (pathname: string) => boolean;
+  permission?: string;
 };
 
 const crmNavLinks: CrmNavLink[] = [
@@ -17,6 +19,7 @@ const crmNavLinks: CrmNavLink[] = [
     icon: Building2,
     path: "/companies",
     match: (pathname: string) => pathname.startsWith("/companies"),
+    permission: "companies",
   },
   {
     id: "leads",
@@ -24,6 +27,7 @@ const crmNavLinks: CrmNavLink[] = [
     icon: Users,
     path: "/leads",
     match: (pathname: string) => pathname.startsWith("/leads"),
+    permission: "leads",
   },
   {
     id: "calendar",
@@ -31,6 +35,7 @@ const crmNavLinks: CrmNavLink[] = [
     icon: CalendarDays,
     path: "/calendar",
     match: (pathname: string) => pathname.startsWith("/calendar"),
+    permission: "calendar",
   },
   {
     id: "followup",
@@ -38,6 +43,7 @@ const crmNavLinks: CrmNavLink[] = [
     icon: Clock,
     path: "/followups",
     match: (pathname: string) => pathname.startsWith("/followups"),
+    permission: "followups",
   },
   {
     id: "emails",
@@ -45,6 +51,7 @@ const crmNavLinks: CrmNavLink[] = [
     icon: Mail,
     path: "/emails/inbox",
     match: (pathname: string) => pathname.startsWith("/emails"),
+    permission: "emails",
   },
 ];
 
@@ -58,13 +65,20 @@ const resolveActiveCrmNav = (pathname: string, links: CrmNavLink[]) => {
 export const CrmNavigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { canView } = usePermissions();
+  
+  const visibleLinks = crmNavLinks.filter((link) => {
+    if (!link.permission) return true;
+    return canView(link.permission);
+  });
+
   const [activeNav, setActiveNav] = useState(
-    resolveActiveCrmNav(location.pathname, crmNavLinks)
+    resolveActiveCrmNav(location.pathname, visibleLinks)
   );
 
   useEffect(() => {
-    setActiveNav(resolveActiveCrmNav(location.pathname, crmNavLinks));
-  }, [location.pathname]);
+    setActiveNav(resolveActiveCrmNav(location.pathname, visibleLinks));
+  }, [location.pathname, visibleLinks.length]);
 
   const handleNavigate = (link: CrmNavLink) => {
     setActiveNav(link.id);
@@ -73,7 +87,7 @@ export const CrmNavigation = () => {
 
   return (
     <nav className="hidden lg:flex scrollbar-hide  min-w-0 w-full w-auto items-center justify-start gap-2 overflow-x-auto flex-nowrap snap-x snap-mandatory ">
-      {crmNavLinks.map((link) => {
+      {visibleLinks.map((link) => {
         const Icon = link.icon;
         const isActive = activeNav === link.id;
         return (

@@ -320,7 +320,7 @@ const AppRoutes = () => {
       <Route
         path="/leads/:leadId"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute moduleName="leads">
             <LeadDetailView />
           </ProtectedRoute>
         }

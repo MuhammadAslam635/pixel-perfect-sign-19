@@ -292,6 +292,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useQueryClient } from "@tanstack/react-query";
+import { usePermissions } from "@/hooks/usePermissions";
 
 type ScheduleMeetingForm = {
   subject: string;
@@ -326,6 +327,7 @@ const MAX_SEARCH_RANGE_MS = 62 * 24 * 60 * 60 * 1000; // 62 days
 
 const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
   const queryClient = useQueryClient();
+  const { canEdit } = usePermissions();
   const [fillingData, setFillingData] = useState(false);
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
   const [schedulingMeeting, setSchedulingMeeting] = useState(false);
@@ -936,6 +938,7 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
                     </Tooltip>
 
                     {/* Edit Details */}
+                    {canEdit("leads") && (
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <button
@@ -950,6 +953,7 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
                         Edit details
                       </TooltipContent>
                     </Tooltip>
+                    )}
 
                     {/* Schedule Meeting */}
                     <Tooltip>

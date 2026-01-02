@@ -352,7 +352,7 @@ const index = () => {
                 />
 
                 {/* Enrich Leads Button */}
-                {canCreate("companies") && (
+                {canCreate("leads") && (
                 <Button
                   onClick={() => setEnrichmentModalOpen(true)}
                   className="bg-gradient-to-r from-[#69B4B7] to-[#3E64B4] hover:from-[#69B4B7]/80 hover:to-[#3E64B4]/80 text-white font-semibold rounded-full px-4 sm:px-6 h-10 shadow-[0_5px_18px_rgba(103,176,183,0.35)] hover:shadow-[0_8px_24px_rgba(103,176,183,0.45)] transition-all whitespace-nowrap"

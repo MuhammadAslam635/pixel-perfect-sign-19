@@ -835,6 +835,7 @@ const LeadsList: FC<LeadsListProps> = ({
               </Tooltip>
 
               {/* Delete Icon */}
+              {canDelete("leads") && (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
@@ -849,6 +850,7 @@ const LeadsList: FC<LeadsListProps> = ({
                   <p>Delete lead</p>
                 </TooltipContent>
               </Tooltip>
+              )}
             </div>
           )}
           <div className="flex items-center gap-1.5">

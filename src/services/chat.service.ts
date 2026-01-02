@@ -113,8 +113,24 @@ export const sendStreamingChatMessage = async (
       signal: controller.signal,
     }).then(async response => {
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+        // Try to parse JSON error response from backend
+        let errorMessage = 'Unable to send message';
+        
+        try {
+          const contentType = response.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            const errorData = await response.json();
+            errorMessage = errorData.message || errorData.error || errorMessage;
+          } else {
+            const errorText = await response.text();
+            errorMessage = errorText || errorMessage;
+          }
+        } catch (parseError) {
+          // If parsing fails, use generic message
+          console.error('Error parsing error response:', parseError);
+        }
+        
+        throw new Error(errorMessage);
       }
 
       const reader = response.body?.getReader();

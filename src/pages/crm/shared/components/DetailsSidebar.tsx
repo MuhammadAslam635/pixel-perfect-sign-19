@@ -25,7 +25,8 @@ const DetailsSidebar: FC<DetailsSidebarProps> = ({
   onSwitchToLeads,
   onExecutiveSelect,
   onClose,
-}) => (
+}) => {
+  return (
   <div
     className={`
       hidden lg:block
@@ -89,6 +90,7 @@ const DetailsSidebar: FC<DetailsSidebarProps> = ({
       )}
     </Card>
   </div>
-);
+  );
+};
 
 export default DetailsSidebar;

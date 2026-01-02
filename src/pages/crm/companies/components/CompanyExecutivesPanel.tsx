@@ -20,6 +20,7 @@ import { Company, CompanyPerson, companiesService } from "@/services/companies.s
 import { CompanyLogoFallback } from "@/components/ui/company-logo-fallback";
 import { Card } from "@/components/ui/card";
 import { AvatarFallback } from "@/components/ui/avatar-fallback";
+import { usePermissions } from "@/hooks/usePermissions";
 
 type CompanyExecutivesPanelProps = {
   company?: Company;
@@ -41,6 +42,8 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
   const [shouldPoll, setShouldPoll] = useState(false);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const previousCompanyId = useRef<string | undefined>(undefined);
+  const { canView } = usePermissions();
+  const hasLeadsPermission = canView("leads");
 
   // Reset tabs only when switching to a DIFFERENT company
   useEffect(() => {
@@ -182,6 +185,7 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
           </motion.div>
           <span className="text-sm font-medium">Company Details</span>
         </motion.button>
+        {hasLeadsPermission && (
         <motion.button
           onClick={() => {
             setActiveTab("executives");
@@ -207,6 +211,7 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
             Executives {displayCompany?.people?.length ? `(${displayCompany.people.length})` : ""}
           </span>
         </motion.button>
+        )}
       </div>
 
       {/* Tab Content */}
