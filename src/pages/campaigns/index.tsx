@@ -1354,8 +1354,6 @@ const CampaignsPage = () => {
                         <div
                           className="flex items-center justify-center gap-1.5 flex-shrink-0 px-2 py-1"
                           style={{
-                            minWidth: "60px",
-                            maxWidth: "120px",
                             borderRadius: "8px",
                             opacity: 1,
                             background: "#66AFB74D",
