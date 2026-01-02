@@ -610,18 +610,38 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
             const transcriptUrl = meeting.recall?.transcriptUrl || storedData?.transcriptUrl;
             const transcriptText = meeting.recall?.transcriptText || storedData?.transcriptText || transcripts[meeting._id];
             const recordingUrl = meeting.recall?.recordingUrl || storedData?.recordingUrl;
-            const transcriptStatus = meeting.recall?.transcriptStatus || storedData?.transcriptStatus || ((transcriptUrl || transcriptText) ? "done" : "pending");
+            const recallStatus = meeting.recall?.status || storedData?.status;
+            const isFailed = recallStatus === "failed";
+            const hasSessionId = Boolean(meeting.recall?.sessionId || storedData?.sessionId);
+            
+            const meetingEndTime = new Date(meeting.endDateTime).getTime();
+            const meetingEnded = meetingEndTime < Date.now();
+            const meetingEndedVeryRecently = meetingEnded && meetingEndTime > Date.now() - (15 * 60 * 1000); // within 15 mins
+            const meetingEndedLongAgo = meetingEndTime < Date.now() - (15 * 60 * 1000); // 15 mins ago
+
             const hasRecording = Boolean(recordingUrl);
             const hasTranscript = Boolean(transcriptUrl || transcriptText);
+
+            // It's unavailable if:
+            // 1. Explicitly failed
+            // 2. Ended long ago and still no data (regardless of sessionId)
+            // 3. Ended long ago and no sessionId was ever created
+            const isUnavailable = isFailed || 
+                                (meetingEndedLongAgo && !hasRecording && !hasTranscript) ||
+                                (meetingEndedLongAgo && !hasSessionId);
+
+            const transcriptStatus = meeting.recall?.transcriptStatus || storedData?.transcriptStatus || ((hasTranscript) ? "done" : "pending");
             const isTranscriptProcessing = transcriptStatus === "processing";
             const isTranscriptPending = transcriptStatus === "pending";
             const isLoadingRecording = loadingRecordings[meeting._id];
             const isLoadingTranscript = loadingTranscripts[meeting._id];
             const isSelected = selectedMeeting?._id === meeting._id;
             
-            // Show loading if status is pending or we're actively loading
-            const showRecordingLoading = (!hasRecording && (isLoadingRecording || isTranscriptPending)) || isLoadingRecording;
-            const showTranscriptLoading = (!hasTranscript && (isLoadingTranscript || isTranscriptPending || isTranscriptProcessing)) || isLoadingTranscript;
+            // Show loading if:
+            // 1. Actively fetching (isLoadingRecording)
+            // 2. OR it's pending/processing AND bot exists AND it's recent (not long ago)
+            const showRecordingLoading = !hasRecording && !isUnavailable && (isLoadingRecording || (hasSessionId && meetingEndedVeryRecently));
+            const showTranscriptLoading = !hasTranscript && !isUnavailable && (isLoadingTranscript || (hasSessionId && (isTranscriptPending || isTranscriptProcessing) && meetingEndedVeryRecently));
 
               return (
                 <div
@@ -673,6 +693,10 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
                           <div className="w-7 h-7 rounded-full border-2 border-amber-400/30 bg-amber-500/10 flex items-center justify-center flex-shrink-0" title="Loading recording...">
                             <Loader2 className="w-4 h-4 text-amber-400 animate-spin" />
                           </div>
+                        ) : isUnavailable ? (
+                          <div className="w-7 h-7 rounded-full border-2 border-white/5 bg-white/5 flex items-center justify-center flex-shrink-0 opacity-40" title="Recording not available">
+                            <Play className="w-3.5 h-3.5 ml-0.5 text-white/40" />
+                          </div>
                         ) : null}
                         
                         {/* Transcript Status */}
@@ -683,6 +707,10 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
                         ) : showTranscriptLoading ? (
                           <div className="w-7 h-7 rounded-full border-2 border-amber-400/30 bg-amber-500/10 flex items-center justify-center flex-shrink-0" title="Loading transcript...">
                             <Loader2 className="w-4 h-4 text-amber-400 animate-spin" />
+                          </div>
+                        ) : isUnavailable ? (
+                          <div className="w-7 h-7 rounded-full border-2 border-white/5 bg-white/5 flex items-center justify-center flex-shrink-0 opacity-40" title="Transcript not available">
+                            <FileText className="w-3.5 h-3.5 text-white/40" />
                           </div>
                         ) : null}
                       </div>
@@ -792,15 +820,33 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
                       const meetingEnded = new Date(selectedMeeting.endDateTime).getTime() < Date.now();
                       const recallStatus = selectedMeeting.recall?.status;
                       const hasRecordingUrl = selectedMeeting.recall?.recordingUrl || storedData?.recordingUrl;
-                      const isStillProcessing = meetingEnded && (recallStatus === "ended" || recallStatus === "active") && !hasRecordingUrl;
+                      const hasSessionIdDetail = Boolean(selectedMeeting.recall?.sessionId || storedData?.sessionId);
+                      const meetingEndTimeDetail = new Date(selectedMeeting.endDateTime).getTime();
+                      const meetingEndedLongAgoDetail = meetingEndTimeDetail < Date.now() - (15 * 60 * 1000);
+                      const meetingEndedVeryRecentlyDetail = meetingEnded && meetingEndTimeDetail > Date.now() - (15 * 60 * 1000);
                       
-                      if (recordingLoading || isStillProcessing) {
+                      const recallStatusDetail = selectedMeeting.recall?.status || storedData?.status;
+                      const isFailedDetail = recallStatusDetail === "failed";
+
+                      const isStillProcessing = meetingEnded && (recallStatus === "ended" || recallStatus === "active") && !hasRecordingUrl && meetingEndedVeryRecentlyDetail;
+                      const isUnavailableDetail = isFailedDetail || (meetingEndedLongAgoDetail && !hasRecordingUrl);
+                      
+                      if (recordingLoading || (isStillProcessing && !isUnavailableDetail)) {
                         return (
                           <div className="flex items-center justify-center py-8">
                             <Loader2 className="w-6 h-6 text-cyan-400 animate-spin" />
                             <span className="ml-2 text-sm text-white/60">
                               {isStillProcessing ? "Processing recording..." : "Loading recording..."}
                             </span>
+                          </div>
+                        );
+                      } else if (isUnavailableDetail) {
+                        return (
+                          <div className="flex flex-col items-center justify-center py-8 px-4 rounded-lg bg-white/5 border border-white/10">
+                            <svg className="w-8 h-8 text-white/20 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                            <p className="text-sm text-white/40 text-center">Recording not available</p>
                           </div>
                         );
                       } else if (recordingError) {
@@ -853,20 +899,34 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
                         const storedData = recordingData[selectedMeeting._id];
                         const transcriptUrl = selectedMeeting.recall?.transcriptUrl || storedData?.transcriptUrl;
                         const transcriptText = selectedMeeting.recall?.transcriptText || storedData?.transcriptText || transcripts[selectedMeeting._id];
-                        const transcriptStatus = selectedMeeting.recall?.transcriptStatus || storedData?.transcriptStatus;
                         const meetingEnded = new Date(selectedMeeting.endDateTime).getTime() < Date.now();
-                        const recallStatus = selectedMeeting.recall?.status;
+                        const recallStatus = selectedMeeting.recall?.status || storedData?.status;
+                        
+                        const transcriptStatus = selectedMeeting.recall?.transcriptStatus || storedData?.transcriptStatus;
+                        const meetingEndTimeTrans = new Date(selectedMeeting.endDateTime).getTime();
+                        const meetingEndedLongAgoTrans = meetingEndTimeTrans < Date.now() - (15 * 60 * 1000);
+                        const meetingEndedVeryRecentlyTrans = meetingEnded && meetingEndTimeTrans > Date.now() - (15 * 60 * 1000);
+                        
+                        const isFailedTrans = recallStatus === "failed";
+
                         const isProcessing = transcriptStatus === "processing";
                         const isLoading = loadingTranscripts[selectedMeeting._id];
-                        const isStillProcessing = meetingEnded && (recallStatus === "ended" || recallStatus === "active") && !transcriptText && !transcriptUrl;
+                        const isStillProcessing = meetingEnded && (recallStatus === "ended" || recallStatus === "active") && !transcriptText && !transcriptUrl && meetingEndedVeryRecentlyTrans;
+                        const isUnavailableTrans = isFailedTrans || (meetingEndedLongAgoTrans && !transcriptText && !transcriptUrl);
 
-                        if (isProcessing || isStillProcessing) {
+                        if ((isProcessing || isStillProcessing) && !isUnavailableTrans) {
                           return (
                             <div className="flex items-center gap-2 py-4 px-4 rounded-lg bg-white/5 border border-white/10">
                               <Loader2 className="w-4 h-4 text-cyan-400 animate-spin" />
                               <span className="text-sm text-white/60">
                                 {isStillProcessing ? "Processing transcript..." : "Transcription in progress..."}
                               </span>
+                            </div>
+                          );
+                        } else if (isUnavailableTrans) {
+                          return (
+                            <div className="py-4 px-4 rounded-lg bg-white/5 border border-white/10 text-center">
+                              <p className="text-sm text-white/40">Transcript not available</p>
                             </div>
                           );
                         } else if (isLoading) {
