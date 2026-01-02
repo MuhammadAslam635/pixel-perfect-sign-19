@@ -47,8 +47,11 @@ import { toast } from "sonner";
 
 const AdminIndustryCategories = () => {
   const [categoryTree, setCategoryTree] = useState<IndustryCategory[]>([]);
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
-  const [selectedCategory, setSelectedCategory] = useState<IndustryCategory | null>(null);
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
+    new Set()
+  );
+  const [selectedCategory, setSelectedCategory] =
+    useState<IndustryCategory | null>(null);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -56,7 +59,8 @@ const AdminIndustryCategories = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [categoryToDelete, setCategoryToDelete] = useState<IndustryCategory | null>(null);
+  const [categoryToDelete, setCategoryToDelete] =
+    useState<IndustryCategory | null>(null);
 
   // Form state
   const [formData, setFormData] = useState<CreateCategoryData>({
@@ -91,13 +95,17 @@ const AdminIndustryCategories = () => {
       const response = await industryCategoryService.getCategoryTree(true);
       if (response.success && response.data) {
         // Backend returns { data: { tree: [...], totalCategories: number } }
-        const treeData = Array.isArray(response.data) ? response.data : (response.data.tree || []);
+        const treeData = Array.isArray(response.data)
+          ? response.data
+          : response.data.tree || [];
         setCategoryTree(treeData);
         calculateStatistics(treeData);
       }
     } catch (error: any) {
       console.error("Error fetching category tree:", error);
-      toast.error(error?.response?.data?.message || "Failed to fetch categories");
+      toast.error(
+        error?.response?.data?.message || "Failed to fetch categories"
+      );
     } finally {
       setLoading(false);
     }
@@ -227,7 +235,9 @@ const AdminIndustryCategories = () => {
       }
     } catch (error: any) {
       console.error("Error creating category:", error);
-      toast.error(error?.response?.data?.message || "Failed to create category");
+      toast.error(
+        error?.response?.data?.message || "Failed to create category"
+      );
     }
   };
 
@@ -247,7 +257,9 @@ const AdminIndustryCategories = () => {
       }
     } catch (error: any) {
       console.error("Error updating category:", error);
-      toast.error(error?.response?.data?.message || "Failed to update category");
+      toast.error(
+        error?.response?.data?.message || "Failed to update category"
+      );
     }
   };
 
@@ -256,7 +268,9 @@ const AdminIndustryCategories = () => {
     if (!categoryToDelete) return;
 
     try {
-      const response = await industryCategoryService.deleteCategory(categoryToDelete._id);
+      const response = await industryCategoryService.deleteCategory(
+        categoryToDelete._id
+      );
       if (response.success) {
         toast.success("Category deleted successfully");
         setIsDeleteDialogOpen(false);
@@ -265,7 +279,9 @@ const AdminIndustryCategories = () => {
       }
     } catch (error: any) {
       console.error("Error deleting category:", error);
-      toast.error(error?.response?.data?.message || "Failed to delete category");
+      toast.error(
+        error?.response?.data?.message || "Failed to delete category"
+      );
     }
   };
 
@@ -279,7 +295,9 @@ const AdminIndustryCategories = () => {
     const searchLower = search.toLowerCase();
     return categories.filter((cat) => {
       const matchesName = cat.name.toLowerCase().includes(searchLower);
-      const matchesDescription = cat.description?.toLowerCase().includes(searchLower);
+      const matchesDescription = cat.description
+        ?.toLowerCase()
+        .includes(searchLower);
       const matchesChildren =
         cat.children && cat.children.length > 0
           ? filterCategories(cat.children, search).length > 0
@@ -399,7 +417,9 @@ const AdminIndustryCategories = () => {
         {/* Render Children */}
         {hasChildren && isExpanded && (
           <div className="mt-2 space-y-2">
-            {category.children!.map((child) => renderCategoryItem(child, depth + 1))}
+            {category.children!.map((child) =>
+              renderCategoryItem(child, depth + 1)
+            )}
           </div>
         )}
       </div>
@@ -417,7 +437,8 @@ const AdminIndustryCategories = () => {
               Industry Categories
             </h1>
             <p className="text-white/60">
-              Manage hierarchical industry classification for companies and leads
+              Manage hierarchical industry classification for companies and
+              leads
             </p>
           </div>
           <Button
@@ -595,7 +616,9 @@ const AdminIndustryCategories = () => {
               </div>
             ) : (
               <div className="space-y-2">
-                {filteredCategoryTree.map((category) => renderCategoryItem(category))}
+                {filteredCategoryTree.map((category) =>
+                  renderCategoryItem(category)
+                )}
               </div>
             )}
           </CardContent>
@@ -605,7 +628,9 @@ const AdminIndustryCategories = () => {
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogContent className="bg-gradient-to-br from-gray-800/95 to-gray-900/95 border border-white/20 text-white max-w-2xl max-h-[90vh] overflow-y-auto scrollbar-hide">
             <DialogHeader>
-              <DialogTitle className="text-xl font-bold">Create Industry Category</DialogTitle>
+              <DialogTitle className="text-xl font-bold">
+                Create Industry Category
+              </DialogTitle>
               <DialogDescription className="text-white/60">
                 Add a new industry category to the hierarchy
               </DialogDescription>
@@ -618,7 +643,9 @@ const AdminIndustryCategories = () => {
                 </label>
                 <Input
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
                   placeholder="e.g., Technology, Manufacturing, Healthcare"
                   className="bg-gradient-to-br from-gray-800/50 to-gray-900/30 border border-white/10 text-white"
                 />
@@ -630,7 +657,9 @@ const AdminIndustryCategories = () => {
                 </label>
                 <Textarea
                   value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
                   placeholder="Brief description of this category"
                   rows={3}
                   className="bg-gradient-to-br from-gray-800/50 to-gray-900/30 border border-white/10 text-white scrollbar-hide"
@@ -647,7 +676,10 @@ const AdminIndustryCategories = () => {
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        metadata: { ...formData.metadata, naicsCode: e.target.value },
+                        metadata: {
+                          ...formData.metadata,
+                          naicsCode: e.target.value,
+                        },
                       })
                     }
                     placeholder="e.g., 541512"
@@ -664,7 +696,10 @@ const AdminIndustryCategories = () => {
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        metadata: { ...formData.metadata, sicCode: e.target.value },
+                        metadata: {
+                          ...formData.metadata,
+                          sicCode: e.target.value,
+                        },
                       })
                     }
                     placeholder="e.g., 7372"
@@ -682,7 +717,10 @@ const AdminIndustryCategories = () => {
                     type="number"
                     value={formData.sortOrder || 0}
                     onChange={(e) =>
-                      setFormData({ ...formData, sortOrder: parseInt(e.target.value) || 0 })
+                      setFormData({
+                        ...formData,
+                        sortOrder: parseInt(e.target.value) || 0,
+                      })
                     }
                     className="bg-gradient-to-br from-gray-800/50 to-gray-900/30 border border-white/10 text-white"
                   />
@@ -734,7 +772,9 @@ const AdminIndustryCategories = () => {
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
           <DialogContent className="bg-gradient-to-br from-gray-800/95 to-gray-900/95 border border-white/20 text-white max-w-2xl max-h-[90vh] overflow-y-auto scrollbar-hide">
             <DialogHeader>
-              <DialogTitle className="text-xl font-bold">Edit Industry Category</DialogTitle>
+              <DialogTitle className="text-xl font-bold">
+                Edit Industry Category
+              </DialogTitle>
               <DialogDescription className="text-white/60">
                 Update category information
               </DialogDescription>
@@ -747,7 +787,9 @@ const AdminIndustryCategories = () => {
                 </label>
                 <Input
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
                   placeholder="e.g., Technology, Manufacturing, Healthcare"
                   className="bg-gradient-to-br from-gray-800/50 to-gray-900/30 border border-white/10 text-white"
                 />
@@ -759,7 +801,9 @@ const AdminIndustryCategories = () => {
                 </label>
                 <Textarea
                   value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
                   placeholder="Brief description of this category"
                   rows={3}
                   className="bg-gradient-to-br from-gray-800/50 to-gray-900/30 border border-white/10 text-white scrollbar-hide"
@@ -776,7 +820,10 @@ const AdminIndustryCategories = () => {
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        metadata: { ...formData.metadata, naicsCode: e.target.value },
+                        metadata: {
+                          ...formData.metadata,
+                          naicsCode: e.target.value,
+                        },
                       })
                     }
                     placeholder="e.g., 541512"
@@ -793,7 +840,10 @@ const AdminIndustryCategories = () => {
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        metadata: { ...formData.metadata, sicCode: e.target.value },
+                        metadata: {
+                          ...formData.metadata,
+                          sicCode: e.target.value,
+                        },
                       })
                     }
                     placeholder="e.g., 7372"
@@ -811,7 +861,10 @@ const AdminIndustryCategories = () => {
                     type="number"
                     value={formData.sortOrder || 0}
                     onChange={(e) =>
-                      setFormData({ ...formData, sortOrder: parseInt(e.target.value) || 0 })
+                      setFormData({
+                        ...formData,
+                        sortOrder: parseInt(e.target.value) || 0,
+                      })
                     }
                     className="bg-gradient-to-br from-gray-800/50 to-gray-900/30 border border-white/10 text-white"
                   />
@@ -873,12 +926,17 @@ const AdminIndustryCategories = () => {
 
             {categoryToDelete && (
               <div className="p-4 bg-red-900/20 border border-red-500/30 rounded-lg">
-                <p className="text-white font-medium mb-1">{categoryToDelete.name}</p>
+                <p className="text-white font-medium mb-1">
+                  {categoryToDelete.name}
+                </p>
                 {categoryToDelete.description && (
-                  <p className="text-white/60 text-sm">{categoryToDelete.description}</p>
+                  <p className="text-white/60 text-sm">
+                    {categoryToDelete.description}
+                  </p>
                 )}
                 <p className="text-red-400 text-sm mt-3">
-                  ⚠️ This action cannot be undone. All child categories will also be deleted.
+                  This action cannot be undone. All child categories will also
+                  be deleted.
                 </p>
               </div>
             )}
