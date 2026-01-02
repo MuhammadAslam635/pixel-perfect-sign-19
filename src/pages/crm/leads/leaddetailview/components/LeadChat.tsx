@@ -1862,9 +1862,7 @@ const LeadChat = ({
     setShowEmailEditWithAI(true);
 
     // Store selection range
-    const tempDiv = document.createElement("div");
-    tempDiv.innerHTML = emailInput;
-    const textContent = tempDiv.textContent || tempDiv.innerText || "";
+    const textContent = markdownToText(htmlToMarkdown(emailInput));
 
     const textStart = textContent
       .toLowerCase()
@@ -1910,9 +1908,7 @@ const LeadChat = ({
     setIsEditingEmailWithAI(true);
     try {
       // Find the text in the content
-      const tempDiv = document.createElement("div");
-      tempDiv.innerHTML = emailInput;
-      const textContent = tempDiv.textContent || tempDiv.innerText || "";
+      const textContent = markdownToText(htmlToMarkdown(emailInput));
 
       const selectedTextLower = emailLockedSelectedText.toLowerCase().trim();
       const contentLower = textContent.toLowerCase();
@@ -1940,8 +1936,14 @@ const LeadChat = ({
         instructions: emailEditAIQuery.trim(),
       });
 
-      const editedPart = response.data?.editedPart || response.data?.proposal;
+      let editedPart = response.data?.editedPart || response.data?.proposal;
       if (editedPart) {
+        // Clean up any potential AI meta-text/markers
+        editedPart = editedPart
+          .replace(/^(Certainly!|Here is|Revised|Updated|Sure|Revised section).*?(\n|:)/i, "")
+          .replace(/^---+\s*$/gm, "")
+          .trim();
+
         // Replace the selected part with the edited version
         let beforeSelection = "";
         let afterSelection = "";
@@ -1961,11 +1963,8 @@ const LeadChat = ({
 
         const newContent = beforeSelection + editedPart + afterSelection;
 
-        // Convert back to HTML (simple text to HTML)
-        const newHtml = newContent
-          .split("\n")
-          .map((line) => `<p>${line}</p>`)
-          .join("");
+        // Convert back to HTML using our helper
+        const newHtml = markdownToHtml(newContent);
         setEmailInput(newHtml);
 
         toast.success("Email content updated successfully!");
