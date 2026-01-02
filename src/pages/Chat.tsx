@@ -139,6 +139,25 @@ const ChatPage = () => {
     } as any,
   };
 
+  // Helper to derive a conversation title from messages when server doesn't provide one
+  const deriveTitleFromMessages = (messages: any[] | undefined) => {
+    if (!messages || !messages.length) return null;
+    const assistantMsg = messages.find((m) => m.role === "assistant" || m.role === "system") || messages[0];
+    if (!assistantMsg || !assistantMsg.content) return null;
+    try {
+      const text = assistantMsg.content
+        .replace(/```[\s\S]*?```/g, "") // remove code blocks
+        .replace(/[#>*_`\[\]]/g, "")
+        .split("\n")[0]
+        .trim();
+      if (!text) return null;
+      const truncated = text.length > 50 ? `${text.slice(0, 47)}...` : text;
+      return truncated;
+    } catch (e) {
+      return null;
+    }
+  };
+
   const {
     data: fetchedChatList = [],
     isLoading: isFetchedChatListLoading,
@@ -175,6 +194,7 @@ const ChatPage = () => {
         title: temporaryChat.title,
         createdAt: temporaryChat.createdAt,
         updatedAt: temporaryChat.createdAt,
+        messages: temporaryChat.messages,
       });
     }
     return list;
@@ -337,23 +357,57 @@ const ChatPage = () => {
             dispatch(setSelectedChatId(newChatId));
           }
 
-          // Set the query data directly from the response when messages are available
-          // This ensures immediate cache update and proper deduplication
-          if (response.data.messages) {
-            queryClient.setQueryData(["chatDetail", newChatId], {
-              _id: newChatId,
-              title: response.data.title || "New Conversation",
-              messages: response.data.messages,
-              createdAt: response.data.createdAt || new Date().toISOString(),
-              updatedAt: response.data.updatedAt || new Date().toISOString(),
-            });
-          }
+          // Ensure query cache has the chat detail (even if messages not present)
+          const computedTitle =
+            response.data.title || deriveTitleFromMessages(response.data.messages) || "New Conversation";
+
+          queryClient.setQueryData(["chatDetail", newChatId], {
+            _id: newChatId,
+            title: computedTitle,
+            messages: response.data.messages || [],
+            createdAt: response.data.createdAt || new Date().toISOString(),
+            updatedAt: response.data.updatedAt || new Date().toISOString(),
+          });
 
           // Move optimistic messages from NEW_CHAT_KEY to the actual chat ID for new chats
           if (!variables.chatId) {
             dispatch(removeOptimisticMessages(NEW_CHAT_KEY));
             // Add messages to new chat - optimistic messages will be replaced by real messages
           }
+
+          // If this was a new chat, update temporary chat title and convert it to the real chat
+          if (!variables.chatId && newChatId) {
+            // Update temporary title if available or derived
+            dispatch(updateTemporaryChatTitle(computedTitle));
+            dispatch(
+              convertTemporaryChat({
+                realChatId: newChatId,
+                title: computedTitle,
+              })
+            );
+          }
+
+          // Ensure chatList contains the new chat and update title if it exists
+          queryClient.setQueryData<ChatSummary[] | undefined>(["chatList"], (old = []) => {
+            if (!old) return old;
+            const exists = old.some((c) => c._id === newChatId);
+            const newChatSummary: ChatSummary = {
+              _id: newChatId,
+              title: computedTitle,
+              createdAt: response.data.createdAt || new Date().toISOString(),
+              updatedAt: response.data.updatedAt || new Date().toISOString(),
+              messages: (response.data.messages as ChatMessage[] ) || undefined,
+            };
+
+            if (exists) {
+              // Update title/updatedAt for existing entry and move to top
+              const updated = old.map((c) => (c._id === newChatId ? { ...c, ...newChatSummary } : c));
+              const found = updated.find((c) => c._id === newChatId)!;
+              return [found, ...updated.filter((c) => c._id !== newChatId)];
+            }
+
+            return [newChatSummary, ...old];
+          });
 
           // Invalidate to ensure fresh data
           queryClient.invalidateQueries({
@@ -502,25 +556,25 @@ const ChatPage = () => {
       );
 
       // Handle the response - backend may or may not create a chat
-      if (result.data.chatId) {
+        if (result.data.chatId) {
         // Backend created a chat
         const newChatId = result.data.chatId;
+
+          const computedTitle =
+            (result.data.title as string) || deriveTitleFromMessages(result.data.messages) || "New Conversation";
 
         if (isNewChat) {
           dispatch(setSelectedChatId(newChatId));
         }
 
-        if (result.data.messages) {
-          queryClient.setQueryData(["chatDetail", newChatId], {
-            _id: newChatId,
-            title: (result.data.title as string) || "New Conversation",
-            messages: result.data.messages,
-            createdAt:
-              (result.data.createdAt as string) || new Date().toISOString(),
-            updatedAt:
-              (result.data.updatedAt as string) || new Date().toISOString(),
-          });
-        }
+        // Ensure chat detail cache is set and includes a sensible title
+        queryClient.setQueryData(["chatDetail", newChatId], {
+          _id: newChatId,
+          title: computedTitle,
+          messages: result.data.messages || [],
+          createdAt: (result.data.createdAt as string) || new Date().toISOString(),
+          updatedAt: (result.data.updatedAt as string) || new Date().toISOString(),
+        });
 
         // Only add new chat to chatList if it's actually a new chat
         // For existing chats, just update the existing entry's updatedAt timestamp
@@ -528,15 +582,25 @@ const ChatPage = () => {
           if (!oldChatList) return oldChatList;
 
           if (isNewChat) {
-            // Add new chat to the beginning of the list
+            // Add new chat to the beginning of the list, but avoid duplicates
+            const existing = oldChatList.find((c) => c._id === newChatId);
             const newChat: ChatSummary = {
               _id: newChatId,
-              title: (result.data.title as string) || "New Conversation",
+              title: computedTitle,
               createdAt:
                 (result.data.createdAt as string) || new Date().toISOString(),
               updatedAt:
                 (result.data.updatedAt as string) || new Date().toISOString(),
+              messages: (result.data.messages as ChatMessage[]) || undefined,
             };
+
+            if (existing) {
+              // If the chat already exists, update its title/updatedAt and move it to top
+              const updated = oldChatList.map((c) => (c._id === newChatId ? { ...c, ...newChat } : c));
+              const found = updated.find((c) => c._id === newChatId)!;
+              return [found, ...updated.filter((c) => c._id !== newChatId)];
+            }
+
             return [newChat, ...oldChatList];
           } else {
             // Update existing chat's updatedAt and move it to the top
@@ -548,6 +612,7 @@ const ChatPage = () => {
                   updatedAt:
                     (result.data.updatedAt as string) ||
                     new Date().toISOString(),
+                  messages: (result.data.messages as ChatMessage[]) || chat.messages,
                 };
               }
               return chat;
@@ -573,7 +638,7 @@ const ChatPage = () => {
           dispatch(
             convertTemporaryChat({
               realChatId: newChatId,
-              title: result.data.title as string,
+              title: computedTitle,
             })
           );
 
@@ -620,6 +685,11 @@ const ChatPage = () => {
               }
             }
           });
+          // Update temporary chat title from messages if possible
+          if (isNewChat && temporaryChat) {
+            const computedTempTitle = deriveTitleFromMessages(result.data.messages) || temporaryChat.title || "New Conversation";
+            dispatch(updateTemporaryChatTitle(computedTempTitle));
+          }
         }
       }
 

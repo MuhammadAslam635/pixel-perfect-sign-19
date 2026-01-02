@@ -7,6 +7,10 @@ import {
   EllipsisVertical,
   Trash2,
 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
+import rehypeSanitize from "rehype-sanitize";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChatSummary } from "@/types/chat.types";
 import { Input } from "@/components/ui/input";
@@ -208,12 +212,23 @@ const ChatList = ({
                           </p>
                         </div>
                         {lastMessage ? (
-                          <p
-                            className="mt-1 truncate text-[12px] text-white/60"
+                          <div
+                            className="mt-1 text-[12px] text-white/60"
                             title={lastMessage.content}
+                            style={{
+                              display: "-webkit-box",
+                              WebkitLineClamp: 1,
+                              WebkitBoxOrient: "vertical",
+                              overflow: "hidden",
+                            }}
                           >
-                            {truncateText(lastMessage.content, 25)}
-                          </p>
+                            <ReactMarkdown
+                              remarkPlugins={[remarkGfm]}
+                              rehypePlugins={[rehypeRaw, rehypeSanitize]}
+                            >
+                              {lastMessage.content}
+                            </ReactMarkdown>
+                          </div>
                         ) : (
                           <p className="mt-1 text-[12px] text-white/45">
                             No messages yet
