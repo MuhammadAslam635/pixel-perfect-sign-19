@@ -232,7 +232,7 @@ const AppRoutes = () => {
       <Route
         path="/followups"
         element={
-          <ProtectedRoute moduleName="followup-templates">
+          <ProtectedRoute moduleName="followups">
             <FollowUp2Page />
           </ProtectedRoute>
         }
@@ -363,7 +363,7 @@ const AppRoutes = () => {
       <Route
         path="/calendar"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute moduleName="calendar">
             <CalendarPage />
           </ProtectedRoute>
         }
