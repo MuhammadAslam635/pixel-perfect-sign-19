@@ -43,11 +43,11 @@ const navLinks: NavLink[] = [
     match: (pathname: string) => pathname === "/dashboard",
   },
   {
-    id: "companies",
+    id: "crm",
     label: "CRM",
     icon: BarChart3,
     path: "/companies",
-    moduleName: "companies", // Protected by 'companies' module
+    // No moduleName - custom permission check in filter logic
     match: (pathname: string) =>
       pathname.startsWith("/companies") ||
       pathname.startsWith("/leads") ||
@@ -179,6 +179,16 @@ export const Navigation = () => {
 
   const filteredNavLinks = useMemo(() => {
     return navLinks.filter((link) => {
+      // Special handling for CRM button - show if user has ANY CRM module permission
+      if (link.id === "crm") {
+        // Admin can always view
+        if (userRole === 'Admin') return true;
+        
+        // Show CRM if user has permission for any CRM module
+        const crmModules = ["companies", "leads", "calendar", "followups", "emails"];
+        return crmModules.some(module => canView(module));
+      }
+
       // 1. Check Module Permissions (New RBAC)
       if (link.moduleName) {
          // Admin can always view
@@ -211,7 +221,29 @@ export const Navigation = () => {
 
   const handleNavigate = (link: NavLink) => {
     setActiveNav(link.id);
-    navigate(link.path);
+    
+    // Special handling for CRM button - navigate to first accessible CRM module
+    if (link.id === "crm") {
+      const crmModules = [
+        { name: "companies", path: "/companies" },
+        { name: "leads", path: "/leads" },
+        { name: "calendar", path: "/calendar" },
+        { name: "followups", path: "/followups" },
+        { name: "emails", path: "/emails/inbox" },
+      ];
+      
+      // Find first CRM module user has access to
+      const firstAccessibleModule = crmModules.find(module => canView(module.name));
+      
+      if (firstAccessibleModule) {
+        navigate(firstAccessibleModule.path);
+      } else {
+        // Fallback to dashboard if no CRM access (shouldn't happen)
+        navigate("/dashboard");
+      }
+    } else {
+      navigate(link.path);
+    }
   };
 
   return (
