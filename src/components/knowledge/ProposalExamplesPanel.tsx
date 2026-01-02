@@ -43,6 +43,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { proposalExampleService, ProposalExampleUploadMetadata } from "@/services/proposalExample.service";
 import { useProposalExamplesData } from "@/pages/companyKnowledgeBase/hooks";
 import { Badge } from "@/components/ui/badge";
+import API from "@/utils/api";
 
 const formatFileSize = (bytes?: number) => {
   if (!bytes) return "Unknown size";
@@ -246,7 +247,9 @@ const ProposalExamplesPanel = () => {
               className="h-auto p-0 text-[10px] text-cyan-500 hover:text-cyan-400"
               onClick={() => {
                 if (example.fileUrl) {
-                  window.open(`/api/uploads/${example.fileUrl}`, "_blank");
+                  const backendUrl = API.defaults.baseURL || "";
+                  const backendOrigin = backendUrl.replace(/\/api\/?$/, "");
+                  window.open(`${backendOrigin}/uploads/${example.fileUrl}`, "_blank");
                 }
               }}
             >
@@ -296,7 +299,9 @@ const ProposalExamplesPanel = () => {
                 className="h-8 w-8"
                 onClick={() => {
                   if (example.fileUrl) {
-                    window.open(`/api/uploads/${example.fileUrl}`, "_blank");
+                    const backendUrl = API.defaults.baseURL || "";
+                    const backendOrigin = backendUrl.replace(/\/api\/?$/, "");
+                    window.open(`${backendOrigin}/uploads/${example.fileUrl}`, "_blank");
                   }
                 }}
               >
