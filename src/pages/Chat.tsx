@@ -40,6 +40,7 @@ import {
   clearTemporaryChat,
   convertTemporaryChat,
   handleUrlMessage,
+  updateTemporaryChatTitle,
 } from "@/store/slices/chatSlice";
 import {
   startStreamingTask,
@@ -523,10 +524,8 @@ const ChatPage = () => {
           startStreamingTask({
             chatId: actualChatId,
             messageId: tempMessage._id,
-            title: `Generating response for ${
-              selectedChatDetail?.title || "new chat"
-            }`,
-            description: "AI is processing your message...",
+            title: `Generating response for: "${trimmedMessage.length > 60 ? trimmedMessage.substring(0, 60) + '...' : trimmedMessage}"`,
+            description: "",
           })
         );
       }

@@ -785,8 +785,8 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
           startStreamingTask({
             chatId: actualChatId,
             messageId: tempMessage._id,
-            title: `Generating response for ${chatTitle}`,
-            description: "AI is processing your message...",
+            title: `Generating response for: "${trimmedMessage.length > 60 ? trimmedMessage.substring(0, 60) + '...' : trimmedMessage}"`,
+            description: "",
           })
         );
       }

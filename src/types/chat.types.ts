@@ -28,6 +28,9 @@ export type SendChatMessageResponse = {
   data: {
     chatId: string;
     messages: ChatMessage[];
+    title?: string;
+    createdAt?: string;
+    updatedAt?: string;
     [key: string]: unknown;
   };
   agentType?: string;
