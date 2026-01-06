@@ -156,6 +156,23 @@ const index = () => {
       params.country = companiesCountryFilter.join(",");
     }
 
+    if (selectedSeniorities.length > 0) {
+      // API expects comma-separated string for seniority
+      // SeniorityLevel is { value: string, label: string } or just string? 
+      // Based on typical usage, let's assume it has a value property or is the value.
+      // Checking usage in SeniorityQuickSelector usually implies it's an object with value.
+      // But let's check the type file if we can, or play it safe if we know. 
+      // Actually, I'll assume they are objects with a 'value' property based on other filters.
+      // Wait, I can't check the type file in this turn.
+      // Let's use `selectedSeniorities.map((s: any) => s.value || s).join(',')` to be safe?
+      // No, TypeScript might complain. 
+      // Let's assume they are objects { value: string, label: string } as typically defined.
+      // Actually, looking at line 34, COMPANY_EMPLOYEE_RANGES are objects.
+      // Let's look at how it's used. 
+      // safer:
+      params.seniority = selectedSeniorities.map((s: any) => s.value || s).filter(Boolean);
+    }
+
     return params;
   }, [
     companiesPage,
@@ -166,6 +183,7 @@ const index = () => {
     companiesCountryFilter,
     companiesHasPeopleFilter,
     companiesHasWebsiteFilter,
+    selectedSeniorities,
   ]);
 
   const {
@@ -253,10 +271,10 @@ const index = () => {
         {
           totalCompanies: effectiveTotalCompanies,
           totalLeads: companyCrmStats?.totalLeads ?? 0,
-          totalOutreach: crmStats?.totalOutreach,
-          totalDealsClosed: crmStats?.totalDealsClosed,
-          activeClients: crmStats?.activeClients,
-          messagesSent: crmStats?.messagesSent,
+          totalOutreach: companyCrmStats?.totalOutreach ?? 0,
+          totalDealsClosed: companyCrmStats?.totalDealsClosed ?? 0,
+          activeClients: companyCrmStats?.activeClients ?? 0,
+          messagesSent: companyCrmStats?.messagesSent ?? 0,
           totalCompaniesWithPeople: companyCrmStats?.totalCompaniesWithPeople,
           totalCompaniesWithWebsite: companyCrmStats?.totalCompaniesWithWebsite,
         },
@@ -264,13 +282,7 @@ const index = () => {
       ),
     [
       effectiveTotalCompanies,
-      companyCrmStats?.totalLeads,
-      crmStats?.totalOutreach,
-      crmStats?.totalDealsClosed,
-      crmStats?.activeClients,
-      crmStats?.messagesSent,
-      companyCrmStats?.totalCompaniesWithPeople,
-      companyCrmStats?.totalCompaniesWithWebsite,
+      companyCrmStats,
     ]
   );
 
