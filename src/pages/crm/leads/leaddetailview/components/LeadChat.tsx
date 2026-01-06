@@ -1700,8 +1700,15 @@ const LeadChat = ({
         instructions: editAIQuery.trim(),
       });
 
-      const editedPart = response.data?.editedPart || response.data?.proposal;
+      let editedPart = response.data?.editedPart || response.data?.proposal;
       if (editedPart) {
+        // Clean up any potential AI meta-text/markers and markdown headers
+        editedPart = editedPart
+          .replace(/^(Certainly!|Here is|Revised|Updated|Sure|Revised section).*?(\n|:)/i, "")
+          .replace(/^---+\s*$/gm, "")
+          .replace(/^[#]+\s/g, "") // Remove leading markdown headers (e.g., #, ##, ###) to prevent double headers
+          .trim();
+
         // Replace the selected part with the edited version
         // Try to find the exact selected text in the content
         let beforeSelection = "";
