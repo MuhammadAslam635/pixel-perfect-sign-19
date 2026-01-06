@@ -430,7 +430,7 @@ const index = () => {
   // Leads filters and pagination
 
   // Fetch all companies for the leads filter dropdown (limit to 500 for dropdown)
-  const { companies: allCompaniesForFilter } = useCompaniesData({
+  const { companies: allCompaniesForFilter, totalCompanies } = useCompaniesData({
     page: 1,
     limit: 500,
   });
@@ -650,11 +650,17 @@ const index = () => {
   
   // Calculate unique companies from filtered leads (respects all filters)
   const effectiveTotalCompanies = useMemo(() => {
-    const uniqueCompanyIds = new Set(
-      filteredLeads.map((lead) => lead.companyId).filter(Boolean)
-    );
-    return uniqueCompanyIds.size;
-  }, [filteredLeads]);
+    // If we have search or filters, we calculate based on the filtered leads
+    if (leadsSearch || hasLeadAdvancedFilters) {
+      const uniqueCompanyIds = new Set(
+        filteredLeads.map((lead) => lead.companyId).filter(Boolean)
+      );
+      return uniqueCompanyIds.size;
+    }
+    
+    // Otherwise return the total count of companies in the system (including those with 0 leads)
+    return totalCompanies ?? 0;
+  }, [filteredLeads, leadsSearch, hasLeadAdvancedFilters, totalCompanies]);
 
   const stats = useMemo(
     () =>
