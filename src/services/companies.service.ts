@@ -89,6 +89,7 @@ export interface CompaniesQueryParams {
   hasWebsite?: boolean;
   location?: string;
   country?: string;
+  company?: string; // Comma-separated company IDs for filtering stats
   stage?: string[];
   seniority?: string[];
   hasEmail?: boolean;

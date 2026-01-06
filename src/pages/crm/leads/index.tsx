@@ -629,6 +629,7 @@ const index = () => {
 
   // Fetch shared CRM stats for top cards (including companies and leads counts)
   const { stats: companyFilteredStats } = useCompanyCrmStatsData({
+    company: leadsCompanyFilter.length > 0 ? leadsCompanyFilter.join(",") : undefined,
     stage: leadsStageFilter.length > 0 ? leadsStageFilter : undefined,
     seniority: leadsSeniorityFilter.length > 0 ? leadsSeniorityFilter : undefined,
     country: leadsCountryFilter.length > 0 ? leadsCountryFilter.join(",") : undefined,
