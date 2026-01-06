@@ -628,16 +628,19 @@ const index = () => {
   );
 
   // Fetch shared CRM stats for top cards (including companies and leads counts)
-  const { stats: companyFilteredStats } = useCompanyCrmStatsData({
+  // Fetch shared CRM stats for top cards (including companies and leads counts)
+  const statsFilters = {
     company: leadsCompanyFilter.length > 0 ? leadsCompanyFilter.join(",") : undefined,
     stage: leadsStageFilter.length > 0 ? leadsStageFilter : undefined,
     seniority: leadsSeniorityFilter.length > 0 ? leadsSeniorityFilter : undefined,
-    country: leadsCountryFilter.length > 0 ? leadsCountryFilter.join(",") : undefined,
+    leadCountry: leadsCountryFilter.length > 0 ? leadsCountryFilter.join(",") : undefined,
     hasEmail: leadsHasEmailFilter || undefined,
     hasPhone: leadsHasPhoneFilter || undefined,
     hasLinkedin: leadsHasLinkedinFilter || undefined,
     hasFavourite: leadsHasFavouriteFilter || undefined,
-  });
+  };
+
+  const { stats: companyFilteredStats } = useCompanyCrmStatsData(statsFilters);
 
   // General CRM stats for outreach/response/active clients/messages sent
   const { stats: crmStats } = useCrmStatsData();

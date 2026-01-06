@@ -96,6 +96,7 @@ export interface CompaniesQueryParams {
   hasPhone?: boolean;
   hasLinkedin?: boolean;
   hasFavourite?: boolean;
+  leadCountry?: string;
 }
 
 export const companiesService = {
