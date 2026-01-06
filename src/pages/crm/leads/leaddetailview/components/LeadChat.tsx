@@ -675,6 +675,13 @@ const LeadChat = ({
     }
   }, [proposalsError]);
 
+  // Auto-select first template if none selected and templates are available
+  useEffect(() => {
+    if (proposalExamples.length > 0 && !selectedExampleId && activeTab === "Proposal") {
+      setSelectedExampleId(proposalExamples[0]._id);
+    }
+  }, [proposalExamples, selectedExampleId, activeTab]);
+
   // Load the most recent unsent proposal when proposals are fetched
   useEffect(() => {
     if (sentProposals.length > 0 && !proposalContent) {
@@ -3704,10 +3711,10 @@ const LeadChat = ({
                           disabled={
                             isUpdatingStage ||
                             !proposalContent ||
-                            !!selectedProposal
+                            (selectedProposal && selectedProposal.emailSent)
                           }
                           title={
-                            selectedProposal
+                            selectedProposal && selectedProposal.emailSent
                               ? "This proposal has already been sent"
                               : ""
                           }
@@ -3717,7 +3724,7 @@ const LeadChat = ({
                               <Loader2 className="h-4 w-4 animate-spin" />
                               Updating...
                             </>
-                          ) : selectedProposal ? (
+                          ) : selectedProposal && selectedProposal.emailSent ? (
                             <>
                               <Check className="h-4 w-4" />
                               Already Sent
@@ -3753,7 +3760,7 @@ const LeadChat = ({
                 </div>
 
                 {/* Show proposal info if it's a previously sent proposal */}
-                {selectedProposal && proposalContent && (
+                {selectedProposal && selectedProposal.emailSent && proposalContent && (
                   <div className="mb-4 px-1">
                     <div className="rounded-lg border border-white/20 bg-white/5 p-3">
                       <div className="flex items-start justify-between gap-3">
