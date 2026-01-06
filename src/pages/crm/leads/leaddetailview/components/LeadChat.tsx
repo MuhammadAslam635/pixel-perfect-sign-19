@@ -195,6 +195,7 @@ const LeadChat = ({
   const [proposalCopied, setProposalCopied] = useState(false);
   const [isUpdatingStage, setIsUpdatingStage] = useState(false);
   const [isProposalEditable, setIsProposalEditable] = useState(false);
+  const [proposalModified, setProposalModified] = useState(false);
   const [selectedText, setSelectedText] = useState<string>("");
   const [lockedSelectedText, setLockedSelectedText] = useState<string>(""); // Locked version for modal
   const [selectionRange, setSelectionRange] = useState<{
@@ -275,7 +276,7 @@ const LeadChat = ({
 
     // Calculate max height for 3 lines (approximately 20px per line + padding)
     const lineHeight = 20;
-    const maxLines = 3;
+    const maxLines = 2;
     const maxHeight = lineHeight * maxLines;
 
     // Set height based on content, capped at max
@@ -673,6 +674,26 @@ const LeadChat = ({
       console.error("Error fetching proposals:", proposalsError);
     }
   }, [proposalsError]);
+
+  // Load the most recent unsent proposal when proposals are fetched
+  useEffect(() => {
+    if (sentProposals.length > 0 && !proposalContent) {
+      // Find the most recent unsent proposal
+      const unsentProposals = sentProposals.filter(proposal => !proposal.emailSent);
+      if (unsentProposals.length > 0) {
+        // Sort by sentAt (most recent first) and take the first one
+        const mostRecentUnsent = unsentProposals.sort((a, b) =>
+          new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime()
+        )[0];
+
+        setProposalContent(mostRecentUnsent.content);
+        setProposalHtmlContent(mostRecentUnsent.htmlContent || "");
+        setSelectedProposal(mostRecentUnsent);
+        setProposalModified(false);
+        console.log("Loaded existing unsent proposal:", mostRecentUnsent._id);
+      }
+    }
+  }, [sentProposals, proposalContent]);
 
   useEffect(() => {
     if (!whatsappUnavailableMessage && whatsappSendError) {
@@ -1101,8 +1122,45 @@ const LeadChat = ({
         response.data?.proposal?.trim() || response.data?.proposal;
 
       if (generated) {
-        setProposalContent(generated);
-        toast.success("Proposal generated successfully!");
+        const htmlContent = markdownToHtml(generated);
+
+        try {
+          if (selectedProposal) {
+            // Update existing proposal when regenerating
+            await proposalService.updateProposal({
+              proposalId: selectedProposal._id,
+              content: generated,
+              htmlContent: htmlContent,
+            });
+            toast.success("Proposal regenerated and updated successfully!");
+          } else {
+            // Save new proposal to the database immediately
+            const saveResult = await proposalService.saveProposal({
+              leadId: lead._id,
+              content: generated,
+              htmlContent: htmlContent,
+              emailSent: false, // Mark as not sent yet
+            });
+
+            if (!saveResult.success) {
+              toast.error("Proposal generated but failed to save. Please try again.");
+            } else {
+              toast.success("Proposal generated and saved successfully!");
+            }
+          }
+
+          setProposalContent(generated);
+          setProposalHtmlContent(htmlContent);
+          setProposalModified(false);
+          // Refresh the proposals list to show the updated proposal
+          queryClient.invalidateQueries({ queryKey: ["proposals", lead._id] });
+        } catch (error: any) {
+          console.error("Failed to save/update proposal:", error);
+          // Fallback: still show the proposal even if save failed
+          setProposalContent(generated);
+          setProposalHtmlContent(htmlContent);
+          toast.error("Proposal generated but failed to save. Please try again.");
+        }
       } else {
         toast.error("No proposal was generated. Try again.");
       }
@@ -1114,6 +1172,27 @@ const LeadChat = ({
       toast.error(friendlyMessage);
     } finally {
       setIsGeneratingProposal(false);
+    }
+  };
+
+  const handleSaveEditedProposal = async () => {
+    if (!selectedProposal) {
+      toast.error("No proposal selected to save.");
+      return;
+    }
+
+    try {
+      await proposalService.updateProposal({
+        proposalId: selectedProposal._id,
+        content: proposalContent,
+        htmlContent: proposalHtmlContent,
+      });
+
+      setProposalModified(false);
+      toast.success("Proposal saved successfully!");
+    } catch (error: any) {
+      console.error("Failed to save edited proposal:", error);
+      toast.error("Failed to save proposal changes.");
     }
   };
 
@@ -1322,16 +1401,27 @@ const LeadChat = ({
         );
       }
 
-      // Save proposal to database
+      // Update existing proposal or create new one
       if (proposalContent) {
         try {
-          const saveResult = await proposalService.saveProposal({
-            leadId: lead._id,
-            content: proposalContent,
-            htmlContent: proposalHtmlContent,
-            emailSent: emailSentSuccessfully,
-            emailAddress: emailAddress || undefined,
-          });
+          let result;
+          if (selectedProposal) {
+            // Update existing proposal
+            result = await proposalService.updateProposal({
+              proposalId: selectedProposal._id,
+              emailSent: emailSentSuccessfully,
+              emailAddress: emailAddress || undefined,
+            });
+          } else {
+            // Create new proposal (fallback, though this shouldn't happen in normal flow)
+            result = await proposalService.saveProposal({
+              leadId: lead._id,
+              content: proposalContent,
+              htmlContent: proposalHtmlContent,
+              emailSent: emailSentSuccessfully,
+              emailAddress: emailAddress || undefined,
+            });
+          }
 
           // Refresh proposals list immediately
           await refetchProposals();
@@ -1339,7 +1429,7 @@ const LeadChat = ({
           // Also invalidate the query to ensure fresh data
           queryClient.invalidateQueries({ queryKey: ["proposals", lead._id] });
         } catch (proposalError: any) {
-          console.error("Failed to save proposal:", proposalError);
+          console.error("Failed to save/update proposal:", proposalError);
           console.error("Error details:", {
             message: proposalError?.message,
             response: proposalError?.response?.data,
@@ -1389,8 +1479,8 @@ const LeadChat = ({
   };
 
   const handleProposalClick = () => {
-    // Only allow editing for new proposals, not for previously sent ones
-    if (proposalContent && !isProposalEditable && !selectedProposal) {
+    // Allow editing for any proposal content
+    if (proposalContent && !isProposalEditable) {
       setIsProposalEditable(true);
     }
   };
@@ -2733,9 +2823,8 @@ const LeadChat = ({
       for (let i = 0; i < markdownLines.length; i++) {
         const line = markdownLines[i].trim();
 
-        // Skip empty lines but add spacing
+        // Skip empty lines
         if (!line) {
-          currentY += lineHeight * 0.5;
           continue;
         }
 
@@ -2765,9 +2854,9 @@ const LeadChat = ({
               currentY = margin + headerHeight;
             }
             pdf.text(textLine, margin, currentY);
-            currentY += lineHeight + 2;
+            currentY += lineHeight;
           });
-          currentY += 2;
+          currentY += lineHeight * 0.2; // Reduced spacing after headings
         } else if (line.startsWith("## ")) {
           // H2
           pdf.setFontSize(14);
@@ -2784,9 +2873,9 @@ const LeadChat = ({
               currentY = margin + headerHeight;
             }
             pdf.text(textLine, margin, currentY);
-            currentY += lineHeight + 1;
+            currentY += lineHeight;
           });
-          currentY += 2;
+          currentY += lineHeight * 0.1; // Reduced spacing after headings
         } else if (line.startsWith("### ")) {
           // H3
           pdf.setFontSize(12);
@@ -2803,9 +2892,9 @@ const LeadChat = ({
               currentY = margin + headerHeight;
             }
             pdf.text(textLine, margin, currentY);
-            currentY += lineHeight + 1;
+            currentY += lineHeight;
           });
-          currentY += 1;
+          currentY += lineHeight * 0.1; // Reduced spacing after headings
         } else if (line.startsWith("- ") || line.startsWith("* ")) {
           // Bullet list - handle bold text in bullets
           pdf.setFontSize(11);
@@ -2877,14 +2966,17 @@ const LeadChat = ({
           });
 
           currentY += lineHeight;
-        } else if (line.match(/^\d+\.\s/)) {
-          // Numbered list - handle bold text
+        } else if (line.match(/\d+\./)) {
+          // Numbered list - handle bold text (including lines that start with **)
           pdf.setFontSize(11);
           pdf.setTextColor(...(textColor as [number, number, number]));
-          const match = line.match(/^(\d+\.)\s(.+)/);
+          const match = line.match(/(\d+\.)\s*(.+)$/);
           if (match) {
             const number = match[1];
-            const text = match[2];
+            let text = match[2];
+
+            // Remove ALL ** markers from text to clean up any markdown artifacts
+            text = text.replace(/\*\*/g, '');
 
             // Parse bold text
             const segments = [];
@@ -3523,13 +3615,10 @@ const LeadChat = ({
                       onClick={handleGenerateProposal}
                       disabled={
                         isGeneratingProposal ||
-                        !!selectedProposal ||
                         !selectedExampleId
                       }
                       title={
-                        selectedProposal
-                          ? "Cannot regenerate a sent proposal"
-                          : !selectedExampleId
+                        !selectedExampleId
                           ? "Please select a template first"
                           : ""
                       }
@@ -3550,39 +3639,24 @@ const LeadChat = ({
                     </button>
                     {proposalContent && (
                       <>
-                        {/* Show View-Only indicator for sent proposals, or Edit/View button for new proposals */}
-                        {selectedProposal ? (
-                          <div className="flex items-center gap-2 rounded-lg border border-blue-500/30 bg-blue-500/10 px-4 py-2 text-xs font-medium text-blue-400">
-                            <svg
-                              className="h-4 w-4"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                              />
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                              />
-                            </svg>
-                            View-Only Mode
-                          </div>
-                        ) : (
+                        {/* Edit/View button for all proposals */}
+                        <button
+                          type="button"
+                          className="flex items-center gap-2 rounded-lg border border-white/30 bg-white/10 px-4 py-2 text-xs font-medium text-white transition hover:bg-white/20 disabled:opacity-40"
+                          onClick={() =>
+                            setIsProposalEditable(!isProposalEditable)
+                          }
+                        >
+                          {isProposalEditable ? "View" : "Edit"}
+                        </button>
+                        {proposalModified && selectedProposal && (
                           <button
                             type="button"
-                            className="flex items-center gap-2 rounded-lg border border-white/30 bg-white/10 px-4 py-2 text-xs font-medium text-white transition hover:bg-white/20 disabled:opacity-40"
-                            onClick={() =>
-                              setIsProposalEditable(!isProposalEditable)
-                            }
+                            className="flex items-center gap-2 rounded-lg border border-green-500/30 bg-green-500/10 px-4 py-2 text-xs font-medium text-green-400 transition hover:bg-green-500/20"
+                            onClick={handleSaveEditedProposal}
                           >
-                            {isProposalEditable ? "View" : "Edit"}
+                            <Check className="h-4 w-4" />
+                            Save Changes
                           </button>
                         )}
                         <button
@@ -3774,6 +3848,7 @@ const LeadChat = ({
                             onChange={(html) => {
                               setProposalHtmlContent(html);
                               setProposalContent(htmlToMarkdown(html));
+                              setProposalModified(true);
                             }}
                             placeholder="Edit your proposal here..."
                             height="400px"

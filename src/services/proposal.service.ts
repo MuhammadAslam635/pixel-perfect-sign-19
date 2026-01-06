@@ -56,6 +56,23 @@ export interface DeleteProposalResponse {
   message: string;
 }
 
+export interface UpdateProposalInput {
+  proposalId: string;
+  content?: string;
+  htmlContent?: string;
+  emailSent?: boolean;
+  emailAddress?: string;
+  metadata?: any;
+}
+
+export interface UpdateProposalResponse {
+  success: boolean;
+  message: string;
+  data: {
+    proposal: Proposal;
+  };
+}
+
 export const proposalService = {
   /**
    * Save a sent proposal
@@ -80,6 +97,17 @@ export const proposalService = {
    */
   getProposalById: async (proposalId: string): Promise<GetProposalResponse> => {
     const response = await API.get(`/proposals/${proposalId}`);
+    return response.data;
+  },
+
+  /**
+   * Update a proposal
+   */
+  updateProposal: async (
+    payload: UpdateProposalInput
+  ): Promise<UpdateProposalResponse> => {
+    const { proposalId, ...updateData } = payload;
+    const response = await API.put(`/proposals/${proposalId}`, updateData);
     return response.data;
   },
 
