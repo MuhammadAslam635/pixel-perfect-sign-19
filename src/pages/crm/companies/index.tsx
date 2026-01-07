@@ -40,8 +40,21 @@ const COMPANY_EMPLOYEE_RANGES = [
 type ViewMode = "compact" | "detailed" | "card";
 
 const index = () => {
-  const { canCreate } = usePermissions();
+  const { canCreate, legacyRole, userRole } = usePermissions();
   const navigate = useNavigate();
+
+  // Check if user is a viewer (supports both legacy and new RBAC)
+  const isViewer = useMemo(() => {
+    // Check new RBAC system (roleId with name property)
+    if (userRole && typeof userRole === "object" && (userRole as any).name === "CompanyViewer") {
+      return true;
+    }
+    // Check legacy role
+    if (legacyRole === "CompanyViewer") {
+      return true;
+    }
+    return false;
+  }, [userRole, legacyRole]);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(
     null
   );
@@ -356,12 +369,14 @@ const index = () => {
             >
               {/* Enrich Leads Section - Always Visible */}
               <div className="flex items-center gap-2 flex-shrink-0">
-                {/* Seniority Quick Selector */}
-                <SeniorityQuickSelector
-                  selectedSeniorities={selectedSeniorities}
-                  onChange={setSelectedSeniorities}
-                  seniorityOptions={seniorityOptions}
-                />
+                {/* Seniority Quick Selector - Hide for viewer role */}
+                {!isViewer && (
+                  <SeniorityQuickSelector
+                    selectedSeniorities={selectedSeniorities}
+                    onChange={setSelectedSeniorities}
+                    seniorityOptions={seniorityOptions}
+                  />
+                )}
 
                 {/* Enrich Leads Button */}
                 {canCreate("leads") && (

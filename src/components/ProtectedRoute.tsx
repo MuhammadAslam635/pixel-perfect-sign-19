@@ -1,4 +1,4 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { isAuthenticated, getUserData } from "@/utils/authHelpers";
@@ -23,6 +23,7 @@ const ProtectedRoute = ({
   requireAllActions = false,
   skipOnboardingCheck = false,
 }: ProtectedRouteProps) => {
+  const location = useLocation();
   const { isAuthenticated: isAuthenticatedRedux, user } = useSelector(
     (state: RootState) => state.auth
   );
