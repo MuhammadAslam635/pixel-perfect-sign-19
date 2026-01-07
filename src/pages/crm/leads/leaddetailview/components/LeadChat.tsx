@@ -2473,6 +2473,7 @@ const LeadChat = ({
           return new Promise((resolve) => {
             const img = new Image();
             img.crossOrigin = "Anonymous"; // Handle CORS
+            const isDataUrl = url.startsWith("data:");
 
             img.onload = () => {
               try {
@@ -2499,7 +2500,9 @@ const LeadChat = ({
             };
 
             // Add timestamp to avoid cache issues
-            img.src = url.includes("?")
+            img.src = isDataUrl
+              ? url
+              : url.includes("?")
               ? `${url}&t=${Date.now()}`
               : `${url}?t=${Date.now()}`;
           });
@@ -2531,6 +2534,19 @@ const LeadChat = ({
         isDarkMode ? "dark" : "light",
         "mode"
       );
+
+      // Prepare WhatsApp icon image (SVG → PNG)
+      let whatsappIconBase64: string | null = null;
+      try {
+        const whatsappSvgDataUrl = convertIconToBase64(
+          IoLogoWhatsapp,
+          16,
+          "#DAA520"
+        );
+        whatsappIconBase64 = await loadImageAsBase64(whatsappSvgDataUrl);
+      } catch (e) {
+        console.warn("Unable to prepare WhatsApp icon:", e);
+      }
 
       // Header height for content calculation
       const headerHeight = 30;
@@ -2660,49 +2676,33 @@ const LeadChat = ({
           "S"
         );
 
-        // WhatsApp icon - modern filled design
+        // WhatsApp icon - render official logo if available
         const whatsappX = margin + sectionWidth * 0.5;
-        pdf.setDrawColor(...(iconColor as [number, number, number]));
-        pdf.setFillColor(...(iconColor as [number, number, number]));
-        pdf.setLineWidth(0.5);
-
-        // Draw filled circle
-        pdf.circle(whatsappX, iconY, iconSize / 2.5, "F");
-
-        // Draw white chat bubble/phone icon inside
-        pdf.setFillColor(
-          isDarkMode ? 35 : 255,
-          isDarkMode ? 35 : 255,
-          isDarkMode ? 35 : 255
-        );
-        const bubbleSize = iconSize / 5;
-        // Simple phone receiver representation
-        pdf.circle(
-          whatsappX - bubbleSize * 0.6,
-          iconY + bubbleSize * 0.4,
-          bubbleSize * 0.35,
-          "F"
-        );
-        pdf.circle(
-          whatsappX + bubbleSize * 0.6,
-          iconY - bubbleSize * 0.4,
-          bubbleSize * 0.35,
-          "F"
-        );
-
-        // Connection line
-        pdf.setLineWidth(bubbleSize * 0.4);
-        pdf.setDrawColor(
-          isDarkMode ? 35 : 255,
-          isDarkMode ? 35 : 255,
-          isDarkMode ? 35 : 255
-        );
-        pdf.line(
-          whatsappX - bubbleSize * 0.3,
-          iconY + bubbleSize * 0.2,
-          whatsappX + bubbleSize * 0.3,
-          iconY - bubbleSize * 0.2
-        );
+        if (whatsappIconBase64) {
+          try {
+            const iconWidth = 6;
+            const iconHeight = 6;
+            pdf.addImage(
+              whatsappIconBase64,
+              "PNG",
+              whatsappX - iconWidth / 2,
+              iconY - iconHeight / 2,
+              iconWidth,
+              iconHeight,
+              undefined,
+              "FAST"
+            );
+          } catch (err) {
+            console.warn("Failed to add WhatsApp icon, falling back:", err);
+            pdf.setDrawColor(...(iconColor as [number, number, number]));
+            pdf.setFillColor(...(iconColor as [number, number, number]));
+            pdf.circle(whatsappX, iconY, iconSize / 2.5, "F");
+          }
+        } else {
+          pdf.setDrawColor(...(iconColor as [number, number, number]));
+          pdf.setFillColor(...(iconColor as [number, number, number]));
+          pdf.circle(whatsappX, iconY, iconSize / 2.5, "F");
+        }
 
         pdf.setFontSize(7);
         pdf.setTextColor(...(secondaryTextColor as [number, number, number]));
