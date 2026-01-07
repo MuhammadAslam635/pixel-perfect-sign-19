@@ -609,10 +609,8 @@ const LeadChat = ({
       "Failed to load email conversation. Please try again later."
     : null;
 
-  const { 
-    examples: proposalExamples, 
-    query: proposalExamplesQuery 
-  } = useProposalExamplesData({ limit: 100 });
+  const { examples: proposalExamples, query: proposalExamplesQuery } =
+    useProposalExamplesData({ limit: 100 });
 
   const isProposalExamplesLoading = proposalExamplesQuery.isLoading;
 
@@ -677,7 +675,11 @@ const LeadChat = ({
 
   // Auto-select first template if none selected and templates are available
   useEffect(() => {
-    if (proposalExamples.length > 0 && !selectedExampleId && activeTab === "Proposal") {
+    if (
+      proposalExamples.length > 0 &&
+      !selectedExampleId &&
+      activeTab === "Proposal"
+    ) {
       setSelectedExampleId(proposalExamples[0]._id);
     }
   }, [proposalExamples, selectedExampleId, activeTab]);
@@ -686,11 +688,13 @@ const LeadChat = ({
   useEffect(() => {
     if (sentProposals.length > 0 && !proposalContent) {
       // Find the most recent unsent proposal
-      const unsentProposals = sentProposals.filter(proposal => !proposal.emailSent);
+      const unsentProposals = sentProposals.filter(
+        (proposal) => !proposal.emailSent
+      );
       if (unsentProposals.length > 0) {
         // Sort by sentAt (most recent first) and take the first one
-        const mostRecentUnsent = unsentProposals.sort((a, b) =>
-          new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime()
+        const mostRecentUnsent = unsentProposals.sort(
+          (a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime()
         )[0];
 
         setProposalContent(mostRecentUnsent.content);
@@ -1150,7 +1154,9 @@ const LeadChat = ({
             });
 
             if (!saveResult.success) {
-              toast.error("Proposal generated but failed to save. Please try again.");
+              toast.error(
+                "Proposal generated but failed to save. Please try again."
+              );
             } else {
               toast.success("Proposal generated and saved successfully!");
             }
@@ -1166,7 +1172,9 @@ const LeadChat = ({
           // Fallback: still show the proposal even if save failed
           setProposalContent(generated);
           setProposalHtmlContent(htmlContent);
-          toast.error("Proposal generated but failed to save. Please try again.");
+          toast.error(
+            "Proposal generated but failed to save. Please try again."
+          );
         }
       } else {
         toast.error("No proposal was generated. Try again.");
@@ -1801,7 +1809,10 @@ const LeadChat = ({
       if (editedPart) {
         // Clean up any potential AI meta-text/markers and markdown headers
         editedPart = editedPart
-          .replace(/^(Certainly!|Here is|Revised|Updated|Sure|Revised section).*?(\n|:)/i, "")
+          .replace(
+            /^(Certainly!|Here is|Revised|Updated|Sure|Revised section).*?(\n|:)/i,
+            ""
+          )
           .replace(/^---+\s*$/gm, "")
           .replace(/^[#]+\s/g, "") // Remove leading markdown headers (e.g., #, ##, ###) to prevent double headers
           .trim();
@@ -2044,7 +2055,10 @@ const LeadChat = ({
       if (editedPart) {
         // Clean up any potential AI meta-text/markers
         editedPart = editedPart
-          .replace(/^(Certainly!|Here is|Revised|Updated|Sure|Revised section).*?(\n|:)/i, "")
+          .replace(
+            /^(Certainly!|Here is|Revised|Updated|Sure|Revised section).*?(\n|:)/i,
+            ""
+          )
           .replace(/^---+\s*$/gm, "")
           .trim();
 
@@ -2446,7 +2460,7 @@ const LeadChat = ({
       const companyName = "TAMIMI PRE ENGINEERED BUILDINGS CO.";
       const companyWebsite = "www.tamimi-peb.com";
       const companyLocation = "Saudi Arabia";
-      const companyWhatsApp = "+966 50 123 4567"; 
+      const companyWhatsApp = "+966 50 123 4567";
 
       // Tamimi logo - Use the appropriate logo based on dark/light mode
       const companyLogoUrl = isDarkMode ? tamimiLogoDark : tamimiLogoLight;
@@ -2828,12 +2842,15 @@ const LeadChat = ({
       const maxWidth = contentWidth;
 
       for (let i = 0; i < markdownLines.length; i++) {
-        const line = markdownLines[i].trim();
-
-        // Skip empty lines
-        if (!line) {
+        const rawLine = markdownLines[i].trim();
+        if (!rawLine) {
           continue;
         }
+        const cleanedLine = rawLine
+          .replace(/\*\*(.+?)\*\*/g, "$1")
+          .replace(/\*(.+?)\*/g, "$1");
+
+        const line = rawLine;
 
         // Check if we need a new page
         if (currentY + lineHeight > maxContentY) {
@@ -2850,7 +2867,7 @@ const LeadChat = ({
           pdf.setFontSize(16);
           pdf.setFont("helvetica", "bold");
           pdf.setTextColor(...(textColor as [number, number, number]));
-          const text = line.substring(2);
+          const text = cleanedLine.substring(2);
           const textLines = pdf.splitTextToSize(text, maxWidth);
           textLines.forEach((textLine: string) => {
             if (currentY + lineHeight > maxContentY) {
@@ -2859,6 +2876,9 @@ const LeadChat = ({
               addHeader();
               addFooter();
               currentY = margin + headerHeight;
+              pdf.setFontSize(16);
+              pdf.setFont("helvetica", "bold");
+              pdf.setTextColor(...(textColor as [number, number, number]));
             }
             pdf.text(textLine, margin, currentY);
             currentY += lineHeight;
@@ -2869,7 +2889,7 @@ const LeadChat = ({
           pdf.setFontSize(14);
           pdf.setFont("helvetica", "bold");
           pdf.setTextColor(...(textColor as [number, number, number]));
-          const text = line.substring(3);
+          const text = cleanedLine.substring(3);
           const textLines = pdf.splitTextToSize(text, maxWidth);
           textLines.forEach((textLine: string) => {
             if (currentY + lineHeight > maxContentY) {
@@ -2878,6 +2898,9 @@ const LeadChat = ({
               addHeader();
               addFooter();
               currentY = margin + headerHeight;
+              pdf.setFontSize(14);
+              pdf.setFont("helvetica", "bold");
+              pdf.setTextColor(...(textColor as [number, number, number]));
             }
             pdf.text(textLine, margin, currentY);
             currentY += lineHeight;
@@ -2888,7 +2911,70 @@ const LeadChat = ({
           pdf.setFontSize(12);
           pdf.setFont("helvetica", "bold");
           pdf.setTextColor(...(textColor as [number, number, number]));
-          const text = line.substring(4);
+          const text = cleanedLine.substring(4);
+          const textLines = pdf.splitTextToSize(text, maxWidth);
+          textLines.forEach((textLine: string) => {
+            if (currentY + lineHeight > maxContentY) {
+              pdf.addPage();
+              addBackground();
+              addHeader();
+              addFooter();
+              currentY = margin + headerHeight;
+              pdf.setFontSize(12);
+              pdf.setFont("helvetica", "bold");
+              pdf.setTextColor(...(textColor as [number, number, number]));
+            }
+            pdf.text(textLine, margin, currentY);
+            currentY += lineHeight;
+          });
+          currentY += lineHeight * 0.1; // Reduced spacing after headings
+        } else if (line.startsWith("#### ")) {
+          pdf.setFontSize(11);
+          pdf.setFont("helvetica", "bold");
+          pdf.setTextColor(...(textColor as [number, number, number]));
+          const text = cleanedLine.substring(5);
+          const textLines = pdf.splitTextToSize(text, maxWidth);
+          textLines.forEach((textLine: string) => {
+            if (currentY + lineHeight > maxContentY) {
+              pdf.addPage();
+              addBackground();
+              addHeader();
+              addFooter();
+              currentY = margin + headerHeight;
+              pdf.setFontSize(11);
+              pdf.setFont("helvetica", "bold");
+              pdf.setTextColor(...(textColor as [number, number, number]));
+            }
+            pdf.text(textLine, margin, currentY);
+            currentY += lineHeight;
+          });
+          currentY += lineHeight * 0.1;
+        } else if (line.startsWith("##### ")) {
+          pdf.setFontSize(10);
+          pdf.setFont("helvetica", "bold");
+          pdf.setTextColor(...(textColor as [number, number, number]));
+          const text = cleanedLine.substring(6);
+          const textLines = pdf.splitTextToSize(text, maxWidth);
+          textLines.forEach((textLine: string) => {
+            if (currentY + lineHeight > maxContentY) {
+              pdf.addPage();
+              addBackground();
+              addHeader();
+              addFooter();
+              currentY = margin + headerHeight;
+              pdf.setFontSize(10);
+              pdf.setFont("helvetica", "bold");
+              pdf.setTextColor(...(textColor as [number, number, number]));
+            }
+            pdf.text(textLine, margin, currentY);
+            currentY += lineHeight;
+          });
+          currentY += lineHeight * 0.1;
+        } else if (line.startsWith("###### ")) {
+          pdf.setFontSize(10);
+          pdf.setFont("helvetica", "bold");
+          pdf.setTextColor(...(textColor as [number, number, number]));
+          const text = cleanedLine.substring(7);
           const textLines = pdf.splitTextToSize(text, maxWidth);
           textLines.forEach((textLine: string) => {
             if (currentY + lineHeight > maxContentY) {
@@ -2901,163 +2987,62 @@ const LeadChat = ({
             pdf.text(textLine, margin, currentY);
             currentY += lineHeight;
           });
-          currentY += lineHeight * 0.1; // Reduced spacing after headings
+          currentY += lineHeight * 0.1;
         } else if (line.startsWith("- ") || line.startsWith("* ")) {
-          // Bullet list - handle bold text in bullets
           pdf.setFontSize(11);
           pdf.setTextColor(...(textColor as [number, number, number]));
-          const text = line.substring(2);
-
-          // Parse bold text
-          const segments = [];
-          let currentText = text;
-          const boldRegex = /\*\*(.+?)\*\*/;
-          let match;
-
-          while ((match = boldRegex.exec(currentText)) !== null) {
-            if (match.index > 0) {
-              segments.push({
-                text: currentText.substring(0, match.index),
-                bold: false,
-              });
-            }
-            segments.push({ text: match[1], bold: true });
-            currentText = currentText.substring(match.index + match[0].length);
-          }
-          if (currentText.length > 0) {
-            segments.push({ text: currentText, bold: false });
-          }
-
-          // Render the line with bold handling and proper wrapping
-          if (currentY + lineHeight > maxContentY) {
-            pdf.addPage();
-            addBackground();
-            addHeader();
-            addFooter();
-            currentY = margin + headerHeight;
-          }
-
+          const text = cleanedLine.substring(2);
           const bulletIndent = margin + 5;
-          let xOffset = margin + 2;
+          const availableWidth = contentWidth - (bulletIndent - margin);
+          const textLines = pdf.splitTextToSize(text, availableWidth);
           pdf.setFont("helvetica", "normal");
-          pdf.text("• ", xOffset, currentY);
-          xOffset = bulletIndent;
-
-          segments.forEach((segment) => {
-            pdf.setFont("helvetica", segment.bold ? "bold" : "normal");
-            const words = segment.text.split(" ");
-
-            words.forEach((word, idx) => {
-              const wordWithSpace = idx < words.length - 1 ? word + " " : word;
-              const wordWidth = pdf.getTextWidth(wordWithSpace);
-
-              // Check if we need to wrap to next line
-              if (
-                xOffset + wordWidth > pageWidth - margin &&
-                xOffset > bulletIndent
-              ) {
-                currentY += lineHeight;
-                if (currentY + lineHeight > maxContentY) {
-                  pdf.addPage();
-                  addBackground();
-                  addHeader();
-                  addFooter();
-                  currentY = margin + headerHeight;
-                }
-                xOffset = bulletIndent; // Indent continuation
-              }
-
-              pdf.text(wordWithSpace, xOffset, currentY);
-              xOffset += wordWidth;
-            });
-          });
-
-          currentY += lineHeight;
-        } else if (line.match(/\d+\./)) {
-          // Numbered list - handle bold text (including lines that start with **)
-          pdf.setFontSize(11);
-          pdf.setTextColor(...(textColor as [number, number, number]));
-          const match = line.match(/(\d+\.)\s*(.+)$/);
-          if (match) {
-            const number = match[1];
-            let text = match[2];
-
-            // Remove ALL ** markers from text to clean up any markdown artifacts
-            text = text.replace(/\*\*/g, '');
-
-            // Parse bold text
-            const segments = [];
-            let currentText = text;
-            const boldRegex = /\*\*(.+?)\*\*/;
-            let boldMatch;
-
-            while ((boldMatch = boldRegex.exec(currentText)) !== null) {
-              if (boldMatch.index > 0) {
-                segments.push({
-                  text: currentText.substring(0, boldMatch.index),
-                  bold: false,
-                });
-              }
-              segments.push({ text: boldMatch[1], bold: true });
-              currentText = currentText.substring(
-                boldMatch.index + boldMatch[0].length
-              );
-            }
-            if (currentText.length > 0) {
-              segments.push({ text: currentText, bold: false });
-            }
-
-            // Render the line with bold handling and proper wrapping
+          pdf.text("• ", margin + 2, currentY);
+          textLines.forEach((textLine: string, idx: number) => {
             if (currentY + lineHeight > maxContentY) {
               pdf.addPage();
               addBackground();
               addHeader();
               addFooter();
               currentY = margin + headerHeight;
+              pdf.setFontSize(11);
+              pdf.setFont("helvetica", "normal");
+              pdf.setTextColor(...(textColor as [number, number, number]));
+              pdf.text("• ", margin + 2, currentY);
             }
-
-            let xOffset = margin;
-            pdf.setFont("helvetica", "normal");
-            pdf.text(number + " ", xOffset, currentY);
-            const numberWidth = pdf.getTextWidth(number + " ");
-            xOffset += numberWidth;
-            const numberIndent = margin + numberWidth;
-
-            segments.forEach((segment) => {
-              pdf.setFont("helvetica", segment.bold ? "bold" : "normal");
-              const words = segment.text.split(" ");
-
-              words.forEach((word, idx) => {
-                const wordWithSpace =
-                  idx < words.length - 1 ? word + " " : word;
-                const wordWidth = pdf.getTextWidth(wordWithSpace);
-
-                // Check if we need to wrap to next line
-                if (
-                  xOffset + wordWidth > pageWidth - margin &&
-                  xOffset > numberIndent
-                ) {
-                  currentY += lineHeight;
-                  if (currentY + lineHeight > maxContentY) {
-                    pdf.addPage();
-                    addBackground();
-                    addHeader();
-                    addFooter();
-                    currentY = margin + headerHeight;
-                  }
-                  xOffset = numberIndent; // Indent continuation to align with text
-                }
-
-                pdf.text(wordWithSpace, xOffset, currentY);
-                xOffset += wordWidth;
-              });
-            });
-
+            pdf.text(textLine, bulletIndent, currentY);
             currentY += lineHeight;
+          });
+        } else if (line.match(/\d+\./)) {
+          pdf.setFontSize(11);
+          pdf.setTextColor(...(textColor as [number, number, number]));
+          const match = line.match(/(\d+\.)\s*(.+)$/);
+          if (match) {
+            const number = match[1];
+            const text = match[2]
+              .replace(/\*\*(.+?)\*\*/g, "$1")
+              .replace(/\*(.+?)\*/g, "$1");
+            const numberWidth = pdf.getTextWidth(number + " ");
+            const numberIndent = margin + numberWidth;
+            const availableWidth = contentWidth - numberWidth;
+            pdf.setFont("helvetica", "normal");
+            pdf.text(number + " ", margin, currentY);
+            const textLines = pdf.splitTextToSize(text, availableWidth);
+            textLines.forEach((textLine: string) => {
+              if (currentY + lineHeight > maxContentY) {
+                pdf.addPage();
+                addBackground();
+                addHeader();
+                addFooter();
+                currentY = margin + headerHeight;
+                pdf.setFontSize(11);
+                pdf.setFont("helvetica", "normal");
+                pdf.setTextColor(...(textColor as [number, number, number]));
+                pdf.text(number + " ", margin, currentY);
+              }
+              pdf.text(textLine, numberIndent, currentY);
+              currentY += lineHeight;
+            });
           }
-        } else if (line.startsWith("")) {
-          // Empty line - add spacing
-          currentY += lineHeight / 2;
         } else if (line.startsWith("---") || line.startsWith("***")) {
           // Horizontal rule
           pdf.setDrawColor(...(textColor as [number, number, number]));
@@ -3070,11 +3055,7 @@ const LeadChat = ({
           pdf.setFont("helvetica", "normal");
           pdf.setTextColor(...(textColor as [number, number, number]));
 
-          // Simple bold handling - split by ** markers
-          let processedText = line;
-          // Remove markdown bold markers for now (jsPDF doesn't support inline formatting easily)
-          processedText = processedText.replace(/\*\*(.+?)\*\*/g, "$1");
-          processedText = processedText.replace(/\*(.+?)\*/g, "$1");
+          let processedText = cleanedLine;
 
           const textLines = pdf.splitTextToSize(processedText, maxWidth);
           textLines.forEach((textLine: string) => {
@@ -3084,6 +3065,9 @@ const LeadChat = ({
               addHeader();
               addFooter();
               currentY = margin + headerHeight;
+              pdf.setFontSize(11);
+              pdf.setFont("helvetica", "normal");
+              pdf.setTextColor(...(textColor as [number, number, number]));
             }
             pdf.text(textLine, margin, currentY);
             currentY += lineHeight;
@@ -3587,7 +3571,9 @@ const LeadChat = ({
                                         value={example.fileName}
                                         onSelect={() => {
                                           // Clear existing proposal when changing template
-                                          if (selectedExampleId !== example._id) {
+                                          if (
+                                            selectedExampleId !== example._id
+                                          ) {
                                             setProposalContent("");
                                             setProposalHtmlContent("");
                                           }
@@ -3620,10 +3606,7 @@ const LeadChat = ({
                       type="button"
                       className="flex items-center gap-2 rounded-lg bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] px-4 py-2 text-xs font-medium text-white transition hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed h-[34px]"
                       onClick={handleGenerateProposal}
-                      disabled={
-                        isGeneratingProposal ||
-                        !selectedExampleId
-                      }
+                      disabled={isGeneratingProposal || !selectedExampleId}
                       title={
                         !selectedExampleId
                           ? "Please select a template first"
@@ -3760,35 +3743,37 @@ const LeadChat = ({
                 </div>
 
                 {/* Show proposal info if it's a previously sent proposal */}
-                {selectedProposal && selectedProposal.emailSent && proposalContent && (
-                  <div className="mb-4 px-1">
-                    <div className="rounded-lg border border-white/20 bg-white/5 p-3">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-semibold text-white/90">
-                            Sent by {selectedProposal.sentBy.name}
-                          </p>
-                          <p className="text-xs text-white/60 mt-0.5">
-                            {new Date(
-                              selectedProposal.sentAt
-                            ).toLocaleDateString("en-US", {
-                              year: "numeric",
-                              month: "long",
-                              day: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </p>
+                {selectedProposal &&
+                  selectedProposal.emailSent &&
+                  proposalContent && (
+                    <div className="mb-4 px-1">
+                      <div className="rounded-lg border border-white/20 bg-white/5 p-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-semibold text-white/90">
+                              Sent by {selectedProposal.sentBy.name}
+                            </p>
+                            <p className="text-xs text-white/60 mt-0.5">
+                              {new Date(
+                                selectedProposal.sentAt
+                              ).toLocaleDateString("en-US", {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </p>
+                          </div>
+                          {selectedProposal.emailSent && (
+                            <span className="flex-shrink-0 text-[10px] px-2 py-1 rounded bg-green-500/20 text-green-300 border border-green-500/30">
+                              ✓ Email Sent
+                            </span>
+                          )}
                         </div>
-                        {selectedProposal.emailSent && (
-                          <span className="flex-shrink-0 text-[10px] px-2 py-1 rounded bg-green-500/20 text-green-300 border border-green-500/30">
-                            ✓ Email Sent
-                          </span>
-                        )}
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
                 {/* Proposal Content */}
                 {proposalContent ? (
