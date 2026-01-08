@@ -646,17 +646,26 @@ const UserList = () => {
                       }}
                       className="relative flex-1 w-full"
                     >
-                      <Card className="relative rounded-2xl border-[#FFFFFF0D] hover:border-[#3a3a3a] transition-all duration-200 w-full overflow-hidden bg-[#222B2C]/95 backdrop-blur-sm">
-                        <CardContent className="p-4 sm:p-6 space-y-4">
+                      {/* Glow effect behind the role container */}
+                      <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/10 via-blue-500/5 to-transparent blur-xl opacity-30 pointer-events-none" />
+                      
+                      <Card 
+                        className="relative rounded-3xl border transition-all duration-200 w-full overflow-hidden shadow-xl"
+                        style={{
+                          background: "linear-gradient(173.83deg, rgba(255, 255, 255, 0.05) 4.82%, rgba(255, 255, 255, 0) 38.08%, rgba(255, 255, 255, 0) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
+                          borderColor: "rgba(255, 255, 255, 0.08)"
+                        }}
+                      >
+                        <CardContent className="p-4 sm:p-6 space-y-5">
                           {/* Role Header */}
                           <div className="flex items-center gap-3">
-                            <h3 className="text-xl font-semibold text-white">
+                            <h3 className="text-xl font-semibold text-white tracking-tight pl-1">
                               {roleName}
                             </h3>
                           </div>
 
                           {/* Users Grid */}
-                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                             {roleUsers.map((user, userIndex) => (
                               <motion.div
                                 key={user._id}
@@ -667,22 +676,18 @@ const UserList = () => {
                                   delay: roleIndex * 0.1 + userIndex * 0.05,
                                   ease: "easeOut",
                                 }}
-                                className="relative flex-1 w-full"
+                                className="relative flex-1 w-full group"
                               >
                                 <div
-                                  className="relative rounded-2xl border-[#FFFFFF0D] hover:border-[#3a3a3a] transition-all duration-200 w-full overflow-hidden"
-                                  style={{
-                                    background:
-                                      "linear-gradient(180deg, #67B0B7 0%, #4066B3 100%)",
-                                  }}
+                                  className="relative rounded-2xl border border-white/5 hover:border-white/20 hover:bg-white/5 transition-all duration-300 w-full overflow-hidden bg-white/[0.02]"
                                 >
-                                  <CardContent className="p-3 sm:p-4 h-full flex flex-row items-center min-h-[110px] gap-4 relative">
-                                    <div className="absolute top-0 right-3">
+                                  <CardContent className="p-4 h-full flex flex-row items-center gap-4 relative py-5">
+                                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                                       <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
                                           <button
                                             type="button"
-                                            className="text-white/60 hover:text-white p-1.5 rounded-full hover:bg-white/10 transition-colors"
+                                            className="text-white/40 hover:text-white p-1.5 rounded-full hover:bg-white/10 transition-colors"
                                             title="More actions"
                                           >
                                             <MoreHorizontal className="h-4 w-4" />
@@ -690,7 +695,7 @@ const UserList = () => {
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent
                                           align="end"
-                                          className="bg-[rgba(30,30,30,0.95)] border border-white/10 text-white shadow-lg rounded-lg w-44 backdrop-blur"
+                                          className="bg-[#1A1A1A]/95 border border-white/10 text-white shadow-xl rounded-xl w-44 backdrop-blur-md"
                                         >
                                           {!trashed ? (
                                             <>
@@ -700,11 +705,14 @@ const UserList = () => {
                                                     `/users/${user._id}/edit`
                                                   )
                                                 }
-                                                className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-white/10"
+                                                className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-white/10 focus:bg-white/10 focus:text-white text-sm"
                                               >
-                                                <Eye className="h-4 w-4" />
+                                                <Eye className="h-4 w-4 text-white/70" />
                                                 View Profile
                                               </DropdownMenuItem>
+                                              
+                                              {/* Removed Delete/Edit actions from direct view to match design simplicity, can add back if requested */}
+                                              {/* Assuming "View Profile" leads to edit details */}
 
                                             </>
                                           ) : (
@@ -721,25 +729,25 @@ const UserList = () => {
                                         </DropdownMenuContent>
                                       </DropdownMenu>
                                     </div>
-                                    <div className="flex items-center justify-center relative">
-                                      <div className="flex-shrink-0">
-                                        <AvatarFallback
-                                          name={resolveUserDisplayName(user)}
-                                          pictureUrl={user.profileImage}
-                                          size="md"
-                                          className="border-2 border-white/20"
-                                        />
-                                      </div>
+                                    
+                                    <div className="flex-shrink-0">
+                                      <AvatarFallback
+                                        name={resolveUserDisplayName(user)}
+                                        pictureUrl={user.profileImage}
+                                        size="md"
+                                        className="border-2 border-white/10 shadow-lg"
+                                      />
                                     </div>
-                                    <div className="flex-1 text-left">
-                                      <h4 className="text-neutral-900 font-bold text-sm">
+                                    
+                                    <div className="flex-1 text-left min-w-0">
+                                      <h4 className="text-white font-medium text-sm truncate pr-6 group-hover:text-cyan-400 transition-colors">
                                         {resolveUserDisplayName(user)}
                                       </h4>
-                                      <p className="text-neutral-900 text-sm">
+                                      <p className="text-white/50 text-xs truncate mt-0.5 font-light">
                                         {user.email}
                                       </p>
                                       {user.phone && (
-                                        <p className="text-white/50 text-sm">
+                                        <p className="text-white/30 text-xs mt-0.5 truncate">
                                           {user.phone}
                                         </p>
                                       )}
