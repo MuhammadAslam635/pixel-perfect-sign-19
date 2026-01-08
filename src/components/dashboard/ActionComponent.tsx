@@ -14,12 +14,34 @@ import { usePermissions } from "@/hooks/usePermissions";
 import LongRunningTasksButton from "@/components/navigation/LongRunningTasksButton";
 import { AvatarFallback } from "@/components/ui/avatar-fallback";
 
+// Helper function to get seen notifications from localStorage
+const getSeenNotifications = (): Set<string> => {
+  try {
+    const stored = localStorage.getItem("seenNotifications");
+    return stored ? new Set(JSON.parse(stored)) : new Set();
+  } catch {
+    return new Set();
+  }
+};
+
+// Helper function to save seen notifications to localStorage
+const saveSeenNotifications = (seenNotifications: Set<string>) => {
+  try {
+    localStorage.setItem(
+      "seenNotifications",
+      JSON.stringify([...seenNotifications])
+    );
+  } catch {
+    // Ignore localStorage errors (e.g., quota exceeded)
+  }
+};
+
 export const ActionComponent = () => {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [previousNotificationIds, setPreviousNotificationIds] = useState<
-    Set<string>
-  >(new Set());
+  const previousNotificationIdsRef = useRef<Set<string>>(
+    getSeenNotifications()
+  );
   const actionsRef = useRef<HTMLDivElement>(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -93,7 +115,7 @@ export const ActionComponent = () => {
     // Find new notifications that weren't in the previous state
     const newNotifications = notifications.filter(
       (notification) =>
-        !previousNotificationIds.has(notification._id) &&
+        !previousNotificationIdsRef.current.has(notification._id) &&
         notification.is_read === "No"
     );
 
@@ -105,9 +127,10 @@ export const ActionComponent = () => {
       });
     });
 
-    // Update previous notification IDs
-    setPreviousNotificationIds(currentNotificationIds);
-  }, [notifications, previousNotificationIds]);
+    // Update previous notification IDs and persist to localStorage
+    previousNotificationIdsRef.current = currentNotificationIds;
+    saveSeenNotifications(currentNotificationIds);
+  }, [notifications]);
 
   const handleLogout = () => {
     dispatch(logout());
