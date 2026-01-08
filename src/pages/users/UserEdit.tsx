@@ -245,8 +245,10 @@ const UserEdit = () => {
             mailgunEmail: "",
           };
           error.response.data.errors.forEach((err: any) => {
-            if (newErrors[err.path as keyof typeof newErrors] === "") {
-              newErrors[err.path as keyof typeof newErrors] = err.msg;
+            // Backend sends 'param' field (e.g., "mailgunEmail"), but some errors might use 'path'
+            const fieldName = err.param || err.path;
+            if (fieldName && newErrors[fieldName as keyof typeof newErrors] === "") {
+              newErrors[fieldName as keyof typeof newErrors] = err.msg;
             }
           });
           setErrors(newErrors);

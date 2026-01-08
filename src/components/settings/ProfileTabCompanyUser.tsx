@@ -18,6 +18,7 @@ import API from "@/utils/api";
 import { getUserData } from "@/utils/authHelpers";
 import { RootState } from "@/store/store";
 import { logout, updateUser } from "@/store/slices/authSlice";
+import { usePermissions } from "@/hooks/usePermissions";
 
 interface CompanyInfo {
   name?: string;
@@ -41,6 +42,7 @@ export const ProfileTabCompanyUser = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const user = useSelector((state: RootState) => state.auth.user);
+  const { canView, canEdit } = usePermissions();
 
   const [companyInfo, setCompanyInfo] = useState<CompanyInfo>({
     name: "",
@@ -122,10 +124,35 @@ export const ProfileTabCompanyUser = () => {
       return;
     }
 
+    const hasViewAccess = canView("settings");
+    const hasEditAccess = canEdit("settings");
+
+    if (!hasViewAccess) {
+      toast({
+        title: "Access denied",
+        description: "You don't have permission to update settings.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    let payload;
+    if (hasViewAccess && !hasEditAccess) {
+      // View-only users can only update firstName and lastName
+      payload = {
+        id: formState.id,
+        firstName: formState.firstName,
+        lastName: formState.lastName,
+      };
+    } else {
+      // Users with edit access can update all fields
+      payload = formState;
+    }
+
     try {
       const response = await API.post(
         "/company-user-profile-update",
-        formState
+        payload
       );
 
       if (response.status === 200 && response.data.success) {
@@ -198,7 +225,9 @@ export const ProfileTabCompanyUser = () => {
     }
   };
 
-  const isViewer = user?.role === "CompanyViewer";
+  const hasViewAccess = canView("settings");
+  const hasEditAccess = canEdit("settings");
+  const canOnlyView = hasViewAccess && !hasEditAccess;
 
   return (
     <form onSubmit={handleSubmit}>
@@ -241,8 +270,8 @@ export const ProfileTabCompanyUser = () => {
                 name="firstName"
                 value={formState.firstName}
                 onChange={handleInputChange}
-                disabled={isViewer}
-                className={`bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 ${isViewer ? 'opacity-50 cursor-not-allowed' : ''}`}
+                disabled={!hasViewAccess}
+                className={`bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 ${!hasViewAccess ? 'opacity-50 cursor-not-allowed' : ''}`}
               />
               {errors.firstName ? (
                 <p className="text-sm text-rose-400">{errors.firstName}</p>
@@ -257,8 +286,8 @@ export const ProfileTabCompanyUser = () => {
                 name="lastName"
                 value={formState.lastName}
                 onChange={handleInputChange}
-                disabled={isViewer}
-                className={`bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 ${isViewer ? 'opacity-50 cursor-not-allowed' : ''}`}
+                disabled={!hasViewAccess}
+                className={`bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 ${!hasViewAccess ? 'opacity-50 cursor-not-allowed' : ''}`}
               />
               {errors.lastName ? (
                 <p className="text-sm text-rose-400">{errors.lastName}</p>
@@ -282,7 +311,7 @@ export const ProfileTabCompanyUser = () => {
             ) : null}
           </div>
         </CardContent>
-        {!isViewer && (
+        {hasViewAccess && (
           <CardFooter className="justify-end border-t border-white/10 bg-white/[0.02] p-6">
             <Button
               type="submit"

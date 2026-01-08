@@ -30,6 +30,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { usePermissions } from "@/hooks/usePermissions";
 
 // Utility function to strip quoted email content
 const stripQuotedEmailContent = (content: string) => {
@@ -86,6 +87,7 @@ const InboxPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { canCreate } = usePermissions();
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState<
     | "all"
@@ -222,6 +224,15 @@ const InboxPage = () => {
   };
 
   const handleCompose = () => {
+    if (!canCreate("emails")) {
+      toast({
+        title: "Unable to create template",
+        description: "CompanyViewer accounts have read-only access.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     navigate("/emails/compose");
   };
 

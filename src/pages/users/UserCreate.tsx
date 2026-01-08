@@ -34,6 +34,7 @@ const UserCreate = () => {
   const [errors, setErrors] = useState({
     email: "",
     name: "",
+    firstName: "",
     roleId: "",
     status: "",
     mailgunEmail: "",
@@ -210,18 +211,27 @@ const UserCreate = () => {
       let usernameParts = [];
       if (user.firstName) usernameParts.push(user.firstName);
       if (user.lastName) usernameParts.push(user.lastName);
-      
-      let username = usernameParts
-          .join(".")
-          .toLowerCase()
-          .trim()
-          .replace(/\s+/g, ".")
-          .replace(/[^a-z0-9.]/g, "");
+
+      // Normalize each part to avoid double dots when there are extra spaces
+      const normalizedParts = usernameParts
+        .map((part) =>
+          part
+            .toLowerCase()
+            .trim()
+            .replace(/\s+/g, ".") // internal spaces -> dots
+            .replace(/[^a-z0-9.]/g, "") // allowed chars only
+            .replace(/^\.+|\.+$/g, "") // no leading/trailing dots on each part
+        )
+        .filter(Boolean);
+
+      let username = normalizedParts.join(".");
+
+      // Collapse any accidental multiple dots and trim edges again
+      username = username.replace(/\.+/g, ".").replace(/^\.+|\.+$/g, "");
 
       if (username) {
         const suggested = `${username}@${mailgunDomain}`;
         setSuggestedEmail(suggested);
-
         // Auto-fill if not manually edited
         if (!isMailgunManual) {
           setUser((prev) => ({ ...prev, mailgunEmail: suggested }));
@@ -300,10 +310,21 @@ const UserCreate = () => {
     setErrors({
       email: "",
       name: "",
+      firstName: "",
       roleId: "",
       status: "",
       mailgunEmail: "",
     });
+
+    // Validate First Name is required
+    if (!user.firstName || user.firstName.trim() === "") {
+      setErrors((prev) => ({
+        ...prev,
+        firstName: "First Name is required",
+      }));
+      setLoading(false);
+      return;
+    }
 
     // Validate RBAC role is selected
     if (!user.roleId || user.roleId === "none") {
@@ -405,6 +426,7 @@ const UserCreate = () => {
         ) {
           const newErrors = {
             name: "",
+            firstName: "",
             email: "",
             password: "",
             roleId: "",
@@ -412,8 +434,10 @@ const UserCreate = () => {
             mailgunEmail: "",
           };
           error.response.data.errors.forEach((err: any) => {
-            if (newErrors[err.path as keyof typeof newErrors] === "") {
-              newErrors[err.path as keyof typeof newErrors] = err.msg;
+            // Backend sends 'param' field (e.g., "mailgunEmail"), but some errors might use 'path'
+            const fieldName = err.param || err.path;
+            if (fieldName && newErrors[fieldName as keyof typeof newErrors] === "") {
+              newErrors[fieldName as keyof typeof newErrors] = err.msg;
             }
           });
           setErrors(newErrors);
@@ -490,6 +514,9 @@ const UserCreate = () => {
                         className="h-10 rounded-lg bg-[#222B2C]/40 border border-white/10 text-white placeholder:text-white/50 focus:ring-2 focus:ring-cyan-400/40 focus:border-cyan-400/40"
                         placeholder="Enter first name"
                       />
+                      {errors.firstName && (
+                        <p className="text-red-400 text-sm mt-1">{errors.firstName}</p>
+                      )}
                   </div>
 
                   {/* Last Name */}

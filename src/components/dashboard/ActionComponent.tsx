@@ -14,9 +14,34 @@ import { usePermissions } from "@/hooks/usePermissions";
 import LongRunningTasksButton from "@/components/navigation/LongRunningTasksButton";
 import { AvatarFallback } from "@/components/ui/avatar-fallback";
 
+// Helper function to get seen notifications from localStorage
+const getSeenNotifications = (): Set<string> => {
+  try {
+    const stored = localStorage.getItem("seenNotifications");
+    return stored ? new Set(JSON.parse(stored)) : new Set();
+  } catch {
+    return new Set();
+  }
+};
+
+// Helper function to save seen notifications to localStorage
+const saveSeenNotifications = (seenNotifications: Set<string>) => {
+  try {
+    localStorage.setItem(
+      "seenNotifications",
+      JSON.stringify([...seenNotifications])
+    );
+  } catch {
+    // Ignore localStorage errors (e.g., quota exceeded)
+  }
+};
+
 export const ActionComponent = () => {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const previousNotificationIdsRef = useRef<Set<string>>(
+    getSeenNotifications()
+  );
   const actionsRef = useRef<HTMLDivElement>(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -81,6 +106,32 @@ export const ActionComponent = () => {
     }
   }, [notificationsError]);
 
+  // Detect new notifications and show toast notifications
+  useEffect(() => {
+    if (notifications.length === 0) return;
+
+    const currentNotificationIds = new Set(notifications.map((n) => n._id));
+
+    // Find new notifications that weren't in the previous state
+    const newNotifications = notifications.filter(
+      (notification) =>
+        !previousNotificationIdsRef.current.has(notification._id) &&
+        notification.is_read === "No"
+    );
+
+    // Show toast for each new notification
+    newNotifications.forEach((notification) => {
+      toast(notification.title || "New Notification", {
+        description: notification.message,
+        duration: 5000,
+      });
+    });
+
+    // Update previous notification IDs and persist to localStorage
+    previousNotificationIdsRef.current = currentNotificationIds;
+    saveSeenNotifications(currentNotificationIds);
+  }, [notifications]);
+
   const handleLogout = () => {
     dispatch(logout());
     toast.success("Logged out successfully");
@@ -135,7 +186,11 @@ export const ActionComponent = () => {
   ].filter((item) => {
     // Show "Team" only for Company, CompanyAdmin, and Admin roles
     if (item.title === "Team") {
-      return userRoleName === "Company" || userRoleName === "CompanyAdmin" || userRoleName === "Admin";
+      return (
+        userRoleName === "Company" ||
+        userRoleName === "CompanyAdmin" ||
+        userRoleName === "Admin"
+      );
     }
     // "Knowledge Base" Visibility Logic:
     // 1. Hide for Admin (as per original logic)
@@ -180,7 +235,7 @@ export const ActionComponent = () => {
         </button>
 
         <LongRunningTasksButton />
-        
+
         <button
           aria-label="Toggle profile menu"
           className="flex items-center gap-1  text-white"
@@ -194,7 +249,13 @@ export const ActionComponent = () => {
         >
           <div className="h-8 w-8 flex items-center justify-center overflow-hidden rounded-full border border-white/25 bg-gradient-to-br from-cyan-500/20 to-blue-600/20">
             <AvatarFallback
-              name={`${currentUser?.firstName || ''} ${currentUser?.lastName || ''}`.trim() || currentUser?.email || "User"}
+              name={
+                `${currentUser?.firstName || ""} ${
+                  currentUser?.lastName || ""
+                }`.trim() ||
+                currentUser?.email ||
+                "User"
+              }
               pictureUrl={currentUser?.profileImage}
               size="xs"
               className="border-none"
@@ -202,7 +263,11 @@ export const ActionComponent = () => {
           </div>
           <div className="hidden lg:flex flex-col text-left text-xs leading-tight text-white/70">
             <span className="font-medium text-white">
-              {`${currentUser?.firstName || ''} ${currentUser?.lastName || ''}`.trim() || currentUser?.email?.split("@")[0] || "User"}
+              {`${currentUser?.firstName || ""} ${
+                currentUser?.lastName || ""
+              }`.trim() ||
+                currentUser?.email?.split("@")[0] ||
+                "User"}
             </span>
             <span className="text-white/50">{currentUser?.email || ""}</span>
           </div>
