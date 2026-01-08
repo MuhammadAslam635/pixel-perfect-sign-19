@@ -40,21 +40,22 @@ const COMPANY_EMPLOYEE_RANGES = [
 type ViewMode = "compact" | "detailed" | "card";
 
 const index = () => {
-  const { canCreate, legacyRole, userRole } = usePermissions();
+  const { canCreate} = usePermissions();
   const navigate = useNavigate();
 
   // Check if user is a viewer (supports both legacy and new RBAC)
-  const isViewer = useMemo(() => {
-    // Check new RBAC system (roleId with name property)
-    if (userRole && typeof userRole === "object" && (userRole as any).name === "CompanyViewer") {
-      return true;
-    }
-    // Check legacy role
-    if (legacyRole === "CompanyViewer") {
-      return true;
-    }
-    return false;
-  }, [userRole, legacyRole]);
+  // Used for other viewer restrictions, but seniority levels are controlled by create permission
+  // const isViewer = useMemo(() => {
+  //   // Check new RBAC system (roleId with name property)
+  //   if (userRole && typeof userRole === "object" && (userRole as any).name === "CompanyViewer") {
+  //     return true;
+  //   }
+  //   // Check legacy role
+  //   if (legacyRole === "CompanyViewer") {
+  //     return true;
+  //   }
+  //   return false;
+  // }, [userRole, legacyRole]);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(
     null
   );
@@ -297,7 +298,9 @@ const index = () => {
   }, [companiesQuery.error]);
 
   const handleCompanyClick = (companyId: string) => {
-    setSelectedCompanyId((prev) => (prev === companyId ? null : companyId));
+    // Treat empty string as null to close the sidebar
+    const normalizedId = companyId === "" ? null : companyId;
+    setSelectedCompanyId((prev) => (prev === normalizedId ? null : normalizedId));
   };
 
   // Reset pagination when filters change
@@ -317,10 +320,18 @@ const index = () => {
     navigate(`/leads/${executive._id}`);
   };
 
-  const isSidebarOpen = selectedCompanyId !== null;
   const selectedCompany: Company | undefined = companies.find(
     (company) => company._id === selectedCompanyId
   );
+
+  // Close sidebar if selected company no longer exists (e.g., after deletion)
+  useEffect(() => {
+    if (selectedCompanyId && !selectedCompany) {
+      setSelectedCompanyId(null);
+    }
+  }, [selectedCompanyId, selectedCompany]);
+
+  const isSidebarOpen = selectedCompanyId !== null;
 
   return (
     <DashboardLayout>
@@ -357,8 +368,8 @@ const index = () => {
             >
               {/* Enrich Leads Section - Always Visible */}
               <div className="flex items-center gap-2 flex-shrink-0">
-                {/* Seniority Quick Selector - Hide for viewer role */}
-                {!isViewer && (
+                {/* Seniority Quick Selector - Show only if user has create permission for leads */}
+                {canCreate("leads") && (
                   <SeniorityQuickSelector
                     selectedSeniorities={selectedSeniorities}
                     onChange={setSelectedSeniorities}

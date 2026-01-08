@@ -987,7 +987,7 @@ const ChatPage = () => {
                     onSelectChat={selectChatFromList}
                     onStartNewChat={handleStartNewChat}
                     searchTerm={searchTerm}
-                    onSearchTermChange={setSearchTerm}
+                    onSearchTermChange={(term) => dispatch(setSearchTerm(term))}
                     selectedChatId={selectedChatId}
                     className="h-full"
                     onDeleteChat={handleDeleteChat}

@@ -139,12 +139,13 @@ const ChatList = ({
         </motion.div>
 
         <div className="relative">
-          <Search className="pointer-events-none absolute left-5 top-1/2 size-4 -translate-y-1/2 text-white/60" />
+          <Search className="pointer-events-none absolute left-5 top-1/2 z-10 size-4 -translate-y-1/2 text-white/60" />
           <Input
+            type="text"
             value={searchTerm}
             onChange={(event) => onSearchTermChange(event.target.value)}
             placeholder="Search.."
-            className="h-12 rounded-full border border-white/5 bg-transparent pl-12 text-sm text-white placeholder:text-white/40 focus-visible:ring-1 focus-visible:ring-white/30"
+            className="relative z-0 h-12 rounded-full border border-white/5 bg-transparent pl-12 text-sm text-white placeholder:text-white/40 focus-visible:ring-1 focus-visible:ring-white/30"
             style={{
               borderRadius: "9999px",
               border: "1px solid rgba(255, 255, 255, 0.1)",

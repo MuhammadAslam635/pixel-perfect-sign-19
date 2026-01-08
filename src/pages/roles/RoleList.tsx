@@ -28,6 +28,7 @@ import { Role, Module } from "@/types/rbac.types";
 import { toast } from "sonner";
 import { usePermissions } from "@/hooks/usePermissions";
 import OrgChart from "./OrgChart";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 type ViewMode = "table" | "chart";
 
@@ -39,6 +40,8 @@ const RoleList = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>("table");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [roleToDelete, setRoleToDelete] = useState<{ id: string; name: string } | null>(null);
 
   // Check if user has permission
   const hasAccess = permissionsReady
@@ -88,21 +91,27 @@ const RoleList = () => {
   };
 
   const handleDelete = async (roleId: string, roleName: string) => {
-    if (
-      !window.confirm(
-        `Are you sure you want to delete role '${roleName}'? This action cannot be undone!`
-      )
-    ) {
-      return;
-    }
+    setRoleToDelete({ id: roleId, name: roleName });
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!roleToDelete) return;
 
     try {
-      await rbacService.deleteRole(roleId);
+      await rbacService.deleteRole(roleToDelete.id);
       toast.success("Role deleted successfully");
+      setDeleteDialogOpen(false);
+      setRoleToDelete(null);
       fetchRoles();
     } catch (error: any) {
       toast.error(error?.response?.data?.message || "Failed to delete role");
     }
+  };
+
+  const cancelDelete = () => {
+    setDeleteDialogOpen(false);
+    setRoleToDelete(null);
   };
 
   const filteredRoles = roles.filter(
@@ -466,6 +475,21 @@ const RoleList = () => {
             )}
           </div>
         </section>
+
+        <ConfirmDialog
+          open={deleteDialogOpen}
+          title="Delete Role"
+          description={
+            roleToDelete
+              ? `Are you sure you want to delete role '${roleToDelete.name}'? This action cannot be undone!`
+              : ""
+          }
+          confirmText="Delete"
+          cancelText="Cancel"
+          confirmVariant="destructive"
+          onConfirm={confirmDelete}
+          onCancel={cancelDelete}
+        />
       </main>
     </DashboardLayout>
   );

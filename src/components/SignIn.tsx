@@ -135,7 +135,12 @@ const SignIn = () => {
         }
 
         toast.success("Login successful!");
-        navigate("/dashboard");
+        
+        // Redirect to appropriate dashboard based on user role
+        const dashboardPath = response.user.role === "Admin" 
+          ? "/admin/dashboard" 
+          : "/dashboard";
+        navigate(dashboardPath);
       } else {
         dispatch(loginFailure(response.message || "Login failed"));
         toast.error(response.message || "Login failed");
