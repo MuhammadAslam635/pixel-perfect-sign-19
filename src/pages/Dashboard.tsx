@@ -129,7 +129,7 @@ const Dashboard = () => {
         </div>
 
         {/* Row 4 - Deals at Risk (Full Width) */}
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-[600ms]">
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-[600ms] px-2">
           <DealsAtRiskCard />
         </div>
 
