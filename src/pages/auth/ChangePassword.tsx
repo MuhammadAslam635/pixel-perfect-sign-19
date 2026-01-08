@@ -82,7 +82,8 @@ const ChangePassword = () => {
             ...userData,
             requiresPasswordChange: false,
           };
-          localStorage.setItem("userData", JSON.stringify(updatedUserData));
+          // Write to "user" key so getUserData() can read it correctly
+          localStorage.setItem("user", JSON.stringify(updatedUserData));
 
           // Update Redux store as well
           dispatch(

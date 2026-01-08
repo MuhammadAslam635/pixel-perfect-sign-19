@@ -137,7 +137,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
       // Return context with the snapshot
       return { previousCompanies };
     },
-    onSuccess: (data) => {
+    onSuccess: (data, companyId) => {
       toast.success(
         data?.message || "Company and associated leads deleted successfully"
       );
@@ -146,11 +146,13 @@ const CompaniesList: FC<CompaniesListProps> = ({
       queryClient.invalidateQueries({ queryKey: ["company-crm-stats"] });
       queryClient.invalidateQueries({ queryKey: ["crm-stats"] });
       setShowDeleteDialog(false);
-      setCompanyToDelete(null);
       // Clear selection if deleted company was selected
-      if (selectedCompanyId === companyToDelete?._id) {
+      if (selectedCompanyId === companyId) {
         onSelectCompany("");
+        // Close mobile executives view if open
+        setMobileExecutivesView(false);
       }
+      setCompanyToDelete(null);
     },
     onError: (error: Error, companyId, context) => {
       // Rollback on error
