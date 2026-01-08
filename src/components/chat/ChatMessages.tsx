@@ -3,6 +3,7 @@ import { Download, Loader2, Menu, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChatMessage } from "@/types/chat.types";
 import { StreamEvent } from "@/services/chat.service";
+import StreamingProgress from "./StreamingProgress";
 import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -529,21 +530,11 @@ const ChatMessages = ({
                   />
                 </div>
                 <div className="flex flex-col gap-1">
-                  <span className="text-white/70">Thinking…</span>
-                  {isStreaming && streamingEvents.length > 0 && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 5 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="text-xs text-gray-400 italic flex items-center gap-2"
-                    >
-                      <Loader2 className="w-3 h-3 animate-spin" />
-                      <span>
-                        {streamingEvents[streamingEvents.length - 1]?.step
-                          ?.replace(/^[^\w\s]+/, "")
-                          .trim() || "Processing..."}
-                      </span>
-                    </motion.div>
-                  )}
+                  <span className="text-white/70 font-medium pt-1">Thinking...</span>
+                  <StreamingProgress 
+                    events={streamingEvents} 
+                    isVisible={isSending} 
+                  />
                 </div>
               </div>
             </motion.div>

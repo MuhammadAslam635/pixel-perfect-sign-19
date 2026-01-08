@@ -9,27 +9,30 @@ interface StreamingProgressProps {
 }
 
 const StreamingProgress: React.FC<StreamingProgressProps> = ({ events, isVisible }) => {
-  if (!isVisible || events.length === 0) {
+  if (!isVisible) {
     return null;
   }
 
   const currentEvent = events[events.length - 1];
 
-  const getCurrentStepText = () => {
+  // Helper to get the main title
+  // Helper to get the display text
+  const getDisplayText = () => {
     if (!currentEvent) return 'Thinking...';
-
-    if (currentEvent.type === 'complete') {
-      return 'Response ready';
+    
+    // Prioritize the detailed description
+    if (currentEvent.description) {
+      return currentEvent.description;
     }
 
-    if (currentEvent.type === 'error') {
-      return 'Error occurred';
-    }
-
-    // Show the step name without emoji for cleaner text
-    const stepText = currentEvent.step?.replace(/^[^\w\s]+/, '').trim() || currentEvent.type;
-    return stepText;
+    if (currentEvent.type === 'complete') return 'Response ready';
+    if (currentEvent.type === 'error') return 'Error occurred';
+    
+    // Fallback to step name
+    return currentEvent.step?.replace(/^[^\w\s]+/, '').trim() || 'Processing...';
   };
+
+  const displayText = getDisplayText();
 
   return (
     <AnimatePresence>
@@ -37,10 +40,12 @@ const StreamingProgress: React.FC<StreamingProgressProps> = ({ events, isVisible
         initial={{ opacity: 0, y: 5 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -5 }}
-        className="text-xs text-gray-500 italic mt-1 flex items-center gap-2"
+        className="text-xs text-white flex flex-col gap-1"
       >
-        <Loader2 className="w-3 h-3 animate-spin" />
-        <span>{getCurrentStepText()}</span>
+        <div className="flex items-center gap-2 font-medium mt-1">
+          <Loader2 className="w-3 h-3 animate-spin text-purple-400" />
+          <span className="text-white/90 max-w-[300px] break-words leading-relaxed inline-block">{displayText}</span>
+        </div>
       </motion.div>
     </AnimatePresence>
   );
