@@ -17,6 +17,9 @@ import { AvatarFallback } from "@/components/ui/avatar-fallback";
 export const ActionComponent = () => {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [previousNotificationIds, setPreviousNotificationIds] = useState<
+    Set<string>
+  >(new Set());
   const actionsRef = useRef<HTMLDivElement>(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -81,6 +84,31 @@ export const ActionComponent = () => {
     }
   }, [notificationsError]);
 
+  // Detect new notifications and show toast notifications
+  useEffect(() => {
+    if (notifications.length === 0) return;
+
+    const currentNotificationIds = new Set(notifications.map((n) => n._id));
+
+    // Find new notifications that weren't in the previous state
+    const newNotifications = notifications.filter(
+      (notification) =>
+        !previousNotificationIds.has(notification._id) &&
+        notification.is_read === "No"
+    );
+
+    // Show toast for each new notification
+    newNotifications.forEach((notification) => {
+      toast(notification.title || "New Notification", {
+        description: notification.message,
+        duration: 5000,
+      });
+    });
+
+    // Update previous notification IDs
+    setPreviousNotificationIds(currentNotificationIds);
+  }, [notifications, previousNotificationIds]);
+
   const handleLogout = () => {
     dispatch(logout());
     toast.success("Logged out successfully");
@@ -135,7 +163,11 @@ export const ActionComponent = () => {
   ].filter((item) => {
     // Show "Team" only for Company, CompanyAdmin, and Admin roles
     if (item.title === "Team") {
-      return userRoleName === "Company" || userRoleName === "CompanyAdmin" || userRoleName === "Admin";
+      return (
+        userRoleName === "Company" ||
+        userRoleName === "CompanyAdmin" ||
+        userRoleName === "Admin"
+      );
     }
     // "Knowledge Base" Visibility Logic:
     // 1. Hide for Admin (as per original logic)
@@ -180,7 +212,7 @@ export const ActionComponent = () => {
         </button>
 
         <LongRunningTasksButton />
-        
+
         <button
           aria-label="Toggle profile menu"
           className="flex items-center gap-1  text-white"
@@ -194,7 +226,13 @@ export const ActionComponent = () => {
         >
           <div className="h-8 w-8 flex items-center justify-center overflow-hidden rounded-full border border-white/25 bg-gradient-to-br from-cyan-500/20 to-blue-600/20">
             <AvatarFallback
-              name={`${currentUser?.firstName || ''} ${currentUser?.lastName || ''}`.trim() || currentUser?.email || "User"}
+              name={
+                `${currentUser?.firstName || ""} ${
+                  currentUser?.lastName || ""
+                }`.trim() ||
+                currentUser?.email ||
+                "User"
+              }
               pictureUrl={currentUser?.profileImage}
               size="xs"
               className="border-none"
@@ -202,7 +240,11 @@ export const ActionComponent = () => {
           </div>
           <div className="hidden lg:flex flex-col text-left text-xs leading-tight text-white/70">
             <span className="font-medium text-white">
-              {`${currentUser?.firstName || ''} ${currentUser?.lastName || ''}`.trim() || currentUser?.email?.split("@")[0] || "User"}
+              {`${currentUser?.firstName || ""} ${
+                currentUser?.lastName || ""
+              }`.trim() ||
+                currentUser?.email?.split("@")[0] ||
+                "User"}
             </span>
             <span className="text-white/50">{currentUser?.email || ""}</span>
           </div>
