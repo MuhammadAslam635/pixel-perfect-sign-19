@@ -44,7 +44,7 @@ const StreamingProgress: React.FC<StreamingProgressProps> = ({ events, isVisible
       >
         <div className="flex items-center gap-2 font-medium mt-1">
           <Loader2 className="w-3 h-3 animate-spin text-purple-400" />
-          <span className="text-white/90 max-w-[300px] break-words leading-relaxed inline-block">{displayText}</span>
+          <span className="text-white/90 max-w-[300px] break-words leading-relaxed inline-block text-left">{displayText}</span>
         </div>
       </motion.div>
     </AnimatePresence>

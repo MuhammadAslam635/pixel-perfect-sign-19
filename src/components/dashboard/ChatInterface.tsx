@@ -13,6 +13,7 @@ import {
   sendStreamingChatMessage,
   StreamEvent,
 } from "@/services/chat.service";
+import StreamingProgress from "@/components/chat/StreamingProgress";
 import { deepgramTranscription } from "@/services/deepgram.service";
 import { ChatMessage, ChatSummary } from "@/types/chat.types";
 import ReactMarkdown from "react-markdown";
@@ -1249,23 +1250,11 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
                   />
                 </div>
                 <div className="flex flex-col gap-1">
-                  <span className="text-white/70 text-left">Thinking…</span>
-                  {isStreaming &&
-                    isCurrentChatSending &&
-                    streamingEvents.length > 0 && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="text-xs text-gray-400 italic flex items-center gap-2"
-                      >
-                        <Loader2 className="w-3 h-3 animate-spin" />
-                        <span>
-                          {streamingEvents[streamingEvents.length - 1]?.step
-                            ?.replace(/^[^\w\s]+/, "")
-                            .trim() || "Processing..."}
-                        </span>
-                      </motion.div>
-                    )}
+                  <span className="text-white/70 text-left">Thinking...</span>
+                  <StreamingProgress 
+                    events={streamingEvents} 
+                    isVisible={isStreaming && isCurrentChatSending} 
+                  />
                 </div>
               </div>
             </motion.div>
