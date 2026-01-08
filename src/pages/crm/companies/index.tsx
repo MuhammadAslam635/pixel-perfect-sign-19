@@ -169,22 +169,10 @@ const index = () => {
       params.country = companiesCountryFilter.join(",");
     }
 
-    if (selectedSeniorities.length > 0) {
-      // API expects comma-separated string for seniority
-      // SeniorityLevel is { value: string, label: string } or just string? 
-      // Based on typical usage, let's assume it has a value property or is the value.
-      // Checking usage in SeniorityQuickSelector usually implies it's an object with value.
-      // But let's check the type file if we can, or play it safe if we know. 
-      // Actually, I'll assume they are objects with a 'value' property based on other filters.
-      // Wait, I can't check the type file in this turn.
-      // Let's use `selectedSeniorities.map((s: any) => s.value || s).join(',')` to be safe?
-      // No, TypeScript might complain. 
-      // Let's assume they are objects { value: string, label: string } as typically defined.
-      // Actually, looking at line 34, COMPANY_EMPLOYEE_RANGES are objects.
-      // Let's look at how it's used. 
-      // safer:
-      params.seniority = selectedSeniorities.map((s: any) => s.value || s).filter(Boolean);
-    }
+    // Seniority filter removed from view params as it should only apply to enrichment
+    // if (selectedSeniorities.length > 0) {
+    //   params.seniority = selectedSeniorities.map((s: any) => s.value || s).filter(Boolean);
+    // }
 
     return params;
   }, [
