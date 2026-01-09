@@ -9,7 +9,6 @@ import { Role } from "@/types/rbac.types";
 
 export const RESTRICTED_MODULES = [
   "users",
-  "settings",
   "company-knowledge",
   "modules",
   "roles"
