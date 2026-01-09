@@ -4,6 +4,7 @@ import { RootState } from "@/store/store";
 import { isAuthenticated, getUserData } from "@/utils/authHelpers";
 import { PermissionAction } from "@/types/rbac.types";
 import { usePermissions } from "@/hooks/usePermissions";
+import { isRestrictedModule } from "@/utils/restrictedModules";
 import { useOnboardingStatus } from "@/hooks/useOnboardingStatus";
 
 interface ProtectedRouteProps {
@@ -76,6 +77,19 @@ const ProtectedRoute = ({
 
   // New RBAC check - takes precedence
   if (moduleName) {
+    // CRITICAL: Fail fast for restricted modules if permissions aren't ready but we know it's restricted
+    // Note: checkPermission inside usePermissions hook should use the updated logic from rbacHelpers
+    // But we add a double-check here for safety
+    if (isRestrictedModule(moduleName) && permissionsReady) {
+         const hasAccess = checkPermission(moduleName, requiredActions, requireAllActions);
+         if (!hasAccess) {
+             const userRole = sessionUser?.role;
+             const dashboardPath = userRole === "Admin" ? "/admin/dashboard" : "/dashboard";
+             // Optional: Show toast here? "Access Denied: Restricted Module"
+             return <Navigate to={dashboardPath} replace />;
+         }
+    }
+
     if (!permissionsReady && !isSysAdmin()) {
       return (
         <div className="flex min-h-screen items-center justify-center text-white/60">

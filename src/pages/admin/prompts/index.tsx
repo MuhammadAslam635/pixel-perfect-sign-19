@@ -111,7 +111,7 @@ const PromptsPage = () => {
       updateStatistics(promptsWithCompanyInfo);
     } catch (error) {
       console.error("Error fetching prompts:", error);
-      toast.error("Failed to fetch prompts");
+      toast.error(error.response?.data?.message || "Failed to fetch prompts");
     } finally {
       setLoading(false);
     }
@@ -128,7 +128,7 @@ const PromptsPage = () => {
       setCompanies(response.data.companies as unknown as Company[]);
     } catch (error) {
       console.error("Failed to fetch companies:", error);
-      toast.error("Failed to fetch companies");
+      toast.error(error.response?.data?.message || "Failed to fetch companies");
     } finally {
       setCompaniesLoading(false);
     }
@@ -182,7 +182,7 @@ const PromptsPage = () => {
       setIsDialogOpen(false);
       fetchPrompts();
     } catch (error) {
-      toast.error("Failed to create prompt");
+      toast.error(error.response?.data?.message || "Failed to create prompt");
     }
   };
 
@@ -284,7 +284,7 @@ const PromptsPage = () => {
       setIsDialogOpen(false);
       fetchPrompts();
     } catch (error) {
-      toast.error("Failed to update prompt");
+      toast.error(error.response?.data?.message || "Failed to update prompt");
     }
   };
 
@@ -303,7 +303,7 @@ const PromptsPage = () => {
       setIsDeleteDialogOpen(false);
       setPromptToDelete(null);
     } catch (error) {
-      toast.error("Failed to delete prompt");
+      toast.error(error.response?.data?.message || "Failed to delete prompt");
     }
   };
 

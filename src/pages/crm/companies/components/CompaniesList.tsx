@@ -154,15 +154,14 @@ const CompaniesList: FC<CompaniesListProps> = ({
       }
       setCompanyToDelete(null);
     },
-    onError: (error: Error, companyId, context) => {
+    onError: (error: any, companyId, context) => {
       // Rollback on error
       if (context?.previousCompanies) {
         queryClient.setQueryData(["companies"], context.previousCompanies);
       }
       const errorMessage =
-        (error as { response?: { data?: { message?: string } } })?.response
-          ?.data?.message ||
-        error?.message ||
+        error.response?.data?.message ||
+        error.message ||
         "Failed to delete company";
       toast.error(errorMessage);
     },

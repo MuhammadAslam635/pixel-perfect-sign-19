@@ -16,6 +16,7 @@ import {
 import { toast } from "sonner";
 import { usePermissions } from "@/hooks/usePermissions";
 import { ArrowLeft, Save, Shield, Search } from "lucide-react";
+import { isRestrictedModule } from "@/utils/restrictedModules";
 
 const AVAILABLE_ACTIONS: PermissionAction[] = [
   "view",
@@ -90,7 +91,9 @@ const RoleForm = () => {
     try {
       const response = await rbacService.getAllModules(false);
       if (response.success && response.data) {
-        setModules(response.data);
+        // Filter out restricted modules so they cannot be seen or assigned
+        const safeModules = response.data.filter((m: Module) => !isRestrictedModule(m.name));
+        setModules(safeModules);
       }
     } catch (error: any) {
       toast.error("Failed to fetch modules");

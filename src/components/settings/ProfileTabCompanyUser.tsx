@@ -270,8 +270,8 @@ export const ProfileTabCompanyUser = () => {
                 name="firstName"
                 value={formState.firstName}
                 onChange={handleInputChange}
-                disabled={!hasViewAccess}
-                className={`bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 ${!hasViewAccess ? 'opacity-50 cursor-not-allowed' : ''}`}
+                disabled={!hasEditAccess}
+                className={`bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 ${!hasEditAccess ? 'opacity-50 cursor-not-allowed' : ''}`}
               />
               {errors.firstName ? (
                 <p className="text-sm text-rose-400">{errors.firstName}</p>
@@ -286,8 +286,8 @@ export const ProfileTabCompanyUser = () => {
                 name="lastName"
                 value={formState.lastName}
                 onChange={handleInputChange}
-                disabled={!hasViewAccess}
-                className={`bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 ${!hasViewAccess ? 'opacity-50 cursor-not-allowed' : ''}`}
+                disabled={!hasEditAccess}
+                className={`bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 ${!hasEditAccess ? 'opacity-50 cursor-not-allowed' : ''}`}
               />
               {errors.lastName ? (
                 <p className="text-sm text-rose-400">{errors.lastName}</p>
@@ -311,7 +311,7 @@ export const ProfileTabCompanyUser = () => {
             ) : null}
           </div>
         </CardContent>
-        {hasViewAccess && (
+        {hasEditAccess && (
           <CardFooter className="justify-end border-t border-white/10 bg-white/[0.02] p-6">
             <Button
               type="submit"

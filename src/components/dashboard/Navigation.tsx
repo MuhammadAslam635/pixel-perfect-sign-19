@@ -20,6 +20,7 @@ import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import { usePermissions } from "@/hooks/usePermissions";
+import { isRestrictedModule } from "@/utils/restrictedModules";
 
 type NavLink = {
   id: string;
@@ -193,6 +194,23 @@ export const Navigation = () => {
       if (link.moduleName) {
          // Admin can always view
          if (userRole === 'Admin') return true;
+         
+         // CRITICAL: Hide restricted modules from navigation
+         if (isRestrictedModule(link.moduleName)) {
+           // We already know userRole !== 'Admin' (checked above)
+           // But what if user is 'CompanyAdmin'? 
+           // Navigation check above: userRole === 'Admin' only checks for System Admin string?
+           // userRole is derived from getUserRoleName() which prioritizes valid RBAC role name.
+           // If user is CompanyAdmin, userRole="CompanyAdmin".
+           // Admin check above handles "Admin". CompanyAdmin needs check.
+           if (userRole === 'Company' || userRole === 'CompanyAdmin') {
+             // Continue to standard permission check or allow
+             // Generally CompanyAdmin has full access, so canView should return true.
+           } else {
+             // Not an admin -> Block absolutely
+             return false;
+           }
+         }
          
          if (!canView(link.moduleName)) {
            return false;

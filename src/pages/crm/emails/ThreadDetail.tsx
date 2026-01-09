@@ -61,11 +61,11 @@ const ThreadDetailPage = () => {
         description: "The email has been deleted successfully.",
       });
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({
-        title: "Error",
-        description: "Failed to delete email. Please try again.",
         variant: "destructive",
+        title: "Error",
+        description: error.response?.data?.message || "Failed to delete email. Please try again.",
       });
     },
   });

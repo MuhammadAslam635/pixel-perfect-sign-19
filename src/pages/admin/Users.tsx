@@ -179,7 +179,7 @@ const AdminUsers = () => {
       }
     } catch (error: any) {
       console.error("Error fetching users:", error);
-      toast.error(error?.response?.data?.message || "Failed to fetch users");
+      toast.error(error.response?.data?.message || "Failed to fetch users");
     } finally {
       setLoading(false);
     }
@@ -415,7 +415,7 @@ const AdminUsers = () => {
       calculateStatistics();
     } catch (error: any) {
       console.error("Error updating status:", error);
-      toast.error(error?.response?.data?.message || "Failed to update status");
+      toast.error(error.response?.data?.message || "Failed to update status");
     }
   };
 

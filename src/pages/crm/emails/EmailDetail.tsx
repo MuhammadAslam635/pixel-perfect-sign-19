@@ -53,10 +53,10 @@ const EmailDetailPage = () => {
       });
       navigate("/emails/inbox");
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({
         title: "Error",
-        description: "Failed to delete email. Please try again.",
+        description: error.response?.data?.message || "Failed to delete email. Please try again.",
         variant: "destructive",
       });
     },
