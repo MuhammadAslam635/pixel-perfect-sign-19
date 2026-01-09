@@ -18,6 +18,7 @@ import {
 import { ActiveNavButton } from "@/components/ui/primary-btn";
 import { format } from "date-fns";
 import { ScheduleDay, transformTouchpointsToSchedule } from "@/utils/followupSuggestionTransform";
+import { convertUTCToLocalTime } from "@/utils/timezone";
 import { useToast } from "@/hooks/use-toast";
 
 type EditableFollowupSuggestionProps = {
@@ -64,6 +65,13 @@ const getTaskColor = (type: string) => {
     default:
       return "bg-gray-500/10 text-gray-300 border-gray-400/30";
   }
+};
+
+const formatTimeWithAMPM = (time24: string): string => {
+  const [hours, minutes] = time24.split(':').map(Number);
+  const period = hours >= 12 ? 'PM' : 'AM';
+  const hours12 = hours % 12 || 12;
+  return `${hours12}:${minutes.toString().padStart(2, '0')} ${period}`;
 };
 
 const EditableFollowupSuggestion: FC<EditableFollowupSuggestionProps> = ({
@@ -752,7 +760,10 @@ const EditableFollowupSuggestion: FC<EditableFollowupSuggestionProps> = ({
 
   const formatScheduledTime = (scheduledFor: string) => {
     const date = new Date(scheduledFor);
-    return format(date, "h:mm a");
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    const time24 = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+    return formatTimeWithAMPM(time24);
   };
 
   const handleAddDay = () => {

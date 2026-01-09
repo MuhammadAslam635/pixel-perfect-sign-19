@@ -28,6 +28,7 @@ import {
 import { FollowupPlan } from "@/services/followupPlans.service";
 import FollowupPlanSchedule from "@/components/dashboard/FollowupPlanSchedule";
 import ConfirmDialog from "@/components/ui/confirm-dialog";
+import { convertUTCToLocalTime } from "@/utils/timezone";
 import { useToast } from "@/hooks/use-toast";
 import { isAxiosError } from "axios";
 
@@ -45,6 +46,12 @@ const transformPlanData = (plan: FollowupPlan) => {
   const month = startDate.toLocaleDateString("en-GB", { month: "short" });
   const year = startDate.getFullYear();
   const formattedDate = `${day} - ${month} - ${year}`;
+
+  // Get time of day to run from template (convert UTC to local time)
+  const timeOfDayToRun =
+    typeof plan.templateId === "object" && plan.templateId?.timeOfDayToRun
+      ? convertUTCToLocalTime(plan.templateId.timeOfDayToRun)
+      : "09:00";
 
   // Calculate total days from todo items or template
   const maxDay = Math.max(...plan.todo.map((task) => task.day || 0), 1);
@@ -95,12 +102,20 @@ const transformPlanData = (plan: FollowupPlan) => {
     id: plan._id,
     name: planName,
     date: formattedDate,
+    timeOfDayToRun,
     status: statusLabel,
     progress: Math.max(1, currentDay),
     totalDays,
     cumulativeCounts,
     originalPlan: plan, // Keep reference to original plan for modal
   };
+};
+
+const formatTimeWithAMPM = (time24: string): string => {
+  const [hours, minutes] = time24.split(':').map(Number);
+  const period = hours >= 12 ? 'PM' : 'AM';
+  const hours12 = hours % 12 || 12;
+  return `${hours12}:${minutes.toString().padStart(2, '0')} ${period}`;
 };
 
 const getErrorMessage = (error: unknown, fallback: string) => {
@@ -262,7 +277,10 @@ const ActiveFollowUpPlans = () => {
                   <div className="w-6 h-6 rounded-full bg-cyan-500/20 flex items-center justify-center">
                     <Calendar className="w-3.5 h-3.5 text-cyan-400" />
                   </div>
-                  <span className="text-white/70">{plan.date}</span>
+                  <div className="flex flex-col">
+                    <span className="text-white/70">{plan.date}</span>
+                    <span className="text-white/50 text-[10px]">{formatTimeWithAMPM(plan.timeOfDayToRun)} (Local)</span>
+                  </div>
                 </div>
 
                 {/* Communication Icons and Counts - Far Right */}

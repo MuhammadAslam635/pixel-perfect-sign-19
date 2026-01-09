@@ -15,6 +15,7 @@ export interface FollowupPlanTemplateRef {
   numberOfEmails?: string;
   numberOfCalls?: string;
   numberOfWhatsappMessages?: string;
+  timeOfDayToRun?: string;
 }
 
 export interface FollowupPlanTodo {
@@ -135,6 +136,7 @@ export interface FollowupPlanSchedulePayload {
   startDate?: string;
   llmModel?: string;
   metadata?: Record<string, unknown>;
+  time?: string;
 }
 
 export interface CreateFollowupPlanPayload {
@@ -158,6 +160,7 @@ export interface UpdateFollowupPlanPayload {
     metadata?: Record<string, unknown>;
     isComplete?: boolean;
   }>;
+  schedule?: FollowupPlanSchedulePayload;
 }
 
 export interface CreateFollowupPlanFromCallPayload {
@@ -171,6 +174,7 @@ export interface CreateFollowupPlanFromCallPayload {
     notes: string;
   }>;
   summary?: string;
+  schedule?: FollowupPlanSchedulePayload;
 }
 
 export const followupPlansService = {

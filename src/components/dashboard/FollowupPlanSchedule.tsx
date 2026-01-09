@@ -21,10 +21,12 @@ import {
   FollowupPlanWithSchedule,
   FollowupPlanScheduleDay,
   FollowupPlanTodo,
+  FollowupPlanTemplateRef,
 } from "@/services/followupPlans.service";
 import { formatFollowupTaskTime } from "@/utils/followupTaskTime";
 import { useUpdateFollowupPlan } from "@/hooks/useFollowupPlans";
 import { useToast } from "@/hooks/use-toast";
+import { convertLocalTimeToUTC, convertUTCToLocalTime } from "@/utils/timezone";
 
 type FollowupPlanScheduleProps = {
   plan: FollowupPlanWithSchedule;
@@ -58,6 +60,13 @@ const getTaskColor = (type: string) => {
   }
 };
 
+const formatTimeWithAMPM = (time24: string): string => {
+  const [hours, minutes] = time24.split(':').map(Number);
+  const period = hours >= 12 ? 'PM' : 'AM';
+  const hours12 = hours % 12 || 12;
+  return `${hours12}:${minutes.toString().padStart(2, '0')} ${period}`;
+};
+
 const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
   plan,
   onClose,
@@ -80,6 +89,11 @@ const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
   const [hasChanges, setHasChanges] = useState(false);
   const [addedDays, setAddedDays] = useState<number[]>([]);
   const [scrollToDay, setScrollToDay] = useState<number | null>(null);
+  const [dailyRunTime, setDailyRunTime] = useState(
+    typeof plan.templateId === "object" && plan.templateId?.timeOfDayToRun
+      ? convertUTCToLocalTime(plan.templateId.timeOfDayToRun)
+      : "09:00"
+  );
   const dayRefs = useRef<Record<number, HTMLDivElement | null>>({});
 
   // Update localDays when plan changes
@@ -87,6 +101,15 @@ const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
     setLocalDays(schedule.days);
     setAddedDays([]);
   }, [schedule.days]);
+
+  // Update dailyRunTime when template data becomes available
+  useEffect(() => {
+    const timeOfDayToRun =
+      typeof plan.templateId === "object" && plan.templateId?.timeOfDayToRun
+        ? convertUTCToLocalTime(plan.templateId.timeOfDayToRun)
+        : "09:00";
+    setDailyRunTime(timeOfDayToRun);
+  }, [plan.templateId]);
 
   // Scroll to newly added day
   useEffect(() => {
@@ -340,12 +363,12 @@ const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
       const firstTask = day.tasks.find((t) => t.scheduledFor);
       const originalTime = firstTask
         ? (() => {
-            const dt = new Date(firstTask.scheduledFor as string);
-            return `${dt.getHours().toString().padStart(2, "0")}:${dt
-              .getMinutes()
-              .toString()
-              .padStart(2, "0")}`;
-          })()
+          const dt = new Date(firstTask.scheduledFor as string);
+          return `${dt.getHours().toString().padStart(2, "0")}:${dt
+            .getMinutes()
+            .toString()
+            .padStart(2, "0")}`;
+        })()
         : defaultTime;
       const currentTime = dayTimes[day.day] ?? originalTime;
       if (currentTime !== originalTime) {
@@ -458,12 +481,12 @@ const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
     const firstTask = day.tasks.find((t) => t.scheduledFor);
     const originalTime = firstTask
       ? (() => {
-          const dt = new Date(firstTask.scheduledFor as string);
-          return `${dt.getHours().toString().padStart(2, "0")}:${dt
-            .getMinutes()
-            .toString()
-            .padStart(2, "0")}`;
-        })()
+        const dt = new Date(firstTask.scheduledFor as string);
+        return `${dt.getHours().toString().padStart(2, "0")}:${dt
+          .getMinutes()
+          .toString()
+          .padStart(2, "0")}`;
+      })()
       : defaultTime;
     const currentTime = dayTimes[dayNumber] ?? originalTime;
     if (currentTime !== originalTime) {
@@ -729,7 +752,7 @@ const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
           todo: allNewTasks.map((task) => {
             const taskId = task._id;
             const isTempId = !taskId || taskId.startsWith("temp-");
-            
+
             return {
               ...(isTempId ? {} : { _id: taskId }),
               type: task.type,
@@ -829,8 +852,8 @@ const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
         type === "emails"
           ? [...(existing.email || [])]
           : type === "calls"
-          ? [...(existing.call || [])]
-          : [...(existing.whatsapp_message || [])];
+            ? [...(existing.call || [])]
+            : [...(existing.whatsapp_message || [])];
 
       // ensure length == numValue
       if (currentArray.length < numValue) {
@@ -856,8 +879,8 @@ const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
         type === "emails"
           ? [...(existing.email || [])]
           : type === "calls"
-          ? [...(existing.call || [])]
-          : [...(existing.whatsapp_message || [])];
+            ? [...(existing.call || [])]
+            : [...(existing.whatsapp_message || [])];
 
       // ensure length == numValue
       if (currentArray.length < numValue) {
@@ -954,6 +977,48 @@ const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
     });
   };
 
+  const handleApplyGlobalTime = () => {
+    // Update all task times to dailyRunTime
+    setDayTaskTimes((prev) => {
+      const next = { ...prev };
+
+      // Iterate over all days in localDays (including added ones)
+      localDays.forEach(day => {
+        const dayNum = day.day;
+        const existing = prev[dayNum] || { email: [], call: [], whatsapp_message: [] };
+
+        // Get counts to know how many tasks we have
+        const count = dayCounts[dayNum] || {
+          emails: day.tasks.filter(t => t.type === "email").length,
+          calls: day.tasks.filter(t => t.type === "call").length,
+          whatsapp: day.tasks.filter(t => t.type === "whatsapp_message").length,
+        };
+
+        next[dayNum] = {
+          email: Array(count.emails).fill(dailyRunTime),
+          call: Array(count.calls).fill(dailyRunTime),
+          whatsapp_message: Array(count.whatsapp).fill(dailyRunTime),
+        };
+      });
+
+      // Also update the day-level time if we track that
+      setDayTimes(prevTimes => {
+        const nextTimes = { ...prevTimes };
+        localDays.forEach(day => {
+          nextTimes[day.day] = dailyRunTime;
+        });
+        return nextTimes;
+      });
+
+      return next;
+    });
+
+    toast({
+      title: "Time Applied",
+      description: `Applied ${dailyRunTime} to all active tasks. Click 'Save All Changes' to persist.`,
+    });
+  };
+
   const handleSaveAll = () => {
     // Get all persons from the plan
     const allPersons = new Set<string>();
@@ -985,8 +1050,8 @@ const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
       {};
 
     const templateDefaultTime =
-      plan.templateId && typeof plan.templateId === "object"
-        ? plan.templateId.timeOfDayToRun || "09:00"
+      plan.templateId && typeof plan.templateId === "object" && plan.templateId.timeOfDayToRun
+        ? convertUTCToLocalTime(plan.templateId.timeOfDayToRun)
         : "09:00";
 
     localDays.forEach((day) => {
@@ -1285,7 +1350,7 @@ const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
             // Only include _id if it's a valid existing task ID (not a temp ID)
             const taskId = task._id;
             const isTempId = !taskId || taskId.startsWith("temp-");
-            
+
             return {
               ...(isTempId ? {} : { _id: taskId }),
               type: task.type,
@@ -1296,6 +1361,9 @@ const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
               isComplete: task.isComplete,
             };
           }),
+          schedule: {
+            time: convertLocalTimeToUTC(dailyRunTime),
+          },
         },
       },
       {
@@ -1341,8 +1409,8 @@ const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
     setDayTimes((prev) => ({
       ...prev,
       [newDayNumber]:
-        plan.templateId && typeof plan.templateId === "object"
-          ? plan.templateId.timeOfDayToRun || "09:00"
+        plan.templateId && typeof plan.templateId === "object" && plan.templateId.timeOfDayToRun
+          ? convertUTCToLocalTime(plan.templateId.timeOfDayToRun)
           : "09:00",
     }));
     setDayTaskTimes((prev) => ({
@@ -1385,20 +1453,72 @@ const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
         </div>
       </div>
 
+      {/* Global Controls */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/5 border border-white/10 p-4 rounded-lg">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-white/60 text-sm">Time:</span>
+            <div className="relative">
+              <Input
+                type="time"
+                step="60"
+                value={dailyRunTime}
+                onChange={(e) => setDailyRunTime(e.target.value)}
+                style={{ colorScheme: "dark" }}
+                className="pl-10 bg-white/5 backdrop-blur-sm border-white/20 text-white text-xs placeholder:text-gray-400 focus:bg-white/10 focus:border-white/30 transition-all h-8 w-32"
+              />
+              <svg
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white pointer-events-none"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12,6 12,12 16,14"></polyline>
+              </svg>
+            </div>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleApplyGlobalTime}
+              className="bg-white/10 hover:bg-white/20 text-white border border-white/10"
+            >
+              Apply to All
+            </Button>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {hasChanges && (
+              <span className="text-xs text-amber-300 mr-2">Unsaved changes</span>
+            )}
+            <Button
+              onClick={handleSaveAll}
+              disabled={!hasChanges || isUpdating}
+              className="bg-cyan-500 hover:bg-cyan-600 text-white"
+            >
+              {isUpdating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+              Save All Changes
+            </Button>
+          </div>
+        </div>
+      </div>
+
       {/* Plan Overview */}
       <div className="mb-6 p-4 rounded-lg bg-white/5 border border-white/10">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-lg font-semibold text-white">Plan Overview</h3>
           <Badge
-            className={`${
-              plan.status === "completed"
-                ? "bg-green-500/15 text-green-300 border border-green-400/30"
-                : plan.status === "in_progress"
+            className={`${plan.status === "completed"
+              ? "bg-green-500/15 text-green-300 border border-green-400/30"
+              : plan.status === "in_progress"
                 ? "bg-blue-500/15 text-blue-200 border border-blue-400/30"
                 : plan.status === "failed"
-                ? "bg-red-500/15 text-red-300 border border-red-400/30"
-                : "bg-white/10 text-white border border-white/20"
-            }`}
+                  ? "bg-red-500/15 text-red-300 border border-red-400/30"
+                  : "bg-white/10 text-white border border-white/20"
+              }`}
           >
             {plan.status.replace("_", " ")}
           </Badge>
@@ -1453,13 +1573,13 @@ const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
           const counts = dayCounts[day.day] || { emails: 0, calls: 0, whatsapp: 0 };
 
           return (
-        <div
-          key={day.day}
-          className="rounded-lg border border-white/10 bg-white/5 p-4"
-          ref={(el) => {
-            dayRefs.current[day.day] = el;
-          }}
-        >
+            <div
+              key={day.day}
+              className="rounded-lg border border-white/10 bg-white/5 p-4"
+              ref={(el) => {
+                dayRefs.current[day.day] = el;
+              }}
+            >
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-2">
@@ -1474,13 +1594,12 @@ const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
                 <div className="flex items-center gap-2">
                   {dayStatus && !isEditing && (
                     <Badge
-                      className={`${
-                        dayStatus.status === "completed"
-                          ? "bg-green-500/15 text-green-300 border border-green-400/30"
-                          : dayStatus.status === "in_progress"
+                      className={`${dayStatus.status === "completed"
+                        ? "bg-green-500/15 text-green-300 border border-green-400/30"
+                        : dayStatus.status === "in_progress"
                           ? "bg-blue-500/15 text-blue-200 border border-blue-400/30"
                           : "bg-white/10 text-white border border-white/20"
-                      }`}
+                        }`}
                     >
                       {dayStatus.label}
                     </Badge>
@@ -1502,11 +1621,10 @@ const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
                         disabled={!dayHasChanges(day.day) || isUpdating}
                         variant="outline"
                         size="sm"
-                        className={`${
-                          dayHasChanges(day.day) && !isUpdating
-                            ? "text-white border-white/20 hover:bg-white/10"
-                            : "text-white/40 border-white/10 bg-white/5 cursor-not-allowed"
-                        }`}
+                        className={`${dayHasChanges(day.day) && !isUpdating
+                          ? "text-white border-white/20 hover:bg-white/10"
+                          : "text-white/40 border-white/10 bg-white/5 cursor-not-allowed"
+                          }`}
                       >
                         <Save className="w-4 h-4 mr-2" />
                         {isUpdating ? "Saving..." : "Save Day"}
@@ -1555,8 +1673,8 @@ const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
                         type === "emails"
                           ? counts.emails
                           : type === "calls"
-                          ? counts.calls
-                          : counts.whatsapp;
+                            ? counts.calls
+                            : counts.whatsapp;
                       return (
                         <div key={type} className="space-y-3">
                           <div className="grid grid-cols-3 gap-4">
@@ -1590,43 +1708,25 @@ const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
                                 type === "emails"
                                   ? counts.emails || 0
                                   : type === "calls"
-                                  ? counts.calls || 0
-                                  : counts.whatsapp || 0,
+                                    ? counts.calls || 0
+                                    : counts.whatsapp || 0,
                             }).map((_, idx) => {
                               const notesArr = dayTaskNotes[day.day]?.[key] || [];
                               const existingNote = notesArr[idx] || "";
-                              
+
                               return (
                                 <div
                                   key={`${type}-${idx}`}
                                   className="p-3 rounded-lg border border-white/10 bg-black/30 space-y-2"
                                 >
                                   {/* First row: Icon, label, and time */}
-                                  <div className="flex items-center justify-between gap-3">
+                                  <div className="flex items-center gap-3">
                                     <div className="flex items-center gap-2 text-sm text-white/80">
                                       {icon}
                                       <span>
                                         {label} #{idx + 1}
                                       </span>
                                     </div>
-                                    <Input
-                                      type="time"
-                                      value={
-                                        timesArr[idx] ||
-                                        (plan.templateId && typeof plan.templateId === "object"
-                                          ? plan.templateId.timeOfDayToRun || "09:00"
-                                          : "09:00")
-                                      }
-                                      onChange={(e) =>
-                                        handleTaskTimeChange(
-                                          day.day,
-                                          key,
-                                          idx,
-                                          e.target.value
-                                        )
-                                      }
-                                      className="bg-white/5 border-white/20 text-white h-9 w-28"
-                                    />
                                   </div>
                                   {/* Second row: Notes input */}
                                   <Input
