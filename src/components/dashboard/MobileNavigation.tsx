@@ -134,14 +134,14 @@ const navLinks: NavLink[] = [
     moduleName: "followups", // Assuming 'followups' module exists
     match: (pathname: string) => pathname.startsWith("/followups"),
   },
-  {
-    id: "contact-now",
-    label: "Contact",
-    icon: PhoneCall,
-    path: "/contact-now",
-    match: (pathname: string) => pathname.startsWith("/contact-now"),
-    roles: contactRoles,
-  },
+  // {
+  //   id: "contact-now",
+  //   label: "Contact",
+  //   icon: PhoneCall,
+  //   path: "/contact-now",
+  //   match: (pathname: string) => pathname.startsWith("/contact-now"),
+  //   roles: contactRoles,
+  // },
 ];
 
 export const MobileNavigation = () => {

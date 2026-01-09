@@ -85,14 +85,14 @@ const navLinks: NavLink[] = [
     moduleName: "campaigns", // Protected by 'campaigns' module
     match: (pathname: string) => pathname.startsWith("/campaigns"),
   },
-  {
-    id: "contact-now",
-    label: "Contact",
-    icon: PhoneCall,
-    path: "/contact-now",
-    match: (pathname: string) => pathname.startsWith("/contact-now"),
-    roles: contactRoles,
-  },
+  // {
+  //   id: "contact-now",
+  //   label: "Contact",
+  //   icon: PhoneCall,
+  //   path: "/contact-now",
+  //   match: (pathname: string) => pathname.startsWith("/contact-now"),
+  //   roles: contactRoles,
+  // },
 ];
 
 // Admin Navigation Links - Enhanced with admin capabilities

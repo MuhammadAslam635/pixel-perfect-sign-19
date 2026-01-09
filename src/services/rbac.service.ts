@@ -151,6 +151,12 @@ export const rbacService = {
       const response = await API.get("/modules", {
         params: { includeInactive },
       });
+      // Manually filter out contact-now module to hide it from UI (Roles form, Modules list)
+      if (response.data && response.data.data) {
+        response.data.data = response.data.data.filter(
+          (m: Module) => m.name !== "contact-now"
+        );
+      }
       return response.data;
     } catch (error: any) {
       throw error;

@@ -24,7 +24,7 @@ const ProspectsPage = lazy(() => import("@/pages/prospects"));
 const UserList = lazy(() => import("@/pages/users/UserList"));
 const UserCreate = lazy(() => import("@/pages/users/UserCreate"));
 const UserEdit = lazy(() => import("@/pages/users/UserEdit"));
-const ContactNow = lazy(() => import("@/pages/twilio-calling/ContactNow"));
+// const ContactNow = lazy(() => import("@/pages/twilio-calling/ContactNow"));
 const FollowupTemplatesPage = lazy(() => import("@/pages/crm/followups"));
 const FollowUp2Page = lazy(() => import("@/pages/crm/followups-2"));
 const LeadDetailView = lazy(() => import("@/pages/crm/leads/leaddetailview"));
@@ -261,14 +261,14 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
-      <Route
+      {/* <Route
         path="/contact-now"
         element={
           <ProtectedRoute moduleName="contact-now">
             <ContactNow />
           </ProtectedRoute>
         }
-      />
+      /> */}
       <Route
         path="/emails/inbox"
         element={

@@ -143,7 +143,7 @@ export const hasLegacyPermission = (userRole: string, moduleName: string): boole
       "followup-templates",
       "emails",
     ],
-    CompanyUser: ["dashboard", "chat", "contact-now", "campaigns", "emails"],
+    CompanyUser: ["dashboard", "chat", /* "contact-now", */ "campaigns", "emails"],
     CompanyViewer: ["dashboard", "campaigns"],
   };
 
