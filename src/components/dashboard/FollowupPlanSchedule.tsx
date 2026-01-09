@@ -75,6 +75,17 @@ const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
   const { toast } = useToast();
   const { mutate: updatePlan, isPending: isUpdating } = useUpdateFollowupPlan();
   const schedule = plan.schedule;
+  const getPlanTemplateTimeUTC = () => {
+    // Prefer plan-level snapshot override, fall back to template default
+    if (plan.templateSnapshot && typeof plan.templateSnapshot === "object" && plan.templateSnapshot.timeOfDayToRun) {
+      return plan.templateSnapshot.timeOfDayToRun;
+    }
+    if (plan.templateId && typeof plan.templateId === "object" && plan.templateId.timeOfDayToRun) {
+      return plan.templateId.timeOfDayToRun;
+    }
+    return "09:00";
+  };
+  const getPlanTemplateTimeLocal = () => convertUTCToLocalTime(getPlanTemplateTimeUTC());
   const [editingDay, setEditingDay] = useState<number | null>(null);
   const [dayCounts, setDayCounts] = useState<Record<number, { emails: number; calls: number; whatsapp: number }>>({});
   const [dayNumbers, setDayNumbers] = useState<Record<number, number | "">>({});
@@ -90,9 +101,7 @@ const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
   const [addedDays, setAddedDays] = useState<number[]>([]);
   const [scrollToDay, setScrollToDay] = useState<number | null>(null);
   const [dailyRunTime, setDailyRunTime] = useState(
-    typeof plan.templateId === "object" && plan.templateId?.timeOfDayToRun
-      ? convertUTCToLocalTime(plan.templateId.timeOfDayToRun)
-      : "09:00"
+    getPlanTemplateTimeLocal()
   );
   const dayRefs = useRef<Record<number, HTMLDivElement | null>>({});
 
@@ -104,12 +113,8 @@ const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
 
   // Update dailyRunTime when template data becomes available
   useEffect(() => {
-    const timeOfDayToRun =
-      typeof plan.templateId === "object" && plan.templateId?.timeOfDayToRun
-        ? convertUTCToLocalTime(plan.templateId.timeOfDayToRun)
-        : "09:00";
-    setDailyRunTime(timeOfDayToRun);
-  }, [plan.templateId]);
+    setDailyRunTime(getPlanTemplateTimeLocal());
+  }, [plan]);
 
   // Scroll to newly added day
   useEffect(() => {
@@ -130,10 +135,7 @@ const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
     const taskTimes: Record<number, { email: string[]; call: string[]; whatsapp_message: string[] }> = {};
     const taskNotes: Record<number, { email: string[]; call: string[]; whatsapp_message: string[] }> = {};
 
-    const defaultTime =
-      plan.templateId && typeof plan.templateId === "object"
-        ? plan.templateId.timeOfDayToRun || "09:00"
-        : "09:00";
+    const defaultTime = getPlanTemplateTimeUTC();
 
     localDays.forEach((day) => {
       counts[day.day] = {
@@ -208,7 +210,7 @@ const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
     setDayTaskTimes(taskTimes);
     setDayTaskNotes(taskNotes);
     setHasChanges(false);
-  }, [localDays, plan.templateId]);
+  }, [localDays, plan]);
 
   const formatScheduledTime = (scheduledFor?: string, isComplete?: boolean) => {
     return formatFollowupTaskTime(scheduledFor, isComplete);
@@ -241,10 +243,7 @@ const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
     const times: Record<number, string> = {};
     const taskTimes: Record<number, { email: string[]; call: string[]; whatsapp_message: string[] }> = {};
     const taskNotes: Record<number, { email: string[]; call: string[]; whatsapp_message: string[] }> = {};
-    const defaultTime =
-      plan.templateId && typeof plan.templateId === "object"
-        ? plan.templateId.timeOfDayToRun || "09:00"
-        : "09:00";
+    const defaultTime = getPlanTemplateTimeUTC();
     localDays.forEach((day) => {
       counts[day.day] = {
         emails: day.tasks.filter((t) => t.type === "email").length,
@@ -326,10 +325,7 @@ const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
 
   // Check if there are changes (counts, day numbers, times, per-task times)
   useEffect(() => {
-    const defaultTime =
-      plan.templateId && typeof plan.templateId === "object"
-        ? plan.templateId.timeOfDayToRun || "09:00"
-        : "09:00";
+    const defaultTime = getPlanTemplateTimeUTC();
 
     let changed = false;
     localDays.forEach((day) => {
@@ -438,18 +434,24 @@ const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
       }
     });
 
+    // If the global daily run time has been changed from the template default, mark as changed
+    try {
+      const templateDefaultLocal = getPlanTemplateTimeLocal();
+      if (dailyRunTime !== templateDefaultLocal) changed = true;
+    } catch (e) {
+      // ignore conversion errors
+    }
+
     setHasChanges(changed);
-  }, [dayCounts, dayNumbers, dayTimes, dayTaskTimes, localDays, plan.templateId]);
+
+  }, [dayCounts, dayNumbers, dayTimes, dayTaskTimes, localDays, plan, dailyRunTime]);
 
   // Check if a specific day has changes
   const dayHasChanges = (dayNumber: number): boolean => {
     const day = localDays.find((d) => d.day === dayNumber);
     if (!day) return false;
 
-    const defaultTime =
-      plan.templateId && typeof plan.templateId === "object"
-        ? plan.templateId.timeOfDayToRun || "09:00"
-        : "09:00";
+    const defaultTime = getPlanTemplateTimeUTC();
 
     const originalCounts = {
       emails: day.tasks.filter((t) => t.type === "email").length,
@@ -622,10 +624,7 @@ const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
     const day = localDays.find((d) => d.day === dayNumber);
     if (!day) return;
 
-    const templateDefaultTime =
-      plan.templateId && typeof plan.templateId === "object"
-        ? plan.templateId.timeOfDayToRun || "09:00"
-        : "09:00";
+    const templateDefaultTime = getPlanTemplateTimeUTC();
 
     const originalDayNumber = day.day;
     const targetDayRaw = dayNumbers[originalDayNumber];
@@ -840,10 +839,7 @@ const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
     }));
 
     // adjust per-task times array lengths to match new count, filling with default time
-    const defaultTime =
-      plan.templateId && typeof plan.templateId === "object"
-        ? plan.templateId.timeOfDayToRun || "09:00"
-        : "09:00";
+    const defaultTime = getPlanTemplateTimeUTC();
 
     setDayTaskTimes((prev) => {
       const existing = prev[day] || { email: [], call: [], whatsapp_message: [] };
@@ -941,11 +937,7 @@ const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
       const arr = [...(type === "email" ? existing.email : type === "call" ? existing.call : existing.whatsapp_message)];
       // pad up to index
       while (arr.length <= index) {
-        arr.push(
-          plan.templateId && typeof plan.templateId === "object"
-            ? plan.templateId.timeOfDayToRun || "09:00"
-            : "09:00"
-        );
+        arr.push(getPlanTemplateTimeLocal());
       }
       arr[index] = value;
       if (type === "email") updated.email = arr;
@@ -1049,10 +1041,7 @@ const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
     const baseTaskTimes: Record<number, { email: string[]; call: string[]; whatsapp_message: string[] }> =
       {};
 
-    const templateDefaultTime =
-      plan.templateId && typeof plan.templateId === "object" && plan.templateId.timeOfDayToRun
-        ? convertUTCToLocalTime(plan.templateId.timeOfDayToRun)
-        : "09:00";
+    const templateDefaultTime = getPlanTemplateTimeLocal();
 
     localDays.forEach((day) => {
       const originalDayNumber = day.day;
@@ -1206,11 +1195,46 @@ const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
       }
     });
 
-    if (editedDays.size === 0) {
+    const templateDefaultLocal = getPlanTemplateTimeLocal();
+
+    const scheduleChanged = dailyRunTime !== templateDefaultLocal;
+
+    if (editedDays.size === 0 && !scheduleChanged) {
       toast({
         title: "No changes",
         description: "No changes to save.",
       });
+      return;
+    }
+
+    // If only schedule (time) changed, send schedule update only so backend recreates cron job
+    if (editedDays.size === 0 && scheduleChanged) {
+      updatePlan(
+        {
+          id: plan._id,
+          payload: {
+            schedule: {
+              time: convertLocalTimeToUTC(dailyRunTime),
+            },
+          },
+        },
+        {
+          onSuccess: () => {
+            toast({
+              title: "Plan updated",
+              description: "Schedule time has been updated successfully.",
+            });
+            setHasChanges(false);
+          },
+          onError: (error: any) => {
+            toast({
+              title: "Failed to update plan",
+              description: error?.response?.data?.message || "Please try again.",
+              variant: "destructive",
+            });
+          },
+        }
+      );
       return;
     }
 
@@ -1238,12 +1262,7 @@ const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
         calls: incomingCounts[dayNum].calls + (baseCounts[dayNum]?.calls ?? 0),
         whatsapp: incomingCounts[dayNum].whatsapp + (baseCounts[dayNum]?.whatsapp ?? 0),
       };
-      combinedTimes[dayNum] =
-        incomingTimes[dayNum] ||
-        baseTimes[dayNum] ||
-        (plan.templateId && typeof plan.templateId === "object"
-          ? plan.templateId.timeOfDayToRun || "09:00"
-          : "09:00");
+      combinedTimes[dayNum] = incomingTimes[dayNum] || baseTimes[dayNum] || getPlanTemplateTimeLocal();
       combinedTaskTimes[dayNum] = {
         email: [
           ...(baseTaskTimes[dayNum]?.email || []),
@@ -1265,11 +1284,7 @@ const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
       const dayNum = parseInt(dayKey, 10);
       if (daysToRemove.has(dayNum) && !combinedCounts[dayNum]) {
         combinedCounts[dayNum] = { ...baseCounts[dayNum] };
-        combinedTimes[dayNum] =
-          baseTimes[dayNum] ||
-          (plan.templateId && typeof plan.templateId === "object"
-            ? plan.templateId.timeOfDayToRun || "09:00"
-            : "09:00");
+        combinedTimes[dayNum] = baseTimes[dayNum] || getPlanTemplateTimeLocal();
         combinedTaskTimes[dayNum] = {
           email: [...(baseTaskTimes[dayNum]?.email || [])],
           call: [...(baseTaskTimes[dayNum]?.call || [])],
@@ -1289,11 +1304,7 @@ const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
         tasksByNewDay[finalDayNumber] = [];
       }
 
-      const timeForDay =
-        combinedTimes[finalDayNumber] ||
-        (plan.templateId && typeof plan.templateId === "object"
-          ? plan.templateId.timeOfDayToRun || "09:00"
-          : "09:00");
+      const timeForDay = combinedTimes[finalDayNumber] || getPlanTemplateTimeLocal();
 
       const timeArrays =
         combinedTaskTimes[finalDayNumber] || { email: [], call: [], whatsapp_message: [] };
@@ -1408,10 +1419,7 @@ const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
     }));
     setDayTimes((prev) => ({
       ...prev,
-      [newDayNumber]:
-        plan.templateId && typeof plan.templateId === "object" && plan.templateId.timeOfDayToRun
-          ? convertUTCToLocalTime(plan.templateId.timeOfDayToRun)
-          : "09:00",
+      [newDayNumber]: getPlanTemplateTimeLocal(),
     }));
     setDayTaskTimes((prev) => ({
       ...prev,
@@ -1480,14 +1488,7 @@ const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
                 <polyline points="12,6 12,12 16,14"></polyline>
               </svg>
             </div>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={handleApplyGlobalTime}
-              className="bg-white/10 hover:bg-white/20 text-white border border-white/10"
-            >
-              Apply to All
-            </Button>
+            {/* global apply removed - changing time now enables Save All Changes */}
           </div>
 
           <div className="flex items-center gap-2">
