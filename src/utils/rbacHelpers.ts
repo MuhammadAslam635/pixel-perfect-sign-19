@@ -151,6 +151,8 @@ export const hasLegacyPermission = (userRole: string, moduleName: string): boole
   return allowedModules.includes("*") || allowedModules.includes(moduleName);
 };
 
+import { isRestrictedModule, isAdminRole as isRestrictedAdminRule } from "./restrictedModules";
+
 /**
  * Check module access (supports both new RBAC and legacy roles)
  * @param user - User object with role information
@@ -163,6 +165,22 @@ export const canAccessModule = (
   requiredActions: PermissionAction[] = ["view"]
 ): boolean => {
   if (!user) return false;
+
+  // CRITICAL: Check restricted modules first
+  if (isRestrictedModule(moduleName)) {
+    // Check if user is allowed to access restricted modules
+    // We check both legacy role string and new role object
+    const legacyRole = user.role;
+    const roleObject = user.roleId && typeof user.roleId === 'object' ? user.roleId : null;
+    
+    const isAdmin = 
+      isRestrictedAdminRule(legacyRole) || 
+      (roleObject && isRestrictedAdminRule(roleObject));
+
+    if (!isAdmin) {
+      return false;
+    }
+  }
 
   // Note: Admin role is intentionally kept as legacy system role (not roleId-based)
   if (user.role === "Admin") return true;

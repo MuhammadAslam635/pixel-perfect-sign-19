@@ -180,7 +180,7 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
     } catch (error: any) {
       console.error("Failed to delete chat", error);
       toast.error(
-        error?.response?.data?.message ||
+        error.response?.data?.message ||
           "Failed to delete the chat. Please try again."
       );
     } finally {

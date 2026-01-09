@@ -73,7 +73,7 @@ const RoleList = () => {
     } catch (error: any) {
       console.error("Error fetching roles:", error);
       setRoles([]);
-      toast.error(error?.response?.data?.message || "Failed to fetch roles");
+      toast.error(error.response?.data?.message || "Failed to fetch roles");
     } finally {
       setLoading(false);
     }
@@ -105,7 +105,7 @@ const RoleList = () => {
       setRoleToDelete(null);
       fetchRoles();
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Failed to delete role");
+      toast.error(error.response?.data?.message || "Failed to delete role");
     }
   };
 
