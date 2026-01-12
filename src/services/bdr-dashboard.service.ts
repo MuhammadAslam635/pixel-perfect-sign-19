@@ -177,6 +177,15 @@ export const bdrDashboardService = {
     params?: Record<string, any>
   ): Promise<DashboardResponse<{ success: boolean }>> => {
     try {
+      // Special handling for send_email action
+      if (action === "send_email" && params?.leadId) {
+        const response = await API.post(
+          `/dashboard/bdr/send-followup-email/${params.leadId}`
+        );
+        return response.data;
+      }
+
+      // Default quick action handler
       const response = await API.post(`/dashboard/bdr/quick-action/${itemId}`, {
         action,
         params,
@@ -184,6 +193,23 @@ export const bdrDashboardService = {
       return response.data;
     } catch (error: any) {
       console.error("Error executing quick action:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Send AI-generated follow-up email to a lead
+   */
+  sendFollowUpEmail: async (
+    leadId: string
+  ): Promise<DashboardResponse<{ emailSent: boolean }>> => {
+    try {
+      const response = await API.post(
+        `/dashboard/bdr/send-followup-email/${leadId}`
+      );
+      return response.data;
+    } catch (error: any) {
+      console.error("Error sending follow-up email:", error);
       throw error;
     }
   },

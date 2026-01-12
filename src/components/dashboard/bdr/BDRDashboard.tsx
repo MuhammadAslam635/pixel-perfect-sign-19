@@ -22,7 +22,7 @@ import { BarChart3, TrendingUp, MessageSquare, Loader2 } from "lucide-react";
 const BDRDashboard: React.FC = () => {
   const { user } = useSelector((state: RootState) => state.auth);
   const sessionUser = user || getUserData();
-  
+
   const {
     dashboardData,
     dailyGoals,
@@ -48,7 +48,11 @@ const BDRDashboard: React.FC = () => {
     toast.success(`${action} action initiated for lead`);
   };
 
-  const handleQuickAction = async (itemId: string, action: string, params?: Record<string, any>) => {
+  const handleQuickAction = async (
+    itemId: string,
+    action: string,
+    params?: Record<string, any>
+  ) => {
     const success = await executeQuickAction(itemId, action, params);
     if (success) {
       toast.success("Action completed successfully");
@@ -61,6 +65,12 @@ const BDRDashboard: React.FC = () => {
     if (priorityQueue.length > 0) {
       await refreshTalkTrack(priorityQueue[0].id);
     }
+  };
+
+  const handleGoalsUpdated = async (newGoals: DailyGoalTracker) => {
+    // Trigger a full dashboard refresh to sync all data
+    await refreshDashboard();
+    toast.success("Your goals have been updated!");
   };
 
   if (isLoading) {
@@ -85,7 +95,14 @@ const BDRDashboard: React.FC = () => {
     );
   }
 
-  if (!dashboardData || !dailyGoals || !pipelineSnapshot || !executionQuality || !activitySummary || !conversionRates) {
+  if (
+    !dashboardData ||
+    !dailyGoals ||
+    !pipelineSnapshot ||
+    !executionQuality ||
+    !activitySummary ||
+    !conversionRates
+  ) {
     return (
       <div className="flex items-center justify-center h-96">
         <div className="text-white">No dashboard data available</div>
@@ -98,9 +115,17 @@ const BDRDashboard: React.FC = () => {
       {/* Welcome Section */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-white mb-2">
-          Good {new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 17 ? 'Afternoon' : 'Evening'}, {sessionUser?.name || 'there'}!
+          Good{" "}
+          {new Date().getHours() < 12
+            ? "Morning"
+            : new Date().getHours() < 17
+            ? "Afternoon"
+            : "Evening"}
+          , {sessionUser?.name || "there"}!
         </h1>
-        <p className="text-gray-400">Ready to crush your goals today? Let's see what needs your attention.</p>
+        <p className="text-gray-400">
+          Ready to crush your goals today? Let's see what needs your attention.
+        </p>
       </div>
 
       {/* Section 1: Today's Mission */}
@@ -109,7 +134,10 @@ const BDRDashboard: React.FC = () => {
           leads={priorityQueue}
           onActionClick={handlePriorityAction}
         />
-        <DailyGoalTracker goals={dailyGoals} />
+        <DailyGoalTracker
+          goals={dailyGoals}
+          onGoalsUpdated={handleGoalsUpdated}
+        />
       </div>
 
       {/* Section 2: Live Pipeline Snapshot */}
@@ -125,7 +153,7 @@ const BDRDashboard: React.FC = () => {
           onRefresh={handleRefreshTalkTrack}
           isLoading={isRefreshing}
         />
-        
+
         {/* Message Suggestions Card */}
         <Card className="bg-gray-900/50 border-gray-800">
           <CardHeader className="pb-4">
@@ -183,15 +211,21 @@ const BDRDashboard: React.FC = () => {
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-400">Calls Made</span>
-                    <span className="text-white">{activitySummary.today.callsMade}</span>
+                    <span className="text-white">
+                      {activitySummary.today.callsMade}
+                    </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-400">Emails Sent</span>
-                    <span className="text-white">{activitySummary.today.emailsSent}</span>
+                    <span className="text-white">
+                      {activitySummary.today.emailsSent}
+                    </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-400">Conversations</span>
-                    <span className="text-white">{activitySummary.today.conversationsHeld}</span>
+                    <span className="text-white">
+                      {activitySummary.today.conversationsHeld}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -200,29 +234,42 @@ const BDRDashboard: React.FC = () => {
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-400">Calls Made</span>
-                    <span className="text-white">{activitySummary.week.callsMade}</span>
+                    <span className="text-white">
+                      {activitySummary.week.callsMade}
+                    </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-400">Emails Sent</span>
-                    <span className="text-white">{activitySummary.week.emailsSent}</span>
+                    <span className="text-white">
+                      {activitySummary.week.emailsSent}
+                    </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-400">Conversations</span>
-                    <span className="text-white">{activitySummary.week.conversationsHeld}</span>
+                    <span className="text-white">
+                      {activitySummary.week.conversationsHeld}
+                    </span>
                   </div>
                 </div>
               </div>
             </div>
-            
+
             {/* Time Allocation */}
             <div className="pt-4 border-t border-gray-700">
-              <h4 className="text-sm font-medium text-white mb-3">Time Allocation</h4>
+              <h4 className="text-sm font-medium text-white mb-3">
+                Time Allocation
+              </h4>
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Selling Time</span>
-                  <span className="text-white">{activitySummary.timeAllocation.sellingTime}%</span>
+                  <span className="text-white">
+                    {activitySummary.timeAllocation.sellingTime}%
+                  </span>
                 </div>
-                <Progress value={activitySummary.timeAllocation.sellingTime} className="h-2 bg-gray-700" />
+                <Progress
+                  value={activitySummary.timeAllocation.sellingTime}
+                  className="h-2 bg-gray-700"
+                />
               </div>
             </div>
           </CardContent>
@@ -238,19 +285,25 @@ const BDRDashboard: React.FC = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             {Object.entries(conversionRates).map(([key, data]) => {
-              const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+              const label = key
+                .replace(/([A-Z])/g, " $1")
+                .replace(/^./, (str) => str.toUpperCase());
               return (
                 <div key={key} className="space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-400">{label}</span>
                     <div className="flex items-center gap-2">
-                      <span className="text-white font-medium">{data.rate}%</span>
-                      <Badge 
-                        variant="outline" 
+                      <span className="text-white font-medium">
+                        {data.rate}%
+                      </span>
+                      <Badge
+                        variant="outline"
                         className={
-                          data.trend === 'up' ? 'text-green-400 border-green-400' :
-                          data.trend === 'down' ? 'text-red-400 border-red-400' :
-                          'text-gray-400 border-gray-400'
+                          data.trend === "up"
+                            ? "text-green-400 border-green-400"
+                            : data.trend === "down"
+                            ? "text-red-400 border-red-400"
+                            : "text-gray-400 border-gray-400"
                         }
                       >
                         {data.trend}
@@ -282,12 +335,14 @@ const BDRDashboard: React.FC = () => {
               <div key={index} className="bg-gray-800/50 rounded-lg p-3">
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="text-white font-medium">{insight.title}</h4>
-                  <Badge 
+                  <Badge
                     variant="outline"
                     className={
-                      insight.priority === 'high' ? 'text-red-400 border-red-400' :
-                      insight.priority === 'medium' ? 'text-yellow-400 border-yellow-400' :
-                      'text-green-400 border-green-400'
+                      insight.priority === "high"
+                        ? "text-red-400 border-red-400"
+                        : insight.priority === "medium"
+                        ? "text-yellow-400 border-yellow-400"
+                        : "text-green-400 border-green-400"
                     }
                   >
                     {insight.priority}
@@ -301,10 +356,7 @@ const BDRDashboard: React.FC = () => {
       )}
 
       {/* Section 7: Alerts & Nudges */}
-      <AtRiskAlertsCard
-        items={atRiskItems}
-        onQuickAction={handleQuickAction}
-      />
+      <AtRiskAlertsCard items={atRiskItems} onQuickAction={handleQuickAction} />
     </div>
   );
 };
