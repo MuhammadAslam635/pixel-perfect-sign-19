@@ -30,7 +30,7 @@ import {
 } from "@/services/followupTemplates.service";
 import { useToast } from "@/hooks/use-toast";
 import { isAxiosError } from "axios";
-import { convertLocalTimeToUTC, convertUTCToLocalTime } from "@/utils/timezone";
+// import { convertLocalTimeToUTC, convertUTCToLocalTime } from "@/utils/timezone";
 import {
   Mail,
   MessageSquare,
@@ -137,7 +137,7 @@ const TemplateFormModal = ({
         numberOfEmails: template.numberOfEmails,
         numberOfCalls: template.numberOfCalls,
         numberOfWhatsappMessages: template.numberOfWhatsappMessages,
-        timeOfDayToRun: convertUTCToLocalTime(template.timeOfDayToRun),
+        timeOfDayToRun: template.timeOfDayToRun,
       });
     } else if (mode === "create") {
       form.reset(defaultFormValues);
@@ -157,7 +157,7 @@ const TemplateFormModal = ({
       numberOfEmails: values.numberOfEmails,
       numberOfCalls: values.numberOfCalls,
       numberOfWhatsappMessages: values.numberOfWhatsappMessages,
-      timeOfDayToRun: convertLocalTimeToUTC(values.timeOfDayToRun),
+      timeOfDayToRun: values.timeOfDayToRun,
     };
 
     if (mode === "edit" && template) {
