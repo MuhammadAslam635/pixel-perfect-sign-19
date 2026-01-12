@@ -44,7 +44,11 @@ const GoalSettingsModal: React.FC<GoalSettingsModalProps> = ({
     },
   });
 
-  const handleInputChange = (category: string, period: string, value: string) => {
+  const handleInputChange = (
+    category: string,
+    period: string,
+    value: string
+  ) => {
     const numValue = parseInt(value) || 0;
     setGoals((prev) => ({
       ...prev,
@@ -59,7 +63,7 @@ const GoalSettingsModal: React.FC<GoalSettingsModalProps> = ({
     setIsLoading(true);
     try {
       const response = await bdrDashboardService.updateDailyGoals(goals);
-      
+
       if (response.success) {
         toast.success("Daily goals updated successfully!");
         onGoalsUpdated(response.data);
@@ -111,7 +115,9 @@ const GoalSettingsModal: React.FC<GoalSettingsModalProps> = ({
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-cyan-400 rounded-full"></div>
-              <h3 className="text-white font-semibold">Conversations Started</h3>
+              <h3 className="text-white font-semibold">
+                Conversations Started
+              </h3>
             </div>
             <div className="grid grid-cols-2 gap-4 pl-4">
               <div className="space-y-2">
@@ -124,7 +130,11 @@ const GoalSettingsModal: React.FC<GoalSettingsModalProps> = ({
                   min="1"
                   value={goals.conversationsStarted.daily}
                   onChange={(e) =>
-                    handleInputChange("conversationsStarted", "daily", e.target.value)
+                    handleInputChange(
+                      "conversationsStarted",
+                      "daily",
+                      e.target.value
+                    )
                   }
                   className="bg-gray-800 border-gray-700 text-white"
                 />
@@ -139,7 +149,11 @@ const GoalSettingsModal: React.FC<GoalSettingsModalProps> = ({
                   min="1"
                   value={goals.conversationsStarted.weekly}
                   onChange={(e) =>
-                    handleInputChange("conversationsStarted", "weekly", e.target.value)
+                    handleInputChange(
+                      "conversationsStarted",
+                      "weekly",
+                      e.target.value
+                    )
                   }
                   className="bg-gray-800 border-gray-700 text-white"
                 />
@@ -179,7 +193,11 @@ const GoalSettingsModal: React.FC<GoalSettingsModalProps> = ({
                   min="1"
                   value={goals.meetingsBooked.weekly}
                   onChange={(e) =>
-                    handleInputChange("meetingsBooked", "weekly", e.target.value)
+                    handleInputChange(
+                      "meetingsBooked",
+                      "weekly",
+                      e.target.value
+                    )
                   }
                   className="bg-gray-800 border-gray-700 text-white"
                 />
@@ -191,7 +209,9 @@ const GoalSettingsModal: React.FC<GoalSettingsModalProps> = ({
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-              <h3 className="text-white font-semibold">Qualified Opportunities</h3>
+              <h3 className="text-white font-semibold">
+                Qualified Opportunities
+              </h3>
             </div>
             <div className="grid grid-cols-2 gap-4 pl-4">
               <div className="space-y-2">
@@ -204,7 +224,11 @@ const GoalSettingsModal: React.FC<GoalSettingsModalProps> = ({
                   min="1"
                   value={goals.qualifiedOpportunities.daily}
                   onChange={(e) =>
-                    handleInputChange("qualifiedOpportunities", "daily", e.target.value)
+                    handleInputChange(
+                      "qualifiedOpportunities",
+                      "daily",
+                      e.target.value
+                    )
                   }
                   className="bg-gray-800 border-gray-700 text-white"
                 />
@@ -219,7 +243,11 @@ const GoalSettingsModal: React.FC<GoalSettingsModalProps> = ({
                   min="1"
                   value={goals.qualifiedOpportunities.weekly}
                   onChange={(e) =>
-                    handleInputChange("qualifiedOpportunities", "weekly", e.target.value)
+                    handleInputChange(
+                      "qualifiedOpportunities",
+                      "weekly",
+                      e.target.value
+                    )
                   }
                   className="bg-gray-800 border-gray-700 text-white"
                 />
@@ -230,8 +258,9 @@ const GoalSettingsModal: React.FC<GoalSettingsModalProps> = ({
           {/* Info Box */}
           <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-lg p-4">
             <p className="text-sm text-cyan-300">
-              <strong>Tip:</strong> Set realistic goals that challenge you without causing burnout.
-              Your targets should be based on your role, experience level, and market conditions.
+              <strong>Tip:</strong> Set realistic goals that challenge you
+              without causing burnout. Your targets should be based on your
+              role, experience level, and market conditions.
             </p>
           </div>
         </div>

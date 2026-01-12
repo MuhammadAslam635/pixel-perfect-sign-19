@@ -179,10 +179,12 @@ export const bdrDashboardService = {
     try {
       // Special handling for send_email action
       if (action === "send_email" && params?.leadId) {
-        const response = await API.post(`/dashboard/bdr/send-followup-email/${params.leadId}`);
+        const response = await API.post(
+          `/dashboard/bdr/send-followup-email/${params.leadId}`
+        );
         return response.data;
       }
-      
+
       // Default quick action handler
       const response = await API.post(`/dashboard/bdr/quick-action/${itemId}`, {
         action,
@@ -202,7 +204,9 @@ export const bdrDashboardService = {
     leadId: string
   ): Promise<DashboardResponse<{ emailSent: boolean }>> => {
     try {
-      const response = await API.post(`/dashboard/bdr/send-followup-email/${leadId}`);
+      const response = await API.post(
+        `/dashboard/bdr/send-followup-email/${leadId}`
+      );
       return response.data;
     } catch (error: any) {
       console.error("Error sending follow-up email:", error);

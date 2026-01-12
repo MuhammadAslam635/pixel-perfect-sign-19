@@ -11,7 +11,10 @@ interface DailyGoalTrackerProps {
   onGoalsUpdated?: (newGoals: DailyGoalTrackerType) => void;
 }
 
-const DailyGoalTracker: React.FC<DailyGoalTrackerProps> = ({ goals, onGoalsUpdated }) => {
+const DailyGoalTracker: React.FC<DailyGoalTrackerProps> = ({
+  goals,
+  onGoalsUpdated,
+}) => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const calculateProgress = (current: number, target: number) => {
@@ -82,9 +85,15 @@ const DailyGoalTracker: React.FC<DailyGoalTrackerProps> = ({ goals, onGoalsUpdat
         </CardHeader>
         <CardContent className="space-y-6">
           {goalItems.map((item, index) => {
-            const dailyProgress = calculateProgress(item.current, item.dailyTarget);
-            const weeklyProgress = calculateProgress(item.current, item.weeklyTarget);
-            
+            const dailyProgress = calculateProgress(
+              item.current,
+              item.dailyTarget
+            );
+            const weeklyProgress = calculateProgress(
+              item.current,
+              item.weeklyTarget
+            );
+
             return (
               <div key={index} className="space-y-3">
                 <div className="flex items-center justify-between">
@@ -101,27 +110,28 @@ const DailyGoalTracker: React.FC<DailyGoalTrackerProps> = ({ goals, onGoalsUpdat
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-gray-400">Daily Progress</span>
-                    <span className="text-white">{dailyProgress.toFixed(0)}%</span>
+                    <span className="text-white">
+                      {dailyProgress.toFixed(0)}%
+                    </span>
                   </div>
-                  <Progress 
-                    value={dailyProgress} 
-                    className="h-2 bg-gray-700"
-                  />
-                  
+                  <Progress value={dailyProgress} className="h-2 bg-gray-700" />
+
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-gray-400">Weekly Progress</span>
-                    <span className="text-white">{weeklyProgress.toFixed(0)}%</span>
+                    <span className="text-white">
+                      {weeklyProgress.toFixed(0)}%
+                    </span>
                   </div>
-                  <Progress 
-                    value={weeklyProgress} 
+                  <Progress
+                    value={weeklyProgress}
                     className="h-1 bg-gray-700"
                   />
                 </div>
-                
+
                 {dailyProgress >= 100 && (
                   <div className="flex items-center gap-1 text-green-400 text-xs">
                     <Target className="w-3 h-3" />
