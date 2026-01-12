@@ -63,6 +63,12 @@ const BDRDashboard: React.FC = () => {
     }
   };
 
+  const handleGoalsUpdated = async (newGoals: DailyGoalTracker) => {
+    // Trigger a full dashboard refresh to sync all data
+    await refreshDashboard();
+    toast.success("Your goals have been updated!");
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -109,7 +115,10 @@ const BDRDashboard: React.FC = () => {
           leads={priorityQueue}
           onActionClick={handlePriorityAction}
         />
-        <DailyGoalTracker goals={dailyGoals} />
+        <DailyGoalTracker 
+          goals={dailyGoals} 
+          onGoalsUpdated={handleGoalsUpdated}
+        />
       </div>
 
       {/* Section 2: Live Pipeline Snapshot */}
