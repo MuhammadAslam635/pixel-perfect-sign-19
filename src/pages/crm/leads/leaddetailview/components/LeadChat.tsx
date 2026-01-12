@@ -195,7 +195,6 @@ const LeadChat = ({
   const [proposalCopied, setProposalCopied] = useState(false);
   const [isUpdatingStage, setIsUpdatingStage] = useState(false);
   const [isProposalEditable, setIsProposalEditable] = useState(false);
-  const [proposalModified, setProposalModified] = useState(false);
   const [selectedText, setSelectedText] = useState<string>("");
   const [lockedSelectedText, setLockedSelectedText] = useState<string>(""); // Locked version for modal
   const [selectionRange, setSelectionRange] = useState<{
@@ -276,7 +275,7 @@ const LeadChat = ({
 
     // Calculate max height for 3 lines (approximately 20px per line + padding)
     const lineHeight = 20;
-    const maxLines = 2;
+    const maxLines = 3;
     const maxHeight = lineHeight * maxLines;
 
     // Set height based on content, capped at max
@@ -672,39 +671,6 @@ const LeadChat = ({
       console.error("Error fetching proposals:", proposalsError);
     }
   }, [proposalsError]);
-
-  // Auto-select first template if none selected and templates are available
-  useEffect(() => {
-    if (
-      proposalExamples.length > 0 &&
-      !selectedExampleId &&
-      activeTab === "Proposal"
-    ) {
-      setSelectedExampleId(proposalExamples[0]._id);
-    }
-  }, [proposalExamples, selectedExampleId, activeTab]);
-
-  // Load the most recent unsent proposal when proposals are fetched
-  useEffect(() => {
-    if (sentProposals.length > 0 && !proposalContent) {
-      // Find the most recent unsent proposal
-      const unsentProposals = sentProposals.filter(
-        (proposal) => !proposal.emailSent
-      );
-      if (unsentProposals.length > 0) {
-        // Sort by sentAt (most recent first) and take the first one
-        const mostRecentUnsent = unsentProposals.sort(
-          (a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime()
-        )[0];
-
-        setProposalContent(mostRecentUnsent.content);
-        setProposalHtmlContent(mostRecentUnsent.htmlContent || "");
-        setSelectedProposal(mostRecentUnsent);
-        setProposalModified(false);
-        console.log("Loaded existing unsent proposal:", mostRecentUnsent._id);
-      }
-    }
-  }, [sentProposals, proposalContent]);
 
   useEffect(() => {
     if (!whatsappUnavailableMessage && whatsappSendError) {
@@ -1133,49 +1099,8 @@ const LeadChat = ({
         response.data?.proposal?.trim() || response.data?.proposal;
 
       if (generated) {
-        const htmlContent = markdownToHtml(generated);
-
-        try {
-          if (selectedProposal) {
-            // Update existing proposal when regenerating
-            await proposalService.updateProposal({
-              proposalId: selectedProposal._id,
-              content: generated,
-              htmlContent: htmlContent,
-            });
-            toast.success("Proposal regenerated and updated successfully!");
-          } else {
-            // Save new proposal to the database immediately
-            const saveResult = await proposalService.saveProposal({
-              leadId: lead._id,
-              content: generated,
-              htmlContent: htmlContent,
-              emailSent: false, // Mark as not sent yet
-            });
-
-            if (!saveResult.success) {
-              toast.error(
-                "Proposal generated but failed to save. Please try again."
-              );
-            } else {
-              toast.success("Proposal generated and saved successfully!");
-            }
-          }
-
-          setProposalContent(generated);
-          setProposalHtmlContent(htmlContent);
-          setProposalModified(false);
-          // Refresh the proposals list to show the updated proposal
-          queryClient.invalidateQueries({ queryKey: ["proposals", lead._id] });
-        } catch (error: any) {
-          console.error("Failed to save/update proposal:", error);
-          // Fallback: still show the proposal even if save failed
-          setProposalContent(generated);
-          setProposalHtmlContent(htmlContent);
-          toast.error(
-            "Proposal generated but failed to save. Please try again."
-          );
-        }
+        setProposalContent(generated);
+        toast.success("Proposal generated successfully!");
       } else {
         toast.error("No proposal was generated. Try again.");
       }
@@ -1187,27 +1112,6 @@ const LeadChat = ({
       toast.error(friendlyMessage);
     } finally {
       setIsGeneratingProposal(false);
-    }
-  };
-
-  const handleSaveEditedProposal = async () => {
-    if (!selectedProposal) {
-      toast.error("No proposal selected to save.");
-      return;
-    }
-
-    try {
-      await proposalService.updateProposal({
-        proposalId: selectedProposal._id,
-        content: proposalContent,
-        htmlContent: proposalHtmlContent,
-      });
-
-      setProposalModified(false);
-      toast.success("Proposal saved successfully!");
-    } catch (error: any) {
-      console.error("Failed to save edited proposal:", error);
-      toast.error("Failed to save proposal changes.");
     }
   };
 
@@ -1416,27 +1320,16 @@ const LeadChat = ({
         );
       }
 
-      // Update existing proposal or create new one
+      // Save proposal to database
       if (proposalContent) {
         try {
-          let result;
-          if (selectedProposal) {
-            // Update existing proposal
-            result = await proposalService.updateProposal({
-              proposalId: selectedProposal._id,
-              emailSent: emailSentSuccessfully,
-              emailAddress: emailAddress || undefined,
-            });
-          } else {
-            // Create new proposal (fallback, though this shouldn't happen in normal flow)
-            result = await proposalService.saveProposal({
-              leadId: lead._id,
-              content: proposalContent,
-              htmlContent: proposalHtmlContent,
-              emailSent: emailSentSuccessfully,
-              emailAddress: emailAddress || undefined,
-            });
-          }
+          const saveResult = await proposalService.saveProposal({
+            leadId: lead._id,
+            content: proposalContent,
+            htmlContent: proposalHtmlContent,
+            emailSent: emailSentSuccessfully,
+            emailAddress: emailAddress || undefined,
+          });
 
           // Refresh proposals list immediately
           await refetchProposals();
@@ -1444,7 +1337,7 @@ const LeadChat = ({
           // Also invalidate the query to ensure fresh data
           queryClient.invalidateQueries({ queryKey: ["proposals", lead._id] });
         } catch (proposalError: any) {
-          console.error("Failed to save/update proposal:", proposalError);
+          console.error("Failed to save proposal:", proposalError);
           console.error("Error details:", {
             message: proposalError?.message,
             response: proposalError?.response?.data,
@@ -1494,8 +1387,8 @@ const LeadChat = ({
   };
 
   const handleProposalClick = () => {
-    // Allow editing for any proposal content
-    if (proposalContent && !isProposalEditable) {
+    // Only allow editing for new proposals, not for previously sent ones
+    if (proposalContent && !isProposalEditable && !selectedProposal) {
       setIsProposalEditable(true);
     }
   };
@@ -1805,18 +1698,8 @@ const LeadChat = ({
         instructions: editAIQuery.trim(),
       });
 
-      let editedPart = response.data?.editedPart || response.data?.proposal;
+      const editedPart = response.data?.editedPart || response.data?.proposal;
       if (editedPart) {
-        // Clean up any potential AI meta-text/markers and markdown headers
-        editedPart = editedPart
-          .replace(
-            /^(Certainly!|Here is|Revised|Updated|Sure|Revised section).*?(\n|:)/i,
-            ""
-          )
-          .replace(/^---+\s*$/gm, "")
-          .replace(/^[#]+\s/g, "") // Remove leading markdown headers (e.g., #, ##, ###) to prevent double headers
-          .trim();
-
         // Replace the selected part with the edited version
         // Try to find the exact selected text in the content
         let beforeSelection = "";
@@ -1977,7 +1860,9 @@ const LeadChat = ({
     setShowEmailEditWithAI(true);
 
     // Store selection range
-    const textContent = markdownToText(htmlToMarkdown(emailInput));
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = emailInput;
+    const textContent = tempDiv.textContent || tempDiv.innerText || "";
 
     const textStart = textContent
       .toLowerCase()
@@ -2023,7 +1908,9 @@ const LeadChat = ({
     setIsEditingEmailWithAI(true);
     try {
       // Find the text in the content
-      const textContent = markdownToText(htmlToMarkdown(emailInput));
+      const tempDiv = document.createElement("div");
+      tempDiv.innerHTML = emailInput;
+      const textContent = tempDiv.textContent || tempDiv.innerText || "";
 
       const selectedTextLower = emailLockedSelectedText.toLowerCase().trim();
       const contentLower = textContent.toLowerCase();
@@ -2051,17 +1938,8 @@ const LeadChat = ({
         instructions: emailEditAIQuery.trim(),
       });
 
-      let editedPart = response.data?.editedPart || response.data?.proposal;
+      const editedPart = response.data?.editedPart || response.data?.proposal;
       if (editedPart) {
-        // Clean up any potential AI meta-text/markers
-        editedPart = editedPart
-          .replace(
-            /^(Certainly!|Here is|Revised|Updated|Sure|Revised section).*?(\n|:)/i,
-            ""
-          )
-          .replace(/^---+\s*$/gm, "")
-          .trim();
-
         // Replace the selected part with the edited version
         let beforeSelection = "";
         let afterSelection = "";
@@ -2081,8 +1959,11 @@ const LeadChat = ({
 
         const newContent = beforeSelection + editedPart + afterSelection;
 
-        // Convert back to HTML using our helper
-        const newHtml = markdownToHtml(newContent);
+        // Convert back to HTML (simple text to HTML)
+        const newHtml = newContent
+          .split("\n")
+          .map((line) => `<p>${line}</p>`)
+          .join("");
         setEmailInput(newHtml);
 
         toast.success("Email content updated successfully!");
@@ -2473,7 +2354,6 @@ const LeadChat = ({
           return new Promise((resolve) => {
             const img = new Image();
             img.crossOrigin = "Anonymous"; // Handle CORS
-            const isDataUrl = url.startsWith("data:");
 
             img.onload = () => {
               try {
@@ -2500,9 +2380,7 @@ const LeadChat = ({
             };
 
             // Add timestamp to avoid cache issues
-            img.src = isDataUrl
-              ? url
-              : url.includes("?")
+            img.src = url.includes("?")
               ? `${url}&t=${Date.now()}`
               : `${url}?t=${Date.now()}`;
           });
@@ -2534,19 +2412,6 @@ const LeadChat = ({
         isDarkMode ? "dark" : "light",
         "mode"
       );
-
-      // Prepare WhatsApp icon image (SVG → PNG)
-      let whatsappIconBase64: string | null = null;
-      try {
-        const whatsappSvgDataUrl = convertIconToBase64(
-          IoLogoWhatsapp,
-          16,
-          "#DAA520"
-        );
-        whatsappIconBase64 = await loadImageAsBase64(whatsappSvgDataUrl);
-      } catch (e) {
-        console.warn("Unable to prepare WhatsApp icon:", e);
-      }
 
       // Header height for content calculation
       const headerHeight = 30;
@@ -2676,33 +2541,49 @@ const LeadChat = ({
           "S"
         );
 
-        // WhatsApp icon - render official logo if available
+        // WhatsApp icon - modern filled design
         const whatsappX = margin + sectionWidth * 0.5;
-        if (whatsappIconBase64) {
-          try {
-            const iconWidth = 6;
-            const iconHeight = 6;
-            pdf.addImage(
-              whatsappIconBase64,
-              "PNG",
-              whatsappX - iconWidth / 2,
-              iconY - iconHeight / 2,
-              iconWidth,
-              iconHeight,
-              undefined,
-              "FAST"
-            );
-          } catch (err) {
-            console.warn("Failed to add WhatsApp icon, falling back:", err);
-            pdf.setDrawColor(...(iconColor as [number, number, number]));
-            pdf.setFillColor(...(iconColor as [number, number, number]));
-            pdf.circle(whatsappX, iconY, iconSize / 2.5, "F");
-          }
-        } else {
-          pdf.setDrawColor(...(iconColor as [number, number, number]));
-          pdf.setFillColor(...(iconColor as [number, number, number]));
-          pdf.circle(whatsappX, iconY, iconSize / 2.5, "F");
-        }
+        pdf.setDrawColor(...(iconColor as [number, number, number]));
+        pdf.setFillColor(...(iconColor as [number, number, number]));
+        pdf.setLineWidth(0.5);
+
+        // Draw filled circle
+        pdf.circle(whatsappX, iconY, iconSize / 2.5, "F");
+
+        // Draw white chat bubble/phone icon inside
+        pdf.setFillColor(
+          isDarkMode ? 35 : 255,
+          isDarkMode ? 35 : 255,
+          isDarkMode ? 35 : 255
+        );
+        const bubbleSize = iconSize / 5;
+        // Simple phone receiver representation
+        pdf.circle(
+          whatsappX - bubbleSize * 0.6,
+          iconY + bubbleSize * 0.4,
+          bubbleSize * 0.35,
+          "F"
+        );
+        pdf.circle(
+          whatsappX + bubbleSize * 0.6,
+          iconY - bubbleSize * 0.4,
+          bubbleSize * 0.35,
+          "F"
+        );
+
+        // Connection line
+        pdf.setLineWidth(bubbleSize * 0.4);
+        pdf.setDrawColor(
+          isDarkMode ? 35 : 255,
+          isDarkMode ? 35 : 255,
+          isDarkMode ? 35 : 255
+        );
+        pdf.line(
+          whatsappX - bubbleSize * 0.3,
+          iconY + bubbleSize * 0.2,
+          whatsappX + bubbleSize * 0.3,
+          iconY - bubbleSize * 0.2
+        );
 
         pdf.setFontSize(7);
         pdf.setTextColor(...(secondaryTextColor as [number, number, number]));
@@ -2842,15 +2723,13 @@ const LeadChat = ({
       const maxWidth = contentWidth;
 
       for (let i = 0; i < markdownLines.length; i++) {
-        const rawLine = markdownLines[i].trim();
-        if (!rawLine) {
+        const line = markdownLines[i].trim();
+
+        // Skip empty lines but add spacing
+        if (!line) {
+          currentY += lineHeight * 0.5;
           continue;
         }
-        const cleanedLine = rawLine
-          .replace(/\*\*(.+?)\*\*/g, "$1")
-          .replace(/\*(.+?)\*/g, "$1");
-
-        const line = rawLine;
 
         // Check if we need a new page
         if (currentY + lineHeight > maxContentY) {
@@ -2867,7 +2746,7 @@ const LeadChat = ({
           pdf.setFontSize(16);
           pdf.setFont("helvetica", "bold");
           pdf.setTextColor(...(textColor as [number, number, number]));
-          const text = cleanedLine.substring(2);
+          const text = line.substring(2);
           const textLines = pdf.splitTextToSize(text, maxWidth);
           textLines.forEach((textLine: string) => {
             if (currentY + lineHeight > maxContentY) {
@@ -2876,20 +2755,17 @@ const LeadChat = ({
               addHeader();
               addFooter();
               currentY = margin + headerHeight;
-              pdf.setFontSize(16);
-              pdf.setFont("helvetica", "bold");
-              pdf.setTextColor(...(textColor as [number, number, number]));
             }
             pdf.text(textLine, margin, currentY);
-            currentY += lineHeight;
+            currentY += lineHeight + 2;
           });
-          currentY += lineHeight * 0.2; // Reduced spacing after headings
+          currentY += 2;
         } else if (line.startsWith("## ")) {
           // H2
           pdf.setFontSize(14);
           pdf.setFont("helvetica", "bold");
           pdf.setTextColor(...(textColor as [number, number, number]));
-          const text = cleanedLine.substring(3);
+          const text = line.substring(3);
           const textLines = pdf.splitTextToSize(text, maxWidth);
           textLines.forEach((textLine: string) => {
             if (currentY + lineHeight > maxContentY) {
@@ -2898,83 +2774,17 @@ const LeadChat = ({
               addHeader();
               addFooter();
               currentY = margin + headerHeight;
-              pdf.setFontSize(14);
-              pdf.setFont("helvetica", "bold");
-              pdf.setTextColor(...(textColor as [number, number, number]));
             }
             pdf.text(textLine, margin, currentY);
-            currentY += lineHeight;
+            currentY += lineHeight + 1;
           });
-          currentY += lineHeight * 0.1; // Reduced spacing after headings
+          currentY += 2;
         } else if (line.startsWith("### ")) {
           // H3
           pdf.setFontSize(12);
           pdf.setFont("helvetica", "bold");
           pdf.setTextColor(...(textColor as [number, number, number]));
-          const text = cleanedLine.substring(4);
-          const textLines = pdf.splitTextToSize(text, maxWidth);
-          textLines.forEach((textLine: string) => {
-            if (currentY + lineHeight > maxContentY) {
-              pdf.addPage();
-              addBackground();
-              addHeader();
-              addFooter();
-              currentY = margin + headerHeight;
-              pdf.setFontSize(12);
-              pdf.setFont("helvetica", "bold");
-              pdf.setTextColor(...(textColor as [number, number, number]));
-            }
-            pdf.text(textLine, margin, currentY);
-            currentY += lineHeight;
-          });
-          currentY += lineHeight * 0.1; // Reduced spacing after headings
-        } else if (line.startsWith("#### ")) {
-          pdf.setFontSize(11);
-          pdf.setFont("helvetica", "bold");
-          pdf.setTextColor(...(textColor as [number, number, number]));
-          const text = cleanedLine.substring(5);
-          const textLines = pdf.splitTextToSize(text, maxWidth);
-          textLines.forEach((textLine: string) => {
-            if (currentY + lineHeight > maxContentY) {
-              pdf.addPage();
-              addBackground();
-              addHeader();
-              addFooter();
-              currentY = margin + headerHeight;
-              pdf.setFontSize(11);
-              pdf.setFont("helvetica", "bold");
-              pdf.setTextColor(...(textColor as [number, number, number]));
-            }
-            pdf.text(textLine, margin, currentY);
-            currentY += lineHeight;
-          });
-          currentY += lineHeight * 0.1;
-        } else if (line.startsWith("##### ")) {
-          pdf.setFontSize(10);
-          pdf.setFont("helvetica", "bold");
-          pdf.setTextColor(...(textColor as [number, number, number]));
-          const text = cleanedLine.substring(6);
-          const textLines = pdf.splitTextToSize(text, maxWidth);
-          textLines.forEach((textLine: string) => {
-            if (currentY + lineHeight > maxContentY) {
-              pdf.addPage();
-              addBackground();
-              addHeader();
-              addFooter();
-              currentY = margin + headerHeight;
-              pdf.setFontSize(10);
-              pdf.setFont("helvetica", "bold");
-              pdf.setTextColor(...(textColor as [number, number, number]));
-            }
-            pdf.text(textLine, margin, currentY);
-            currentY += lineHeight;
-          });
-          currentY += lineHeight * 0.1;
-        } else if (line.startsWith("###### ")) {
-          pdf.setFontSize(10);
-          pdf.setFont("helvetica", "bold");
-          pdf.setTextColor(...(textColor as [number, number, number]));
-          const text = cleanedLine.substring(7);
+          const text = line.substring(4);
           const textLines = pdf.splitTextToSize(text, maxWidth);
           textLines.forEach((textLine: string) => {
             if (currentY + lineHeight > maxContentY) {
@@ -2985,64 +2795,162 @@ const LeadChat = ({
               currentY = margin + headerHeight;
             }
             pdf.text(textLine, margin, currentY);
-            currentY += lineHeight;
+            currentY += lineHeight + 1;
           });
-          currentY += lineHeight * 0.1;
+          currentY += 1;
         } else if (line.startsWith("- ") || line.startsWith("* ")) {
+          // Bullet list - handle bold text in bullets
           pdf.setFontSize(11);
           pdf.setTextColor(...(textColor as [number, number, number]));
-          const text = cleanedLine.substring(2);
-          const bulletIndent = margin + 5;
-          const availableWidth = contentWidth - (bulletIndent - margin);
-          const textLines = pdf.splitTextToSize(text, availableWidth);
-          pdf.setFont("helvetica", "normal");
-          pdf.text("• ", margin + 2, currentY);
-          textLines.forEach((textLine: string, idx: number) => {
-            if (currentY + lineHeight > maxContentY) {
-              pdf.addPage();
-              addBackground();
-              addHeader();
-              addFooter();
-              currentY = margin + headerHeight;
-              pdf.setFontSize(11);
-              pdf.setFont("helvetica", "normal");
-              pdf.setTextColor(...(textColor as [number, number, number]));
-              pdf.text("• ", margin + 2, currentY);
+          const text = line.substring(2);
+
+          // Parse bold text
+          const segments = [];
+          let currentText = text;
+          const boldRegex = /\*\*(.+?)\*\*/;
+          let match;
+
+          while ((match = boldRegex.exec(currentText)) !== null) {
+            if (match.index > 0) {
+              segments.push({
+                text: currentText.substring(0, match.index),
+                bold: false,
+              });
             }
-            pdf.text(textLine, bulletIndent, currentY);
-            currentY += lineHeight;
+            segments.push({ text: match[1], bold: true });
+            currentText = currentText.substring(match.index + match[0].length);
+          }
+          if (currentText.length > 0) {
+            segments.push({ text: currentText, bold: false });
+          }
+
+          // Render the line with bold handling and proper wrapping
+          if (currentY + lineHeight > maxContentY) {
+            pdf.addPage();
+            addBackground();
+            addHeader();
+            addFooter();
+            currentY = margin + headerHeight;
+          }
+
+          const bulletIndent = margin + 5;
+          let xOffset = margin + 2;
+          pdf.setFont("helvetica", "normal");
+          pdf.text("• ", xOffset, currentY);
+          xOffset = bulletIndent;
+
+          segments.forEach((segment) => {
+            pdf.setFont("helvetica", segment.bold ? "bold" : "normal");
+            const words = segment.text.split(" ");
+
+            words.forEach((word, idx) => {
+              const wordWithSpace = idx < words.length - 1 ? word + " " : word;
+              const wordWidth = pdf.getTextWidth(wordWithSpace);
+
+              // Check if we need to wrap to next line
+              if (
+                xOffset + wordWidth > pageWidth - margin &&
+                xOffset > bulletIndent
+              ) {
+                currentY += lineHeight;
+                if (currentY + lineHeight > maxContentY) {
+                  pdf.addPage();
+                  addBackground();
+                  addHeader();
+                  addFooter();
+                  currentY = margin + headerHeight;
+                }
+                xOffset = bulletIndent; // Indent continuation
+              }
+
+              pdf.text(wordWithSpace, xOffset, currentY);
+              xOffset += wordWidth;
+            });
           });
-        } else if (line.match(/\d+\./)) {
+
+          currentY += lineHeight;
+        } else if (line.match(/^\d+\.\s/)) {
+          // Numbered list - handle bold text
           pdf.setFontSize(11);
           pdf.setTextColor(...(textColor as [number, number, number]));
-          const match = line.match(/(\d+\.)\s*(.+)$/);
+          const match = line.match(/^(\d+\.)\s(.+)/);
           if (match) {
             const number = match[1];
-            const text = match[2]
-              .replace(/\*\*(.+?)\*\*/g, "$1")
-              .replace(/\*(.+?)\*/g, "$1");
-            const numberWidth = pdf.getTextWidth(number + " ");
-            const numberIndent = margin + numberWidth;
-            const availableWidth = contentWidth - numberWidth;
-            pdf.setFont("helvetica", "normal");
-            pdf.text(number + " ", margin, currentY);
-            const textLines = pdf.splitTextToSize(text, availableWidth);
-            textLines.forEach((textLine: string) => {
-              if (currentY + lineHeight > maxContentY) {
-                pdf.addPage();
-                addBackground();
-                addHeader();
-                addFooter();
-                currentY = margin + headerHeight;
-                pdf.setFontSize(11);
-                pdf.setFont("helvetica", "normal");
-                pdf.setTextColor(...(textColor as [number, number, number]));
-                pdf.text(number + " ", margin, currentY);
+            const text = match[2];
+
+            // Parse bold text
+            const segments = [];
+            let currentText = text;
+            const boldRegex = /\*\*(.+?)\*\*/;
+            let boldMatch;
+
+            while ((boldMatch = boldRegex.exec(currentText)) !== null) {
+              if (boldMatch.index > 0) {
+                segments.push({
+                  text: currentText.substring(0, boldMatch.index),
+                  bold: false,
+                });
               }
-              pdf.text(textLine, numberIndent, currentY);
-              currentY += lineHeight;
+              segments.push({ text: boldMatch[1], bold: true });
+              currentText = currentText.substring(
+                boldMatch.index + boldMatch[0].length
+              );
+            }
+            if (currentText.length > 0) {
+              segments.push({ text: currentText, bold: false });
+            }
+
+            // Render the line with bold handling and proper wrapping
+            if (currentY + lineHeight > maxContentY) {
+              pdf.addPage();
+              addBackground();
+              addHeader();
+              addFooter();
+              currentY = margin + headerHeight;
+            }
+
+            let xOffset = margin;
+            pdf.setFont("helvetica", "normal");
+            pdf.text(number + " ", xOffset, currentY);
+            const numberWidth = pdf.getTextWidth(number + " ");
+            xOffset += numberWidth;
+            const numberIndent = margin + numberWidth;
+
+            segments.forEach((segment) => {
+              pdf.setFont("helvetica", segment.bold ? "bold" : "normal");
+              const words = segment.text.split(" ");
+
+              words.forEach((word, idx) => {
+                const wordWithSpace =
+                  idx < words.length - 1 ? word + " " : word;
+                const wordWidth = pdf.getTextWidth(wordWithSpace);
+
+                // Check if we need to wrap to next line
+                if (
+                  xOffset + wordWidth > pageWidth - margin &&
+                  xOffset > numberIndent
+                ) {
+                  currentY += lineHeight;
+                  if (currentY + lineHeight > maxContentY) {
+                    pdf.addPage();
+                    addBackground();
+                    addHeader();
+                    addFooter();
+                    currentY = margin + headerHeight;
+                  }
+                  xOffset = numberIndent; // Indent continuation to align with text
+                }
+
+                pdf.text(wordWithSpace, xOffset, currentY);
+                xOffset += wordWidth;
+              });
             });
+
+            currentY += lineHeight;
           }
+        } else if (line.startsWith("")) {
+          // Empty line - add spacing
+          currentY += lineHeight / 2;
         } else if (line.startsWith("---") || line.startsWith("***")) {
           // Horizontal rule
           pdf.setDrawColor(...(textColor as [number, number, number]));
@@ -3055,7 +2963,11 @@ const LeadChat = ({
           pdf.setFont("helvetica", "normal");
           pdf.setTextColor(...(textColor as [number, number, number]));
 
-          let processedText = cleanedLine;
+          // Simple bold handling - split by ** markers
+          let processedText = line;
+          // Remove markdown bold markers for now (jsPDF doesn't support inline formatting easily)
+          processedText = processedText.replace(/\*\*(.+?)\*\*/g, "$1");
+          processedText = processedText.replace(/\*(.+?)\*/g, "$1");
 
           const textLines = pdf.splitTextToSize(processedText, maxWidth);
           textLines.forEach((textLine: string) => {
@@ -3065,9 +2977,6 @@ const LeadChat = ({
               addHeader();
               addFooter();
               currentY = margin + headerHeight;
-              pdf.setFontSize(11);
-              pdf.setFont("helvetica", "normal");
-              pdf.setTextColor(...(textColor as [number, number, number]));
             }
             pdf.text(textLine, margin, currentY);
             currentY += lineHeight;
@@ -3606,9 +3515,15 @@ const LeadChat = ({
                       type="button"
                       className="flex items-center gap-2 rounded-lg bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] px-4 py-2 text-xs font-medium text-white transition hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed h-[34px]"
                       onClick={handleGenerateProposal}
-                      disabled={isGeneratingProposal || !selectedExampleId}
-                      title={
+                      disabled={
+                        isGeneratingProposal ||
+                        !!selectedProposal ||
                         !selectedExampleId
+                      }
+                      title={
+                        selectedProposal
+                          ? "Cannot regenerate a sent proposal"
+                          : !selectedExampleId
                           ? "Please select a template first"
                           : ""
                       }
@@ -3629,24 +3544,39 @@ const LeadChat = ({
                     </button>
                     {proposalContent && (
                       <>
-                        {/* Edit/View button for all proposals */}
-                        <button
-                          type="button"
-                          className="flex items-center gap-2 rounded-lg border border-white/30 bg-white/10 px-4 py-2 text-xs font-medium text-white transition hover:bg-white/20 disabled:opacity-40"
-                          onClick={() =>
-                            setIsProposalEditable(!isProposalEditable)
-                          }
-                        >
-                          {isProposalEditable ? "View" : "Edit"}
-                        </button>
-                        {proposalModified && selectedProposal && (
+                        {/* Show View-Only indicator for sent proposals, or Edit/View button for new proposals */}
+                        {selectedProposal ? (
+                          <div className="flex items-center gap-2 rounded-lg border border-blue-500/30 bg-blue-500/10 px-4 py-2 text-xs font-medium text-blue-400">
+                            <svg
+                              className="h-4 w-4"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                              />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                              />
+                            </svg>
+                            View-Only Mode
+                          </div>
+                        ) : (
                           <button
                             type="button"
-                            className="flex items-center gap-2 rounded-lg border border-green-500/30 bg-green-500/10 px-4 py-2 text-xs font-medium text-green-400 transition hover:bg-green-500/20"
-                            onClick={handleSaveEditedProposal}
+                            className="flex items-center gap-2 rounded-lg border border-white/30 bg-white/10 px-4 py-2 text-xs font-medium text-white transition hover:bg-white/20 disabled:opacity-40"
+                            onClick={() =>
+                              setIsProposalEditable(!isProposalEditable)
+                            }
                           >
-                            <Check className="h-4 w-4" />
-                            Save Changes
+                            {isProposalEditable ? "View" : "Edit"}
                           </button>
                         )}
                         <button
@@ -3694,10 +3624,10 @@ const LeadChat = ({
                           disabled={
                             isUpdatingStage ||
                             !proposalContent ||
-                            (selectedProposal && selectedProposal.emailSent)
+                            !!selectedProposal
                           }
                           title={
-                            selectedProposal && selectedProposal.emailSent
+                            selectedProposal
                               ? "This proposal has already been sent"
                               : ""
                           }
@@ -3707,7 +3637,7 @@ const LeadChat = ({
                               <Loader2 className="h-4 w-4 animate-spin" />
                               Updating...
                             </>
-                          ) : selectedProposal && selectedProposal.emailSent ? (
+                          ) : selectedProposal ? (
                             <>
                               <Check className="h-4 w-4" />
                               Already Sent
@@ -3743,37 +3673,35 @@ const LeadChat = ({
                 </div>
 
                 {/* Show proposal info if it's a previously sent proposal */}
-                {selectedProposal &&
-                  selectedProposal.emailSent &&
-                  proposalContent && (
-                    <div className="mb-4 px-1">
-                      <div className="rounded-lg border border-white/20 bg-white/5 p-3">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-semibold text-white/90">
-                              Sent by {selectedProposal.sentBy.name}
-                            </p>
-                            <p className="text-xs text-white/60 mt-0.5">
-                              {new Date(
-                                selectedProposal.sentAt
-                              ).toLocaleDateString("en-US", {
-                                year: "numeric",
-                                month: "long",
-                                day: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
-                            </p>
-                          </div>
-                          {selectedProposal.emailSent && (
-                            <span className="flex-shrink-0 text-[10px] px-2 py-1 rounded bg-green-500/20 text-green-300 border border-green-500/30">
-                              ✓ Email Sent
-                            </span>
-                          )}
+                {selectedProposal && proposalContent && (
+                  <div className="mb-4 px-1">
+                    <div className="rounded-lg border border-white/20 bg-white/5 p-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold text-white/90">
+                            Sent by {selectedProposal.sentBy.name}
+                          </p>
+                          <p className="text-xs text-white/60 mt-0.5">
+                            {new Date(
+                              selectedProposal.sentAt
+                            ).toLocaleDateString("en-US", {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </p>
                         </div>
+                        {selectedProposal.emailSent && (
+                          <span className="flex-shrink-0 text-[10px] px-2 py-1 rounded bg-green-500/20 text-green-300 border border-green-500/30">
+                            ✓ Email Sent
+                          </span>
+                        )}
                       </div>
                     </div>
-                  )}
+                  </div>
+                )}
 
                 {/* Proposal Content */}
                 {proposalContent ? (
@@ -3840,7 +3768,6 @@ const LeadChat = ({
                             onChange={(html) => {
                               setProposalHtmlContent(html);
                               setProposalContent(htmlToMarkdown(html));
-                              setProposalModified(true);
                             }}
                             placeholder="Edit your proposal here..."
                             height="400px"
