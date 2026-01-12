@@ -35,7 +35,12 @@ interface UseBDRDashboardReturn {
   // Actions
   refreshDashboard: () => Promise<void>;
   refreshTalkTrack: (leadId: string) => Promise<void>;
-  executeQuickAction: (itemId: string, action: string, params?: Record<string, any>) => Promise<boolean>;
+  sendFollowUpEmail: (leadId: string) => Promise<boolean>;
+  executeQuickAction: (
+    itemId: string,
+    action: string,
+    params?: Record<string, any>
+  ) => Promise<boolean>;
   updateDailyGoals: (goals: Partial<DailyGoalTracker>) => Promise<boolean>;
 
   // Error handling
@@ -43,7 +48,9 @@ interface UseBDRDashboardReturn {
 }
 
 export const useBDRDashboard = (): UseBDRDashboardReturn => {
-  const [dashboardData, setDashboardData] = useState<BDRDashboardData | null>(null);
+  const [dashboardData, setDashboardData] = useState<BDRDashboardData | null>(
+    null
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -76,58 +83,98 @@ export const useBDRDashboard = (): UseBDRDashboardReturn => {
     await loadDashboardData(false);
   }, [loadDashboardData]);
 
-  const refreshTalkTrack = useCallback(async (leadId: string) => {
-    try {
-      const response = await bdrDashboardService.getTalkTrack(leadId);
-      if (response.success && dashboardData) {
-        setDashboardData(prev => prev ? {
-          ...prev,
-          talkTrack: response.data,
-        } : null);
+  const refreshTalkTrack = useCallback(
+    async (leadId: string) => {
+      try {
+        const response = await bdrDashboardService.getTalkTrack(leadId);
+        if (response.success && dashboardData) {
+          setDashboardData((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  talkTrack: response.data,
+                }
+              : null
+          );
+        }
+      } catch (err: any) {
+        console.error("Failed to refresh talk track:", err);
+        setError("Failed to refresh talk track");
       }
-    } catch (err: any) {
-      console.error("Failed to refresh talk track:", err);
-      setError("Failed to refresh talk track");
-    }
-  }, [dashboardData]);
+    },
+    [dashboardData]
+  );
 
-  const executeQuickAction = useCallback(async (
-    itemId: string, 
-    action: string, 
-    params?: Record<string, any>
-  ): Promise<boolean> => {
-    try {
-      const response = await bdrDashboardService.executeQuickAction(itemId, action, params);
-      if (response.success) {
-        // Refresh dashboard data after successful action
-        await refreshDashboard();
-        return true;
+  const executeQuickAction = useCallback(
+    async (
+      itemId: string,
+      action: string,
+      params?: Record<string, any>
+    ): Promise<boolean> => {
+      try {
+        const response = await bdrDashboardService.executeQuickAction(
+          itemId,
+          action,
+          params
+        );
+        if (response.success) {
+          // Refresh dashboard data after successful action
+          await refreshDashboard();
+          return true;
+        }
+        return false;
+      } catch (err: any) {
+        console.error("Failed to execute quick action:", err);
+        setError("Failed to execute action");
+        return false;
       }
-      return false;
-    } catch (err: any) {
-      console.error("Failed to execute quick action:", err);
-      setError("Failed to execute action");
-      return false;
-    }
-  }, [refreshDashboard]);
+    },
+    [refreshDashboard]
+  );
 
-  const updateDailyGoals = useCallback(async (goals: Partial<DailyGoalTracker>): Promise<boolean> => {
-    try {
-      const response = await bdrDashboardService.updateDailyGoals(goals);
-      if (response.success && dashboardData) {
-        setDashboardData(prev => prev ? {
-          ...prev,
-          dailyGoals: response.data,
-        } : null);
-        return true;
+  const sendFollowUpEmail = useCallback(
+    async (leadId: string): Promise<boolean> => {
+      try {
+        const response = await bdrDashboardService.sendFollowUpEmail(leadId);
+        if (response.success) {
+          // Refresh dashboard data after sending email
+          await refreshDashboard();
+          return true;
+        }
+        return false;
+      } catch (err: any) {
+        console.error("Failed to send follow-up email:", err);
+        setError("Failed to send email");
+        return false;
       }
-      return false;
-    } catch (err: any) {
-      console.error("Failed to update daily goals:", err);
-      setError("Failed to update goals");
-      return false;
-    }
-  }, [dashboardData]);
+    },
+    [refreshDashboard]
+  );
+
+  const updateDailyGoals = useCallback(
+    async (goals: Partial<DailyGoalTracker>): Promise<boolean> => {
+      try {
+        const response = await bdrDashboardService.updateDailyGoals(goals);
+        if (response.success && dashboardData) {
+          setDashboardData((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  dailyGoals: response.data,
+                }
+              : null
+          );
+          return true;
+        }
+        return false;
+      } catch (err: any) {
+        console.error("Failed to update daily goals:", err);
+        setError("Failed to update goals");
+        return false;
+      }
+    },
+    [dashboardData]
+  );
 
   // Load data on mount
   useEffect(() => {
@@ -167,6 +214,7 @@ export const useBDRDashboard = (): UseBDRDashboardReturn => {
     // Actions
     refreshDashboard,
     refreshTalkTrack,
+    sendFollowUpEmail,
     executeQuickAction,
     updateDailyGoals,
 
