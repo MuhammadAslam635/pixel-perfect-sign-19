@@ -199,6 +199,15 @@ export const ActionComponent = () => {
       if (userRoleName === "Admin") return false;
       return canView("company-knowledge");
     }
+
+    // "Settings" Visibility Logic:
+    if (item.title === "Settings") {
+      // Admin always has access to their settings
+      if (userRoleName === "Admin") return true; 
+      // Check for permission for other users
+      return canView("settings");
+    }
+
     return true;
   });
 
