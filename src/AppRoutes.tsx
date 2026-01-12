@@ -21,6 +21,7 @@ const SettingsPage = lazy(() => import("@/pages/Settings"));
 const CompanyKnowledge = lazy(() => import("@/pages/companyKnowledgeBase"));
 const CampaignsPage = lazy(() => import("@/pages/campaigns"));
 const ProspectsPage = lazy(() => import("@/pages/prospects"));
+const NewsPage = lazy(() => import("@/pages/News"));
 const UserList = lazy(() => import("@/pages/users/UserList"));
 const UserCreate = lazy(() => import("@/pages/users/UserCreate"));
 const UserEdit = lazy(() => import("@/pages/users/UserEdit"));
@@ -218,6 +219,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute moduleName="clients">
             <ProspectsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/news"
+        element={
+          <ProtectedRoute>
+            <NewsPage />
           </ProtectedRoute>
         }
       />

@@ -10,6 +10,7 @@ import {
   Home,
   Megaphone,
   MessageSquare,
+  Newspaper,
   PhoneCall,
   Settings,
   Settings2,
@@ -85,6 +86,13 @@ const navLinks: NavLink[] = [
     path: "/campaigns",
     moduleName: "campaigns", // Protected by 'campaigns' module
     match: (pathname: string) => pathname.startsWith("/campaigns"),
+  },
+  {
+    id: "news",
+    label: "News",
+    icon: Newspaper,
+    path: "/news",
+    match: (pathname: string) => pathname.startsWith("/news"),
   },
   // {
   //   id: "contact-now",
