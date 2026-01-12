@@ -101,7 +101,7 @@ const AtRiskAlertsCard: React.FC<AtRiskAlertsCardProps> = ({
           Items requiring immediate attention to prevent revenue leakage
         </p>
       </CardHeader>
-      <CardContent className="space-y-3 max-h-96 overflow-y-auto">
+      <CardContent className="space-y-3 max-h-96 overflow-y-auto scrollbar-hide">
         {sortedItems.length === 0 ? (
           <div className="text-center py-8 text-gray-400">
             <AlertTriangle className="w-12 h-12 mx-auto mb-3 opacity-50" />
