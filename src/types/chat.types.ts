@@ -8,6 +8,7 @@ export type ChatMessage = {
   content: string;
   createdAt: string;
   updatedAt?: string;
+  confidence?: number;
 };
 
 export type ChatSummary = {
@@ -31,6 +32,7 @@ export type SendChatMessageResponse = {
     title?: string;
     createdAt?: string;
     updatedAt?: string;
+    confidence?: number;
     [key: string]: unknown;
   };
   agentType?: string;

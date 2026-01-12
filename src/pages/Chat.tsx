@@ -555,12 +555,12 @@ const ChatPage = () => {
       );
 
       // Handle the response - backend may or may not create a chat
-        if (result.data.chatId) {
+      if (result.data.chatId) {
         // Backend created a chat
         const newChatId = result.data.chatId;
 
-          const computedTitle =
-            (result.data.title as string) || deriveTitleFromMessages(result.data.messages) || "New Conversation";
+        const computedTitle =
+          (result.data.title as string) || deriveTitleFromMessages(result.data.messages) || "New Conversation";
 
         if (isNewChat) {
           dispatch(setSelectedChatId(newChatId));
@@ -677,6 +677,7 @@ const ChatPage = () => {
                 role: "assistant",
                 content: msg.content,
                 createdAt: msg.createdAt || new Date().toISOString(),
+                confidence: msg.confidence,
               };
 
               if (isNewChat && temporaryChat) {
