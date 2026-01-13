@@ -1,8 +1,11 @@
 import { motion } from "framer-motion";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 
 const NewsPage = () => {
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     // Try to add padding to RssGrid element inside iframe and apply theme colors
     const style = document.createElement('style');
@@ -81,10 +84,81 @@ const NewsPage = () => {
         background: rgba(26, 26, 26, 0.95) !important;
         color: #ffffff !important;
       }
+
+      /* Hide scrollbars on news iframe container */
+      .news-iframe-container {
+        scrollbar-width: none !important; /* Firefox */
+        -ms-overflow-style: none !important; /* IE and Edge */
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+      }
+
+      .news-iframe-container::-webkit-scrollbar {
+        display: none !important; /* Chrome, Safari, Opera */
+        width: 0 !important;
+        height: 0 !important;
+      }
+
+      .news-iframe-container::-webkit-scrollbar-track {
+        display: none !important;
+      }
+
+      .news-iframe-container::-webkit-scrollbar-thumb {
+        display: none !important;
+      }
+
+      /* Hide scrollbars on iframe element */
+      iframe[src*="rss.app"] {
+        scrollbar-width: none !important; /* Firefox */
+        -ms-overflow-style: none !important; /* IE and Edge */
+      }
+
+      /* Hide scrollbars on section and main containers */
+      section[class*="rounded"],
+      main[class*="px-4"] {
+        scrollbar-width: none !important; /* Firefox */
+        -ms-overflow-style: none !important; /* IE and Edge */
+      }
+
+      section[class*="rounded"]::-webkit-scrollbar,
+      main[class*="px-4"]::-webkit-scrollbar {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+      }
     `;
     document.head.appendChild(style);
 
+    // Function to calculate and set iframe height dynamically
+    const calculateIframeHeight = () => {
+      if (containerRef.current && iframeRef.current) {
+        const container = containerRef.current;
+        const viewportHeight = window.innerHeight;
+        const containerTop = container.getBoundingClientRect().top;
+        const availableHeight = viewportHeight - containerTop - 20; // 20px padding
+        
+        // Set container height to fit viewport - this stays fixed on screen
+        container.style.height = `${availableHeight}px`;
+        container.style.maxHeight = `${availableHeight}px`;
+        
+        // Set iframe to a large height to accommodate all content
+        // The container will scroll the iframe content (scrollbars hidden)
+        iframeRef.current.style.height = '5000px'; // Large enough for all content
+        iframeRef.current.style.width = '100%';
+      }
+    };
+
+    // Calculate on mount and resize
+    calculateIframeHeight();
+    window.addEventListener('resize', calculateIframeHeight);
+
     return () => {
+      // Restore body scrolling when component unmounts
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+
+      window.removeEventListener('resize', calculateIframeHeight);
+
       if (document.head.contains(style)) {
         document.head.removeChild(style);
       }
@@ -97,15 +171,19 @@ const NewsPage = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3, ease: "easeOut" }}
-        className="relative mt-32 mb-8 flex-1 overflow-y-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] text-white"
+        className="relative px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] mt-20 sm:mt-20 lg:mt-24 xl:mt-28 mb-10 flex flex-col text-white flex-1 min-h-0 max-w-full"
       >
         <motion.section
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3, ease: "easeOut", delay: 0.1 }}
-          className="mx-auto flex flex-col gap-2.5 space-y-3 pt-3 sm:pt-4 pb-6 px-3 sm:px-6 rounded-xl sm:rounded-[30px] w-full border-0 sm:border sm:border-white/10 bg-transparent sm:bg-[linear-gradient(173.83deg,_rgba(255,255,255,0.08)_4.82%,_rgba(255,255,255,0)_38.08%,_rgba(255,255,255,0)_56.68%,_rgba(255,255,255,0.02)_95.1%)] min-h-[600px] flex-1"
+          className="relative mx-auto flex flex-col pt-3 sm:pt-4 rounded-xl sm:rounded-[30px] w-full h-full border-0 sm:border sm:border-white/10 bg-transparent sm:bg-[linear-gradient(173.83deg,_rgba(255,255,255,0.08)_4.82%,_rgba(255,255,255,0)_38.08%,_rgba(255,255,255,0)_56.68%,_rgba(255,255,255,0.02)_95.1%)] flex-1 min-w-0 min-h-0"
+          style={{
+            scrollbarWidth: "none",
+            msOverflowStyle: "none",
+          }}
         >
-          <header className="flex flex-col gap-2">
+          <header className="flex flex-col gap-2 flex-shrink-0 pb-3 px-3 sm:px-6">
             <motion.h1
               className="text-3xl font-semibold tracking-tight text-white sm:text-4xl"
               initial={{ opacity: 0, x: -20 }}
@@ -125,21 +203,25 @@ const NewsPage = () => {
           </header>
 
           <motion.div
+            ref={containerRef}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.8 }}
-            className="-mt-3 flex-1 rounded-3xl border border-white/10 bg-white/[0.02] p-4 backdrop-blur sm:p-6"
+            className="news-iframe-container flex-1 min-h-0 rounded-3xl border border-white/10 bg-white/[0.02] p-0 backdrop-blur overflow-x-hidden scrollbar-hide"
             style={{
-              minHeight: "1600px", // Set container height to 1600px
+              scrollbarWidth: "none",
+              msOverflowStyle: "none",
+              overflowY: "auto",
             }}
           >
             <iframe
-              src="https://rss.app/embed/v1/magazine/tpBEhxBRMkMCEw3I"
+              ref={iframeRef}
+              src="https://rss.app/embed/v1/wall/tpBEhxBRMkMCEw3I"
               frameBorder="0"
+              className="w-full border-0 block"
               style={{
-                width: "100%",
-                height: "1600px", // Set iframe height to 1600px
-                border: 0,
+                scrollbarWidth: "none",
+                msOverflowStyle: "none",
               }}
               title="News Feed"
             ></iframe>
