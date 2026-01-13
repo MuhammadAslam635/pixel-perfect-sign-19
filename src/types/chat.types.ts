@@ -8,6 +8,7 @@ export type ChatMessage = {
   content: string;
   createdAt: string;
   updatedAt?: string;
+  confidence?: number;
 };
 
 export type ChatSummary = {

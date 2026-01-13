@@ -498,6 +498,11 @@ const ChatMessages = ({
                   >
                     {transformCompanyTable(message.content)}
                   </ReactMarkdown>
+                  {isAssistant && message.confidence !== undefined && message.confidence !== null && (
+                    <div className="mt-2 text-[10px] text-white/40 leading-none">
+                      Confidence: {Math.round(message.confidence * 100)}%
+                    </div>
+                  )}
                 </div>
               </motion.div>
             );

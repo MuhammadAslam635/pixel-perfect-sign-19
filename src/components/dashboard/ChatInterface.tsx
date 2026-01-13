@@ -1217,6 +1217,11 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
                     >
                       {transformCompanyTable(msg.content)}
                     </ReactMarkdown>
+                    {isAssistant && msg.confidence !== undefined && msg.confidence !== null && (
+                      <div className="mt-2 text-[10px] text-white/40 leading-none">
+                        Confidence: {Math.round(msg.confidence * 100)}%
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
