@@ -35,6 +35,7 @@ import {
   addStreamingEvent,
   clearStreamingEvents,
   setIsStreaming,
+  setStreamingChatId,
   createTemporaryChat,
   addMessageToTemporaryChat,
   clearTemporaryChat,
@@ -93,6 +94,9 @@ const ChatPage = () => {
   const isStreaming = useSelector((state: RootState) => state.chat.isStreaming);
   const useStreaming = useSelector(
     (state: RootState) => state.chat.useStreaming
+  );
+  const streamingChatId = useSelector(
+    (state: RootState) => state.chat.streamingChatId
   );
 
   // Local state for timing (not in Redux as it's UI-specific)
@@ -485,7 +489,8 @@ const ChatPage = () => {
     const actualChatId = isNewChat
       ? `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
       : selectedChatId;
-    streamingChatIdRef.current = actualChatId; // Track which chat is streaming
+    streamingChatIdRef.current = actualChatId; // Track which chat is streaming (local ref)
+    dispatch(setStreamingChatId(actualChatId)); // Also set in Redux for cross-component access
 
     const tempMessage: ChatMessage = {
       _id: `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -940,8 +945,18 @@ const ChatPage = () => {
   const isCurrentChatSending = useMemo(() => {
     // Only show thinking indicator if:
     // 1. We're streaming AND the current chat is the one being streamed
-    const isStreamingThisChat =
-      isStreaming && streamingChatIdRef.current === selectedChatId;
+    // Check both local ref and Redux state for streaming chat ID
+    let isStreamingThisChat = false;
+    if (isStreaming) {
+      // Direct match with local ref or Redux state
+      if (streamingChatIdRef.current === selectedChatId || streamingChatId === selectedChatId) {
+        isStreamingThisChat = true;
+      }
+      // Special case: if streaming for a new chat (temp ID) and we're on __new_chat__
+      else if (streamingChatId?.startsWith("temp_") && selectedChatId === "__new_chat__") {
+        isStreamingThisChat = true;
+      }
+    }
 
     // For temporary chats, check if we have messages in temporary chat
     const isTempChatId = selectedChatId?.startsWith("temp_");
@@ -963,7 +978,7 @@ const ChatPage = () => {
     }
 
     return false;
-  }, [isStreaming, optimisticMessages.length, selectedChatId, temporaryChat]);
+  }, [isStreaming, streamingChatId, optimisticMessages.length, selectedChatId, temporaryChat]);
 
   return (
     <DashboardLayout>

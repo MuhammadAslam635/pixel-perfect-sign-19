@@ -36,6 +36,7 @@ export interface ChatState {
   streamingEvents: StreamEvent[];
   isStreaming: boolean;
   useStreaming: boolean; // Default to streaming mode
+  streamingChatId: string | null; // Track which chat is currently streaming (shared across components)
 
   // UI state
   isChatListLoading: boolean;
@@ -61,6 +62,7 @@ const initialState: ChatState = {
   streamingEvents: [],
   isStreaming: false,
   useStreaming: true,
+  streamingChatId: null,
   isChatListLoading: false,
   isChatDetailLoading: false,
   chatList: [],
@@ -149,6 +151,14 @@ const chatSlice = createSlice({
 
     setIsStreaming: (state, action: PayloadAction<boolean>) => {
       state.isStreaming = action.payload;
+      // Clear streaming chat ID when streaming stops
+      if (!action.payload) {
+        state.streamingChatId = null;
+      }
+    },
+
+    setStreamingChatId: (state, action: PayloadAction<string | null>) => {
+      state.streamingChatId = action.payload;
     },
 
     setUseStreaming: (state, action: PayloadAction<boolean>) => {
@@ -292,6 +302,7 @@ export const {
   addStreamingEvent,
   clearStreamingEvents,
   setIsStreaming,
+  setStreamingChatId,
   setUseStreaming,
   setChatList,
   setIsChatListLoading,

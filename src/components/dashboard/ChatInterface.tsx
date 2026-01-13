@@ -29,6 +29,7 @@ import {
   addStreamingEvent,
   clearStreamingEvents,
   setIsStreaming,
+  setStreamingChatId,
   setComposerValue,
 } from "@/store/slices/chatSlice";
 import {
@@ -433,6 +434,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
     (state: RootState) => state.chat.streamingEvents
   );
   const isStreaming = useSelector((state: RootState) => state.chat.isStreaming);
+  const streamingChatId = useSelector((state: RootState) => state.chat.streamingChatId); // Get streaming chat ID from Redux
   const optimisticMessagesByChat = useSelector(
     (state: RootState) => state.chat.optimisticMessagesByChat
   );
@@ -462,8 +464,21 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
     // Only show thinking indicator if:
     // 1. We're streaming AND the current chat is the one being streamed, OR
     // 2. The current chat has optimistic messages (user message waiting for response)
-    const isStreamingThisChat =
-      isStreaming && streamingChatIdRef.current === activeChatId;
+    // Use Redux streaming chat ID for cross-component streaming state
+    
+    // Check if we're streaming for this specific chat
+    let isStreamingThisChat = false;
+    if (isStreaming) {
+      // Direct match with either Redux or local ref
+      if (streamingChatId === activeChatId || streamingChatIdRef.current === activeChatId) {
+        isStreamingThisChat = true;
+      }
+      // Special case: if streaming for a new chat (temp ID) and we're on __new_chat__
+      else if (streamingChatId?.startsWith("temp_") && activeChatId === "__new_chat__") {
+        isStreamingThisChat = true;
+      }
+    }
+    
     const hasOptimisticMessages = optimisticMessages.length > 0;
 
     // Show indicator if streaming for this specific chat OR if this chat has optimistic messages
@@ -472,7 +487,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
     }
 
     return false;
-  }, [isStreaming, optimisticMessages.length, activeChatId]);
+  }, [isStreaming, streamingChatId, optimisticMessages.length, activeChatId]);
 
   const isSendingMessage = isCurrentChatSending;
 
@@ -917,7 +932,8 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
     const actualChatId = isNewChat
       ? `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
       : activeChatId;
-    streamingChatIdRef.current = actualChatId; // Track which chat is streaming
+    streamingChatIdRef.current = actualChatId; // Track which chat is streaming (local ref)
+    dispatch(setStreamingChatId(actualChatId)); // Also set in Redux for cross-component access
 
     const tempMessage: ChatMessage = {
       _id: `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
