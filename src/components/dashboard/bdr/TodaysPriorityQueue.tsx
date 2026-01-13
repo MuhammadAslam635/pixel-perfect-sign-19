@@ -45,8 +45,9 @@ const TodaysPriorityQueue: React.FC<TodaysPriorityQueueProps> = ({
     const date = new Date(lastInteraction);
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - date.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
     
+    if (diffDays === 0) return "Today";
     if (diffDays === 1) return "Yesterday";
     if (diffDays < 7) return `${diffDays} days ago`;
     return date.toLocaleDateString();
@@ -63,7 +64,7 @@ const TodaysPriorityQueue: React.FC<TodaysPriorityQueueProps> = ({
           Ranked by urgency, conversion likelihood, and SLA risk
         </p>
       </CardHeader>
-      <CardContent className="space-y-3 max-h-96 overflow-y-auto">
+      <CardContent className="space-y-3 max-h-96 overflow-y-auto scrollbar-hide">
         {leads.length === 0 ? (
           <div className="text-center py-8 text-gray-400">
             <Clock className="w-12 h-12 mx-auto mb-3 opacity-50" />
