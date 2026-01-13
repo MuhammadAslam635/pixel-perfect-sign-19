@@ -46,6 +46,183 @@ const getTimeBasedGreeting = () => {
   return "Good Evening";
 };
 
+// Function to get confidence score from message (prioritizes content extraction, falls back to database field)
+const getConfidenceScore = (message: ChatMessage): number | null => {
+  const content = message.content || '';
+  
+  // First priority: Try to extract from content (this is the actual LLM-provided confidence)
+  // Try multiple patterns to catch all variations
+  
+  // Pattern 1: XML tag format: <CONFIDENCE_SCORE>85</CONFIDENCE_SCORE>
+  const xmlMatch = content.match(/<CONFIDENCE_SCORE>\s*(\d+)\s*<\/CONFIDENCE_SCORE>/i);
+  if (xmlMatch) {
+    const score = parseInt(xmlMatch[1], 10);
+    if (score >= 0 && score <= 100) return score;
+  }
+
+  // Pattern 2: "CONFIDENCE_SCORE : 85%" or "CONFIDENCE_SCORE: 85%"
+  const underscoreMatch = content.match(/CONFIDENCE_SCORE\s*:\s*(\d+)[%)]?/i);
+  if (underscoreMatch) {
+    const score = parseInt(underscoreMatch[1], 10);
+    if (score >= 0 && score <= 100) return score;
+  }
+
+  // Pattern 3: "Confidence Score: 85%" (explicit pattern - check this FIRST for "Score" variant)
+  const scoreColonMatch = content.match(/Confidence\s+Score\s*:\s*(\d+)[%)]?\s*[✓✔]?/i);
+  if (scoreColonMatch) {
+    const score = parseInt(scoreColonMatch[1], 10);
+    if (score >= 0 && score <= 100) return score;
+  }
+  
+  // Pattern 3b: "Confidence: 65% ✓" or "Confidence: 65%" (without "Score")
+  const colonMatch = content.match(/Confidence\s*:\s*(\d+)[%)]?\s*[✓✔]?/i);
+  if (colonMatch) {
+    const score = parseInt(colonMatch[1], 10);
+    if (score >= 0 && score <= 100) return score;
+  }
+  
+  // Pattern 4: "Confidence 65%" (without colon)
+  const noColonMatch = content.match(/Confidence(?:\s+Score)?\s+(\d+)[%)]?\s*[✓✔]?/i);
+  if (noColonMatch) {
+    const score = parseInt(noColonMatch[1], 10);
+    if (score >= 0 && score <= 100) return score;
+  }
+  
+  // Pattern 5: Any number followed by % after "Confidence" (very flexible)
+  const flexibleMatch = content.match(/Confidence(?:\s+Score)?[:\s]+(\d+)[%)]/i);
+  if (flexibleMatch) {
+    const score = parseInt(flexibleMatch[1], 10);
+    if (score >= 0 && score <= 100) return score;
+  }
+  
+  // Pattern 6: "Interpretation: 70 (as reported)" - extract the number
+  const interpretationMatch = content.match(/Interpretation\s*:\s*(\d+)/i);
+  if (interpretationMatch) {
+    const score = parseInt(interpretationMatch[1], 10);
+    if (score >= 0 && score <= 100) return score;
+  }
+  
+  // Pattern 7: Table format - look for numbers in table rows with confidence
+  const tableMatch = content.match(/\|[^\n]*confidence[^\n]*\|\s*(\d+)[^\n]*\|/i);
+  if (tableMatch) {
+    const score = parseInt(tableMatch[1], 10);
+    if (score >= 0 && score <= 100) return score;
+  }
+
+  // Fallback: Use confidence from database (calculated by backend) ONLY if content extraction completely failed
+  // Check if content has any confidence-related text - if it does, don't use database (content is more accurate)
+  const hasConfidenceInContent = /Confidence/i.test(content);
+  
+  // Only use database if:
+  // 1. No confidence text found in content, AND
+  // 2. Database has a confidence value
+  if (!hasConfidenceInContent && message.confidence !== undefined && message.confidence !== null) {
+    const confidence = Number(message.confidence);
+    // Convert from 0.0-1.0 scale to 0-100 scale if needed
+    if (confidence <= 1.0 && confidence >= 0.0) {
+      return Math.round(confidence * 100);
+    }
+    // If already in 0-100 scale, return as is
+    if (confidence > 1.0 && confidence <= 100) {
+      return Math.round(confidence);
+    }
+  }
+
+  return null;
+};
+
+// Function to remove confidence-related text from markdown content
+const removeConfidenceText = (content: string): string => {
+  let cleanedContent = content;
+
+  // Remove XML-style confidence tags (case insensitive)
+  cleanedContent = cleanedContent.replace(/<CONFIDENCE_SCORE>\s*\d+\s*<\/CONFIDENCE_SCORE>/gi, '');
+  
+  // Remove patterns like "CONFIDENCE_SCORE : 85%" or "CONFIDENCE_SCORE: 85%" (uppercase with underscore)
+  cleanedContent = cleanedContent.replace(/CONFIDENCE_SCORE\s*:\s*\d+[%)]?/gi, '');
+  
+  // Remove patterns containing the XML Tag (Label + Tag, Code Block + Tag, or just Tag)
+  cleanedContent = cleanedContent.replace(/(?:(?:\n|^)\s*(?:##\s*|[*_]+|[|]\s*)?Confidence(?: Score)?[\s\S]*?)?(?:```|`)?<CONFIDENCE_SCORE>\s*\d+\s*<\/CONFIDENCE_SCORE>(?:```|`)?/gi, '');
+
+  // Remove markdown headers for confidence (any level: #, ##, ###, etc.)
+  cleanedContent = cleanedContent.replace(/^#{1,6}\s*Confidence\s*(?:Score)?\s*$/gim, '');
+  
+  // Remove standalone "Confidence" headers
+  cleanedContent = cleanedContent.replace(/^#{1,6}\s*Confidence\s*$/gim, '');
+  
+  // MULTIPLE PASSES to ensure we catch everything
+  
+  // PASS 1: Remove all confidence patterns (most aggressive first pass)
+  // This catches "Confidence Score: 85%" anywhere in the text
+  cleanedContent = cleanedContent.replace(/Confidence\s+Score\s*:\s*\d+[%)]?\s*[✓✔]?/gi, '');
+  cleanedContent = cleanedContent.replace(/Confidence\s*:\s*\d+[%)]?\s*[✓✔]?/gi, '');
+  cleanedContent = cleanedContent.replace(/Confidence\s+Score\s+\d+[%)]?\s*[✓✔]?/gi, '');
+  cleanedContent = cleanedContent.replace(/Confidence\s+\d+[%)]?\s*[✓✔]?/gi, '');
+
+  // PASS 2: Remove XML-style confidence tags (case insensitive)
+  cleanedContent = cleanedContent.replace(/<CONFIDENCE_SCORE>\s*\d+\s*<\/CONFIDENCE_SCORE>/gi, '');
+  
+  // Remove patterns like "CONFIDENCE_SCORE : 85%" or "CONFIDENCE_SCORE: 85%" (uppercase with underscore)
+  cleanedContent = cleanedContent.replace(/CONFIDENCE_SCORE\s*:\s*\d+[%)]?/gi, '');
+  
+  // Remove patterns containing the XML Tag (Label + Tag, Code Block + Tag, or just Tag)
+  cleanedContent = cleanedContent.replace(/(?:(?:\n|^)\s*(?:##\s*|[*_]+|[|]\s*)?Confidence(?: Score)?[\s\S]*?)?(?:```|`)?<CONFIDENCE_SCORE>\s*\d+\s*<\/CONFIDENCE_SCORE>(?:```|`)?/gi, '');
+
+  // PASS 3: Remove markdown headers for confidence (any level: #, ##, ###, etc.)
+  cleanedContent = cleanedContent.replace(/^#{1,6}\s*Confidence\s*(?:Score)?\s*$/gim, '');
+  cleanedContent = cleanedContent.replace(/^#{1,6}\s*Confidence\s*$/gim, '');
+  
+  // PASS 4: Remove lines containing confidence (with newlines)
+  cleanedContent = cleanedContent.replace(/(?:^|\n)\s*Confidence(?:\s+Score)?\s*:\s*\d+[%)]?\s*[✓✔]?\s*(?:\n|$)/gi, '\n');
+  cleanedContent = cleanedContent.replace(/(?:^|\n)\s*Confidence(?:\s+Score)?\s*[:]?\s*\d+[%)]?\s*[✓✔]?\s*(?:\n|$)/gi, '\n');
+  
+  // PASS 5: Remove "Metadata" sections that contain confidence scores
+  cleanedContent = cleanedContent.replace(/##\s*Metadata\s*\n[\s\S]*?Confidence(?:\s+Score)?\s*[:]?\s*\d+[%)]?\s*[✓✔]?[\s\S]*?(?=\n##|\n\n|$)/gi, '');
+  cleanedContent = cleanedContent.replace(/###\s*Metadata\s*\n[\s\S]*?Confidence(?:\s+Score)?\s*[:]?\s*\d+[%)]?\s*[✓✔]?[\s\S]*?(?=\n##|\n###|\n\n|$)/gi, '');
+  
+  // PASS 6: Remove bold markdown confidence
+  cleanedContent = cleanedContent.replace(/(?:^|\n)\s*\*\*?Confidence(?:\s+Score)?\*\*?\s*[:]?\s*\d+[%)]?\s*[✓✔]?\s*(?:\n|$)/gi, '\n');
+  
+  // PASS 7: Remove confidence at end of lines/paragraphs
+  cleanedContent = cleanedContent.replace(/\.\s*Confidence(?:\s+Score)?\s*:\s*\d+[%)]?\s*[✓✔]?/gi, '.');
+  cleanedContent = cleanedContent.replace(/\s+Confidence(?:\s+Score)?\s*:\s*\d+[%)]?\s*[✓✔]?\s*$/gm, '');
+  
+  // Remove table rows containing confidence information
+  // Pattern: | FIELD | VALUE | with confidence-related content
+  cleanedContent = cleanedContent.replace(/\|[^\n]*\b(?:Reported\s+)?confidence\s*(?:tag|score)?\b[^\n]*\|[^\n]*\|/gi, '');
+  cleanedContent = cleanedContent.replace(/\|[^\n]*\|\s*[^\n]*\b(?:Reported\s+)?confidence\s*(?:tag|score)?\b[^\n]*\|/gi, '');
+  
+  // Remove entire table rows that contain confidence (more comprehensive)
+  cleanedContent = cleanedContent.replace(/\|[^\n]*confidence[^\n]*\|[^\n]*\n/gi, '');
+  
+  // Remove "Interpretation: 70 (as reported)" or similar patterns
+  cleanedContent = cleanedContent.replace(/Interpretation\s*:\s*\d+\s*\([^)]*\)/gi, '');
+  cleanedContent = cleanedContent.replace(/Interpretation\s*:\s*\d+/gi, '');
+  
+  // Remove "Reported confidence tag" text
+  cleanedContent = cleanedContent.replace(/Reported\s+confidence\s+tag/gi, '');
+  
+  // Remove patterns in code blocks or backticks
+  cleanedContent = cleanedContent.replace(/```[\s\S]*?Confidence(?:\s+Score)?\s*[:]?\s*\d+[%)]?[\s\S]*?```/gi, '');
+  cleanedContent = cleanedContent.replace(/`Confidence(?:\s+Score)?\s*[:]?\s*\d+[%)]?`/gi, '');
+  
+  // Remove any remaining confidence text patterns (more aggressive)
+  cleanedContent = cleanedContent.replace(/(?:^|\n)\s*(?:##\s*|[*_]+|[|]\s*)?Confidence(?:\s+Score)?[\s:]*[\s`]*\d+[%)]*(?:\s*[|])?(?:\s*\n|$)/gi, '\n');
+  
+  // Remove empty table rows or tables with only confidence info
+  cleanedContent = cleanedContent.replace(/\|\s*FIELD\s*\|\s*VALUE\s*\|\s*\n\|\s*[-:]+\s*\|\s*[-:]+\s*\|\s*\n\|\s*[^\n]*confidence[^\n]*\|[^\n]*\|/gi, '');
+  
+  // Clean up multiple consecutive newlines
+  cleanedContent = cleanedContent.replace(/\n{3,}/g, '\n\n');
+  
+  // Clean up extra newlines and formatting
+  cleanedContent = cleanedContent.replace(/\n\s*---\s*\n\s*---\s*\n/g, '\n\n---\n\n');
+  cleanedContent = cleanedContent.replace(/\n\s*---\s*\n\s*$/g, '');
+  cleanedContent = cleanedContent.trim();
+
+  return cleanedContent;
+};
+
 // Function to transform markdown tables: remove Website column and make company names clickable
 const transformCompanyTable = (content: string): string => {
   // Match markdown tables
@@ -192,6 +369,29 @@ const dotVariants3 = {
       delay: 0.4,
     },
   },
+};
+
+// Confidence Badge Component
+const ConfidenceBadge: FC<{ score: number }> = ({ score }) => {
+  // Determine color based on confidence score
+  const getColorClass = (score: number): string => {
+    if (score >= 70) return "bg-green-500/20 border-green-500/50 text-green-400";
+    if (score >= 40) return "bg-yellow-500/20 border-yellow-500/50 text-yellow-400";
+    return "bg-red-500/20 border-red-500/50 text-red-400";
+  };
+
+  return (
+    <div
+      className={cn(
+        "mt-1.5 flex items-center gap-1.5 justify-end self-end",
+        "px-2.5 py-1.5 rounded-md border text-xs font-medium w-fit shrink-0",
+        getColorClass(score)
+      )}
+    >
+      <span className="text-[10px] font-semibold opacity-80 leading-none">Confidence</span>
+      <span className="font-bold leading-none">{score}%</span>
+    </div>
+  );
 };
 
 type ChatInterfaceProps = {
@@ -1011,6 +1211,11 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
         >
           {selectedMessages.map((msg) => {
             const isAssistant = msg.role === "assistant";
+            // Get confidence score (prioritizes database field, falls back to content extraction)
+            const confidenceScore = getConfidenceScore(msg);
+            // Remove confidence text from content for display
+            const displayContent = removeConfidenceText(msg.content);
+            
             return (
               <div
                 key={msg._id}
@@ -1023,11 +1228,11 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
                   className={cn(
                     "rounded-2xl px-3 py-2 text-sm leading-relaxed shadow-lg",
                     isAssistant
-                      ? "max-w-[90%] sm:max-w-[90%] rounded-bl-md bg-white/5 text-white"
+                      ? "max-w-[90%] sm:max-w-[90%] rounded-bl-md bg-white/5 text-white flex flex-col"
                       : "max-w-[100%] sm:max-w-[100%] rounded-br-md bg-[linear-gradient(226.23deg,_#3E65B4_0%,_#68B3B7_100%)] text-white"
                   )}
                 >
-                  <div className="text-left max-w-none">
+                  <div className="text-left max-w-none flex-1">
                     <ReactMarkdown
                       remarkPlugins={[remarkGfm]}
                       rehypePlugins={[rehypeRaw, rehypeSanitize]}
@@ -1215,7 +1420,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
                         ),
                       }}
                     >
-                      {transformCompanyTable(msg.content)}
+                      {transformCompanyTable(displayContent)}
                     </ReactMarkdown>
                     {isAssistant && msg.confidence !== undefined && msg.confidence !== null && (
                       <div className="mt-2 text-[10px] text-white/40 leading-none">
@@ -1223,6 +1428,9 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
                       </div>
                     )}
                   </div>
+                  {isAssistant && confidenceScore !== null && confidenceScore >= 0 && (
+                    <ConfidenceBadge score={confidenceScore} />
+                  )}
                 </div>
               </div>
             );

@@ -1,4 +1,5 @@
 import { useState, useMemo, forwardRef, useImperativeHandle } from "react";
+import { format, parse } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -487,7 +488,21 @@ const FollowUpTemplates = forwardRef<
                               color: "#FFFFFF99",
                             }}
                           >
-                            {template.timeOfDayToRun} (UTC)
+                            {template.startDate && (
+                              <span className="mr-2 opacity-75">
+                                {format(new Date(template.startDate), "dd - MMM - yyyy")}
+                              </span>
+                            )}
+                            {(() => {
+                              try {
+                                return format(
+                                  parse(template.timeOfDayToRun, "HH:mm", new Date()),
+                                  "hh:mm a"
+                                );
+                              } catch (e) {
+                                return template.timeOfDayToRun;
+                              }
+                            })()}
                           </span>
                         </div>
                       </div>
@@ -574,7 +589,20 @@ const FollowUpTemplates = forwardRef<
                             color: "#FFFFFF80",
                           }}
                         >
-                          Day time: {template.timeOfDayToRun} (UTC)
+                          Day time:{" "}
+                          {template.startDate
+                            ? `${format(new Date(template.startDate), "dd - MMM - yyyy")} at `
+                            : ""}
+                          {(() => {
+                            try {
+                              return format(
+                                parse(template.timeOfDayToRun, "HH:mm", new Date()),
+                                "hh:mm a"
+                              );
+                            } catch (e) {
+                              return template.timeOfDayToRun;
+                            }
+                          })()}
                         </span>
                         {/* <Button
                           variant="ghost"
