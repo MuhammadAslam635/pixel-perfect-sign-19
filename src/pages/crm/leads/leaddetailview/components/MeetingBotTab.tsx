@@ -866,9 +866,6 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
                                 controls
                                 src={recordingVideoUrl}
                                 className="w-full rounded"
-                                style={{
-                                  filter: "invert(1) hue-rotate(180deg)",
-                                }}
                               />
                             </div>
                             <p className="text-xs text-white/40 text-center">
