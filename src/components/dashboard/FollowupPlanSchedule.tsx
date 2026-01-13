@@ -1714,22 +1714,42 @@ const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
                             }).map((_, idx) => {
                               const notesArr = dayTaskNotes[day.day]?.[key] || [];
                               const existingNote = notesArr[idx] || "";
+                              const timesArr = dayTaskTimes[day.day]?.[key] || [];
+                              const defaultTime = getPlanTemplateTimeLocal();
+                              const existingTime = timesArr[idx] || defaultTime;
 
                               return (
                                 <div
                                   key={`${type}-${idx}`}
                                   className="p-3 rounded-lg border border-white/10 bg-black/30 space-y-2"
                                 >
-                                  {/* First row: Icon, label, and time */}
-                                  <div className="flex items-center gap-3">
-                                    <div className="flex items-center gap-2 text-sm text-white/80">
-                                      {icon}
-                                      <span>
-                                        {label} #{idx + 1}
-                                      </span>
-                                    </div>
+                                  {/* First row: Icon and label */}
+                                  <div className="flex items-center gap-2 text-sm text-white/80">
+                                    {icon}
+                                    <span>
+                                      {label} #{idx + 1}
+                                    </span>
                                   </div>
-                                  {/* Second row: Notes input */}
+                                  {/* Second row: Time input */}
+                                  <div className="relative">
+                                    <Input
+                                      type="time"
+                                      step="60"
+                                      value={existingTime}
+                                      onChange={(e) =>
+                                        handleTaskTimeChange(
+                                          day.day,
+                                          key,
+                                          idx,
+                                          e.target.value
+                                        )
+                                      }
+                                      style={{ colorScheme: "dark" }}
+                                      className="pl-10 bg-white/5 backdrop-blur-sm border-white/20 text-white text-xs placeholder:text-gray-400 focus:bg-white/10 focus:border-white/30 transition-all h-8"
+                                    />
+                                    <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60 pointer-events-none" />
+                                  </div>
+                                  {/* Third row: Notes input */}
                                   <Input
                                     type="text"
                                     value={existingNote}
