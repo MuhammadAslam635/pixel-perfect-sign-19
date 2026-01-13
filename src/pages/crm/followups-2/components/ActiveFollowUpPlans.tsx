@@ -50,8 +50,11 @@ const transformPlanData = (plan: FollowupPlan) => {
   // Get time of day to run from template (convert UTC to local time)
   const timeOfDayToRun =
     typeof plan.templateId === "object" && plan.templateId?.timeOfDayToRun
-      ? convertUTCToLocalTime(plan.templateId.timeOfDayToRun)
+      ? plan.templateId.timeOfDayToRun
       : "09:00";
+
+  // Get timezone from metadata
+  const timezone = (plan.metadata?.timezone as string) || "UTC";
 
   // Calculate total days from todo items or template
   const maxDay = Math.max(...plan.todo.map((task) => task.day || 0), 1);
@@ -103,11 +106,14 @@ const transformPlanData = (plan: FollowupPlan) => {
     name: planName,
     date: formattedDate,
     timeOfDayToRun,
+    timezone,
     status: statusLabel,
     progress: Math.max(1, currentDay),
     totalDays,
     cumulativeCounts,
     originalPlan: plan, // Keep reference to original plan for modal
+
+
   };
 };
 
@@ -279,7 +285,7 @@ const ActiveFollowUpPlans = () => {
                   </div>
                   <div className="flex flex-col">
                     <span className="text-white/70">{plan.date}</span>
-                    <span className="text-white/50 text-[10px]">{formatTimeWithAMPM(plan.timeOfDayToRun)} (Local)</span>
+                    <span className="text-white/50 text-[10px]">{formatTimeWithAMPM(plan.timeOfDayToRun)} ({plan.timezone})</span>
                   </div>
                 </div>
 

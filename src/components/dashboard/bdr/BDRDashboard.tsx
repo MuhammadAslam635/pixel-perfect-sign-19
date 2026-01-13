@@ -3,6 +3,8 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { getUserData } from "@/utils/authHelpers";
 import { useBDRDashboard } from "@/hooks/useBDRDashboard";
+import { useTwilioCalling } from "@/hooks/useTwilioCalling";
+import { DailyGoalTracker as DailyGoalTrackerType } from "@/types/bdr-dashboard.types";
 import { toast } from "sonner";
 
 // BDR Components
@@ -12,6 +14,7 @@ import PersonalPipelineCard from "./PersonalPipelineCard";
 import ExecutionQualityCard from "./ExecutionQualityCard";
 import TalkTrackAssistant from "./TalkTrackAssistant";
 import AtRiskAlertsCard from "./AtRiskAlertsCard";
+import ActiveCallCard from "./ActiveCallCard";
 
 // Existing components for activity and performance
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,15 +40,95 @@ const BDRDashboard: React.FC = () => {
     atRiskItems,
     isLoading,
     isRefreshing,
+    refreshDashboard,
     refreshTalkTrack,
+    sendFollowUpEmail,
     executeQuickAction,
     error,
   } = useBDRDashboard();
 
+  // Twilio calling integration
+  const {
+    callStatus,
+    callStatusMessage,
+    isCalling,
+    initiateCall,
+    endCall,
+    normalizePhoneNumber,
+  } = useTwilioCalling();
+
   const handlePriorityAction = async (leadId: string, action: string) => {
-    // Refresh talk track for the selected lead
-    await refreshTalkTrack(leadId);
-    toast.success(`${action} action initiated for lead`);
+    try {
+      // Find the lead from priority queue to get phone number
+      const lead = priorityQueue.find((item) => item.id === leadId);
+
+      console.log("🚀 handlePriorityAction:", { leadId, action, lead, hasPhone: !!lead?.phone });
+
+      if (action === "email") {
+        // Send follow-up email for email actions
+        const success = await sendFollowUpEmail(leadId);
+        if (success) {
+          toast.success("Follow-up email sent successfully!");
+        } else {
+          toast.error("Failed to send email");
+        }
+      } else if (action === "call") {
+        // For call actions, initiate Twilio call
+        if (!lead) {
+          toast.error("Lead not found in priority queue");
+          console.error("❌ Lead not found:", { leadId, priorityQueue });
+          return;
+        }
+
+        if (!lead.phone) {
+          toast.error("No phone number available for this lead");
+          console.error("❌ No phone number:", { lead });
+          return;
+        }
+
+        console.log("📞 Phone number found:", lead.phone);
+
+        // Normalize and validate phone number
+        const normalizedPhone = normalizePhoneNumber(lead.phone);
+        if (!normalizedPhone) {
+          toast.error("Invalid phone number format");
+          console.error("❌ Invalid phone format:", lead.phone);
+          return;
+        }
+
+        console.log("✅ Normalized phone:", normalizedPhone);
+
+        // Load talk track first
+        await refreshTalkTrack(leadId);
+
+        // Initiate the call
+        toast.info("📞 Initiating call to " + normalizedPhone);
+        console.log("🎯 Calling initiateCall with:", normalizedPhone);
+        
+        try {
+          await initiateCall(normalizedPhone);
+          console.log("✅ initiateCall completed");
+          toast.success("Call initiated! Follow the talk track", {
+            duration: 5000,
+          });
+        } catch (error) {
+          console.error("❌ initiateCall failed:", error);
+          toast.error("Failed to initiate call: " + (error instanceof Error ? error.message : "Unknown error"));
+        }
+      } else if (action === "meeting") {
+        // For meeting actions, show talk track and prompt to schedule
+        await refreshTalkTrack(leadId);
+        toast.success("📅 Review talk track and schedule a meeting", {
+          duration: 4000,
+        });
+      } else {
+        // For other actions, refresh talk track
+        await refreshTalkTrack(leadId);
+        toast.success(`${action} action prepared - review talk track`);
+      }
+    } catch (error) {
+      toast.error("Action failed");
+    }
   };
 
   const handleQuickAction = async (
@@ -67,7 +150,7 @@ const BDRDashboard: React.FC = () => {
     }
   };
 
-  const handleGoalsUpdated = async (newGoals: DailyGoalTracker) => {
+  const handleGoalsUpdated = async (newGoals: DailyGoalTrackerType) => {
     // Trigger a full dashboard refresh to sync all data
     await refreshDashboard();
     toast.success("Your goals have been updated!");
@@ -145,6 +228,16 @@ const BDRDashboard: React.FC = () => {
 
       {/* Section 3: Execution Quality & Speed */}
       <ExecutionQualityCard quality={executionQuality} />
+
+      {/* Active Call Indicator */}
+      {(isCalling || callStatus !== "idle") && (
+        <ActiveCallCard
+          callStatus={callStatus}
+          callStatusMessage={callStatusMessage}
+          isCalling={isCalling}
+          onEndCall={endCall}
+        />
+      )}
 
       {/* Section 4: Real-Time Assistance */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

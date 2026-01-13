@@ -147,9 +147,19 @@ export const twilioService = {
    */
   getToken: async (): Promise<TwilioTokenResponse> => {
     try {
+      console.log("📡 Calling /twilio/token endpoint...");
       const response = await API.get<TwilioTokenResponse>("/twilio/token");
+      console.log("✅ Token API response:", { 
+        hasToken: !!response.data?.token,
+        status: response.status 
+      });
       return response.data;
     } catch (error: any) {
+      console.error("❌ Token API error:", {
+        status: error.response?.status,
+        message: error.response?.data?.message || error.response?.data?.error,
+        error: error.message
+      });
       throw error;
     }
   },
