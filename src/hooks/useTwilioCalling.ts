@@ -28,23 +28,26 @@ export const useTwilioCalling = (): UseTwilioCallingReturn => {
   /**
    * Set error status and auto-clear after delay
    */
-  const setErrorStatus = useCallback((message: string) => {
-    setCallStatus("error");
-    setCallStatusMessage(message);
-    
-    // Clear any existing timeout
-    if (errorTimeoutRef.current) {
-      clearTimeout(errorTimeoutRef.current);
-    }
-    
-    // Auto-clear error after 10 seconds
-    errorTimeoutRef.current = setTimeout(() => {
-      if (callStatus === "error") {
-        setCallStatus("idle");
-        setCallStatusMessage("");
+  const setErrorStatus = useCallback(
+    (message: string) => {
+      setCallStatus("error");
+      setCallStatusMessage(message);
+
+      // Clear any existing timeout
+      if (errorTimeoutRef.current) {
+        clearTimeout(errorTimeoutRef.current);
       }
-    }, 10000);
-  }, [callStatus]);
+
+      // Auto-clear error after 10 seconds
+      errorTimeoutRef.current = setTimeout(() => {
+        if (callStatus === "error") {
+          setCallStatus("idle");
+          setCallStatusMessage("");
+        }
+      }, 10000);
+    },
+    [callStatus]
+  );
 
   /**
    * Normalize phone number to E.164 format
@@ -76,29 +79,11 @@ export const useTwilioCalling = (): UseTwilioCallingReturn => {
   /**
    * Ensure Twilio device is initialized and registered
    */
-  const ensureDevice = useCallback(async (forceRefresh = false): Promise<Device> => {
-    // If forcing refresh, destroy existing device first
-    if (forceRefresh && deviceRef.current) {
-      console.log("🔄 Forcing device refresh, destroying old device...");
-      try {
-        deviceRef.current.destroy();
-      } catch (e) {
-        console.warn("⚠️ Error destroying old device:", e);
-      }
-      deviceRef.current = null;
-    }
-
-    // Check if device exists and is in a usable state
-    if (deviceRef.current) {
-      const state = deviceRef.current.state;
-      console.log("♻️ Existing device found, state:", state);
-      
-      // Only reuse if registered, otherwise force refresh
-      if (state === "registered") {
-        console.log("✅ Reusing registered Twilio device");
-        return deviceRef.current;
-      } else {
-        console.log("⚠️ Device in non-registered state, forcing refresh");
+  const ensureDevice = useCallback(
+    async (forceRefresh = false): Promise<Device> => {
+      // If forcing refresh, destroy existing device first
+      if (forceRefresh && deviceRef.current) {
+        console.log("🔄 Forcing device refresh, destroying old device...");
         try {
           deviceRef.current.destroy();
         } catch (e) {
@@ -106,105 +91,145 @@ export const useTwilioCalling = (): UseTwilioCallingReturn => {
         }
         deviceRef.current = null;
       }
-    }
 
-    try {
-      console.log("🔑 Fetching Twilio token...");
-      const data = await twilioService.getToken();
-      console.log("✅ Token received:", data.token ? "YES" : "NO");
-      
-      if (!data.token) {
-        throw new Error("Token missing from response");
+      // Check if device exists and is in a usable state
+      if (deviceRef.current) {
+        const state = deviceRef.current.state;
+        console.log("♻️ Existing device found, state:", state);
+
+        // Only reuse if registered, otherwise force refresh
+        if (state === "registered") {
+          console.log("✅ Reusing registered Twilio device");
+          return deviceRef.current;
+        } else {
+          console.log("⚠️ Device in non-registered state, forcing refresh");
+          try {
+            deviceRef.current.destroy();
+          } catch (e) {
+            console.warn("⚠️ Error destroying old device:", e);
+          }
+          deviceRef.current = null;
+        }
       }
-
-      console.log("🎧 Creating new Twilio Device...");
-      const device = new Device(data.token, { 
-        logLevel: 1, // Debug level for more info
-        codecPreferences: ["opus", "pcmu"],
-      });
-
-      device.on("error", (event: DeviceError) => {
-        console.error("🔴 Twilio Device error:", event);
-        setErrorStatus(`Device error: ${event.message}`);
-        // Clear device on error to force refresh on next call
-        deviceRef.current = null;
-      });
-
-      device.on("disconnect", () => {
-        console.log("📴 Twilio Device disconnected");
-        setIsCalling(false);
-        setCallStatus("ended");
-        setCallStatusMessage("Call ended");
-        activeCallRef.current = null;
-      });
-
-      device.on("registered", () => {
-        console.log("✅ Twilio Device registered");
-        setCallStatus("idle");
-        setCallStatusMessage("Ready for calls");
-      });
-
-      device.on("unregistered", () => {
-        console.log("⚠️ Twilio Device unregistered");
-        setCallStatus("idle");
-        setCallStatusMessage("Reconnecting to Twilio...");
-        // Clear device to force refresh on next call
-        deviceRef.current = null;
-      });
-
-      console.log("📝 Registering Twilio Device...");
-      
-      // Register with timeout - don't wait forever
-      const registrationPromise = device.register();
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("Registration timeout after 10 seconds")), 10000)
-      );
 
       try {
-        await Promise.race([registrationPromise, timeoutPromise]);
-        console.log("✅ Twilio Device registration complete");
-      } catch (error) {
-        console.error("❌ Device registration failed:", error);
-        // Throw the error so caller knows registration failed
-        throw new Error(`Twilio device registration failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      }
-      
-      deviceRef.current = device;
-      return device;
-    } catch (error: unknown) {
-      let errorMessage = "Failed to initialize Twilio";
+        console.log("🔑 Fetching Twilio token...");
+        const data = await twilioService.getToken();
+        console.log("✅ Token received:", data.token ? "YES" : "NO");
 
-      if (error && typeof error === "object" && "response" in error) {
-        const apiError = error as {
-          response?: { data?: { message?: string; error?: string }; status?: number };
-        };
-        const errorData = apiError.response?.data;
-        const status = apiError.response?.status;
-        
-        // Provide user-friendly messages for common errors
-        if (status === 400 || status === 500) {
-          errorMessage = errorData?.message || errorData?.error || "Twilio is not configured for your account";
-        } else {
-          errorMessage = errorData?.message || errorData?.error || errorMessage;
+        if (!data.token) {
+          throw new Error("Token missing from response");
         }
-      } else if (error instanceof Error) {
-        errorMessage = error.message;
-      } else if (typeof error === "string") {
-        errorMessage = error;
-      }
 
-      console.error("❌ ensureDevice error:", errorMessage);
-      setErrorStatus(errorMessage);
-      throw new Error(errorMessage);
-    }
-  }, [setErrorStatus]);
+        console.log("🎧 Creating new Twilio Device...");
+        const device = new Device(data.token, {
+          logLevel: 1, // Debug level for more info
+          codecPreferences: ["opus", "pcmu"],
+        });
+
+        device.on("error", (event: DeviceError) => {
+          console.error("🔴 Twilio Device error:", event);
+          setErrorStatus(`Device error: ${event.message}`);
+          // Clear device on error to force refresh on next call
+          deviceRef.current = null;
+        });
+
+        device.on("disconnect", () => {
+          console.log("📴 Twilio Device disconnected");
+          setIsCalling(false);
+          setCallStatus("ended");
+          setCallStatusMessage("Call ended");
+          activeCallRef.current = null;
+        });
+
+        device.on("registered", () => {
+          console.log("✅ Twilio Device registered");
+          setCallStatus("idle");
+          setCallStatusMessage("Ready for calls");
+        });
+
+        device.on("unregistered", () => {
+          console.log("⚠️ Twilio Device unregistered");
+          setCallStatus("idle");
+          setCallStatusMessage("Reconnecting to Twilio...");
+          // Clear device to force refresh on next call
+          deviceRef.current = null;
+        });
+
+        console.log("📝 Registering Twilio Device...");
+
+        // Register with timeout - don't wait forever
+        const registrationPromise = device.register();
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(
+            () => reject(new Error("Registration timeout after 10 seconds")),
+            10000
+          )
+        );
+
+        try {
+          await Promise.race([registrationPromise, timeoutPromise]);
+          console.log("✅ Twilio Device registration complete");
+        } catch (error) {
+          console.error("❌ Device registration failed:", error);
+          // Throw the error so caller knows registration failed
+          throw new Error(
+            `Twilio device registration failed: ${
+              error instanceof Error ? error.message : "Unknown error"
+            }`
+          );
+        }
+
+        deviceRef.current = device;
+        return device;
+      } catch (error: unknown) {
+        let errorMessage = "Failed to initialize Twilio";
+
+        if (error && typeof error === "object" && "response" in error) {
+          const apiError = error as {
+            response?: {
+              data?: { message?: string; error?: string };
+              status?: number;
+            };
+          };
+          const errorData = apiError.response?.data;
+          const status = apiError.response?.status;
+
+          // Provide user-friendly messages for common errors
+          if (status === 400 || status === 500) {
+            errorMessage =
+              errorData?.message ||
+              errorData?.error ||
+              "Twilio is not configured for your account";
+          } else {
+            errorMessage =
+              errorData?.message || errorData?.error || errorMessage;
+          }
+        } else if (error instanceof Error) {
+          errorMessage = error.message;
+        } else if (typeof error === "string") {
+          errorMessage = error;
+        }
+
+        console.error("❌ ensureDevice error:", errorMessage);
+        setErrorStatus(errorMessage);
+        throw new Error(errorMessage);
+      }
+    },
+    [setErrorStatus]
+  );
 
   /**
    * Initiate an outbound call to the given phone number
    */
   const initiateCall = useCallback(
     async (phoneNumber: string, retryCount = 0) => {
-      console.log("🎯 initiateCall called with:", phoneNumber, "retry:", retryCount);
+      console.log(
+        "🎯 initiateCall called with:",
+        phoneNumber,
+        "retry:",
+        retryCount
+      );
 
       if (!phoneNumber) {
         setErrorStatus("Enter a phone number");
@@ -234,7 +259,7 @@ export const useTwilioCalling = (): UseTwilioCallingReturn => {
         console.log("📞 Connecting to:", normalized);
         const connection = await device.connect({ params: { To: normalized } });
         console.log("✅ Connection established:", connection);
-        
+
         activeCallRef.current = connection;
 
         connection.on("accept", () => {
@@ -267,16 +292,19 @@ export const useTwilioCalling = (): UseTwilioCallingReturn => {
         });
       } catch (error) {
         console.error("❌ initiateCall error:", error);
-        
+
         // If this is the first attempt and we get a connection error, retry once with fresh device
-        if (retryCount === 0 && error instanceof Error && 
-            (error.message.includes("registration") || 
-             error.message.includes("WebSocket") ||
-             error.message.includes("connection"))) {
+        if (
+          retryCount === 0 &&
+          error instanceof Error &&
+          (error.message.includes("registration") ||
+            error.message.includes("WebSocket") ||
+            error.message.includes("connection"))
+        ) {
           console.log("🔄 Retrying with fresh device...");
           return initiateCall(phoneNumber, retryCount + 1);
         }
-        
+
         setIsCalling(false);
         setErrorStatus(
           error instanceof Error ? error.message : "Unable to place call"
@@ -303,17 +331,17 @@ export const useTwilioCalling = (): UseTwilioCallingReturn => {
   useEffect(() => {
     return () => {
       console.log("🧹 Cleaning up Twilio device on unmount");
-      
+
       // Clear error timeout
       if (errorTimeoutRef.current) {
         clearTimeout(errorTimeoutRef.current);
       }
-      
+
       // Disconnect active call
       if (activeCallRef.current) {
         activeCallRef.current.disconnect();
       }
-      
+
       // Destroy device
       if (deviceRef.current) {
         deviceRef.current.destroy();

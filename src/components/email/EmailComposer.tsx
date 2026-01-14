@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Send, X, Plus, Sparkles } from "lucide-react";
+import { Send, X, Plus, Sparkles, Paperclip } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { connectionMessagesService } from "@/services/connectionMessages.service";
 import { leadsService } from "@/services/leads.service";
@@ -27,6 +27,7 @@ interface EmailComposerProps {
     text?: string;
     html?: string;
     threadId?: string;
+    attachments?: File[];
   }) => void;
   onCancel?: () => void;
   isLoading?: boolean;
@@ -52,6 +53,8 @@ export const EmailComposer = ({
   const [showCc, setShowCc] = useState(false);
   const [showBcc, setShowBcc] = useState(false);
   const [isEnhancing, setIsEnhancing] = useState(false);
+  const [attachments, setAttachments] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   const addRecipient = (
@@ -71,6 +74,16 @@ export const EmailComposer = ({
     setList: (list: string[]) => void
   ) => {
     setList(list.filter((e) => e !== email));
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setAttachments((prev) => [...prev, ...Array.from(e.target.files!)]);
+    }
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSend = () => {
@@ -97,6 +110,7 @@ export const EmailComposer = ({
       text: plainText || undefined,
       html: formattedContent.html || undefined,
       threadId,
+      attachments,
     });
   };
 
@@ -441,6 +455,50 @@ export const EmailComposer = ({
               height="300px"
               className="min-h-[200px] placeholder:text-white/40"
             />
+          </div>
+          
+          <div className="flex flex-col gap-2">
+            {attachments.length > 0 && (
+              <div className="flex flex-wrap gap-2 px-1">
+                {attachments.map((file, i) => (
+                  <Badge
+                    key={i}
+                    variant="secondary"
+                    className="bg-white/10 hover:bg-white/20 text-white/90 border border-white/10 flex items-center gap-1.5 py-1.5"
+                  >
+                    <Paperclip className="h-3 w-3 text-white/60" />
+                    <span className="max-w-[150px] truncate">{file.name}</span>
+                    <button
+                      onClick={() => removeAttachment(i)}
+                      className="ml-1 hover:text-red-400 transition-colors"
+                      type="button"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            )}
+            
+            <div className="flex justify-end px-1">
+              <input
+                type="file"
+                multiple
+                className="hidden"
+                ref={fileInputRef}
+                onChange={handleFileSelect}
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm" // Changed to sm to match screenshot vibe if needed, but icon is fine
+                className="text-white/70 hover:text-white hover:bg-white/10 gap-2"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Paperclip className="h-4 w-4" />
+                <span className="sr-only">Attach file</span>
+              </Button>
+            </div>
           </div>
         </div>
       </div>

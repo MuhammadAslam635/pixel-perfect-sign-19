@@ -103,6 +103,12 @@ export const EmailViewer = ({
     return "bg-primary";
   };
 
+  const getBaseApiUrl = () => {
+    const backendUrl = import.meta.env.VITE_APP_BACKEND_URL || "http://localhost:5111/api";
+    // Remove /api from the end if it exists to get the server root for static files
+    return backendUrl.replace(/\/api$/, "");
+  };
+
   return (
     <div className="h-full flex flex-col bg-background">
       {/* Top Action Bar - Sleek and Modern */}
@@ -176,7 +182,7 @@ export const EmailViewer = ({
         <div className="max-w-5xl mx-auto px-6 py-8 h-full flex flex-col">
           {/* Subject Line - Bold and Prominent */}
           <div className="flex-shrink-0 mb-8">
-            <h1 className="text-3xl font-bold tracking-tight mb-3 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+            <h1 className="text-3xl font-bold tracking-tight mb-3 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
               {email.subject || "(No Subject)"}
             </h1>
             <div className="flex items-center gap-2 flex-wrap">
@@ -333,6 +339,39 @@ export const EmailViewer = ({
               </div>
             )}
           </div>
+
+          {/* Attachments Section */}
+          {email.attachments && email.attachments.length > 0 && (
+            <div className="mt-8">
+              <h4 className="text-sm font-semibold text-muted-foreground mb-4 flex items-center gap-2">
+                <span className="h-4 w-4">📎</span>
+                Attachments ({email.attachments.length})
+              </h4>
+              <div className="flex flex-wrap gap-4">
+                {email.attachments.map((attachment, index) => (
+                  <a
+                    key={index}
+                    href={`${getBaseApiUrl()}${attachment.url}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 p-3 rounded-xl bg-card/50 border border-border/50 hover:border-primary/50 transition-all group min-w-[200px]"
+                  >
+                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                      <span className="text-lg">📄</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {attachment.filename}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {(attachment.size / 1024).toFixed(1)} KB
+                      </p>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
