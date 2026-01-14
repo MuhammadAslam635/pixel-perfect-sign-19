@@ -26,6 +26,9 @@ import {
 } from "@/components/ui/command";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
 import {
   Loader2,
   MoveRight,
@@ -34,6 +37,7 @@ import {
   Info,
   RefreshCcw,
   Trash2,
+  Calendar as CalendarIcon,
 } from "lucide-react";
 import {
   Tooltip,
@@ -56,7 +60,7 @@ import {
   leadSummaryService,
   LeadSummaryResponse,
 } from "@/services/leadSummary.service";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, format } from "date-fns";
 import {
   formatFollowupTaskTime,
 } from "@/utils/followupTaskTime";
@@ -199,6 +203,8 @@ const Activity: FC<ActivityProps> = ({
   const [activeTab, setActiveTab] = useState("summary");
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const [selectedTemplateId, setSelectedTemplateId] = useState("");
+  const [selectedTime, setSelectedTime] = useState<string>("09:00");
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedLeadsMap, setSelectedLeadsMap] = useState<
     Record<string, Lead>
   >({});
@@ -456,7 +462,7 @@ const Activity: FC<ActivityProps> = ({
     ) {
       const newDate = new Date(selectedWeekDate);
       // Set to 1st of month to avoid edge cases with varying days in months
-      newDate.setDate(1); 
+      newDate.setDate(1);
       setCurrentDate(newDate);
     }
   }, [selectedWeekDate, currentDate]);
@@ -551,8 +557,8 @@ const Activity: FC<ActivityProps> = ({
   const followupTemplates = useMemo<Array<Record<string, any>>>(() => {
     const docs = (
       followupTemplatesData as
-        | { data?: { docs?: Array<Record<string, any>> } }
-        | undefined
+      | { data?: { docs?: Array<Record<string, any>> } }
+      | undefined
     )?.data?.docs;
     return docs ?? [];
   }, [followupTemplatesData]);
@@ -788,16 +794,23 @@ const Activity: FC<ActivityProps> = ({
   const nowTimestamp = todayRef.getTime();
 
   const getTemplateTitle = (plan: FollowupPlan) => {
-    // Prefer an immutable snapshot stored on the plan (created at plan start)
-    // so updates to the template later do NOT mutate the displayed plan title.
-    const templateSource =
-      (plan as any).templateSnapshot && typeof (plan as any).templateSnapshot === "object"
-        ? (plan as any).templateSnapshot
-        : typeof plan.templateId === "object"
-        ? plan.templateId
-        : undefined;
+    let title = typeof plan.templateId === "string"
+      ? "Followup Plan"
+      : (plan.templateId?.title || "Followup Plan");
 
-    return templateSource?.title ?? "Followup Plan";
+    // Check if there's a scheduled time in the first task
+    if (plan.todo && plan.todo.length > 0) {
+      const firstTask = plan.todo[0];
+      if (firstTask.scheduledFor) {
+        const date = new Date(firstTask.scheduledFor);
+        if (!Number.isNaN(date.getTime())) {
+          const timeStr = date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+          return `${title} (Runs at ${timeStr})`;
+        }
+      }
+    }
+
+    return title;
   };
 
   const getDisplayTime = (scheduledFor?: string, isComplete?: boolean) => {
@@ -885,6 +898,8 @@ const Activity: FC<ActivityProps> = ({
 
   const resetFollowupForm = () => {
     setSelectedTemplateId("");
+    setSelectedTime("09:00");
+    setSelectedDate(undefined);
     setLeadsSearch("");
     if (lead?._id) {
       setSelectedLeadsMap({ [lead._id]: lead });
@@ -951,11 +966,28 @@ const Activity: FC<ActivityProps> = ({
       return;
     }
 
+    const planPayload: any = {
+      templateId: selectedTemplateId,
+      personIds: selectedLeadIds,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    };
+
+    // Add startDate if selected
+    if (selectedDate) {
+      planPayload.startDate = selectedDate.toISOString();
+    }
+
+    // Add schedule with time if selected
+    if (selectedTime) {
+      planPayload.schedule = {
+        enabled: true,
+        time: selectedTime,
+        ...(selectedDate && { startDate: selectedDate.toISOString() }),
+      };
+    }
+
     createFollowupPlan(
-      {
-        templateId: selectedTemplateId,
-        personIds: selectedLeadIds,
-      },
+      planPayload,
       {
         onSuccess: (response) => {
           toast({
@@ -996,10 +1028,10 @@ const Activity: FC<ActivityProps> = ({
             onValueChange={(value) =>
               setTopLevelTab(
                 value as
-                  | "activity"
-                  | "company"
-                  | "call_script"
-                  | "agent_research"
+                | "activity"
+                | "company"
+                | "call_script"
+                | "agent_research"
               )
             }
             className="flex-1 flex flex-col min-h-0"
@@ -1261,11 +1293,10 @@ const Activity: FC<ActivityProps> = ({
                               <button
                                 key={index}
                                 onClick={() => setSelectedWeekDate(date)}
-                                className={`flex flex-col items-center justify-center w-9 h-9 rounded-lg transition-all duration-200 relative overflow-hidden ${
-                                  isSelected
-                                    ? "border-2 border-primary"
-                                    : "border border-white/10 hover:border-white/20"
-                                }`}
+                                className={`flex flex-col items-center justify-center w-9 h-9 rounded-lg transition-all duration-200 relative overflow-hidden ${isSelected
+                                  ? "border-2 border-primary"
+                                  : "border border-white/10 hover:border-white/20"
+                                  }`}
                                 style={{
                                   background: isSelected
                                     ? `linear-gradient(180deg, rgba(104, 177, 184, 0.25) 0%, rgba(104, 177, 184, 0.1) 100%)`
@@ -1273,22 +1304,20 @@ const Activity: FC<ActivityProps> = ({
                                 }}
                               >
                                 <span
-                                  className={`text-[8px] font-medium ${
-                                    isSelected
-                                      ? "text-primary"
-                                      : "text-white/50"
-                                  }`}
+                                  className={`text-[8px] font-medium ${isSelected
+                                    ? "text-primary"
+                                    : "text-white/50"
+                                    }`}
                                 >
                                   {dayName}
                                 </span>
                                 <span
-                                  className={`text-xs font-semibold ${
-                                    isSelected
-                                      ? "text-white"
-                                      : isToday
+                                  className={`text-xs font-semibold ${isSelected
+                                    ? "text-white"
+                                    : isToday
                                       ? "text-primary"
                                       : "text-white/80"
-                                  }`}
+                                    }`}
                                 >
                                   {dayNumber}
                                 </span>
@@ -1300,26 +1329,23 @@ const Activity: FC<ActivityProps> = ({
                         <div className="flex flex-wrap items-center justify-between gap-2 mb-2 text-xs text-white/70">
                           <span>
                             {sortedMeetings.length > 0
-                              ? `${sortedMeetings.length} meeting${
-                                  sortedMeetings.length === 1 ? "" : "s"
-                                } on ${
-                                  monthNames[selectedWeekDate.getMonth()]
-                                } ${selectedWeekDate.getDate()}`
-                              : `No meetings on ${
-                                  monthNames[selectedWeekDate.getMonth()]
-                                } ${selectedWeekDate.getDate()}`}
+                              ? `${sortedMeetings.length} meeting${sortedMeetings.length === 1 ? "" : "s"
+                              } on ${monthNames[selectedWeekDate.getMonth()]
+                              } ${selectedWeekDate.getDate()}`
+                              : `No meetings on ${monthNames[selectedWeekDate.getMonth()]
+                              } ${selectedWeekDate.getDate()}`}
                           </span>
                           <div className="flex items-center justify-center gap-2">
                             <ActiveNavButton
                               icon={
                                 isCalendarDataBusy ||
-                                syncMeetingsMutation.isPending
+                                  syncMeetingsMutation.isPending
                                   ? Loader2
                                   : RefreshCcw
                               }
                               iconClassName={
                                 isCalendarDataBusy ||
-                                syncMeetingsMutation.isPending
+                                  syncMeetingsMutation.isPending
                                   ? "animate-spin"
                                   : ""
                               }
@@ -1400,45 +1426,45 @@ const Activity: FC<ActivityProps> = ({
                                               meeting.status === "completed"
                                                 ? "bg-teal-500/20 text-teal-200 border border-teal-400/40"
                                                 : meeting.status === "cancelled"
-                                                ? "bg-red-500/20 text-red-200 border border-red-400/40"
-                                                : "bg-indigo-500/20 text-indigo-200 border border-indigo-400/40"
+                                                  ? "bg-red-500/20 text-red-200 border border-red-400/40"
+                                                  : "bg-indigo-500/20 text-indigo-200 border border-indigo-400/40"
                                             }
                                           >
                                             {meeting.status === "completed"
                                               ? "Completed"
                                               : meeting.status === "cancelled"
-                                              ? "Cancelled"
-                                              : "Scheduled"}
+                                                ? "Cancelled"
+                                                : "Scheduled"}
                                           </Badge>
                                           {meeting.recall?.status && (
                                             <Badge
                                               className={
                                                 meeting.recall.status ===
-                                                "active"
+                                                  "active"
                                                   ? "bg-emerald-500/20 text-emerald-100 border border-emerald-400/50"
                                                   : meeting.recall.status ===
-                                                      "starting" ||
+                                                    "starting" ||
                                                     meeting.recall.status ===
-                                                      "scheduled"
-                                                  ? "bg-sky-500/15 text-sky-100 border border-sky-400/40"
-                                                  : meeting.recall.status ===
-                                                    "failed"
-                                                  ? "bg-red-500/20 text-red-100 border border-red-400/40"
-                                                  : "bg-slate-500/20 text-slate-100 border border-slate-400/40"
+                                                    "scheduled"
+                                                    ? "bg-sky-500/15 text-sky-100 border border-sky-400/40"
+                                                    : meeting.recall.status ===
+                                                      "failed"
+                                                      ? "bg-red-500/20 text-red-100 border border-red-400/40"
+                                                      : "bg-slate-500/20 text-slate-100 border border-slate-400/40"
                                               }
                                             >
                                               {meeting.recall.status ===
-                                              "active"
+                                                "active"
                                                 ? "Recall active"
                                                 : meeting.recall.status ===
-                                                    "starting" ||
+                                                  "starting" ||
                                                   meeting.recall.status ===
-                                                    "scheduled"
-                                                ? "Recall pending"
-                                                : meeting.recall.status ===
-                                                  "failed"
-                                                ? "Recall failed"
-                                                : "Recall ended"}
+                                                  "scheduled"
+                                                  ? "Recall pending"
+                                                  : meeting.recall.status ===
+                                                    "failed"
+                                                    ? "Recall failed"
+                                                    : "Recall ended"}
                                             </Badge>
                                           )}
                                         </div>
@@ -1620,9 +1646,9 @@ const Activity: FC<ActivityProps> = ({
                                     Next up: {nextTask.type.replace("_", " ")}
                                     {nextTask.scheduledFor
                                       ? ` ${getDisplayTime(
-                                          nextTask.scheduledFor,
-                                          false
-                                        )}`
+                                        nextTask.scheduledFor,
+                                        false
+                                      )}`
                                       : ""}
                                   </span>
                                 )}
@@ -1680,8 +1706,8 @@ const Activity: FC<ActivityProps> = ({
                                 isFollowupTemplatesLoading
                                   ? "Loading templates..."
                                   : followupTemplates.length
-                                  ? "Select a template"
-                                  : "No templates available"
+                                    ? "Select a template"
+                                    : "No templates available"
                               }
                             />
                           </SelectTrigger>
@@ -1707,7 +1733,73 @@ const Activity: FC<ActivityProps> = ({
                         </Select>
                       </div>
 
-                      {/* <div className="space-y-2">
+                      {selectedTemplateId && (
+                        <div className="grid gap-4 md:grid-cols-2">
+                          <div className="space-y-2">
+                            <span className="text-xs text-white/60">Time</span>
+                            <div className="relative">
+                              <Input
+                                type="time"
+                                step="60"
+                                value={selectedTime}
+                                onChange={(e) => setSelectedTime(e.target.value)}
+                                style={{ colorScheme: "dark" }}
+                                className="pl-10 bg-white/5 backdrop-blur-sm border-white/20 text-white text-xs placeholder:text-gray-400 focus:bg-white/10 focus:border-white/30 transition-all"
+                              />
+                              <svg
+                                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white pointer-events-none"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12,6 12,12 16,14"></polyline>
+                              </svg>
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <span className="text-xs text-white/60">
+                              Start Date
+                            </span>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  className={cn(
+                                    "w-full pl-3 text-left font-normal bg-white/5 backdrop-blur-sm border-white/20 text-white text-xs hover:bg-white/10 hover:text-white transition-all",
+                                    !selectedDate && "text-gray-400"
+                                  )}
+                                >
+                                  {selectedDate ? (
+                                    format(selectedDate, "PPP")
+                                  ) : (
+                                    <span>Pick a date</span>
+                                  )}
+                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                  mode="single"
+                                  selected={selectedDate}
+                                  onSelect={setSelectedDate}
+                                  disabled={(date) =>
+                                    date < new Date(new Date().setHours(0, 0, 0, 0))
+                                  }
+                                  initialFocus
+                                />
+                              </PopoverContent>
+                            </Popover>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="space-y-2">
                         <span className="text-xs text-white/60">Leads</span>
                         <Popover
                           open={leadSelectorOpen}
@@ -1721,11 +1813,10 @@ const Activity: FC<ActivityProps> = ({
                             >
                               <span>
                                 {selectedLeadIds.length > 0
-                                  ? `${selectedLeadIds.length} ${
-                                      selectedLeadIds.length === 1
-                                        ? "lead"
-                                        : "leads"
-                                    } selected`
+                                  ? `${selectedLeadIds.length} ${selectedLeadIds.length === 1
+                                    ? "lead"
+                                    : "leads"
+                                  } selected`
                                   : "Select leads"}
                               </span>
                               <ChevronRight className="w-4 h-4 opacity-70" />
@@ -1822,13 +1913,11 @@ const Activity: FC<ActivityProps> = ({
                                   className="bg-white/10 text-white border border-white/20 text-xs flex items-center gap-1 w-full justify-between hover:bg-white/20"
                                 >
                                   {(() => {
-                                    const text = `${
-                                      leadItem.name || "Lead"
-                                    } · ${
-                                      leadItem.companyName ||
+                                    const text = `${leadItem.name || "Lead"
+                                      } · ${leadItem.companyName ||
                                       leadItem.position ||
                                       "Unknown"
-                                    }`;
+                                      }`;
                                     return (
                                       <Tooltip>
                                         <TooltipTrigger asChild>
@@ -1939,9 +2028,8 @@ const Activity: FC<ActivityProps> = ({
         title="Delete meeting?"
         description={
           meetingPendingDelete
-            ? `This will permanently delete "${
-                meetingPendingDelete.subject || "this meeting"
-              }" from your Microsoft calendar and remove it from the lead's record.`
+            ? `This will permanently delete "${meetingPendingDelete.subject || "this meeting"
+            }" from your Microsoft calendar and remove it from the lead's record.`
             : undefined
         }
         confirmText="Delete meeting"
