@@ -1017,7 +1017,7 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
                       } else {
                         return (
                           <div
-                            className="flex flex-col gap-4 text-left cursor-pointer hover:bg-white/5 p-4 rounded-lg transition-colors border border-white/10"
+                            className="flex flex-col gap-4 text-left  cursor-pointer hover:bg-white/5 p-4 rounded-lg transition-colors border border-white/10"
                             onClick={() => setShowNotesDetailModal(true)}
                           >
                             {/* Preview Summary */}
@@ -1103,7 +1103,7 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
             </div>
 
             {/* Modal Content */}
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="flex-1 overflow-y-auto p-6 scrollbar-hide">
               {(() => {
                 const notes = meetingNotes[selectedMeeting._id];
                 if (!notes) return null;

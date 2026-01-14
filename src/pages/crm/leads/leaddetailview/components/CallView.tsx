@@ -25,6 +25,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { FollowupGenerator } from "./FollowupGenerator";
 
 type CallViewProps = {
   lead?: Lead;
@@ -1553,7 +1554,19 @@ export const CallView = ({
                   </div>
                 ) : (
                   <div className="flex flex-col gap-4">
-                    {/* Follow-up Content */}
+                    {/* Multi-Channel Follow-up Generator */}
+                    <div className="flex flex-col gap-2">
+                       <h3 className="text-xs font-semibold text-white/80">
+                        AI Follow-up Drafts
+                      </h3>
+                      <FollowupGenerator 
+                        callLogId={selectedCallLog._id} 
+                        transcript={selectedCallLog.transcriptionText || selectedCallLog.elevenlabsTranscript || ""}
+                      />
+                    </div>
+
+                    {/* Follow-up Content - COMMENTED OUT AS PER USER REQUEST */}
+                    {/* 
                     {selectedCallLog.leadSuccessScore !== null &&
                     selectedCallLog.leadSuccessScore !== undefined ? (
                       <div className="flex flex-col gap-2">
@@ -1583,7 +1596,7 @@ export const CallView = ({
                       </div>
                     ) : null}
 
-                    {/* Follow-up Suggestions with EditableFollowupSuggestion */}
+                    {/* Follow-up Suggestions with EditableFollowupSuggestion * /}
                     <div className="flex flex-col gap-2">
                       <h3 className="text-xs font-semibold text-white/80">
                         Follow-up Suggestions
@@ -1706,6 +1719,7 @@ export const CallView = ({
                         </div>
                       )}
                     </div>
+                    */}
                   </div>
                 )}
               </div>

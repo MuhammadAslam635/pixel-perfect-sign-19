@@ -10,6 +10,13 @@ export interface EmailBody {
   html?: string;
 }
 
+export interface EmailAttachment {
+  filename: string;
+  contentType: string;
+  size: number;
+  url: string;
+}
+
 export interface EmailDeliveryStatus {
   delivered?: boolean;
   deliveredAt?: string;
@@ -60,6 +67,7 @@ export interface Email {
     | "Client Communication"
     | "Internal Communication"
     | "All Emails";
+  attachments?: EmailAttachment[];
   createdAt: string;
   updatedAt: string;
   deletedAt?: string;
@@ -101,6 +109,7 @@ export interface SendEmailRequest {
     | "partnership"
     | "general";
   customInstructions?: string;
+  attachments?: File[];
 }
 
 export interface SendEmailResponse {

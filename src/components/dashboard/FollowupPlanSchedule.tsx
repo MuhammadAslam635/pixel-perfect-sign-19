@@ -1462,7 +1462,7 @@ const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
       </div>
 
       {/* Global Controls */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/5 border border-white/10 p-4 rounded-lg">
+      {/* <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/5 border border-white/10 p-4 rounded-lg">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             <span className="text-white/60 text-sm">Time:</span>
@@ -1488,7 +1488,7 @@ const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
                 <polyline points="12,6 12,12 16,14"></polyline>
               </svg>
             </div>
-            {/* global apply removed - changing time now enables Save All Changes */}
+            global apply removed - changing time now enables Save All Changes
           </div>
 
           <div className="flex items-center gap-2">
@@ -1505,7 +1505,7 @@ const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
             </Button>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Plan Overview */}
       <div className="mb-6 p-4 rounded-lg bg-white/5 border border-white/10">
@@ -1623,7 +1623,7 @@ const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
                         variant="outline"
                         size="sm"
                         className={`${dayHasChanges(day.day) && !isUpdating
-                          ? "text-white border-white/20 hover:bg-white/10"
+                          ? "bg-cyan-500 hover:bg-cyan-600 text-white"
                           : "text-white/40 border-white/10 bg-white/5 cursor-not-allowed"
                           }`}
                       >

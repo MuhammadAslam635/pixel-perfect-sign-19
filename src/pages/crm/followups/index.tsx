@@ -419,10 +419,16 @@ const FollowupTemplatesPage = () => {
   };
 
   const getTemplateTitle = (plan: FollowupPlan) => {
-    if (typeof plan.templateId === "string") {
-      return "Followup Plan";
-    }
-    return plan.templateId?.title || "Followup Plan";
+    // Prefer the stored template snapshot so UI reflects the plan as it was
+    // when it was started rather than any later edits to the template.
+    const templateSource =
+      (plan as any).templateSnapshot && typeof (plan as any).templateSnapshot === "object"
+        ? (plan as any).templateSnapshot
+        : typeof plan.templateId === "object"
+        ? plan.templateId
+        : undefined;
+
+    return templateSource?.title ?? "Followup Plan";
   };
 
   const getPlanStatusBadgeClass = (status: string) => {

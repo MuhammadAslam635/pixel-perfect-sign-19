@@ -20,8 +20,42 @@ export const emailService = {
    */
   sendEmail: async (data: SendEmailRequest): Promise<SendEmailResponse> => {
     try {
-      const response = await API.post("/emails/send", data);
-      return response.data;
+      if (data.attachments && data.attachments.length > 0) {
+        const formData = new FormData();
+        
+        // Append all text fields
+        Object.keys(data).forEach((key) => {
+          if (key !== "attachments") {
+            const value = data[key as keyof SendEmailRequest];
+            if (Array.isArray(value)) {
+              // For arrays like 'to', 'cc', we likely need to append them individually or as JSON
+              // Mailgun often accepts comma-separated strings or repeated fields.
+              // Let's assume the backend controller expects them parsed.
+              // Since we are changing backend, we can decide how to handle.
+              // Safest is to append as is, axios serializes array slightly differently.
+              // But usually for FormData, we append each item with same key.
+              value.forEach((item) => formData.append(key, item));
+            } else if (value !== undefined) {
+              formData.append(key, String(value));
+            }
+          }
+        });
+
+        // Append files
+        data.attachments.forEach((file) => {
+          formData.append("attachments", file);
+        });
+
+        const response = await API.post("/emails/send", formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+        return response.data;
+      } else {
+        const response = await API.post("/emails/send", data);
+        return response.data;
+      }
     } catch (error: any) {
       throw error;
     }
