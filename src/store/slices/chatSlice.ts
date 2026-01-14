@@ -76,6 +76,11 @@ const chatSlice = createSlice({
   reducers: {
     // Chat selection
     setSelectedChatId: (state, action: PayloadAction<string | null>) => {
+      // Save current composer value to cache before switching
+      if (state.selectedChatId && state.composerValue !== undefined) {
+        state.composerValuesByChat[state.selectedChatId] = state.composerValue;
+      }
+      
       state.selectedChatId = action.payload;
       // Restore composer value for this chat
       state.composerValue = state.composerValuesByChat[action.payload || ""] || "";
@@ -88,10 +93,15 @@ const chatSlice = createSlice({
 
     // Composer management
     setComposerValue: (state, action: PayloadAction<string>) => {
+      // Only update the current composerValue (not the per-chat cache)
+      // This prevents unnecessary state updates on every keystroke
       state.composerValue = action.payload;
-      // Store per-chat composer value
-      if (state.selectedChatId) {
-        state.composerValuesByChat[state.selectedChatId] = action.payload;
+    },
+    
+    // Save composer value to per-chat cache (called when switching chats or sending messages)
+    saveComposerValueToCache: (state) => {
+      if (state.selectedChatId && state.composerValue !== undefined) {
+        state.composerValuesByChat[state.selectedChatId] = state.composerValue;
       }
     },
 
@@ -290,6 +300,7 @@ export const {
   setSelectedChatId,
   setIsMobileListOpen,
   setComposerValue,
+  saveComposerValueToCache,
   setComposerValuesByChat,
   setSearchTerm,
   setPendingFile,

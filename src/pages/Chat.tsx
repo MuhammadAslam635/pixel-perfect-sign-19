@@ -25,7 +25,6 @@ import { StreamEvent, sendStreamingChatMessage } from "@/services/chat.service";
 import {
   setSelectedChatId,
   setIsMobileListOpen,
-  setComposerValue,
   setSearchTerm,
   setPendingFile,
   setIsCreatingNewChat,
@@ -52,8 +51,6 @@ import {
   updateTask,
 } from "@/store/slices/longRunningTasksSlice";
 
-const NEW_CHAT_KEY = "__new_chat__";
-
 const ChatPage = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -67,12 +64,6 @@ const ChatPage = () => {
   );
   const temporaryChat = useSelector(
     (state: RootState) => state.chat.temporaryChat
-  );
-  const composerValue = useSelector(
-    (state: RootState) => state.chat.composerValue
-  );
-  const composerValuesByChat = useSelector(
-    (state: RootState) => state.chat.composerValuesByChat
   );
   const searchTerm = useSelector((state: RootState) => state.chat.searchTerm);
   const pendingFile = useSelector((state: RootState) => state.chat.pendingFile);
@@ -279,12 +270,6 @@ const ChatPage = () => {
     setSearchParams(nextParams);
   }, [searchParams, setSearchParams, dispatch]);
 
-  // Restore composer value when selected chat changes
-  useEffect(() => {
-    const chatKey = selectedChatId ?? NEW_CHAT_KEY;
-    const savedValue = composerValuesByChat[chatKey] ?? "";
-    dispatch(setComposerValue(savedValue));
-  }, [selectedChatId]); // Only depend on selectedChatId
 
   // Focus input when navigating from widget
   useEffect(() => {
@@ -314,9 +299,6 @@ const ChatPage = () => {
 
     dispatch(setSelectedChatId(chatId));
     dispatch(setIsMobileListOpen(false));
-
-    // Restore composer value for the selected chat
-    dispatch(setComposerValue(composerValuesByChat[chatId] ?? ""));
   };
 
   type SendMessageContext = {
@@ -343,8 +325,7 @@ const ChatPage = () => {
           createdAt: new Date().toISOString(),
         };
 
-        // Clear composer value and pending file
-        dispatch(setComposerValue(""));
+        // Clear pending file (composer is already cleared locally)
         dispatch(setPendingFile(null));
 
         // Add optimistic message
@@ -435,8 +416,7 @@ const ChatPage = () => {
           dispatch(removeOptimisticMessages(context.chatKey));
         }
 
-        // Restore composer value and pending file on error
-        dispatch(setComposerValue(variables.message));
+        // Restore pending file on error (can't restore input as it's local state)
         dispatch(setPendingFile(variables.file ?? null));
 
         toast({
@@ -449,18 +429,18 @@ const ChatPage = () => {
       },
     });
 
-  const handleSendMessage = () => {
+  const handleSendMessage = (message: string) => {
     if (isSendingMessage || isStreaming) {
       return;
     }
 
-    const trimmedMessage = composerValue.trim();
+    const trimmedMessage = message.trim();
     if (!trimmedMessage) {
       return;
     }
 
     if (useStreaming) {
-      handleSendStreamingMessage();
+      handleSendStreamingMessage(trimmedMessage);
     } else {
       mutateSendMessage({
         message: trimmedMessage,
@@ -470,12 +450,12 @@ const ChatPage = () => {
     }
   };
 
-  const handleSendStreamingMessage = async () => {
+  const handleSendStreamingMessage = async (message: string) => {
     if (isSendingMessage || isStreaming) {
       return;
     }
 
-    const trimmedMessage = composerValue.trim();
+    const trimmedMessage = message.trim();
     if (!trimmedMessage) {
       return;
     }
@@ -500,8 +480,7 @@ const ChatPage = () => {
       createdAt: new Date().toISOString(),
     };
 
-    // Clear composer value and pending file
-    dispatch(setComposerValue(""));
+    // Clear pending file (composer is already cleared locally)
     dispatch(setPendingFile(null));
 
     // Add optimistic message
@@ -719,8 +698,7 @@ const ChatPage = () => {
         })
       );
 
-      // Restore composer value and pending file on error
-      dispatch(setComposerValue(trimmedMessage));
+      // Restore pending file on error (can't restore input as it's local state)
       dispatch(setPendingFile(pendingFile));
 
       toast({
@@ -773,9 +751,8 @@ const ChatPage = () => {
         dispatch(clearTemporaryChat());
         dispatch(removeOptimisticMessages(NEW_CHAT_KEY));
 
-        // Clear composer value and pending file
-        dispatch(setComposerValue(""));
-        dispatch(setPendingFile(null));
+    // Clear pending file (composer is already cleared locally)
+    dispatch(setPendingFile(null));
 
         // Select the first available chat if there are any
         if (chatList.length > 0) {
@@ -819,7 +796,6 @@ const ChatPage = () => {
         } else {
           dispatch(setSelectedChatId(null));
         }
-        dispatch(setComposerValue(""));
         dispatch(setPendingFile(null));
         dispatch(setIsCreatingNewChat(false));
       }
@@ -1056,8 +1032,6 @@ const ChatPage = () => {
                     ) : null}
 
                     <ChatComposer
-                      value={composerValue}
-                      onChange={(value) => dispatch(setComposerValue(value))}
                       onSend={handleSendMessage}
                       isSending={isSendingMessage}
                       isAwaitingResponse={isSendingMessage}
