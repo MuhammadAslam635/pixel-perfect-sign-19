@@ -243,7 +243,8 @@ const LeadChat = ({
   );
   const [proposalMessage, setProposalMessage] = useState("");
   const [proposalPdfText, setProposalPdfText] = useState<string>("");
-  const [isGeneratingProposalMessage, setIsGeneratingProposalMessage] = useState(false);
+  const [isGeneratingProposalMessage, setIsGeneratingProposalMessage] =
+    useState(false);
   const [pendingAttachmentTrigger, setPendingAttachmentTrigger] =
     useState(false);
 
@@ -1256,25 +1257,31 @@ const LeadChat = ({
     try {
       // Use pdf.js library to extract text
       const arrayBuffer = await file.arrayBuffer();
-      const loadingTask = (window as any).pdfjsLib.getDocument({ data: arrayBuffer });
+      const loadingTask = (window as any).pdfjsLib.getDocument({
+        data: arrayBuffer,
+      });
       const pdf = await loadingTask.promise;
-      
-      let fullText = '';
-      
+
+      let fullText = "";
+
       // Extract text from all pages
       for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
         const textContent = await page.getTextContent();
-        const pageText = textContent.items.map((item: any) => item.str).join(' ');
-        fullText += pageText + '\n\n';
+        const pageText = textContent.items
+          .map((item: any) => item.str)
+          .join(" ");
+        fullText += pageText + "\n\n";
       }
-      
+
       return fullText.trim();
     } catch (error) {
-      console.error('Error extracting text from PDF:', error);
-      
+      console.error("Error extracting text from PDF:", error);
+
       // Fallback: use simple file name and metadata
-      return `PDF File: ${file.name}\nSize: ${(file.size / 1024 / 1024).toFixed(2)} MB\nType: ${file.type}`;
+      return `PDF File: ${file.name}\nSize: ${(file.size / 1024 / 1024).toFixed(
+        2
+      )} MB\nType: ${file.type}`;
     }
   };
 
@@ -1305,14 +1312,18 @@ const LeadChat = ({
       };
 
       // Call API to generate message
-      const response = await API.post('/connection-messages/proposal-email-message', {
-        personId: lead._id,
-        companyId: lead.companyId,
-        context: context,
-      });
+      const response = await API.post(
+        "/connection-messages/proposal-email-message",
+        {
+          personId: lead._id,
+          companyId: lead.companyId,
+          context: context,
+        }
+      );
 
-      const generated = response.data?.data?.message?.trim() || response.data?.message?.trim();
-      
+      const generated =
+        response.data?.data?.message?.trim() || response.data?.message?.trim();
+
       if (generated) {
         setProposalMessage(generated);
         toast.success("Email message generated successfully!");
@@ -4088,13 +4099,18 @@ const LeadChat = ({
                           <div className="relative">
                             <textarea
                               value={proposalMessage}
-                              onChange={(e) => setProposalMessage(e.target.value)}
+                              onChange={(e) =>
+                                setProposalMessage(e.target.value)
+                              }
                               placeholder="Write a message to accompany your proposal..."
                               className="w-full min-h-[120px] rounded-xl bg-white/5 border border-white/10 p-4 text-sm text-white placeholder:text-white/30 outline-none focus:border-white/30 transition-all resize-none"
                             />
                             <button
                               onClick={handleGenerateProposalMessage}
-                              disabled={isGeneratingProposalMessage || !proposalAttachment}
+                              disabled={
+                                isGeneratingProposalMessage ||
+                                !proposalAttachment
+                              }
                               className="absolute bottom-3 right-3 p-2 rounded-lg bg-gradient-to-br from-purple-500/20 to-blue-500/20 hover:from-purple-500/30 hover:to-blue-500/30 border border-purple-500/30 text-purple-300 hover:text-purple-200 transition-all disabled:opacity-40 disabled:cursor-not-allowed group"
                               title="Generate message with AI"
                             >
