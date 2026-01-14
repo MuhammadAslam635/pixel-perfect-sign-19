@@ -1438,11 +1438,6 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
                     >
                       {transformCompanyTable(displayContent)}
                     </ReactMarkdown>
-                    {isAssistant && msg.confidence !== undefined && msg.confidence !== null && (
-                      <div className="mt-2 text-[10px] text-white/40 leading-none">
-                        Confidence: {Math.round(msg.confidence * 100)}%
-                      </div>
-                    )}
                   </div>
                   {isAssistant && confidenceScore !== null && confidenceScore >= 0 && (
                     <ConfidenceBadge score={confidenceScore} />
