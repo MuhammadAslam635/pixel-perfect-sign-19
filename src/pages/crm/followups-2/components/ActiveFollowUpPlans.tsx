@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef, useEffect, memo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -34,11 +34,17 @@ import { isAxiosError } from "axios";
 
 // Transform API plan data to component format
 const transformPlanData = (plan: FollowupPlan) => {
-  // Get plan name from template
-  const planName =
-    typeof plan.templateId === "object" && plan.templateId?.title
-      ? plan.templateId.title
-      : "Follow up campaign";
+  // Prefer a snapshot stored on the plan (immutable at creation time) so
+  // editing the original template later does NOT mutate the plan display.
+  const templateSource =
+    (plan as any).templateSnapshot && typeof (plan as any).templateSnapshot === "object"
+      ? (plan as any).templateSnapshot
+      : typeof plan.templateId === "object"
+      ? plan.templateId
+      : null;
+
+  // Get plan name from snapshot or populated template
+  const planName = templateSource?.title ?? "Follow up campaign";
 
   // Format date as "03 - Dec - 2025"
   const startDate = new Date(plan.startDate);
@@ -47,23 +53,18 @@ const transformPlanData = (plan: FollowupPlan) => {
   const year = startDate.getFullYear();
   const formattedDate = `${day} - ${month} - ${year}`;
 
-  // Get time of day to run from template (convert UTC to local time)
-  const timeOfDayToRun =
-    typeof plan.templateId === "object" && plan.templateId?.timeOfDayToRun
-      ? plan.templateId.timeOfDayToRun
-      : "09:00";
+  // Get time of day to run from snapshot/template (convert UTC to local time)
+  const timeOfDayToRun = templateSource?.timeOfDayToRun ?? "09:00";
 
   // Get timezone from metadata
   const timezone = (plan.metadata?.timezone as string) || "UTC";
 
-  // Calculate total days from todo items or template
+  // Calculate total days from todo items or snapshot/template
   const maxDay = Math.max(...plan.todo.map((task) => task.day || 0), 1);
   const totalDays =
-    (typeof plan.templateId === "object" && plan.templateId?.numberOfDaysToRun
-      ? parseInt(plan.templateId.numberOfDaysToRun)
-      : null) ||
-    maxDay ||
-    7;
+    (templateSource && templateSource.numberOfDaysToRun
+      ? parseInt(templateSource.numberOfDaysToRun as any)
+      : null) || maxDay || 7;
 
   // Calculate current progress day based on completed tasks
   const today = new Date();
@@ -112,8 +113,6 @@ const transformPlanData = (plan: FollowupPlan) => {
     totalDays,
     cumulativeCounts,
     originalPlan: plan, // Keep reference to original plan for modal
-
-
   };
 };
 
@@ -151,6 +150,10 @@ const ActiveFollowUpPlans = () => {
   } = useFollowupPlans({
     limit: 100, // Get all active plans
   });
+
+  useEffect(() => {
+    console.debug("[ActiveFollowUpPlans] plansData changed", { plansData });
+  }, [plansData]);
 
   // Fetch schedule data for selected plan
   const { data: planScheduleData, isLoading: isPlanScheduleLoading } =
@@ -459,4 +462,6 @@ const ActiveFollowUpPlans = () => {
   );
 };
 
-export default ActiveFollowUpPlans;
+ActiveFollowUpPlans.displayName = "ActiveFollowUpPlans";
+
+export default memo(ActiveFollowUpPlans);

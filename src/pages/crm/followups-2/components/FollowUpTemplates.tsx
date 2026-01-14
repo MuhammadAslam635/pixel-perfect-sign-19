@@ -473,7 +473,7 @@ const FollowUpTemplates = forwardRef<
                         </div>
 
                         {/* Calendar */}
-                        <div className="flex items-center gap-2 text-sm ml-auto">
+                        {/* <div className="flex items-center gap-2 text-sm ml-auto">
                           <Calendar
                             className="w-5 h-5 text-[#5A9EA1]"
                             strokeWidth={2}
@@ -504,7 +504,7 @@ const FollowUpTemplates = forwardRef<
                               }
                             })()}
                           </span>
-                        </div>
+                        </div> */}
                       </div>
 
                       {/* Communication Channels Row */}
@@ -578,8 +578,8 @@ const FollowUpTemplates = forwardRef<
                       </div>
 
                       {/* Footer: Day Time and Run Button */}
-                      <div className="flex items-center justify-between pt-2">
-                        <span
+                      {/* <div className="flex items-center justify-between pt-2"> */}
+                        {/* <span
                           style={{
                             fontFamily: "Inter",
                             fontWeight: 400,
@@ -603,7 +603,7 @@ const FollowUpTemplates = forwardRef<
                               return template.timeOfDayToRun;
                             }
                           })()}
-                        </span>
+                        </span> */}
                         {/* <Button
                           variant="ghost"
                           size="sm"
@@ -640,7 +640,7 @@ const FollowUpTemplates = forwardRef<
                             {isCreatingPlan ? "Creating..." : "Run Templates"}
                           </span>
                         </Button> */}
-                      </div>
+                      {/* </div> */}
                     </CardContent>
                   </Card>
                 );
@@ -826,7 +826,7 @@ const FollowUpTemplates = forwardRef<
                 onClick={handleConfirmRunTemplate}
                 disabled={isCreatingPlan || selectedLeadIds.length === 0}
                 className="bg-primary hover:bg-primary/90 text-white transition-all text-xs disabled:opacity-50"
-              >
+              >Day time: 09:00 AM
                 {isCreatingPlan ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />

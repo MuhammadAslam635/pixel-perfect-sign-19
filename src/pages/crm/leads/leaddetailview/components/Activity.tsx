@@ -788,10 +788,16 @@ const Activity: FC<ActivityProps> = ({
   const nowTimestamp = todayRef.getTime();
 
   const getTemplateTitle = (plan: FollowupPlan) => {
-    if (typeof plan.templateId === "string") {
-      return "Followup Plan";
-    }
-    return plan.templateId?.title || "Followup Plan";
+    // Prefer an immutable snapshot stored on the plan (created at plan start)
+    // so updates to the template later do NOT mutate the displayed plan title.
+    const templateSource =
+      (plan as any).templateSnapshot && typeof (plan as any).templateSnapshot === "object"
+        ? (plan as any).templateSnapshot
+        : typeof plan.templateId === "object"
+        ? plan.templateId
+        : undefined;
+
+    return templateSource?.title ?? "Followup Plan";
   };
 
   const getDisplayTime = (scheduledFor?: string, isComplete?: boolean) => {
@@ -1701,7 +1707,7 @@ const Activity: FC<ActivityProps> = ({
                         </Select>
                       </div>
 
-                      <div className="space-y-2">
+                      {/* <div className="space-y-2">
                         <span className="text-xs text-white/60">Leads</span>
                         <Popover
                           open={leadSelectorOpen}
@@ -1853,13 +1859,13 @@ const Activity: FC<ActivityProps> = ({
                             })}
                           </div>
                         )}
-                      </div>
+                      </div> */}
 
                       <div className="flex items-center justify-between flex-wrap gap-3 pt-2 border-t border-white/10">
-                        <div className="text-xs text-white/60">
+                        {/* <div className="text-xs text-white/60">
                           Each selected lead will get a personalized followup
                           plan using the template above.
-                        </div>
+                        </div> */}
                         <Button
                           onClick={handleRunFollowupPlan}
                           disabled={isCreatingFollowupPlan}

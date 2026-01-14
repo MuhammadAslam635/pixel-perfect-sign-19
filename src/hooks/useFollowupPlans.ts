@@ -20,6 +20,8 @@ export const useFollowupPlans = (params: FollowupPlansQueryParams = {}) => {
   return useQuery({
     queryKey: followupPlanKeys.list(params),
     queryFn: () => followupPlansService.getPlans(params),
+    refetchOnMount: false,  
+    refetchOnWindowFocus: false,
   });
 };
 
