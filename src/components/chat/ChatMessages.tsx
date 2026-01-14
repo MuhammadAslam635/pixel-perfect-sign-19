@@ -372,21 +372,16 @@ const ChatMessages = ({
   const ConfidenceBadge: FC<{ score: number }> = ({ score }) => {
     // Determine color based on confidence score
     const getColorClass = (score: number): string => {
-      if (score >= 70) return "bg-green-500/20 border-green-500/50 text-green-400";
-      if (score >= 40) return "bg-yellow-500/20 border-yellow-500/50 text-yellow-400";
-      return "bg-red-500/20 border-red-500/50 text-red-400";
+      if (score >= 70) return "text-green-400";
+      if (score >= 40) return "text-yellow-400";
+      return "text-red-400";
     };
 
     return (
-      <div
-        className={cn(
-          "mt-1.5 flex items-center gap-1.5 justify-end self-end",
-          "px-2.5 py-1.5 rounded-md border text-xs font-medium w-fit shrink-0",
-          getColorClass(score)
-        )}
-      >
-        <span className="text-[10px] font-semibold opacity-80 leading-none">Confidence</span>
-        <span className="font-bold leading-none">{score}%</span>
+      <div className="text-[10px] text-right mt-1 opacity-70">
+        <span className={cn("font-medium", getColorClass(score))}>
+          Confidence: {score}%
+        </span>
       </div>
     );
   };
