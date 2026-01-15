@@ -1413,9 +1413,9 @@ const LeadChat = ({
     const finalLines = html.split("\n");
     for (let i = 0; i < finalLines.length; i++) {
       const line = finalLines[i].trim();
-      
+
       // Check if line is a block element
-      const isBlockElement = 
+      const isBlockElement =
         line.startsWith("<h") ||
         line.startsWith("<ul") ||
         line.startsWith("<ol") ||
@@ -2954,7 +2954,7 @@ const LeadChat = ({
       // Parse markdown content into structured elements
       // First, decode any HTML entities in the content
       const decodeHtmlEntities = (text: string) => {
-        const textarea = document.createElement('textarea');
+        const textarea = document.createElement("textarea");
         textarea.innerHTML = text;
         return textarea.value;
       };
@@ -2965,7 +2965,9 @@ const LeadChat = ({
       const maxContentY = pageHeight - footerHeight - 10;
       const maxWidth = contentWidth;
 
-      console.log(`Processing ${markdownLines.length} lines for PDF generation`);
+      console.log(
+        `Processing ${markdownLines.length} lines for PDF generation`
+      );
 
       for (let i = 0; i < markdownLines.length; i++) {
         const line = markdownLines[i];
@@ -3350,7 +3352,9 @@ const LeadChat = ({
         }
       }
 
-      console.log(`PDF generation completed. Processed all ${markdownLines.length} lines`);
+      console.log(
+        `PDF generation completed. Processed all ${markdownLines.length} lines`
+      );
 
       const fileName = `Proposal_${(displayName || "Lead").replace(
         /\s+/g,
