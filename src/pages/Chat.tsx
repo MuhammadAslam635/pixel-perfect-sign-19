@@ -51,6 +51,8 @@ import {
   updateTask,
 } from "@/store/slices/longRunningTasksSlice";
 
+const NEW_CHAT_KEY = "__new_chat__";
+
 const ChatPage = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
