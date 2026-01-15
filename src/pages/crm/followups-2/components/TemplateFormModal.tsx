@@ -112,20 +112,22 @@ const TemplateFormModal = ({
     useUpdateFollowupTemplate();
 
   useEffect(() => {
-    if (mode === "edit" && template) {
-      form.reset({
-        title: template.title,
-        startDate: undefined, // Not shown in form
-        numberOfDaysToRun: template.numberOfDaysToRun,
-        numberOfEmails: template.numberOfEmails,
-        numberOfCalls: template.numberOfCalls,
-        numberOfWhatsappMessages: template.numberOfWhatsappMessages,
-        timeOfDayToRun: template.timeOfDayToRun || "09:00",
-      });
-    } else if (mode === "create") {
-      form.reset(defaultFormValues);
+    if (open) {
+      if (mode === "edit" && template) {
+        form.reset({
+          title: template.title,
+          startDate: undefined, // Not shown in form
+          numberOfDaysToRun: String(template.numberOfDaysToRun),
+          numberOfEmails: String(template.numberOfEmails),
+          numberOfCalls: String(template.numberOfCalls),
+          numberOfWhatsappMessages: String(template.numberOfWhatsappMessages),
+          timeOfDayToRun: template.timeOfDayToRun || "09:00",
+        });
+      } else if (mode === "create") {
+        form.reset(defaultFormValues);
+      }
     }
-  }, [mode, template, form]);
+  }, [open, mode, template]);
 
   const closeForm = () => {
     onOpenChange(false);
