@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { Loader2, Copy, Check, Mail, MessageSquare, Send } from "lucide-react";
+import { Loader2, Copy, Check, Mail, MessageSquare, Send, RefreshCw } from "lucide-react";
 import { IoLogoWhatsapp } from "react-icons/io5";
 import API from "@/utils/api";
 import { useToast } from "@/hooks/use-toast";
@@ -34,28 +34,38 @@ export const FollowupGenerator: React.FC<FollowupGeneratorProps> = ({
   const [copied, setCopied] = useState<Channel | null>(null);
   const { toast } = useToast();
 
-  useEffect(() => {
-    const fetchMessages = async () => {
-      if (!callLogId) return;
-      setLoading(true);
-      try {
-        const response = await API.get(`/twilio/calls/${callLogId}/followup-messages`);
-        setMessages(response.data);
-      } catch (error: any) {
-        console.error("Failed to generate follow-up messages", error);
+  const fetchMessages = async (regenerate = false) => {
+    if (!callLogId) return;
+    setLoading(true);
+    try {
+      // Pass regenerate=true query param if forcing a refresh
+      const response = await API.get(`/twilio/calls/${callLogId}/followup-messages${regenerate ? '?regenerate=true' : ''}`);
+      setMessages(response.data);
+      if (regenerate) {
         toast({
-          title: "Error",
-          description: "Failed to generate follow-up messages. Using transcript to create draft...",
-          variant: "destructive",
+          title: "Drafts Regenerated",
+          description: "New follow-up messages have been generated.",
         });
-        // Fallback or empty state handled by UI
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (error: any) {
+      console.error("Failed to generate follow-up messages", error);
+      toast({
+        title: "Error",
+        description: "Failed to generate follow-up messages.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchMessages();
-  }, [callLogId, toast]);
+  }, [callLogId]);
+
+  const handleRegenerate = () => {
+    fetchMessages(true);
+  };
 
   const handleCopy = () => {
     const message = messages[activeChannel];
@@ -180,21 +190,26 @@ export const FollowupGenerator: React.FC<FollowupGeneratorProps> = ({
                 className="w-full flex-1 p-4 text-xs text-white/80 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-cyan-500/50 resize-none scrollbar-hide leading-relaxed"
                 placeholder={`No ${activeChannel} draft available.`}
               />
-              {/* <button
-                onClick={handleCopy}
-                className="absolute top-3 right-3 p-2 rounded-lg bg-white/5 border border-white/10 text-white/40 hover:text-white hover:bg-white/10 transition-all opacity-0 group-hover:opacity-100"
-                title="Copy to clipboard"
-              >
-                {copied === activeChannel ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-              </button> */}
+              {/* <div className="absolute top-3 right-3 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                <button
+                  onClick={handleCopy}
+                  className="p-2 rounded-lg bg-white/5 border border-white/10 text-white/40 hover:text-white hover:bg-white/10 transition-all"
+                  title="Copy to clipboard"
+                >
+                  {copied === activeChannel ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                </button>
+              </div> */}
             </div>
 
-            <div className="flex items-center justify-end gap-4 mt-1">
-              {/* <div className="flex-1">
-                <p className="text-[10px] text-white/30 italic">
-                  Review the AI-generated draft before sending.
-                </p>
-              </div> */}
+            <div className="flex items-center justify-end gap-2 mt-1">
+              <button
+                onClick={handleRegenerate}
+                className="h-7 w-7 flex items-center justify-center rounded-md border border-white/10 bg-white/5 text-white/40 hover:text-white hover:bg-white/10 transition-all"
+                title="Regenerate drafts"
+                disabled={loading}
+              >
+                 <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+              </button>
               <Button 
                 onClick={handleSend}
                 disabled={sending || !messages[activeChannel]}

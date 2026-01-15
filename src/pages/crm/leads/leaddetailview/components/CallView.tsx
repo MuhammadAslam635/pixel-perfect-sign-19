@@ -1246,8 +1246,8 @@ export const CallView = ({
                     </div>
                   </div>
 
-                  {/* Additional Info Section - Score, Transcript, Follow-up - COMMENTED OUT
-                    <div className="px-3 pb-3">
+
+                    {/* <div className="px-3 pb-3">
                       <div className="flex flex-wrap items-center gap-2">
                         {/* Success Score * /}
                         {scoreStatus === "completed" &&
@@ -1283,7 +1283,7 @@ export const CallView = ({
                           </span>
                         )}
 
-                        {/* Transcription * /}
+                        {/* Transcription - HIDDEN
                         {hasTranscript ? (
                           <Button
                             type="button"
@@ -1309,41 +1309,10 @@ export const CallView = ({
                           >
                             Transcript loading…
                           </Button>
-                        ) : null}
+                        ) : null} * /}
 
-                        {/* Follow-up * /}
-                        {followupStatus === "completed" ? (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="h-5 px-2 py-1 rounded-full border-white/20 bg-white/5 text-[0.65rem] text-white hover:bg-white/10 hover:text-white"
-                            onClick={() =>
-                              setSelectedCallLogView({
-                                type: "followup",
-                                log,
-                              })
-                            }
-                          >
-                            Follow-up
-                          </Button>
-                        ) : followupStatus === "pending" ||
-                          (isElevenLabsCall &&
-                            (followupStatus === "not-requested" ||
-                              !log.followupSuggestionSummary)) ? (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            disabled
-                            className="h-5 px-2 py-1 rounded-full border-white/10 bg-white/5 text-[0.65rem] text-white/50 cursor-not-allowed"
-                          >
-                            Follow-up loading…
-                          </Button>
-                        ) : null}
                       </div>
-                    </div>
-                    */}
+                    </div> */}
                 </div>
               );
             });
@@ -1458,7 +1427,7 @@ export const CallView = ({
               {/* Tab Content */}
               <div className="flex-1 flex flex-col min-h-0">
                 {activeTab === "recording" ? (
-                  <div className="flex flex-col gap-4">
+                  <div className="flex flex-col gap-4 pb-4">
                     {/* Audio Player */}
                     {recordingLoading ? (
                       <div className="flex items-center justify-center py-8">
@@ -1488,7 +1457,7 @@ export const CallView = ({
                       </div>
                     ) : recordingAudioUrl ? (
                       <div className="flex flex-col gap-3">
-                        <div className="rounded-lg bg-white/5 p-4 border border-white/10">
+                        <div className="w-full">
                           <audio
                             controls
                             src={recordingAudioUrl}
@@ -1538,7 +1507,7 @@ export const CallView = ({
                       ) : selectedCallLog.transcriptionText ||
                         selectedCallLog.elevenlabsTranscript ? (
                         <div className="py-3 px-4 rounded-lg bg-white/5 border border-white/10 text-left">
-                          <p className="text-sm text-white/80 leading-relaxed whitespace-pre-wrap">
+                          <p className="text-sm text-white/80 leading-relaxed whitespace-pre-wrap break-words">
                             {selectedCallLog.transcriptionText ||
                               selectedCallLog.elevenlabsTranscript}
                           </p>
@@ -2293,3 +2262,4 @@ export const CallView = ({
     </div>
   );
 };
+
