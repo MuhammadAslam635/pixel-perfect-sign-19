@@ -62,7 +62,25 @@ const GoalSettingsModal: React.FC<GoalSettingsModalProps> = ({
   const handleSave = async () => {
     setIsLoading(true);
     try {
-      const response = await bdrDashboardService.updateDailyGoals(goals);
+      const updatedGoals = {
+        conversationsStarted: {
+          current: currentGoals.conversationsStarted.current,
+          dailyTarget: goals.conversationsStarted.daily,
+          weeklyTarget: goals.conversationsStarted.weekly,
+        },
+        meetingsBooked: {
+          current: currentGoals.meetingsBooked.current,
+          dailyTarget: goals.meetingsBooked.daily,
+          weeklyTarget: goals.meetingsBooked.weekly,
+        },
+        qualifiedOpportunities: {
+          current: currentGoals.qualifiedOpportunities.current,
+          dailyTarget: goals.qualifiedOpportunities.daily,
+          weeklyTarget: goals.qualifiedOpportunities.weekly,
+        },
+      };
+
+      const response = await bdrDashboardService.updateDailyGoals(updatedGoals);
 
       if (response.success) {
         toast.success("Daily goals updated successfully!");

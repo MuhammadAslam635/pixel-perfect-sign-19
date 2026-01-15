@@ -62,7 +62,12 @@ const BDRDashboard: React.FC = () => {
       // Find the lead from priority queue to get phone number
       const lead = priorityQueue.find((item) => item.id === leadId);
 
-      console.log("🚀 handlePriorityAction:", { leadId, action, lead, hasPhone: !!lead?.phone });
+      console.log("🚀 handlePriorityAction:", {
+        leadId,
+        action,
+        lead,
+        hasPhone: !!lead?.phone,
+      });
 
       if (action === "email") {
         // Send follow-up email for email actions
@@ -104,7 +109,7 @@ const BDRDashboard: React.FC = () => {
         // Initiate the call
         toast.info("📞 Initiating call to " + normalizedPhone);
         console.log("🎯 Calling initiateCall with:", normalizedPhone);
-        
+
         try {
           await initiateCall(normalizedPhone);
           console.log("✅ initiateCall completed");
@@ -113,7 +118,10 @@ const BDRDashboard: React.FC = () => {
           });
         } catch (error) {
           console.error("❌ initiateCall failed:", error);
-          toast.error("Failed to initiate call: " + (error instanceof Error ? error.message : "Unknown error"));
+          toast.error(
+            "Failed to initiate call: " +
+              (error instanceof Error ? error.message : "Unknown error")
+          );
         }
       } else if (action === "meeting") {
         // For meeting actions, show talk track and prompt to schedule
