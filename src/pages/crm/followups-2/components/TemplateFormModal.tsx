@@ -137,12 +137,12 @@ const TemplateFormModal = ({
   const handleSubmitForm = (values: FollowupTemplateFormValues) => {
     const payload: FollowupTemplatePayload = {
       title: values.title,
-      startDate: undefined, // Not used in template creation, set at plan creation
+      startDate: undefined,
       numberOfDaysToRun: values.numberOfDaysToRun,
       numberOfEmails: values.numberOfEmails,
       numberOfCalls: values.numberOfCalls,
       numberOfWhatsappMessages: values.numberOfWhatsappMessages,
-      timeOfDayToRun: values.timeOfDayToRun || "09:00", // Default value for backend compatibility
+      timeOfDayToRun: values.timeOfDayToRun || "09:00",
     };
 
     if (mode === "edit" && template) {
