@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Loader2, Copy, Check, Mail, MessageSquare, Send } from "lucide-react";
+import { IoLogoWhatsapp } from "react-icons/io5";
 import API from "@/utils/api";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -142,8 +143,8 @@ export const FollowupGenerator: React.FC<FollowupGeneratorProps> = ({
 
   const channels: { id: Channel; label: string; icon: any }[] = [
     { id: "email", label: "Email", icon: Mail },
-    { id: "sms", label: "SMS", icon: Send },
-    { id: "whatsapp", label: "WhatsApp", icon: MessageSquare },
+    { id: "sms", label: "SMS", icon:  MessageSquare},
+    { id: "whatsapp", label: "WhatsApp", icon: IoLogoWhatsapp },
   ];
 
   return (
@@ -155,12 +156,11 @@ export const FollowupGenerator: React.FC<FollowupGeneratorProps> = ({
             onClick={() => setActiveChannel(channel.id)}
             className={`flex-1 flex-shrink-0 flex items-center justify-center gap-2 py-2 px-3 text-xs font-medium rounded-md transition-all whitespace-nowrap ${
               activeChannel === channel.id
-                ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/30"
+                ? "text-cyan-400 border border-transparent"
                 : "text-white/40 hover:text-white/60 border border-transparent"
             }`}
           >
-            <channel.icon className="w-3.5 h-3.5" />
-            {channel.label}
+            <channel.icon className="w-5 h-5" />
           </button>
         ))}
       </div>
