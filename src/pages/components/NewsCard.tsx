@@ -21,7 +21,8 @@ const NewsCard = ({ item, index }: NewsCardProps) => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: index * 0.05, ease: "easeOut" }}
       whileHover={{ scale: 1.01, y: -2 }}
-      className="group flex flex-col h-full bg-[#1A1A1A] border border-white/10 rounded-2xl overflow-hidden hover:border-white/20 hover:shadow-[0_8px_30px_rgba(0,0,0,0.4)] transition-colors duration-300"
+      className="group relative isolate flex flex-col h-full bg-[#1A1A1A] rounded-2xl overflow-hidden hover:shadow-[0_8px_30px_rgba(0,0,0,0.4)] transition-colors duration-300 transform-gpu"
+      style={{ WebkitMaskImage: "-webkit-radial-gradient(white, black)" }}
     >
       {/* Image Section */}
       <div className="relative h-60 w-full overflow-hidden bg-[#222]">
@@ -54,7 +55,6 @@ const NewsCard = ({ item, index }: NewsCardProps) => {
       {/* Content Section */}
       <div className="flex flex-col flex-1 p-5 gap-3">
         {/* Meta Info */}
-        {/* Meta Info */}
         <div className="flex items-center gap-1.5 text-xs text-white/40">
           <Calendar className="w-3.5 h-3.5" strokeWidth={1.5} />
           <span className="leading-none mt-[1px]">{timeAgo}</span>
@@ -84,6 +84,9 @@ const NewsCard = ({ item, index }: NewsCardProps) => {
           </div>
         </div>
       </div>
+
+      {/* Overlay Border - Fixes image overflow/bleeding issues by rendering border ON TOP */}
+      <div className="absolute inset-0 rounded-2xl border border-white/10 pointer-events-none z-10 group-hover:border-white/20 transition-colors duration-300" />
     </motion.a>
   );
 };
