@@ -1,6 +1,8 @@
 import { motion } from "framer-motion";
 import { useEffect } from "react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
+import { MOCK_NEWS_DATA } from "@/data/newsData";
+import NewsCard from "@/pages/components/NewsCard";
 
 const NewsPage = () => {
   // Disable body scrolling to match Dashboard behavior
@@ -38,7 +40,7 @@ const NewsPage = () => {
             }}
           />
           {/* Header Section */}
-          <header className="flex flex-col gap-1 flex-shrink-0 mb-6">
+          <header className="flex flex-col gap-1 flex-shrink-0 mb-6 relative z-10">
             <motion.h1
               className="text-3xl font-semibold tracking-tight text-white sm:text-4xl"
               initial={{ opacity: 0, x: -20 }}
@@ -57,45 +59,20 @@ const NewsPage = () => {
             </motion.p>
           </header>
 
-          {/* News Feed Container */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.99 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            className="flex-1 w-full rounded-2xl border border-white/5 relative overflow-hidden group shadow-2xl"
-            style={{
-              background: "#0A0A0A",
-            }}
+          {/* News Feed Grid - Custom Implementation */}
+          <div 
+             className="flex-1 w-full relative overflow-y-auto pr-2 scrollbar-hide z-10"
           >
-            {/* 
-              Width-offest trick to hide the iframe's internal scrollbar.
-              We make the iframe wider than the container and the container hides the overflow.
-            */}
-            <div className="absolute inset-0 w-full h-full overflow-hidden z-0">
-               <iframe
-                src="https://rss.app/embed/v1/wall/tpBEhxBRMkMCEw3I"
-                frameBorder="0"
-                className="absolute inset-0 h-full border-0 block"
-                style={{
-                  width: 'calc(100% + 18px)', // Push scrollbar out of view
-                  background: 'transparent',
-                  filter: 'invert(1) hue-rotate(180deg) brightness(0.85) contrast(1.2)',
-                }}
-                title="News Feed"
-              ></iframe>
+             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-6">
+                {MOCK_NEWS_DATA.map((item, index) => (
+                    <NewsCard key={item.id} item={item} index={index} />
+                ))}
             </div>
+          </div>
+          
+          {/* Bottom Fade Mask */}
+          <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A]/90 to-transparent pointer-events-none z-20" />
 
-            {/* Premium Gradient overlay - placed on top (z-30) to ensure it stays visible over the iframe */}
-            <div 
-              className="absolute inset-0 pointer-events-none z-30"
-              style={{
-                background: "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0) 38.08%, rgba(255, 255, 255, 0) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)"
-              }}
-            />
-            
-            {/* Gradient Mask at bottom - provides a smooth transition/fade */}
-            <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A]/90 to-transparent pointer-events-none z-40" />
-          </motion.div>
         </motion.section>
       </motion.main>
     </DashboardLayout>
