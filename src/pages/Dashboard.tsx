@@ -121,7 +121,7 @@ const Dashboard = () => {
     const bdrMobileLayout = (
       <main className="relative z-10 flex flex-col gap-6 px-5 pt-28 pb-12 text-white lg:hidden">
         <BDRDashboard />
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-[1050ms]">
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 animation-delay-[1050ms]">
           <MobileAssistantCTA />
         </div>
       </main>
@@ -172,28 +172,28 @@ const Dashboard = () => {
         </div>
 
         {/* Existing StatsCard */}
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-[450ms]">
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 animation-delay-[450ms]">
           <StatsCard />
         </div>
 
         {/* Row 4 - Deals at Risk (Full Width) */}
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-[600ms] px-2">
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 animation-delay-[600ms] px-2">
           <DealsAtRiskCard />
         </div>
 
         <div className="p-2 mt-6">
-          <div className="grid grid-cols-2 gap-4 lg:gap-4 mb-6 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-[600ms]">
+          <div className="grid grid-cols-2 gap-4 lg:gap-4 mb-6 animate-in fade-in slide-in-from-bottom-4 duration-500 animation-delay-[600ms]">
             <LeadsScoreDistributionCard />
             {/* <CommunicationHubCard />
             <ProposalsToSendCard /> */}
           </div>
 
-          <div className="grid grid-cols-2 gap-4 lg:gap-4 mb-6 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-[750ms]">
+          <div className="grid grid-cols-2 gap-4 lg:gap-4 mb-6 animate-in fade-in slide-in-from-bottom-4 duration-500 animation-delay-[750ms]">
             {/* <TopLeadsCard />
             <CalendarCard /> */}
           </div>
 
-          <div className="grid grid-cols-2 gap-4 lg:gap-4 mb-6 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-[900ms]">
+          <div className="grid grid-cols-2 gap-4 lg:gap-4 mb-6 animate-in fade-in slide-in-from-bottom-4 duration-500 animation-delay-[900ms]">
             {/* <FollowupTasksCard /> */}
             <div></div> {/* Empty space for balance */}
           </div>
@@ -223,31 +223,31 @@ const Dashboard = () => {
       </div>
 
       {/* Existing StatsCard */}
-      <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-[450ms]">
+      <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 animation-delay-[450ms]">
         <StatsCard />
       </div>
 
       {/* Row 4 - Deals at Risk */}
-      <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-[600ms]">
+      <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 animation-delay-[600ms]">
         <DealsAtRiskCard />
       </div>
 
       <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-[750ms]">
+        <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500 animation-delay-[750ms]">
           <LeadsScoreDistributionCard />
         </div>
 
-        <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-[900ms]">
+        <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500 animation-delay-[900ms]">
           {/* <TopLeadsCard />
           <CalendarCard /> */}
         </div>
 
-        <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-[1050ms]">
+        <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500 animation-delay-[1050ms]">
           {/* <FollowupTasksCard /> */}
         </div>
       </div>
 
-      <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-[1050ms]">
+      <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 animation-delay-[1050ms]">
         <MobileAssistantCTA />
       </div>
     </main>

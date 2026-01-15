@@ -137,15 +137,14 @@ const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-lg font-semibold text-white">Plan Overview</h3>
             <Badge
-              className={`${
-                plan.status === "completed"
-                  ? "bg-green-500/15 text-green-300 border border-green-400/30"
-                  : plan.status === "in_progress"
+              className={`${plan.status === "completed"
+                ? "bg-green-500/15 text-green-300 border border-green-400/30"
+                : plan.status === "in_progress"
                   ? "bg-blue-500/15 text-blue-200 border border-blue-400/30"
                   : plan.status === "failed"
-                  ? "bg-red-500/15 text-red-300 border border-red-400/30"
-                  : "bg-white/10 text-white border border-white/20"
-              }`}
+                    ? "bg-red-500/15 text-red-300 border border-red-400/30"
+                    : "bg-white/10 text-white border border-white/20"
+                }`}
             >
               {plan.status.replace("_", " ")}
             </Badge>
@@ -198,19 +197,18 @@ const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
                       <span className="text-white font-semibold">Day {day.day}</span>
                     </div>
                     <span className="text-white/60 text-sm">
-                      {format(dayDate, "EEEE, MMM d")}
+                      {/* {format(dayDate, "EEEE, MMM d")} */}
                     </span>
                   </div>
 
                   {dayStatus && (
                     <Badge
-                      className={`${
-                        dayStatus.status === "completed"
-                          ? "bg-green-500/15 text-green-300 border border-green-400/30"
-                          : dayStatus.status === "in_progress"
+                      className={`${dayStatus.status === "completed"
+                        ? "bg-green-500/15 text-green-300 border border-green-400/30"
+                        : dayStatus.status === "in_progress"
                           ? "bg-blue-500/15 text-blue-200 border border-blue-400/30"
                           : "bg-white/10 text-white border border-white/20"
-                      }`}
+                        }`}
                     >
                       {dayStatus.label}
                     </Badge>

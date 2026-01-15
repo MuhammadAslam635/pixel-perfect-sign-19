@@ -37,14 +37,6 @@ import {
   Phone,
   Calendar as CalendarIcon,
 } from "lucide-react";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 
 const followupTemplateSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -65,12 +57,7 @@ const followupTemplateSchema = z.object({
     .string()
     .min(1, "Number of WhatsApp messages is required")
     .regex(/^\d+$/, "Messages must be a positive number"),
-  timeOfDayToRun: z
-    .string()
-    .regex(
-      /^([01]\d|2[0-3]):([0-5]\d)$/,
-      "Time must be in HH:MM 24-hour format"
-    ),
+  timeOfDayToRun: z.string().optional(),
 });
 
 type FollowupTemplateFormValues = z.infer<typeof followupTemplateSchema>;
@@ -113,8 +100,6 @@ const TemplateFormModal = ({
   template,
 }: TemplateFormModalProps) => {
   const { toast } = useToast();
-  const timeInputRef = useRef<HTMLInputElement | null>(null);
-  const isTriggeringTimePicker = useRef(false);
 
   const form = useForm<FollowupTemplateFormValues>({
     resolver: zodResolver(followupTemplateSchema),
@@ -130,14 +115,12 @@ const TemplateFormModal = ({
     if (mode === "edit" && template) {
       form.reset({
         title: template.title,
-        startDate: template.startDate
-          ? new Date(template.startDate)
-          : undefined,
+        startDate: undefined, // Not shown in form
         numberOfDaysToRun: template.numberOfDaysToRun,
         numberOfEmails: template.numberOfEmails,
         numberOfCalls: template.numberOfCalls,
         numberOfWhatsappMessages: template.numberOfWhatsappMessages,
-        timeOfDayToRun: template.timeOfDayToRun,
+        timeOfDayToRun: template.timeOfDayToRun || "09:00",
       });
     } else if (mode === "create") {
       form.reset(defaultFormValues);
@@ -152,12 +135,12 @@ const TemplateFormModal = ({
   const handleSubmitForm = (values: FollowupTemplateFormValues) => {
     const payload: FollowupTemplatePayload = {
       title: values.title,
-      startDate: values.startDate ? values.startDate.toISOString() : undefined,
+      startDate: undefined, // Not used in template creation, set at plan creation
       numberOfDaysToRun: values.numberOfDaysToRun,
       numberOfEmails: values.numberOfEmails,
       numberOfCalls: values.numberOfCalls,
       numberOfWhatsappMessages: values.numberOfWhatsappMessages,
-      timeOfDayToRun: values.timeOfDayToRun,
+      timeOfDayToRun: values.timeOfDayToRun || "09:00", // Default value for backend compatibility
     };
 
     if (mode === "edit" && template) {
@@ -257,44 +240,6 @@ const TemplateFormModal = ({
                       </FormItem>
                     )}
                   />
-                  <FormField
-                    control={form.control}
-                    name="timeOfDayToRun"
-                    render={({ field }) => (
-                      <FormItem className="space-y-2">
-                        <FormLabel className={formLabelClasses}>Time</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Input
-                              {...field}
-                              type="time"
-                              step="60"
-                              ref={(node) => {
-                                field.ref(node);
-                                timeInputRef.current = node;
-                              }}
-                              disabled={isCreating || isUpdating}
-                              style={{ colorScheme: "dark" }}
-                              className="pl-10 bg-white/5 backdrop-blur-sm border-white/20 text-white text-xs placeholder:text-gray-400 focus:bg-white/10 focus:border-white/30 transition-all"
-                            />
-                            <svg
-                              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white pointer-events-none"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <circle cx="12" cy="12" r="10"></circle>
-                              <polyline points="12,6 12,12 16,14"></polyline>
-                            </svg>
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
 
                   <FormField
                     control={form.control}
@@ -317,51 +262,6 @@ const TemplateFormModal = ({
                             <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/80 pointer-events-none" />
                           </div>
                         </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="startDate"
-                    render={({ field }) => (
-                      <FormItem className="space-y-2">
-                        <FormLabel className={formLabelClasses}>
-                          Start Date
-                        </FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                disabled={isCreating || isUpdating}
-                                variant={"outline"}
-                                className={cn(
-                                  "w-full pl-3 text-left font-normal bg-white/5 backdrop-blur-sm border-white/20 text-white text-xs hover:bg-white/10 hover:text-white transition-all",
-                                  !field.value && "text-gray-400"
-                                )}
-                              >
-                                {field.value ? (
-                                  format(field.value, "PPP")
-                                ) : (
-                                  <span>Pick a date</span>
-                                )}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={field.value}
-                              onSelect={field.onChange}
-                              disabled={(date) =>
-                                date < new Date(new Date().setHours(0, 0, 0, 0))
-                              }
-                              initialFocus
-                            />
-                          </PopoverContent>
-                        </Popover>
                         <FormMessage />
                       </FormItem>
                     )}

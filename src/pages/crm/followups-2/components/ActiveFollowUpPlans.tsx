@@ -40,8 +40,8 @@ const transformPlanData = (plan: FollowupPlan) => {
     (plan as any).templateSnapshot && typeof (plan as any).templateSnapshot === "object"
       ? (plan as any).templateSnapshot
       : typeof plan.templateId === "object"
-      ? plan.templateId
-      : null;
+        ? plan.templateId
+        : null;
 
   // Get plan name from snapshot or populated template
   const planName = templateSource?.title ?? "Follow up campaign";
@@ -53,13 +53,39 @@ const transformPlanData = (plan: FollowupPlan) => {
   const year = startDate.getFullYear();
   const formattedDate = `${day} - ${month} - ${year}`;
 
-  // Get time of day to run from snapshot/template (convert UTC to local time)
-  const timeOfDayToRun = templateSource?.timeOfDayToRun ?? "09:00";
-
   // Get timezone from metadata
   const timezone = (plan.metadata?.timezone as string) || "UTC";
 
-  // Calculate total days from todo items or snapshot/template
+  // Get time of day to run from the first scheduled task (if available), otherwise from template
+  let timeOfDayToRun = "09:00";
+
+  if (plan.todo && plan.todo.length > 0 && plan.todo[0].scheduledFor) {
+    try {
+      const scheduledDate = new Date(plan.todo[0].scheduledFor);
+      // Format to HH:mm in the plan's timezone
+      timeOfDayToRun = new Intl.DateTimeFormat("en-GB", {
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: timezone,
+        hour12: false,
+      }).format(scheduledDate);
+    } catch (e) {
+      console.warn("Error parsing scheduled time:", e);
+      // Fallback to template time if parsing fails
+      timeOfDayToRun =
+        typeof plan.templateId === "object" && plan.templateId?.timeOfDayToRun
+          ? plan.templateId.timeOfDayToRun
+          : "09:00";
+    }
+  } else {
+    // Fallback to template time if no tasks
+    timeOfDayToRun =
+      typeof plan.templateId === "object" && plan.templateId?.timeOfDayToRun
+        ? plan.templateId.timeOfDayToRun
+        : "09:00";
+  }
+
+  // Calculate total days from todo items or template
   const maxDay = Math.max(...plan.todo.map((task) => task.day || 0), 1);
   const totalDays =
     (templateSource && templateSource.numberOfDaysToRun
@@ -370,27 +396,24 @@ const ActiveFollowUpPlans = () => {
                         <div
                           className="absolute z-10 flex flex-col items-center cursor-pointer"
                           style={{
-                            left: `calc(1rem + ${positionRatio * 100}% - ${
-                              positionRatio * 2
-                            }rem)`,
+                            left: `calc(1rem + ${positionRatio * 100}% - ${positionRatio * 2
+                              }rem)`,
                             top: "52px", // top-12 (48px) + half of h-2 (4px) = 52px (center of status bar)
                             transform: "translateX(-50%)",
                           }}
                         >
                           {/* Circular Marker */}
                           <div
-                            className={`w-4 h-4 rounded-full transition-all -mt-2 ${
-                              isCompleted
-                                ? "bg-cyan-400 border-2 border-cyan-400"
-                                : "bg-white border-2 border-white/20"
-                            }`}
+                            className={`w-4 h-4 rounded-full transition-all -mt-2 ${isCompleted
+                              ? "bg-cyan-400 border-2 border-cyan-400"
+                              : "bg-white border-2 border-white/20"
+                              }`}
                           />
 
                           {/* Day Label */}
                           <span
-                            className={`text-[10px] mt-2 whitespace-nowrap ${
-                              isCompleted ? "text-cyan-300" : "text-white/40"
-                            }`}
+                            className={`text-[10px] mt-2 whitespace-nowrap ${isCompleted ? "text-cyan-300" : "text-white/40"
+                              }`}
                           >
                             Day {dayNumber}
                           </span>
@@ -413,11 +436,9 @@ const ActiveFollowUpPlans = () => {
                     style={{
                       width:
                         plan.totalDays > 1
-                          ? `calc(${
-                              ((plan.progress - 1) / (plan.totalDays - 1)) * 100
-                            }% - ${
-                              ((plan.progress - 1) / (plan.totalDays - 1)) * 2
-                            }rem)`
+                          ? `calc(${((plan.progress - 1) / (plan.totalDays - 1)) * 100
+                          }% - ${((plan.progress - 1) / (plan.totalDays - 1)) * 2
+                          }rem)`
                           : "0",
                     }}
                   />

@@ -15,6 +15,7 @@ import {
   MapPin,
   X,
   ArrowLeft,
+  Paperclip,
 } from "lucide-react";
 import { IoLogoWhatsapp, IoLocationSharp } from "react-icons/io5";
 import jsPDF from "jspdf";
@@ -234,6 +235,18 @@ const LeadChat = ({
   const [emailEditAIQuery, setEmailEditAIQuery] = useState<string>("");
   const [isEditingEmailWithAI, setIsEditingEmailWithAI] = useState(false);
   const emailEditorRef = useRef<HTMLDivElement>(null);
+  const [attachments, setAttachments] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const proposalFileInputRef = useRef<HTMLInputElement>(null);
+  const [proposalAttachment, setProposalAttachment] = useState<File | null>(
+    null
+  );
+  const [proposalMessage, setProposalMessage] = useState("");
+  const [proposalPdfText, setProposalPdfText] = useState<string>("");
+  const [isGeneratingProposalMessage, setIsGeneratingProposalMessage] =
+    useState(false);
+  const [pendingAttachmentTrigger, setPendingAttachmentTrigger] =
+    useState(false);
 
   const [messageToDelete, setMessageToDelete] = useState<string | null>(null);
   const [openMessageMenu, setOpenMessageMenu] = useState<string | null>(null);
@@ -820,10 +833,10 @@ const LeadChat = ({
   });
 
   const emailMutation = useMutation({
-    mutationFn: (payload: { to: string[]; subject: string; text: string }) =>
-      emailService.sendEmail(payload),
+    mutationFn: (payload: any) => emailService.sendEmail(payload),
     onSuccess: () => {
       setEmailInput("");
+      setAttachments([]);
       setEmailSubject(DEFAULT_EMAIL_SUBJECT);
       setEmailSendError(null);
       queryClient.invalidateQueries({ queryKey: emailConversationQueryKey });
@@ -841,6 +854,19 @@ const LeadChat = ({
       setEmailSendError(fallbackMessage);
     },
   });
+
+  useEffect(() => {
+    if (activeTab === "Email" && pendingAttachmentTrigger) {
+      // Use a small timeout to ensure the tab content is fully rendered and the input is available
+      const timer = setTimeout(() => {
+        if (fileInputRef.current) {
+          fileInputRef.current.click();
+          setPendingAttachmentTrigger(false);
+        }
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [activeTab, pendingAttachmentTrigger]);
 
   useEffect(() => {
     if (activeTab === "WhatsApp") {
@@ -975,20 +1001,115 @@ const LeadChat = ({
     }
   };
 
-  const handleSendEmail = () => {
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+      setAttachments((prev) => [...prev, ...Array.from(files)]);
+    }
+    // Reset input value so same file can be selected again
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleProposalFileSelect = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setProposalAttachment(file);
+      setProposalContent(""); // Remove previously written proposal text
+      setProposalHtmlContent("");
+      setProposalMessage("Please find the attached business proposal.");
+    }
+    if (proposalFileInputRef.current) {
+      proposalFileInputRef.current.value = "";
+    }
+  };
+
+  const handleSendProposalViaAttachment = () => {
     if (
       !leadId ||
       !emailAddress ||
-      !emailInput.trim() ||
+      !proposalAttachment ||
       emailMutation.isPending
     ) {
       return;
     }
-    emailMutation.mutate({
-      to: [emailAddress],
-      subject: emailSubject?.trim() || DEFAULT_EMAIL_SUBJECT,
-      text: emailInput.trim(),
-    });
+
+    emailMutation.mutate(
+      {
+        to: [emailAddress],
+        subject: `Business Proposal - ${lead?.name || "Your Proposal"}`,
+        text: proposalMessage,
+        html: `<p>${proposalMessage.replace(/\n/g, "<br>")}</p>`,
+        attachments: [proposalAttachment],
+      },
+      {
+        onSuccess: async () => {
+          // Update lead stage to 'Proposal Sent'
+          if (leadId) {
+            try {
+              await leadsService.markProposalSent(leadId);
+              queryClient.invalidateQueries({ queryKey: ["lead", leadId] });
+              if (onMessageUpdate) onMessageUpdate();
+              // Clear proposal specific states
+              setProposalAttachment(null);
+              setProposalMessage("");
+              setShowProposalList(true);
+              toast.success("Proposal sent successfully!");
+            } catch (error) {
+              console.error(
+                "Failed to update lead stage after sending proposal:",
+                error
+              );
+            }
+          }
+        },
+      }
+    );
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSendEmail = () => {
+    if (
+      !leadId ||
+      !emailAddress ||
+      (!emailInput.trim() && attachments.length === 0) ||
+      emailMutation.isPending
+    ) {
+      return;
+    }
+
+    emailMutation.mutate(
+      {
+        to: [emailAddress],
+        subject: emailSubject?.trim() || DEFAULT_EMAIL_SUBJECT,
+        text: emailInput.replace(/<[^>]*>/g, "").trim(),
+        html: emailInput.trim(),
+        attachments: attachments.length > 0 ? attachments : undefined,
+      },
+      {
+        onSuccess: async () => {
+          // If attachments were sent, update lead stage to 'Proposal Sent'
+          if (attachments.length > 0 && leadId) {
+            try {
+              await leadsService.markProposalSent(leadId);
+              queryClient.invalidateQueries({ queryKey: ["lead", leadId] });
+              if (onMessageUpdate) onMessageUpdate();
+            } catch (error) {
+              console.error(
+                "Failed to update lead stage after sending proposal email:",
+                error
+              );
+            }
+          }
+        },
+      }
+    );
   };
 
   const handleGenerateEmailMessage = async () => {
@@ -1128,6 +1249,95 @@ const LeadChat = ({
       setTimeout(() => setProposalCopied(false), 2000);
     } catch (error) {
       toast.error("Failed to copy proposal.");
+    }
+  };
+
+  // Extract text from PDF file
+  const extractTextFromPDF = async (file: File): Promise<string> => {
+    try {
+      // Use pdf.js library to extract text
+      const arrayBuffer = await file.arrayBuffer();
+      const loadingTask = (window as any).pdfjsLib.getDocument({
+        data: arrayBuffer,
+      });
+      const pdf = await loadingTask.promise;
+
+      let fullText = "";
+
+      // Extract text from all pages
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items
+          .map((item: any) => item.str)
+          .join(" ");
+        fullText += pageText + "\n\n";
+      }
+
+      return fullText.trim();
+    } catch (error) {
+      console.error("Error extracting text from PDF:", error);
+
+      // Fallback: use simple file name and metadata
+      return `PDF File: ${file.name}\nSize: ${(file.size / 1024 / 1024).toFixed(
+        2
+      )} MB\nType: ${file.type}`;
+    }
+  };
+
+  // Generate message based on attached PDF
+  const handleGenerateProposalMessage = async () => {
+    if (!proposalAttachment || !lead) {
+      toast.error("No proposal attachment found");
+      return;
+    }
+
+    setIsGeneratingProposalMessage(true);
+    try {
+      // Extract text from PDF if not already extracted
+      let pdfText = proposalPdfText;
+      if (!pdfText) {
+        toast.info("Analyzing PDF content...");
+        pdfText = await extractTextFromPDF(proposalAttachment);
+        setProposalPdfText(pdfText);
+      }
+
+      // Prepare context for AI
+      const context = {
+        leadName: lead.name || displayName,
+        leadPosition: lead.position,
+        leadCompany: lead.companyName,
+        pdfFileName: proposalAttachment.name,
+        pdfContent: pdfText.substring(0, 8000), // Limit to avoid token limits
+      };
+
+      // Call API to generate message
+      const response = await API.post(
+        "/connection-messages/proposal-email-message",
+        {
+          personId: lead._id,
+          companyId: lead.companyId,
+          context: context,
+        }
+      );
+
+      const generated =
+        response.data?.data?.message?.trim() || response.data?.message?.trim();
+
+      if (generated) {
+        setProposalMessage(generated);
+        toast.success("Email message generated successfully!");
+      } else {
+        toast.error("No message was generated. Try again.");
+      }
+    } catch (error: any) {
+      const friendlyMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to generate message.";
+      toast.error(friendlyMessage);
+    } finally {
+      setIsGeneratingProposalMessage(false);
     }
   };
 
@@ -2723,11 +2933,12 @@ const LeadChat = ({
       const maxWidth = contentWidth;
 
       for (let i = 0; i < markdownLines.length; i++) {
-        const line = markdownLines[i].trim();
+        const line = markdownLines[i];
+        const trimmedLine = line.trim();
 
-        // Skip empty lines but add spacing
-        if (!line) {
-          currentY += lineHeight * 0.5;
+        // Skip completely empty lines but add minimal spacing
+        if (!trimmedLine) {
+          currentY += lineHeight * 0.3;
           continue;
         }
 
@@ -2741,12 +2952,12 @@ const LeadChat = ({
         }
 
         // Handle different markdown elements
-        if (line.startsWith("# ")) {
+        if (trimmedLine.startsWith("# ")) {
           // H1
           pdf.setFontSize(16);
           pdf.setFont("helvetica", "bold");
           pdf.setTextColor(...(textColor as [number, number, number]));
-          const text = line.substring(2);
+          const text = trimmedLine.substring(2);
           const textLines = pdf.splitTextToSize(text, maxWidth);
           textLines.forEach((textLine: string) => {
             if (currentY + lineHeight > maxContentY) {
@@ -2760,12 +2971,12 @@ const LeadChat = ({
             currentY += lineHeight + 2;
           });
           currentY += 2;
-        } else if (line.startsWith("## ")) {
+        } else if (trimmedLine.startsWith("## ")) {
           // H2
           pdf.setFontSize(14);
           pdf.setFont("helvetica", "bold");
           pdf.setTextColor(...(textColor as [number, number, number]));
-          const text = line.substring(3);
+          const text = trimmedLine.substring(3);
           const textLines = pdf.splitTextToSize(text, maxWidth);
           textLines.forEach((textLine: string) => {
             if (currentY + lineHeight > maxContentY) {
@@ -2779,12 +2990,12 @@ const LeadChat = ({
             currentY += lineHeight + 1;
           });
           currentY += 2;
-        } else if (line.startsWith("### ")) {
+        } else if (trimmedLine.startsWith("### ")) {
           // H3
           pdf.setFontSize(12);
           pdf.setFont("helvetica", "bold");
           pdf.setTextColor(...(textColor as [number, number, number]));
-          const text = line.substring(4);
+          const text = trimmedLine.substring(4);
           const textLines = pdf.splitTextToSize(text, maxWidth);
           textLines.forEach((textLine: string) => {
             if (currentY + lineHeight > maxContentY) {
@@ -2798,11 +3009,14 @@ const LeadChat = ({
             currentY += lineHeight + 1;
           });
           currentY += 1;
-        } else if (line.startsWith("- ") || line.startsWith("* ")) {
+        } else if (
+          trimmedLine.startsWith("- ") ||
+          trimmedLine.startsWith("* ")
+        ) {
           // Bullet list - handle bold text in bullets
           pdf.setFontSize(11);
           pdf.setTextColor(...(textColor as [number, number, number]));
-          const text = line.substring(2);
+          const text = trimmedLine.substring(2);
 
           // Parse bold text
           const segments = [];
@@ -2869,11 +3083,11 @@ const LeadChat = ({
           });
 
           currentY += lineHeight;
-        } else if (line.match(/^\d+\.\s/)) {
+        } else if (trimmedLine.match(/^\d+\.\s/)) {
           // Numbered list - handle bold text
           pdf.setFontSize(11);
           pdf.setTextColor(...(textColor as [number, number, number]));
-          const match = line.match(/^(\d+\.)\s(.+)/);
+          const match = trimmedLine.match(/^(\d+\.)\s(.+)/);
           if (match) {
             const number = match[1];
             const text = match[2];
@@ -2948,29 +3162,25 @@ const LeadChat = ({
 
             currentY += lineHeight;
           }
-        } else if (line.startsWith("")) {
-          // Empty line - add spacing
-          currentY += lineHeight / 2;
-        } else if (line.startsWith("---") || line.startsWith("***")) {
-          // Horizontal rule
-          pdf.setDrawColor(...(textColor as [number, number, number]));
-          pdf.setLineWidth(0.5);
-          pdf.line(margin, currentY, pageWidth - margin, currentY);
-          currentY += lineHeight;
-        } else {
-          // Regular paragraph - handle bold text
-          pdf.setFontSize(11);
+        } else if (trimmedLine.startsWith("|")) {
+          // Table row handling
+          pdf.setFontSize(10);
           pdf.setFont("helvetica", "normal");
           pdf.setTextColor(...(textColor as [number, number, number]));
 
-          // Simple bold handling - split by ** markers
-          let processedText = line;
-          // Remove markdown bold markers for now (jsPDF doesn't support inline formatting easily)
-          processedText = processedText.replace(/\*\*(.+?)\*\*/g, "$1");
-          processedText = processedText.replace(/\*(.+?)\*/g, "$1");
+          // Split by pipe and clean up
+          const cells = trimmedLine
+            .split("|")
+            .map((cell) => cell.trim())
+            .filter((cell) => cell);
 
-          const textLines = pdf.splitTextToSize(processedText, maxWidth);
-          textLines.forEach((textLine: string) => {
+          // Check if it's a separator row (contains only dashes and pipes)
+          const isSeparator = trimmedLine.match(/^\|[\s\-:]+\|/);
+
+          if (!isSeparator && cells.length > 0) {
+            // Calculate column widths (equal distribution)
+            const cellWidth = maxWidth / cells.length;
+
             if (currentY + lineHeight > maxContentY) {
               pdf.addPage();
               addBackground();
@@ -2978,9 +3188,133 @@ const LeadChat = ({
               addFooter();
               currentY = margin + headerHeight;
             }
-            pdf.text(textLine, margin, currentY);
+
+            // Render each cell
+            cells.forEach((cell, idx) => {
+              const cellX = margin + idx * cellWidth;
+              // Truncate long cell content to fit
+              const cellText = pdf.splitTextToSize(cell, cellWidth - 2);
+              pdf.text(cellText[0] || cell, cellX + 1, currentY);
+            });
+
+            // Draw border for table row
+            pdf.setDrawColor(...(dividerColor as [number, number, number]));
+            pdf.setLineWidth(0.2);
+            pdf.rect(margin, currentY - 4, maxWidth, lineHeight - 1);
+
             currentY += lineHeight;
-          });
+          } else if (isSeparator) {
+            // Draw thicker line for header separator
+            pdf.setDrawColor(...(dividerColor as [number, number, number]));
+            pdf.setLineWidth(0.5);
+            pdf.line(margin, currentY, pageWidth - margin, currentY);
+            currentY += lineHeight * 0.5;
+          }
+        } else if (trimmedLine.startsWith("")) {
+          // Empty line - add spacing
+          currentY += lineHeight / 2;
+        } else if (
+          trimmedLine.startsWith("---") ||
+          trimmedLine.startsWith("***")
+        ) {
+          // Horizontal rule
+          pdf.setDrawColor(...(textColor as [number, number, number]));
+          pdf.setLineWidth(0.5);
+          pdf.line(margin, currentY, pageWidth - margin, currentY);
+          currentY += lineHeight;
+        } else if (trimmedLine) {
+          // Regular paragraph - handle bold text and preserve all content
+          pdf.setFontSize(11);
+          pdf.setFont("helvetica", "normal");
+          pdf.setTextColor(...(textColor as [number, number, number]));
+
+          // Parse and handle bold/italic markdown
+          let processedText = trimmedLine;
+
+          // Track if this line has any bold text
+          const hasBold = /\*\*(.+?)\*\*/g.test(processedText);
+
+          if (hasBold) {
+            // Handle bold text by splitting and rendering each part
+            const segments: { text: string; bold: boolean }[] = [];
+            let remaining = processedText;
+            const boldRegex = /\*\*(.+?)\*\*/g;
+            let lastIndex = 0;
+            let match;
+
+            while ((match = boldRegex.exec(processedText)) !== null) {
+              // Add text before bold
+              if (match.index > lastIndex) {
+                segments.push({
+                  text: processedText.substring(lastIndex, match.index),
+                  bold: false,
+                });
+              }
+              // Add bold text
+              segments.push({
+                text: match[1],
+                bold: true,
+              });
+              lastIndex = match.index + match[0].length;
+            }
+            // Add remaining text
+            if (lastIndex < processedText.length) {
+              segments.push({
+                text: processedText.substring(lastIndex),
+                bold: false,
+              });
+            }
+
+            // Render with proper wrapping
+            let xOffset = margin;
+            segments.forEach((segment) => {
+              pdf.setFont("helvetica", segment.bold ? "bold" : "normal");
+              const words = segment.text.split(" ");
+
+              words.forEach((word, idx) => {
+                const wordWithSpace =
+                  idx < words.length - 1 ? word + " " : word;
+                const wordWidth = pdf.getTextWidth(wordWithSpace);
+
+                // Check if we need to wrap
+                if (
+                  xOffset + wordWidth > pageWidth - margin &&
+                  xOffset > margin
+                ) {
+                  currentY += lineHeight;
+                  if (currentY + lineHeight > maxContentY) {
+                    pdf.addPage();
+                    addBackground();
+                    addHeader();
+                    addFooter();
+                    currentY = margin + headerHeight;
+                  }
+                  xOffset = margin;
+                }
+
+                pdf.text(wordWithSpace, xOffset, currentY);
+                xOffset += wordWidth;
+              });
+            });
+            currentY += lineHeight;
+          } else {
+            // No bold text - simple rendering
+            processedText = processedText.replace(/\*\*(.+?)\*\*/g, "$1");
+            processedText = processedText.replace(/\*(.+?)\*/g, "$1");
+
+            const textLines = pdf.splitTextToSize(processedText, maxWidth);
+            textLines.forEach((textLine: string) => {
+              if (currentY + lineHeight > maxContentY) {
+                pdf.addPage();
+                addBackground();
+                addHeader();
+                addFooter();
+                currentY = margin + headerHeight;
+              }
+              pdf.text(textLine, margin, currentY);
+              currentY += lineHeight;
+            });
+          }
         }
       }
 
@@ -3619,36 +3953,22 @@ const LeadChat = ({
                         </button>
                         <button
                           type="button"
-                          className="flex items-center gap-2 rounded-lg bg-gradient-to-br from-[#68B3B7] to-[#3E65B4] px-4 py-2 text-xs font-medium text-white transition hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
-                          onClick={handleUpdateStage}
-                          disabled={
-                            isUpdatingStage ||
-                            !proposalContent ||
-                            !!selectedProposal
-                          }
-                          title={
-                            selectedProposal
-                              ? "This proposal has already been sent"
-                              : ""
-                          }
+                          className="flex h-8.5 w-8.5 items-center justify-center rounded-lg border border-white/30 bg-white/10 text-white transition hover:bg-white/20 disabled:opacity-40 h-[34px] w-[34px]"
+                          onClick={() => {
+                            proposalFileInputRef.current?.click();
+                          }}
+                          disabled={!proposalContent || !!selectedProposal}
+                          title="Attach this proposal"
                         >
-                          {isUpdatingStage ? (
-                            <>
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                              Updating...
-                            </>
-                          ) : selectedProposal ? (
-                            <>
-                              <Check className="h-4 w-4" />
-                              Already Sent
-                            </>
-                          ) : (
-                            <>
-                              <Check className="h-4 w-4" />
-                              Send Proposal
-                            </>
-                          )}
+                          <Paperclip className="h-4 w-4" />
                         </button>
+                        <input
+                          type="file"
+                          ref={proposalFileInputRef}
+                          className="hidden"
+                          onChange={handleProposalFileSelect}
+                          accept=".pdf,.doc,.docx"
+                        />
                       </>
                     )}
                   </div>
@@ -3704,7 +4024,7 @@ const LeadChat = ({
                 )}
 
                 {/* Proposal Content */}
-                {proposalContent ? (
+                {proposalContent || proposalAttachment ? (
                   <div className="flex-1 overflow-y-auto scrollbar-hide pb-4 relative">
                     {/* View-Only Banner for sent proposals */}
                     {selectedProposal && (
@@ -3736,6 +4056,92 @@ const LeadChat = ({
                         </div>
                       </div>
                     )}
+
+                    {/* Proposal Attachment Flow */}
+                    {proposalAttachment && (
+                      <div className="flex flex-col gap-4 p-6 rounded-2xl bg-white/10">
+                        <div className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10">
+                          <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 rounded-lg bg-red-500/20 flex items-center justify-center text-red-400">
+                              <span className="text-xl">📄</span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-white truncate">
+                                {proposalAttachment.name}
+                              </p>
+                              <p className="text-xs text-white/50">
+                                {(
+                                  proposalAttachment.size /
+                                  1024 /
+                                  1024
+                                ).toFixed(2)}{" "}
+                                MB • Ready to send
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => {
+                              setProposalAttachment(null);
+                              // Maybe we should NOT restore proposalContent automatically as user might have wanted to clear it
+                              // But if they clicked 'X' they might want to go back.
+                              // For now, just clear it.
+                            }}
+                            className="text-white/40 hover:text-white transition-colors"
+                          >
+                            <X size={18} />
+                          </button>
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-xs font-medium text-white/70">
+                            Message to Lead
+                          </label>
+                          <div className="relative">
+                            <textarea
+                              value={proposalMessage}
+                              onChange={(e) =>
+                                setProposalMessage(e.target.value)
+                              }
+                              placeholder="Write a message to accompany your proposal..."
+                              className="w-full min-h-[120px] rounded-xl bg-white/5 border border-white/10 p-4 text-sm text-white placeholder:text-white/30 outline-none focus:border-white/30 transition-all resize-none"
+                            />
+                            <button
+                              onClick={handleGenerateProposalMessage}
+                              disabled={
+                                isGeneratingProposalMessage ||
+                                !proposalAttachment
+                              }
+                              className="absolute bottom-3 right-3 p-2 rounded-lg bg-gradient-to-br from-purple-500/20 to-blue-500/20 hover:from-purple-500/30 hover:to-blue-500/30 border border-purple-500/30 text-purple-300 hover:text-purple-200 transition-all disabled:opacity-40 disabled:cursor-not-allowed group"
+                              title="Generate message with AI"
+                            >
+                              {isGeneratingProposalMessage ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Sparkles className="h-4 w-4" />
+                              )}
+                            </button>
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={handleSendProposalViaAttachment}
+                          disabled={
+                            emailMutation.isPending || !proposalMessage.trim()
+                          }
+                          className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] text-sm font-semibold text-white shadow-xl hover:opacity-90 transition-all disabled:opacity-40"
+                        >
+                          {emailMutation.isPending ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <>
+                              <Send size={16} />
+                              Send Proposal via Email
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    )}
+
                     <style>{`
                       .proposal-content ::selection {
                         background-color: rgba(34, 197, 94, 0.4) !important;
@@ -3756,163 +4162,162 @@ const LeadChat = ({
                         }
                       }
                     `}</style>
-                    <div
-                      ref={proposalContentRef}
-                      className="proposal-content rounded-2xl bg-white/10 p-6 text-white/90 relative"
-                      onClick={handleProposalClick}
-                    >
-                      {isProposalEditable ? (
-                        <div className="w-full min-h-[400px] [&_.ql-toolbar]:!bg-white/10 [&_.ql-toolbar]:!border-white/20 [&_.ql-toolbar_.ql-stroke]:!stroke-white/80 [&_.ql-toolbar_.ql-fill]:!fill-white/80 [&_.ql-toolbar_.ql-picker-label]:!text-white/80 [&_.ql-toolbar_button:hover]:!bg-white/20 [&_.ql-container]:!bg-white/5 [&_.ql-container]:!border-white/20 [&_.ql-editor]:!text-white/90 [&_.ql-editor]:!min-h-[400px] [&_.ql-editor_p]:!text-white/90 [&_.ql-editor_h1]:!text-white [&_.ql-editor_h2]:!text-white [&_.ql-editor_h3]:!text-white [&_.ql-editor_strong]:!text-white [&_.ql-snow_.ql-picker]:!text-white/80">
-                          <RichTextEditor
-                            value={proposalHtmlContent}
-                            onChange={(html) => {
-                              setProposalHtmlContent(html);
-                              setProposalContent(htmlToMarkdown(html));
-                            }}
-                            placeholder="Edit your proposal here..."
-                            height="400px"
-                            toolbar={true}
-                          />
-                        </div>
-                      ) : (
-                        <div
-                          className="prose prose-invert prose-sm max-w-none cursor-text select-text"
-                          onMouseUp={handleProposalSelection}
-                          onKeyUp={handleProposalSelection}
-                        >
-                          <ReactMarkdown
-                            components={{
-                              h1: ({ node, ...props }) => (
-                                <h1
-                                  className="text-2xl font-bold text-white mt-6 mb-4 first:mt-0"
-                                  {...props}
-                                />
-                              ),
-                              h2: ({ node, ...props }) => (
-                                <h2
-                                  className="text-xl font-bold text-white mt-5 mb-3"
-                                  {...props}
-                                />
-                              ),
-                              h3: ({ node, ...props }) => (
-                                <h3
-                                  className="text-lg font-semibold text-white mt-4 mb-2"
-                                  {...props}
-                                />
-                              ),
-                              h4: ({ node, ...props }) => (
-                                <h4
-                                  className="text-base font-semibold text-white/90 mt-3 mb-2"
-                                  {...props}
-                                />
-                              ),
-                              p: ({ node, ...props }) => (
-                                <p
-                                  className="text-white/80 mb-3 leading-relaxed"
-                                  {...props}
-                                />
-                              ),
-                              strong: ({ node, ...props }) => (
-                                <strong
-                                  className="text-white font-semibold"
-                                  {...props}
-                                />
-                              ),
-                              em: ({ node, ...props }) => (
-                                <em
-                                  className="text-white/90 italic"
-                                  {...props}
-                                />
-                              ),
-                              ul: ({ node, ...props }) => (
-                                <ul
-                                  className="list-disc list-inside ml-4 mb-3 space-y-1.5"
-                                  {...props}
-                                />
-                              ),
-                              ol: ({ node, ...props }) => (
-                                <ol
-                                  className="list-decimal list-inside ml-4 mb-3 space-y-1.5"
-                                  {...props}
-                                />
-                              ),
-                              li: ({ node, ...props }) => (
-                                <li className="text-white/80" {...props} />
-                              ),
-                              hr: ({ node, ...props }) => (
-                                <hr
-                                  className="border-white/20 my-4"
-                                  {...props}
-                                />
-                              ),
-                              blockquote: ({ node, ...props }) => (
-                                <blockquote
-                                  className="border-l-4 border-white/30 pl-4 my-3 italic text-white/70"
-                                  {...props}
-                                />
-                              ),
-                              code: ({ node, ...props }: any) => {
-                                const codeProps = props as any;
-                                const isInline = props.inline !== false;
-                                return isInline ? (
-                                  <code
-                                    className="bg-white/20 px-1.5 py-0.5 rounded text-white/90 text-xs font-mono"
-                                    {...codeProps}
-                                  />
-                                ) : (
-                                  <code
-                                    className="block bg-white/10 p-3 rounded text-white/90 text-xs font-mono overflow-x-auto mb-3"
-                                    {...codeProps}
-                                  />
-                                );
-                              },
-                              pre: ({ node, ...props }) => (
-                                <pre
-                                  className="bg-white/10 p-3 rounded text-white/90 text-xs font-mono overflow-x-auto mb-3"
-                                  {...props}
-                                />
-                              ),
-                            }}
+                    {proposalContent && (
+                      <div
+                        ref={proposalContentRef}
+                        className="proposal-content rounded-2xl bg-white/10 p-6 text-white/90 relative"
+                        onClick={handleProposalClick}
+                      >
+                        {isProposalEditable ? (
+                          <div className="w-full min-h-[400px] [&_.ql-toolbar]:!bg-white/10 [&_.ql-toolbar]:!border-white/20 [&_.ql-toolbar_.ql-stroke]:!stroke-white/80 [&_.ql-toolbar_.ql-fill]:!fill-white/80 [&_.ql-toolbar_.ql-picker-label]:!text-white/80 [&_.ql-toolbar_button:hover]:!bg-white/20 [&_.ql-container]:!bg-white/5 [&_.ql-container]:!border-white/20 [&_.ql-editor]:!text-white/90 [&_.ql-editor]:!min-h-[400px] [&_.ql-editor_p]:!text-white/90 [&_.ql-editor_h1]:!text-white [&_.ql-editor_h2]:!text-white [&_.ql-editor_h3]:!text-white [&_.ql-editor_strong]:!text-white [&_.ql-snow_.ql-picker]:!text-white/80">
+                            <RichTextEditor
+                              value={proposalHtmlContent}
+                              onChange={(html) => {
+                                setProposalHtmlContent(html);
+                                setProposalContent(htmlToMarkdown(html));
+                              }}
+                              placeholder="Edit your proposal here..."
+                              height="400px"
+                              toolbar={true}
+                            />
+                          </div>
+                        ) : (
+                          <div
+                            className="prose prose-invert prose-sm max-w-none cursor-text select-text"
+                            onMouseUp={handleProposalSelection}
+                            onKeyUp={handleProposalSelection}
                           >
-                            {proposalContent}
-                          </ReactMarkdown>
-                        </div>
-                      )}
-
-                      {/* Edit with AI Button - appears when text is selected */}
-                      {(() => {
-                        return null;
-                      })()}
-                      {showEditWithAI &&
-                        editWithAIPosition &&
-                        selectedText &&
-                        !selectedProposal && (
-                          <button
-                            type="button"
-                            onMouseDown={(e) => {
-                              // Prevent the mousedown from clearing the selection
-                              e.preventDefault();
-                            }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              e.preventDefault();
-                              handleEditWithAI();
-                            }}
-                            className="absolute flex items-center gap-2 rounded-lg bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] px-4 py-2 text-xs font-semibold text-white shadow-xl transition-all hover:opacity-90 hover:scale-105 border border-white/20"
-                            style={{
-                              top: `${editWithAIPosition.top}px`,
-                              left: `${editWithAIPosition.left}px`,
-                              transform: "translateX(-50%)",
-                              animation: "fadeIn 0.2s ease-in",
-                              zIndex: 9999,
-                              pointerEvents: "auto",
-                            }}
-                          >
-                            <Sparkles className="h-4 w-4" />
-                            Edit with AI
-                          </button>
+                            <ReactMarkdown
+                              components={{
+                                h1: ({ node, ...props }) => (
+                                  <h1
+                                    className="text-2xl font-bold text-white mt-6 mb-4 first:mt-0"
+                                    {...props}
+                                  />
+                                ),
+                                h2: ({ node, ...props }) => (
+                                  <h2
+                                    className="text-xl font-bold text-white mt-5 mb-3"
+                                    {...props}
+                                  />
+                                ),
+                                h3: ({ node, ...props }) => (
+                                  <h3
+                                    className="text-lg font-semibold text-white mt-4 mb-2"
+                                    {...props}
+                                  />
+                                ),
+                                h4: ({ node, ...props }) => (
+                                  <h4
+                                    className="text-base font-semibold text-white/90 mt-3 mb-2"
+                                    {...props}
+                                  />
+                                ),
+                                p: ({ node, ...props }) => (
+                                  <p
+                                    className="text-white/80 mb-3 leading-relaxed"
+                                    {...props}
+                                  />
+                                ),
+                                strong: ({ node, ...props }) => (
+                                  <strong
+                                    className="text-white font-semibold"
+                                    {...props}
+                                  />
+                                ),
+                                em: ({ node, ...props }) => (
+                                  <em
+                                    className="text-white/90 italic"
+                                    {...props}
+                                  />
+                                ),
+                                ul: ({ node, ...props }) => (
+                                  <ul
+                                    className="list-disc list-inside ml-4 mb-3 space-y-1.5"
+                                    {...props}
+                                  />
+                                ),
+                                ol: ({ node, ...props }) => (
+                                  <ol
+                                    className="list-decimal list-inside ml-4 mb-3 space-y-1.5"
+                                    {...props}
+                                  />
+                                ),
+                                li: ({ node, ...props }) => (
+                                  <li className="text-white/80" {...props} />
+                                ),
+                                hr: ({ node, ...props }) => (
+                                  <hr
+                                    className="border-white/20 my-4"
+                                    {...props}
+                                  />
+                                ),
+                                blockquote: ({ node, ...props }) => (
+                                  <blockquote
+                                    className="border-l-4 border-white/30 pl-4 my-3 italic text-white/70"
+                                    {...props}
+                                  />
+                                ),
+                                code: ({ node, ...props }: any) => {
+                                  const codeProps = props as any;
+                                  const isInline = props.inline !== false;
+                                  return isInline ? (
+                                    <code
+                                      className="bg-white/20 px-1.5 py-0.5 rounded text-white/90 text-xs font-mono"
+                                      {...codeProps}
+                                    />
+                                  ) : (
+                                    <code
+                                      className="block bg-white/10 p-3 rounded text-white/90 text-xs font-mono overflow-x-auto mb-3"
+                                      {...codeProps}
+                                    />
+                                  );
+                                },
+                                pre: ({ node, ...props }) => (
+                                  <pre
+                                    className="bg-white/10 p-3 rounded text-white/90 text-xs font-mono overflow-x-auto mb-3"
+                                    {...props}
+                                  />
+                                ),
+                              }}
+                            >
+                              {proposalContent}
+                            </ReactMarkdown>
+                          </div>
                         )}
-                    </div>
+
+                        {/* Edit with AI Button - appears when text is selected */}
+                        {showEditWithAI &&
+                          editWithAIPosition &&
+                          selectedText &&
+                          !selectedProposal && (
+                            <button
+                              type="button"
+                              onMouseDown={(e) => {
+                                // Prevent the mousedown from clearing the selection
+                                e.preventDefault();
+                              }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                handleEditWithAI();
+                              }}
+                              className="absolute flex items-center gap-2 rounded-lg bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] px-4 py-2 text-xs font-semibold text-white shadow-xl transition-all hover:opacity-90 hover:scale-105 border border-white/20"
+                              style={{
+                                top: `${editWithAIPosition.top}px`,
+                                left: `${editWithAIPosition.left}px`,
+                                transform: "translateX(-50%)",
+                                animation: "fadeIn 0.2s ease-in",
+                                zIndex: 9999,
+                                pointerEvents: "auto",
+                              }}
+                            >
+                              <Sparkles className="h-4 w-4" />
+                              Edit with AI
+                            </button>
+                          )}
+                      </div>
+                    )}
                   </div>
                 ) : showProposalList ||
                   (!proposalContent && sentProposals.length > 0) ? (
@@ -3997,7 +4402,8 @@ const LeadChat = ({
                         The proposal will be generated based on all
                         communication history
                         <br />
-                        (SMS, emails, WhatsApp, phone calls) and knowledge base
+                        (SMS, emails, WhatsApp, phone calls, meeting notes) and
+                        knowledge base
                       </p>
                     </div>
                   </div>
@@ -4173,6 +4579,36 @@ const LeadChat = ({
               className="sticky bottom-0 left-0 right-0 pt-4"
               ref={emailComposerRef}
             >
+              {/* Attachments Display */}
+              {attachments.length > 0 && (
+                <div className="flex flex-wrap gap-2 px-4 mb-2">
+                  {attachments.map((file, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[10px] text-white/90 border border-white/20"
+                    >
+                      <span className="truncate max-w-[150px]">
+                        {file.name}
+                      </span>
+                      <button
+                        onClick={() => removeAttachment(index)}
+                        className="hover:text-red-400 transition-colors"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <input
+                type="file"
+                multiple
+                ref={fileInputRef}
+                className="hidden"
+                onChange={handleFileSelect}
+              />
+
               <div
                 className={`flex gap-2 bg-white/10 px-4 py-3 mx-1 mb-1 transition-all duration-200 relative ${
                   isEmailEditorExpanded
@@ -4265,22 +4701,53 @@ const LeadChat = ({
                   </button>
                   <button
                     type="button"
-                    className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0 cursor-pointer"
-                    onClick={handleSendEmail}
-                    disabled={
-                      !emailAddress ||
-                      !emailInput.trim() ||
-                      emailMutation.isPending
-                    }
+                    className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-white/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0 cursor-pointer"
+                    onClick={() => fileInputRef.current?.click()}
+                    title="Attach files"
                   >
-                    {emailMutation.isPending ? (
-                      <Loader2 className="h-4 w-4 animate-spin text-white" />
-                    ) : (
-                      <Send size={14} className="text-white" />
-                    )}
+                    <Paperclip className="h-4 w-4 text-white" />
                   </button>
+                  {attachments.length > 0 ? (
+                    <button
+                      type="button"
+                      className="flex items-center gap-2 rounded-lg bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] px-4 py-2 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0 cursor-pointer shadow-lg"
+                      onClick={handleSendEmail}
+                      disabled={
+                        !emailAddress ||
+                        (!emailInput.trim() && attachments.length === 0) ||
+                        emailMutation.isPending
+                      }
+                    >
+                      {emailMutation.isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <>
+                          <Send size={14} />
+                          Send Proposal
+                        </>
+                      )}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0 cursor-pointer shadow-lg"
+                      onClick={handleSendEmail}
+                      disabled={
+                        !emailAddress ||
+                        !emailInput.trim() ||
+                        emailMutation.isPending
+                      }
+                    >
+                      {emailMutation.isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin text-white" />
+                      ) : (
+                        <Send size={14} className="text-white" />
+                      )}
+                    </button>
+                  )}
                 </div>
               </div>
+
               {emailSendError && (
                 <p className="mt-2 text-xs text-red-300 mx-1 mb-1">
                   {emailSendError}

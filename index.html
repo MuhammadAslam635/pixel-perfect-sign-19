@@ -23,6 +23,16 @@
     <meta name="twitter:image" content="/EmpaTech.png" />
 
     <link rel="icon" type="image/png" href="/EmpaTech.png" />
+
+    <!-- PDF.js library for text extraction -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+      // Configure PDF.js worker
+      if (window.pdfjsLib) {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+          "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+      }
+    </script>
   </head>
 
   <body>

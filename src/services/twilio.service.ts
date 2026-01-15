@@ -23,12 +23,15 @@ export interface LeadSmsMessage {
   _id: string;
   leadId?: string | null;
   companyId: string;
-  userId?: {
-    _id: string;
-    firstName?: string;
-    lastName?: string;
-    name?: string;
-  } | string | null;
+  userId?:
+    | {
+        _id: string;
+        firstName?: string;
+        lastName?: string;
+        name?: string;
+      }
+    | string
+    | null;
   direction: LeadSmsDirection;
   from: string;
   to: string;
@@ -87,11 +90,7 @@ export interface LeadCallLog {
   transcriptionProvider?: string | null;
   transcriptionMetadata?: Record<string, any>;
   // Post-call analysis fields
-  leadSuccessScoreStatus?:
-    | "not-requested"
-    | "pending"
-    | "completed"
-    | "failed";
+  leadSuccessScoreStatus?: "not-requested" | "pending" | "completed" | "failed";
   leadSuccessScore?: number | null;
   leadSuccessScoreMetadata?: Record<string, any>;
   followupSuggestionStatus?:
@@ -149,16 +148,16 @@ export const twilioService = {
     try {
       console.log("📡 Calling /twilio/token endpoint...");
       const response = await API.get<TwilioTokenResponse>("/twilio/token");
-      console.log("✅ Token API response:", { 
+      console.log("✅ Token API response:", {
         hasToken: !!response.data?.token,
-        status: response.status 
+        status: response.status,
       });
       return response.data;
     } catch (error: any) {
       console.error("❌ Token API error:", {
         status: error.response?.status,
         message: error.response?.data?.message || error.response?.data?.error,
-        error: error.message
+        error: error.message,
       });
       throw error;
     }
@@ -262,9 +261,7 @@ export const elevenlabsService = {
   /**
    * Initiate an AI call via ElevenLabs
    */
-  initiateAICall: async (
-    leadId: string
-  ): Promise<InitiateAICallResponse> => {
+  initiateAICall: async (leadId: string): Promise<InitiateAICallResponse> => {
     try {
       const response = await API.post<InitiateAICallResponse>(
         "/elevenlabs/calls",
@@ -288,4 +285,3 @@ export const elevenlabsService = {
     }
   },
 };
-
