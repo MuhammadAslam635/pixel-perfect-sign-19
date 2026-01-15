@@ -1385,10 +1385,10 @@ export const CallView = ({
         </div>
 
         {/* Card Container */}
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-y-auto scrollbar-hide p-6 flex flex-col gap-6 flex-1">
+        <div className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-y-auto scrollbar-hide pt-6 px-6 pb-2 flex flex-col gap-4 flex-1">
           {/* Show Call Details if a call log is selected */}
           {selectedCallLog ? (
-            <div className="flex flex-col gap-4 h-full">
+            <div className="flex-1 flex flex-col gap-4 min-h-0">
               {/* Call Info Header */}
               <div className="flex flex-col gap-2 pb-4 border-b border-white/10">
                 <div className="flex items-center gap-2">
@@ -1456,7 +1456,7 @@ export const CallView = ({
               </div>
 
               {/* Tab Content */}
-              <div className="flex-1 overflow-y-auto scrollbar-hide">
+              <div className="flex-1 flex flex-col min-h-0">
                 {activeTab === "recording" ? (
                   <div className="flex flex-col gap-4">
                     {/* Audio Player */}
@@ -1553,15 +1553,18 @@ export const CallView = ({
                     </div>
                   </div>
                 ) : (
-                  <div className="flex flex-col gap-4">
+                  <div className="flex-1 flex flex-col gap-4 min-h-0">
                     {/* Multi-Channel Follow-up Generator */}
-                    <div className="flex flex-col gap-2">
-                       <h3 className="text-xs font-semibold text-white/80">
+                    <div className="flex-1 flex flex-col gap-1.5 min-h-0">
+                      <h3 className="text-xs font-semibold text-white/80">
                         AI Follow-up Drafts
                       </h3>
                       <FollowupGenerator 
                         callLogId={selectedCallLog._id} 
                         transcript={selectedCallLog.transcriptionText || selectedCallLog.elevenlabsTranscript || ""}
+                        leadId={lead?._id || ""}
+                        leadEmail={lead?.email || ""}
+                        leadPhone={lead?.phone || lead?.whatsapp || ""}
                       />
                     </div>
 
@@ -1596,115 +1599,15 @@ export const CallView = ({
                       </div>
                     ) : null}
 
-                    {/* Follow-up Suggestions with EditableFollowupSuggestion * /}
                     <div className="flex flex-col gap-2">
                       <h3 className="text-xs font-semibold text-white/80">
                         Follow-up Suggestions
                       </h3>
-                      {selectedCallLog.followupSuggestionStatus ===
-                      "pending" ? (
+                      {selectedCallLog.followupSuggestionStatus === "pending" ? (
                         <div className="flex items-center gap-2 py-4 px-4 rounded-lg bg-white/5 border border-white/10">
                           <Loader2 className="w-4 h-4 text-cyan-400 animate-spin" />
-                          <span className="text-sm text-white/60">
-                            Generating suggestions...
-                          </span>
+                          <span className="text-sm text-white/60">Generating suggestions...</span>
                         </div>
-                      ) : Array.isArray(
-                          (selectedCallLog.followupSuggestionMetadata as any)
-                            ?.raw?.touchpoints
-                        ) &&
-                        (selectedCallLog.followupSuggestionMetadata as any).raw
-                          .touchpoints.length > 0 ? (
-                        <EditableFollowupSuggestion
-                          touchpoints={
-                            (selectedCallLog.followupSuggestionMetadata as any)
-                              .raw.touchpoints
-                          }
-                          summary={
-                            selectedCallLog.followupSuggestionSummary ||
-                            undefined
-                          }
-                          callEndTime={
-                            selectedCallLog.endedAt ||
-                            new Date(
-                              new Date(selectedCallLog.startedAt).getTime() +
-                                (selectedCallLog.durationSeconds || 0) * 1000
-                            ).toISOString()
-                          }
-                          leadId={selectedCallLog.leadId || lead?._id || ""}
-                          onExecute={async (
-                            todo,
-                            startDate,
-                            executedPlanId?: string
-                          ) => {
-                            try {
-                              let planId: string | undefined;
-
-                              if (executedPlanId) {
-                                const response =
-                                  await updatePlanMutation.mutateAsync({
-                                    id: executedPlanId,
-                                    payload: {
-                                      todo: todo.map((task) => ({
-                                        type: task.type,
-                                        personId: task.personId,
-                                        day: task.day,
-                                        scheduledFor: task.scheduledFor,
-                                        notes: task.notes,
-                                      })),
-                                    },
-                                  });
-                                planId =
-                                  (response as any)?.data?._id ||
-                                  (response as any)?.data?.data?._id ||
-                                  executedPlanId;
-                                toast({
-                                  title: "Follow-up plan updated",
-                                  description:
-                                    "The follow-up plan has been updated successfully.",
-                                });
-                              } else {
-                                const response =
-                                  await createPlanFromCallMutation.mutateAsync({
-                                    leadId:
-                                      selectedCallLog.leadId || lead?._id || "",
-                                    startDate,
-                                    todo,
-                                    summary:
-                                      selectedCallLog.followupSuggestionSummary,
-                                  });
-                                planId =
-                                  (response as any)?.data?._id ||
-                                  (response as any)?.data?.data?._id;
-                                toast({
-                                  title: "Follow-up plan created",
-                                  description:
-                                    "The follow-up plan has been created and is now active.",
-                                });
-                              }
-
-                              return {
-                                planId,
-                              };
-                            } catch (error: any) {
-                              toast({
-                                title: executedPlanId
-                                  ? "Failed to update plan"
-                                  : "Failed to create plan",
-                                description:
-                                  error?.response?.data?.message ||
-                                  error?.message ||
-                                  "Please try again.",
-                                variant: "destructive",
-                              });
-                              throw error;
-                            }
-                          }}
-                          isExecuting={
-                            createPlanFromCallMutation.isPending ||
-                            updatePlanMutation.isPending
-                          }
-                        />
                       ) : selectedCallLog.followupSuggestionSummary ? (
                         <div className="py-3 px-4 rounded-lg bg-white/5 border border-white/10 text-left">
                           <p className="text-sm text-white/80 leading-relaxed">
@@ -1713,9 +1616,7 @@ export const CallView = ({
                         </div>
                       ) : (
                         <div className="py-3 px-4 rounded-lg bg-white/5 border border-white/10 text-center">
-                          <p className="text-sm text-white/40">
-                            No follow-up suggestions available
-                          </p>
+                          <p className="text-sm text-white/40">No follow-up suggestions available</p>
                         </div>
                       )}
                     </div>
