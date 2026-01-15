@@ -1799,7 +1799,7 @@ const Activity: FC<ActivityProps> = ({
                         </div>
                       )}
 
-                      <div className="space-y-2">
+                      {/* <div className="space-y-2">
                         <span className="text-xs text-white/60">Leads</span>
                         <Popover
                           open={leadSelectorOpen}
@@ -1948,7 +1948,7 @@ const Activity: FC<ActivityProps> = ({
                             })}
                           </div>
                         )}
-                      </div> */}
+                      </div>  */}
 
                       <div className="flex items-center justify-between flex-wrap gap-3 pt-2 border-t border-white/10">
                         {/* <div className="text-xs text-white/60">
