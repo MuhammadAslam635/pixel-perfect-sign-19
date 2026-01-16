@@ -837,6 +837,10 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
             queryClient.invalidateQueries({
               queryKey: ["lead-calendar-meetings", lead._id],
             }),
+            // Immediately refetch notifications to show meeting creation notification
+            queryClient.refetchQueries({
+              queryKey: ["notifications"],
+            }),
             queryClient.invalidateQueries({
               queryKey: ["calendar-available-slots"],
             }),

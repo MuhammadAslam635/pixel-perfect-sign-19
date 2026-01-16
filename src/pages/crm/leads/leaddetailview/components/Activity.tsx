@@ -38,6 +38,7 @@ import {
   RefreshCcw,
   Trash2,
   Calendar as CalendarIcon,
+  Copy,
 } from "lucide-react";
 import {
   Tooltip,
@@ -1421,69 +1422,115 @@ const Activity: FC<ActivityProps> = ({
                                           )}
                                         </p>
                                       </div>
-                                      <div className="flex items-center gap-2 flex-wrap justify-end">
-                                        <div className="flex items-center gap-2">
-                                          <Badge
-                                            className={
-                                              meeting.status === "completed"
-                                                ? "bg-teal-500/20 text-teal-200 border border-teal-400/40"
-                                                : meeting.status === "cancelled"
-                                                  ? "bg-red-500/20 text-red-200 border border-red-400/40"
-                                                  : "bg-indigo-500/20 text-indigo-200 border border-indigo-400/40"
-                                            }
-                                          >
-                                            {meeting.status === "completed"
-                                              ? "Completed"
-                                              : meeting.status === "cancelled"
-                                                ? "Cancelled"
-                                                : "Scheduled"}
-                                          </Badge>
-                                          {meeting.recall?.status && (
+                                      <div className="flex flex-col gap-2">
+                                        <div className="flex items-center gap-1.5 justify-between">
+                                          <div className="flex items-center gap-1.5 shrink-0">
                                             <Badge
                                               className={
-                                                meeting.recall.status ===
+                                                meeting.status === "completed"
+                                                  ? "bg-teal-500/20 text-teal-200 border border-teal-400/40"
+                                                  : meeting.status === "cancelled"
+                                                    ? "bg-red-500/20 text-red-200 border border-red-400/40"
+                                                    : "bg-indigo-500/20 text-indigo-200 border border-indigo-400/40"
+                                              }
+                                            >
+                                              {meeting.status === "completed"
+                                                ? "Completed"
+                                                : meeting.status === "cancelled"
+                                                  ? "Cancelled"
+                                                  : "Scheduled"}
+                                            </Badge>
+                                            {meeting.recall?.status && (
+                                              <Badge
+                                                className={
+                                                  meeting.recall.status ===
+                                                    "active"
+                                                    ? "bg-emerald-500/20 text-emerald-100 border border-emerald-400/50"
+                                                    : meeting.recall.status ===
+                                                      "starting" ||
+                                                      meeting.recall.status ===
+                                                      "scheduled"
+                                                      ? "bg-sky-500/15 text-sky-100 border border-sky-400/40"
+                                                      : meeting.recall.status ===
+                                                        "failed"
+                                                        ? "bg-red-500/20 text-red-100 border border-red-400/40"
+                                                        : "bg-slate-500/20 text-slate-100 border border-slate-400/40"
+                                                }
+                                              >
+                                                {meeting.recall.status ===
                                                   "active"
-                                                  ? "bg-emerald-500/20 text-emerald-100 border border-emerald-400/50"
+                                                  ? "Recall active"
                                                   : meeting.recall.status ===
                                                     "starting" ||
                                                     meeting.recall.status ===
                                                     "scheduled"
-                                                    ? "bg-sky-500/15 text-sky-100 border border-sky-400/40"
+                                                    ? "Recall pending"
                                                     : meeting.recall.status ===
                                                       "failed"
-                                                      ? "bg-red-500/20 text-red-100 border border-red-400/40"
-                                                      : "bg-slate-500/20 text-slate-100 border border-slate-400/40"
+                                                      ? "Recall failed"
+                                                      : "Recall ended"}
+                                              </Badge>
+                                            )}
+                                          </div>
+                                          <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="sm"
+                                            className="text-red-200 hover:text-red-100 hover:bg-red-500/10 h-6 w-6 p-0 shrink-0"
+                                            onClick={() =>
+                                              setMeetingPendingDelete(meeting)
+                                            }
+                                            disabled={
+                                              deleteMeetingMutation.isPending
+                                            }
+                                          >
+                                            <Trash2 className="w-3 h-3" />
+                                          </Button>
+                                        </div>
+                                        {meeting.joinLink && (
+                                          <div className="flex items-center gap-1.5">
+                                            <Button
+                                              type="button"
+                                              variant="outline"
+                                              size="sm"
+                                              className="text-xs h-7 px-2.5 border-indigo-400/40 text-indigo-300 hover:text-indigo-200 hover:bg-indigo-500/10"
+                                              onClick={() =>
+                                                window.open(
+                                                  meeting.joinLink,
+                                                  "_blank",
+                                                  "noopener,noreferrer"
+                                                )
                                               }
                                             >
-                                              {meeting.recall.status ===
-                                                "active"
-                                                ? "Recall active"
-                                                : meeting.recall.status ===
-                                                  "starting" ||
-                                                  meeting.recall.status ===
-                                                  "scheduled"
-                                                  ? "Recall pending"
-                                                  : meeting.recall.status ===
-                                                    "failed"
-                                                    ? "Recall failed"
-                                                    : "Recall ended"}
-                                            </Badge>
-                                          )}
-                                        </div>
-                                        <Button
-                                          type="button"
-                                          variant="ghost"
-                                          size="sm"
-                                          className="text-red-200 hover:text-red-100 hover:bg-red-500/10 h-6 w-6 p-0"
-                                          onClick={() =>
-                                            setMeetingPendingDelete(meeting)
-                                          }
-                                          disabled={
-                                            deleteMeetingMutation.isPending
-                                          }
-                                        >
-                                          <Trash2 className="w-3 h-3" />
-                                        </Button>
+                                              Meeting Link
+                                            </Button>
+                                            <Button
+                                              type="button"
+                                              variant="ghost"
+                                              size="sm"
+                                              className="h-6 w-6 p-0 text-indigo-300 hover:text-indigo-200 hover:bg-indigo-500/10"
+                                              onClick={async () => {
+                                                try {
+                                                  await navigator.clipboard.writeText(
+                                                    meeting.joinLink
+                                                  );
+                                                  toast({
+                                                    title: "Copied!",
+                                                    description: "Meeting link copied to clipboard",
+                                                  });
+                                                } catch (err) {
+                                                  toast({
+                                                    title: "Failed to copy",
+                                                    description: "Could not copy meeting link",
+                                                    variant: "destructive",
+                                                  });
+                                                }
+                                              }}
+                                            >
+                                              <Copy className="w-3 h-3" />
+                                            </Button>
+                                          </div>
+                                        )}
                                       </div>
                                     </div>
                                     {meeting.body && (

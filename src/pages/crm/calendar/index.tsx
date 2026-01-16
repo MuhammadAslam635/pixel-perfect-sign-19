@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ActiveNavButton } from "@/components/ui/primary-btn";
-import { Loader2, RefreshCcw, Trash2, CalendarDays } from "lucide-react";
+import { Loader2, RefreshCcw, Trash2, CalendarDays, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   calendarService,
@@ -757,8 +757,17 @@ const CalendarPage: FC = () => {
                                 <ReactMarkdown
                                   rehypePlugins={[rehypeRaw, rehypeSanitize]}
                                   components={{
-                                    p: ({node, ...props}) => <span {...props} />,
-                                    a: ({node, ...props}) => <a {...props} className="text-indigo-300 hover:text-indigo-200 underline" target="_blank" rel="noopener noreferrer" />,
+                                    p: ({ node, ...props }) => (
+                                      <span {...props} />
+                                    ),
+                                    a: ({ node, ...props }) => (
+                                      <a
+                                        {...props}
+                                        className="text-indigo-300 hover:text-indigo-200 underline"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                      />
+                                    ),
                                   }}
                                 >
                                   {meeting.body}
@@ -784,21 +793,51 @@ const CalendarPage: FC = () => {
                                 </Button>
                               )}
                               {meeting.joinLink && (
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  className="text-xs h-7 px-3 border-indigo-400/40 text-indigo-300 hover:text-indigo-200 hover:bg-indigo-500/10"
-                                  onClick={() =>
-                                    window.open(
-                                      meeting.joinLink,
-                                      "_blank",
-                                      "noopener,noreferrer"
-                                    )
-                                  }
-                                >
-                                  Meeting Link
-                                </Button>
+                                <>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-xs h-7 px-3 border-indigo-400/40 text-indigo-300 hover:text-indigo-200 hover:bg-indigo-500/10"
+                                    onClick={() =>
+                                      window.open(
+                                        meeting.joinLink,
+                                        "_blank",
+                                        "noopener,noreferrer"
+                                      )
+                                    }
+                                  >
+                                    Meeting Link
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-xs h-7 px-3 border-indigo-400/40 text-indigo-300 hover:text-indigo-200 hover:bg-indigo-500/10"
+                                    onClick={async () => {
+                                      try {
+                                        await navigator.clipboard.writeText(
+                                          meeting.joinLink
+                                        );
+                                        toast({
+                                          title: "Copied!",
+                                          description:
+                                            "Meeting link copied to clipboard",
+                                        });
+                                      } catch (err) {
+                                        toast({
+                                          title: "Failed to copy",
+                                          description:
+                                            "Could not copy meeting link",
+                                          variant: "destructive",
+                                        });
+                                      }
+                                    }}
+                                  >
+                                    Copy Link
+                                    {/* <Copy className="w-3.5 h-3.5" /> */}
+                                  </Button>
+                                </>
                               )}
                             </div>
                           </div>
