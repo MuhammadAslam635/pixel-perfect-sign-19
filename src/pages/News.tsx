@@ -1,10 +1,14 @@
 import { motion } from "framer-motion";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
-import { MOCK_NEWS_DATA } from "@/data/newsData";
 import NewsCard from "@/pages/components/NewsCard";
+import type { NewsItem } from "@/types/news";
 
 const NewsPage = () => {
+  const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   // Disable body scrolling to match Dashboard behavior
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -13,6 +17,31 @@ const NewsPage = () => {
       document.body.style.overflow = "";
       document.documentElement.style.overflow = "";
     };
+  }, []);
+
+  useEffect(() => {
+    const fetchNews = async () => {
+      try {
+        const response = await fetch('https://rss.app/api/widget/wall/tpBEhxBRMkMCEw3I');
+        if (!response.ok) {
+          throw new Error('Failed to fetch news');
+        }
+        const data = await response.json();
+        // The API returns the items inside data.feed.items based on the provided JSON structure
+        if (data?.feed?.items) {
+           setNewsItems(data.feed.items);
+        } else {
+           throw new Error('Invalid data structure');
+        }
+      } catch (err) {
+        console.error("Error fetching news:", err);
+        setError("Failed to load news.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNews();
   }, []);
 
   return (
@@ -63,11 +92,21 @@ const NewsPage = () => {
           <div 
              className="flex-1 w-full relative overflow-y-auto pr-2 scrollbar-hide z-10"
           >
-             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6 pb-6 p-2">
-                {MOCK_NEWS_DATA.map((item, index) => (
-                    <NewsCard key={item.id} item={item} index={index} />
-                ))}
-            </div>
+             {loading ? (
+                <div className="flex h-full items-center justify-center">
+                   <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/20 border-t-white" />
+                </div>
+             ) : error ? (
+                <div className="flex h-full items-center justify-center text-red-400">
+                   {error}
+                </div>
+             ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6 pb-6 p-2">
+                    {newsItems.map((item, index) => (
+                        <NewsCard key={item.id} item={item} index={index} />
+                    ))}
+                </div>
+             )}
           </div>
           
           {/* Bottom Fade Mask */}
