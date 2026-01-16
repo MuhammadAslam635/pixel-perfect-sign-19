@@ -60,12 +60,10 @@ const ChatList = ({
   const chatItemVariants = {
     hidden: {
       opacity: 0,
-      x: -20,
       scale: 0.95,
     },
     visible: {
       opacity: 1,
-      x: 0,
       scale: 1,
       transition: {
         duration: 0.3,
@@ -74,7 +72,6 @@ const ChatList = ({
     },
     exit: {
       opacity: 0,
-      x: -20,
       scale: 0.95,
       transition: {
         duration: 0.2,
@@ -188,8 +185,6 @@ const ChatList = ({
                     <motion.div
                       key={chat._id}
                       layout
-                      initial="hidden"
-                      animate="visible"
                       exit="exit"
                       variants={chatItemVariants}
                       className={cn(

@@ -89,6 +89,9 @@ export interface LeadMeetingRecord {
     transcriptProvider?: string | null;
     recordingUrl?: string | null;
   };
+  draftEmail?: string;
+  draftSms?: string;
+  draftWhatsapp?: string;
   createdAt: string;
   updatedAt: string;
   __v?: number;
@@ -292,6 +295,15 @@ export const calendarService = {
     data: unknown;
   }> => {
     const response = await API.get(`/recall/transcript/${sessionId}/json`);
+    return response.data;
+  },
+  generateFollowupMessages: async (
+    meetingId: string,
+    regenerate: boolean = false
+  ): Promise<{ email: string; sms: string; whatsapp: string }> => {
+    const response = await API.get(
+      `/recall/meeting/${meetingId}/followup-messages?regenerate=${regenerate}`
+    );
     return response.data;
   },
 };

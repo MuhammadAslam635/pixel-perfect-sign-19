@@ -4,9 +4,14 @@ import { useQuery } from "@tanstack/react-query";
 import { Lead } from "@/services/leads.service";
 import { calendarService } from "@/services/calendar.service";
 import { Button } from "@/components/ui/button";
-import { Loader2, RefreshCcw, FileText, Calendar, Play, X } from "lucide-react";
+import { Loader2, RefreshCcw, FileText, Calendar, Play, X, Mail, MessageSquare, Phone, Send, RefreshCw, Copy, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { LeadMeetingRecord } from "@/services/calendar.service";
+import { emailService } from "@/services/email.service";
+import { twilioService } from "@/services/twilio.service";
+import { whatsappService } from "@/services/whatsapp.service";
+import { useToast } from "@/hooks/use-toast";
+import { IoLogoWhatsapp } from "react-icons/io5";
 
 type MeetingBotTabProps = {
   lead?: Lead;
@@ -186,6 +191,167 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
     Record<string, string | null>
   >({});
   const [showNotesDetailModal, setShowNotesDetailModal] = useState(false);
+
+  // Follow-up functionality state
+  const { toast } = useToast();
+  const [followupTab, setFollowupTab] = useState<"email" | "sms" | "whatsapp">("email");
+  const [followupDrafts, setFollowupDrafts] = useState<{
+    email: string;
+    sms: string;
+    whatsapp: string;
+  }>({ email: "", sms: "", whatsapp: "" });
+  const [loadingDrafts, setLoadingDrafts] = useState(false);
+  const [regeneratingDrafts, setRegeneratingDrafts] = useState(false);
+  const [sendingFollowup, setSendingFollowup] = useState(false);
+  const [copiedState, setCopiedState] = useState<string | null>(null);
+
+  // WhatsApp connection for sending
+  const [whatsappPhoneId, setWhatsappPhoneId] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Fetch WhatsApp connection on mount to be ready
+    whatsappService.getConnections().then((res) => {
+        if (res.success && res.credentials.length > 0) {
+            setWhatsappPhoneId(res.credentials[0].phoneNumberId);
+        }
+    }).catch(() => {});
+  }, []);
+
+  const handleGenerateDrafts = async (meetingId: string, regenerate = false) => {
+    if (regenerate) {
+        setRegeneratingDrafts(true);
+    } else {
+        setLoadingDrafts(true);
+    }
+
+    try {
+        const drafts = await calendarService.generateFollowupMessages(meetingId, regenerate);
+        setFollowupDrafts({
+            email: drafts.email || "",
+            sms: drafts.sms || "",
+            whatsapp: drafts.whatsapp || ""
+        });
+        
+        // If we have drafts, update the local meeting status if needed (though drafts are separate)
+    } catch (error: any) {
+        console.error("Failed to generate drafts", error);
+        const errorMessage = 
+            error?.response?.data?.error || 
+            error?.response?.data?.message || 
+            "Failed to generate follow-up drafts. Please try again.";
+
+        toast({
+            title: "Error",
+            description: errorMessage,
+            variant: "destructive"
+        });
+    } finally {
+        setLoadingDrafts(false);
+        setRegeneratingDrafts(false);
+    }
+  };
+
+  const handleCopy = (text: string, type: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedState(type);
+    setTimeout(() => setCopiedState(null), 2000);
+    toast({
+        title: "Copied",
+        description: "Message copied to clipboard",
+    });
+  };
+
+  const handleSendFollowup = async () => {
+    if (!selectedMeeting || !lead?._id) return;
+    setSendingFollowup(true);
+
+    try {
+        const message = followupDrafts[followupTab];
+        if (!message) return;
+
+        if (followupTab === "email") {
+            // Parse Subject and Body
+            let subject = "Follow up";
+            let body = message;
+            
+            // Simple parsing for "Subject: ..."
+            const subjectMatch = message.match(/^Subject:\s*(.*?)(\n|$)/i);
+            if (subjectMatch) {
+                subject = subjectMatch[1].trim();
+                body = message.replace(/^Subject:.*(\n|$)/i, "").trim();
+            }
+
+            // Convert newlines to simple HTML breaks for email body if it's plain text
+            const htmlBody = body.replace(/\n/g, "<br/>");
+
+            // Determine recipient email: try attendee first, then lead email
+            const recipientEmail = selectedMeeting.attendees?.[0]?.email || lead.email || "";
+
+            await emailService.sendEmail({
+                to: [recipientEmail],
+                subject,
+                html: htmlBody,
+                leadId: lead._id,
+                // Attachments?
+            } as any);
+            toast({ title: "Email Sent", description: "Follow-up email sent successfully." });
+
+        } else if (followupTab === "sms") {
+            await twilioService.sendLeadMessage(lead._id, {
+                body: message
+            });
+            toast({ title: "SMS Sent", description: "Follow-up SMS sent successfully." });
+
+        } else if (followupTab === "whatsapp") {
+            if (!whatsappPhoneId) {
+                throw new Error("No WhatsApp business account connected.");
+            }
+            // Need destination phone number.
+            // Try to find phone from lead or attendees
+            // This is a bit tricky if lead phone is not readily available in 'lead' prop? 
+            // Lead prop has _id. We might fallback to manual input or assume backend knows?
+            // whatsappService.sendTextMessage requires 'to'.
+            // Use lead.phone or parse from meeting object?
+            // Use lead.phone
+            const phone = lead.phone;
+            if (!phone) throw new Error("Lead has no phone number for WhatsApp.");
+
+            await whatsappService.sendTextMessage({
+                phoneNumberId: whatsappPhoneId,
+                to: phone,
+                body: message
+            });
+            toast({ title: "WhatsApp Sent", description: "Follow-up WhatsApp message sent successfully." });
+        }
+    } catch (error: any) {
+        console.error("Failed to send message", error);
+        toast({
+            title: "Sending Failed",
+            description: error.message || "Failed to send message.",
+            variant: "destructive"
+        });
+    } finally {
+        setSendingFollowup(false);
+    }
+  };
+
+  // Effect to load drafts when tab is notes
+  useEffect(() => {
+    if (activeTab === "notes" && selectedMeeting) {
+        // Check if we already have drafts in selectedMeeting?
+        // The selectedMeeting object might be stale if we just updated drafts.
+        // But generateFollowupMessages(..., false) handles fetching existing.
+        // Only fetch if we haven't fetched for this meeting yet OR if it's empty
+        if (!followupDrafts.email && !loadingDrafts) {
+            handleGenerateDrafts(selectedMeeting._id, false);
+        }
+    }
+  }, [activeTab, selectedMeeting]);
+
+  // Reset drafts when meeting changes
+  useEffect(() => {
+      setFollowupDrafts({ email: "", sms: "", whatsapp: "" });
+  }, [selectedMeeting?._id]);
 
   const fetchRecordingData = async (meetingId: string) => {
     // Don't fetch if already loading
@@ -752,11 +918,14 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
               {/* Meeting Info Header */}
               <div className="flex flex-col gap-2 pb-4 border-b border-white/10">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-cyan-500/10 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full bg-cyan-500/10 flex items-center justify-center flex-shrink-0">
                     <Calendar className="w-4 h-4 text-cyan-400" />
                   </div>
-                  <div className="flex flex-col items-start">
-                    <span className="text-sm font-medium text-white line-clamp-1">
+                  <div className="flex flex-col items-start flex-1 min-w-0">
+                    <span 
+                      className="text-sm font-medium text-white truncate w-full" 
+                      title={selectedMeeting.subject}
+                    >
                       {selectedMeeting.subject || "Meeting"}
                     </span>
                     <span className="text-xs text-white/60">
@@ -768,10 +937,10 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
               </div>
 
               {/* Tabs */}
-              <div className="flex gap-2 border-b border-white/10">
+              <div className="flex justify-between gap-2 border-b border-white/10 overflow-x-auto scrollbar-hide">
                 <button
                   onClick={() => setActiveTab("recording")}
-                  className={`px-4 py-2 text-sm font-medium transition-colors relative ${
+                  className={`px-2 py-2 text-sm font-medium transition-colors relative whitespace-nowrap flex-shrink-0 ${
                     activeTab === "recording"
                       ? "text-cyan-400"
                       : "text-white/60 hover:text-white/80"
@@ -784,7 +953,7 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
                 </button>
                 <button
                   onClick={() => setActiveTab("transcript")}
-                  className={`px-4 py-2 text-sm font-medium transition-colors relative ${
+                  className={`px-2 py-2 text-sm font-medium transition-colors relative whitespace-nowrap flex-shrink-0 ${
                     activeTab === "transcript"
                       ? "text-cyan-400"
                       : "text-white/60 hover:text-white/80"
@@ -797,7 +966,7 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
                 </button>
                 <button
                   onClick={() => setActiveTab("notes")}
-                  className={`px-4 py-2 text-sm font-medium transition-colors relative ${
+                  className={`px-2 py-2 text-sm font-medium transition-colors relative whitespace-nowrap flex-shrink-0 ${
                     activeTab === "notes"
                       ? "text-cyan-400"
                       : "text-white/60 hover:text-white/80"
@@ -889,9 +1058,9 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
                   <div className="flex flex-col gap-4">
                     {/* Transcript */}
                     <div className="flex flex-col gap-2">
-                      <h3 className="text-xs font-semibold text-white/80">
+                      {/* <h3 className="text-xs font-semibold text-white/80">
                         Transcript
-                      </h3>
+                      </h3> */}
                       {(() => {
                         const storedData = recordingData[selectedMeeting._id];
                         const transcriptUrl = selectedMeeting.recall?.transcriptUrl || storedData?.transcriptUrl;
@@ -1057,6 +1226,112 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
                         );
                       }
                     })()}
+
+                    {/* Follow-up Generator Section */}
+                    {meetingNotes[selectedMeeting._id] && (
+                        <div className="flex flex-col gap-4 pt-6 border-t border-white/10 mt-2">
+                             <div className="text-center">
+                                <h4 className="text-sm font-semibold text-white/90">
+                                  AI Follow-up Drafts
+                                </h4>
+                             </div>
+
+                             {loadingDrafts ? (
+                                <div className="flex items-center justify-center py-12 rounded-2xl bg-white/[0.02] border border-white/10">
+                                    <Loader2 className="w-6 h-6 text-cyan-400 animate-spin" />
+                                    <span className="ml-2 text-sm text-white/60">Generating drafts...</span>
+                                </div>
+                             ) : (
+                                <div className="flex flex-col gap-4">
+                                    {/* Channel Tabs */}
+                                    <div className="grid grid-cols-3 p-1 rounded-xl bg-white/5 border border-white/10">
+                                        {[
+                                            { id: "email", icon: Mail, label: "Email" },
+                                            { id: "sms", icon: MessageSquare, label: "SMS" },
+                                            { id: "whatsapp", icon: IoLogoWhatsapp, label: "WhatsApp" }
+                                        ].map((channel) => (
+                                            <button
+                                                key={channel.id}
+                                                // @ts-ignore
+                                                onClick={() => setFollowupTab(channel.id)}
+                                                className={`flex items-center justify-center py-2 rounded-lg transition-all duration-200 ${
+                                                    followupTab === channel.id
+                                                        ? "text-cyan-400"
+                                                        : "text-white/40 hover:text-white/60"
+                                                }`}
+                                                title={channel.label}
+                                            >
+                                                <channel.icon className="w-5 h-5" />
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    {/* Message Display/Edit */}
+                                    <div className="relative group">
+                                        <textarea
+                                            value={followupDrafts[followupTab]}
+                                            onChange={(e) => setFollowupDrafts(prev => ({ ...prev, [followupTab]: e.target.value }))}
+                                            className="w-full h-64 bg-white/5 border border-white/10 rounded-xl p-5 text-sm text-white/80 resize-none focus:outline-none focus:border-cyan-500/30 focus:ring-1 focus:ring-cyan-500/20 font-sans leading-relaxed transition-all placeholder:text-white/20 scrollbar-hide"
+                                            placeholder={`Generated ${followupTab} message will appear here...`}
+                                        />
+                                        
+                                        {/* Copy Button (Hidden as requested) */}
+                                        {/* <Button ... /> */}
+                                    </div>
+
+                                    {/* Actions */}
+                                    <div className="flex items-center justify-end gap-3 mt-1">
+                                         {/* Regenerate Button */}
+                                         <Button
+                                          variant="outline"
+                                          size="icon"
+                                          onClick={() => handleGenerateDrafts(selectedMeeting._id, true)}
+                                          disabled={regeneratingDrafts || loadingDrafts}
+                                          className="h-10 w-10 rounded-full border-white/10 bg-white/5 text-white/60 hover:text-white hover:bg-white/10 hover:border-white/20"
+                                          title="Regenerate Drafts"
+                                        >
+                                          {regeneratingDrafts ? (
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                          ) : (
+                                            <RefreshCw className="w-4 h-4" />
+                                          )}
+                                        </Button>
+
+                                        {/* Send Button */}
+                                        <Button
+                                            onClick={handleSendFollowup}
+                                            disabled={sendingFollowup || !followupDrafts[followupTab]}
+                                            className="relative overflow-hidden h-10 px-6 rounded-full border border-white/40 text-xs font-medium tracking-wide transition-all duration-400 ease-elastic text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] bg-gradient-to-r from-[#30cfd0] via-[#2a9cb3] to-[#1f6f86] z-10 before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/15 before:to-transparent before:transition-all before:duration-300 before:ease-in-out hover:shadow-[0_0_20px_rgba(48,207,208,0.5)]"
+                                            style={{
+                                                boxShadow:
+                                                    "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                                            }}
+                                        >
+                                            <div
+                                                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[100px] h-[100px] rounded-full pointer-events-none"
+                                                style={{
+                                                    background: "linear-gradient(180deg, #67B0B7 0%, #4066B3 100%)",
+                                                    filter: "blur(20px)",
+                                                    WebkitFilter: "blur(20px)",
+                                                }}
+                                            ></div>
+                                            {sendingFollowup ? (
+                                                <>
+                                                    <Loader2 className="w-4 h-4 mr-2 animate-spin relative z-10" />
+                                                    <span className="relative z-10">Sending...</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Send className="w-4 h-4 mr-2 relative z-10" />
+                                                    <span className="relative z-10">Send Now</span>
+                                                </>
+                                            )}
+                                        </Button>
+                                    </div>
+                                </div>
+                             )}
+                        </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -1076,31 +1351,40 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
       {showNotesDetailModal && selectedMeeting && typeof window !== "undefined" &&
         createPortal(
           <div
-            className="fixed inset-0 bg-black/50 z-[9999] flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 transition-all duration-300"
             onClick={() => setShowNotesDetailModal(false)}
           >
             <div
-              className="bg-[#1a1d24] rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+              className="relative bg-[#0a0a0a] rounded-[32px] max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-white/10 shadow-[0_25px_60px_rgba(0,0,0,0.55)] animate-in fade-in zoom-in-95 duration-200"
               onClick={(e) => e.stopPropagation()}
             >
-            {/* Modal Header */}
-            <div className="flex items-center justify-between p-6 border-b border-white/10">
-              <div>
-                <h2 className="text-lg font-semibold text-white">
-                  Meeting Notes
-                </h2>
-                <p className="text-sm text-white/60 mt-1">
-                  {selectedMeeting.subject} •{" "}
-                  {formatDate(selectedMeeting.startDateTime)}
-                </p>
-              </div>
-              <button
-                onClick={() => setShowNotesDetailModal(false)}
-                className="text-white/60 hover:text-white transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+              {/* Gradient overlay */}
+              <div 
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background: "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0) 38.08%, rgba(255, 255, 255, 0) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)"
+                }}
+              />
+
+              <div className="relative z-10 flex flex-col h-full min-h-0">
+                {/* Modal Header */}
+                <div className="flex items-center justify-between p-6 border-b border-white/10">
+                  <div>
+                    <h2 className="text-lg font-semibold text-white">
+                      Meeting Notes
+                    </h2>
+                    <p className="text-sm text-white/60 mt-1">
+                      {selectedMeeting.subject} •{" "}
+                      {formatDate(selectedMeeting.startDateTime)}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setShowNotesDetailModal(false)}
+                    className="text-white/60 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
 
             {/* Modal Content */}
             <div className="flex-1 overflow-y-auto p-6 scrollbar-hide">
@@ -1263,6 +1547,7 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
                   </div>
                 );
               })()}
+            </div>
             </div>
           </div>
         </div>,

@@ -91,7 +91,7 @@ const ProspectsTable: React.FC = () => {
           toast({
             title: "Sync Failed",
             description:
-              error?.response?.data?.message || "Failed to sync from Airtable",
+              error?.response?.data?.message || "Failed to sync",
             variant: "destructive",
           });
         },
@@ -162,7 +162,7 @@ const ProspectsTable: React.FC = () => {
                 }`}
               />
               <span className="whitespace-nowrap relative z-10">
-                {isSyncing ? "Syncing..." : "Sync from Airtable"}
+                {isSyncing ? "Syncing..." : "Sync"}
               </span>
             </button>
           </CardContent>
