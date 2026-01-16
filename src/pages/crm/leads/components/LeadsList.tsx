@@ -110,7 +110,7 @@ const LeadsList: FC<LeadsListProps> = ({
   pageSize = 10,
   pageSizeOptions = [10, 25, 50, 100],
   onPageSizeChange,
-  viewMode = "detailed",
+  viewMode = "card",
   onViewModeChange,
 }) => {
   const navigate = useNavigate();

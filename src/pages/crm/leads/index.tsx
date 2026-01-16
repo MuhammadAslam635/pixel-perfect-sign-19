@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { MultiSelect } from "@/components/ui/multi-select";
-import { Layers } from "lucide-react";
+import { Layers, Sparkles } from "lucide-react";
 import { CompanyPerson } from "@/services/companies.service";
 import { CrmNavigation } from "../shared/components/CrmNavigation";
 import { Lead } from "@/services/leads.service";
@@ -35,15 +35,69 @@ import {
   LeadsFiltersInline,
 } from "../shared/components";
 import { buildStats } from "../shared/hooks";
+import LeadEnrichmentModal from "@/components/lead-enrichment/LeadEnrichmentModal";
+import SeniorityQuickSelector from "@/components/lead-enrichment/SeniorityQuickSelector";
+import { useEnrichmentConfigs } from "@/hooks/useEnrichmentConfigs";
+import type { SeniorityLevel } from "@/types/leadEnrichment";
+import { userService } from "@/services/user.service";
+import { usePermissions } from "@/hooks/usePermissions";
 
 type ViewMode = "compact" | "detailed" | "card";
 
 const index = () => {
+  const { canCreate } = usePermissions();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   // Selected lead state
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("detailed");
+  const [enrichmentModalOpen, setEnrichmentModalOpen] = useState(false);
+  const [selectedSeniorities, setSelectedSeniorities] = useState<
+    SeniorityLevel[]
+  >([]);
+
+  // Fetch dynamic enrichment configs
+  const { seniorityOptions } = useEnrichmentConfigs();
+
+  // Load user preferences on mount
+  useEffect(() => {
+    const loadPreferences = async () => {
+      try {
+        const response = await userService.getUserPreferences();
+        if (
+          response.success &&
+          response.data.preferences?.enrichment?.selectedSeniorities
+        ) {
+          setSelectedSeniorities(
+            response.data.preferences.enrichment
+              .selectedSeniorities as SeniorityLevel[]
+          );
+        }
+      } catch (error) {
+        console.error("Failed to load user preferences:", error);
+      }
+    };
+    loadPreferences();
+  }, []);
+
+  // Save user preferences when seniority selection changes
+  useEffect(() => {
+    const savePreferences = async () => {
+      try {
+        await userService.updateUserPreferences({
+          selectedSeniorities,
+        });
+      } catch (error) {
+        console.error("Failed to save user preferences:", error);
+      }
+    };
+
+    // Only save if we have loaded initial preferences (to avoid saving empty array on mount)
+    // We check if seniorityOptions are loaded to ensure configs are ready
+    if (seniorityOptions.length > 0) {
+      savePreferences();
+    }
+  }, [selectedSeniorities, seniorityOptions.length]);
 
   // Leads filters and pagination
   const [leadsPage, setLeadsPage] = useState(1);
@@ -58,7 +112,9 @@ const index = () => {
   }, [viewMode]);
 
   const [leadsCountryFilter, setLeadsCountryFilter] = useState<string[]>([]);
-  const [leadsSeniorityFilter, setLeadsSeniorityFilter] = useState<string[]>([]);
+  const [leadsSeniorityFilter, setLeadsSeniorityFilter] = useState<string[]>(
+    []
+  );
   const [leadsCompanyFilter, setLeadsCompanyFilter] = useState<string[]>([]);
   const [leadsStageFilter, setLeadsStageFilter] = useState<string[]>([]);
   const [leadsHasEmailFilter, setLeadsHasEmailFilter] = useState(false);
@@ -430,10 +486,12 @@ const index = () => {
   // Leads filters and pagination
 
   // Fetch all companies for the leads filter dropdown (limit to 500 for dropdown)
-  const { companies: allCompaniesForFilter, totalCompanies } = useCompaniesData({
-    page: 1,
-    limit: 500,
-  });
+  const { companies: allCompaniesForFilter, totalCompanies } = useCompaniesData(
+    {
+      page: 1,
+      limit: 500,
+    }
+  );
 
   // Fetch all leads (without pagination) to count leads per company
   const { leads: allLeadsForCount, query: leadsQuery } = useLeadsData(
@@ -631,10 +689,13 @@ const index = () => {
   // Fetch shared CRM stats for top cards (including companies and leads counts)
   const statsFilters = {
     leadSearch: leadsSearch || undefined,
-    company: leadsCompanyFilter.length > 0 ? leadsCompanyFilter.join(",") : undefined,
+    company:
+      leadsCompanyFilter.length > 0 ? leadsCompanyFilter.join(",") : undefined,
     stage: leadsStageFilter.length > 0 ? leadsStageFilter : undefined,
-    seniority: leadsSeniorityFilter.length > 0 ? leadsSeniorityFilter : undefined,
-    leadCountry: leadsCountryFilter.length > 0 ? leadsCountryFilter.join(",") : undefined,
+    seniority:
+      leadsSeniorityFilter.length > 0 ? leadsSeniorityFilter : undefined,
+    leadCountry:
+      leadsCountryFilter.length > 0 ? leadsCountryFilter.join(",") : undefined,
     hasEmail: leadsHasEmailFilter || undefined,
     hasPhone: leadsHasPhoneFilter || undefined,
     hasLinkedin: leadsHasLinkedinFilter || undefined,
@@ -648,7 +709,7 @@ const index = () => {
 
   // Calculate filtered counts for stats
   const effectiveTotalLeads = totalFilteredLeads;
-  
+
   // Calculate unique companies from filtered leads (respects all filters)
   const effectiveTotalCompanies = useMemo(() => {
     // If we have search or filters, we calculate based on the filtered leads
@@ -658,7 +719,7 @@ const index = () => {
       );
       return uniqueCompanyIds.size;
     }
-    
+
     // Otherwise return the total count of companies in the system (including those with 0 leads)
     return totalCompanies ?? 0;
   }, [filteredLeads, leadsSearch, hasLeadAdvancedFilters, totalCompanies]);
@@ -669,10 +730,15 @@ const index = () => {
         {
           totalCompanies: effectiveTotalCompanies,
           totalLeads: effectiveTotalLeads,
-          totalOutreach: companyFilteredStats?.totalOutreach ?? crmStats?.totalOutreach,
-          totalDealsClosed: companyFilteredStats?.totalDealsClosed ?? crmStats?.totalDealsClosed,
-          activeClients: companyFilteredStats?.activeClients ?? crmStats?.activeClients,
-          messagesSent: companyFilteredStats?.messagesSent ?? crmStats?.messagesSent,
+          totalOutreach:
+            companyFilteredStats?.totalOutreach ?? crmStats?.totalOutreach,
+          totalDealsClosed:
+            companyFilteredStats?.totalDealsClosed ??
+            crmStats?.totalDealsClosed,
+          activeClients:
+            companyFilteredStats?.activeClients ?? crmStats?.activeClients,
+          messagesSent:
+            companyFilteredStats?.messagesSent ?? crmStats?.messagesSent,
         },
         "leads"
       ),
@@ -793,6 +859,30 @@ const index = () => {
               transition={{ duration: 0.6, ease: "easeOut", delay: 0.4 }}
               className="flex flex-col sm:flex-row justify-end items-stretch sm:items-center gap-1.5 sm:gap-2 md:gap-3 min-w-0 flex-1"
             >
+              {/* Enrich Leads Section - Always Visible */}
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {/* Seniority Quick Selector - Show only if user has create permission for leads */}
+                {canCreate("leads") && (
+                  <SeniorityQuickSelector
+                    selectedSeniorities={selectedSeniorities}
+                    onChange={setSelectedSeniorities}
+                    seniorityOptions={seniorityOptions}
+                  />
+                )}
+
+                {/* Enrich Leads Button */}
+                {canCreate("leads") && (
+                  <Button
+                    onClick={() => setEnrichmentModalOpen(true)}
+                    className="bg-gradient-to-r from-[#69B4B7] to-[#3E64B4] hover:from-[#69B4B7]/80 hover:to-[#3E64B4]/80 text-white font-semibold rounded-full px-4 sm:px-6 h-10 shadow-[0_5px_18px_rgba(103,176,183,0.35)] hover:shadow-[0_8px_24px_rgba(103,176,183,0.45)] transition-all whitespace-nowrap"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    <span className="hidden sm:inline">Find Leads</span>
+                    <span className="sm:hidden">Find</span>
+                  </Button>
+                )}
+              </div>
+
               {/* Controls Container */}
               <div className="flex flex-col sm:flex-row flex-1 items-stretch sm:items-center gap-1.5 sm:gap-2 md:gap-3 order-1 lg:order-2">
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2 flex-1">
@@ -1010,6 +1100,22 @@ const index = () => {
         onRegenerate={handlePhoneRegenerate}
         messageId={phoneMessageId}
         onEdit={handlePhoneEdit}
+      />
+
+      {/* Lead Enrichment Modal */}
+      <LeadEnrichmentModal
+        isOpen={enrichmentModalOpen}
+        onClose={() => setEnrichmentModalOpen(false)}
+        selectedSeniorities={selectedSeniorities}
+        onEnrichmentStart={(searchId, mode) => {
+          toast.success(`Enrichment started! Tracking ID: ${searchId}`);
+        }}
+        onEnrichmentComplete={(searchId) => {
+          toast.success("Enrichment completed! Leads list will refresh.");
+          leadsQuery.refetch();
+          queryClient.invalidateQueries({ queryKey: ["companies"] });
+          setEnrichmentModalOpen(false);
+        }}
       />
     </DashboardLayout>
   );

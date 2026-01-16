@@ -32,6 +32,13 @@ const LeadEnrichmentModal = ({
   const [isEnriching, setIsEnriching] = useState(false);
   const [searchId, setSearchId] = useState<string | null>(null);
   const [estimatedTime, setEstimatedTime] = useState<string | null>(null);
+  
+  // Domain-specific tab state (lifted to persist across tab switches)
+  const [domains, setDomains] = useState<string[]>([]);
+  const [domainInput, setDomainInput] = useState("");
+  const [bulkInput, setBulkInput] = useState("");
+  const [showBulkInput, setShowBulkInput] = useState(false);
+  const [invalidDomains, setInvalidDomains] = useState<string[]>([]);
 
   const handleEnrichmentStart = (
     searchId: string,
@@ -67,6 +74,12 @@ const LeadEnrichmentModal = ({
       setSearchId(null);
       setEstimatedTime(null);
       setIsEnriching(false);
+      // Reset domain-specific state
+      setDomains([]);
+      setDomainInput("");
+      setBulkInput("");
+      setShowBulkInput(false);
+      setInvalidDomains([]);
     }, 300);
   };
 
@@ -137,6 +150,16 @@ const LeadEnrichmentModal = ({
                   onEnrichmentStart={(searchId, estimatedTime) =>
                     handleEnrichmentStart(searchId, estimatedTime, "domain")
                   }
+                  domains={domains}
+                  setDomains={setDomains}
+                  domainInput={domainInput}
+                  setDomainInput={setDomainInput}
+                  bulkInput={bulkInput}
+                  setBulkInput={setBulkInput}
+                  showBulkInput={showBulkInput}
+                  setShowBulkInput={setShowBulkInput}
+                  invalidDomains={invalidDomains}
+                  setInvalidDomains={setInvalidDomains}
                 />
               </TabsContent>
 

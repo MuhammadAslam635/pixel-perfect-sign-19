@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type React from "react";
 import { motion } from "framer-motion";
 import { Building2, Plus, X, AlertCircle, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,20 +17,56 @@ import type { SeniorityLevel } from "@/types/leadEnrichment";
 interface DomainSpecificTabProps {
   selectedSeniorities?: SeniorityLevel[];
   onEnrichmentStart: (searchId: string, estimatedTime: string) => void;
+  // Lifted state props to persist across tab switches
+  domains?: string[];
+  setDomains?: React.Dispatch<React.SetStateAction<string[]>>;
+  domainInput?: string;
+  setDomainInput?: React.Dispatch<React.SetStateAction<string>>;
+  bulkInput?: string;
+  setBulkInput?: React.Dispatch<React.SetStateAction<string>>;
+  showBulkInput?: boolean;
+  setShowBulkInput?: React.Dispatch<React.SetStateAction<boolean>>;
+  invalidDomains?: string[];
+  setInvalidDomains?: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
-const DomainSpecificTab = ({ 
-  selectedSeniorities = [], 
-  onEnrichmentStart 
+const DomainSpecificTab = ({
+  selectedSeniorities = [],
+  onEnrichmentStart,
+  domains: externalDomains,
+  setDomains: externalSetDomains,
+  domainInput: externalDomainInput,
+  setDomainInput: externalSetDomainInput,
+  bulkInput: externalBulkInput,
+  setBulkInput: externalSetBulkInput,
+  showBulkInput: externalShowBulkInput,
+  setShowBulkInput: externalSetShowBulkInput,
+  invalidDomains: externalInvalidDomains,
+  setInvalidDomains: externalSetInvalidDomains,
 }: DomainSpecificTabProps) => {
   const { seniorityOptions } = useEnrichmentConfigs();
-  const [localSelectedSeniorities, setLocalSelectedSeniorities] = useState<SeniorityLevel[]>(selectedSeniorities);
-  
-  const [domains, setDomains] = useState<string[]>([]);
-  const [domainInput, setDomainInput] = useState("");
-  const [bulkInput, setBulkInput] = useState("");
-  const [showBulkInput, setShowBulkInput] = useState(false);
-  const [invalidDomains, setInvalidDomains] = useState<string[]>([]);
+  const [localSelectedSeniorities, setLocalSelectedSeniorities] =
+    useState<SeniorityLevel[]>(selectedSeniorities);
+
+  // Use external state if provided (from parent), otherwise use local state as fallback
+  const [localDomains, setLocalDomains] = useState<string[]>([]);
+  const [localDomainInput, setLocalDomainInput] = useState("");
+  const [localBulkInput, setLocalBulkInput] = useState("");
+  const [localShowBulkInput, setLocalShowBulkInput] = useState(false);
+  const [localInvalidDomains, setLocalInvalidDomains] = useState<string[]>([]);
+
+  // Use external state if provided, otherwise fall back to local state
+  const domains = externalDomains ?? localDomains;
+  const setDomains = externalSetDomains ?? setLocalDomains;
+  const domainInput = externalDomainInput ?? localDomainInput;
+  const setDomainInput = externalSetDomainInput ?? setLocalDomainInput;
+  const bulkInput = externalBulkInput ?? localBulkInput;
+  const setBulkInput = externalSetBulkInput ?? setLocalBulkInput;
+  const showBulkInput = externalShowBulkInput ?? localShowBulkInput;
+  const setShowBulkInput = externalSetShowBulkInput ?? setLocalShowBulkInput;
+  const invalidDomains = externalInvalidDomains ?? localInvalidDomains;
+  const setInvalidDomains = externalSetInvalidDomains ?? setLocalInvalidDomains;
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleAddDomain = () => {
@@ -95,15 +132,14 @@ const DomainSpecificTab = ({
     try {
       const response = await leadEnrichmentService.enrichByDomain(
         domains,
-        localSelectedSeniorities.length > 0 ? localSelectedSeniorities : undefined
+        localSelectedSeniorities.length > 0
+          ? localSelectedSeniorities
+          : undefined
       );
 
       if (response.success) {
         toast.success(response.message);
-        onEnrichmentStart(
-          response.data.searchId,
-          response.data.estimatedTime
-        );
+        onEnrichmentStart(response.data.searchId, response.data.estimatedTime);
       } else {
         toast.error("Failed to start enrichment");
       }
@@ -282,9 +318,8 @@ const DomainSpecificTab = ({
         <div className="text-xs text-white/50">
           {domains.length > 0 && (
             <span>
-              Estimated time: ~
-              {Math.ceil(domains.length * 2)}-{Math.ceil(domains.length * 10)}{" "}
-              minutes
+              Estimated time: ~{Math.ceil(domains.length * 2)}-
+              {Math.ceil(domains.length * 10)} minutes
             </span>
           )}
         </div>
@@ -305,7 +340,8 @@ const DomainSpecificTab = ({
           ) : (
             <>
               <Building2 className="w-4 h-4 mr-2" />
-              Enrich {domains.length} {domains.length === 1 ? "Company" : "Companies"}
+              Enrich {domains.length}{" "}
+              {domains.length === 1 ? "Company" : "Companies"}
             </>
           )}
         </Button>
