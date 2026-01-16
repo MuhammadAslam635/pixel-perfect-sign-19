@@ -39,6 +39,7 @@ export interface FollowupPlan {
   startDate: string;
   summary?: string;
   llmModel?: string;
+  templateSnapshot?: FollowupPlanTemplateRef;
   metadata?: Record<string, unknown>;
   todo: FollowupPlanTodo[];
   createdAt: string;

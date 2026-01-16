@@ -794,9 +794,11 @@ const Activity: FC<ActivityProps> = ({
   const nowTimestamp = todayRef.getTime();
 
   const getTemplateTitle = (plan: FollowupPlan) => {
-    let title = typeof plan.templateId === "string"
-      ? "Followup Plan"
-      : (plan.templateId?.title || "Followup Plan");
+    // UPDATED: Prefer snapshot title for historical accuracy
+    const baseTitle = plan.templateSnapshot?.title || 
+      (typeof plan.templateId === "object" ? plan.templateId.title : "Followup Plan");
+    
+    let title = baseTitle || "Followup Plan";
 
     // Check if there's a scheduled time in the first task
     if (plan.todo && plan.todo.length > 0) {

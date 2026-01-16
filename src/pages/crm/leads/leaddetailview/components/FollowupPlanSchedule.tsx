@@ -112,9 +112,9 @@ const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
               Follow-up Plan Schedule
             </CardTitle>
             <p className="text-sm text-white/60 mt-1">
-              {plan.templateId && typeof plan.templateId === "object"
+              {plan.templateSnapshot?.title || (plan.templateId && typeof plan.templateId === "object"
                 ? plan.templateId.title
-                : "Follow-up Plan"}{" "}
+                : "Follow-up Plan")}{" "}
               • Started {formatDistanceToNow(new Date(plan.createdAt), {
                 addSuffix: true,
               })}
