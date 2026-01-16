@@ -4141,7 +4141,7 @@ const LeadChat = ({
                                 setProposalMessage(e.target.value)
                               }
                               placeholder="Write a message to accompany your proposal..."
-                              className="w-full min-h-[120px] rounded-xl bg-white/5 border border-white/10 p-4 text-sm text-white placeholder:text-white/30 outline-none focus:border-white/30 transition-all resize-none"
+                              className="scrollbar-hide w-full min-h-[120px] rounded-xl bg-white/5 border border-white/10 p-4 text-sm text-white placeholder:text-white/30 outline-none focus:border-white/30 transition-all resize-none"
                             />
                             <button
                               onClick={handleGenerateProposalMessage}
