@@ -1406,29 +1406,53 @@ const LeadChat = ({
 
     html = processedLines.join("\n");
 
-    // Convert double newlines to paragraphs
-    html = html
-      .split(/\n\n+/)
-      .map((block) => {
-        const trimmed = block.trim();
-        if (!trimmed) return "";
-        // Don't wrap if it's already a block element
-        if (
-          trimmed.startsWith("<h") ||
-          trimmed.startsWith("<ul") ||
-          trimmed.startsWith("<ol") ||
-          trimmed.startsWith("<pre") ||
-          trimmed.startsWith("<blockquote") ||
-          trimmed.startsWith("<hr")
-        ) {
-          return trimmed;
-        }
-        return `<p>${trimmed.replace(/\n/g, "<br>")}</p>`;
-      })
-      .filter((block) => block)
-      .join("");
+    // Convert to paragraphs - process line by line for better control
+    const blocks: string[] = [];
+    let currentParagraph: string[] = [];
 
-    return html;
+    const finalLines = html.split("\n");
+    for (let i = 0; i < finalLines.length; i++) {
+      const line = finalLines[i].trim();
+
+      // Check if line is a block element
+      const isBlockElement =
+        line.startsWith("<h") ||
+        line.startsWith("<ul") ||
+        line.startsWith("<ol") ||
+        line.startsWith("<pre") ||
+        line.startsWith("<blockquote") ||
+        line.startsWith("<hr") ||
+        line.startsWith("</h") ||
+        line.startsWith("</ul") ||
+        line.startsWith("</ol") ||
+        line.startsWith("</pre") ||
+        line.startsWith("</blockquote");
+
+      if (isBlockElement) {
+        // Flush current paragraph if any
+        if (currentParagraph.length > 0) {
+          blocks.push(`<p>${currentParagraph.join("<br>")}</p>`);
+          currentParagraph = [];
+        }
+        blocks.push(line);
+      } else if (line === "") {
+        // Empty line - flush current paragraph
+        if (currentParagraph.length > 0) {
+          blocks.push(`<p>${currentParagraph.join("<br>")}</p>`);
+          currentParagraph = [];
+        }
+      } else {
+        // Regular content line - add to current paragraph
+        currentParagraph.push(line);
+      }
+    }
+
+    // Flush any remaining paragraph
+    if (currentParagraph.length > 0) {
+      blocks.push(`<p>${currentParagraph.join("<br>")}</p>`);
+    }
+
+    return blocks.join("");
   };
 
   // Helper function to convert HTML back to markdown
@@ -1437,10 +1461,10 @@ const LeadChat = ({
 
     let markdown = html
       // Headers
-      .replace(/<h1>(.*?)<\/h1>/gi, "# $1\n\n")
-      .replace(/<h2>(.*?)<\/h2>/gi, "## $1\n\n")
-      .replace(/<h3>(.*?)<\/h3>/gi, "### $1\n\n")
-      .replace(/<h4>(.*?)<\/h4>/gi, "#### $1\n\n")
+      .replace(/<h1>(.*?)<\/h1>/gi, "# $1\n")
+      .replace(/<h2>(.*?)<\/h2>/gi, "## $1\n")
+      .replace(/<h3>(.*?)<\/h3>/gi, "### $1\n")
+      .replace(/<h4>(.*?)<\/h4>/gi, "#### $1\n")
       // Bold and italic
       .replace(/<strong>(.*?)<\/strong>/gi, "**$1**")
       .replace(/<b>(.*?)<\/b>/gi, "**$1**")
@@ -1463,12 +1487,13 @@ const LeadChat = ({
       .replace(/<blockquote>(.*?)<\/blockquote>/gi, "> $1\n")
       // Horizontal rules
       .replace(/<hr\s*\/?>/gi, "\n---\n")
-      // Paragraphs and line breaks
-      .replace(/<p>(.*?)<\/p>/gi, "$1\n\n")
+      // Line breaks - convert to single newline
       .replace(/<br\s*\/?>/gi, "\n")
+      // Paragraphs - add newline after
+      .replace(/<p>(.*?)<\/p>/gis, "$1\n")
       // Remove remaining HTML tags
       .replace(/<[^>]+>/g, "")
-      // Clean up multiple newlines
+      // Clean up excessive newlines (more than 2 consecutive)
       .replace(/\n{3,}/g, "\n\n")
       .trim();
 
@@ -2927,10 +2952,22 @@ const LeadChat = ({
       addFooter();
 
       // Parse markdown content into structured elements
-      const markdownLines = proposalContent.split("\n");
+      // First, decode any HTML entities in the content
+      const decodeHtmlEntities = (text: string) => {
+        const textarea = document.createElement("textarea");
+        textarea.innerHTML = text;
+        return textarea.value;
+      };
+
+      const decodedContent = decodeHtmlEntities(proposalContent);
+      const markdownLines = decodedContent.split("\n");
       const lineHeight = 6;
       const maxContentY = pageHeight - footerHeight - 10;
       const maxWidth = contentWidth;
+
+      console.log(
+        `Processing ${markdownLines.length} lines for PDF generation`
+      );
 
       for (let i = 0; i < markdownLines.length; i++) {
         const line = markdownLines[i];
@@ -3210,9 +3247,6 @@ const LeadChat = ({
             pdf.line(margin, currentY, pageWidth - margin, currentY);
             currentY += lineHeight * 0.5;
           }
-        } else if (trimmedLine.startsWith("")) {
-          // Empty line - add spacing
-          currentY += lineHeight / 2;
         } else if (
           trimmedLine.startsWith("---") ||
           trimmedLine.startsWith("***")
@@ -3317,6 +3351,10 @@ const LeadChat = ({
           }
         }
       }
+
+      console.log(
+        `PDF generation completed. Processed all ${markdownLines.length} lines`
+      );
 
       const fileName = `Proposal_${(displayName || "Lead").replace(
         /\s+/g,
