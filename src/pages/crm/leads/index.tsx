@@ -50,7 +50,7 @@ const index = () => {
   const queryClient = useQueryClient();
   // Selected lead state
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>("detailed");
+  const [viewMode, setViewMode] = useState<ViewMode>("card");
   const [enrichmentModalOpen, setEnrichmentModalOpen] = useState(false);
   const [selectedSeniorities, setSelectedSeniorities] = useState<
     SeniorityLevel[]
