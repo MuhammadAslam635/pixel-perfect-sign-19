@@ -150,15 +150,6 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
       return;
     }
 
-    if (formData.name.includes(" ")) {
-      toast({
-        title: "Validation error",
-        description: "Campaign name cannot contain spaces",
-        variant: "destructive",
-      });
-      return;
-    }
-
     if (!formData.userRequirements.trim()) {
       toast({
         title: "Validation error",
@@ -395,10 +386,10 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      name: e.target.value.replace(/\s/g, ""),
+                      name: e.target.value,
                     })
                   }
-                  placeholder="e.g., Summer-Sale-2024 (no spaces allowed)"
+                  placeholder="e.g., Summer Sale 2024"
                   required
                   disabled={isPending}
                   className="bg-white/5 backdrop-blur-sm border-white/20 text-white text-xs placeholder:text-gray-400 focus:bg-white/10 focus:border-white/30 transition-all"
@@ -723,61 +714,6 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
                     </p>
                   </div>
                 )}
-              </div>
-
-              {/* Document Creation Steps */}
-              <div className="space-y-3 pt-2 border-t border-white/10">
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs text-white/70 font-semibold">
-                    Document Creation Steps
-                  </Label>
-                  {isStreaming && currentStep && (
-                    <div className="flex items-center gap-2 text-xs text-white/60">
-                      <Loader2 className="w-3 h-3 animate-spin" />
-                      <span>{currentStep}</span>
-                    </div>
-                  )}
-                </div>
-                <p className="text-xs text-gray-400 mb-3">
-                  {isStreaming
-                    ? "Documents are being generated in real-time..."
-                    : "After campaign creation, the following documents will be automatically generated:"}
-                </p>
-                <div className="space-y-2">
-                  {documentSteps.map((step, index) => (
-                    <div
-                      key={index}
-                      className={`flex items-start gap-3 p-2 rounded-lg backdrop-blur-sm border transition-all ${
-                        step.status === "completed"
-                          ? "bg-green-500/10 border-green-500/30"
-                          : step.status === "in-progress"
-                          ? "bg-blue-500/10 border-blue-500/30"
-                          : "bg-white/5 border-white/10"
-                      }`}
-                    >
-                      {step.status === "completed" ? (
-                        <CheckCircle2 className="w-4 h-4 mt-0.5 text-green-400 flex-shrink-0" />
-                      ) : step.status === "in-progress" ? (
-                        <Loader2 className="w-4 h-4 mt-0.5 text-blue-400 animate-spin flex-shrink-0" />
-                      ) : (
-                        <Circle className="w-4 h-4 mt-0.5 text-white/50 flex-shrink-0" />
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-white">
-                          {step.name}
-                        </p>
-                        <p className="text-xs text-gray-400 mt-0.5">
-                          {step.description}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <p className="text-xs text-gray-500 mt-2 italic">
-                  {isStreaming
-                    ? "These documents are being created in parallel, followed by content creation and media generation."
-                    : "These documents will be created in parallel, followed by content creation and media generation."}
-                </p>
               </div>
             </div>
 

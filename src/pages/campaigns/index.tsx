@@ -1545,11 +1545,11 @@ const CampaignsPage = () => {
                         <DialogTitle className="text-xs sm:text-sm font-semibold break-words text-white drop-shadow-lg">
                           {isEditing ? (
                             <Input
-                              value={editedCampaign.name.replace(/\s/g, "")}
+                              value={editedCampaign.name}
                               onChange={(e) =>
                                 setEditedCampaign({
                                   ...editedCampaign,
-                                  name: e.target.value.replace(/\s/g, ""),
+                                  name: e.target.value,
                                 })
                               }
                               className="text-xs sm:text-sm font-semibold bg-white/5 backdrop-blur-sm border-white/20 text-white focus:bg-white/10 focus:border-white/30 transition-all"
