@@ -5,6 +5,11 @@ import { IoLogoWhatsapp } from "react-icons/io5";
 import API from "@/utils/api";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface FollowupGeneratorProps {
   callLogId: string;
@@ -157,21 +162,39 @@ export const FollowupGenerator: React.FC<FollowupGeneratorProps> = ({
     { id: "whatsapp", label: "WhatsApp", icon: IoLogoWhatsapp },
   ];
 
+  const getChannelTooltip = (channelId: Channel) => {
+    switch (channelId) {
+      case "email":
+        return leadEmail || "No email available";
+      case "sms":
+      case "whatsapp":
+        return leadPhone || "No phone available";
+      default:
+        return "";
+    }
+  };
+
   return (
     <div className="flex flex-col gap-1.5 mt-0.5 flex-1 min-h-0">
       <div className="flex gap-2 p-1 bg-white/5 rounded-lg border border-white/10 overflow-x-auto scrollbar-hide">
         {channels.map((channel) => (
-          <button
-            key={channel.id}
-            onClick={() => setActiveChannel(channel.id)}
-            className={`flex-1 flex-shrink-0 flex items-center justify-center gap-2 py-2 px-3 text-xs font-medium rounded-md transition-all whitespace-nowrap ${
-              activeChannel === channel.id
-                ? "text-cyan-400 border border-transparent"
-                : "text-white/40 hover:text-white/60 border border-transparent"
-            }`}
-          >
-            <channel.icon className="w-5 h-5" />
-          </button>
+          <Tooltip key={channel.id}>
+            <TooltipTrigger asChild>
+              <button
+                onClick={() => setActiveChannel(channel.id)}
+                className={`flex-1 flex-shrink-0 flex items-center justify-center gap-2 py-2 px-3 text-xs font-medium rounded-md transition-all whitespace-nowrap ${
+                  activeChannel === channel.id
+                    ? "text-cyan-400 border border-transparent"
+                    : "text-white/40 hover:text-white/60 border border-transparent"
+                }`}
+              >
+                <channel.icon className="w-5 h-5" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="top">
+              <p className="font-medium text-xs">{channel.label}</p>
+            </TooltipContent>
+          </Tooltip>
         ))}
       </div>
 

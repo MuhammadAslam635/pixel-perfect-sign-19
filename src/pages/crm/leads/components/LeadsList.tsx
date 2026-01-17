@@ -472,6 +472,7 @@ const LeadsList: FC<LeadsListProps> = ({
     const { isActive, displayEmail, displayPhone } = getLeadData(lead);
     const hasPhone = displayPhone !== "N/A";
     const hasEmail = displayEmail !== "N/A";
+    const hasWhatsapp = Boolean(lead.whatsapp && lead.whatsapp.trim());
     const hasLinkedin = Boolean(lead.linkedinUrl && lead.linkedinUrl.trim());
     const isFilling = fillingLeads[lead._id];
     const canEnrich = Boolean(
@@ -657,26 +658,57 @@ const LeadsList: FC<LeadsListProps> = ({
                 </TooltipContent>
               </Tooltip>
               <div className="mt-0.5 sm:mt-1 md:mt-2 flex flex-wrap items-center gap-1.5 sm:gap-2 md:gap-3 text-xs text-gray-300">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center border border-white bg-white text-gray-900 flex-shrink-0 cursor-pointer">
-                      <Linkedin className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{lead.linkedinUrl || "No LinkedIn available"}</p>
-                  </TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center border border-white bg-white text-gray-900 flex-shrink-0 cursor-pointer">
-                      <Mail className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{displayEmail}</p>
-                  </TooltipContent>
-                </Tooltip>
+                {hasPhone && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center border border-white bg-white text-gray-900 flex-shrink-0 cursor-pointer">
+                        <Phone className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{displayPhone}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+
+                {hasWhatsapp && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center border border-white bg-white text-gray-900 flex-shrink-0 cursor-pointer">
+                        <MessageCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{lead.whatsapp}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+
+                {hasLinkedin && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center border border-white bg-white text-gray-900 flex-shrink-0 cursor-pointer">
+                        <Linkedin className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{lead.linkedinUrl || "No LinkedIn available"}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+
+                {hasEmail && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center border border-white bg-white text-gray-900 flex-shrink-0 cursor-pointer">
+                        <Mail className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{displayEmail}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
               </div>
             </>
           )}

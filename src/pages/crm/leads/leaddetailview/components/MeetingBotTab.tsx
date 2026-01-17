@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Lead } from "@/services/leads.service";
 import { calendarService } from "@/services/calendar.service";
 import { Button } from "@/components/ui/button";
-import { Loader2, RefreshCcw, FileText, Calendar, Play, X, Mail, MessageSquare, Phone, Send, RefreshCw, Copy, Check } from "lucide-react";
+import { Loader2, RefreshCcw, FileText, Calendar, Play, X, Mail, MessageSquare, Phone, Send, RefreshCw, Copy, Check, Video, Notebook, FileAudio } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { LeadMeetingRecord } from "@/services/calendar.service";
 import { emailService } from "@/services/email.service";
@@ -12,6 +12,11 @@ import { twilioService } from "@/services/twilio.service";
 import { whatsappService } from "@/services/whatsapp.service";
 import { useToast } from "@/hooks/use-toast";
 import { IoLogoWhatsapp } from "react-icons/io5";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 type MeetingBotTabProps = {
   lead?: Lead;
@@ -938,45 +943,71 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
 
               {/* Tabs */}
               <div className="flex justify-between gap-2 border-b border-white/10 overflow-x-auto scrollbar-hide">
-                <button
-                  onClick={() => setActiveTab("recording")}
-                  className={`px-2 py-2 text-sm font-medium transition-colors relative whitespace-nowrap flex-shrink-0 ${
-                    activeTab === "recording"
-                      ? "text-cyan-400"
-                      : "text-white/60 hover:text-white/80"
-                  }`}
-                >
-                  Recording
-                  {activeTab === "recording" && (
-                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400" />
-                  )}
-                </button>
-                <button
-                  onClick={() => setActiveTab("transcript")}
-                  className={`px-2 py-2 text-sm font-medium transition-colors relative whitespace-nowrap flex-shrink-0 ${
-                    activeTab === "transcript"
-                      ? "text-cyan-400"
-                      : "text-white/60 hover:text-white/80"
-                  }`}
-                >
-                  Transcript
-                  {activeTab === "transcript" && (
-                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400" />
-                  )}
-                </button>
-                <button
-                  onClick={() => setActiveTab("notes")}
-                  className={`px-2 py-2 text-sm font-medium transition-colors relative whitespace-nowrap flex-shrink-0 ${
-                    activeTab === "notes"
-                      ? "text-cyan-400"
-                      : "text-white/60 hover:text-white/80"
-                  }`}
-                >
-                  Notes
-                  {activeTab === "notes" && (
-                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400" />
-                  )}
-                </button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => setActiveTab("recording")}
+                      className={`px-3 py-2 text-sm font-medium transition-colors relative whitespace-nowrap flex-shrink-0 flex items-center justify-center ${
+                        activeTab === "recording"
+                          ? "text-cyan-400"
+                          : "text-white/60 hover:text-white/80"
+                      }`}
+                    >
+                      <span className="block 4xl:hidden"><Video className="w-5 h-5" /></span>
+                      <span className="hidden 4xl:block">Recording</span>
+                      {activeTab === "recording" && (
+                        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400" />
+                      )}
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    <p className="font-medium text-xs">Recording</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => setActiveTab("transcript")}
+                      className={`px-3 py-2 text-sm font-medium transition-colors relative whitespace-nowrap flex-shrink-0 flex items-center justify-center ${
+                        activeTab === "transcript"
+                          ? "text-cyan-400"
+                          : "text-white/60 hover:text-white/80"
+                      }`}
+                    >
+                      <span className="block 4xl:hidden"><FileAudio className="w-5 h-5" /></span>
+                      <span className="hidden 4xl:block">Transcript</span>
+                      {activeTab === "transcript" && (
+                        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400" />
+                      )}
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    <p className="font-medium text-xs">Transcript</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => setActiveTab("notes")}
+                      className={`px-3 py-2 text-sm font-medium transition-colors relative whitespace-nowrap flex-shrink-0 flex items-center justify-center ${
+                        activeTab === "notes"
+                          ? "text-cyan-400"
+                          : "text-white/60 hover:text-white/80"
+                      }`}
+                    >
+                      <span className="block 4xl:hidden"><FileText className="w-5 h-5" /></span>
+                      <span className="hidden 4xl:block">Notes</span>
+                      {activeTab === "notes" && (
+                        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400" />
+                      )}
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    <p className="font-medium text-xs">Notes</p>
+                  </TooltipContent>
+                </Tooltip>
               </div>
 
               {/* Tab Content */}
