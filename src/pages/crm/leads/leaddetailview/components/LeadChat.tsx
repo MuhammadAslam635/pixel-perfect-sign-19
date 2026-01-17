@@ -455,6 +455,8 @@ const LeadChat = ({
     setShowEditWithAI(false);
     setShowEditAIModal(false);
     setEditAIQuery("");
+    setSelectedProposal(null);
+    setShowProposalList(false);
   }, [lead?._id]);
 
   const whatsappConversationQueryKey = [
@@ -677,6 +679,30 @@ const LeadChat = ({
   });
 
   const sentProposals: Proposal[] = proposalsResponse?.data?.proposals || [];
+
+  // Auto-load latest proposal when tab opens and proposals exist
+  useEffect(() => {
+    if (
+      activeTab === "Proposal" &&
+      sentProposals.length > 0 &&
+      !proposalContent &&
+      !selectedProposal &&
+      !isGeneratingProposal
+    ) {
+      // Load the most recent proposal automatically
+      const latestProposal = sentProposals[0];
+      setProposalContent(latestProposal.content);
+      setProposalHtmlContent(latestProposal.htmlContent || "");
+      setSelectedProposal(latestProposal);
+      setIsProposalEditable(false); // View-only for sent proposals
+    }
+  }, [
+    activeTab,
+    sentProposals,
+    proposalContent,
+    selectedProposal,
+    isGeneratingProposal,
+  ]);
 
   // Log proposals error if any
   useEffect(() => {
@@ -2421,69 +2447,82 @@ const LeadChat = ({
   const formatTextWithSpacing = (normalizedText: string) => {
     // Detect signature section (starts with "Best regards," "Regards," etc.)
     // Make pattern more flexible - can be at start of line or after newline
-    const signaturePattern = /(?:^|\n)\s*(Best regards|Regards|Sincerely|Thank you|Thanks|Yours truly|Cordially|Warm regards|Kind regards),/i;
+    const signaturePattern =
+      /(?:^|\n)\s*(Best regards|Regards|Sincerely|Thank you|Thanks|Yours truly|Cordially|Warm regards|Kind regards),/i;
     const signatureMatch = normalizedText.match(signaturePattern);
-    
+
     if (signatureMatch && signatureMatch.index !== undefined) {
       // Split into main body and signature
       const mainBody = normalizedText.substring(0, signatureMatch.index).trim();
       const signature = normalizedText.substring(signatureMatch.index).trim();
-      
+
       // Process main body: preserve paragraph breaks (double newlines create spacing)
       let mainBodyHtml = "";
       if (mainBody) {
         // Split by double newlines for paragraphs, or use single newlines if no double newlines
         if (/\n\n/.test(mainBody)) {
-          const paragraphs = mainBody.split(/\n\n+/).filter(p => p.trim());
+          const paragraphs = mainBody.split(/\n\n+/).filter((p) => p.trim());
           mainBodyHtml = paragraphs
             .map((para, index) => {
               const formatted = para.trim().replace(/\n/g, "<br>");
               const isLast = index === paragraphs.length - 1;
-              return `<p style="margin: 0 0 ${isLast ? '0' : '0.75rem'} 0; line-height: 1.5;">${formatted}</p>`;
+              return `<p style="margin: 0 0 ${
+                isLast ? "0" : "0.75rem"
+              } 0; line-height: 1.5;">${formatted}</p>`;
             })
             .join("");
         } else {
           // Single newlines in main body - treat as separate paragraphs with spacing
-          const lines = mainBody.split(/\n/).filter(line => line.trim());
+          const lines = mainBody.split(/\n/).filter((line) => line.trim());
           mainBodyHtml = lines
             .map((line, index) => {
               const isLast = index === lines.length - 1;
-              return `<p style="margin: 0 0 ${isLast ? '0' : '0.75rem'} 0; line-height: 1.5;">${line.trim()}</p>`;
+              return `<p style="margin: 0 0 ${
+                isLast ? "0" : "0.75rem"
+              } 0; line-height: 1.5;">${line.trim()}</p>`;
             })
             .join("");
         }
       }
-      
+
       // Process signature: use single line breaks with minimal spacing
       // Add a blank line before signature to separate it from main body
-      const signatureLines = signature.split(/\n/).filter(line => line.trim());
+      const signatureLines = signature
+        .split(/\n/)
+        .filter((line) => line.trim());
       const signatureHtml = signatureLines
         .map((line, index) => {
           // Add margin-top to first line to create blank line before signature
-          const marginTop = index === 0 ? '0.75rem' : '0';
+          const marginTop = index === 0 ? "0.75rem" : "0";
           return `<div style="line-height: 1.2; margin: ${marginTop} 0 0 0; padding: 0; display: block;">${line.trim()}</div>`;
         })
         .join("");
-      
+
       return mainBodyHtml + signatureHtml;
     } else {
       // No signature detected - treat all as main body with paragraph spacing
       if (/\n\n/.test(normalizedText)) {
-        const paragraphs = normalizedText.split(/\n\n+/).filter(p => p.trim());
+        const paragraphs = normalizedText
+          .split(/\n\n+/)
+          .filter((p) => p.trim());
         return paragraphs
           .map((para, index) => {
             const formatted = para.trim().replace(/\n/g, "<br>");
             const isLast = index === paragraphs.length - 1;
-            return `<p style="margin: 0 0 ${isLast ? '0' : '0.75rem'} 0; line-height: 1.5;">${formatted}</p>`;
+            return `<p style="margin: 0 0 ${
+              isLast ? "0" : "0.75rem"
+            } 0; line-height: 1.5;">${formatted}</p>`;
           })
           .join("");
       } else {
         // Single newlines - treat as separate paragraphs
-        const lines = normalizedText.split(/\n/).filter(line => line.trim());
+        const lines = normalizedText.split(/\n/).filter((line) => line.trim());
         return lines
           .map((line, index) => {
             const isLast = index === lines.length - 1;
-            return `<p style="margin: 0 0 ${isLast ? '0' : '0.75rem'} 0; line-height: 1.5;">${line.trim()}</p>`;
+            return `<p style="margin: 0 0 ${
+              isLast ? "0" : "0.75rem"
+            } 0; line-height: 1.5;">${line.trim()}</p>`;
           })
           .join("");
       }
@@ -2508,7 +2547,7 @@ const LeadChat = ({
       // Remove event handlers
       sanitized = sanitized.replace(/\son\w+\s*=\s*["'][^"']*["']/gi, "");
       sanitized = sanitized.replace(/\son\w+\s*=\s*[^\s>]*/gi, "");
-      
+
       // Convert HTML to text, then apply our formatting logic
       // Replace <br> and <br/> with newlines
       let textFromHtml = sanitized.replace(/<br\s*\/?>/gi, "\n");
@@ -2524,14 +2563,17 @@ const LeadChat = ({
       textFromHtml = textFromHtml.replace(/&gt;/g, ">");
       textFromHtml = textFromHtml.replace(/&quot;/g, '"');
       textFromHtml = textFromHtml.replace(/&#39;/g, "'");
-      
+
       // Normalize and apply formatting
       const cleanedText = stripQuotedEmailContent(textFromHtml);
-      const normalizedText = cleanedText.replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
-      
+      const normalizedText = cleanedText
+        .replace(/\r\n/g, "\n")
+        .replace(/\r/g, "\n")
+        .trim();
+
       return formatTextWithSpacing(normalizedText);
     }
-    
+
     // Fallback to text field
     if (email.body?.text?.trim()) {
       const textContent = email.body.text.trim();
@@ -2554,36 +2596,45 @@ const LeadChat = ({
         sanitized = sanitized.replace(/\son\w+\s*=\s*[^\s>]*/gi, "");
         return sanitized;
       }
-      
+
       // Otherwise, convert plain text to HTML with proper formatting
       const cleanedText = stripQuotedEmailContent(textContent);
       // Normalize line endings (handle \r\n, \r, and \n)
-      let normalizedText = cleanedText.replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
-      
+      let normalizedText = cleanedText
+        .replace(/\r\n/g, "\n")
+        .replace(/\r/g, "\n")
+        .trim();
+
       // Track if text was auto-formatted (had no original newlines)
       const wasAutoFormatted = !/\n/.test(normalizedText);
-      
+
       // If text has no newlines but contains signature patterns, add line breaks intelligently
       if (wasAutoFormatted) {
         // Add line breaks before common signature patterns
         normalizedText = normalizedText
           // Add line break before "Best regards," "Regards," "Sincerely," etc. (and after the comma, but only single newline)
-          .replace(/\b(Best regards|Regards|Sincerely|Thank you|Thanks|Yours truly|Cordially|Warm regards|Kind regards),/gi, "\n$1,")
+          .replace(
+            /\b(Best regards|Regards|Sincerely|Thank you|Thanks|Yours truly|Cordially|Warm regards|Kind regards),/gi,
+            "\n$1,"
+          )
           // Add line break after comma if followed by capital letter (common in signatures like "Best regards,Name")
           .replace(/,([A-Z])/g, ",\n$1")
           // Add line break before email addresses (before @)
-          .replace(/([^\n])([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g, "$1\n$2")
+          .replace(
+            /([^\n])([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g,
+            "$1\n$2"
+          )
           // Add line break before URLs
           .replace(/([^\n])(https?:\/\/[^\s]+)/g, "$1\n$2")
           // Add line break when lowercase letter is followed by uppercase (word boundary detection)
           .replace(/([a-z])([A-Z])/g, "$1\n$2")
           // Add line break before capitalized words that follow lowercase (likely names/titles after text)
           .replace(/([a-z])([A-Z][a-z]+(?: [A-Z][a-z]+)*)/g, "$1\n$2");
-        
+
         // Clean up any double newlines that might have been created - convert to single newline
         normalizedText = normalizedText.replace(/\n\n+/g, "\n").trim();
       }
-      
+
       return formatTextWithSpacing(normalizedText);
     }
     return "";
