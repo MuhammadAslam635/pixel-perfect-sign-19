@@ -242,6 +242,12 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
         </div>
       </div>
       {/* Render Chat List or Chat Interface */}
+        <div 
+    className="flex-1 overflow-y-auto"
+    style={{
+      paddingTop: "90px",
+    }}
+  >
       {showChatList ? (
         <ChatHistoryList
           chats={chatHistory}
@@ -263,6 +269,7 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
           initialMessages={localMessages}
         />
       )}
+      </div>
     </section>
   );
 };

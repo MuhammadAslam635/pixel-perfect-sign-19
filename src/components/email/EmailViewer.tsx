@@ -316,19 +316,24 @@ export const EmailViewer = ({
             </div>
           </div>
 
-          {/* Email Body - Clean and Readable - Scrollable Container */}
-          <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-8 rounded-2xl bg-card/30 backdrop-blur-sm border border-border/50 shadow-inner scrollbar-hide">
+          {/* Email Body - Fixed Height with Hidden Scroll */}
+          <div 
+            className="flex-1 min-h-0 p-8 rounded-2xl bg-card/30 backdrop-blur-sm border border-border/50 shadow-inner overflow-y-auto scrollbar-hide"
+            style={{
+              maxHeight: "calc(100vh - 550px)",
+            }}
+          >
             {email.body.html ? (
               <div
                 className="prose prose-invert prose-lg max-w-none
-                           prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-foreground
-                           prose-p:leading-relaxed prose-p:text-foreground/90 prose-p:my-4
-                           prose-a:text-primary prose-a:font-medium prose-a:no-underline hover:prose-a:underline
-                           prose-strong:text-foreground prose-strong:font-bold
-                           prose-ul:my-4 prose-ol:my-4 prose-li:my-1
-                           prose-blockquote:border-l-primary prose-blockquote:bg-primary/5 prose-blockquote:py-2
-                           prose-code:text-primary prose-code:bg-primary/10 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
-                           animate-in fade-in-50 slide-in-from-bottom-4 duration-500"
+                          prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-foreground
+                          prose-p:leading-relaxed prose-p:text-foreground/90 prose-p:my-4
+                          prose-a:text-primary prose-a:font-medium prose-a:no-underline hover:prose-a:underline
+                          prose-strong:text-foreground prose-strong:font-bold
+                          prose-ul:my-4 prose-ol:my-4 prose-li:my-1
+                          prose-blockquote:border-l-primary prose-blockquote:bg-primary/5 prose-blockquote:py-2
+                          prose-code:text-primary prose-code:bg-primary/10 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
+                          animate-in fade-in-50 slide-in-from-bottom-4 duration-500"
                 dangerouslySetInnerHTML={{
                   __html: stripQuotedEmailContent(email.body.html),
                 }}
