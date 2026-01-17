@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Target, Loader2 } from "lucide-react";
+import { Target, Loader2, CheckCircle2 } from "lucide-react";
 import {
   dashboardService,
   ActiveQualifiedLeadsData,
@@ -39,7 +39,7 @@ export const ActiveQualifiedLeadsCard = () => {
       <div className="flex items-center gap-3">
         {/* left */}
         <div>
-          <Target className="w-10 h-10" stroke="url(#dashboard-icon-gradient)" />
+          <CheckCircle2 className="w-10 h-10" stroke="url(#dashboard-icon-gradient)"/>
         </div>
 
         {/* right */}

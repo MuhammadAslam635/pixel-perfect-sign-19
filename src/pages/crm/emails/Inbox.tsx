@@ -96,6 +96,11 @@ const InboxPage = () => {
     | "Client Communication"
     | "Marketing & Promotions"
     | "Internal Communication"
+    | "Primary"
+    | "Promotions"
+    | "Social"
+    | "Updates"
+    | "Spam"
   >("all");
   const [showCategories, setShowCategories] = useState(false);
   const [page, setPage] = useState(1);
@@ -122,7 +127,12 @@ const InboxPage = () => {
           : (filter as
               | "Client Communication"
               | "Marketing & Promotions"
-              | "Internal Communication"),
+              | "Internal Communication"
+              | "Primary"
+              | "Promotions"
+              | "Social"
+              | "Updates"
+              | "Spam"),
       });
     },
   });
@@ -448,6 +458,101 @@ const InboxPage = () => {
                           <div className="h-1 w-1 rounded-full bg-current mr-2 flex-shrink-0" />
                           <span className="flex-1">Internal Communication</span>
                         </Button>
+                        <Button
+                          variant={
+                            filter === "Primary"
+                              ? "default"
+                              : "ghost"
+                          }
+                          className={`w-[calc(100%-24px)] ml-6 rounded-full pl-3 pr-2 text-xs text-left whitespace-normal h-auto py-1.5 ${
+                            filter === "Primary"
+                              ? "bg-white/15 text-white border border-white/20"
+                              : "text-white/60 hover:text-white hover:bg-white/10"
+                          }`}
+                          onClick={() => {
+                            setFilter("Primary");
+                            setPage(1);
+                          }}
+                        >
+                          <div className="h-1 w-1 rounded-full bg-current mr-2 flex-shrink-0" />
+                          <span className="flex-1">Primary</span>
+                        </Button>
+                        <Button
+                          variant={
+                            filter === "Promotions"
+                              ? "default"
+                              : "ghost"
+                          }
+                          className={`w-[calc(100%-24px)] ml-6 rounded-full pl-3 pr-2 text-xs text-left whitespace-normal h-auto py-1.5 ${
+                            filter === "Promotions"
+                              ? "bg-white/15 text-white border border-white/20"
+                              : "text-white/60 hover:text-white hover:bg-white/10"
+                          }`}
+                          onClick={() => {
+                            setFilter("Promotions");
+                            setPage(1);
+                          }}
+                        >
+                          <div className="h-1 w-1 rounded-full bg-current mr-2 flex-shrink-0" />
+                          <span className="flex-1">Promotions</span>
+                        </Button>
+                        <Button
+                          variant={
+                            filter === "Social"
+                              ? "default"
+                              : "ghost"
+                          }
+                          className={`w-[calc(100%-24px)] ml-6 rounded-full pl-3 pr-2 text-xs text-left whitespace-normal h-auto py-1.5 ${
+                            filter === "Social"
+                              ? "bg-white/15 text-white border border-white/20"
+                              : "text-white/60 hover:text-white hover:bg-white/10"
+                          }`}
+                          onClick={() => {
+                            setFilter("Social");
+                            setPage(1);
+                          }}
+                        >
+                          <div className="h-1 w-1 rounded-full bg-current mr-2 flex-shrink-0" />
+                          <span className="flex-1">Social</span>
+                        </Button>
+                        <Button
+                          variant={
+                            filter === "Updates"
+                              ? "default"
+                              : "ghost"
+                          }
+                          className={`w-[calc(100%-24px)] ml-6 rounded-full pl-3 pr-2 text-xs text-left whitespace-normal h-auto py-1.5 ${
+                            filter === "Updates"
+                              ? "bg-white/15 text-white border border-white/20"
+                              : "text-white/60 hover:text-white hover:bg-white/10"
+                          }`}
+                          onClick={() => {
+                            setFilter("Updates");
+                            setPage(1);
+                          }}
+                        >
+                          <div className="h-1 w-1 rounded-full bg-current mr-2 flex-shrink-0" />
+                          <span className="flex-1">Updates</span>
+                        </Button>
+                        <Button
+                          variant={
+                            filter === "Spam"
+                              ? "default"
+                              : "ghost"
+                          }
+                          className={`w-[calc(100%-24px)] ml-6 rounded-full pl-3 pr-2 text-xs text-left whitespace-normal h-auto py-1.5 ${
+                            filter === "Spam"
+                              ? "bg-white/15 text-white border border-white/20"
+                              : "text-white/60 hover:text-white hover:bg-white/10"
+                          }`}
+                          onClick={() => {
+                            setFilter("Spam");
+                            setPage(1);
+                          }}
+                        >
+                          <div className="h-1 w-1 rounded-full bg-current mr-2 flex-shrink-0" />
+                          <span className="flex-1">Spam</span>
+                        </Button>
                       </div>
                     )}
                     <Button
@@ -565,8 +670,13 @@ const InboxPage = () => {
                         "Client Communication"}
                       {filter === "Marketing & Promotions" &&
                         "Marketing & Promotions"}
-                      {filter === "Internal Communication" &&
+                        {filter === "Internal Communication" &&
                         "Internal Communication"}
+                      {filter === "Primary" && "Primary"}
+                      {filter === "Promotions" && "Promotions"}
+                      {filter === "Social" && "Social"}
+                      {filter === "Updates" && "Updates"}
+                      {filter === "Spam" && "Spam"}
                     </h2>
                   </div>
                   <div className="space-y-1.5 pb-4 overflow-y-auto scrollbar-hide">

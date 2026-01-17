@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { ChevronDown, TrendingUp, Loader2 } from "lucide-react";
+import { ChevronDown, Trophy, Loader2, Check } from "lucide-react";
 import {
   dashboardService,
   WinRateData,
@@ -66,7 +66,7 @@ export const WinRateCard = () => {
       <div className="flex items-center gap-3">
         {/* Left Icon */}
         <div>
-          <TrendingUp className="w-10 h-10" stroke="url(#dashboard-icon-gradient)" />
+          <Trophy className="w-10 h-10" stroke="url(#dashboard-icon-gradient)"/>
         </div>
 
         {/* Right Content */}

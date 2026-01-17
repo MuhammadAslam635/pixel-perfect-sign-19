@@ -127,7 +127,12 @@ export interface GetInboxEmailsParams {
     | "Marketing & Promotions"
     | "Client Communication"
     | "Internal Communication"
-    | "All Emails";
+    | "All Emails"
+    | "Primary"
+    | "Promotions"
+    | "Social"
+    | "Updates"
+    | "Spam";
 }
 
 export interface GetSentEmailsParams {

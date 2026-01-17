@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Zap, Loader2 } from "lucide-react";
+import { Users, Loader2 } from "lucide-react";
 import {
   dashboardService,
   SpeedToLeadData,
@@ -37,7 +37,7 @@ export const SpeedToLeadCard = () => {
       <div className="flex items-center gap-3">
         {/* Left Icon */}
         <div>
-          <Zap className="w-10 h-10" stroke="url(#dashboard-icon-gradient)" />
+          <Users className="w-10 h-10" stroke="url(#dashboard-icon-gradient)"/>
         </div>
 
         {/* Right Content */}
