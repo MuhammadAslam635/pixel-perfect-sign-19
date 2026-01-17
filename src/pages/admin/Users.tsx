@@ -27,16 +27,23 @@ import {
   X,
   UserCog,
   Sparkles,
+  AlertTriangle,
+  Settings,
 } from "lucide-react";
 import { adminService, CompanyAdmin, Company } from "@/services/admin.service";
 import { rbacService } from "@/services/rbac.service";
 import { Role } from "@/types/rbac.types";
 import { toast } from "sonner";
+import { UserProvisioningModal } from "@/components/admin/UserProvisioningModal";
 
 interface UserWithCompany extends CompanyAdmin {
   companyName?: string;
   companyId?: string;
   roleId?: Role | string;
+  hasTwilioConfig?: boolean;
+  hasElevenLabsConfig?: boolean;
+  twilioError?: string | null;
+  elevenlabsError?: string | null;
 }
 
 const AdminUsers = () => {
@@ -69,6 +76,9 @@ const AdminUsers = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [activeRoleTab, setActiveRoleTab] = useState<string>("all");
+  const [provisioningModalOpen, setProvisioningModalOpen] = useState(false);
+  const [selectedUserForProvisioning, setSelectedUserForProvisioning] =
+    useState<UserWithCompany | null>(null);
 
   const [statistics, setStatistics] = useState({
     totalUsers: 0,
@@ -706,10 +716,17 @@ const AdminUsers = () => {
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/50" />
                 <Input
+                  type="search"
                   placeholder="Search users by name, email, or company..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 w-full rounded-full bg-black/35 border border-white/10 text-white placeholder:text-white/50 focus:ring-2 focus:ring-cyan-400/40"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck="false"
+                  name="user-search"
+                  data-form-type="other"
                 />
               </div>
               <div className="flex gap-2">
@@ -818,6 +835,9 @@ const AdminUsers = () => {
                                   Status
                                 </th>
                                 <th className="text-left py-3 px-4 text-white/70 text-sm font-medium">
+                                  Config Status
+                                </th>
+                                <th className="text-left py-3 px-4 text-white/70 text-sm font-medium">
                                   Actions
                                 </th>
                               </tr>
@@ -869,6 +889,41 @@ const AdminUsers = () => {
                                         Inactive
                                       </Badge>
                                     )}
+                                  </td>
+                                  <td className="py-4 px-4">
+                                    {(() => {
+                                      const hasTwilio = user.hasTwilioConfig ?? false;
+                                      const hasElevenLabs = user.hasElevenLabsConfig ?? false;
+                                      const needsConfig = !hasTwilio || !hasElevenLabs;
+                                      
+                                      // Only show config status for company users (not system admins)
+                                      if (!user.companyId && user.role !== "Company") {
+                                        return <span className="text-white/40 text-xs">N/A</span>;
+                                      }
+
+                                      if (needsConfig) {
+                                        return (
+                                          <Button
+                                            onClick={() => {
+                                              setSelectedUserForProvisioning(user);
+                                              setProvisioningModalOpen(true);
+                                            }}
+                                            className="bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 hover:bg-yellow-500/30 rounded-full px-4 py-2 text-xs"
+                                            size="sm"
+                                          >
+                                            <AlertTriangle className="h-4 w-4 mr-2" />
+                                            Fix Config
+                                          </Button>
+                                        );
+                                      } else {
+                                        return (
+                                          <Badge className="bg-green-500/20 text-green-300 border border-green-500/30 rounded-full px-3 py-1 text-xs flex items-center gap-1 w-fit">
+                                            <CheckCircle2 className="h-3 w-3" />
+                                            Configured
+                                          </Badge>
+                                        );
+                                      }
+                                    })()}
                                   </td>
                                   <td className="py-4 px-4">
                                     <div className="flex items-center gap-2">
@@ -932,6 +987,24 @@ const AdminUsers = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* User Provisioning Modal */}
+        {selectedUserForProvisioning && (
+          <UserProvisioningModal
+            open={provisioningModalOpen}
+            onOpenChange={(open) => {
+              setProvisioningModalOpen(open);
+              if (!open) {
+                setSelectedUserForProvisioning(null);
+              }
+            }}
+            user={selectedUserForProvisioning}
+            onSuccess={() => {
+              // Refresh user list after successful provisioning
+              fetchAllUsers();
+            }}
+          />
+        )}
       </main>
     </AdminLayout>
   );

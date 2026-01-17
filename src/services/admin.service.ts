@@ -362,4 +362,79 @@ export const adminService = {
       throw error;
     }
   },
+
+  /**
+   * Configure Twilio for a user
+   */
+  configureUserTwilio: async (
+    userId: string
+  ): Promise<{
+    success: boolean;
+    message: string;
+    logs?: Array<{ type: string; message: string }>;
+    data?: {
+      userId: string;
+      email: string;
+      twilioConfig: any;
+    };
+    error?: string;
+  }> => {
+    try {
+      const response = await API.post(`/admin/users/${userId}/configure/twilio`);
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  /**
+   * Configure ElevenLabs for a user
+   */
+  configureUserElevenLabs: async (
+    userId: string
+  ): Promise<{
+    success: boolean;
+    message: string;
+    logs?: Array<{ type: string; message: string }>;
+    data?: {
+      userId: string;
+      email: string;
+      elevenlabsData: any;
+    };
+    error?: string;
+  }> => {
+    try {
+      const response = await API.post(`/admin/users/${userId}/configure/elevenlabs`);
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  /**
+   * Check which credentials are missing
+   */
+  checkMissingCredentials: async (): Promise<{
+    success: boolean;
+    missingCredentials: {
+      twilio: {
+        missing: string[];
+        hasAccountSid: boolean;
+        hasApiKeySid: boolean;
+        hasApiKeySecret: boolean;
+        hasAuthToken: boolean;
+      };
+      elevenlabs: {
+        missing: string[];
+        hasApiKey: boolean;
+      };
+    };
+  }> => {
+    try {
+      const response = await API.get("/admin/users/check-credentials");
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
 };
