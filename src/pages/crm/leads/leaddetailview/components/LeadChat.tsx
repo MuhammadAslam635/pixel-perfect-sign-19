@@ -316,8 +316,8 @@ const LeadChat = ({
 
   const whatsappConnectionErrorMessage = isWhatsAppConnectionError
     ? (whatsappConnectionsError as any)?.response?.data?.message ||
-      (whatsappConnectionsError as Error)?.message ||
-      "Failed to load WhatsApp connection."
+    (whatsappConnectionsError as Error)?.message ||
+    "Failed to load WhatsApp connection."
     : null;
 
   const twilioReady = twilioConnection.ready;
@@ -327,12 +327,12 @@ const LeadChat = ({
   const whatsappUnavailableMessage = !whatsappNumber
     ? "Add a WhatsApp number for this lead to start WhatsApp chats."
     : whatsappConnectionErrorMessage
-    ? whatsappConnectionErrorMessage
-    : !whatsappReady
-    ? "Connect a WhatsApp number in Settings → Integrations."
-    : !normalizedLeadWhatsapp
-    ? "Lead WhatsApp number must include the country code."
-    : null;
+      ? whatsappConnectionErrorMessage
+      : !whatsappReady
+        ? "Connect a WhatsApp number in Settings → Integrations."
+        : !normalizedLeadWhatsapp
+          ? "Lead WhatsApp number must include the country code."
+          : null;
 
   const whatsappInputsDisabled =
     whatsappStatusLoading ||
@@ -350,20 +350,20 @@ const LeadChat = ({
     const whatsappStatus = !hasWhatsapp
       ? "Add WhatsApp number"
       : isWhatsAppConnectionLoading
-      ? "Checking..."
-      : whatsappConnectionErrorMessage
-      ? "Error"
-      : whatsappReady
-      ? "Connected"
-      : "Not connected";
+        ? "Checking..."
+        : whatsappConnectionErrorMessage
+          ? "Error"
+          : whatsappReady
+            ? "Connected"
+            : "Not connected";
 
     const smsStatus = !hasPhone
       ? "Add phone"
       : twilioStatusLoading
-      ? "Checking..."
-      : twilioReady
-      ? "Connected"
-      : "Not configured";
+        ? "Checking..."
+        : twilioReady
+          ? "Connected"
+          : "Not configured";
 
     const emailStatus = hasEmail ? "Connected" : "Unavailable";
 
@@ -519,8 +519,8 @@ const LeadChat = ({
 
   const whatsappConversationErrorMessage = isWhatsAppConversationError
     ? (whatsappConversationError as any)?.response?.data?.message ||
-      (whatsappConversationError as Error)?.message ||
-      "Failed to load WhatsApp conversation."
+    (whatsappConversationError as Error)?.message ||
+    "Failed to load WhatsApp conversation."
     : null;
 
   useEffect(() => {
@@ -532,15 +532,15 @@ const LeadChat = ({
         const statusData = response.data?.data;
         const ready = Boolean(
           response.data?.success &&
-            response.data?.connected &&
-            statusData?.hasAllEnvVars
+          response.data?.connected &&
+          statusData?.hasAllEnvVars
         );
         const missingFields = statusData?.missingFields || [];
         const message = ready
           ? "Twilio calling and SMS are ready."
           : missingFields.length
-          ? "Twilio is not fully configured. Please contact your administrator."
-          : "Twilio is not configured. Please contact your administrator.";
+            ? "Twilio is not fully configured. Please contact your administrator."
+            : "Twilio is not configured. Please contact your administrator.";
         if (isMounted) {
           setTwilioConnection({
             loading: false,
@@ -619,8 +619,8 @@ const LeadChat = ({
   const emailMessages = emailConversationData || EMPTY_ARRAY;
   const emailError = isEmailConversationError
     ? (emailConversationError as any)?.response?.data?.message ||
-      (emailConversationError as Error)?.message ||
-      "Failed to load email conversation. Please try again later."
+    (emailConversationError as Error)?.message ||
+    "Failed to load email conversation. Please try again later."
     : null;
 
   const { examples: proposalExamples, query: proposalExamplesQuery } =
@@ -661,7 +661,7 @@ const LeadChat = ({
   const smsUnavailableMessage =
     !twilioReady && !twilioStatusLoading
       ? twilioConnection.message ||
-        "Twilio is not configured. Please contact your administrator."
+      "Twilio is not configured. Please contact your administrator."
       : null;
   const smsInputsDisabled = Boolean(smsUnavailableMessage) || !phoneNumber;
 
@@ -745,8 +745,8 @@ const LeadChat = ({
 
   const smsQueryErrorMessage = isSmsError
     ? (smsQueryError as any)?.response?.data?.message ||
-      (smsQueryError as Error)?.message ||
-      "Failed to load SMS history"
+    (smsQueryError as Error)?.message ||
+    "Failed to load SMS history"
     : null;
 
   const smsMutation = useMutation({
@@ -834,8 +834,8 @@ const LeadChat = ({
     onError: (mutationError: any) => {
       setWhatsappSendError(
         mutationError?.response?.data?.message ||
-          mutationError?.message ||
-          "Failed to clear WhatsApp conversation"
+        mutationError?.message ||
+        "Failed to clear WhatsApp conversation"
       );
     },
   });
@@ -851,8 +851,8 @@ const LeadChat = ({
     onError: (mutationError: any) => {
       setWhatsappSendError(
         mutationError?.response?.data?.message ||
-          mutationError?.message ||
-          "Failed to delete message"
+        mutationError?.message ||
+        "Failed to delete message"
       );
       setMessageToDelete(null);
     },
@@ -1606,10 +1606,9 @@ const LeadChat = ({
           });
           // Show error to user so they know the proposal wasn't saved
           toast.error(
-            `Proposal not saved: ${
-              proposalError?.response?.data?.message ||
-              proposalError?.message ||
-              "Unknown error"
+            `Proposal not saved: ${proposalError?.response?.data?.message ||
+            proposalError?.message ||
+            "Unknown error"
             }`
           );
         }
@@ -2466,9 +2465,8 @@ const LeadChat = ({
             .map((para, index) => {
               const formatted = para.trim().replace(/\n/g, "<br>");
               const isLast = index === paragraphs.length - 1;
-              return `<p style="margin: 0 0 ${
-                isLast ? "0" : "0.75rem"
-              } 0; line-height: 1.5;">${formatted}</p>`;
+              return `<p style="margin: 0 0 ${isLast ? "0" : "0.75rem"
+                } 0; line-height: 1.5;">${formatted}</p>`;
             })
             .join("");
         } else {
@@ -2477,9 +2475,8 @@ const LeadChat = ({
           mainBodyHtml = lines
             .map((line, index) => {
               const isLast = index === lines.length - 1;
-              return `<p style="margin: 0 0 ${
-                isLast ? "0" : "0.75rem"
-              } 0; line-height: 1.5;">${line.trim()}</p>`;
+              return `<p style="margin: 0 0 ${isLast ? "0" : "0.75rem"
+                } 0; line-height: 1.5;">${line.trim()}</p>`;
             })
             .join("");
         }
@@ -2509,9 +2506,8 @@ const LeadChat = ({
           .map((para, index) => {
             const formatted = para.trim().replace(/\n/g, "<br>");
             const isLast = index === paragraphs.length - 1;
-            return `<p style="margin: 0 0 ${
-              isLast ? "0" : "0.75rem"
-            } 0; line-height: 1.5;">${formatted}</p>`;
+            return `<p style="margin: 0 0 ${isLast ? "0" : "0.75rem"
+              } 0; line-height: 1.5;">${formatted}</p>`;
           })
           .join("");
       } else {
@@ -2520,9 +2516,8 @@ const LeadChat = ({
         return lines
           .map((line, index) => {
             const isLast = index === lines.length - 1;
-            return `<p style="margin: 0 0 ${
-              isLast ? "0" : "0.75rem"
-            } 0; line-height: 1.5;">${line.trim()}</p>`;
+            return `<p style="margin: 0 0 ${isLast ? "0" : "0.75rem"
+              } 0; line-height: 1.5;">${line.trim()}</p>`;
           })
           .join("");
       }
@@ -2657,8 +2652,8 @@ const LeadChat = ({
     activeTab === "Email"
       ? emailAddress || ""
       : activeTab === "WhatsApp"
-      ? whatsappNumber || ""
-      : phoneNumber || "";
+        ? whatsappNumber || ""
+        : phoneNumber || "";
 
   // Auto-resize textareas when content changes
   useEffect(() => {
@@ -3531,9 +3526,8 @@ const LeadChat = ({
       const fileName = `Proposal_${(displayName || "Lead").replace(
         /\s+/g,
         "_"
-      )}_${isDarkMode ? "Dark" : "Light"}_${
-        new Date().toISOString().split("T")[0]
-      }.pdf`;
+      )}_${isDarkMode ? "Dark" : "Light"}_${new Date().toISOString().split("T")[0]
+        }.pdf`;
 
       pdf.save(fileName);
 
@@ -3547,8 +3541,7 @@ const LeadChat = ({
         error instanceof Error ? error.stack : "No stack trace"
       );
       toast.error(
-        `Failed to generate PDF: ${
-          error instanceof Error ? error.message : "Unknown error"
+        `Failed to generate PDF: ${error instanceof Error ? error.message : "Unknown error"
         }`
       );
     }
@@ -3577,9 +3570,8 @@ const LeadChat = ({
                 className="relative pb-2 text-left"
               >
                 <span
-                  className={`text-xs font-medium sm:text-sm transition-colors ${
-                    isActive ? "text-white font-semibold" : "text-white/50"
-                  }`}
+                  className={`text-xs font-medium sm:text-sm transition-colors ${isActive ? "text-white font-semibold" : "text-white/50"
+                    }`}
                 >
                   {tab.label}
                 </span>
@@ -3716,9 +3708,8 @@ const LeadChat = ({
                   return (
                     <div
                       key={message._id || message.messageId || timestamp}
-                      className={`group relative flex w-full gap-3 ${
-                        isOutbound ? "justify-end" : "justify-start"
-                      }`}
+                      className={`group relative flex w-full gap-3 ${isOutbound ? "justify-end" : "justify-start"
+                        }`}
                     >
                       {!isOutbound && (
                         <div className="h-10 w-10 flex-shrink-0">
@@ -3730,22 +3721,20 @@ const LeadChat = ({
                         </div>
                       )}
                       <div
-                        className={`flex max-w-[80%] sm:max-w-[65%] flex-col gap-2 ${
-                          isOutbound ? "items-end" : "items-start"
-                        }`}
+                        className={`flex max-w-[80%] sm:max-w-[65%] flex-col gap-2 ${isOutbound ? "items-end" : "items-start"
+                          }`}
                       >
                         <div
-                          className={`w-full rounded-2xl px-3 py-2 ${
-                            isOutbound
+                          className={`w-full rounded-2xl px-3 py-2 ${isOutbound
                               ? "bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] text-white"
                               : "bg-white/10 text-white/90"
-                          }`}
+                            }`}
                           style={
                             isOutbound
                               ? {
-                                  background:
-                                    "linear-gradient(135deg, #3E65B4 0%, #68B3B7 100%)",
-                                }
+                                background:
+                                  "linear-gradient(135deg, #3E65B4 0%, #68B3B7 100%)",
+                              }
                               : {}
                           }
                         >
@@ -3991,8 +3980,8 @@ const LeadChat = ({
                             <span className="truncate">
                               {selectedExampleId
                                 ? proposalExamples.find(
-                                    (ex: any) => ex._id === selectedExampleId
-                                  )?.fileName
+                                  (ex: any) => ex._id === selectedExampleId
+                                )?.fileName
                                 : "Select Template..."}
                             </span>
                             <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -4068,8 +4057,8 @@ const LeadChat = ({
                         selectedProposal
                           ? "Cannot regenerate a sent proposal"
                           : !selectedExampleId
-                          ? "Please select a template first"
-                          : ""
+                            ? "Please select a template first"
+                            : ""
                       }
                     >
                       {isGeneratingProposal ? (
@@ -4718,42 +4707,33 @@ const LeadChat = ({
                   return (
                     <div
                       key={email._id}
-                      className={`flex w-full gap-3 ${
-                        isOutbound ? "justify-end" : "justify-start"
-                      }`}
+                      className={`flex w-full gap-3 ${isOutbound ? "justify-end" : "justify-start"
+                        }`}
                     >
                       {!isOutbound && (
                         <div className="h-10 w-10 flex-shrink-0">
-                          {avatarSrc ? (
-                            <img
-                              src={avatarSrc}
-                              alt={`${displayName} avatar`}
-                              className="h-full w-full rounded-full object-cover"
-                            />
-                          ) : (
-                            <span className="flex h-full w-full items-center justify-center rounded-full bg-[#3d4f51] text-white text-2xl">
-                              {avatarLetter}
-                            </span>
-                          )}
+                          <AvatarFallback
+                            name={displayName}
+                            pictureUrl={avatarSrc}
+                            size="sm"
+                          />
                         </div>
                       )}
                       <div
-                        className={`flex max-w-[80%] sm:max-w-[65%] flex-col gap-2 ${
-                          isOutbound ? "items-end" : "items-start"
-                        }`}
+                        className={`flex max-w-[80%] sm:max-w-[65%] flex-col gap-2 ${isOutbound ? "items-end" : "items-start"
+                          }`}
                       >
                         <div
-                          className={`w-full rounded-2xl px-3 py-2 ${
-                            isOutbound
-                              ? "bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] text-white"
-                              : "bg-white/10 text-white/90"
-                          }`}
+                          className={`w-full rounded-2xl px-3 py-2 ${isOutbound
+                            ? "bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] text-white"
+                            : "bg-white/10 text-white/90"
+                            }`}
                           style={
                             isOutbound
                               ? {
-                                  background:
-                                    "linear-gradient(135deg, #3E65B4 0%, #68B3B7 100%)",
-                                }
+                                background:
+                                  "linear-gradient(135deg, #3E65B4 0%, #68B3B7 100%)",
+                              }
                               : {}
                           }
                         >
@@ -4820,11 +4800,10 @@ const LeadChat = ({
               />
 
               <div
-                className={`flex gap-2 bg-white/10 px-4 py-3 mx-1 mb-1 transition-all duration-200 relative ${
-                  isEmailEditorExpanded
-                    ? "rounded-2xl items-end"
-                    : "rounded-2xl items-center"
-                }`}
+                className={`flex gap-2 bg-white/10 px-4 py-3 mx-1 mb-1 transition-all duration-200 relative ${isEmailEditorExpanded
+                  ? "rounded-2xl items-end"
+                  : "rounded-2xl items-center"
+                  }`}
               >
                 {/* Rich Text Editor */}
                 <div className="flex-1 relative" ref={emailEditorRef}>
@@ -4850,11 +4829,10 @@ const LeadChat = ({
                       height={isEmailEditorExpanded ? "80px" : "20px"}
                       toolbar={true}
                       onFocus={() => setIsEmailEditorExpanded(true)}
-                      className={`text-xs w-full transition-all duration-200 ${
-                        !isEmailEditorExpanded
-                          ? "[&_.ql-toolbar]:hidden [&_.ql-container]:border-none [&_.ql-editor]:!p-0 [&_.ql-editor]:!min-h-0 [&_.ql-editor]:!pb-0"
-                          : ""
-                      }`}
+                      className={`text-xs w-full transition-all duration-200 ${!isEmailEditorExpanded
+                        ? "[&_.ql-toolbar]:hidden [&_.ql-container]:border-none [&_.ql-editor]:!p-0 [&_.ql-editor]:!min-h-0 [&_.ql-editor]:!pb-0"
+                        : ""
+                        }`}
                     />
                   </div>
 
@@ -5065,42 +5043,33 @@ const LeadChat = ({
                   return (
                     <div
                       key={message._id}
-                      className={`flex w-full gap-3 ${
-                        isOutbound ? "justify-end" : "justify-start"
-                      }`}
+                      className={`flex w-full gap-3 ${isOutbound ? "justify-end" : "justify-start"
+                        }`}
                     >
                       {!isOutbound && (
                         <div className="h-10 w-10 flex-shrink-0">
-                          {avatarSrc ? (
-                            <img
-                              src={avatarSrc}
-                              alt={`${displayName} avatar`}
-                              className="h-full w-full rounded-full object-cover"
-                            />
-                          ) : (
-                            <span className="flex h-full w-full items-center justify-center rounded-full bg-[#3d4f51] text-white text-2xl">
-                              {avatarLetter}
-                            </span>
-                          )}
+                          <AvatarFallback
+                            name={displayName}
+                            pictureUrl={avatarSrc}
+                            size="sm"
+                          />
                         </div>
                       )}
                       <div
-                        className={`flex max-w-[80%] sm:max-w-[65%] flex-col gap-2 ${
-                          isOutbound ? "items-end" : "items-start"
-                        }`}
+                        className={`flex max-w-[80%] sm:max-w-[65%] flex-col gap-2 ${isOutbound ? "items-end" : "items-start"
+                          }`}
                       >
                         <div
-                          className={`w-full rounded-2xl px-3 py-2 ${
-                            isOutbound
-                              ? "bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] text-white"
-                              : "bg-white/10 text-white/90"
-                          }`}
+                          className={`w-full rounded-2xl px-3 py-2 ${isOutbound
+                            ? "bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] text-white"
+                            : "bg-white/10 text-white/90"
+                            }`}
                           style={
                             isOutbound
                               ? {
-                                  background:
-                                    "linear-gradient(135deg, #3E65B4 0%, #68B3B7 100%)",
-                                }
+                                background:
+                                  "linear-gradient(135deg, #3E65B4 0%, #68B3B7 100%)",
+                              }
                               : {}
                           }
                         >
@@ -5163,8 +5132,8 @@ const LeadChat = ({
                     smsUnavailableMessage
                       ? smsUnavailableMessage
                       : phoneNumber
-                      ? "Type SMS message"
-                      : "Add a phone number to send SMS"
+                        ? "Type SMS message"
+                        : "Add a phone number to send SMS"
                   }
                   rows={1}
                   style={{
@@ -5224,7 +5193,7 @@ const LeadChat = ({
                 twilioStatusLoading
                   ? "Checking calling availability..."
                   : twilioConnection.message ||
-                    "Company Twilio credentials aren't added yet."
+                  "Company Twilio credentials aren't added yet."
               }
               twilioStatusLoading={twilioStatusLoading}
               autoStart={autoStartCall}
@@ -5241,7 +5210,7 @@ const LeadChat = ({
                 twilioStatusLoading
                   ? "Checking AI calling availability..."
                   : twilioConnection.message ||
-                    "Company Twilio credentials aren't added yet."
+                  "Company Twilio credentials aren't added yet."
               }
               twilioStatusLoading={twilioStatusLoading}
               autoStart={false}

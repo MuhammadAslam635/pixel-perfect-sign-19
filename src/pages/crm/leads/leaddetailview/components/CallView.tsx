@@ -56,8 +56,8 @@ export const CallView = ({
     twilioStatusLoading
       ? "Checking calling availability..."
       : twilioReady
-      ? "Ready to call"
-      : twilioStatusMessage || "Twilio calling is unavailable."
+        ? "Ready to call"
+        : twilioStatusMessage || "Twilio calling is unavailable."
   );
   const [callPhase, setCallPhase] = useState<
     "idle" | "ringing" | "incoming" | "connected"
@@ -107,8 +107,8 @@ export const CallView = ({
       twilioStatusLoading
         ? "Checking calling availability..."
         : twilioReady
-        ? "Ready to call"
-        : twilioStatusMessage || "Twilio calling is unavailable."
+          ? "Ready to call"
+          : twilioStatusMessage || "Twilio calling is unavailable."
     );
   }, [twilioReady, twilioStatusLoading, twilioStatusMessage]);
 
@@ -153,8 +153,8 @@ export const CallView = ({
         console.error("Failed to load call logs", loadError);
         setCallLogsError(
           loadError?.response?.data?.message ||
-            loadError?.message ||
-            "Unable to load call logs."
+          loadError?.message ||
+          "Unable to load call logs."
         );
       } finally {
         if (!isBackground) {
@@ -278,8 +278,8 @@ export const CallView = ({
         } else {
           setRecordingError(
             err?.response?.data?.error ||
-              err?.message ||
-              "Unable to load call recording."
+            err?.message ||
+            "Unable to load call recording."
           );
         }
       } finally {
@@ -354,8 +354,8 @@ export const CallView = ({
       console.error("Failed to load call recording", err);
       setRecordingError(
         err?.response?.data?.error ||
-          err?.message ||
-          "Unable to load call recording."
+        err?.message ||
+        "Unable to load call recording."
       );
     } finally {
       setRecordingLoading(false);
@@ -537,11 +537,11 @@ export const CallView = ({
       const AudioContextConstructor =
         typeof window !== "undefined"
           ? window.AudioContext ||
-            (
-              window as typeof window & {
-                webkitAudioContext?: typeof AudioContext;
-              }
-            ).webkitAudioContext
+          (
+            window as typeof window & {
+              webkitAudioContext?: typeof AudioContext;
+            }
+          ).webkitAudioContext
           : null;
 
       if (!AudioContextConstructor) {
@@ -685,10 +685,10 @@ export const CallView = ({
     } catch (tokenError: any) {
       const friendlyMessage = axios.isAxiosError(tokenError)
         ? tokenError.response?.data?.error ||
-          tokenError.response?.data?.message ||
-          (tokenError.response?.status === 404
-            ? "Company Twilio credentials aren't added yet."
-            : "Unable to fetch calling token.")
+        tokenError.response?.data?.message ||
+        (tokenError.response?.status === 404
+          ? "Company Twilio credentials aren't added yet."
+          : "Unable to fetch calling token.")
         : tokenError?.message || "Unable to fetch calling token.";
       throw new Error(friendlyMessage);
     }
@@ -858,6 +858,10 @@ export const CallView = ({
       const result = await elevenlabsService.initiateAICall(lead._id);
 
       setCallStatus("AI call initiated successfully");
+      toast({
+        title: "AI Call Initiated",
+        description: `AI agent is calling ${leadName || "the lead"}...`,
+      });
 
       // Refresh call logs after a short delay to show the new call
       setTimeout(() => {
@@ -1084,10 +1088,10 @@ export const CallView = ({
                   {callLogsLoading
                     ? "Loading call logs..."
                     : leadId
-                    ? mode === "ai"
-                      ? "No AI calls have been logged yet."
-                      : "No calls have been logged yet."
-                    : "Select a lead to view call logs."}
+                      ? mode === "ai"
+                        ? "No AI calls have been logged yet."
+                        : "No calls have been logged yet."
+                      : "Select a lead to view call logs."}
                 </div>
               );
             }
@@ -1128,8 +1132,8 @@ export const CallView = ({
               const callTypeLabel = isMissed
                 ? "Outgoing Call"
                 : isIncoming
-                ? "Incoming Call"
-                : "Outgoing Call";
+                  ? "Incoming Call"
+                  : "Outgoing Call";
 
               const iconBgColor = isMissed
                 ? "bg-red-500/10"
@@ -1146,11 +1150,10 @@ export const CallView = ({
                 <div
                   key={log._id}
                   onClick={() => handleOpenCallDetails(log)}
-                  className={`rounded-2xl border backdrop-blur-xl overflow-hidden transition-colors cursor-pointer ${
-                    isSelected
-                      ? "border-white/10 bg-white/20"
-                      : "border-white/10 bg-white/[0.03] hover:bg-white/[0.05]"
-                  }`}
+                  className={`rounded-2xl border backdrop-blur-xl overflow-hidden transition-colors cursor-pointer ${isSelected
+                    ? "border-white/10 bg-white/20"
+                    : "border-white/10 bg-white/[0.03] hover:bg-white/[0.05]"
+                    }`}
                 >
                   <div className="flex items-center justify-between px-4 py-3 gap-4">
                     {/* Left side: Icon + Call Type + Duration */}
@@ -1191,52 +1194,50 @@ export const CallView = ({
                       {/* Play Button */}
                       {recordingUrl || log.callSid || log.elevenlabsCallId
                         ? (() => {
-                            const hasReadyRecording = !!recordingUrl;
-                            const isProcessingRecording =
-                              !recordingUrl &&
-                              (log.callSid || log.elevenlabsCallId);
+                          const hasReadyRecording = !!recordingUrl;
+                          const isProcessingRecording =
+                            !recordingUrl &&
+                            (log.callSid || log.elevenlabsCallId);
 
-                            const playButton = (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  if (!hasReadyRecording) return;
-                                  void handleRecordingView(log);
-                                }}
-                                disabled={!hasReadyRecording}
-                                className={`w-7 h-7 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
-                                  hasReadyRecording
-                                    ? "border-emerald-400/30 bg-emerald-500/10 hover:bg-emerald-500/20 cursor-pointer"
-                                    : "border-white/15 bg-white/5 text-white/40 cursor-not-allowed"
+                          const playButton = (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (!hasReadyRecording) return;
+                                void handleRecordingView(log);
+                              }}
+                              disabled={!hasReadyRecording}
+                              className={`w-7 h-7 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${hasReadyRecording
+                                ? "border-emerald-400/30 bg-emerald-500/10 hover:bg-emerald-500/20 cursor-pointer"
+                                : "border-white/15 bg-white/5 text-white/40 cursor-not-allowed"
                                 }`}
-                              >
-                                <svg
-                                  className={`w-4 h-4 ml-0.5 ${
-                                    hasReadyRecording
-                                      ? "text-emerald-400"
-                                      : "text-white/40"
+                            >
+                              <svg
+                                className={`w-4 h-4 ml-0.5 ${hasReadyRecording
+                                  ? "text-emerald-400"
+                                  : "text-white/40"
                                   }`}
-                                  fill="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path d="M8 5v14l11-7z" />
-                                </svg>
-                              </button>
-                            );
+                                fill="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path d="M8 5v14l11-7z" />
+                              </svg>
+                            </button>
+                          );
 
-                            return isProcessingRecording ? (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  {playButton}
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <span>Recording processing…</span>
-                                </TooltipContent>
-                              </Tooltip>
-                            ) : (
-                              playButton
-                            );
-                          })()
+                          return isProcessingRecording ? (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                {playButton}
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <span>Recording processing…</span>
+                              </TooltipContent>
+                            </Tooltip>
+                          ) : (
+                            playButton
+                          );
+                        })()
                         : null}
 
                       {/* Date */}
@@ -1247,7 +1248,7 @@ export const CallView = ({
                   </div>
 
 
-                    {/* <div className="px-3 pb-3">
+                  {/* <div className="px-3 pb-3">
                       <div className="flex flex-wrap items-center gap-2">
                         {/* Success Score * /}
                         {scoreStatus === "completed" &&
@@ -1362,18 +1363,16 @@ export const CallView = ({
               <div className="flex flex-col gap-2 pb-4 border-b border-white/10">
                 <div className="flex items-center gap-2">
                   <div
-                    className={`w-8 h-8 rounded-full ${
-                      selectedCallLog.status === "completed"
-                        ? "bg-emerald-500/10"
-                        : "bg-red-500/10"
-                    } flex items-center justify-center`}
+                    className={`w-8 h-8 rounded-full ${selectedCallLog.status === "completed"
+                      ? "bg-emerald-500/10"
+                      : "bg-red-500/10"
+                      } flex items-center justify-center`}
                   >
                     <svg
-                      className={`w-4 h-4 ${
-                        selectedCallLog.status === "completed"
-                          ? "text-emerald-400"
-                          : "text-red-400"
-                      }`}
+                      className={`w-4 h-4 ${selectedCallLog.status === "completed"
+                        ? "text-emerald-400"
+                        : "text-red-400"
+                        }`}
                       fill="currentColor"
                       viewBox="0 0 24 24"
                     >
@@ -1398,11 +1397,10 @@ export const CallView = ({
               <div className="flex gap-2 border-b border-white/10">
                 <button
                   onClick={() => setActiveTab("recording")}
-                  className={`px-4 py-2 text-sm font-medium transition-colors relative ${
-                    activeTab === "recording"
-                      ? "text-cyan-400"
-                      : "text-white/60 hover:text-white/80"
-                  }`}
+                  className={`px-4 py-2 text-sm font-medium transition-colors relative ${activeTab === "recording"
+                    ? "text-cyan-400"
+                    : "text-white/60 hover:text-white/80"
+                    }`}
                 >
                   Recording
                   {activeTab === "recording" && (
@@ -1411,11 +1409,10 @@ export const CallView = ({
                 </button>
                 <button
                   onClick={() => setActiveTab("followup")}
-                  className={`px-4 py-2 text-sm font-medium transition-colors relative ${
-                    activeTab === "followup"
-                      ? "text-cyan-400"
-                      : "text-white/60 hover:text-white/80"
-                  }`}
+                  className={`px-4 py-2 text-sm font-medium transition-colors relative ${activeTab === "followup"
+                    ? "text-cyan-400"
+                    : "text-white/60 hover:text-white/80"
+                    }`}
                 >
                   Follow-up
                   {activeTab === "followup" && (
@@ -1528,8 +1525,8 @@ export const CallView = ({
                       <h3 className="text-xs font-semibold text-white/80">
                         AI Follow-up Drafts
                       </h3>
-                      <FollowupGenerator 
-                        callLogId={selectedCallLog._id} 
+                      <FollowupGenerator
+                        callLogId={selectedCallLog._id}
                         transcript={selectedCallLog.transcriptionText || selectedCallLog.elevenlabsTranscript || ""}
                         leadId={lead?._id || ""}
                         leadEmail={lead?.email || ""}
@@ -1655,15 +1652,14 @@ export const CallView = ({
                             handleHangUp();
                           }
                         }}
-                        className={`flex items-center justify-center rounded-full transition-colors relative z-10 ${
-                          !twilioReady
-                            ? "cursor-not-allowed opacity-60"
-                            : callPhase === "idle"
+                        className={`flex items-center justify-center rounded-full transition-colors relative z-10 ${!twilioReady
+                          ? "cursor-not-allowed opacity-60"
+                          : callPhase === "idle"
                             ? "cursor-pointer hover:border-cyan-300/60"
                             : callPhase === "connected"
-                            ? "cursor-pointer border-cyan-300/80"
-                            : "cursor-not-allowed"
-                        }`}
+                              ? "cursor-pointer border-cyan-300/80"
+                              : "cursor-not-allowed"
+                          }`}
                         style={{
                           width: "130px",
                           height: "130px",
@@ -1880,10 +1876,10 @@ export const CallView = ({
                         callPhase === "connected"
                           ? handleHangUp
                           : callPhase === "incoming"
-                          ? handleAnswerIncoming
-                          : callPhase === "idle" && twilioReady
-                          ? handleCall
-                          : undefined
+                            ? handleAnswerIncoming
+                            : callPhase === "idle" && twilioReady
+                              ? handleCall
+                              : undefined
                       }
                       disabled={primaryActionDisabled}
                       className="px-6 py-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 text-xs sm:text-sm font-semibold text-white shadow-lg shadow-blue-900/40 hover:opacity-90 transition disabled:opacity-60 disabled:cursor-not-allowed"
@@ -1891,10 +1887,10 @@ export const CallView = ({
                       {callPhase === "connected"
                         ? "End call"
                         : callPhase === "ringing"
-                        ? "Ringing..."
-                        : callPhase === "incoming"
-                        ? "Answer call"
-                        : "Make a call"}
+                          ? "Ringing..."
+                          : callPhase === "incoming"
+                            ? "Answer call"
+                            : "Make a call"}
                     </Button>
                   )}
 
@@ -2127,8 +2123,8 @@ export const CallView = ({
                     (selectedCallLogView.log.followupSuggestionMetadata as any)
                       ?.raw?.touchpoints
                   ) &&
-                  (selectedCallLogView.log.followupSuggestionMetadata as any)
-                    .raw.touchpoints.length > 0 ? (
+                    (selectedCallLogView.log.followupSuggestionMetadata as any)
+                      .raw.touchpoints.length > 0 ? (
                     <EditableFollowupSuggestion
                       touchpoints={
                         (
@@ -2146,8 +2142,8 @@ export const CallView = ({
                           new Date(
                             selectedCallLogView.log.startedAt
                           ).getTime() +
-                            (selectedCallLogView.log.durationSeconds || 0) *
-                              1000
+                          (selectedCallLogView.log.durationSeconds || 0) *
+                          1000
                         ).toISOString()
                       }
                       leadId={selectedCallLogView.log.leadId || lead?._id || ""}
