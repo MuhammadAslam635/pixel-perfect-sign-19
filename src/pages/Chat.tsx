@@ -42,6 +42,8 @@ import {
   convertTemporaryChat,
   handleUrlMessage,
   updateTemporaryChatTitle,
+  saveComposerValueToCache,
+  setComposerValue,
 } from "@/store/slices/chatSlice";
 import {
   startStreamingTask,
@@ -303,6 +305,9 @@ const ChatPage = () => {
       dispatch(setIsCreatingNewChat(false));
     }
 
+    // Save current composer value to cache before switching
+    dispatch(saveComposerValueToCache());
+
     dispatch(setSelectedChatId(chatId));
     dispatch(setIsMobileListOpen(false));
   };
@@ -520,6 +525,12 @@ const ChatPage = () => {
       }
       dispatch(addMessageToTemporaryChat(tempMessage));
 
+      // CRITICAL: ALSO add to optimisticMessagesByChat with the temp chat ID
+      // This is required because once we switch to temp ID, messages come from optimisticMessagesByChat
+      dispatch(
+        addOptimisticMessage({ chatId: actualChatId, message: tempMessage })
+      );
+
       // CRITICAL: Immediately add to chat list optimistically so it's visible
       const optimisticChat: ChatSummary = {
         _id: actualChatId, // Use temp chat ID
@@ -543,9 +554,16 @@ const ChatPage = () => {
         }
       );
 
+      // CRITICAL: Save current composer value before switching to temp chat ID
+      dispatch(saveComposerValueToCache());
+
       // CRITICAL: Update selectedChatId to the temp chat ID immediately
       // This ensures the chat is properly tracked and visible in the list
       dispatch(setSelectedChatId(actualChatId));
+
+      // Set composer value to empty for the new temp chat ID
+      // This ensures when we switch back, it's properly empty
+      dispatch(setComposerValue(""));
     } else {
       // Add to optimistic messages for existing chats
       dispatch(
@@ -875,8 +893,12 @@ const ChatPage = () => {
   };
 
   const handleStartNewChat = () => {
+    // Save current composer value before switching
+    dispatch(saveComposerValueToCache());
+
     // Clear any pending state
     dispatch(setPendingFile(null));
+
     // Create new temporary chat (this will set selectedChatId to "__new_chat__")
     dispatch(createTemporaryChat());
     dispatch(setIsMobileListOpen(false));
@@ -983,13 +1005,21 @@ const ChatPage = () => {
   const optimisticMessages = optimisticMessagesByChat[currentChatKey] ?? [];
 
   const selectedMessages = useMemo(() => {
-    // If we have a temporary chat selected, use its messages
-    // Also check if selectedChatId is a temp chat ID (starts with "temp_") and we have a temporary chat
-    const isTempChatId = selectedChatId?.startsWith("temp_");
-    if ((selectedChatId === "__new_chat__" || isTempChatId) && temporaryChat) {
+    // CRITICAL: Only use temporaryChat for "__new_chat__" (before first message is sent)
+    // Once a message is sent, the chat gets a temp ID and messages go to optimisticMessagesByChat
+    if (selectedChatId === "__new_chat__" && temporaryChat) {
       return temporaryChat.messages;
     }
 
+    // For temp chat IDs (temp_123_abc, temp_456_def, etc.), use optimisticMessagesByChat
+    // Each temp chat has its own entry in optimisticMessagesByChat
+    const isTempChatId = selectedChatId?.startsWith("temp_");
+    if (isTempChatId) {
+      // Return messages specific to this temp chat ID
+      return optimisticMessagesByChat[selectedChatId] || [];
+    }
+
+    // For real chat IDs, combine API messages with optimistic messages
     const apiMessages = selectedChat?.messages ?? [];
     const optimisticMessages =
       optimisticMessagesByChat[selectedChatId || ""] || [];
@@ -1211,6 +1241,7 @@ const ChatPage = () => {
                     ) : null}
 
                     <ChatComposer
+                      key={selectedChatId || "__new_chat__"}
                       onSend={handleSendMessage}
                       isSending={isCurrentChatSending}
                       isAwaitingResponse={isCurrentChatSending}

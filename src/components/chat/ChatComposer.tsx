@@ -1,8 +1,11 @@
-import { ChangeEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
+import { ChangeEvent, KeyboardEvent, useEffect, useRef } from "react";
 import { Loader2, Plus, Send } from "lucide-react";
 import { motion, Variants } from "framer-motion";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/store/store";
+import { setComposerValue } from "@/store/slices/chatSlice";
 
 type ChatComposerProps = {
   onSend: (message: string) => void; // Pass the message when sending
@@ -19,18 +22,12 @@ const ChatComposer = ({
   onUploadFile,
   isAwaitingResponse = false,
 }: ChatComposerProps) => {
+  const dispatch = useDispatch();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  
-  // Keep input state completely local - no Redux at all
-  const [localValue, setLocalValue] = useState("");
-  
-  // Clear input after sending completes
-  useEffect(() => {
-    if (!isSending && !isAwaitingResponse) {
-      // Clear was handled by onSend callback, just keep clean
-    }
-  }, [isSending, isAwaitingResponse]);
 
+  // Use Redux state for composer value (per-chat caching)
+  const composerValue = useSelector((state: RootState) => state.chat.composerValue);
+  
   // Auto-resize textarea to fit content (max 3 lines)
   const autoResizeTextarea = () => {
     const textarea = textareaRef.current;
@@ -51,14 +48,14 @@ const ChatComposer = ({
 
   useEffect(() => {
     autoResizeTextarea();
-  }, [localValue]);
+  }, [composerValue]);
 
   const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
-      if (!disabled && !isAwaitingResponse && localValue.trim()) {
-        const messageToSend = localValue.trim();
-        setLocalValue(""); // Clear immediately
+      if (!disabled && !isAwaitingResponse && composerValue.trim()) {
+        const messageToSend = composerValue.trim();
+        dispatch(setComposerValue("")); // Clear immediately
         onSend(messageToSend);
       }
     }
@@ -73,7 +70,7 @@ const ChatComposer = ({
   };
 
   const isSendDisabled =
-    disabled || !localValue.trim() || isSending || isAwaitingResponse;
+    disabled || !composerValue.trim() || isSending || isAwaitingResponse;
 
   // Animation variants
   const buttonHoverVariants: Variants = {
@@ -107,9 +104,9 @@ const ChatComposer = ({
 
   const handleSend = () => {
     // Validate that message is not empty before sending
-    if (!disabled && !isAwaitingResponse && !isSending && localValue.trim()) {
-      const messageToSend = localValue.trim();
-      setLocalValue(""); // Clear immediately
+    if (!disabled && !isAwaitingResponse && !isSending && composerValue.trim()) {
+      const messageToSend = composerValue.trim();
+      dispatch(setComposerValue("")); // Clear immediately
       onSend(messageToSend);
     }
   };
@@ -146,10 +143,10 @@ const ChatComposer = ({
 
         <Textarea
           ref={textareaRef}
-          value={localValue}
+          value={composerValue}
           onChange={(event) => {
-            // Pure local state - zero Redux interaction!
-            setLocalValue(event.target.value);
+            // Update Redux state (per-chat caching)
+            dispatch(setComposerValue(event.target.value));
           }}
           onKeyDown={handleKeyDown}
           rows={1}
