@@ -16,9 +16,9 @@ const Toaster = ({ ...props }: ToasterProps) => {
           toast: [
             "group toast",
             // Just transparent + blur, no gradient / glow
-            "group-[.toaster]:bg-transparent",
-            "group-[.toaster]:backdrop-blur-[6px]",
-            "group-[.toaster]:border group-[.toaster]:border-white/14",
+            "group-[.toaster]:bg-white/[0.03]",
+            "group-[.toaster]:backdrop-blur-[12px]",
+            "group-[.toaster]:border group-[.toaster]:border-white/20",
             // Text + layout
             "group-[.toaster]:text-white",
             "group-[.toaster]:rounded-2xl",
@@ -26,14 +26,19 @@ const Toaster = ({ ...props }: ToasterProps) => {
             // Simple neutral depth
             "group-[.toaster]:shadow-[0_18px_45px_rgba(0,0,0,0.45)]",
           ].join(" "),
-          description: "group-[.toast]:text-muted-foreground",
+          title: "group-[.toast]:text-sm group-[.toast]:font-bold group-[.toast]:text-white",
+          description: "group-[.toast]:text-sm group-[.toast]:text-white group-[.toast]:font-medium",
+
+
           actionButton:
             "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
+
           cancelButton:
             "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
           closeButton:
-            "group-[.toast]:text-muted-foreground group-[.toast]:bg-muted absolute left-auto right-4 top-4 translate-x-0 translate-y-0",
+            "group-[.toast]:text-white/50 group-[.toast]:bg-transparent absolute left-auto right-2 top-2 translate-x-0 translate-y-0 opacity-0 group-hover:opacity-100 transition-opacity hover:text-white",
         },
+
       }}
       {...props}
     />

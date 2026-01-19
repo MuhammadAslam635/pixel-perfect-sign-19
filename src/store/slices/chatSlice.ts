@@ -32,11 +32,10 @@ export interface ChatState {
   // Message management
   optimisticMessagesByChat: Record<string, ChatMessage[]>;
 
-  // Streaming state
-  streamingEvents: StreamEvent[];
-  isStreaming: boolean;
+  // Streaming state - support multiple concurrent chats
+  streamingEventsByChat: Record<string, StreamEvent[]>; // Per-chat streaming events
+  streamingChatIds: string[]; // Track which chats are currently streaming (supports multiple)
   useStreaming: boolean; // Default to streaming mode
-  streamingChatId: string | null; // Track which chat is currently streaming (shared across components)
 
   // UI state
   isChatListLoading: boolean;
@@ -59,10 +58,9 @@ const initialState: ChatState = {
   pendingFile: null,
   deletingChatId: null,
   optimisticMessagesByChat: {},
-  streamingEvents: [],
-  isStreaming: false,
+  streamingEventsByChat: {},
+  streamingChatIds: [],
   useStreaming: true,
-  streamingChatId: null,
   isChatListLoading: false,
   isChatDetailLoading: false,
   chatList: [],
@@ -80,10 +78,11 @@ const chatSlice = createSlice({
       if (state.selectedChatId && state.composerValue !== undefined) {
         state.composerValuesByChat[state.selectedChatId] = state.composerValue;
       }
-      
+
       state.selectedChatId = action.payload;
       // Restore composer value for this chat
-      state.composerValue = state.composerValuesByChat[action.payload || ""] || "";
+      state.composerValue =
+        state.composerValuesByChat[action.payload || ""] || "";
     },
 
     // Mobile navigation
@@ -97,7 +96,7 @@ const chatSlice = createSlice({
       // This prevents unnecessary state updates on every keystroke
       state.composerValue = action.payload;
     },
-    
+
     // Save composer value to per-chat cache (called when switching chats or sending messages)
     saveComposerValueToCache: (state) => {
       if (state.selectedChatId && state.composerValue !== undefined) {
@@ -105,7 +104,10 @@ const chatSlice = createSlice({
       }
     },
 
-    setComposerValuesByChat: (state, action: PayloadAction<Record<string, string>>) => {
+    setComposerValuesByChat: (
+      state,
+      action: PayloadAction<Record<string, string>>
+    ) => {
       state.composerValuesByChat = action.payload;
     },
 
@@ -130,7 +132,10 @@ const chatSlice = createSlice({
     },
 
     // Optimistic messages
-    addOptimisticMessage: (state, action: PayloadAction<{ chatId: string; message: ChatMessage }>) => {
+    addOptimisticMessage: (
+      state,
+      action: PayloadAction<{ chatId: string; message: ChatMessage }>
+    ) => {
       const { chatId, message } = action.payload;
       if (!state.optimisticMessagesByChat[chatId]) {
         state.optimisticMessagesByChat[chatId] = [];
@@ -146,29 +151,80 @@ const chatSlice = createSlice({
       state.optimisticMessagesByChat = {};
     },
 
-    // Streaming state
-    setStreamingEvents: (state, action: PayloadAction<StreamEvent[]>) => {
-      state.streamingEvents = action.payload;
-    },
-
-    addStreamingEvent: (state, action: PayloadAction<StreamEvent>) => {
-      state.streamingEvents.push(action.payload);
-    },
-
-    clearStreamingEvents: (state) => {
-      state.streamingEvents = [];
-    },
-
-    setIsStreaming: (state, action: PayloadAction<boolean>) => {
-      state.isStreaming = action.payload;
-      // Clear streaming chat ID when streaming stops
-      if (!action.payload) {
-        state.streamingChatId = null;
+    // Streaming state - per-chat operations
+    addStreamingChat: (state, action: PayloadAction<string>) => {
+      const chatId = action.payload;
+      if (!state.streamingChatIds.includes(chatId)) {
+        state.streamingChatIds.push(chatId);
+      }
+      // Initialize events array for this chat if it doesn't exist
+      if (!state.streamingEventsByChat[chatId]) {
+        state.streamingEventsByChat[chatId] = [];
       }
     },
 
-    setStreamingChatId: (state, action: PayloadAction<string | null>) => {
-      state.streamingChatId = action.payload;
+    removeStreamingChat: (state, action: PayloadAction<string>) => {
+      const chatId = action.payload;
+      state.streamingChatIds = state.streamingChatIds.filter(
+        (id) => id !== chatId
+      );
+      // Optionally clear events for this chat when streaming stops
+      // Commented out to preserve events for UI display
+      // delete state.streamingEventsByChat[chatId];
+    },
+
+    setStreamingEvents: (
+      state,
+      action: PayloadAction<{ chatId: string; events: StreamEvent[] }>
+    ) => {
+      const { chatId, events } = action.payload;
+      state.streamingEventsByChat[chatId] = events;
+    },
+
+    addStreamingEvent: (
+      state,
+      action: PayloadAction<{ chatId: string; event: StreamEvent }>
+    ) => {
+      const { chatId, event } = action.payload;
+      if (!state.streamingEventsByChat[chatId]) {
+        state.streamingEventsByChat[chatId] = [];
+      }
+      state.streamingEventsByChat[chatId].push(event);
+    },
+
+    clearStreamingEvents: (state, action: PayloadAction<string>) => {
+      const chatId = action.payload;
+      if (state.streamingEventsByChat[chatId]) {
+        state.streamingEventsByChat[chatId] = [];
+      }
+    },
+
+    clearAllStreamingEvents: (state) => {
+      state.streamingEventsByChat = {};
+    },
+
+    // Migrate streaming events from old chat ID to new chat ID (e.g., temp to real)
+    migrateStreamingEvents: (
+      state,
+      action: PayloadAction<{ oldChatId: string; newChatId: string }>
+    ) => {
+      const { oldChatId, newChatId } = action.payload;
+      if (state.streamingEventsByChat[oldChatId]) {
+        // Move events to new chat ID
+        state.streamingEventsByChat[newChatId] = [
+          ...(state.streamingEventsByChat[newChatId] || []),
+          ...state.streamingEventsByChat[oldChatId],
+        ];
+        // Remove old chat ID events
+        delete state.streamingEventsByChat[oldChatId];
+      }
+      // Update streaming chat IDs array
+      const oldIndex = state.streamingChatIds.indexOf(oldChatId);
+      if (oldIndex !== -1) {
+        state.streamingChatIds[oldIndex] = newChatId;
+        // Ensure no duplicates
+        state.streamingChatIds = Array.from(new Set(state.streamingChatIds));
+      }
     },
 
     setUseStreaming: (state, action: PayloadAction<boolean>) => {
@@ -188,7 +244,10 @@ const chatSlice = createSlice({
       state.isChatDetailLoading = action.payload;
     },
 
-    setSelectedChatDetail: (state, action: PayloadAction<ChatDetail | null>) => {
+    setSelectedChatDetail: (
+      state,
+      action: PayloadAction<ChatDetail | null>
+    ) => {
       state.selectedChatDetail = action.payload;
     },
 
@@ -199,7 +258,9 @@ const chatSlice = createSlice({
 
     // Update chat in list
     updateChatInList: (state, action: PayloadAction<ChatSummary>) => {
-      const index = state.chatList.findIndex(chat => chat._id === action.payload._id);
+      const index = state.chatList.findIndex(
+        (chat) => chat._id === action.payload._id
+      );
       if (index !== -1) {
         state.chatList[index] = action.payload;
       }
@@ -207,7 +268,9 @@ const chatSlice = createSlice({
 
     // Remove chat from list
     removeChatFromList: (state, action: PayloadAction<string>) => {
-      state.chatList = state.chatList.filter(chat => chat._id !== action.payload);
+      state.chatList = state.chatList.filter(
+        (chat) => chat._id !== action.payload
+      );
     },
 
     // Error handling
@@ -255,14 +318,19 @@ const chatSlice = createSlice({
     },
 
     // Convert temporary chat to real chat (when server response arrives)
-    convertTemporaryChat: (state, action: PayloadAction<{ realChatId: string; title?: string }>) => {
+    convertTemporaryChat: (
+      state,
+      action: PayloadAction<{ realChatId: string; title?: string }>
+    ) => {
       const { realChatId, title } = action.payload;
       if (state.temporaryChat) {
         // Move messages from temporary chat to optimistic messages for the real chat
         if (!state.optimisticMessagesByChat[realChatId]) {
           state.optimisticMessagesByChat[realChatId] = [];
         }
-        state.optimisticMessagesByChat[realChatId].push(...state.temporaryChat.messages);
+        state.optimisticMessagesByChat[realChatId].push(
+          ...state.temporaryChat.messages
+        );
 
         // Clear temporary chat
         state.temporaryChat = null;
@@ -271,14 +339,18 @@ const chatSlice = createSlice({
 
         // Update composer values mapping
         if (state.composerValuesByChat["__new_chat__"]) {
-          state.composerValuesByChat[realChatId] = state.composerValuesByChat["__new_chat__"];
+          state.composerValuesByChat[realChatId] =
+            state.composerValuesByChat["__new_chat__"];
           delete state.composerValuesByChat["__new_chat__"];
         }
       }
     },
 
     // Handle URL parameters
-    handleUrlMessage: (state, action: PayloadAction<{ message: string; chatId?: string }>) => {
+    handleUrlMessage: (
+      state,
+      action: PayloadAction<{ message: string; chatId?: string }>
+    ) => {
       const { message, chatId } = action.payload;
       if (message) {
         state.composerValue = message;
@@ -309,11 +381,13 @@ export const {
   addOptimisticMessage,
   removeOptimisticMessages,
   clearOptimisticMessages,
+  addStreamingChat,
+  removeStreamingChat,
   setStreamingEvents,
   addStreamingEvent,
   clearStreamingEvents,
-  setIsStreaming,
-  setStreamingChatId,
+  clearAllStreamingEvents,
+  migrateStreamingEvents,
   setUseStreaming,
   setChatList,
   setIsChatListLoading,
