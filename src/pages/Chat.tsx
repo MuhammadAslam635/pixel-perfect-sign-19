@@ -99,6 +99,7 @@ const ChatPage = () => {
   const streamingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isStreamingRef = useRef<boolean>(false);
   const streamingChatIdRef = useRef<string | null>(null); // Track which chat is currently streaming
+  const selectedChatIdRef = useRef<string | null>(null); // Track the current selected chat
 
   // Animation variants for page transitions
   const pageVariants = {
@@ -295,6 +296,11 @@ const ChatPage = () => {
       return () => clearTimeout(timer);
     }
   }, [location.state]);
+
+  // Keep ref in sync with selectedChatId for async operations
+  useEffect(() => {
+    selectedChatIdRef.current = selectedChatId;
+  }, [selectedChatId]);
 
   const selectChatFromList = (chatId: string) => {
     // If selecting a different chat (not the temporary chat), we should allow the selection
@@ -672,7 +678,14 @@ const ChatPage = () => {
           "New Conversation";
 
         if (isNewChat) {
-          dispatch(setSelectedChatId(newChatId));
+          // Only switch to the new chat ID if the user is still viewing this chat
+          // Check if current selected chat is either the temp ID or already the new ID
+          const currentSelected = selectedChatIdRef.current;
+          if (currentSelected === actualChatId || currentSelected === newChatId) {
+            // User is still on this chat - update to real ID
+            dispatch(setSelectedChatId(newChatId));
+          }
+          // If user switched to a different chat, don't force them back
         }
 
         // Ensure chat detail cache is set and includes a sensible title
