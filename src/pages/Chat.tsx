@@ -506,6 +506,10 @@ const ChatPage = () => {
       ? `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
       : selectedChatId;
     streamingChatIdRef.current = actualChatId; // Track which chat is streaming (local ref)
+
+    // CRITICAL: Store the chat ID we're sending from, to check later if user switched away
+    const chatIdWhenSent = actualChatId;
+
     dispatch(addStreamingChat(actualChatId)); // Add to streaming chats set
     dispatch(clearStreamingEvents(actualChatId)); // Clear events for this specific chat
 
@@ -677,15 +681,20 @@ const ChatPage = () => {
           deriveTitleFromMessages(result.data.messages) ||
           "New Conversation";
 
+        // Only update selectedChatId if the user is still viewing this specific chat
         if (isNewChat) {
-          // Only switch to the new chat ID if the user is still viewing this chat
-          // Check if current selected chat is either the temp ID or already the new ID
-          const currentSelected = selectedChatIdRef.current;
-          if (currentSelected === actualChatId || currentSelected === newChatId) {
-            // User is still on this chat - update to real ID
+          // Use the ref to check current state (most up-to-date value)
+          const currentlyViewing = selectedChatIdRef.current;
+
+          // Only switch if user is still viewing this specific chat (by temp ID or already migrated ID)
+          // This ensures we migrate temp_A → real_A only when user is on temp_A
+          // If user switched to temp_B, currentlyViewing will be temp_B, and this won't match
+          if (currentlyViewing === chatIdWhenSent || currentlyViewing === newChatId) {
+            // User is still on this chat - migrate to real ID
             dispatch(setSelectedChatId(newChatId));
           }
-          // If user switched to a different chat, don't force them back
+          // Otherwise, user switched away to another chat - don't force them back
+          // Example: User on temp_B, temp_A completes → stay on temp_B
         }
 
         // Ensure chat detail cache is set and includes a sensible title
