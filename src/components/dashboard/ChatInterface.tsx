@@ -582,12 +582,17 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
   // Computed value to replace the old isSendingMessage from mutation
   // Make it chat-specific - only show typing indicator for the current chat being processed
   const isCurrentChatSending = useMemo(() => {
-    // Check if this specific chat is currently streaming
+    // For new/empty chats, never show as sending unless it has optimistic messages
+    if (!activeChatId || activeChatId === NEW_CHAT_KEY) {
+      // Only show as sending if THIS specific new chat has optimistic messages
+      // Don't block just because some other temp chat is streaming
+      const hasOptimisticMessages = optimisticMessages.length > 0;
+      return hasOptimisticMessages;
+    }
+
+    // For existing chats (with real IDs or temp IDs), check if THIS specific chat is streaming
     const isStreamingThisChat =
-      streamingChatIds.includes(activeChatId || "") ||
-      streamingChatIds.some(
-        (id) => id.startsWith("temp_") && activeChatId === NEW_CHAT_KEY
-      ) ||
+      streamingChatIds.includes(activeChatId) ||
       streamingChatIdRef.current === activeChatId;
 
     const hasOptimisticMessages = optimisticMessages.length > 0;

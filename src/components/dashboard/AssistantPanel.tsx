@@ -34,6 +34,7 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
   // Redux selectors
   const selectedChatId = useSelector((state: RootState) => state.chat.selectedChatId);
   const deletingChatId = useSelector((state: RootState) => state.chat.deletingChatId);
+  const streamingChatIds = useSelector((state: RootState) => state.chat.streamingChatIds);
 
   // Get current auth token to identify user changes
   const getCurrentAuthToken = (): string | null => {
@@ -259,6 +260,7 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
           isLoading={isChatListLoading}
           onDeleteChat={handleDeleteChat}
           deletingChatId={deletingChatId}
+          streamingChatIds={streamingChatIds}
         />
       ) : (
         <ChatInterface

@@ -28,6 +28,7 @@ type ChatHistoryListProps = {
   isLoading?: boolean;
   onDeleteChat?: (chatId: string) => void;
   deletingChatId?: string | null;
+  streamingChatIds?: string[];
 };
 
 const ChatHistoryList: FC<ChatHistoryListProps> = ({
@@ -40,6 +41,7 @@ const ChatHistoryList: FC<ChatHistoryListProps> = ({
   isLoading = false,
   onDeleteChat,
   deletingChatId = null,
+  streamingChatIds = [],
 }) => {
   const truncateText = (text: string, limit: number) =>
     text.length > limit ? `${text.slice(0, limit - 1)}…` : text;
@@ -125,6 +127,7 @@ const ChatHistoryList: FC<ChatHistoryListProps> = ({
                 const truncatedTitle = truncateText(fullTitle, 18);
 
                 const isDeletingThisChat = deletingChatId === chat._id;
+                const isStreamingThisChat = streamingChatIds.includes(chat._id);
 
                 return (
                   <div
@@ -142,6 +145,9 @@ const ChatHistoryList: FC<ChatHistoryListProps> = ({
                       className="flex min-w-0 flex-1 flex-col text-left"
                     >
                       <div className="flex items-center gap-2">
+                        {isStreamingThisChat && (
+                          <Loader2 className="size-3 animate-spin text-cyan-400 flex-shrink-0" />
+                        )}
                         <p
                           className="flex-1 truncate text-sm font-semibold text-white"
                           title={chat.title || "Untitled Conversation"}
@@ -149,7 +155,11 @@ const ChatHistoryList: FC<ChatHistoryListProps> = ({
                           {truncatedTitle}
                         </p>
                       </div>
-                      {lastMessage ? (
+                      {isStreamingThisChat ? (
+                        <p className="mt-1 text-[12px] text-cyan-400/80 animate-pulse">
+                          Generating response...
+                        </p>
+                      ) : lastMessage ? (
                         <p
                           className="mt-1 truncate text-[12px] text-white/60"
                           title={lastMessage.content}
