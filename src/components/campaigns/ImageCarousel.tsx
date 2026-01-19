@@ -33,7 +33,14 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
     ) {
       return image;
     }
-    // Otherwise, construct the URL with backend URL (without /api)
+    // Check if it's a storage service file ID (storage://fileId)
+    // Use backend proxy endpoint instead of direct storage service access
+    if (image.startsWith("storage://")) {
+      const fileId = image.replace("storage://", "");
+      const baseUrl = getBaseUrl();
+      return `${baseUrl}/api/storage/file/${fileId}`;
+    }
+    // Otherwise, construct the URL with backend URL (without /api) - legacy format
     const baseUrl = getBaseUrl();
     return `${baseUrl}/uploads/${image}`;
   };
