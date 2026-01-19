@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -42,6 +43,7 @@ import {
   Campaign,
   UpdateCampaignData,
   CreateCampaignData,
+  CampaignResponse,
 } from "@/services/campaigns.service";
 import {
   useCampaigns,
@@ -79,6 +81,12 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import ImageCarousel from "@/components/campaigns/ImageCarousel";
 import CreateCampaignModal from "@/components/campaigns/CreateCampaignModal";
 import FacebookIcon from "@/components/icons/FacebookIcon";
@@ -86,6 +94,7 @@ import AnalyticsCard from "@/components/campaigns/AnalyticsCard";
 import { useUserAggregatedAnalytics } from "@/hooks/useAnalytics";
 
 const CampaignsPage = () => {
+  const navigate = useNavigate();
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [platformFilter, setPlatformFilter] = useState<string>("all");
   const [searchInput, setSearchInput] = useState<string>("");
@@ -99,7 +108,9 @@ const CampaignsPage = () => {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [editedCampaign, setEditedCampaign] = useState<Campaign | null>(null);
-  const [viewingCampaignId, setViewingCampaignId] = useState<string | null>(null);
+  const [viewingCampaignId, setViewingCampaignId] = useState<string | null>(
+    null
+  );
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
   const [regenerateType, setRegenerateType] = useState<
     "content" | "media" | "research" | "both" | null
@@ -136,31 +147,35 @@ const CampaignsPage = () => {
   const { mutate: updateCampaign, isPending: isUpdating } = useUpdateCampaign();
 
   // Get fresh campaign data when modal is open
-  const { data: freshCampaignData, isLoading: isLoadingCampaignDetails } = useQuery({
-    queryKey: campaignKeys.detail(viewingCampaignId || ''),
-    queryFn: () => campaignsService.getCampaignById(viewingCampaignId || ''),
-    enabled: isModalOpen && !!viewingCampaignId,
-    staleTime: 0, // Always refetch when modal opens
-    refetchOnMount: true,
-    retry: (failureCount, error: any) => {
-      if (error?.response?.status >= 400 && error?.response?.status < 500) {
+  const { data: freshCampaignData, isLoading: isLoadingCampaignDetails } =
+    useQuery({
+      queryKey: campaignKeys.detail(viewingCampaignId || ""),
+      queryFn: () => campaignsService.getCampaignById(viewingCampaignId || ""),
+      enabled: isModalOpen && !!viewingCampaignId,
+      staleTime: 0, // Always refetch when modal opens
+      refetchOnMount: true,
+      retry: (failureCount, error: any) => {
+        if (error?.response?.status >= 400 && error?.response?.status < 500) {
+          return false;
+        }
+        return failureCount < 2;
+      },
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 15000),
+      // Add polling when campaign has processing status in progress
+      refetchInterval: (query) => {
+        const response = query.state.data as CampaignResponse | undefined;
+        if (response && "data" in response && response.data) {
+          const campaign = response.data;
+          const hasProcessingStatus =
+            campaign.processingStatus?.content?.status === "in-progress" ||
+            campaign.processingStatus?.media?.status === "in-progress" ||
+            campaign.processingStatus?.research?.status === "in-progress";
+          return hasProcessingStatus ? 5000 : false; // Poll every 5 seconds if processing
+        }
         return false;
-      }
-      return failureCount < 2;
-    },
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 15000),
-    // Add polling when campaign has processing status in progress
-    refetchInterval: (data) => {
-      if (data?.data) {
-        const hasProcessingStatus = data.data.processingStatus?.content?.status === 'in-progress' ||
-          data.data.processingStatus?.media?.status === 'in-progress' ||
-          data.data.processingStatus?.research?.status === 'in-progress';
-        return hasProcessingStatus ? 5000 : false; // Poll every 5 seconds if processing
-      }
-      return false;
-    },
-    refetchIntervalInBackground: true, // Continue polling even when tab is not active
-  });
+      },
+      refetchIntervalInBackground: true, // Continue polling even when tab is not active
+    });
 
   // Update selectedCampaign and editedCampaign when fresh data arrives
   React.useEffect(() => {
@@ -172,7 +187,7 @@ const CampaignsPage = () => {
       }
     }
   }, [freshCampaignData, isModalOpen, isEditing]);
-  
+
   const { mutate: deleteCampaign, isPending: isDeleting } = useDeleteCampaign();
 
   // Campaign Suggestions hooks
@@ -216,20 +231,22 @@ const CampaignsPage = () => {
       if (updatedCampaign) {
         // Don't override if current selectedCampaign has completed status but updated has in-progress
         const shouldUpdate =
-          JSON.stringify(updatedCampaign) !== JSON.stringify(selectedCampaign) &&
+          JSON.stringify(updatedCampaign) !==
+            JSON.stringify(selectedCampaign) &&
           !(
-            selectedCampaign.processingStatus?.content?.status === 'completed' &&
-            updatedCampaign.processingStatus?.content?.status === 'in-progress'
+            selectedCampaign.processingStatus?.content?.status ===
+              "completed" &&
+            updatedCampaign.processingStatus?.content?.status === "in-progress"
           ) &&
           !(
-            selectedCampaign.processingStatus?.media?.status === 'completed' &&
-            updatedCampaign.processingStatus?.media?.status === 'in-progress'
+            selectedCampaign.processingStatus?.media?.status === "completed" &&
+            updatedCampaign.processingStatus?.media?.status === "in-progress"
           );
 
         if (shouldUpdate) {
           setSelectedCampaign(updatedCampaign);
           if (!isEditing) {
-             setEditedCampaign(updatedCampaign);
+            setEditedCampaign(updatedCampaign);
           }
         }
       }
@@ -666,7 +683,7 @@ const CampaignsPage = () => {
             {/* Gradient glow behind card - more spread out and diffused */}
             <div className="absolute -inset-4 lg:-inset-8 bg-gradient-to-r from-[#1877F2]/30 via-[#1877F2]/15 to-transparent blur-3xl opacity-60" />
             <Card
-              className="relative border-[#FFFFFF4D] shadow-2xl w-full"
+              className="relative border-[#FFFFFF4D] shadow-2xl w-full cursor-pointer hover:border-[#1877F2]/50 transition-all duration-200"
               style={{
                 height: "140px",
                 borderRadius: "16px",
@@ -675,6 +692,7 @@ const CampaignsPage = () => {
                 background:
                   "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
               }}
+              onClick={() => navigate("/campaigns/facebook")}
             >
               <CardContent className="p-2.5 sm:p-3 h-full flex flex-col justify-between">
                 <div className="flex items-center justify-between">
@@ -695,48 +713,50 @@ const CampaignsPage = () => {
                       Facebook Ads
                     </h3>
                   </div>
-                  <Select
-                    defaultValue="last-week"
-                    onValueChange={(value) =>
-                      setFacebookDays(getDaysFromSelection(value))
-                    }
-                  >
-                    <SelectTrigger className="w-[110px] h-7 bg-[#252525] border-[#3a3a3a] text-gray-300 text-[10px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a]">
-                      <SelectItem
-                        value="last-7-days"
-                        className="text-gray-300 focus:text-white focus:bg-white/10"
-                      >
-                        Last 7 Days
-                      </SelectItem>
-                      <SelectItem
-                        value="last-week"
-                        className="text-gray-300 focus:text-white focus:bg-white/10"
-                      >
-                        Last Week
-                      </SelectItem>
-                      <SelectItem
-                        value="last-month"
-                        className="text-gray-300 focus:text-white focus:bg-white/10"
-                      >
-                        Last Month
-                      </SelectItem>
-                      <SelectItem
-                        value="last-3-months"
-                        className="text-gray-300 focus:text-white focus:bg-white/10"
-                      >
-                        Last 3 Months
-                      </SelectItem>
-                      <SelectItem
-                        value="last-year"
-                        className="text-gray-300 focus:text-white focus:bg-white/10"
-                      >
-                        Last Year
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <Select
+                      defaultValue="last-week"
+                      onValueChange={(value) =>
+                        setFacebookDays(getDaysFromSelection(value))
+                      }
+                    >
+                      <SelectTrigger className="w-[110px] h-7 bg-[#252525] border-[#3a3a3a] text-gray-300 text-[10px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a]">
+                        <SelectItem
+                          value="last-7-days"
+                          className="text-gray-300 focus:text-white focus:bg-white/10"
+                        >
+                          Last 7 Days
+                        </SelectItem>
+                        <SelectItem
+                          value="last-week"
+                          className="text-gray-300 focus:text-white focus:bg-white/10"
+                        >
+                          Last Week
+                        </SelectItem>
+                        <SelectItem
+                          value="last-month"
+                          className="text-gray-300 focus:text-white focus:bg-white/10"
+                        >
+                          Last Month
+                        </SelectItem>
+                        <SelectItem
+                          value="last-3-months"
+                          className="text-gray-300 focus:text-white focus:bg-white/10"
+                        >
+                          Last 3 Months
+                        </SelectItem>
+                        <SelectItem
+                          value="last-year"
+                          className="text-gray-300 focus:text-white focus:bg-white/10"
+                        >
+                          Last Year
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
                   <div>
@@ -1717,13 +1737,272 @@ const CampaignsPage = () => {
                       </CardContent>
                     </Card>
 
+                    {/* Research Documents */}
+                    {selectedCampaign.researchDocs &&
+                      (selectedCampaign.researchDocs.marketResearch?.content ||
+                        selectedCampaign.researchDocs.offerServiceBrief
+                          ?.content ||
+                        selectedCampaign.researchDocs.necessaryBriefs
+                          ?.content ||
+                        selectedCampaign.researchDocs.brandDesign?.content) && (
+                        <Card className="bg-white/5 backdrop-blur-sm border-white/10 shadow-lg">
+                          <CardHeader className="px-4 py-3">
+                            <CardTitle className="text-xs flex items-center gap-2 text-white drop-shadow-md">
+                              <Search className="w-5 h-5" />
+                              Research Documents
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="px-4 pb-4">
+                            <Accordion
+                              type="single"
+                              collapsible
+                              className="w-full"
+                            >
+                              {selectedCampaign.researchDocs.marketResearch
+                                ?.content && (
+                                <AccordionItem
+                                  value="market-research"
+                                  className="border-b border-white/10"
+                                >
+                                  <AccordionTrigger className="text-xs text-white hover:no-underline py-3">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-medium">
+                                        Market Research
+                                      </span>
+                                      {selectedCampaign.researchDocs
+                                        .marketResearch.status && (
+                                        <Badge
+                                          className={
+                                            selectedCampaign.researchDocs
+                                              .marketResearch.status ===
+                                            "completed"
+                                              ? "bg-green-500/20 text-green-300 border-green-400/50 text-[10px]"
+                                              : selectedCampaign.researchDocs
+                                                  .marketResearch.status ===
+                                                "in-progress"
+                                              ? "bg-blue-500/20 text-blue-300 border-blue-400/50 text-[10px]"
+                                              : "bg-gray-500/20 text-gray-300 border-gray-400/50 text-[10px]"
+                                          }
+                                        >
+                                          {
+                                            selectedCampaign.researchDocs
+                                              .marketResearch.status
+                                          }
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  </AccordionTrigger>
+                                  <AccordionContent className="pt-2 pb-4">
+                                    <div className="space-y-2">
+                                      {selectedCampaign.researchDocs
+                                        .marketResearch.createdAt && (
+                                        <div className="text-[10px] text-gray-400">
+                                          Created:{" "}
+                                          {formatDate(
+                                            selectedCampaign.researchDocs
+                                              .marketResearch
+                                              .createdAt as string
+                                          )}
+                                        </div>
+                                      )}
+                                      <p className="text-xs text-gray-300/90 whitespace-pre-wrap break-words">
+                                        {renderTextWithLinks(
+                                          selectedCampaign.researchDocs
+                                            .marketResearch.content
+                                        )}
+                                      </p>
+                                    </div>
+                                  </AccordionContent>
+                                </AccordionItem>
+                              )}
+
+                              {selectedCampaign.researchDocs.offerServiceBrief
+                                ?.content && (
+                                <AccordionItem
+                                  value="offer-service-brief"
+                                  className="border-b border-white/10"
+                                >
+                                  <AccordionTrigger className="text-xs text-white hover:no-underline py-3">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-medium">
+                                        Offer/Service Brief
+                                      </span>
+                                      {selectedCampaign.researchDocs
+                                        .offerServiceBrief.status && (
+                                        <Badge
+                                          className={
+                                            selectedCampaign.researchDocs
+                                              .offerServiceBrief.status ===
+                                            "completed"
+                                              ? "bg-green-500/20 text-green-300 border-green-400/50 text-[10px]"
+                                              : selectedCampaign.researchDocs
+                                                  .offerServiceBrief.status ===
+                                                "in-progress"
+                                              ? "bg-blue-500/20 text-blue-300 border-blue-400/50 text-[10px]"
+                                              : "bg-gray-500/20 text-gray-300 border-gray-400/50 text-[10px]"
+                                          }
+                                        >
+                                          {
+                                            selectedCampaign.researchDocs
+                                              .offerServiceBrief.status
+                                          }
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  </AccordionTrigger>
+                                  <AccordionContent className="pt-2 pb-4">
+                                    <div className="space-y-2">
+                                      {selectedCampaign.researchDocs
+                                        .offerServiceBrief.createdAt && (
+                                        <div className="text-[10px] text-gray-400">
+                                          Created:{" "}
+                                          {formatDate(
+                                            selectedCampaign.researchDocs
+                                              .offerServiceBrief
+                                              .createdAt as string
+                                          )}
+                                        </div>
+                                      )}
+                                      <p className="text-xs text-gray-300/90 whitespace-pre-wrap break-words">
+                                        {renderTextWithLinks(
+                                          selectedCampaign.researchDocs
+                                            .offerServiceBrief.content
+                                        )}
+                                      </p>
+                                    </div>
+                                  </AccordionContent>
+                                </AccordionItem>
+                              )}
+
+                              {selectedCampaign.researchDocs.necessaryBriefs
+                                ?.content && (
+                                <AccordionItem
+                                  value="necessary-briefs"
+                                  className="border-b border-white/10"
+                                >
+                                  <AccordionTrigger className="text-xs text-white hover:no-underline py-3">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-medium">
+                                        Campaign Brief
+                                      </span>
+                                      {selectedCampaign.researchDocs
+                                        .necessaryBriefs.status && (
+                                        <Badge
+                                          className={
+                                            selectedCampaign.researchDocs
+                                              .necessaryBriefs.status ===
+                                            "completed"
+                                              ? "bg-green-500/20 text-green-300 border-green-400/50 text-[10px]"
+                                              : selectedCampaign.researchDocs
+                                                  .necessaryBriefs.status ===
+                                                "in-progress"
+                                              ? "bg-blue-500/20 text-blue-300 border-blue-400/50 text-[10px]"
+                                              : "bg-gray-500/20 text-gray-300 border-gray-400/50 text-[10px]"
+                                          }
+                                        >
+                                          {
+                                            selectedCampaign.researchDocs
+                                              .necessaryBriefs.status
+                                          }
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  </AccordionTrigger>
+                                  <AccordionContent className="pt-2 pb-4">
+                                    <div className="space-y-2">
+                                      {selectedCampaign.researchDocs
+                                        .necessaryBriefs.createdAt && (
+                                        <div className="text-[10px] text-gray-400">
+                                          Created:{" "}
+                                          {formatDate(
+                                            selectedCampaign.researchDocs
+                                              .necessaryBriefs
+                                              .createdAt as string
+                                          )}
+                                        </div>
+                                      )}
+                                      <p className="text-xs text-gray-300/90 whitespace-pre-wrap break-words">
+                                        {renderTextWithLinks(
+                                          selectedCampaign.researchDocs
+                                            .necessaryBriefs.content
+                                        )}
+                                      </p>
+                                    </div>
+                                  </AccordionContent>
+                                </AccordionItem>
+                              )}
+
+                              {selectedCampaign.researchDocs.brandDesign
+                                ?.content && (
+                                <AccordionItem
+                                  value="brand-design"
+                                  className="border-b border-white/10"
+                                >
+                                  <AccordionTrigger className="text-xs text-white hover:no-underline py-3">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-medium">
+                                        Brand & Design Guidelines
+                                      </span>
+                                      {selectedCampaign.researchDocs.brandDesign
+                                        .status && (
+                                        <Badge
+                                          className={
+                                            selectedCampaign.researchDocs
+                                              .brandDesign.status ===
+                                            "completed"
+                                              ? "bg-green-500/20 text-green-300 border-green-400/50 text-[10px]"
+                                              : selectedCampaign.researchDocs
+                                                  .brandDesign.status ===
+                                                "in-progress"
+                                              ? "bg-blue-500/20 text-blue-300 border-blue-400/50 text-[10px]"
+                                              : "bg-gray-500/20 text-gray-300 border-gray-400/50 text-[10px]"
+                                          }
+                                        >
+                                          {
+                                            selectedCampaign.researchDocs
+                                              .brandDesign.status
+                                          }
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  </AccordionTrigger>
+                                  <AccordionContent className="pt-2 pb-4">
+                                    <div className="space-y-2">
+                                      {selectedCampaign.researchDocs.brandDesign
+                                        .createdAt && (
+                                        <div className="text-[10px] text-gray-400">
+                                          Created:{" "}
+                                          {formatDate(
+                                            selectedCampaign.researchDocs
+                                              .brandDesign.createdAt as string
+                                          )}
+                                        </div>
+                                      )}
+                                      <p className="text-xs text-gray-300/90 whitespace-pre-wrap break-words">
+                                        {renderTextWithLinks(
+                                          selectedCampaign.researchDocs
+                                            .brandDesign.content
+                                        )}
+                                      </p>
+                                    </div>
+                                  </AccordionContent>
+                                </AccordionItem>
+                              )}
+                            </Accordion>
+                          </CardContent>
+                        </Card>
+                      )}
+
                     {/* Research Generation Indicator */}
-                    {selectedCampaign.processingStatus?.research?.status === "in-progress" && (
+                    {selectedCampaign.processingStatus?.research?.status ===
+                      "in-progress" && (
                       <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 mb-4">
                         <div className="flex items-center gap-2 text-blue-400">
                           <Search className="w-4 h-4" />
                           <Loader2 className="w-4 h-4 animate-spin" />
-                          <span className="text-sm font-medium">Generating research documents...</span>
+                          <span className="text-sm font-medium">
+                            Generating research documents...
+                          </span>
                         </div>
                         <p className="text-xs text-blue-300/70 mt-1 ml-6">
                           This may take a few moments

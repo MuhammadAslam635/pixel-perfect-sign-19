@@ -2,6 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowRightIcon } from "lucide-react";
 import { motion } from "framer-motion";
+import { NavLink } from "react-router-dom";
 
 type AgentCardProps = {
   image: string;
@@ -55,7 +56,6 @@ const AgentCard = ({ image, name, title, description }: AgentCardProps) => {
                   </div>
                 </div>
               </div>
-
               {/* Title */}
               {title && (
                 <p className="text-sm font-normal text-white/80 transition-colors duration-300 group-hover:text-white/90">
@@ -95,7 +95,7 @@ const AgentCard = ({ image, name, title, description }: AgentCardProps) => {
                 }}
               ></div>
               <ArrowRightIcon className="w-4 h-4 mr-2 relative z-10" />
-              <span className="relative z-10">Learn more about {name}</span>
+              <NavLink to={`/agent-detail/${name}`}><span className="relative z-10">Learn more about {name}</span></NavLink>
             </Button>
           </div>
         </div>
