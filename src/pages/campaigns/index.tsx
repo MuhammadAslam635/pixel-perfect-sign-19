@@ -81,6 +81,12 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import ImageCarousel from "@/components/campaigns/ImageCarousel";
 import CreateCampaignModal from "@/components/campaigns/CreateCampaignModal";
 import FacebookIcon from "@/components/icons/FacebookIcon";
@@ -1730,6 +1736,262 @@ const CampaignsPage = () => {
                         )}
                       </CardContent>
                     </Card>
+
+                    {/* Research Documents */}
+                    {selectedCampaign.researchDocs &&
+                      (selectedCampaign.researchDocs.marketResearch?.content ||
+                        selectedCampaign.researchDocs.offerServiceBrief
+                          ?.content ||
+                        selectedCampaign.researchDocs.necessaryBriefs
+                          ?.content ||
+                        selectedCampaign.researchDocs.brandDesign?.content) && (
+                        <Card className="bg-white/5 backdrop-blur-sm border-white/10 shadow-lg">
+                          <CardHeader className="px-4 py-3">
+                            <CardTitle className="text-xs flex items-center gap-2 text-white drop-shadow-md">
+                              <Search className="w-5 h-5" />
+                              Research Documents
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="px-4 pb-4">
+                            <Accordion
+                              type="single"
+                              collapsible
+                              className="w-full"
+                            >
+                              {selectedCampaign.researchDocs.marketResearch
+                                ?.content && (
+                                <AccordionItem
+                                  value="market-research"
+                                  className="border-b border-white/10"
+                                >
+                                  <AccordionTrigger className="text-xs text-white hover:no-underline py-3">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-medium">
+                                        Market Research
+                                      </span>
+                                      {selectedCampaign.researchDocs
+                                        .marketResearch.status && (
+                                        <Badge
+                                          className={
+                                            selectedCampaign.researchDocs
+                                              .marketResearch.status ===
+                                            "completed"
+                                              ? "bg-green-500/20 text-green-300 border-green-400/50 text-[10px]"
+                                              : selectedCampaign.researchDocs
+                                                  .marketResearch.status ===
+                                                "in-progress"
+                                              ? "bg-blue-500/20 text-blue-300 border-blue-400/50 text-[10px]"
+                                              : "bg-gray-500/20 text-gray-300 border-gray-400/50 text-[10px]"
+                                          }
+                                        >
+                                          {
+                                            selectedCampaign.researchDocs
+                                              .marketResearch.status
+                                          }
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  </AccordionTrigger>
+                                  <AccordionContent className="pt-2 pb-4">
+                                    <div className="space-y-2">
+                                      {selectedCampaign.researchDocs
+                                        .marketResearch.createdAt && (
+                                        <div className="text-[10px] text-gray-400">
+                                          Created:{" "}
+                                          {formatDate(
+                                            selectedCampaign.researchDocs
+                                              .marketResearch
+                                              .createdAt as string
+                                          )}
+                                        </div>
+                                      )}
+                                      <p className="text-xs text-gray-300/90 whitespace-pre-wrap break-words">
+                                        {renderTextWithLinks(
+                                          selectedCampaign.researchDocs
+                                            .marketResearch.content
+                                        )}
+                                      </p>
+                                    </div>
+                                  </AccordionContent>
+                                </AccordionItem>
+                              )}
+
+                              {selectedCampaign.researchDocs.offerServiceBrief
+                                ?.content && (
+                                <AccordionItem
+                                  value="offer-service-brief"
+                                  className="border-b border-white/10"
+                                >
+                                  <AccordionTrigger className="text-xs text-white hover:no-underline py-3">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-medium">
+                                        Offer/Service Brief
+                                      </span>
+                                      {selectedCampaign.researchDocs
+                                        .offerServiceBrief.status && (
+                                        <Badge
+                                          className={
+                                            selectedCampaign.researchDocs
+                                              .offerServiceBrief.status ===
+                                            "completed"
+                                              ? "bg-green-500/20 text-green-300 border-green-400/50 text-[10px]"
+                                              : selectedCampaign.researchDocs
+                                                  .offerServiceBrief.status ===
+                                                "in-progress"
+                                              ? "bg-blue-500/20 text-blue-300 border-blue-400/50 text-[10px]"
+                                              : "bg-gray-500/20 text-gray-300 border-gray-400/50 text-[10px]"
+                                          }
+                                        >
+                                          {
+                                            selectedCampaign.researchDocs
+                                              .offerServiceBrief.status
+                                          }
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  </AccordionTrigger>
+                                  <AccordionContent className="pt-2 pb-4">
+                                    <div className="space-y-2">
+                                      {selectedCampaign.researchDocs
+                                        .offerServiceBrief.createdAt && (
+                                        <div className="text-[10px] text-gray-400">
+                                          Created:{" "}
+                                          {formatDate(
+                                            selectedCampaign.researchDocs
+                                              .offerServiceBrief
+                                              .createdAt as string
+                                          )}
+                                        </div>
+                                      )}
+                                      <p className="text-xs text-gray-300/90 whitespace-pre-wrap break-words">
+                                        {renderTextWithLinks(
+                                          selectedCampaign.researchDocs
+                                            .offerServiceBrief.content
+                                        )}
+                                      </p>
+                                    </div>
+                                  </AccordionContent>
+                                </AccordionItem>
+                              )}
+
+                              {selectedCampaign.researchDocs.necessaryBriefs
+                                ?.content && (
+                                <AccordionItem
+                                  value="necessary-briefs"
+                                  className="border-b border-white/10"
+                                >
+                                  <AccordionTrigger className="text-xs text-white hover:no-underline py-3">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-medium">
+                                        Campaign Brief
+                                      </span>
+                                      {selectedCampaign.researchDocs
+                                        .necessaryBriefs.status && (
+                                        <Badge
+                                          className={
+                                            selectedCampaign.researchDocs
+                                              .necessaryBriefs.status ===
+                                            "completed"
+                                              ? "bg-green-500/20 text-green-300 border-green-400/50 text-[10px]"
+                                              : selectedCampaign.researchDocs
+                                                  .necessaryBriefs.status ===
+                                                "in-progress"
+                                              ? "bg-blue-500/20 text-blue-300 border-blue-400/50 text-[10px]"
+                                              : "bg-gray-500/20 text-gray-300 border-gray-400/50 text-[10px]"
+                                          }
+                                        >
+                                          {
+                                            selectedCampaign.researchDocs
+                                              .necessaryBriefs.status
+                                          }
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  </AccordionTrigger>
+                                  <AccordionContent className="pt-2 pb-4">
+                                    <div className="space-y-2">
+                                      {selectedCampaign.researchDocs
+                                        .necessaryBriefs.createdAt && (
+                                        <div className="text-[10px] text-gray-400">
+                                          Created:{" "}
+                                          {formatDate(
+                                            selectedCampaign.researchDocs
+                                              .necessaryBriefs
+                                              .createdAt as string
+                                          )}
+                                        </div>
+                                      )}
+                                      <p className="text-xs text-gray-300/90 whitespace-pre-wrap break-words">
+                                        {renderTextWithLinks(
+                                          selectedCampaign.researchDocs
+                                            .necessaryBriefs.content
+                                        )}
+                                      </p>
+                                    </div>
+                                  </AccordionContent>
+                                </AccordionItem>
+                              )}
+
+                              {selectedCampaign.researchDocs.brandDesign
+                                ?.content && (
+                                <AccordionItem
+                                  value="brand-design"
+                                  className="border-b border-white/10"
+                                >
+                                  <AccordionTrigger className="text-xs text-white hover:no-underline py-3">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-medium">
+                                        Brand & Design Guidelines
+                                      </span>
+                                      {selectedCampaign.researchDocs.brandDesign
+                                        .status && (
+                                        <Badge
+                                          className={
+                                            selectedCampaign.researchDocs
+                                              .brandDesign.status ===
+                                            "completed"
+                                              ? "bg-green-500/20 text-green-300 border-green-400/50 text-[10px]"
+                                              : selectedCampaign.researchDocs
+                                                  .brandDesign.status ===
+                                                "in-progress"
+                                              ? "bg-blue-500/20 text-blue-300 border-blue-400/50 text-[10px]"
+                                              : "bg-gray-500/20 text-gray-300 border-gray-400/50 text-[10px]"
+                                          }
+                                        >
+                                          {
+                                            selectedCampaign.researchDocs
+                                              .brandDesign.status
+                                          }
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  </AccordionTrigger>
+                                  <AccordionContent className="pt-2 pb-4">
+                                    <div className="space-y-2">
+                                      {selectedCampaign.researchDocs.brandDesign
+                                        .createdAt && (
+                                        <div className="text-[10px] text-gray-400">
+                                          Created:{" "}
+                                          {formatDate(
+                                            selectedCampaign.researchDocs
+                                              .brandDesign.createdAt as string
+                                          )}
+                                        </div>
+                                      )}
+                                      <p className="text-xs text-gray-300/90 whitespace-pre-wrap break-words">
+                                        {renderTextWithLinks(
+                                          selectedCampaign.researchDocs
+                                            .brandDesign.content
+                                        )}
+                                      </p>
+                                    </div>
+                                  </AccordionContent>
+                                </AccordionItem>
+                              )}
+                            </Accordion>
+                          </CardContent>
+                        </Card>
+                      )}
 
                     {/* Research Generation Indicator */}
                     {selectedCampaign.processingStatus?.research?.status ===
