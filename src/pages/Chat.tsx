@@ -33,8 +33,9 @@ import {
   removeOptimisticMessages,
   addStreamingEvent,
   clearStreamingEvents,
-  setIsStreaming,
-  setStreamingChatId,
+  addStreamingChat,
+  removeStreamingChat,
+  migrateStreamingEvents,
   createTemporaryChat,
   addMessageToTemporaryChat,
   clearTemporaryChat,
@@ -81,15 +82,14 @@ const ChatPage = () => {
   const optimisticMessagesByChat = useSelector(
     (state: RootState) => state.chat.optimisticMessagesByChat
   );
-  const streamingEvents = useSelector(
-    (state: RootState) => state.chat.streamingEvents
+  const streamingEventsByChat = useSelector(
+    (state: RootState) => state.chat.streamingEventsByChat
   );
-  const isStreaming = useSelector((state: RootState) => state.chat.isStreaming);
+  const streamingChatIds = useSelector(
+    (state: RootState) => state.chat.streamingChatIds
+  );
   const useStreaming = useSelector(
     (state: RootState) => state.chat.useStreaming
-  );
-  const streamingChatId = useSelector(
-    (state: RootState) => state.chat.streamingChatId
   );
 
   // Local state for timing (not in Redux as it's UI-specific)
@@ -140,7 +140,9 @@ const ChatPage = () => {
   // Helper to derive a conversation title from messages when server doesn't provide one
   const deriveTitleFromMessages = (messages: any[] | undefined) => {
     if (!messages || !messages.length) return null;
-    const assistantMsg = messages.find((m) => m.role === "assistant" || m.role === "system") || messages[0];
+    const assistantMsg =
+      messages.find((m) => m.role === "assistant" || m.role === "system") ||
+      messages[0];
     if (!assistantMsg || !assistantMsg.content) return null;
     try {
       const text = assistantMsg.content
@@ -272,7 +274,6 @@ const ChatPage = () => {
     setSearchParams(nextParams);
   }, [searchParams, setSearchParams, dispatch]);
 
-
   // Focus input when navigating from widget
   useEffect(() => {
     if (location.state?.focusInput) {
@@ -347,7 +348,9 @@ const ChatPage = () => {
 
           // Ensure query cache has the chat detail (even if messages not present)
           const computedTitle =
-            response.data.title || deriveTitleFromMessages(response.data.messages) || "New Conversation";
+            response.data.title ||
+            deriveTitleFromMessages(response.data.messages) ||
+            "New Conversation";
 
           queryClient.setQueryData(["chatDetail", newChatId], {
             _id: newChatId,
@@ -376,26 +379,32 @@ const ChatPage = () => {
           }
 
           // Ensure chatList contains the new chat and update title if it exists
-          queryClient.setQueryData<ChatSummary[] | undefined>(["chatList"], (old = []) => {
-            if (!old) return old;
-            const exists = old.some((c) => c._id === newChatId);
-            const newChatSummary: ChatSummary = {
-              _id: newChatId,
-              title: computedTitle,
-              createdAt: response.data.createdAt || new Date().toISOString(),
-              updatedAt: response.data.updatedAt || new Date().toISOString(),
-              messages: (response.data.messages as ChatMessage[] ) || undefined,
-            };
+          queryClient.setQueryData<ChatSummary[] | undefined>(
+            ["chatList"],
+            (old = []) => {
+              if (!old) return old;
+              const exists = old.some((c) => c._id === newChatId);
+              const newChatSummary: ChatSummary = {
+                _id: newChatId,
+                title: computedTitle,
+                createdAt: response.data.createdAt || new Date().toISOString(),
+                updatedAt: response.data.updatedAt || new Date().toISOString(),
+                messages:
+                  (response.data.messages as ChatMessage[]) || undefined,
+              };
 
-            if (exists) {
-              // Update title/updatedAt for existing entry and move to top
-              const updated = old.map((c) => (c._id === newChatId ? { ...c, ...newChatSummary } : c));
-              const found = updated.find((c) => c._id === newChatId)!;
-              return [found, ...updated.filter((c) => c._id !== newChatId)];
+              if (exists) {
+                // Update title/updatedAt for existing entry and move to top
+                const updated = old.map((c) =>
+                  c._id === newChatId ? { ...c, ...newChatSummary } : c
+                );
+                const found = updated.find((c) => c._id === newChatId)!;
+                return [found, ...updated.filter((c) => c._id !== newChatId)];
+              }
+
+              return [newChatSummary, ...old];
             }
-
-            return [newChatSummary, ...old];
-          });
+          );
 
           // Invalidate to ensure fresh data
           queryClient.invalidateQueries({
@@ -432,7 +441,9 @@ const ChatPage = () => {
     });
 
   const handleSendMessage = (message: string) => {
-    if (isSendingMessage || isStreaming) {
+    // Check if this specific chat is already streaming
+    const isThisChatStreaming = streamingChatIds.includes(selectedChatId || "");
+    if (isSendingMessage || isThisChatStreaming) {
       return;
     }
 
@@ -453,7 +464,9 @@ const ChatPage = () => {
   };
 
   const handleSendStreamingMessage = async (message: string) => {
-    if (isSendingMessage || isStreaming) {
+    // Check if this specific chat is already streaming
+    const isThisChatStreaming = streamingChatIds.includes(selectedChatId || "");
+    if (isSendingMessage || isThisChatStreaming) {
       return;
     }
 
@@ -462,8 +475,6 @@ const ChatPage = () => {
       return;
     }
 
-    dispatch(setIsStreaming(true));
-    dispatch(clearStreamingEvents());
     isStreamingRef.current = true;
 
     // Generate temporary chat ID if this is a new chat
@@ -472,7 +483,11 @@ const ChatPage = () => {
       ? `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
       : selectedChatId;
     streamingChatIdRef.current = actualChatId; // Track which chat is streaming (local ref)
-    dispatch(setStreamingChatId(actualChatId)); // Also set in Redux for cross-component access
+    dispatch(addStreamingChat(actualChatId)); // Add to streaming chats set
+    dispatch(clearStreamingEvents(actualChatId)); // Clear events for this specific chat
+
+    // Track final chat ID for cleanup
+    let finalChatId = actualChatId;
 
     const tempMessage: ChatMessage = {
       _id: `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -510,7 +525,11 @@ const ChatPage = () => {
           startStreamingTask({
             chatId: actualChatId,
             messageId: tempMessage._id,
-            title: `Generating response for: "${trimmedMessage.length > 60 ? trimmedMessage.substring(0, 60) + '...' : trimmedMessage}"`,
+            title: `Generating response for: "${
+              trimmedMessage.length > 60
+                ? trimmedMessage.substring(0, 60) + "..."
+                : trimmedMessage
+            }"`,
             description: "",
           })
         );
@@ -525,7 +544,13 @@ const ChatPage = () => {
           file: null, // File is already cleared
         },
         (event: StreamEvent) => {
-          dispatch(addStreamingEvent(event));
+          // Use actualChatId for events, but if we get a result event, we know the real chat ID
+          const eventChatId =
+            event.type === "result" && event.data?.chatId
+              ? event.data.chatId
+              : actualChatId;
+
+          dispatch(addStreamingEvent({ chatId: eventChatId, event }));
 
           // Update long-running task with streaming progress
           if (event.step) {
@@ -537,6 +562,44 @@ const ChatPage = () => {
               })
             );
           }
+
+          // If this is a result event, update finalChatId and update query cache immediately
+          if (event.type === "result" && event.data?.chatId) {
+            const realChatId = event.data.chatId;
+            finalChatId = realChatId; // Update final chat ID for cleanup
+
+            if (realChatId !== actualChatId) {
+              // Migrate events from temp to real chat ID
+              dispatch(
+                migrateStreamingEvents({
+                  oldChatId: actualChatId,
+                  newChatId: realChatId,
+                })
+              );
+            }
+
+            // Update query cache immediately with messages from result
+            if (event.data.messages) {
+              const computedTitle =
+                event.data.title ||
+                deriveTitleFromMessages(event.data.messages) ||
+                "New Conversation";
+              queryClient.setQueryData(["chatDetail", realChatId], {
+                _id: realChatId,
+                title: computedTitle,
+                messages: event.data.messages,
+                createdAt: event.data.createdAt || new Date().toISOString(),
+                updatedAt: event.data.updatedAt || new Date().toISOString(),
+              });
+            }
+
+            // Clear streaming state when result is received
+            dispatch(removeStreamingChat(realChatId));
+            // Clear events after a brief delay to allow UI to show completion
+            setTimeout(() => {
+              dispatch(clearStreamingEvents(realChatId));
+            }, 500);
+          }
         }
       );
 
@@ -544,9 +607,12 @@ const ChatPage = () => {
       if (result.data.chatId) {
         // Backend created a chat
         const newChatId = result.data.chatId;
+        finalChatId = newChatId; // Update final chat ID
 
         const computedTitle =
-          (result.data.title as string) || deriveTitleFromMessages(result.data.messages) || "New Conversation";
+          (result.data.title as string) ||
+          deriveTitleFromMessages(result.data.messages) ||
+          "New Conversation";
 
         if (isNewChat) {
           dispatch(setSelectedChatId(newChatId));
@@ -557,8 +623,10 @@ const ChatPage = () => {
           _id: newChatId,
           title: computedTitle,
           messages: result.data.messages || [],
-          createdAt: (result.data.createdAt as string) || new Date().toISOString(),
-          updatedAt: (result.data.updatedAt as string) || new Date().toISOString(),
+          createdAt:
+            (result.data.createdAt as string) || new Date().toISOString(),
+          updatedAt:
+            (result.data.updatedAt as string) || new Date().toISOString(),
         });
 
         // Only add new chat to chatList if it's actually a new chat
@@ -581,7 +649,9 @@ const ChatPage = () => {
 
             if (existing) {
               // If the chat already exists, update its title/updatedAt and move it to top
-              const updated = oldChatList.map((c) => (c._id === newChatId ? { ...c, ...newChat } : c));
+              const updated = oldChatList.map((c) =>
+                c._id === newChatId ? { ...c, ...newChat } : c
+              );
               const found = updated.find((c) => c._id === newChatId)!;
               return [found, ...updated.filter((c) => c._id !== newChatId)];
             }
@@ -597,7 +667,8 @@ const ChatPage = () => {
                   updatedAt:
                     (result.data.updatedAt as string) ||
                     new Date().toISOString(),
-                  messages: (result.data.messages as ChatMessage[]) || chat.messages,
+                  messages:
+                    (result.data.messages as ChatMessage[]) || chat.messages,
                 };
               }
               return chat;
@@ -620,6 +691,14 @@ const ChatPage = () => {
 
         // Convert temporary chat to real chat if it was a new chat
         if (isNewChat && temporaryChat) {
+          // Migrate streaming events from temp chat ID to real chat ID
+          dispatch(
+            migrateStreamingEvents({
+              oldChatId: actualChatId,
+              newChatId: newChatId,
+            })
+          );
+
           dispatch(
             convertTemporaryChat({
               realChatId: newChatId,
@@ -639,9 +718,16 @@ const ChatPage = () => {
 
           // Clear optimistic messages after converting temporary chat (messages are now in server response)
           dispatch(removeOptimisticMessages(newChatId));
+
+          // Clear streaming state for the new chat ID (result received)
+          dispatch(removeStreamingChat(newChatId));
+          dispatch(clearStreamingEvents(newChatId));
         } else {
           // For existing chats, clear optimistic messages after server response
           dispatch(removeOptimisticMessages(actualChatId));
+          // Clear streaming state (result received)
+          dispatch(removeStreamingChat(actualChatId));
+          dispatch(clearStreamingEvents(actualChatId));
         }
 
         // Don't invalidate queries - we've already updated the cache with setQueryData
@@ -673,7 +759,10 @@ const ChatPage = () => {
           });
           // Update temporary chat title from messages if possible
           if (isNewChat && temporaryChat) {
-            const computedTempTitle = deriveTitleFromMessages(result.data.messages) || temporaryChat.title || "New Conversation";
+            const computedTempTitle =
+              deriveTitleFromMessages(result.data.messages) ||
+              temporaryChat.title ||
+              "New Conversation";
             dispatch(updateTemporaryChatTitle(computedTempTitle));
           }
         }
@@ -716,8 +805,9 @@ const ChatPage = () => {
       if (streamingChatIdRef.current === actualChatId) {
         streamingChatIdRef.current = null;
       }
-      dispatch(setIsStreaming(false));
-      dispatch(clearStreamingEvents());
+      // Remove from streaming chats set (if not already removed in success handler)
+      dispatch(removeStreamingChat(finalChatId));
+      dispatch(clearStreamingEvents(finalChatId));
 
       // Complete or clear the long-running task
       dispatch(
@@ -753,8 +843,8 @@ const ChatPage = () => {
         dispatch(clearTemporaryChat());
         dispatch(removeOptimisticMessages(NEW_CHAT_KEY));
 
-    // Clear pending file (composer is already cleared locally)
-    dispatch(setPendingFile(null));
+        // Clear pending file (composer is already cleared locally)
+        dispatch(setPendingFile(null));
 
         // Select the first available chat if there are any
         if (chatList.length > 0) {
@@ -919,22 +1009,41 @@ const ChatPage = () => {
     (isChatDetailLoading || isChatDetailFetching) &&
     optimisticMessages.length === 0;
 
+  // Helper to get the correct chat ID for looking up streaming events
+  // This handles temp-to-real ID conversion
+  const getStreamingChatId = useMemo(() => {
+    // First check if current chat is in streaming list
+    if (streamingChatIds.includes(selectedChatId || "")) {
+      return selectedChatId;
+    }
+    // Check if any streaming chat ID matches (handles temp IDs)
+    const matchingStreamingId = streamingChatIds.find((id) => {
+      // If selectedChatId is a real ID and we have a temp ID streaming, check if they're related
+      if (
+        id.startsWith("temp_") &&
+        selectedChatId &&
+        !selectedChatId.startsWith("temp_")
+      ) {
+        // Events might have been migrated, so check both
+        return false; // Will check events by selectedChatId
+      }
+      return (
+        id === selectedChatId ||
+        (id.startsWith("temp_") && selectedChatId === "__new_chat__")
+      );
+    });
+    return matchingStreamingId || selectedChatId || streamingChatIdRef.current;
+  }, [streamingChatIds, selectedChatId]);
+
   // Make sending state chat-specific - only show thinking indicator for the chat that's currently processing
   const isCurrentChatSending = useMemo(() => {
-    // Only show thinking indicator if:
-    // 1. We're streaming AND the current chat is the one being streamed
-    // Check both local ref and Redux state for streaming chat ID
-    let isStreamingThisChat = false;
-    if (isStreaming) {
-      // Direct match with local ref or Redux state
-      if (streamingChatIdRef.current === selectedChatId || streamingChatId === selectedChatId) {
-        isStreamingThisChat = true;
-      }
-      // Special case: if streaming for a new chat (temp ID) and we're on __new_chat__
-      else if (streamingChatId?.startsWith("temp_") && selectedChatId === "__new_chat__") {
-        isStreamingThisChat = true;
-      }
-    }
+    // Check if this specific chat is currently streaming
+    const isStreamingThisChat =
+      streamingChatIds.includes(selectedChatId || "") ||
+      streamingChatIds.some(
+        (id) => id.startsWith("temp_") && selectedChatId === "__new_chat__"
+      ) ||
+      streamingChatIdRef.current === selectedChatId;
 
     // For temporary chats, check if we have messages in temporary chat
     const isTempChatId = selectedChatId?.startsWith("temp_");
@@ -947,16 +1056,15 @@ const ChatPage = () => {
     const hasOptimisticMessages = optimisticMessages.length > 0;
 
     // Show indicator if streaming for this specific chat OR if this chat has optimistic/temporary messages
-    if (
-      isStreamingThisChat ||
-      hasOptimisticMessages ||
-      hasTemporaryChatMessages
-    ) {
-      return true;
-    }
-
-    return false;
-  }, [isStreaming, streamingChatId, optimisticMessages.length, selectedChatId, temporaryChat]);
+    return (
+      isStreamingThisChat || hasOptimisticMessages || hasTemporaryChatMessages
+    );
+  }, [
+    streamingChatIds,
+    optimisticMessages.length,
+    selectedChatId,
+    temporaryChat,
+  ]);
 
   return (
     <DashboardLayout>
@@ -999,8 +1107,13 @@ const ChatPage = () => {
                   isSending={isCurrentChatSending}
                   messages={selectedMessages}
                   onOpenChatList={() => dispatch(setIsMobileListOpen(true))}
-                  streamingEvents={streamingEvents}
-                  isStreaming={isStreaming && isCurrentChatSending}
+                  streamingEvents={
+                    streamingEventsByChat[getStreamingChatId || ""] ||
+                    streamingEventsByChat[selectedChatId || ""] ||
+                    streamingEventsByChat[streamingChatIdRef.current || ""] ||
+                    []
+                  }
+                  isStreaming={isCurrentChatSending}
                 />
 
                 <AnimatePresence mode="sync">
