@@ -13,6 +13,7 @@ import {
   setSelectedChatId,
   setDeletingChatId,
   removeOptimisticMessages,
+  setComposerValue,
 } from "@/store/slices/chatSlice";
 
 type AssistantPanelProps = {
@@ -151,8 +152,19 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
   };
 
   const handleStartNewChat = () => {
+    // Clear selected chat ID
     dispatch(setSelectedChatId(null));
+
+    // Clear composer input value
+    dispatch(setComposerValue(""));
+
+    // Clear local messages
     setLocalMessages([]);
+
+    // Clear optimistic messages for the "__new_chat__" key
+    dispatch(removeOptimisticMessages("__new_chat__"));
+
+    // Close chat list and clear search
     setShowChatList(false);
     setSearchTerm("");
   };

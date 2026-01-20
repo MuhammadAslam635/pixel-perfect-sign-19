@@ -906,6 +906,16 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
     };
   }, []);
 
+  // Reset refs when starting a new chat (activeChatId becomes null)
+  useEffect(() => {
+    if (!activeChatId || activeChatId === NEW_CHAT_KEY) {
+      // Clear any stale refs that might block sending
+      isSendingRef.current = false;
+      isStreamingRef.current = false;
+      streamingChatIdRef.current = null;
+    }
+  }, [activeChatId]);
+
   // Fetch chat details when activeChatId changes
   const { data: chatDetail } = useQuery({
     queryKey: ["chatDetail", activeChatId],
@@ -1020,9 +1030,10 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
 
   const handleSendStreamingMessage = async (messageToSend?: string) => {
     // Check if this specific chat is already streaming
+    // IMPORTANT: Don't block if both are null (new chat scenario)
     const isThisChatStreaming =
-      streamingChatIds.includes(activeChatId || "") ||
-      streamingChatIdRef.current === activeChatId;
+      (activeChatId && streamingChatIds.includes(activeChatId)) ||
+      (activeChatId && streamingChatIdRef.current === activeChatId);
     if (isSendingRef.current || isThisChatStreaming) {
       return;
     }
