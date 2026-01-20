@@ -533,13 +533,14 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
         meeting.recall?.recordingUrl || storedData?.recordingUrl;
       const sessionId = meeting.recall?.sessionId || storedData?.sessionId;
 
-      // Load recording if available - prefer backend endpoint over direct URLs
+      // ALWAYS use backend endpoint when sessionId is available
+      // Never use Recall URLs directly - always go through backend
       if (sessionId) {
         // Use backend endpoint for consistent access and caching
         // Use the same base URL logic as the API client
         const backendBaseUrl = import.meta.env.VITE_APP_BACKEND_URL || `${window.location.origin}/api`;
         const backendRecordingUrl = `${backendBaseUrl}/recall/recording/${sessionId}`;
-        console.log('Constructing recording URL:', { backendBaseUrl, backendRecordingUrl, envVar: import.meta.env.VITE_APP_BACKEND_URL });
+        console.log('Using backend recording URL:', { backendBaseUrl, backendRecordingUrl, sessionId });
         setRecordingLoading(true);
         try {
           setRecordingVideoUrl(backendRecordingUrl);
@@ -554,7 +555,7 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
           setRecordingLoading(false);
         }
       } else if (recordingUrl && recordingUrl.includes('/api/recall/')) {
-        // Fallback to backend URL if available
+        // Fallback: Only use backend URL format if no sessionId but URL is already a backend URL
         setRecordingLoading(true);
         try {
           setRecordingVideoUrl(recordingUrl);
@@ -568,6 +569,13 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
         } finally {
           setRecordingLoading(false);
         }
+      } else if (recordingUrl) {
+        // If we have a Recall URL but no sessionId, log a warning
+        console.warn('Meeting has recording URL but no sessionId - cannot use backend endpoint', {
+          meetingId: meeting._id,
+          recordingUrl: recordingUrl.substring(0, 100),
+        });
+        setRecordingError("Recording URL is not available through backend. Please wait for assets to be processed.");
       }
     },
     [recordingData, meetingNotes, fetchMeetingNotes]
