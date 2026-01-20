@@ -60,7 +60,7 @@ const index = () => {
     null
   );
   const [isMobileExecutivesView, setIsMobileExecutivesView] = useState(false);
-  const [viewMode, setViewMode] = useState<ViewMode>("detailed");
+  const [viewMode, setViewMode] = useState<ViewMode>("card");
   const [enrichmentModalOpen, setEnrichmentModalOpen] = useState(false);
   const [selectedSeniorities, setSelectedSeniorities] = useState<
     SeniorityLevel[]
