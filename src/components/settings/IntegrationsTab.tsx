@@ -89,12 +89,9 @@ export const IntegrationsTab = () => {
   const [isSavingWhatsApp, setIsSavingWhatsApp] = useState(false);
   const [showWhatsAppForm, setShowWhatsAppForm] = useState(false);
   const [whatsappForm, setWhatsAppForm] = useState({
-    businessAccountId: "",
-    phoneNumberId: "",
+    apiKey: "",
     phoneNumber: "",
-    accessToken: "",
-    verifyToken: "",
-    appSecret: "",
+    webhookSecret: "",
   });
   const [disconnectDialog, setDisconnectDialog] = useState<{
     open: boolean;
@@ -261,12 +258,9 @@ export const IntegrationsTab = () => {
 
   const resetWhatsAppForm = () => {
     setWhatsAppForm({
-      businessAccountId: "",
-      phoneNumberId: "",
+      apiKey: "",
       phoneNumber: "",
-      accessToken: "",
-      verifyToken: "",
-      appSecret: "",
+      webhookSecret: "",
     });
     setWhatsappValidated(false);
   };
@@ -365,23 +359,14 @@ export const IntegrationsTab = () => {
       return;
     }
 
-    const requiredFields: Array<keyof typeof whatsappForm> = [
-      "businessAccountId",
-      "phoneNumberId",
-      "phoneNumber",
-      "accessToken",
-      "verifyToken",
-    ];
-
-    for (const field of requiredFields) {
-      if (!whatsappForm[field]) {
-        toast({
-          title: "Missing information",
-          description: "Please fill in all required WhatsApp fields.",
-          variant: "destructive",
-        });
-        return;
-      }
+    // Validate required field
+    if (!whatsappForm.apiKey) {
+      toast({
+        title: "Missing information",
+        description: "Please enter your Wasender API key.",
+        variant: "destructive",
+      });
+      return;
     }
 
     if (!user?.token) {
@@ -396,12 +381,9 @@ export const IntegrationsTab = () => {
     setIsSavingWhatsApp(true);
     try {
       const payload = {
-        businessAccountId: whatsappForm.businessAccountId.trim(),
-        phoneNumberId: whatsappForm.phoneNumberId.trim(),
-        phoneNumber: whatsappForm.phoneNumber.trim(),
-        accessToken: whatsappForm.accessToken.trim(),
-        verifyToken: whatsappForm.verifyToken.trim(),
-        appSecret: whatsappForm.appSecret.trim() || undefined,
+        apiKey: whatsappForm.apiKey.trim(),
+        phoneNumber: whatsappForm.phoneNumber.trim() || undefined,
+        webhookSecret: whatsappForm.webhookSecret.trim() || undefined,
       };
 
       const response = await whatsappService.connect(payload);
@@ -441,12 +423,9 @@ export const IntegrationsTab = () => {
     if (!showWhatsAppForm) {
       if (primaryWhatsAppConnection) {
         setWhatsAppForm({
-          businessAccountId: primaryWhatsAppConnection.businessAccountId || "",
-          phoneNumberId: primaryWhatsAppConnection.phoneNumberId || "",
+          apiKey: "", // Don't populate sensitive API key
           phoneNumber: primaryWhatsAppConnection.phoneNumber || "",
-          accessToken: "",
-          verifyToken: "",
-          appSecret: "",
+          webhookSecret: "", // Don't populate sensitive webhook secret
         });
       } else {
         resetWhatsAppForm();
@@ -456,7 +435,7 @@ export const IntegrationsTab = () => {
     setShowWhatsAppForm((prev) => !prev);
   };
 
-  const requestWhatsAppDisconnect = (phoneNumberId: string) => {
+  const requestWhatsAppDisconnect = () => {
     if (!canManageWhatsApp) {
       toast({
         title: "Access restricted",
@@ -476,7 +455,7 @@ export const IntegrationsTab = () => {
       return;
     }
 
-    setDisconnectDialog({ open: true, phoneNumberId });
+    setDisconnectDialog({ open: true, phoneNumberId: "wasender" });
   };
 
   const handleWhatsAppDisconnect = async () => {
@@ -496,11 +475,11 @@ export const IntegrationsTab = () => {
 
     try {
       setIsDisconnectingWhatsApp(true);
-      await whatsappService.disconnect(disconnectDialog.phoneNumberId);
+      await whatsappService.disconnect();
 
       toast({
         title: "Disconnected",
-        description: "WhatsApp number disconnected successfully.",
+        description: "WhatsApp disconnected successfully.",
       });
       fetchWhatsAppConnections();
     } catch (error: unknown) {
@@ -1445,21 +1424,14 @@ export const IntegrationsTab = () => {
       return;
     }
 
-    const requiredFields: Array<keyof typeof whatsappForm> = [
-      "businessAccountId",
-      "phoneNumberId",
-      "accessToken",
-    ];
-
-    for (const field of requiredFields) {
-      if (!whatsappForm[field]) {
-        toast({
-          title: "Missing information",
-          description: "Please fill in all required WhatsApp fields.",
-          variant: "destructive",
-        });
-        return;
-      }
+    // Validate required field
+    if (!whatsappForm.apiKey) {
+      toast({
+        title: "Missing information",
+        description: "Please enter your Wasender API key.",
+        variant: "destructive",
+      });
+      return;
     }
 
     if (!user?.token) {
@@ -1474,10 +1446,7 @@ export const IntegrationsTab = () => {
     setIsValidatingWhatsApp(true);
     try {
       const response = await whatsappService.validateConfig({
-        businessAccountId: whatsappForm.businessAccountId.trim(),
-        phoneNumberId: whatsappForm.phoneNumberId.trim(),
-        accessToken: whatsappForm.accessToken.trim(),
-        appSecret: whatsappForm.appSecret.trim() || undefined,
+        apiKey: whatsappForm.apiKey.trim(),
       });
 
       if (response?.success) {
@@ -2143,32 +2112,19 @@ export const IntegrationsTab = () => {
             <div className="space-y-4 pt-4 border-t border-white/10">
               {whatsappConnections.map((connection) => (
                 <div
-                  key={connection.phoneNumberId}
+                  key={connection.id}
                   className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"
                 >
                   <div className="space-y-1 text-xs sm:text-sm text-white/80 min-w-0 flex-1">
                     <p className="text-sm sm:text-base font-semibold text-white break-words">
-                      {connection.phoneNumber}
+                      {connection.phoneNumber || "WhatsApp Connected"}
                     </p>
-                    <p className="break-all">
-                      Phone Number ID: {connection.phoneNumberId}
+                    <p className="text-xs text-white/60">
+                      Status: <span className="text-emerald-400 capitalize">{connection.status}</span>
                     </p>
-                    <p className="break-all">
-                      Business Account ID: {connection.businessAccountId}
-                    </p>
-                    {connection.tokens?.accessToken && (
-                      <p className="break-all">
-                        Access Token: {connection.tokens.accessToken}
-                      </p>
-                    )}
-                    {connection.tokens?.verifyToken && (
-                      <p className="break-all">
-                        Verify Token: {connection.tokens.verifyToken}
-                      </p>
-                    )}
-                    {connection.tokens?.appSecret && (
-                      <p className="break-all">
-                        App Secret: {connection.tokens.appSecret}
+                    {connection.apiKey && (
+                      <p className="text-xs text-white/60">
+                        API Key: {connection.apiKey}
                       </p>
                     )}
                   </div>
@@ -2178,9 +2134,7 @@ export const IntegrationsTab = () => {
                     variant="outline"
                     size="sm"
                     className="w-full sm:w-auto border-rose-400/50 text-rose-300 hover:bg-rose-500/10 disabled:opacity-60 disabled:cursor-not-allowed text-xs sm:text-sm flex-shrink-0"
-                    onClick={() =>
-                      requestWhatsAppDisconnect(connection.phoneNumberId)
-                    }
+                    onClick={() => requestWhatsAppDisconnect()}
                     disabled={!canManageWhatsApp}
                   >
                     Disconnect
@@ -2193,41 +2147,34 @@ export const IntegrationsTab = () => {
           {showWhatsAppForm && (
             <div className="space-y-4 pt-4 border-t border-white/10">
               <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2 sm:col-span-1">
+                <div className="space-y-2 sm:col-span-2">
                   <Label className="text-white/80 text-sm">
-                    Business Account ID
+                    Wasender API Key <span className="text-rose-400">*</span>
                   </Label>
                   <Input
-                    value={whatsappForm.businessAccountId}
+                    type="password"
+                    value={whatsappForm.apiKey}
                     onChange={(event) =>
-                      handleWhatsAppInputChange(
-                        "businessAccountId",
-                        event.target.value
-                      )
+                      handleWhatsAppInputChange("apiKey", event.target.value)
                     }
-                    placeholder="Enter business account ID"
+                    placeholder="Enter your Wasender API key"
                     className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 text-sm sm:text-base"
                   />
+                  <p className="text-xs text-white/50">
+                    Get your API key from{" "}
+                    <a
+                      href="https://wasenderapi.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-cyan-400 hover:text-cyan-300 underline"
+                    >
+                      wasenderapi.com
+                    </a>
+                  </p>
                 </div>
-                <div className="space-y-2 sm:col-span-1">
+                <div className="space-y-2 sm:col-span-2">
                   <Label className="text-white/80 text-sm">
-                    Phone Number ID
-                  </Label>
-                  <Input
-                    value={whatsappForm.phoneNumberId}
-                    onChange={(event) =>
-                      handleWhatsAppInputChange(
-                        "phoneNumberId",
-                        event.target.value
-                      )
-                    }
-                    placeholder="Enter phone number ID"
-                    className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 text-sm sm:text-base"
-                  />
-                </div>
-                <div className="space-y-2 sm:col-span-1">
-                  <Label className="text-white/80 text-sm">
-                    WhatsApp Number
+                    Phone Number <span className="text-white/40">(Optional)</span>
                   </Label>
                   <Input
                     value={whatsappForm.phoneNumber}
@@ -2237,50 +2184,32 @@ export const IntegrationsTab = () => {
                         event.target.value
                       )
                     }
-                    placeholder="Enter WhatsApp number in E.164 format"
+                    placeholder="Enter WhatsApp number in E.164 format (e.g., +1234567890)"
                     className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 text-sm sm:text-base"
                   />
+                  <p className="text-xs text-white/50">
+                    Optional: For reference only
+                  </p>
                 </div>
-                <div className="space-y-2 sm:col-span-1">
-                  <Label className="text-white/80 text-sm">Access Token</Label>
+                <div className="space-y-2 sm:col-span-2">
+                  <Label className="text-white/80 text-sm">
+                    Webhook Secret <span className="text-white/40">(Optional)</span>
+                  </Label>
                   <Input
                     type="password"
-                    value={whatsappForm.accessToken}
+                    value={whatsappForm.webhookSecret}
                     onChange={(event) =>
                       handleWhatsAppInputChange(
-                        "accessToken",
+                        "webhookSecret",
                         event.target.value
                       )
                     }
-                    placeholder="Enter permanent access token"
+                    placeholder="Enter webhook secret for signature verification"
                     className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 text-sm sm:text-base"
                   />
-                </div>
-                <div className="space-y-2 sm:col-span-1">
-                  <Label className="text-white/80 text-sm">Verify Token</Label>
-                  <Input
-                    value={whatsappForm.verifyToken}
-                    onChange={(event) =>
-                      handleWhatsAppInputChange(
-                        "verifyToken",
-                        event.target.value
-                      )
-                    }
-                    placeholder="Token used in webhook verification"
-                    className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 text-sm sm:text-base"
-                  />
-                </div>
-                <div className="space-y-2 sm:col-span-1">
-                  <Label className="text-white/80 text-sm">App Secret</Label>
-                  <Input
-                    type="password"
-                    value={whatsappForm.appSecret}
-                    onChange={(event) =>
-                      handleWhatsAppInputChange("appSecret", event.target.value)
-                    }
-                    placeholder="Used for webhook signature validation"
-                    className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 text-sm sm:text-base"
-                  />
+                  <p className="text-xs text-white/50">
+                    Optional: For webhook signature verification (get from Wasender dashboard)
+                  </p>
                 </div>
               </div>
 

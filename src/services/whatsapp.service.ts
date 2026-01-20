@@ -3,15 +3,9 @@ import API from "@/utils/api";
 export interface WhatsAppCredential {
   id: string;
   companyId: string;
-  businessAccountId: string;
-  phoneNumberId: string;
-  phoneNumber: string;
+  phoneNumber?: string;
   status: string;
-  tokens?: {
-    accessToken?: string | null;
-    verifyToken?: string | null;
-    appSecret?: string | null;
-  };
+  apiKey?: string; // Masked API key
   createdAt: string;
   updatedAt: string;
 }
@@ -78,12 +72,9 @@ class WhatsAppService {
   }
 
   async connect(payload: {
-    businessAccountId: string;
-    phoneNumberId: string;
-    phoneNumber: string;
-    accessToken: string;
-    verifyToken: string;
-    appSecret?: string;
+    apiKey: string;
+    phoneNumber?: string;
+    webhookSecret?: string;
   }): Promise<{
     success: boolean;
     message: string;
@@ -93,28 +84,16 @@ class WhatsAppService {
     return response.data;
   }
 
-  async disconnect(
-    phoneNumberId: string
-  ): Promise<{ success: boolean; message: string }> {
-    const response = await API.delete(`/whatsapp/connection/${phoneNumberId}`);
+  async disconnect(): Promise<{ success: boolean; message: string }> {
+    const response = await API.delete("/whatsapp/connection");
     return response.data;
   }
 
   async sendTextMessage(payload: {
-    phoneNumberId: string;
     to: string;
-    body: string;
-    previewUrl?: boolean;
+    text: string;
   }): Promise<{ success: boolean; data: WhatsAppMessage }> {
-    const response = await API.post("/whatsapp/messages/send", {
-      phoneNumberId: payload.phoneNumberId,
-      to: payload.to,
-      type: "text",
-      text: {
-        body: payload.body,
-        previewUrl: payload.previewUrl ?? false,
-      },
-    });
+    const response = await API.post("/whatsapp/messages/send", payload);
     return response.data;
   }
 
@@ -128,7 +107,6 @@ class WhatsAppService {
 
   async getConversation(params: {
     contact: string;
-    phoneNumberId?: string;
     leadId?: string;
     page?: number;
     limit?: number;
@@ -141,22 +119,10 @@ class WhatsAppService {
 
   async deleteConversation(params: {
     contact: string;
-    phoneNumberId?: string;
   }): Promise<{ success: boolean; message: string }> {
     const response = await API.delete("/whatsapp/messages/conversation", {
       params,
     });
-    return response.data;
-  }
-
-  async markMessagesRead(payload: {
-    phoneNumberId: string;
-    messageIds: string[];
-  }): Promise<{
-    success: boolean;
-    data: Array<{ messageId: string; status: string }>;
-  }> {
-    const response = await API.post("/whatsapp/messages/mark-read", payload);
     return response.data;
   }
 
@@ -169,17 +135,12 @@ class WhatsAppService {
   }
 
   async validateConfig(payload: {
-    businessAccountId: string;
-    phoneNumberId: string;
-    accessToken: string;
-    appSecret?: string;
+    apiKey: string;
   }): Promise<{
     success: boolean;
     message: string;
     data?: {
-      phoneNumberId: string;
-      businessAccountId: string;
-      verifiedAt: string;
+      valid: boolean;
     };
   }> {
     const response = await API.post("/integration/whatsapp/validate", payload);
