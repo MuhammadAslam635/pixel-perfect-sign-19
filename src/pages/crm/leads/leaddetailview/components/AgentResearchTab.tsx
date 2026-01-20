@@ -67,8 +67,8 @@ const AgentResearchTab: FC<AgentResearchTabProps> = ({ lead }) => {
     onError: (error: any) => {
       toast.error(
         error?.response?.data?.message ||
-          error?.message ||
-          "Failed to trigger research"
+        error?.message ||
+        "Failed to trigger research"
       );
     },
   });
@@ -95,6 +95,15 @@ const AgentResearchTab: FC<AgentResearchTabProps> = ({ lead }) => {
     }
   };
 
+  // Markdown function 
+  const parseMarkdownWithCitations = (text: string): string => {
+    return text
+      .replace(/\.(.*?)((?:\[\d+\])+)/g, '.$1<br/>$2<br/>')
+      .replace(/\[(\d+)\]/g, '<sup class="text-blue-400">[$1]</sup>')
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>');
+  };
+  
   if (!leadId) {
     return (
       <div
@@ -249,7 +258,7 @@ const AgentResearchTab: FC<AgentResearchTabProps> = ({ lead }) => {
     <div className="space-y-4">
       {/* Header with status and refresh */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col items-center gap-3">
           <Badge className="bg-emerald-500/20 text-emerald-200 border border-emerald-400/40">
             Research Completed
           </Badge>
@@ -293,9 +302,12 @@ const AgentResearchTab: FC<AgentResearchTabProps> = ({ lead }) => {
               Professional Background
             </h3>
           </div>
-          <p className="text-white/80 text-xs leading-relaxed">
-            {researchData.professionalBackground}
-          </p>
+          <div
+            className="text-white/80 text-xs leading-relaxed prose prose-invert prose-sm max-w-none"
+            dangerouslySetInnerHTML={{
+              __html: parseMarkdownWithCitations(researchData.professionalBackground)
+            }}
+          />
         </Card>
       )}
 

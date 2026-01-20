@@ -1,9 +1,11 @@
 import { Email } from "@/types/email.types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { formatDistanceToNow } from "date-fns";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Star,
   Reply,
@@ -16,6 +18,7 @@ import {
   User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { leadsService, Lead } from "@/services/leads.service";
 
 // Utility function to strip quoted email content
 const stripQuotedEmailContent = (content: string) => {
@@ -85,10 +88,24 @@ export const EmailViewer = ({
   onReply,
   isLoading = false,
 }: EmailViewerProps) => {
+  const [imageError, setImageError] = useState(false);
+  
   const fromName = email.from.name || email.from.email.split("@")[0];
   const toRecipients = email.to.map((r) => r.name || r.email).join(", ");
   const ccRecipients = email.cc?.map((r) => r.name || r.email).join(", ");
   const bccRecipients = email.bcc?.map((r) => r.name || r.email).join(", ");
+
+  // Fetch lead data if email has leadId
+  const { data: leadData } = useQuery<Lead>({
+    queryKey: ["lead", email.leadId],
+    queryFn: () => leadsService.getLeadById(email.leadId!),
+    enabled: !!email.leadId,
+    staleTime: 10 * 60 * 1000,
+    retry: 1,
+  });
+
+  const hasLeadProfile = !!leadData;
+  const leadImage = leadData?.pictureUrl || null;
 
   const getInitials = (name: string) => {
     return name
@@ -100,7 +117,18 @@ export const EmailViewer = ({
   };
 
   const getAvatarStyle = () => {
-    return "bg-primary";
+    const colors = [
+      "bg-blue-500",
+      "bg-purple-500",
+      "bg-pink-500",
+      "bg-green-500",
+      "bg-orange-500",
+      "bg-red-500",
+      "bg-cyan-500",
+      "bg-yellow-500",
+    ];
+    const hash = fromName.charCodeAt(0) + fromName.charCodeAt(fromName.length - 1);
+    return colors[hash % colors.length];
   };
 
   const getBaseApiUrl = () => {
@@ -226,23 +254,28 @@ export const EmailViewer = ({
             <div className="flex items-start gap-4">
               {/* Avatar with Gradient */}
               <div className="relative">
-                <Avatar
-                  className={cn(
-                    "h-16 w-16 ring-4 ring-background shadow-lg",
-                    getAvatarStyle()
-                  )}
-                >
-                  <AvatarFallback className="text-white font-bold text-lg bg-transparent">
+                <Avatar className={cn("h-16 w-16 ring-4 ring-background shadow-lg", hasLeadProfile ? "ring-emerald-500/30" : "")}>
+                  {leadImage && !imageError ? (
+                    <AvatarImage 
+                      src={leadImage} 
+                      alt={fromName}
+                      onError={() => setImageError(true)}
+                    />
+                  ) : null}
+                  <AvatarFallback className={cn("text-white font-bold text-lg bg-transparent", getAvatarStyle())}>
                     {getInitials(fromName)}
                   </AvatarFallback>
                 </Avatar>
                 <div
                   className={cn(
                     "absolute -bottom-1 -right-1 h-5 w-5 rounded-full border-2 border-background",
-                    email.direction === "inbound"
+                    hasLeadProfile
+                      ? "bg-emerald-500"
+                      : email.direction === "inbound"
                       ? "bg-green-500"
                       : "bg-blue-500"
                   )}
+                  title={hasLeadProfile ? "Lead profile exists in system" : ""}
                 />
               </div>
 
@@ -320,7 +353,7 @@ export const EmailViewer = ({
           <div 
             className="flex-1 min-h-0 p-8 rounded-2xl bg-card/30 backdrop-blur-sm border border-border/50 shadow-inner overflow-y-auto scrollbar-hide"
             style={{
-              maxHeight: "calc(100vh - 550px)",
+              maxHeight: "calc(100vh - 630px)",
             }}
           >
             {email.body.html ? (

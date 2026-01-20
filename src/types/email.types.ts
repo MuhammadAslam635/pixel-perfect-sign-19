@@ -55,6 +55,7 @@ export interface Email {
   inReplyTo?: string | null;
   references?: string[];
   threadId?: string;
+  leadId?: string | null;
   direction: "inbound" | "outbound";
   status: "sent" | "delivered" | "bounced" | "complained";
   deliveryStatus: EmailDeliveryStatus;
