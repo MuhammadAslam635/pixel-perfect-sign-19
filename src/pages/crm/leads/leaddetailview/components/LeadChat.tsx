@@ -310,6 +310,7 @@ const LeadChat = ({
   const whatsappConnections =
     whatsappConnectionsData?.credentials || EMPTY_ARRAY;
   const primaryWhatsAppConnection = whatsappConnections[0] || null;
+  const whatsappPhoneNumberId = primaryWhatsAppConnection?.phoneNumber || null;
   const whatsappReady = whatsappConnections.length > 0;
 
   const whatsappConnectionErrorMessage = isWhatsAppConnectionError
@@ -836,6 +837,20 @@ const LeadChat = ({
           "Failed to delete message",
       );
       setMessageToDelete(null);
+    },
+  });
+
+  const markReadMutation = useMutation({
+    mutationFn: async (messageIds: string[]) => {
+      // Mark messages as read - could call backend API here if needed
+      // For now, this is a client-side cache update
+      return Promise.resolve({ success: true });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: whatsappConversationQueryKey });
+    },
+    onError: (error: any) => {
+      console.error('Failed to mark messages as read:', error);
     },
   });
 
