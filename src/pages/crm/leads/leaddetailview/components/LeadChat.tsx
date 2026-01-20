@@ -850,7 +850,7 @@ const LeadChat = ({
       queryClient.invalidateQueries({ queryKey: whatsappConversationQueryKey });
     },
     onError: (error: any) => {
-      console.error('Failed to mark messages as read:', error);
+      console.error("Failed to mark messages as read:", error);
     },
   });
 
