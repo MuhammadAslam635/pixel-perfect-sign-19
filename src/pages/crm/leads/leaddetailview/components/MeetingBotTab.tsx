@@ -718,9 +718,9 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
   }
 
   return (
-    <div className="grid grid-cols-3 gap-4 h-full min-h-0">
-      {/* Left Side: Meeting List - 2/3 width */}
-      <div className="col-span-2 flex flex-col gap-4 overflow-hidden">
+    <div className="grid grid-cols-2 gap-4 h-full min-h-0">
+      {/* Left Side: Meeting List - 1/2 width */}
+      <div className="flex flex-col gap-4 overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -899,8 +899,8 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
         )}
       </div>
 
-      {/* Right Side: Meeting Details - 1/3 width */}
-      <div className="col-span-1 flex flex-col text-white/80 text-center gap-3 overflow-hidden">
+      {/* Right Side: Meeting Details - 1/2 width */}
+      <div className="flex flex-col text-white/80 text-center gap-3 overflow-hidden">
         <div className="flex items-center justify-between">
           <h2 className="text-xs sm:text-sm font-semibold text-white leading-snug text-left">
             {selectedMeeting ? "Meeting Details" : "Meeting Recordings"}
@@ -922,13 +922,13 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
             <div className="flex flex-col gap-4 h-full">
               {/* Meeting Info Header */}
               <div className="flex flex-col gap-2 pb-4 border-b border-white/10">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-cyan-500/10 flex items-center justify-center flex-shrink-0">
+                <div className="flex flex-col items-center text-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-cyan-500/10 flex items-center justify-center">
                     <Calendar className="w-4 h-4 text-cyan-400" />
                   </div>
-                  <div className="flex flex-col items-start flex-1 min-w-0">
+                  <div className="flex flex-col items-center gap-1">
                     <span 
-                      className="text-sm font-medium text-white truncate w-full" 
+                      className="text-sm font-medium text-white" 
                       title={selectedMeeting.subject}
                     >
                       {selectedMeeting.subject || "Meeting"}
@@ -947,14 +947,14 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
                   <TooltipTrigger asChild>
                     <button
                       onClick={() => setActiveTab("recording")}
-                      className={`px-3 py-2 text-sm font-medium transition-colors relative whitespace-nowrap flex-shrink-0 flex items-center justify-center ${
+                      className={`px-3 py-2 text-sm font-medium transition-colors relative whitespace-nowrap flex-shrink-0 flex items-center justify-center gap-2 ${
                         activeTab === "recording"
                           ? "text-cyan-400"
                           : "text-white/60 hover:text-white/80"
                       }`}
                     >
-                      <span className="block 4xl:hidden"><Video className="w-5 h-5" /></span>
-                      <span className="hidden 4xl:block">Recording</span>
+                      <Video className="w-5 h-5" />
+                      <span className="hidden 2xl:block">Recording</span>
                       {activeTab === "recording" && (
                         <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400" />
                       )}
@@ -969,14 +969,14 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
                   <TooltipTrigger asChild>
                     <button
                       onClick={() => setActiveTab("transcript")}
-                      className={`px-3 py-2 text-sm font-medium transition-colors relative whitespace-nowrap flex-shrink-0 flex items-center justify-center ${
+                      className={`px-3 py-2 text-sm font-medium transition-colors relative whitespace-nowrap flex-shrink-0 flex items-center justify-center gap-2 ${
                         activeTab === "transcript"
                           ? "text-cyan-400"
                           : "text-white/60 hover:text-white/80"
                       }`}
                     >
-                      <span className="block 4xl:hidden"><FileAudio className="w-5 h-5" /></span>
-                      <span className="hidden 4xl:block">Transcript</span>
+                      <FileAudio className="w-5 h-5" />
+                      <span className="hidden 2xl:block">Transcript</span>
                       {activeTab === "transcript" && (
                         <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400" />
                       )}
@@ -991,14 +991,14 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
                   <TooltipTrigger asChild>
                     <button
                       onClick={() => setActiveTab("notes")}
-                      className={`px-3 py-2 text-sm font-medium transition-colors relative whitespace-nowrap flex-shrink-0 flex items-center justify-center ${
+                      className={`px-3 py-2 text-sm font-medium transition-colors relative whitespace-nowrap flex-shrink-0 flex items-center justify-center gap-2 ${
                         activeTab === "notes"
                           ? "text-cyan-400"
                           : "text-white/60 hover:text-white/80"
                       }`}
                     >
-                      <span className="block 4xl:hidden"><FileText className="w-5 h-5" /></span>
-                      <span className="hidden 4xl:block">Notes</span>
+                      <FileText className="w-5 h-5" />
+                      <span className="hidden 2xl:block">Notes</span>
                       {activeTab === "notes" && (
                         <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400" />
                       )}
@@ -1275,7 +1275,7 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
                              ) : (
                                 <div className="flex flex-col gap-4">
                                     {/* Channel Tabs */}
-                                    <div className="grid grid-cols-3 p-1 rounded-xl bg-white/5 border border-white/10">
+                                    <div className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-white/5 border border-white/10">
                                         {[
                                             { id: "email", icon: Mail, label: "Email" },
                                             { id: "sms", icon: MessageSquare, label: "SMS" },
@@ -1285,14 +1285,15 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
                                                 key={channel.id}
                                                 // @ts-ignore
                                                 onClick={() => setFollowupTab(channel.id)}
-                                                className={`flex items-center justify-center py-2 rounded-lg transition-all duration-200 ${
+                                                className={`flex items-center justify-center gap-2 py-2 px-3 rounded-lg transition-all duration-200 ${
                                                     followupTab === channel.id
-                                                        ? "text-cyan-400"
-                                                        : "text-white/40 hover:text-white/60"
+                                                        ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/30"
+                                                        : "text-white/40 hover:text-white/60 hover:bg-white/5"
                                                 }`}
                                                 title={channel.label}
                                             >
                                                 <channel.icon className="w-5 h-5" />
+                                                <span className="hidden 2xl:block text-xs font-medium">{channel.label}</span>
                                             </button>
                                         ))}
                                     </div>
