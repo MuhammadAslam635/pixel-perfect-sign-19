@@ -11,6 +11,7 @@ export interface ScheduleMeetingPayload {
   findAvailableSlot?: boolean;
   startDate?: string;
   endDate?: string;
+  recallBotIncluded?: boolean;
 }
 
 export interface ScheduleMeetingResponse {

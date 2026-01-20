@@ -293,6 +293,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useQueryClient } from "@tanstack/react-query";
 import { usePermissions } from "@/hooks/usePermissions";
+import { Switch } from "@/components/ui/switch";
 
 type ScheduleMeetingForm = {
   subject: string;
@@ -302,6 +303,7 @@ type ScheduleMeetingForm = {
   startDate: string;
   endDate: string;
   durationMinutes: number;
+  recallBotIncluded: boolean;
 };
 
 // Helper function to get timezone offset in minutes for a given timezone and date
@@ -369,6 +371,7 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
         startDate: formatDateTimeLocalInTimezone(now, targetTimezone),
         endDate: getDefaultSearchEndInTimezone(now, targetTimezone),
         durationMinutes: 30,
+        recallBotIncluded: true,
       };
     };
   }, [lead?.name, lead?.timezone]);
@@ -713,6 +716,7 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
       timezone: schedulingTimezone, // Send lead's timezone (or user's if lead has none)
       startDate: autoModeStart.toISOString(),
       endDate: autoModeEnd.toISOString(),
+      recallBotIncluded: scheduleForm.recallBotIncluded,
     };
 
     setSchedulingMeeting(true);
@@ -1491,6 +1495,24 @@ const LeadDetailCard: FC<LeadDetailCardProps> = ({ lead }) => {
                 }
                 className="bg-white/5 border-white/10 text-white text-xs"
                 placeholder="Optional location"
+              />
+            </div>
+
+            <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-3 py-2.5">
+              <div className="min-w-0 pr-3">
+                <Label className="text-xs text-white/80">Note taker agent</Label>
+                <p className="text-[10px] text-white/50 mt-0.5">
+                  When enabled, a meeting bot will join and generate notes/recording/transcript.
+                </p>
+              </div>
+              <Switch
+                checked={scheduleForm.recallBotIncluded}
+                onCheckedChange={(checked) =>
+                  setScheduleForm((prev) => ({
+                    ...prev,
+                    recallBotIncluded: Boolean(checked),
+                  }))
+                }
               />
             </div>
 
