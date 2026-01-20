@@ -175,6 +175,43 @@ export const leadEnrichmentService = {
   },
 
   /**
+   * Check if domain actually exists (makes HTTP request)
+   * @param domain - Domain to check (e.g., "example.com")
+   * @returns Promise<boolean> - True if domain exists and is reachable
+   */
+  checkDomainExists: async (domain: string): Promise<boolean> => {
+    try {
+      // Try both http and https
+      const urls = [
+        `https://${domain}`,
+        `http://${domain}`,
+      ];
+
+      for (const url of urls) {
+        try {
+          const response = await fetch(url, {
+            method: 'HEAD',
+            mode: 'no-cors', // Allow requests to domains without CORS
+            cache: 'no-cache',
+            signal: AbortSignal.timeout(5000), // 5 second timeout
+          });
+
+          // In no-cors mode, we can't read the status, but if fetch doesn't throw, the domain exists
+          return true;
+        } catch (error) {
+          // Try next URL
+          continue;
+        }
+      }
+
+      return false;
+    } catch (error) {
+      console.error(`Domain check failed for ${domain}:`, error);
+      return false;
+    }
+  },
+
+  /**
    * Parse and validate multiple domains
    * @param input - Comma or newline separated domains or URLs
    */

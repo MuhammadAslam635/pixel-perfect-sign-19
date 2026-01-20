@@ -69,42 +69,110 @@ const DomainSpecificTab = ({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleAddDomain = () => {
+  const handleAddDomain = async () => {
     const trimmed = domainInput.trim();
     if (!trimmed) return;
 
     // Extract clean domain from URL
     const cleanDomain = leadEnrichmentService.extractDomain(trimmed);
 
-    if (leadEnrichmentService.validateDomain(cleanDomain)) {
-      if (!domains.includes(cleanDomain)) {
-        setDomains([...domains, cleanDomain]);
-        setDomainInput("");
-        setInvalidDomains(invalidDomains.filter((d) => d !== cleanDomain));
-        toast.success(`Added ${cleanDomain}`);
-      } else {
-        toast.error("Domain already added");
-      }
-    } else {
+    // First check format
+    if (!leadEnrichmentService.validateDomain(cleanDomain)) {
       toast.error("Invalid domain format");
       if (!invalidDomains.includes(trimmed)) {
         setInvalidDomains([...invalidDomains, trimmed]);
       }
+      return;
     }
+
+    // Check if domain already exists in list
+    if (domains.includes(cleanDomain)) {
+      toast.error("Domain already added");
+      return;
+    }
+
+    // Check if domain actually exists
+    toast.loading(`Verifying ${cleanDomain}...`, { id: "domain-check" });
+    const exists = await leadEnrichmentService.checkDomainExists(cleanDomain);
+
+    if (!exists) {
+      toast.error(`Domain ${cleanDomain} does not exist or is unreachable`, {
+        id: "domain-check",
+      });
+      if (!invalidDomains.includes(trimmed)) {
+        setInvalidDomains([...invalidDomains, trimmed]);
+      }
+      return;
+    }
+
+    // Domain is valid and exists - add it
+    setDomains([...domains, cleanDomain]);
+    setDomainInput("");
+    setInvalidDomains(invalidDomains.filter((d) => d !== cleanDomain));
+    toast.success(`Added ${cleanDomain}`, { id: "domain-check" });
   };
 
-  const handleBulkAdd = () => {
+  const handleBulkAdd = async () => {
     const { valid, invalid } = leadEnrichmentService.parseDomains(bulkInput);
-
-    if (valid.length > 0) {
-      const newDomains = valid.filter((d) => !domains.includes(d));
-      setDomains([...domains, ...newDomains]);
-      toast.success(`Added ${newDomains.length} domains`);
-    }
 
     if (invalid.length > 0) {
       setInvalidDomains([...invalidDomains, ...invalid]);
-      toast.error(`${invalid.length} invalid domains`);
+      toast.error(`${invalid.length} domains have invalid format`);
+    }
+
+    if (valid.length === 0) {
+      setBulkInput("");
+      setShowBulkInput(false);
+      return;
+    }
+
+    // Filter out already added domains
+    const newDomains = valid.filter((d) => !domains.includes(d));
+
+    if (newDomains.length === 0) {
+      toast.info("All domains are already added");
+      setBulkInput("");
+      setShowBulkInput(false);
+      return;
+    }
+
+    // Show progress toast
+    toast.loading(`Verifying ${newDomains.length} domains...`, {
+      id: "bulk-check",
+    });
+
+    // Check existence for all domains
+    const existenceChecks = await Promise.all(
+      newDomains.map(async (domain) => ({
+        domain,
+        exists: await leadEnrichmentService.checkDomainExists(domain),
+      }))
+    );
+
+    const existingDomains = existenceChecks
+      .filter((check) => check.exists)
+      .map((check) => check.domain);
+
+    const nonExistingDomains = existenceChecks
+      .filter((check) => !check.exists)
+      .map((check) => check.domain);
+
+    // Add valid and existing domains
+    if (existingDomains.length > 0) {
+      setDomains([...domains, ...existingDomains]);
+      toast.success(`Added ${existingDomains.length} verified domains`, {
+        id: "bulk-check",
+      });
+    } else {
+      toast.error("No valid domains found", { id: "bulk-check" });
+    }
+
+    // Add non-existing domains to invalid list
+    if (nonExistingDomains.length > 0) {
+      setInvalidDomains([...invalidDomains, ...nonExistingDomains]);
+      toast.error(
+        `${nonExistingDomains.length} domains do not exist or are unreachable`
+      );
     }
 
     setBulkInput("");
