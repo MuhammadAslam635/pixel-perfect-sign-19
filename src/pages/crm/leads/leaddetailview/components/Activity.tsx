@@ -1463,7 +1463,7 @@ const Activity: FC<ActivityProps> = ({
                                               >
                                                 {meeting.recall.status ===
                                                   "active"
-                                                  ? "Recall active"
+                                                  ? "Note Taker Agent"
                                                   : meeting.recall.status ===
                                                     "starting" ||
                                                     meeting.recall.status ===
@@ -1537,7 +1537,7 @@ const Activity: FC<ActivityProps> = ({
                                         )}
                                       </div>
                                     </div>
-                                    {meeting.body && (
+                                    {/* {meeting.body && (
                                       <div className="text-xs text-white/70 mt-2 line-clamp-3 prose prose-invert prose-p:my-0 prose-pre:my-0 prose-ul:my-0 prose-li:my-0 max-w-none">
                                         <ReactMarkdown
                                           rehypePlugins={[
@@ -1561,7 +1561,7 @@ const Activity: FC<ActivityProps> = ({
                                           {meeting.body}
                                         </ReactMarkdown>
                                       </div>
-                                    )}
+                                    )} */}
                                     {meeting.webLink && (
                                       <a
                                         href={meeting.webLink}

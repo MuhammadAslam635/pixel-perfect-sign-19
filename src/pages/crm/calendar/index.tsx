@@ -727,7 +727,7 @@ const CalendarPage: FC = () => {
                                       }
                                     >
                                       {meeting.recall.status === "active"
-                                        ? "Recall active"
+                                        ? "Note Taker Agent"
                                         : meeting.recall.status ===
                                             "starting" ||
                                           meeting.recall.status === "scheduled"

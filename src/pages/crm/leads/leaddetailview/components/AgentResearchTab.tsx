@@ -288,7 +288,7 @@ const AgentResearchTab: FC<AgentResearchTabProps> = ({ lead }) => {
       {/* Professional Background */}
       {researchData?.professionalBackground && (
         <Card
-          className="p-4"
+          className="p-4 h-44 overflow-auto scrollbar-hide"
           style={{
             background: "rgba(255, 255, 255, 0.03)",
             border: "1px solid rgba(255, 255, 255, 0.1)",
@@ -379,7 +379,7 @@ const AgentResearchTab: FC<AgentResearchTabProps> = ({ lead }) => {
       {/* Pain Points */}
       {researchData?.painPoints && researchData.painPoints.length > 0 && (
         <Card
-          className="p-4"
+          className="p-4 h-44 overflow-auto scrollbar-hide"
           style={{
             background: "rgba(255, 255, 255, 0.03)",
             border: "1px solid rgba(255, 255, 255, 0.1)",
@@ -409,7 +409,7 @@ const AgentResearchTab: FC<AgentResearchTabProps> = ({ lead }) => {
       {/* Opportunities */}
       {researchData?.opportunities && researchData.opportunities.length > 0 && (
         <Card
-          className="p-4"
+          className="p-4 h-44 overflow-auto scrollbar-hide"
           style={{
             background: "rgba(255, 255, 255, 0.03)",
             border: "1px solid rgba(255, 255, 255, 0.1)",
