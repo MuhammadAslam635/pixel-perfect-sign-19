@@ -113,24 +113,10 @@ export const FollowupGenerator: React.FC<FollowupGeneratorProps> = ({
           html: emailBody.replace(/\n/g, '<br/>'),
         });
       } else if (activeChannel === "whatsapp") {
-        // Fetch WhatsApp connection to get the phoneNumberId
-        const connectionRes = await API.get("/whatsapp/connection");
-        const credentials = connectionRes.data?.credentials || [];
-        
-        if (credentials.length === 0) {
-          throw new Error("No connected WhatsApp phone number found. Please connect your WhatsApp Business account first.");
-        }
-
-        // Use the first active connection
-        const phoneNumberId = credentials[0].phoneNumberId;
-
+        // Send WhatsApp message using Wasender API
         await API.post("/whatsapp/messages/send", {
-          phoneNumberId,
           to: leadPhone,
-          type: "text",
-          text: {
-            body: body
-          }
+          text: body
         });
       } else {
         await API.post("/twilio/message", {

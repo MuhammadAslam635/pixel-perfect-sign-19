@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Lead } from "@/services/leads.service";
 import { calendarService } from "@/services/calendar.service";
 import { Button } from "@/components/ui/button";
-import { Loader2, RefreshCcw, FileText, Calendar, Play, X, Mail, MessageSquare, Phone, Send, RefreshCw, Copy, Check, Video, Notebook, FileAudio } from "lucide-react";
+import { Loader2, RefreshCcw, FileText, Calendar, Play, X, Mail, MessageSquare, Send, RefreshCw, Copy, Video, Notebook, FileAudio } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { LeadMeetingRecord } from "@/services/calendar.service";
 import { emailService } from "@/services/email.service";
@@ -210,17 +210,7 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
   const [sendingFollowup, setSendingFollowup] = useState(false);
   const [copiedState, setCopiedState] = useState<string | null>(null);
 
-  // WhatsApp connection for sending
-  const [whatsappPhoneId, setWhatsappPhoneId] = useState<string | null>(null);
-
-  useEffect(() => {
-    // Fetch WhatsApp connection on mount to be ready
-    whatsappService.getConnections().then((res) => {
-        if (res.success && res.credentials.length > 0) {
-            setWhatsappPhoneId(res.credentials[0].phoneNumberId);
-        }
-    }).catch(() => {});
-  }, []);
+  // WhatsApp connection check removed - no longer needed with Wasender API
 
   const handleGenerateDrafts = async (meetingId: string, regenerate = false) => {
     if (regenerate) {
@@ -308,23 +298,13 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
             toast({ title: "SMS Sent", description: "Follow-up SMS sent successfully." });
 
         } else if (followupTab === "whatsapp") {
-            if (!whatsappPhoneId) {
-                throw new Error("No WhatsApp business account connected.");
-            }
-            // Need destination phone number.
-            // Try to find phone from lead or attendees
-            // This is a bit tricky if lead phone is not readily available in 'lead' prop? 
-            // Lead prop has _id. We might fallback to manual input or assume backend knows?
-            // whatsappService.sendTextMessage requires 'to'.
-            // Use lead.phone or parse from meeting object?
-            // Use lead.phone
+            // Need destination phone number from lead
             const phone = lead.phone;
             if (!phone) throw new Error("Lead has no phone number for WhatsApp.");
 
             await whatsappService.sendTextMessage({
-                phoneNumberId: whatsappPhoneId,
                 to: phone,
-                body: message
+                text: message
             });
             toast({ title: "WhatsApp Sent", description: "Follow-up WhatsApp message sent successfully." });
         }

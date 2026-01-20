@@ -311,8 +311,6 @@ const LeadChat = ({
     whatsappConnectionsData?.credentials || EMPTY_ARRAY;
   const primaryWhatsAppConnection = whatsappConnections[0] || null;
   const whatsappReady = whatsappConnections.length > 0;
-  const whatsappPhoneNumberId =
-    primaryWhatsAppConnection?.phoneNumberId || null;
 
   const whatsappConnectionErrorMessage = isWhatsAppConnectionError
     ? (whatsappConnectionsError as any)?.response?.data?.message ||
@@ -338,8 +336,7 @@ const LeadChat = ({
     whatsappStatusLoading ||
     Boolean(whatsappUnavailableMessage) ||
     !whatsappReady ||
-    !normalizedLeadWhatsapp ||
-    !whatsappPhoneNumberId;
+    !normalizedLeadWhatsapp;
   const canGenerateWhatsAppMessage = Boolean(lead?.companyId && lead?._id);
 
   const channelTabs = useMemo(() => {
@@ -463,17 +460,15 @@ const LeadChat = ({
     "whatsapp-conversation",
     leadId,
     normalizedLeadWhatsapp,
-    whatsappPhoneNumberId,
   ];
 
   const whatsappConversationEnabled =
     activeTab === "WhatsApp" &&
     Boolean(
-      leadId && normalizedLeadWhatsapp && whatsappReady && whatsappPhoneNumberId
+      leadId && normalizedLeadWhatsapp && whatsappReady
     );
 
-  const shouldPollWhatsApp =
-    whatsappConversationEnabled && Boolean(whatsappPhoneNumberId);
+  const shouldPollWhatsApp = whatsappConversationEnabled;
 
   const {
     data: whatsappConversationResponse,
@@ -487,7 +482,6 @@ const LeadChat = ({
     queryFn: () =>
       whatsappService.getConversation({
         contact: normalizedLeadWhatsapp as string,
-        phoneNumberId: whatsappPhoneNumberId || undefined,
         leadId: leadId || undefined,
         limit: 100,
       }),
@@ -771,11 +765,10 @@ const LeadChat = ({
   });
 
   const whatsappMutation = useMutation({
-    mutationFn: (payload: { body: string }) =>
+    mutationFn: (payload: { text: string }) =>
       whatsappService.sendTextMessage({
-        phoneNumberId: whatsappPhoneNumberId as string,
         to: normalizedLeadWhatsapp as string,
-        body: payload.body,
+        text: payload.text,
       }),
     onSuccess: () => {
       setWhatsappInput("");
@@ -802,27 +795,12 @@ const LeadChat = ({
     },
   });
 
-  const markReadMutation = useMutation({
-    mutationFn: (messageIds: string[]) =>
-      whatsappService.markMessagesRead({
-        phoneNumberId: whatsappPhoneNumberId as string,
-        messageIds,
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: whatsappConversationQueryKey,
-      });
-    },
-    onError: (_error, messageIds) => {
-      messageIds.forEach((id) => markedReadCacheRef.current.delete(id));
-    },
-  });
+  // markMessagesRead mutation removed - not supported by Wasender API
 
   const deleteConversationMutation = useMutation({
     mutationFn: () =>
       whatsappService.deleteConversation({
         contact: normalizedLeadWhatsapp as string,
-        phoneNumberId: whatsappPhoneNumberId || undefined,
       }),
     onSuccess: () => {
       markedReadCacheRef.current.clear();
@@ -929,31 +907,7 @@ const LeadChat = ({
     };
   }, [openMessageMenu]);
 
-  useEffect(() => {
-    if (
-      !whatsappConversationEnabled ||
-      !whatsappPhoneNumberId ||
-      unreadInboundMessageIds.length === 0
-    ) {
-      return;
-    }
-
-    const pending = unreadInboundMessageIds.filter(
-      (id) => !markedReadCacheRef.current.has(id)
-    );
-
-    if (!pending.length) {
-      return;
-    }
-
-    pending.forEach((id) => markedReadCacheRef.current.add(id));
-    markReadMutation.mutate(pending);
-  }, [
-    unreadInboundMessageIds,
-    whatsappConversationEnabled,
-    whatsappPhoneNumberId,
-    markReadMutation,
-  ]);
+  // Auto-mark messages as read removed - not supported by Wasender API
 
   const handleSendSms = () => {
     if (
@@ -974,7 +928,6 @@ const LeadChat = ({
     if (
       !leadId ||
       !normalizedLeadWhatsapp ||
-      !whatsappPhoneNumberId ||
       !whatsappInput.trim() ||
       whatsappMutation.isPending ||
       whatsappInputsDisabled
@@ -985,7 +938,7 @@ const LeadChat = ({
       return;
     }
 
-    whatsappMutation.mutate({ body: whatsappInput.trim() });
+    whatsappMutation.mutate({ text: whatsappInput.trim() });
   };
 
   const handleGenerateWhatsAppMessage = async () => {
