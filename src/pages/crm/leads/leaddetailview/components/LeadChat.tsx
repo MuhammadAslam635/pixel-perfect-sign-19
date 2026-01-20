@@ -163,22 +163,22 @@ const LeadChat = ({
   const leadId = lead?._id;
   const normalizedLeadPhone = useMemo(
     () => normalizePhoneNumber(phoneNumber),
-    [phoneNumber]
+    [phoneNumber],
   );
   const normalizedLeadWhatsapp = useMemo(
     () => normalizePhoneNumber(whatsappNumber),
-    [whatsappNumber]
+    [whatsappNumber],
   );
 
   const [smsInput, setSmsInput] = useState("");
   const [smsSendError, setSmsSendError] = useState<string | null>(null);
   const [whatsappInput, setWhatsappInput] = useState("");
   const [whatsappSendError, setWhatsappSendError] = useState<string | null>(
-    null
+    null,
   );
   const [emailInput, setEmailInput] = useState("");
   const [emailSubject, setEmailSubject] = useState<string>(
-    DEFAULT_EMAIL_SUBJECT
+    DEFAULT_EMAIL_SUBJECT,
   );
   const [emailSendError, setEmailSendError] = useState<string | null>(null);
   const [isGeneratingWhatsAppMessage, setIsGeneratingWhatsAppMessage] =
@@ -215,7 +215,7 @@ const LeadChat = ({
   // Proposal list view states
   const [showProposalList, setShowProposalList] = useState(false);
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(
-    null
+    null,
   );
 
   // Email Edit with AI states
@@ -239,7 +239,7 @@ const LeadChat = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const proposalFileInputRef = useRef<HTMLInputElement>(null);
   const [proposalAttachment, setProposalAttachment] = useState<File | null>(
-    null
+    null,
   );
   const [proposalMessage, setProposalMessage] = useState("");
   const [proposalPdfText, setProposalPdfText] = useState<string>("");
@@ -314,8 +314,8 @@ const LeadChat = ({
 
   const whatsappConnectionErrorMessage = isWhatsAppConnectionError
     ? (whatsappConnectionsError as any)?.response?.data?.message ||
-    (whatsappConnectionsError as Error)?.message ||
-    "Failed to load WhatsApp connection."
+      (whatsappConnectionsError as Error)?.message ||
+      "Failed to load WhatsApp connection."
     : null;
 
   const twilioReady = twilioConnection.ready;
@@ -412,7 +412,7 @@ const LeadChat = ({
   const preferredInitialTab = useMemo(() => {
     if (initialTab) {
       const matching = channelTabs.find(
-        (tab) => tab.label.toLowerCase() === initialTab.toLowerCase()
+        (tab) => tab.label.toLowerCase() === initialTab.toLowerCase(),
       );
       if (matching && matching.isAvailable) {
         return matching.label;
@@ -426,7 +426,7 @@ const LeadChat = ({
   useEffect(() => {
     if (!preferredInitialTab) return;
     setActiveTab((prev) =>
-      prev === preferredInitialTab ? prev : preferredInitialTab
+      prev === preferredInitialTab ? prev : preferredInitialTab,
     );
   }, [preferredInitialTab]);
 
@@ -465,7 +465,10 @@ const LeadChat = ({
   const whatsappConversationEnabled =
     activeTab === "WhatsApp" &&
     Boolean(
-      leadId && normalizedLeadWhatsapp && whatsappReady
+      leadId &&
+      normalizedLeadWhatsapp &&
+      whatsappReady &&
+      whatsappPhoneNumberId,
     );
 
   const shouldPollWhatsApp = whatsappConversationEnabled;
@@ -502,7 +505,7 @@ const LeadChat = ({
         (message) =>
           message.direction === "inbound" &&
           message.messageStatus !== "read" &&
-          Boolean(message.messageId)
+          Boolean(message.messageId),
       )
       .map((message) => message.messageId as string);
   }, [whatsappMessages, whatsappConversationEnabled]);
@@ -513,8 +516,8 @@ const LeadChat = ({
 
   const whatsappConversationErrorMessage = isWhatsAppConversationError
     ? (whatsappConversationError as any)?.response?.data?.message ||
-    (whatsappConversationError as Error)?.message ||
-    "Failed to load WhatsApp conversation."
+      (whatsappConversationError as Error)?.message ||
+      "Failed to load WhatsApp conversation."
     : null;
 
   useEffect(() => {
@@ -527,7 +530,7 @@ const LeadChat = ({
         const ready = Boolean(
           response.data?.success &&
           response.data?.connected &&
-          statusData?.hasAllEnvVars
+          statusData?.hasAllEnvVars,
         );
         const missingFields = statusData?.missingFields || [];
         const message = ready
@@ -598,7 +601,7 @@ const LeadChat = ({
         // Sort chronologically
         return emails.sort(
           (a, b) =>
-            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
         );
       } catch (error) {
         console.error("Failed to fetch lead emails:", error);
@@ -613,8 +616,8 @@ const LeadChat = ({
   const emailMessages = emailConversationData || EMPTY_ARRAY;
   const emailError = isEmailConversationError
     ? (emailConversationError as any)?.response?.data?.message ||
-    (emailConversationError as Error)?.message ||
-    "Failed to load email conversation. Please try again later."
+      (emailConversationError as Error)?.message ||
+      "Failed to load email conversation. Please try again later."
     : null;
 
   const { examples: proposalExamples, query: proposalExamplesQuery } =
@@ -655,7 +658,7 @@ const LeadChat = ({
   const smsUnavailableMessage =
     !twilioReady && !twilioStatusLoading
       ? twilioConnection.message ||
-      "Twilio is not configured. Please contact your administrator."
+        "Twilio is not configured. Please contact your administrator."
       : null;
   const smsInputsDisabled = Boolean(smsUnavailableMessage) || !phoneNumber;
 
@@ -714,7 +717,7 @@ const LeadChat = ({
   const orderedSmsMessages = useMemo(() => {
     return [...smsMessages].sort(
       (a, b) =>
-        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
     );
   }, [smsMessages]);
 
@@ -739,8 +742,8 @@ const LeadChat = ({
 
   const smsQueryErrorMessage = isSmsError
     ? (smsQueryError as any)?.response?.data?.message ||
-    (smsQueryError as Error)?.message ||
-    "Failed to load SMS history"
+      (smsQueryError as Error)?.message ||
+      "Failed to load SMS history"
     : null;
 
   const smsMutation = useMutation({
@@ -812,8 +815,8 @@ const LeadChat = ({
     onError: (mutationError: any) => {
       setWhatsappSendError(
         mutationError?.response?.data?.message ||
-        mutationError?.message ||
-        "Failed to clear WhatsApp conversation"
+          mutationError?.message ||
+          "Failed to clear WhatsApp conversation",
       );
     },
   });
@@ -829,8 +832,8 @@ const LeadChat = ({
     onError: (mutationError: any) => {
       setWhatsappSendError(
         mutationError?.response?.data?.message ||
-        mutationError?.message ||
-        "Failed to delete message"
+          mutationError?.message ||
+          "Failed to delete message",
       );
       setMessageToDelete(null);
     },
@@ -907,7 +910,31 @@ const LeadChat = ({
     };
   }, [openMessageMenu]);
 
-  // Auto-mark messages as read removed - not supported by Wasender API
+  useEffect(() => {
+    if (
+      !whatsappConversationEnabled ||
+      !whatsappPhoneNumberId ||
+      unreadInboundMessageIds.length === 0
+    ) {
+      return;
+    }
+
+    const pending = unreadInboundMessageIds.filter(
+      (id) => !markedReadCacheRef.current.has(id),
+    );
+
+    if (!pending.length) {
+      return;
+    }
+
+    pending.forEach((id) => markedReadCacheRef.current.add(id));
+    markReadMutation.mutate(pending);
+  }, [
+    unreadInboundMessageIds,
+    whatsappConversationEnabled,
+    whatsappPhoneNumberId,
+    markReadMutation,
+  ]);
 
   const handleSendSms = () => {
     if (
@@ -944,7 +971,7 @@ const LeadChat = ({
   const handleGenerateWhatsAppMessage = async () => {
     if (!lead?.companyId || !lead?._id) {
       setWhatsappSendError(
-        "Lead information is incomplete for generating suggestions."
+        "Lead information is incomplete for generating suggestions.",
       );
       return;
     }
@@ -964,7 +991,7 @@ const LeadChat = ({
 
       if (generated) {
         setWhatsappInput((prev) =>
-          prev ? `${prev}\n\n${generated}` : generated
+          prev ? `${prev}\n\n${generated}` : generated,
         );
       } else {
         setWhatsappSendError("No message suggestion was generated. Try again.");
@@ -982,8 +1009,29 @@ const LeadChat = ({
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
-    if (files) {
-      setAttachments((prev) => [...prev, ...Array.from(files)]);
+    if (files && files.length > 0) {
+      const fileArray = Array.from(files);
+
+      // Check file sizes (max 10MB per file)
+      const oversizedFiles = fileArray.filter(
+        (file) => file.size > 10 * 1024 * 1024,
+      );
+      if (oversizedFiles.length > 0) {
+        toast.error(
+          `File too large: ${oversizedFiles.map((f) => f.name).join(", ")} exceeds 10MB limit`,
+        );
+        // Only add files under 10MB
+        const validFiles = fileArray.filter(
+          (file) => file.size <= 10 * 1024 * 1024,
+        );
+        if (validFiles.length > 0) {
+          setAttachments((prev) => [...prev, ...validFiles]);
+          toast.success(`${validFiles.length} file(s) attached successfully`);
+        }
+      } else {
+        setAttachments((prev) => [...prev, ...fileArray]);
+        toast.success(`${fileArray.length} file(s) attached successfully`);
+      }
     }
     // Reset input value so same file can be selected again
     if (fileInputRef.current) {
@@ -992,7 +1040,7 @@ const LeadChat = ({
   };
 
   const handleProposalFileSelect = (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -1040,12 +1088,12 @@ const LeadChat = ({
             } catch (error) {
               console.error(
                 "Failed to update lead stage after sending proposal:",
-                error
+                error,
               );
             }
           }
         },
-      }
+      },
     );
   };
 
@@ -1063,38 +1111,51 @@ const LeadChat = ({
       return;
     }
 
-    emailMutation.mutate(
-      {
-        to: [emailAddress],
-        subject: emailSubject?.trim() || DEFAULT_EMAIL_SUBJECT,
-        text: emailInput.replace(/<[^>]*>/g, "").trim(),
-        html: emailInput.trim(),
-        attachments: attachments.length > 0 ? attachments : undefined,
-      },
-      {
-        onSuccess: async () => {
-          // If attachments were sent, update lead stage to 'Proposal Sent'
-          if (attachments.length > 0 && leadId) {
-            try {
-              await leadsService.markProposalSent(leadId);
-              queryClient.invalidateQueries({ queryKey: ["lead", leadId] });
-              if (onMessageUpdate) onMessageUpdate();
-            } catch (error) {
-              console.error(
-                "Failed to update lead stage after sending proposal email:",
-                error
-              );
-            }
+    const emailPayload = {
+      to: [emailAddress],
+      subject: emailSubject?.trim() || DEFAULT_EMAIL_SUBJECT,
+      text: emailInput.replace(/<[^>]*>/g, "").trim(),
+      html: emailInput.trim(),
+      attachments: attachments.length > 0 ? attachments : undefined,
+    };
+
+    console.log("[Email Send] Sending email with payload:", {
+      to: emailPayload.to,
+      subject: emailPayload.subject,
+      hasText: !!emailPayload.text,
+      hasHtml: !!emailPayload.html,
+      attachmentsCount: attachments.length,
+      attachments: attachments.map((f) => ({
+        name: f.name,
+        size: f.size,
+        type: f.type,
+      })),
+    });
+
+    emailMutation.mutate(emailPayload, {
+      onSuccess: async () => {
+        console.log("[Email Send] Email sent successfully");
+        // If attachments were sent, update lead stage to 'Proposal Sent'
+        if (attachments.length > 0 && leadId) {
+          try {
+            await leadsService.markProposalSent(leadId);
+            queryClient.invalidateQueries({ queryKey: ["lead", leadId] });
+            if (onMessageUpdate) onMessageUpdate();
+          } catch (error) {
+            console.error(
+              "Failed to update lead stage after sending proposal email:",
+              error,
+            );
           }
-        },
-      }
-    );
+        }
+      },
+    });
   };
 
   const handleGenerateEmailMessage = async () => {
     if (!lead?.companyId || !lead?._id) {
       setEmailSendError(
-        "Lead information is incomplete for generating suggestions."
+        "Lead information is incomplete for generating suggestions.",
       );
       return;
     }
@@ -1146,7 +1207,7 @@ const LeadChat = ({
   const handleGenerateSmsMessage = async () => {
     if (!lead?.companyId || !lead?._id) {
       setSmsSendError(
-        "Lead information is incomplete for generating suggestions."
+        "Lead information is incomplete for generating suggestions.",
       );
       return;
     }
@@ -1259,7 +1320,7 @@ const LeadChat = ({
 
       // Fallback: use simple file name and metadata
       return `PDF File: ${file.name}\nSize: ${(file.size / 1024 / 1024).toFixed(
-        2
+        2,
       )} MB\nType: ${file.type}`;
     }
   };
@@ -1297,7 +1358,7 @@ const LeadChat = ({
           personId: lead._id,
           companyId: lead.companyId,
           context: context,
-        }
+        },
       );
 
       const generated =
@@ -1344,7 +1405,7 @@ const LeadChat = ({
       // Links
       .replace(
         /\[([^\]]+)\]\(([^)]+)\)/gim,
-        '<a href="$2" style="color: #68B3B7; text-decoration: underline;">$1</a>'
+        '<a href="$2" style="color: #68B3B7; text-decoration: underline;">$1</a>',
       )
       // Horizontal rule
       .replace(/^---$/gim, "<hr>")
@@ -1530,7 +1591,7 @@ const LeadChat = ({
         }
       } else if (!emailAddress) {
         toast.warning(
-          "No email address found. Stage will be updated, but proposal cannot be sent via email."
+          "No email address found. Stage will be updated, but proposal cannot be sent via email.",
         );
       }
 
@@ -1559,10 +1620,11 @@ const LeadChat = ({
           });
           // Show error to user so they know the proposal wasn't saved
           toast.error(
-            `Proposal not saved: ${proposalError?.response?.data?.message ||
-            proposalError?.message ||
-            "Unknown error"
-            }`
+            `Proposal not saved: ${
+              proposalError?.response?.data?.message ||
+              proposalError?.message ||
+              "Unknown error"
+            }`,
           );
         }
       }
@@ -1572,7 +1634,7 @@ const LeadChat = ({
       toast.success(
         emailAddress && proposalContent
           ? "Proposal sent via email and lead stage updated to 'Proposal Sent'!"
-          : "Lead stage updated to 'Proposal Sent'!"
+          : "Lead stage updated to 'Proposal Sent'!",
       );
 
       // Refresh lead data to update the UI
@@ -1675,7 +1737,7 @@ const LeadChat = ({
 
   const findTextInMarkdown = (
     selectedText: string,
-    markdownContent: string
+    markdownContent: string,
   ): { start: number; end: number } | null => {
     // Remove markdown formatting from both strings for comparison
     const cleanSelected = selectedText
@@ -1922,7 +1984,7 @@ const LeadChat = ({
           // Use the found position
           beforeSelection = proposalContent.substring(0, foundIndex);
           afterSelection = proposalContent.substring(
-            foundIndex + lockedSelectedText.length
+            foundIndex + lockedSelectedText.length,
           );
         } else if (selectionRange) {
           // Fallback to using the range if we have it
@@ -2160,7 +2222,7 @@ const LeadChat = ({
         if (foundIndex !== -1) {
           beforeSelection = textContent.substring(0, foundIndex);
           afterSelection = textContent.substring(
-            foundIndex + emailLockedSelectedText.length
+            foundIndex + emailLockedSelectedText.length,
           );
         } else if (emailSelectionRange) {
           beforeSelection = textContent.substring(0, emailSelectionRange.start);
@@ -2341,7 +2403,7 @@ const LeadChat = ({
     const withoutQuotedLines = withoutMarkers
       .split("\n")
       .filter(
-        (line) => !line.trim().startsWith(">") && !line.trim().startsWith("--")
+        (line) => !line.trim().startsWith(">") && !line.trim().startsWith("--"),
       )
       .join("\n")
       .trim();
@@ -2353,7 +2415,7 @@ const LeadChat = ({
     const fallback = normalized
       .split("\n")
       .filter(
-        (line) => !line.trim().startsWith(">") && !line.trim().startsWith("--")
+        (line) => !line.trim().startsWith(">") && !line.trim().startsWith("--"),
       )
       .join("\n")
       .trim();
@@ -2418,8 +2480,9 @@ const LeadChat = ({
             .map((para, index) => {
               const formatted = para.trim().replace(/\n/g, "<br>");
               const isLast = index === paragraphs.length - 1;
-              return `<p style="margin: 0 0 ${isLast ? "0" : "0.75rem"
-                } 0; line-height: 1.5;">${formatted}</p>`;
+              return `<p style="margin: 0 0 ${
+                isLast ? "0" : "0.75rem"
+              } 0; line-height: 1.5;">${formatted}</p>`;
             })
             .join("");
         } else {
@@ -2428,8 +2491,9 @@ const LeadChat = ({
           mainBodyHtml = lines
             .map((line, index) => {
               const isLast = index === lines.length - 1;
-              return `<p style="margin: 0 0 ${isLast ? "0" : "0.75rem"
-                } 0; line-height: 1.5;">${line.trim()}</p>`;
+              return `<p style="margin: 0 0 ${
+                isLast ? "0" : "0.75rem"
+              } 0; line-height: 1.5;">${line.trim()}</p>`;
             })
             .join("");
         }
@@ -2459,8 +2523,9 @@ const LeadChat = ({
           .map((para, index) => {
             const formatted = para.trim().replace(/\n/g, "<br>");
             const isLast = index === paragraphs.length - 1;
-            return `<p style="margin: 0 0 ${isLast ? "0" : "0.75rem"
-              } 0; line-height: 1.5;">${formatted}</p>`;
+            return `<p style="margin: 0 0 ${
+              isLast ? "0" : "0.75rem"
+            } 0; line-height: 1.5;">${formatted}</p>`;
           })
           .join("");
       } else {
@@ -2469,8 +2534,9 @@ const LeadChat = ({
         return lines
           .map((line, index) => {
             const isLast = index === lines.length - 1;
-            return `<p style="margin: 0 0 ${isLast ? "0" : "0.75rem"
-              } 0; line-height: 1.5;">${line.trim()}</p>`;
+            return `<p style="margin: 0 0 ${
+              isLast ? "0" : "0.75rem"
+            } 0; line-height: 1.5;">${line.trim()}</p>`;
           })
           .join("");
       }
@@ -2485,12 +2551,12 @@ const LeadChat = ({
       // Remove script tags and their content
       sanitized = sanitized.replace(
         /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
-        ""
+        "",
       );
       // Remove style tags and their content
       sanitized = sanitized.replace(
         /<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi,
-        ""
+        "",
       );
       // Remove event handlers
       sanitized = sanitized.replace(/\son\w+\s*=\s*["'][^"']*["']/gi, "");
@@ -2532,12 +2598,12 @@ const LeadChat = ({
         // Remove script tags and their content
         sanitized = sanitized.replace(
           /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
-          ""
+          "",
         );
         // Remove style tags and their content
         sanitized = sanitized.replace(
           /<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi,
-          ""
+          "",
         );
         // Remove event handlers
         sanitized = sanitized.replace(/\son\w+\s*=\s*["'][^"']*["']/gi, "");
@@ -2563,14 +2629,14 @@ const LeadChat = ({
           // Add line break before "Best regards," "Regards," "Sincerely," etc. (and after the comma, but only single newline)
           .replace(
             /\b(Best regards|Regards|Sincerely|Thank you|Thanks|Yours truly|Cordially|Warm regards|Kind regards),/gi,
-            "\n$1,"
+            "\n$1,",
           )
           // Add line break after comma if followed by capital letter (common in signatures like "Best regards,Name")
           .replace(/,([A-Z])/g, ",\n$1")
           // Add line break before email addresses (before @)
           .replace(
             /([^\n])([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g,
-            "$1\n$2"
+            "$1\n$2",
           )
           // Add line break before URLs
           .replace(/([^\n])(https?:\/\/[^\s]+)/g, "$1\n$2")
@@ -2647,11 +2713,11 @@ const LeadChat = ({
   const convertIconToBase64 = (
     IconComponent: any,
     size: number = 16,
-    color: string = "#000000"
+    color: string = "#000000",
   ): string => {
     try {
       const svgString = ReactDOMServer.renderToString(
-        <IconComponent size={size} color={color} />
+        <IconComponent size={size} color={color} />,
       );
 
       // Properly encode the SVG string to handle Unicode characters
@@ -2765,7 +2831,7 @@ const LeadChat = ({
       console.log(
         "Colors configured for",
         isDarkMode ? "dark" : "light",
-        "mode"
+        "mode",
       );
 
       // Header height for content calculation
@@ -2794,7 +2860,7 @@ const LeadChat = ({
               logoWidth,
               logoHeight,
               undefined,
-              "FAST"
+              "FAST",
             );
           } catch (error) {
             // Fallback to placeholder if image fails
@@ -2802,7 +2868,7 @@ const LeadChat = ({
             pdf.setFillColor(
               isDarkMode ? 60 : 200,
               isDarkMode ? 60 : 200,
-              isDarkMode ? 60 : 200
+              isDarkMode ? 60 : 200,
             );
             pdf.rect(logoX, logoY, logoWidth, logoHeight, "F");
           }
@@ -2876,7 +2942,7 @@ const LeadChat = ({
           footerBarHeight,
           3,
           3,
-          "F"
+          "F",
         );
 
         // Add border to footer bar for better definition
@@ -2893,7 +2959,7 @@ const LeadChat = ({
           footerBarHeight,
           3,
           3,
-          "S"
+          "S",
         );
 
         // WhatsApp icon - modern filled design
@@ -2909,7 +2975,7 @@ const LeadChat = ({
         pdf.setFillColor(
           isDarkMode ? 35 : 255,
           isDarkMode ? 35 : 255,
-          isDarkMode ? 35 : 255
+          isDarkMode ? 35 : 255,
         );
         const bubbleSize = iconSize / 5;
         // Simple phone receiver representation
@@ -2917,13 +2983,13 @@ const LeadChat = ({
           whatsappX - bubbleSize * 0.6,
           iconY + bubbleSize * 0.4,
           bubbleSize * 0.35,
-          "F"
+          "F",
         );
         pdf.circle(
           whatsappX + bubbleSize * 0.6,
           iconY - bubbleSize * 0.4,
           bubbleSize * 0.35,
-          "F"
+          "F",
         );
 
         // Connection line
@@ -2931,20 +2997,20 @@ const LeadChat = ({
         pdf.setDrawColor(
           isDarkMode ? 35 : 255,
           isDarkMode ? 35 : 255,
-          isDarkMode ? 35 : 255
+          isDarkMode ? 35 : 255,
         );
         pdf.line(
           whatsappX - bubbleSize * 0.3,
           iconY + bubbleSize * 0.2,
           whatsappX + bubbleSize * 0.3,
-          iconY - bubbleSize * 0.2
+          iconY - bubbleSize * 0.2,
         );
 
         pdf.setFontSize(7);
         pdf.setTextColor(...(secondaryTextColor as [number, number, number]));
         const whatsappLines = pdf.splitTextToSize(
           companyWhatsApp,
-          sectionWidth - 4
+          sectionWidth - 4,
         );
         whatsappLines.forEach((line: string, idx: number) => {
           pdf.text(line, whatsappX, textY + idx * 3, { align: "center" });
@@ -2957,7 +3023,7 @@ const LeadChat = ({
           margin + sectionWidth,
           footerBarY + 2,
           margin + sectionWidth,
-          footerBarY + footerBarHeight - 2
+          footerBarY + footerBarHeight - 2,
         );
 
         // Website icon (globe) - modern filled design
@@ -2973,7 +3039,7 @@ const LeadChat = ({
         pdf.setDrawColor(
           isDarkMode ? 35 : 255,
           isDarkMode ? 35 : 255,
-          isDarkMode ? 35 : 255
+          isDarkMode ? 35 : 255,
         );
         pdf.setLineWidth(0.4);
 
@@ -2985,7 +3051,7 @@ const LeadChat = ({
           websiteX - iconSize / 3.2,
           iconY,
           websiteX + iconSize / 3.2,
-          iconY
+          iconY,
         );
 
         // Vertical meridian (ellipse)
@@ -2993,7 +3059,7 @@ const LeadChat = ({
 
         const websiteLines = pdf.splitTextToSize(
           companyWebsite,
-          sectionWidth - 4
+          sectionWidth - 4,
         );
         websiteLines.forEach((line: string, idx: number) => {
           pdf.text(line, websiteX, textY + idx * 3, { align: "center" });
@@ -3004,7 +3070,7 @@ const LeadChat = ({
           margin + sectionWidth * 2,
           footerBarY + 2,
           margin + sectionWidth * 2,
-          footerBarY + footerBarHeight - 2
+          footerBarY + footerBarHeight - 2,
         );
 
         // Location icon - modern filled pin design
@@ -3027,20 +3093,20 @@ const LeadChat = ({
           iconY + pinRadius * 0.3,
           locationX,
           iconY + pinRadius * 1.8,
-          "F"
+          "F",
         );
 
         // Inner circle (white dot in pin)
         pdf.setFillColor(
           isDarkMode ? 35 : 255,
           isDarkMode ? 35 : 255,
-          isDarkMode ? 35 : 255
+          isDarkMode ? 35 : 255,
         );
         pdf.circle(locationX, iconY - pinRadius * 0.5, pinRadius * 0.45, "F");
 
         const locationLines = pdf.splitTextToSize(
           companyLocation,
-          sectionWidth - 4
+          sectionWidth - 4,
         );
         locationLines.forEach((line: string, idx: number) => {
           pdf.text(line, locationX, textY + idx * 3, { align: "center" });
@@ -3086,7 +3152,7 @@ const LeadChat = ({
       const maxWidth = contentWidth;
 
       console.log(
-        `Processing ${markdownLines.length} lines for PDF generation`
+        `Processing ${markdownLines.length} lines for PDF generation`,
       );
 
       for (let i = 0; i < markdownLines.length; i++) {
@@ -3264,7 +3330,7 @@ const LeadChat = ({
               }
               segments.push({ text: boldMatch[1], bold: true });
               currentText = currentText.substring(
-                boldMatch.index + boldMatch[0].length
+                boldMatch.index + boldMatch[0].length,
               );
             }
             if (currentText.length > 0) {
@@ -3473,29 +3539,31 @@ const LeadChat = ({
       }
 
       console.log(
-        `PDF generation completed. Processed all ${markdownLines.length} lines`
+        `PDF generation completed. Processed all ${markdownLines.length} lines`,
       );
 
       const fileName = `Proposal_${(displayName || "Lead").replace(
         /\s+/g,
-        "_"
-      )}_${isDarkMode ? "Dark" : "Light"}_${new Date().toISOString().split("T")[0]
-        }.pdf`;
+        "_",
+      )}_${isDarkMode ? "Dark" : "Light"}_${
+        new Date().toISOString().split("T")[0]
+      }.pdf`;
 
       pdf.save(fileName);
 
       toast.success(
-        `PDF downloaded successfully (${isDarkMode ? "Dark" : "Light"} mode)`
+        `PDF downloaded successfully (${isDarkMode ? "Dark" : "Light"} mode)`,
       );
     } catch (error) {
       console.error("Error generating PDF:", error);
       console.error(
         "Error stack:",
-        error instanceof Error ? error.stack : "No stack trace"
+        error instanceof Error ? error.stack : "No stack trace",
       );
       toast.error(
-        `Failed to generate PDF: ${error instanceof Error ? error.message : "Unknown error"
-        }`
+        `Failed to generate PDF: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
       );
     }
   };
@@ -3523,8 +3591,9 @@ const LeadChat = ({
                 className="relative pb-2 text-left"
               >
                 <span
-                  className={`text-xs font-medium sm:text-sm transition-colors ${isActive ? "text-white font-semibold" : "text-white/50"
-                    }`}
+                  className={`text-xs font-medium sm:text-sm transition-colors ${
+                    isActive ? "text-white font-semibold" : "text-white/50"
+                  }`}
                 >
                   {tab.label}
                 </span>
@@ -3661,8 +3730,9 @@ const LeadChat = ({
                   return (
                     <div
                       key={message._id || message.messageId || timestamp}
-                      className={`group relative flex w-full gap-3 ${isOutbound ? "justify-end" : "justify-start"
-                        }`}
+                      className={`group relative flex w-full gap-3 ${
+                        isOutbound ? "justify-end" : "justify-start"
+                      }`}
                     >
                       {!isOutbound && (
                         <div className="h-10 w-10 flex-shrink-0">
@@ -3674,20 +3744,22 @@ const LeadChat = ({
                         </div>
                       )}
                       <div
-                        className={`flex max-w-[80%] sm:max-w-[65%] flex-col gap-2 ${isOutbound ? "items-end" : "items-start"
-                          }`}
+                        className={`flex max-w-[80%] sm:max-w-[65%] flex-col gap-2 ${
+                          isOutbound ? "items-end" : "items-start"
+                        }`}
                       >
                         <div
-                          className={`w-full rounded-2xl px-3 py-2 ${isOutbound
+                          className={`w-full rounded-2xl px-3 py-2 ${
+                            isOutbound
                               ? "bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] text-white"
                               : "bg-white/10 text-white/90"
-                            }`}
+                          }`}
                           style={
                             isOutbound
                               ? {
-                                background:
-                                  "linear-gradient(135deg, #3E65B4 0%, #68B3B7 100%)",
-                              }
+                                  background:
+                                    "linear-gradient(135deg, #3E65B4 0%, #68B3B7 100%)",
+                                }
                               : {}
                           }
                         >
@@ -3933,8 +4005,8 @@ const LeadChat = ({
                             <span className="truncate">
                               {selectedExampleId
                                 ? proposalExamples.find(
-                                  (ex: any) => ex._id === selectedExampleId
-                                )?.fileName
+                                    (ex: any) => ex._id === selectedExampleId,
+                                  )?.fileName
                                 : "Select Template..."}
                             </span>
                             <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -3982,7 +4054,7 @@ const LeadChat = ({
                                             "mr-2 h-3 w-3",
                                             selectedExampleId === example._id
                                               ? "opacity-100"
-                                              : "opacity-0"
+                                              : "opacity-0",
                                           )}
                                         />
                                         {example.fileName}
@@ -4155,7 +4227,7 @@ const LeadChat = ({
                           </p>
                           <p className="text-xs text-white/60 mt-0.5">
                             {new Date(
-                              selectedProposal.sentAt
+                              selectedProposal.sentAt,
                             ).toLocaleDateString("en-US", {
                               year: "numeric",
                               month: "long",
@@ -4504,7 +4576,7 @@ const LeadChat = ({
                               // Set proposal content
                               setProposalContent(proposal.content);
                               setProposalHtmlContent(
-                                proposal.htmlContent || ""
+                                proposal.htmlContent || "",
                               );
                               setShowProposalList(false);
                               setSelectedProposal(proposal);
@@ -4527,7 +4599,7 @@ const LeadChat = ({
                                       day: "numeric",
                                       hour: "2-digit",
                                       minute: "2-digit",
-                                    }
+                                    },
                                   )}
                                 </p>
                               </div>
@@ -4660,8 +4732,9 @@ const LeadChat = ({
                   return (
                     <div
                       key={email._id}
-                      className={`flex w-full gap-3 ${isOutbound ? "justify-end" : "justify-start"
-                        }`}
+                      className={`flex w-full gap-3 ${
+                        isOutbound ? "justify-end" : "justify-start"
+                      }`}
                     >
                       {!isOutbound && (
                         <div className="h-10 w-10 flex-shrink-0">
@@ -4673,20 +4746,22 @@ const LeadChat = ({
                         </div>
                       )}
                       <div
-                        className={`flex max-w-[80%] sm:max-w-[65%] flex-col gap-2 ${isOutbound ? "items-end" : "items-start"
-                          }`}
+                        className={`flex max-w-[80%] sm:max-w-[65%] flex-col gap-2 ${
+                          isOutbound ? "items-end" : "items-start"
+                        }`}
                       >
                         <div
-                          className={`w-full rounded-2xl px-3 py-2 ${isOutbound
-                            ? "bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] text-white"
-                            : "bg-white/10 text-white/90"
-                            }`}
+                          className={`w-full rounded-2xl px-3 py-2 ${
+                            isOutbound
+                              ? "bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] text-white"
+                              : "bg-white/10 text-white/90"
+                          }`}
                           style={
                             isOutbound
                               ? {
-                                background:
-                                  "linear-gradient(135deg, #3E65B4 0%, #68B3B7 100%)",
-                              }
+                                  background:
+                                    "linear-gradient(135deg, #3E65B4 0%, #68B3B7 100%)",
+                                }
                               : {}
                           }
                         >
@@ -4728,14 +4803,22 @@ const LeadChat = ({
                   {attachments.map((file, index) => (
                     <div
                       key={index}
-                      className="flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[10px] text-white/90 border border-white/20"
+                      className="flex items-center gap-2 rounded-lg bg-white/10 px-3 py-1.5 text-[10px] text-white/90 border border-white/20"
                     >
+                      <Paperclip
+                        size={12}
+                        className="text-white/60 flex-shrink-0"
+                      />
                       <span className="truncate max-w-[150px]">
                         {file.name}
                       </span>
+                      <span className="text-white/50 text-[9px] flex-shrink-0">
+                        ({(file.size / 1024).toFixed(1)} KB)
+                      </span>
                       <button
                         onClick={() => removeAttachment(index)}
-                        className="hover:text-red-400 transition-colors"
+                        className="hover:text-red-400 transition-colors flex-shrink-0"
+                        type="button"
                       >
                         <X size={12} />
                       </button>
@@ -4747,16 +4830,18 @@ const LeadChat = ({
               <input
                 type="file"
                 multiple
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif"
                 ref={fileInputRef}
                 className="hidden"
                 onChange={handleFileSelect}
               />
 
               <div
-                className={`flex gap-2 bg-white/10 px-4 py-3 mx-1 mb-1 transition-all duration-200 relative ${isEmailEditorExpanded
-                  ? "rounded-2xl items-end"
-                  : "rounded-2xl items-center"
-                  }`}
+                className={`flex gap-2 bg-white/10 px-4 py-3 mx-1 mb-1 transition-all duration-200 relative ${
+                  isEmailEditorExpanded
+                    ? "rounded-2xl items-end"
+                    : "rounded-2xl items-center"
+                }`}
               >
                 {/* Rich Text Editor */}
                 <div className="flex-1 relative" ref={emailEditorRef}>
@@ -4782,10 +4867,11 @@ const LeadChat = ({
                       height={isEmailEditorExpanded ? "80px" : "20px"}
                       toolbar={true}
                       onFocus={() => setIsEmailEditorExpanded(true)}
-                      className={`text-xs w-full transition-all duration-200 ${!isEmailEditorExpanded
-                        ? "[&_.ql-toolbar]:hidden [&_.ql-container]:border-none [&_.ql-editor]:!p-0 [&_.ql-editor]:!min-h-0 [&_.ql-editor]:!pb-0"
-                        : ""
-                        }`}
+                      className={`text-xs w-full transition-all duration-200 ${
+                        !isEmailEditorExpanded
+                          ? "[&_.ql-toolbar]:hidden [&_.ql-container]:border-none [&_.ql-editor]:!p-0 [&_.ql-editor]:!min-h-0 [&_.ql-editor]:!pb-0"
+                          : ""
+                      }`}
                     />
                   </div>
 
@@ -4996,8 +5082,9 @@ const LeadChat = ({
                   return (
                     <div
                       key={message._id}
-                      className={`flex w-full gap-3 ${isOutbound ? "justify-end" : "justify-start"
-                        }`}
+                      className={`flex w-full gap-3 ${
+                        isOutbound ? "justify-end" : "justify-start"
+                      }`}
                     >
                       {!isOutbound && (
                         <div className="h-10 w-10 flex-shrink-0">
@@ -5009,20 +5096,22 @@ const LeadChat = ({
                         </div>
                       )}
                       <div
-                        className={`flex max-w-[80%] sm:max-w-[65%] flex-col gap-2 ${isOutbound ? "items-end" : "items-start"
-                          }`}
+                        className={`flex max-w-[80%] sm:max-w-[65%] flex-col gap-2 ${
+                          isOutbound ? "items-end" : "items-start"
+                        }`}
                       >
                         <div
-                          className={`w-full rounded-2xl px-3 py-2 ${isOutbound
-                            ? "bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] text-white"
-                            : "bg-white/10 text-white/90"
-                            }`}
+                          className={`w-full rounded-2xl px-3 py-2 ${
+                            isOutbound
+                              ? "bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] text-white"
+                              : "bg-white/10 text-white/90"
+                          }`}
                           style={
                             isOutbound
                               ? {
-                                background:
-                                  "linear-gradient(135deg, #3E65B4 0%, #68B3B7 100%)",
-                              }
+                                  background:
+                                    "linear-gradient(135deg, #3E65B4 0%, #68B3B7 100%)",
+                                }
                               : {}
                           }
                         >
@@ -5146,7 +5235,7 @@ const LeadChat = ({
                 twilioStatusLoading
                   ? "Checking calling availability..."
                   : twilioConnection.message ||
-                  "Company Twilio credentials aren't added yet."
+                    "Company Twilio credentials aren't added yet."
               }
               twilioStatusLoading={twilioStatusLoading}
               autoStart={autoStartCall}
@@ -5163,7 +5252,7 @@ const LeadChat = ({
                 twilioStatusLoading
                   ? "Checking AI calling availability..."
                   : twilioConnection.message ||
-                  "Company Twilio credentials aren't added yet."
+                    "Company Twilio credentials aren't added yet."
               }
               twilioStatusLoading={twilioStatusLoading}
               autoStart={false}

@@ -22,7 +22,16 @@ export const emailService = {
     try {
       if (data.attachments && data.attachments.length > 0) {
         const formData = new FormData();
-        
+
+        console.log("[Email Service] Creating FormData with attachments:", {
+          attachmentCount: data.attachments.length,
+          files: data.attachments.map((f) => ({
+            name: f.name,
+            size: f.size,
+            type: f.type,
+          })),
+        });
+
         // Append all text fields
         Object.keys(data).forEach((key) => {
           if (key !== "attachments") {
@@ -42,21 +51,29 @@ export const emailService = {
         });
 
         // Append files
-        data.attachments.forEach((file) => {
+        data.attachments.forEach((file, index) => {
+          console.log(`[Email Service] Appending file ${index}:`, {
+            name: file.name,
+            size: file.size,
+          });
           formData.append("attachments", file);
         });
 
+        console.log("[Email Service] Sending FormData to /emails/send");
         const response = await API.post("/emails/send", formData, {
           headers: {
             "Content-Type": "multipart/form-data",
           },
         });
+        console.log("[Email Service] Email sent successfully:", response.data);
         return response.data;
       } else {
+        console.log("[Email Service] Sending email without attachments");
         const response = await API.post("/emails/send", data);
         return response.data;
       }
     } catch (error: any) {
+      console.error("[Email Service] Error sending email:", error);
       throw error;
     }
   },
@@ -65,7 +82,7 @@ export const emailService = {
    * Get inbox emails with pagination and filters
    */
   getInboxEmails: async (
-    params?: GetInboxEmailsParams
+    params?: GetInboxEmailsParams,
   ): Promise<GetInboxEmailsResponse> => {
     try {
       const response = await API.get("/emails/inbox", { params });
@@ -80,7 +97,7 @@ export const emailService = {
    */
   getLeadEmails: async (
     leadId: string,
-    params?: GetInboxEmailsParams
+    params?: GetInboxEmailsParams,
   ): Promise<GetInboxEmailsResponse> => {
     try {
       const response = await API.get(`/emails/lead/${leadId}`, { params });
@@ -94,7 +111,7 @@ export const emailService = {
    * Get sent emails with pagination and filters
    */
   getSentEmails: async (
-    params?: GetSentEmailsParams
+    params?: GetSentEmailsParams,
   ): Promise<GetInboxEmailsResponse> => {
     try {
       const response = await API.get("/emails/sent", { params });
@@ -108,7 +125,7 @@ export const emailService = {
    * Get email threads with pagination and filters
    */
   getEmailThreads: async (
-    params?: GetEmailThreadsParams
+    params?: GetEmailThreadsParams,
   ): Promise<GetEmailThreadsResponse> => {
     try {
       const response = await API.get("/emails/threads", { params });
@@ -147,7 +164,7 @@ export const emailService = {
    */
   markEmailRead: async (
     emailId: string,
-    data: UpdateEmailReadRequest
+    data: UpdateEmailReadRequest,
   ): Promise<GetEmailResponse> => {
     try {
       const response = await API.patch(`/emails/${emailId}/read`, data);
@@ -162,7 +179,7 @@ export const emailService = {
    */
   starEmail: async (
     emailId: string,
-    data: UpdateEmailStarRequest
+    data: UpdateEmailStarRequest,
   ): Promise<GetEmailResponse> => {
     try {
       const response = await API.patch(`/emails/${emailId}/star`, data);
@@ -176,7 +193,7 @@ export const emailService = {
    * Delete an email
    */
   deleteEmail: async (
-    emailId: string
+    emailId: string,
   ): Promise<{ success: boolean; message: string }> => {
     try {
       const response = await API.delete(`/emails/${emailId}`);
@@ -202,7 +219,7 @@ export const emailService = {
    * Batch categorize emails using AI
    */
   batchCategorizeEmails: async (
-    limit?: number
+    limit?: number,
   ): Promise<{ success: boolean; message: string; data: any[] }> => {
     try {
       const response = await API.post("/emails/categorize/batch", { limit });
