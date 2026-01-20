@@ -27,6 +27,8 @@ export interface FollowupPlanTodo {
   notes?: string;
   metadata?: Record<string, unknown>;
   isComplete: boolean;
+  status?: "pending" | "scheduled" | "running" | "completed" | "failed" | "cancelled" | "skipped";
+  executionResult?: Record<string, any>;
 }
 
 export interface FollowupPlan {

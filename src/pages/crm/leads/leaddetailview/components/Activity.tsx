@@ -801,11 +801,15 @@ const Activity: FC<ActivityProps> = ({
     
     let title = baseTitle || "Followup Plan";
 
-    // Check if there's a scheduled time in the first task
+    // Check if there's a scheduled time in the tasks
     if (plan.todo && plan.todo.length > 0) {
-      const firstTask = plan.todo[0];
-      if (firstTask.scheduledFor) {
-        const date = new Date(firstTask.scheduledFor);
+      // Find the earliest scheduled task regardless of array order
+      const earliestTask = [...plan.todo]
+        .filter((t) => t.scheduledFor)
+        .sort((a, b) => new Date(a.scheduledFor!).getTime() - new Date(b.scheduledFor!).getTime())[0];
+
+      if (earliestTask) {
+        const date = new Date(earliestTask.scheduledFor!);
         if (!Number.isNaN(date.getTime())) {
           const timeStr = date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
           return `${title} (Runs at ${timeStr})`;
@@ -1627,7 +1631,7 @@ const Activity: FC<ActivityProps> = ({
                         {sortedLeadFollowupPlans.map((plan) => {
                           const totalTasks = plan.todo?.length ?? 0;
                           const completedTasks =
-                            plan.todo?.filter((task) => task.isComplete)
+                            plan.todo?.filter((task) => task.isComplete && task.status !== 'cancelled' && task.status !== 'skipped')
                               .length ?? 0;
                           const nextTask = plan.todo?.find(
                             (task) => !task.isComplete
@@ -1667,7 +1671,9 @@ const Activity: FC<ActivityProps> = ({
                                       plan.status
                                     )}
                                   >
-                                    {plan.status.replace("_", " ")}
+                                    {(plan.metadata as any)?.lastResult === 'rescheduled' 
+                                      ? 'rescheduled' 
+                                      : plan.status.replace("_", " ")}
                                   </Badge>
                                   {canDeletePlan && (
                                     <Button
@@ -1690,7 +1696,7 @@ const Activity: FC<ActivityProps> = ({
                                 <span>
                                   Tasks: {completedTasks}/{totalTasks}
                                 </span>
-                                {nextTask && (
+                                {nextTask && ['scheduled', 'in_progress', 'running'].includes(plan.status) && (
                                   <span>
                                     Next up: {nextTask.type.replace("_", " ")}
                                     {nextTask.scheduledFor
