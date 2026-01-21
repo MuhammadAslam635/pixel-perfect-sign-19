@@ -10,6 +10,9 @@ export interface OnboardingCache {
     website: string;
     companyName?: string;
     description?: string;
+    address?: string;
+    postalCode?: string;
+    country?: string;
     fetchedAt: number;
   };
 

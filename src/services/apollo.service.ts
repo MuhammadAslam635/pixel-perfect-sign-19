@@ -17,6 +17,9 @@ export const apolloService = {
       companyName: string | null;
       description: string | null;
       website: string;
+      address: string | null;
+      postalCode: string | null;
+      country: string | null;
     };
     error?: string;
   }> => {
