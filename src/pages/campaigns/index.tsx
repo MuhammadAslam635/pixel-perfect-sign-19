@@ -1837,11 +1837,13 @@ const CampaignsPage = () => {
                                           )}
                                         </div>
                                       )}
-                                      <p className="text-xs text-gray-300/90 whitespace-pre-wrap break-words">
-                                       {renderCleanContent(
-                                          selectedCampaign.researchDocs.marketResearch.content
-                                        )}
-                                      </p>
+                                      <div className="max-h-96 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                                        <p className="text-xs text-gray-300/90 whitespace-pre-wrap break-words">
+                                         {renderCleanContent(
+                                            selectedCampaign.researchDocs.marketResearch.content
+                                          )}
+                                        </p>
+                                      </div>
                                     </div>
                                   </AccordionContent>
                                 </AccordionItem>
@@ -1894,11 +1896,13 @@ const CampaignsPage = () => {
                                           )}
                                         </div>
                                       )}
-                                      <p className="text-xs text-gray-300/90 whitespace-pre-wrap break-words">
-                                        {renderCleanContent(
-    selectedCampaign.researchDocs.offerServiceBrief.content
-  )}
-                                      </p>
+                                      <div className="max-h-96 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                                        <p className="text-xs text-gray-300/90 whitespace-pre-wrap break-words">
+                                          {renderCleanContent(
+     selectedCampaign.researchDocs.offerServiceBrief.content
+   )}
+                                        </p>
+                                      </div>
                                     </div>
                                   </AccordionContent>
                                 </AccordionItem>
@@ -1951,11 +1955,13 @@ const CampaignsPage = () => {
                                           )}
                                         </div>
                                       )}
-                                      <p className="text-xs text-gray-300/90 whitespace-pre-wrap break-words">
-                                         {renderCleanContent(
-    selectedCampaign.researchDocs.necessaryBriefs.content
-  )}
-                                      </p>
+                                      <div className="max-h-96 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                                        <p className="text-xs text-gray-300/90 whitespace-pre-wrap break-words">
+                                           {renderCleanContent(
+     selectedCampaign.researchDocs.necessaryBriefs.content
+   )}
+                                        </p>
+                                      </div>
                                     </div>
                                   </AccordionContent>
                                 </AccordionItem>
@@ -2007,11 +2013,13 @@ const CampaignsPage = () => {
                                           )}
                                         </div>
                                       )}
-                                      <p className="text-xs text-gray-300/90 whitespace-pre-wrap break-words">
-                                         {renderCleanContent(
-    selectedCampaign.researchDocs.brandDesign.content
-  )}
-                                      </p>
+                                      <div className="max-h-96 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                                        <p className="text-xs text-gray-300/90 whitespace-pre-wrap break-words">
+                                           {renderCleanContent(
+     selectedCampaign.researchDocs.brandDesign.content
+   )}
+                                        </p>
+                                      </div>
                                     </div>
                                   </AccordionContent>
                                 </AccordionItem>
