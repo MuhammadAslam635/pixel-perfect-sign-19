@@ -9,6 +9,7 @@ export interface RegisterData {
   email: string;
   password: string;
   confirm_password: string;
+  timezone?: string | null;
 }
 
 export interface LoginData {
@@ -59,6 +60,7 @@ export interface AcceptInvitationData {
   lastName: string;
   password: string;
   confirm_password: string;
+  timezone?: string | null;
 }
 
 export const authService = {

@@ -10,6 +10,7 @@ import {
   authService,
   InvitationDetails,
 } from "@/services/auth.service";
+import { getBrowserTimezone } from "@/utils/timezone";
 
 const SignUp = () => {
   const [firstName, setFirstName] = useState("");
@@ -21,6 +22,15 @@ const SignUp = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  
+  // Detect browser timezone on component mount using Luxon
+  const [browserTimezone, setBrowserTimezone] = useState<string | null>(null);
+  
+  useEffect(() => {
+    // Get browser timezone using utility function
+    const timezone = getBrowserTimezone();
+    setBrowserTimezone(timezone);
+  }, []);
   const [errors, setErrors] = useState({
     firstName: "",
     lastName: "",
@@ -175,6 +185,7 @@ const SignUp = () => {
           lastName: lastName.trim(),
           password,
           confirm_password: confirmPassword,
+          timezone: browserTimezone,
         });
 
         if (response.success) {
@@ -250,6 +261,7 @@ const SignUp = () => {
         email,
         password,
         confirm_password: confirmPassword,
+        timezone: browserTimezone,
       });
 
       if (response.success) {

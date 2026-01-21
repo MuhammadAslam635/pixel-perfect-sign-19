@@ -17,6 +17,7 @@ import { getUserData } from "@/utils/authHelpers";
 import { RootState } from "@/store/store";
 import { logout, updateUser } from "@/store/slices/authSlice";
 import { userService } from "@/services/user.service";
+import { TimezoneSelector } from "./TimezoneSelector";
 
 interface AdminProfileForm {
   id: string;
@@ -46,6 +47,9 @@ export const AdminProfileTab = () => {
     name: "",
     email: "",
   });
+  const [timezone, setTimezone] = useState<string | null>(null);
+  const [isLoadingTimezone, setIsLoadingTimezone] = useState(true);
+  const [isSavingTimezone, setIsSavingTimezone] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -57,6 +61,24 @@ export const AdminProfileTab = () => {
       });
     }
   }, [user]);
+
+  // Fetch user preferences (timezone) on mount
+  useEffect(() => {
+    const fetchPreferences = async () => {
+      try {
+        setIsLoadingTimezone(true);
+        const response = await userService.getUserPreferences();
+        if (response.success && response.data?.preferences) {
+          setTimezone(response.data.preferences.timezone || null);
+        }
+      } catch (error) {
+        console.error("Failed to load preferences:", error);
+      } finally {
+        setIsLoadingTimezone(false);
+      }
+    };
+    fetchPreferences();
+  }, []);
 
   const handleUnauthorized = () => {
     dispatch(logout());
@@ -71,6 +93,53 @@ export const AdminProfileTab = () => {
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
     setFormState((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleTimezoneChange = async (newTimezone: string | null) => {
+    setTimezone(newTimezone);
+    
+    try {
+      setIsSavingTimezone(true);
+      const response = await userService.updateUserPreferences({
+        timezone: newTimezone,
+      });
+      
+      if (response.success) {
+        toast({
+          title: "Timezone updated",
+          description: "Your timezone preference has been saved.",
+        });
+      } else {
+        toast({
+          title: "Update failed",
+          description: "Failed to update timezone. Please try again.",
+          variant: "destructive",
+        });
+        // Revert on failure
+        const prefs = await userService.getUserPreferences();
+        if (prefs.success && prefs.data?.preferences) {
+          setTimezone(prefs.data.preferences.timezone || null);
+        }
+      }
+    } catch (error: unknown) {
+      console.error("Error updating timezone:", error);
+      toast({
+        title: "Error",
+        description: "An error occurred while updating your timezone.",
+        variant: "destructive",
+      });
+      // Revert on error
+      try {
+        const prefs = await userService.getUserPreferences();
+        if (prefs.success && prefs.data?.preferences) {
+          setTimezone(prefs.data.preferences.timezone || null);
+        }
+      } catch (e) {
+        // Ignore revert error
+      }
+    } finally {
+      setIsSavingTimezone(false);
+    }
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -191,6 +260,22 @@ export const AdminProfileTab = () => {
             {errors.email ? (
               <p className="text-sm text-rose-400">{errors.email}</p>
             ) : null}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="timezone" className="text-white/80">
+              Timezone
+            </Label>
+            <TimezoneSelector
+              id="timezone"
+              value={timezone}
+              onValueChange={handleTimezoneChange}
+              disabled={isLoadingTimezone || isSavingTimezone}
+            />
+            <p className="text-xs text-white/50">
+              Your timezone is used by Skylar to provide accurate time information
+              and scheduling assistance.
+            </p>
           </div>
         </CardContent>
         <CardFooter className="justify-end border-t border-white/10 bg-white/[0.02]">

@@ -106,6 +106,7 @@ export interface UserPreferences {
   enrichment: {
     selectedSeniorities: string[];
   };
+  timezone: string | null;
 }
 
 export interface UserPreferencesResponse {
@@ -305,7 +306,8 @@ export const userService = {
    * Update user preferences
    */
   updateUserPreferences: async (data: {
-    selectedSeniorities: string[];
+    selectedSeniorities?: string[];
+    timezone?: string | null;
   }): Promise<UserPreferencesResponse> => {
     try {
       const response = await API.put("/users/preferences", data);
