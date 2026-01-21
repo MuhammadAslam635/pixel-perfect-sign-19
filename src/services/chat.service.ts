@@ -158,6 +158,7 @@ export const sendStreamingChatMessage = async (
               if (line.startsWith('data: ')) {
                 try {
                   const data = JSON.parse(line.slice(6));
+                  console.log('Stream event received:', data);
                   onEvent(data);
 
                   // Resolve promise on result or error

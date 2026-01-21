@@ -26,7 +26,6 @@ import { emailService } from "@/services/email.service";
 import { Email } from "@/types/email.types";
 import { twilioService, LeadSmsMessage } from "@/services/twilio.service";
 import API from "@/utils/api";
-import { sanitizeErrorMessage } from "@/utils/errorMessages";
 import { CallView } from "./CallView";
 import MeetingBotTab from "./MeetingBotTab";
 import {
@@ -211,6 +210,8 @@ const LeadChat = ({
   const [showEditAIModal, setShowEditAIModal] = useState(false);
   const [editAIQuery, setEditAIQuery] = useState<string>("");
   const [isEditingWithAI, setIsEditingWithAI] = useState(false);
+  const [generationStatus, setGenerationStatus] = useState<string>("");
+  const [currentHeading, setCurrentHeading] = useState<string>("");
   const proposalContentRef = useRef<HTMLDivElement>(null);
 
   // Proposal list view states
@@ -1256,31 +1257,121 @@ const LeadChat = ({
     }
 
     setIsGeneratingProposal(true);
+    setGenerationStatus("Starting proposal generation...");
+    setCurrentHeading("");
+    
+    // Clear existing content if any to prepare for stream
+    if (!proposalContent) {
+        setProposalContent("");
+    }
+
     try {
-      const response = await connectionMessagesService.generateProposal({
-        companyId: lead.companyId,
-        personId: lead._id,
-        regenerate: proposalContent ? true : false,
-        proposalExampleId: selectedExampleId || undefined,
+      const userData = getUserData();
+      const baseUrl = import.meta.env.VITE_APP_BACKEND_URL || "http://localhost:3000/api";
+      
+      const response = await fetch(`${baseUrl}/connection-messages/proposal`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${userData?.token || ""}`,
+        },
+        body: JSON.stringify({
+          companyId: lead.companyId,
+          personId: lead._id,
+          regenerate: proposalContent ? true : false,
+          proposalExampleId: selectedExampleId || undefined,
+        }),
       });
 
-      const generated =
-        response.data?.proposal?.trim() || response.data?.proposal;
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to start generation");
+      }
 
-      if (generated) {
-        setProposalContent(generated);
-        toast.success("Proposal generated successfully!");
-      } else {
-        toast.error("No proposal was generated. Try again.");
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error("No reader available");
+
+      let accumulatedContent = "";
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      // Ensure proposal content state is cleared/ready for new content
+      setProposalContent("");
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const parts = buffer.split("\n\n");
+        buffer = parts.pop() || ""; // Keep incomplete part
+
+        for (const part of parts) {
+          if (part.startsWith("data: ")) {
+            const dataStr = part.replace("data: ", "").trim();
+            if (!dataStr) continue;
+
+            try {
+              const data = JSON.parse(dataStr);
+
+              if (data.error) {
+                throw new Error(data.error);
+              }
+
+              if (data.done) {
+                // Final update with processed content
+                setProposalContent(data.proposal || accumulatedContent);
+                setGenerationStatus("Completed");
+                setCurrentHeading("");
+                toast.success(data.message || "Proposal generated!");
+                
+                // Refresh list if needed (though we have the content directly)
+                if (data.proposalId) {
+                  queryClient.invalidateQueries({ queryKey: ["proposals", leadId] });
+                }
+              } else if (data.content) {
+                accumulatedContent += data.content;
+                setProposalContent(accumulatedContent);
+                
+                // Detect headings for UI feedback
+                 if (data.content.includes("#")) {
+                    // Look at recent lines
+                    const lines = accumulatedContent.split("\n");
+                    // Check last few lines
+                    for (let i = lines.length - 1; i >= Math.max(0, lines.length - 5); i--) {
+                        const line = lines[i].trim();
+                        if (line.startsWith("###")) {
+                             setCurrentHeading(line.replace(/#+\s*/, "").trim());
+                             setGenerationStatus("Generating section: ");
+                             break;
+                        } else if (line.startsWith("##")) {
+                             setCurrentHeading(line.replace(/#+\s*/, "").trim());
+                             setGenerationStatus("Generating section: ");
+                             break;
+                        } else if (line.startsWith("#")) {
+                             setCurrentHeading(line.replace(/#+\s*/, "").trim());
+                             setGenerationStatus("Generating heading: ");
+                             break;
+                        }
+                    }
+                 }
+              }
+            } catch (e) {
+              console.error("Error parsing stream chunk", e);
+            }
+          }
+        }
       }
     } catch (error: any) {
-      const friendlyMessage = sanitizeErrorMessage(
-        error,
-        "Failed to generate proposal."
-      );
+      const friendlyMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to generate proposal.";
       toast.error(friendlyMessage);
     } finally {
       setIsGeneratingProposal(false);
+      setGenerationStatus("");
+      setCurrentHeading("");
     }
   };
 
@@ -4256,8 +4347,28 @@ const LeadChat = ({
                 )}
 
                 {/* Proposal Content */}
-                {proposalContent || proposalAttachment ? (
+                {proposalContent || proposalAttachment || isGeneratingProposal ? (
                   <div className="flex-1 overflow-y-auto scrollbar-hide pb-4 relative">
+                    
+                    {/* Thinking / Status Indicator */}
+                    {isGeneratingProposal && (
+                      <div className="mb-4 rounded-xl bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 p-4 animate-pulse mx-1 mt-1">
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 flex-shrink-0 flex items-center justify-center rounded-full bg-blue-500/20 text-blue-300">
+                            <Loader2 className="h-5 w-5 animate-spin" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-semibold text-white/90">
+                              Thinking...
+                            </p>
+                            <p className="text-xs text-white/60 truncate flex items-center gap-1">
+                              {generationStatus} 
+                              {currentHeading && <span className="text-blue-300 font-medium bg-blue-500/10 px-1.5 py-0.5 rounded">{currentHeading}</span>}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     {/* View-Only Banner for sent proposals */}
                     {selectedProposal && (
                       <div className="mb-4 px-1">

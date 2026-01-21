@@ -37,6 +37,7 @@ const StreamingProgress: React.FC<StreamingProgressProps> = ({ events, isVisible
   return (
     <AnimatePresence>
       <motion.div
+        key={displayText}
         initial={{ opacity: 0, y: 5 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -5 }}
