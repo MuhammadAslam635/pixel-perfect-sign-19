@@ -44,6 +44,7 @@ import {
   CreateCategoryData,
 } from "@/services/industryCategory.service";
 import { toast } from "sonner";
+import { sanitizeErrorMessage } from "@/utils/errorMessages";
 
 const AdminIndustryCategories = () => {
   const [categoryTree, setCategoryTree] = useState<IndustryCategory[]>([]);
@@ -104,7 +105,7 @@ const AdminIndustryCategories = () => {
     } catch (error: any) {
       console.error("Error fetching category tree:", error);
       toast.error(
-        error?.response?.data?.message || "Failed to fetch categories"
+        sanitizeErrorMessage(error, "Unable to load categories. Please try again.")
       );
     } finally {
       setLoading(false);

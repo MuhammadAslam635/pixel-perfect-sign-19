@@ -8,6 +8,7 @@ import { Search, Box, Check, X } from "lucide-react";
 import { rbacService } from "@/services/rbac.service";
 import { Module } from "@/types/rbac.types";
 import { toast } from "sonner";
+import { sanitizeErrorMessage } from "@/utils/errorMessages";
 import { usePermissions } from "@/hooks/usePermissions";
 
 const ModuleList = () => {
@@ -46,7 +47,7 @@ const ModuleList = () => {
     } catch (error: any) {
       console.error("Error fetching modules:", error);
       setModules([]);
-      toast.error(error?.response?.data?.message || "Failed to fetch modules");
+      toast.error(sanitizeErrorMessage(error, "Unable to load modules. Please try again."));
     } finally {
       setLoading(false);
     }

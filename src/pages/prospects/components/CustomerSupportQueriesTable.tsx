@@ -14,6 +14,7 @@ import {
 import type { Client } from "@/services/clients.service";
 import ClientDetailsModal from "./ClientDetailsModal";
 import { useToast } from "@/hooks/use-toast";
+import { sanitizeErrorMessage } from "@/utils/errorMessages";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -101,8 +102,7 @@ const CustomerSupportQueriesTable: React.FC = () => {
         onError: (error: any) => {
           toast({
             title: "Sync Failed",
-            description:
-              error?.response?.data?.message || "Failed to sync",
+            description: sanitizeErrorMessage(error, "Failed to sync"),
             variant: "destructive",
           });
         },
@@ -121,7 +121,7 @@ const CustomerSupportQueriesTable: React.FC = () => {
       >
         <CardContent className="p-6">
           <div className="text-center text-red-400">
-            Error loading queries: {error.message}
+            {sanitizeErrorMessage(error, "Error loading queries")}
           </div>
         </CardContent>
       </Card>

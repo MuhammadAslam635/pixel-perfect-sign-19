@@ -23,6 +23,7 @@ import { userService } from "@/services/user.service";
 import { rbacService } from "@/services/rbac.service";
 import { Role } from "@/types/rbac.types";
 import { TimezoneSelector } from "./TimezoneSelector";
+import { sanitizeErrorMessage } from "@/utils/errorMessages";
 
 interface ProfileErrors {
   name: string;
@@ -248,9 +249,10 @@ export const ProfileTab = () => {
         }
         toast({
           title: "Error",
-          description:
-            (error.response.data as { message?: string })?.message ||
-            "An error occurred while updating your profile.",
+          description: sanitizeErrorMessage(
+            error,
+            "An error occurred while updating your profile."
+          ),
           variant: "destructive",
         });
       } else {

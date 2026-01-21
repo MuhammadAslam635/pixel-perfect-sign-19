@@ -130,7 +130,7 @@ const UserEdit = () => {
           toast.error("Session expired. Please log in again.");
           navigate("/");
         } else {
-          toast.error(error.response?.data?.message || "Failed to fetch user");
+          toast.error(sanitizeErrorMessage(error, "Unable to load user information. Please try again."));
           navigate("/users");
         }
       } finally {

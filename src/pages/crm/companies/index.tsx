@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { CrmNavigation } from "../shared/components/CrmNavigation";
 import { Company, CompanyPerson } from "@/services/companies.service";
 import { toast } from "sonner";
+import { sanitizeErrorMessage } from "@/utils/errorMessages";
 import CompaniesList from "./components/CompaniesList";
 import { DetailsSidebar } from "../shared/components";
 import {
@@ -291,9 +292,7 @@ const index = () => {
   useEffect(() => {
     if (companiesQuery.error) {
       const error = companiesQuery.error as any;
-      toast.error(
-        error?.response?.data?.message || "Failed to fetch companies"
-      );
+      toast.error(sanitizeErrorMessage(error, "Unable to load companies. Please try again."));
     }
   }, [companiesQuery.error]);
 

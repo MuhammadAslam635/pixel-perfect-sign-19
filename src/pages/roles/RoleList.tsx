@@ -26,6 +26,7 @@ import {
 import { rbacService } from "@/services/rbac.service";
 import { Role, Module } from "@/types/rbac.types";
 import { toast } from "sonner";
+import { sanitizeErrorMessage } from "@/utils/errorMessages";
 import { usePermissions } from "@/hooks/usePermissions";
 import OrgChart from "./OrgChart";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -73,7 +74,7 @@ const RoleList = () => {
     } catch (error: any) {
       console.error("Error fetching roles:", error);
       setRoles([]);
-      toast.error(error.response?.data?.message || "Failed to fetch roles");
+      toast.error(sanitizeErrorMessage(error, "Unable to load roles. Please try again."));
     } finally {
       setLoading(false);
     }

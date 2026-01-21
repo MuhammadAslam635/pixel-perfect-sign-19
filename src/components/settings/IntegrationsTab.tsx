@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { RefreshCw, Settings } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
+import { sanitizeErrorMessage } from "@/utils/errorMessages";
 import { getUserData } from "@/utils/authHelpers";
 import {
   WhatsAppCredential,
@@ -1275,9 +1276,10 @@ export const IntegrationsTab = () => {
       setMailgunValidated(false);
       toast({
         title: "Validation Failed",
-        description:
-          error?.response?.data?.message ||
-          "Failed to validate Mailgun configuration. Please check your credentials.",
+        description: sanitizeErrorMessage(
+          error,
+          "Failed to validate Mailgun configuration. Please check your credentials."
+        ),
         variant: "destructive",
       });
     } finally {
@@ -1376,9 +1378,10 @@ export const IntegrationsTab = () => {
       console.error("Error saving Mailgun config:", error);
       toast({
         title: "Error",
-        description:
-          error?.response?.data?.message ||
-          "Failed to save Mailgun configuration. Please verify your details.",
+        description: sanitizeErrorMessage(
+          error,
+          "Failed to save Mailgun configuration. Please verify your details."
+        ),
         variant: "destructive",
       });
     } finally {
@@ -1454,9 +1457,10 @@ export const IntegrationsTab = () => {
       setWhatsappValidated(false);
       toast({
         title: "Validation Failed",
-        description:
-          error?.response?.data?.message ||
-          "Failed to validate WhatsApp configuration. Please check your credentials.",
+        description: sanitizeErrorMessage(
+          error,
+          "Failed to validate WhatsApp configuration. Please check your credentials."
+        ),
         variant: "destructive",
       });
     } finally {

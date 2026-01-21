@@ -96,7 +96,7 @@ const RoleForm = () => {
         setModules(safeModules);
       }
     } catch (error: any) {
-      toast.error("Failed to fetch modules");
+      toast.error("Unable to load modules. Please try again.");
     }
   };
 
@@ -111,7 +111,7 @@ const RoleForm = () => {
         setRolePermissionData(role.permissions || []);
       }
     } catch (error: any) {
-      toast.error("Failed to fetch role details");
+      toast.error("Unable to load role details. Please try again.");
       navigate("/roles");
     }
   };

@@ -18,6 +18,7 @@ import {
 } from "@/services/chat.service";
 import { ChatDetail, ChatSummary, ChatMessage } from "@/types/chat.types";
 import { useToast } from "@/components/ui/use-toast";
+import { sanitizeErrorMessage } from "@/utils/errorMessages";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
@@ -873,7 +874,7 @@ const ChatPage = () => {
       dispatch(
         errorTask({
           id: tempMessage._id,
-          errorMessage: error?.message || "Failed to send message",
+          errorMessage: sanitizeErrorMessage(error, "Failed to send message"),
         })
       );
 
@@ -882,9 +883,10 @@ const ChatPage = () => {
 
       toast({
         title: "Unable to send message",
-        description:
-          error?.message ||
-          "We could not deliver your message. Please try again.",
+        description: sanitizeErrorMessage(
+          error,
+          "We could not deliver your message. Please try again."
+        ),
         variant: "destructive",
       });
     } finally {

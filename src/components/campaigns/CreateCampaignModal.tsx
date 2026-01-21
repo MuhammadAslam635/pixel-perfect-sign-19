@@ -21,6 +21,7 @@ import {
 import { Upload, ImageIcon, Circle, CheckCircle2, Loader2 } from "lucide-react";
 import { CreateCampaignData, campaignsService, CampaignStreamEvent, DocumentCreationStep } from "@/services/campaigns.service";
 import { useToast } from "@/hooks/use-toast";
+import { sanitizeErrorMessage } from "@/utils/errorMessages";
 import ImageCarousel from "./ImageCarousel";
 
 interface CreateCampaignModalProps {
@@ -304,7 +305,10 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
           setIsPending(false);
           toast({
             title: "Creation failed",
-            description: event.message || event.error || "Failed to create campaign",
+            description: sanitizeErrorMessage(
+              event.message || event.error,
+              "Failed to create campaign"
+            ),
             variant: "destructive",
           });
         }
@@ -315,10 +319,7 @@ const CreateCampaignModal: React.FC<CreateCampaignModalProps> = ({
         setIsPending(false);
         toast({
           title: "Creation failed",
-          description:
-            error?.response?.data?.message ||
-            error?.message ||
-            "Failed to create campaign",
+          description: sanitizeErrorMessage(error, "Failed to create campaign"),
           variant: "destructive",
         });
       });

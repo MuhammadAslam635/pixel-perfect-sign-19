@@ -26,6 +26,7 @@ import { emailService } from "@/services/email.service";
 import { Email } from "@/types/email.types";
 import { twilioService, LeadSmsMessage } from "@/services/twilio.service";
 import API from "@/utils/api";
+import { sanitizeErrorMessage } from "@/utils/errorMessages";
 import { CallView } from "./CallView";
 import MeetingBotTab from "./MeetingBotTab";
 import {
@@ -314,9 +315,10 @@ const LeadChat = ({
   const whatsappReady = whatsappConnections.length > 0;
 
   const whatsappConnectionErrorMessage = isWhatsAppConnectionError
-    ? (whatsappConnectionsError as any)?.response?.data?.message ||
-      (whatsappConnectionsError as Error)?.message ||
-      "Failed to load WhatsApp connection."
+    ? sanitizeErrorMessage(
+        whatsappConnectionsError,
+        "Failed to load WhatsApp connection."
+      )
     : null;
 
   const twilioReady = twilioConnection.ready;
@@ -509,9 +511,10 @@ const LeadChat = ({
     (isWhatsAppConversationFetching && !whatsappConversationResponse);
 
   const whatsappConversationErrorMessage = isWhatsAppConversationError
-    ? (whatsappConversationError as any)?.response?.data?.message ||
-      (whatsappConversationError as Error)?.message ||
-      "Failed to load WhatsApp conversation."
+    ? sanitizeErrorMessage(
+        whatsappConversationError,
+        "Failed to load WhatsApp conversation."
+      )
     : null;
 
   useEffect(() => {
@@ -541,9 +544,10 @@ const LeadChat = ({
           });
         }
       } catch (error: any) {
-        const message =
-          error?.response?.data?.message ||
-          "Unable to verify Twilio configuration.";
+        const message = sanitizeErrorMessage(
+          error,
+          "Unable to verify Twilio configuration."
+        );
         if (isMounted) {
           setTwilioConnection({
             loading: false,
@@ -609,9 +613,10 @@ const LeadChat = ({
     (isEmailConversationFetching && !emailConversationData);
   const emailMessages = emailConversationData || EMPTY_ARRAY;
   const emailError = isEmailConversationError
-    ? (emailConversationError as any)?.response?.data?.message ||
-      (emailConversationError as Error)?.message ||
-      "Failed to load email conversation. Please try again later."
+    ? sanitizeErrorMessage(
+        emailConversationError,
+        "Failed to load email conversation. Please try again later."
+      )
     : null;
 
   const { examples: proposalExamples, query: proposalExamplesQuery } =
@@ -735,9 +740,7 @@ const LeadChat = ({
   }, [orderedSmsMessages, activeTab]);
 
   const smsQueryErrorMessage = isSmsError
-    ? (smsQueryError as any)?.response?.data?.message ||
-      (smsQueryError as Error)?.message ||
-      "Failed to load SMS history"
+    ? sanitizeErrorMessage(smsQueryError, "Failed to load SMS history")
     : null;
 
   const smsMutation = useMutation({
@@ -753,10 +756,10 @@ const LeadChat = ({
       }
     },
     onError: (mutationError: any) => {
-      const fallbackMessage =
-        mutationError?.response?.data?.error ||
-        mutationError?.message ||
-        "Failed to send SMS";
+      const fallbackMessage = sanitizeErrorMessage(
+        mutationError,
+        "Failed to send SMS"
+      );
       toast.error(fallbackMessage);
     },
   });
@@ -779,13 +782,10 @@ const LeadChat = ({
       }
     },
     onError: (mutationError: any) => {
-      const errorData = mutationError?.response?.data;
-      const fallbackMessage =
-        errorData?.message ||
-        errorData?.error?.error?.message ||
-        errorData?.error?.message ||
-        mutationError?.message ||
-        "Failed to send WhatsApp message";
+      const fallbackMessage = sanitizeErrorMessage(
+        mutationError,
+        "Failed to send WhatsApp message"
+      );
 
       setWhatsappSendError(fallbackMessage);
       toast.error(fallbackMessage);
@@ -1003,10 +1003,10 @@ const LeadChat = ({
         setWhatsappSendError("No message suggestion was generated. Try again.");
       }
     } catch (error: any) {
-      const friendlyMessage =
-        error?.response?.data?.message ||
-        error?.message ||
-        "Failed to generate a connection message.";
+      const friendlyMessage = sanitizeErrorMessage(
+        error,
+        "Failed to generate a connection message."
+      );
       setWhatsappSendError(friendlyMessage);
     } finally {
       setIsGeneratingWhatsAppMessage(false);
@@ -1200,10 +1200,10 @@ const LeadChat = ({
         setEmailSendError("No message suggestion was generated. Try again.");
       }
     } catch (error: any) {
-      const friendlyMessage =
-        error?.response?.data?.message ||
-        error?.message ||
-        "Failed to generate a connection message.";
+      const friendlyMessage = sanitizeErrorMessage(
+        error,
+        "Failed to generate a connection message."
+      );
       setEmailSendError(friendlyMessage);
     } finally {
       setIsGeneratingEmailMessage(false);
@@ -1237,10 +1237,10 @@ const LeadChat = ({
         setSmsSendError("No message suggestion was generated. Try again.");
       }
     } catch (error: any) {
-      const friendlyMessage =
-        error?.response?.data?.message ||
-        error?.message ||
-        "Failed to generate a connection message.";
+      const friendlyMessage = sanitizeErrorMessage(
+        error,
+        "Failed to generate a connection message."
+      );
       setSmsSendError(friendlyMessage);
     } finally {
       setIsGeneratingSmsMessage(false);
@@ -1272,10 +1272,10 @@ const LeadChat = ({
         toast.error("No proposal was generated. Try again.");
       }
     } catch (error: any) {
-      const friendlyMessage =
-        error?.response?.data?.message ||
-        error?.message ||
-        "Failed to generate proposal.";
+      const friendlyMessage = sanitizeErrorMessage(
+        error,
+        "Failed to generate proposal."
+      );
       toast.error(friendlyMessage);
     } finally {
       setIsGeneratingProposal(false);
@@ -1377,10 +1377,10 @@ const LeadChat = ({
         toast.error("No message was generated. Try again.");
       }
     } catch (error: any) {
-      const friendlyMessage =
-        error?.response?.data?.message ||
-        error?.message ||
-        "Failed to generate message.";
+      const friendlyMessage = sanitizeErrorMessage(
+        error,
+        "Failed to generate message."
+      );
       toast.error(friendlyMessage);
     } finally {
       setIsGeneratingProposalMessage(false);
@@ -1588,10 +1588,10 @@ const LeadChat = ({
             queryKey: emailConversationQueryKey,
           });
         } catch (emailError: any) {
-          const emailErrorMessage =
-            emailError?.response?.data?.message ||
-            emailError?.message ||
-            "Failed to send proposal email, but stage will still be updated.";
+          const emailErrorMessage = sanitizeErrorMessage(
+            emailError,
+            "Failed to send proposal email, but stage will still be updated."
+          );
           toast.error(emailErrorMessage);
           // Continue with stage update even if email fails
         }
@@ -1626,11 +1626,10 @@ const LeadChat = ({
           });
           // Show error to user so they know the proposal wasn't saved
           toast.error(
-            `Proposal not saved: ${
-              proposalError?.response?.data?.message ||
-              proposalError?.message ||
+            `Proposal not saved: ${sanitizeErrorMessage(
+              proposalError,
               "Unknown error"
-            }`,
+            )}`
           );
         }
       }
@@ -2020,10 +2019,10 @@ const LeadChat = ({
         toast.error("No edited content was generated. Try again.");
       }
     } catch (error: any) {
-      const friendlyMessage =
-        error?.response?.data?.message ||
-        error?.message ||
-        "Failed to edit proposal section.";
+      const friendlyMessage = sanitizeErrorMessage(
+        error,
+        "Failed to edit proposal section."
+      );
       toast.error(friendlyMessage);
     } finally {
       setIsEditingWithAI(false);
@@ -2257,10 +2256,10 @@ const LeadChat = ({
         toast.error("No edited content was generated. Try again.");
       }
     } catch (error: any) {
-      const friendlyMessage =
-        error?.response?.data?.message ||
-        error?.message ||
-        "Failed to edit email content.";
+      const friendlyMessage = sanitizeErrorMessage(
+        error,
+        "Failed to edit email content."
+      );
       toast.error(friendlyMessage);
     } finally {
       setIsEditingEmailWithAI(false);
@@ -3567,9 +3566,10 @@ const LeadChat = ({
         error instanceof Error ? error.stack : "No stack trace",
       );
       toast.error(
-        `Failed to generate PDF: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`,
+        `Failed to generate PDF: ${sanitizeErrorMessage(
+          error,
+          "Unknown error"
+        )}`
       );
     }
   };

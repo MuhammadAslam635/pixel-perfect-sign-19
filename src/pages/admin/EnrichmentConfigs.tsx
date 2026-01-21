@@ -37,6 +37,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
+import { sanitizeErrorMessage } from "@/utils/errorMessages";
 import {
   enrichmentConfigService,
   EnrichmentConfig,
@@ -101,7 +102,7 @@ const AdminEnrichmentConfigs = () => {
       }
     } catch (error: any) {
       console.error("Error fetching configs:", error);
-      toast.error(error?.response?.data?.message || "Failed to fetch configurations");
+      toast.error(sanitizeErrorMessage(error, "Unable to load configurations. Please try again."));
     } finally {
       setLoading(false);
     }
