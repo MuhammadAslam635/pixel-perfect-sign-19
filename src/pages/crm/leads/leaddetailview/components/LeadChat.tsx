@@ -55,6 +55,8 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
+import { sanitizeErrorMessage } from "@/utils/errorMessages";
+import { getUserData } from "@/utils/authHelpers";
 
 // Import Tamimi logos
 import tamimiLogoLight from "@/assets/tamimi-logo-light.png";
