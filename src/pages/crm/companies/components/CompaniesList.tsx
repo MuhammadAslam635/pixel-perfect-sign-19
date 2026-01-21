@@ -352,21 +352,18 @@ const CompaniesList: FC<CompaniesListProps> = ({
             {/* Skeleton content */}
             <div className="flex items-center gap-2">
               <div
-                className={`h-4 bg-white/10 rounded animate-pulse ${
-                  viewMode === "card" ? "w-full" : "w-32"
-                }`}
+                className={`h-4 bg-white/10 rounded animate-pulse ${viewMode === "card" ? "w-full" : "w-32"
+                  }`}
               ></div>
             </div>
             <div className="flex items-center gap-2">
               <div
-                className={`h-3 bg-white/5 rounded animate-pulse ${
-                  viewMode === "card" ? "w-3/4" : "w-20"
-                }`}
+                className={`h-3 bg-white/5 rounded animate-pulse ${viewMode === "card" ? "w-3/4" : "w-20"
+                  }`}
               ></div>
               <div
-                className={`h-3 bg-white/10 rounded animate-pulse ${
-                  viewMode === "card" ? "w-1/2" : "w-16"
-                }`}
+                className={`h-3 bg-white/10 rounded animate-pulse ${viewMode === "card" ? "w-1/2" : "w-16"
+                  }`}
               ></div>
             </div>
             {viewMode === "detailed" && (
@@ -483,6 +480,13 @@ const CompaniesList: FC<CompaniesListProps> = ({
                   </TooltipContent>
                 </Tooltip>
               )}
+              {/* No Leads Found Label */}
+              {company.leadsGenerationStatus === "completed" &&
+                (!company.people || company.people.length === 0) && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-gradient-to-r from-gray-500 to-gray-600 text-white flex-shrink-0 cursor-help" title="Lead enrichment completed but no contacts were found">
+                    NO LEADS FOUND
+                  </span>
+                )}
             </h3>
 
             {/* Second Row: Industry */}
@@ -509,20 +513,20 @@ const CompaniesList: FC<CompaniesListProps> = ({
 
           {/* Delete Button */}
           {canDelete("companies") && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                className="absolute top-12 right-2 h-6 w-6 sm:h-7 sm:w-7 rounded-full flex items-center justify-center border border-white bg-white text-gray-900 hover:bg-white/80 hover:text-gray-950 transition-colors duration-200 z-10"
-                onClick={(e) => handleDeleteClick(company, e)}
-                aria-label="Delete company"
-              >
-                <Trash2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent sideOffset={8}>
-              <p>Delete company</p>
-            </TooltipContent>
-          </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  className="absolute top-12 right-2 h-6 w-6 sm:h-7 sm:w-7 rounded-full flex items-center justify-center border border-white bg-white text-gray-900 hover:bg-white/80 hover:text-gray-950 transition-colors duration-200 z-10"
+                  onClick={(e) => handleDeleteClick(company, e)}
+                  aria-label="Delete company"
+                >
+                  <Trash2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent sideOffset={8}>
+                <p>Delete company</p>
+              </TooltipContent>
+            </Tooltip>
           )}
         </Card>
       );
@@ -532,9 +536,8 @@ const CompaniesList: FC<CompaniesListProps> = ({
     return (
       <Card
         key={company._id}
-        className={`relative flex flex-col gap-0.5 sm:gap-1 md:flex-row md:items-center md:justify-between overflow-hidden border-0 mb-1.5 sm:mb-2 rounded-[16px] sm:rounded-[20px] md:rounded-[30px] px-3 sm:px-4 md:px-5 py-1.5 sm:py-2 transition-all duration-300 hover:bg-white/5 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] ${
-          viewMode !== "compact" ? "backdrop-blur-[22.6px]" : ""
-        }`}
+        className={`relative flex flex-col gap-0.5 sm:gap-1 md:flex-row md:items-center md:justify-between overflow-hidden border-0 mb-1.5 sm:mb-2 rounded-[16px] sm:rounded-[20px] md:rounded-[30px] px-3 sm:px-4 md:px-5 py-1.5 sm:py-2 transition-all duration-300 hover:bg-white/5 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] ${viewMode !== "compact" ? "backdrop-blur-[22.6px]" : ""
+          }`}
         style={{
           background: `linear-gradient(180deg, rgba(104, 177, 184, 0.1) 0%, rgba(104, 177, 184, 0.08) 100%), radial-gradient(50% 100% at 50% 0%, rgba(104, 177, 184, 0.1) 0%, rgba(104, 177, 184, 0) 100%)`,
         }}
@@ -576,6 +579,13 @@ const CompaniesList: FC<CompaniesListProps> = ({
                 </TooltipContent>
               </Tooltip>
             )}
+            {/* No Leads Found Label */}
+            {company.leadsGenerationStatus === "completed" &&
+              (!company.people || company.people.length === 0) && (
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-gradient-to-r from-gray-500 to-gray-600 text-white flex-shrink-0 cursor-help" title="Lead enrichment completed but no contacts were found">
+                  NO LEADS FOUND
+                </span>
+              )}
             {viewMode === "compact" && (company.industry && (
               <span className="text-xs text-white/70 font-medium">
                 | {company.industry}
@@ -677,20 +687,20 @@ const CompaniesList: FC<CompaniesListProps> = ({
           )}
           <div className="flex items-center gap-1.5">
             {canDelete("companies") && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  className="h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center border border-white bg-white text-gray-900 hover:bg-white/80 hover:text-gray-950 transition-colors duration-200"
-                  onClick={(e) => handleDeleteClick(company, e)}
-                  aria-label="Delete company"
-                >
-                  <Trash2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent sideOffset={8}>
-                <p>Delete company</p>
-              </TooltipContent>
-            </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    className="h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center border border-white bg-white text-gray-900 hover:bg-white/80 hover:text-gray-950 transition-colors duration-200"
+                    onClick={(e) => handleDeleteClick(company, e)}
+                    aria-label="Delete company"
+                  >
+                    <Trash2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent sideOffset={8}>
+                  <p>Delete company</p>
+                </TooltipContent>
+              </Tooltip>
             )}
             <ActiveNavButton
               icon={Users}
@@ -722,9 +732,8 @@ const CompaniesList: FC<CompaniesListProps> = ({
 
     return (
       <div
-        className={`flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between ${
-          position === "top" ? "mb-4" : "mt-4"
-        }`}
+        className={`flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between ${position === "top" ? "mb-4" : "mt-4"
+          }`}
       >
         <div>
           {position === "top" && onViewModeChange && (
@@ -733,11 +742,10 @@ const CompaniesList: FC<CompaniesListProps> = ({
                 variant={viewMode === "compact" ? "default" : "ghost"}
                 size="sm"
                 onClick={() => onViewModeChange("compact")}
-                className={`h-9 px-3 rounded-full text-xs font-medium transition-all ${
-                  viewMode === "compact"
+                className={`h-9 px-3 rounded-full text-xs font-medium transition-all ${viewMode === "compact"
                     ? "bg-primary text-white shadow-sm"
                     : "text-white/70 hover:text-white hover:bg-white/10"
-                }`}
+                  }`}
               >
                 <Grid3X3 className="w-3 h-3 mr-1.5" />
                 Compact
@@ -746,11 +754,10 @@ const CompaniesList: FC<CompaniesListProps> = ({
                 variant={viewMode === "card" ? "default" : "ghost"}
                 size="sm"
                 onClick={() => onViewModeChange("card")}
-                className={`h-9 px-3 rounded-full text-xs font-medium transition-all ${
-                  viewMode === "card"
+                className={`h-9 px-3 rounded-full text-xs font-medium transition-all ${viewMode === "card"
                     ? "bg-primary text-white shadow-sm"
                     : "text-white/70 hover:text-white hover:bg-white/10"
-                }`}
+                  }`}
               >
                 <LayoutGrid className="w-3 h-3 mr-1.5" />
                 Card
@@ -759,11 +766,10 @@ const CompaniesList: FC<CompaniesListProps> = ({
                 variant={viewMode === "detailed" ? "default" : "ghost"}
                 size="sm"
                 onClick={() => onViewModeChange("detailed")}
-                className={`h-9 px-3 rounded-full text-xs font-medium transition-all ${
-                  viewMode === "detailed"
+                className={`h-9 px-3 rounded-full text-xs font-medium transition-all ${viewMode === "detailed"
                     ? "bg-primary text-white shadow-sm"
                     : "text-white/70 hover:text-white hover:bg-white/10"
-                }`}
+                  }`}
               >
                 <List className="w-3 h-3 mr-1.5" />
                 Detailed
@@ -795,8 +801,8 @@ const CompaniesList: FC<CompaniesListProps> = ({
               </SelectContent>
             </Select>
             {position === "top" &&
-            calculatedTotalPages > 1 &&
-            paginationPages ? (
+              calculatedTotalPages > 1 &&
+              paginationPages ? (
               <>
                 <div className="h-4 w-px bg-white/20 mx-1"></div>
                 <Pagination>
@@ -807,9 +813,8 @@ const CompaniesList: FC<CompaniesListProps> = ({
                           e.preventDefault();
                           if (page > 1) handlePageChange(1);
                         }}
-                        className={`cursor-pointer hover:bg-white/10 transition-colors h-7 w-7 p-0 flex items-center justify-center ${
-                          page <= 1 ? "opacity-50 cursor-not-allowed" : ""
-                        }`}
+                        className={`cursor-pointer hover:bg-white/10 transition-colors h-7 w-7 p-0 flex items-center justify-center ${page <= 1 ? "opacity-50 cursor-not-allowed" : ""
+                          }`}
                         aria-label="Go to first page"
                       >
                         <ChevronsLeft className="h-4 w-4" />
@@ -821,9 +826,8 @@ const CompaniesList: FC<CompaniesListProps> = ({
                           e.preventDefault();
                           if (page > 1) handlePageChange(page - 1);
                         }}
-                        className={`cursor-pointer hover:bg-white/10 transition-colors h-7 w-7 p-0 flex items-center justify-center [&>span]:hidden ${
-                          page <= 1 ? "opacity-50 cursor-not-allowed" : ""
-                        }`}
+                        className={`cursor-pointer hover:bg-white/10 transition-colors h-7 w-7 p-0 flex items-center justify-center [&>span]:hidden ${page <= 1 ? "opacity-50 cursor-not-allowed" : ""
+                          }`}
                       />
                     </PaginationItem>
                     {paginationPages.map((p, idx) => (
@@ -851,11 +855,10 @@ const CompaniesList: FC<CompaniesListProps> = ({
                           if (page < calculatedTotalPages)
                             handlePageChange(page + 1);
                         }}
-                        className={`cursor-pointer hover:bg-white/10 transition-colors h-7 w-7 p-0 flex items-center justify-center [&>span]:hidden ${
-                          page >= calculatedTotalPages
+                        className={`cursor-pointer hover:bg-white/10 transition-colors h-7 w-7 p-0 flex items-center justify-center [&>span]:hidden ${page >= calculatedTotalPages
                             ? "opacity-50 cursor-not-allowed"
                             : ""
-                        }`}
+                          }`}
                       />
                     </PaginationItem>
                     <PaginationItem>
@@ -865,11 +868,10 @@ const CompaniesList: FC<CompaniesListProps> = ({
                           if (page < calculatedTotalPages)
                             handlePageChange(calculatedTotalPages);
                         }}
-                        className={`cursor-pointer hover:bg-white/10 transition-colors h-7 w-7 p-0 flex items-center justify-center ${
-                          page >= calculatedTotalPages
+                        className={`cursor-pointer hover:bg-white/10 transition-colors h-7 w-7 p-0 flex items-center justify-center ${page >= calculatedTotalPages
                             ? "opacity-50 cursor-not-allowed"
                             : ""
-                        }`}
+                          }`}
                         aria-label="Go to last page"
                       >
                         <ChevronsRight className="h-4 w-4" />
@@ -942,7 +944,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
             <Card className="bg-transparent border-transparent shadow-none sm:bg-[#1f3032] sm:border-[#3A3A3A] sm:shadow-sm p-3 sm:p-4">
               <CompanyExecutivesPanel
                 company={selectedCompany}
-                onViewAllLeads={onViewAllLeads || (() => {})}
+                onViewAllLeads={onViewAllLeads || (() => { })}
                 onExecutiveSelect={onExecutiveSelect}
               />
             </Card>
@@ -1028,7 +1030,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
                                   <CompanyExecutivesPanel
                                     company={selectedCompany}
                                     onViewAllLeads={
-                                      onViewAllLeads || (() => {})
+                                      onViewAllLeads || (() => { })
                                     }
                                     onExecutiveSelect={onExecutiveSelect}
                                   />
@@ -1067,13 +1069,10 @@ const CompaniesList: FC<CompaniesListProps> = ({
       <ConfirmDialog
         open={showDeleteDialog}
         title="Delete Company"
-        description={`Are you sure you want to delete ${
-          companyToDelete?.name
-        }? This will also delete all ${
-          companyToDelete?.people?.length || 0
-        } associated ${
-          (companyToDelete?.people?.length || 0) === 1 ? "lead" : "leads"
-        }. This action cannot be undone.`}
+        description={`Are you sure you want to delete ${companyToDelete?.name
+          }? This will also delete all ${companyToDelete?.people?.length || 0
+          } associated ${(companyToDelete?.people?.length || 0) === 1 ? "lead" : "leads"
+          }. This action cannot be undone.`}
         confirmText="Yes, Delete"
         cancelText="Cancel"
         isPending={deleteMutation.isPending}

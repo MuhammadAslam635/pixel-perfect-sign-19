@@ -1778,8 +1778,9 @@ const Activity: FC<ActivityProps> = ({
                                   </span>
                                   <span className="text-[11px] text-white/60">
                                     {template.numberOfDaysToRun} days ·{" "}
-                                    {template.numberOfEmails} emails ·{" "}
-                                    {template.numberOfCalls} calls
+                                    {template.numberOfCalls} calls ·{" "}
+                                    {template.numberOfWhatsappMessages || 0} whatsapp ·{" "}
+                                    {template.numberOfEmails} emails
                                   </span>
                                 </div>
                               </SelectItem>
@@ -1789,8 +1790,9 @@ const Activity: FC<ActivityProps> = ({
                       </div>
 
                       {selectedTemplateId && (
-                        <div className="grid gap-4 md:grid-cols-2">
-                          <div className="space-y-2">
+                        <div className="grid gap-4 md:grid-cols-1">
+                          {/* Time field removed - system automatically schedules across 9 AM - 5 PM business hours */}
+                          {/* <div className="space-y-2">
                             <span className="text-xs text-white/60">Time</span>
                             <div className="relative">
                               <Input
@@ -1814,7 +1816,7 @@ const Activity: FC<ActivityProps> = ({
                                 <polyline points="12,6 12,12 16,14"></polyline>
                               </svg>
                             </div>
-                          </div>
+                          </div> */}
 
                           <div className="space-y-2">
                             <span className="text-xs text-white/60">

@@ -15,7 +15,7 @@ import {
 } from "@/services/connectionMessages.service";
 
 const DEFAULT_EMAIL_BODY =
-  "Hi there,\n\nI hope you're doing well. I wanted to reach out personally to introduce myself and learn more about what you're working on.\n\nWould you be open to a brief conversation sometime next week?\n\nBest regards,\n[Your Name]";
+  "Hi there,\n\nI hope you're doing well. I wanted to reach out personally to introduce myself and learn more about what you're working on.\n\nWould you be open to a brief conversation sometime next week?\n\nBest regards";
 
 interface EmailDraftModalProps {
   open: boolean;
