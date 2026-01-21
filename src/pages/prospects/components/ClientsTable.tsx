@@ -11,6 +11,7 @@ import { useClients, useSyncFromAirtableTable } from "@/hooks/useProspects";
 import type { Client } from "@/services/clients.service";
 import ClientDetailsModal from "./ClientDetailsModal";
 import { useToast } from "@/hooks/use-toast";
+import { sanitizeErrorMessage } from "@/utils/errorMessages";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -196,8 +197,7 @@ const ClientsTable: React.FC<ClientsTableProps> = ({
         onError: (error: any) => {
           toast({
             title: "Sync Failed",
-            description:
-              error?.response?.data?.message || "Failed to sync",
+            description: sanitizeErrorMessage(error, "Failed to sync"),
             variant: "destructive",
           });
         },
@@ -216,7 +216,7 @@ const ClientsTable: React.FC<ClientsTableProps> = ({
       >
         <CardContent className="p-6">
           <div className="text-center text-red-400">
-            Error loading sessions: {error.message}
+            {sanitizeErrorMessage(error, "Error loading sessions")}
           </div>
         </CardContent>
       </Card>

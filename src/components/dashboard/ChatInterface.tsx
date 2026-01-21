@@ -21,6 +21,7 @@ import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import rehypeSanitize from "rehype-sanitize";
 import { useToast } from "@/components/ui/use-toast";
+import { sanitizeErrorMessage } from "@/utils/errorMessages";
 import {
   setSelectedChatId,
   addOptimisticMessage,
@@ -1346,7 +1347,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
       dispatch(
         errorTask({
           id: tempMessage._id,
-          errorMessage: error?.message || "Failed to send message",
+          errorMessage: sanitizeErrorMessage(error, "Failed to send message"),
         })
       );
 
@@ -1354,9 +1355,10 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
 
       toast({
         title: "Unable to send message",
-        description:
-          error?.message ||
-          "We could not deliver your message. Please try again.",
+        description: sanitizeErrorMessage(
+          error,
+          "We could not deliver your message. Please try again."
+        ),
         variant: "destructive",
       });
     } finally {

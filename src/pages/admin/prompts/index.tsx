@@ -18,6 +18,7 @@ import {
 } from "@/services/connectionMessages.service";
 import { adminService, type Company } from "@/services/admin.service";
 import { toast } from "sonner";
+import { sanitizeErrorMessage } from "@/utils/errorMessages";
 import { PromptManagement } from "./components/PromptManagement";
 import { PromptForm } from "./components/PromptForm";
 
@@ -111,7 +112,7 @@ const PromptsPage = () => {
       updateStatistics(promptsWithCompanyInfo);
     } catch (error) {
       console.error("Error fetching prompts:", error);
-      toast.error(error.response?.data?.message || "Failed to fetch prompts");
+      toast.error(sanitizeErrorMessage(error, "Unable to load prompts. Please try again."));
     } finally {
       setLoading(false);
     }
@@ -128,7 +129,7 @@ const PromptsPage = () => {
       setCompanies(response.data.companies as unknown as Company[]);
     } catch (error) {
       console.error("Failed to fetch companies:", error);
-      toast.error(error.response?.data?.message || "Failed to fetch companies");
+      toast.error(sanitizeErrorMessage(error, "Unable to load companies. Please try again."));
     } finally {
       setCompaniesLoading(false);
     }

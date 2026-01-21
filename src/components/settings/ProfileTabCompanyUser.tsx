@@ -21,6 +21,7 @@ import { logout, updateUser } from "@/store/slices/authSlice";
 import { usePermissions } from "@/hooks/usePermissions";
 import { TimezoneSelector } from "./TimezoneSelector";
 import { userService } from "@/services/user.service";
+import { sanitizeErrorMessage } from "@/utils/errorMessages";
 
 interface CompanyInfo {
   name?: string;
@@ -280,9 +281,10 @@ export const ProfileTabCompanyUser = () => {
         }
         toast({
           title: "Error",
-          description:
-            (error.response.data as { message?: string })?.message ||
-            "An error occurred while updating your profile.",
+          description: sanitizeErrorMessage(
+            error,
+            "An error occurred while updating your profile."
+          ),
           variant: "destructive",
         });
       } else {

@@ -30,7 +30,7 @@ export const apolloService = {
         error:
           error?.response?.data?.error ||
           error?.message ||
-          "Failed to fetch company information",
+          "Unable to load company information. Please try again.",
       };
     }
   },

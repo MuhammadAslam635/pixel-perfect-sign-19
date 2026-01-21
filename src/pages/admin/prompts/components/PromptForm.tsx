@@ -161,7 +161,7 @@ export const PromptForm = ({
         }
       } catch (error) {
         console.error("Failed to fetch available models:", error);
-        toast.error("Failed to fetch available AI models");
+        toast.error("Unable to load available AI models. Please try again.");
         // Set fallback models
         setAvailableModels([
           { id: "gpt-4o", name: "gpt-4o" },

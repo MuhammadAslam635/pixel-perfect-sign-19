@@ -18,6 +18,7 @@ import { RootState } from "@/store/store";
 import { logout, updateUser } from "@/store/slices/authSlice";
 import { userService } from "@/services/user.service";
 import { TimezoneSelector } from "./TimezoneSelector";
+import { sanitizeErrorMessage } from "@/utils/errorMessages";
 
 interface AdminProfileForm {
   id: string;
@@ -206,9 +207,10 @@ export const AdminProfileTab = () => {
         }
         toast({
           title: "Error",
-          description:
-            (error.response.data as { message?: string })?.message ||
-            "An error occurred while updating your profile.",
+          description: sanitizeErrorMessage(
+            error,
+            "An error occurred while updating your profile."
+          ),
           variant: "destructive",
         });
       } else {

@@ -65,6 +65,7 @@ import {
 import ConfirmDialog from "@/components/ui/confirm-dialog";
 import { userService, User } from "@/services/user.service";
 import { toast } from "sonner";
+import { sanitizeErrorMessage } from "@/utils/errorMessages";
 import { rbacService } from "@/services/rbac.service";
 import { Role } from "@/types/rbac.types";
 
@@ -165,7 +166,7 @@ const UserList = () => {
       } catch (error: any) {
         console.error("Error fetching users:", error);
         setUsers([]);
-        toast.error(error?.response?.data?.message || "Failed to fetch users");
+        toast.error(sanitizeErrorMessage(error, "Unable to load users. Please try again."));
       } finally {
         setLoading(false);
       }

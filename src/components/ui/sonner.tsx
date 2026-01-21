@@ -26,8 +26,23 @@ const Toaster = ({ ...props }: ToasterProps) => {
             // Simple neutral depth
             "group-[.toaster]:shadow-[0_18px_45px_rgba(0,0,0,0.45)]",
           ].join(" "),
+          error: [
+            "group toast",
+            // Darker cyan background for error notifications
+            "group-[.toaster]:bg-[#0891B2]",
+            "group-[.toaster]:backdrop-blur-[12px]",
+            "group-[.toaster]:border group-[.toaster]:border-cyan-400/30",
+            // Text + layout - white text for contrast
+            "group-[.toaster]:text-white",
+            "group-[.toaster]:rounded-2xl",
+            "group-[.toaster]:px-5 group-[.toaster]:py-4 sm:group-[.toaster]:px-6",
+            // Simple neutral depth
+            "group-[.toaster]:shadow-[0_18px_45px_rgba(8,145,178,0.45)]",
+          ].join(" "),
           title: "group-[.toast]:text-sm group-[.toast]:font-bold group-[.toast]:text-white",
           description: "group-[.toast]:text-sm group-[.toast]:text-white group-[.toast]:font-medium",
+          errorTitle: "group-[.toast]:text-white",
+          errorDescription: "group-[.toast]:text-white",
 
 
           actionButton:

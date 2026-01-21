@@ -65,7 +65,7 @@ export class AdminGlobalIntegrationsService {
     } catch (error: any) {
       console.error("Error fetching global integrations:", error);
       throw new Error(
-        error?.response?.data?.message || "Failed to fetch global integrations"
+        error?.response?.data?.message || "Unable to load integrations. Please try again."
       );
     }
   }

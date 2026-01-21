@@ -11,6 +11,7 @@ import { emailService } from "@/services/email.service";
 import { twilioService } from "@/services/twilio.service";
 import { whatsappService } from "@/services/whatsapp.service";
 import { useToast } from "@/hooks/use-toast";
+import { sanitizeErrorMessage } from "@/utils/errorMessages";
 import { IoLogoWhatsapp } from "react-icons/io5";
 import {
   Tooltip,
@@ -230,10 +231,10 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
         // If we have drafts, update the local meeting status if needed (though drafts are separate)
     } catch (error: any) {
         console.error("Failed to generate drafts", error);
-        const errorMessage = 
-            error?.response?.data?.error || 
-            error?.response?.data?.message || 
-            "Failed to generate follow-up drafts. Please try again.";
+        const errorMessage = sanitizeErrorMessage(
+          error,
+          "Failed to generate follow-up drafts. Please try again."
+        );
 
         toast({
             title: "Error",
@@ -447,10 +448,7 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
         console.error("Failed to fetch meeting notes:", error);
         setNotesErrors((prev) => ({
           ...prev,
-          [meetingId]:
-            error?.response?.data?.message ||
-            error?.message ||
-            "Failed to load notes",
+          [meetingId]: sanitizeErrorMessage(error, "Failed to load notes"),
         }));
       } finally {
         setLoadingNotes((prev) => ({ ...prev, [meetingId]: false }));
@@ -499,10 +497,7 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
         console.error("Failed to generate notes:", error);
         setNotesErrors((prev) => ({
           ...prev,
-          [meetingId]:
-            error?.response?.data?.message ||
-            error?.message ||
-            "Failed to generate notes",
+          [meetingId]: sanitizeErrorMessage(error, "Failed to generate notes"),
         }));
         setLoadingNotes((prev) => ({ ...prev, [meetingId]: false }));
       }

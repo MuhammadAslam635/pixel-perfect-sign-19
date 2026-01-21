@@ -105,7 +105,7 @@ export const useEnrichmentConfigs = (): UseEnrichmentConfigsReturn => {
         console.error("Error fetching enrichment configs:", err);
         setError(
           err?.response?.data?.message ||
-            "Failed to fetch enrichment configurations"
+            "Unable to load enrichment configurations. Please try again."
         );
 
         // Fallback to empty arrays on error

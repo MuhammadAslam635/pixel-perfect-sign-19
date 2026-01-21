@@ -34,6 +34,7 @@ import { adminService, CompanyAdmin, Company } from "@/services/admin.service";
 import { rbacService } from "@/services/rbac.service";
 import { Role } from "@/types/rbac.types";
 import { toast } from "sonner";
+import { sanitizeErrorMessage } from "@/utils/errorMessages";
 import { UserProvisioningModal } from "@/components/admin/UserProvisioningModal";
 
 interface UserWithCompany extends CompanyAdmin {
@@ -189,7 +190,7 @@ const AdminUsers = () => {
       }
     } catch (error: any) {
       console.error("Error fetching users:", error);
-      toast.error(error.response?.data?.message || "Failed to fetch users");
+      toast.error(sanitizeErrorMessage(error, "Unable to load users. Please try again."));
     } finally {
       setLoading(false);
     }

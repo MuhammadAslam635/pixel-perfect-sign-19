@@ -20,6 +20,7 @@ import {
   LeadResearchResponse,
 } from "@/services/leadResearch.service";
 import { toast } from "sonner";
+import { sanitizeErrorMessage } from "@/utils/errorMessages";
 import { format } from "date-fns";
 
 type AgentResearchTabProps = {
@@ -65,11 +66,7 @@ const AgentResearchTab: FC<AgentResearchTabProps> = ({ lead }) => {
       }, 3000);
     },
     onError: (error: any) => {
-      toast.error(
-        error?.response?.data?.message ||
-        error?.message ||
-        "Failed to trigger research"
-      );
+      toast.error(sanitizeErrorMessage(error, "Failed to trigger research"));
     },
   });
 
