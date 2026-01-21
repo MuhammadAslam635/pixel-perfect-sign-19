@@ -249,50 +249,55 @@ const CompanyInfoStep = ({
         )}
       </div>
 
-      {/* Address Details */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Full Address */}
-        <div className="space-y-2 md:col-span-2">
-          <Label className="text-white flex items-center gap-2 text-sm">
-            <MapPin className="h-4 w-4 text-cyan-400" />
-            Address
-          </Label>
-          <Input
-            value={formData.address || ""}
-            readOnly
-            className="bg-white/[0.06] text-white placeholder:text-white/40 text-sm rounded-lg h-12 border-cyan-400/30 cursor-not-allowed opacity-80"
-            placeholder="Address not available"
-          />
-        </div>
+      {/* Address Details - Only show if we have at least one address field */}
+      {(formData.address || formData.postalCode || formData.country) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Full Address */}
+          {formData.address && (
+            <div className="space-y-2 md:col-span-2">
+              <Label className="text-white flex items-center gap-2 text-sm">
+                <MapPin className="h-4 w-4 text-cyan-400" />
+                Address
+              </Label>
+              <Input
+                value={formData.address}
+                readOnly
+                className="bg-white/[0.06] text-white placeholder:text-white/40 text-sm rounded-lg h-12 border-cyan-400/30 cursor-not-allowed opacity-80"
+              />
+            </div>
+          )}
 
-        {/* Postal Code */}
-        <div className="space-y-2">
-          <Label className="text-white flex items-center gap-2 text-sm">
-            <MapPin className="h-4 w-4 text-cyan-400" />
-            Postal Code
-          </Label>
-          <Input
-            value={formData.postalCode || ""}
-            readOnly
-            className="bg-white/[0.06] text-white placeholder:text-white/40 text-sm rounded-lg h-12 border-cyan-400/30 cursor-not-allowed opacity-80"
-            placeholder="Postal code not available"
-          />
-        </div>
+          {/* Postal Code */}
+          {formData.postalCode && (
+            <div className="space-y-2">
+              <Label className="text-white flex items-center gap-2 text-sm">
+                <MapPin className="h-4 w-4 text-cyan-400" />
+                Postal Code
+              </Label>
+              <Input
+                value={formData.postalCode}
+                readOnly
+                className="bg-white/[0.06] text-white placeholder:text-white/40 text-sm rounded-lg h-12 border-cyan-400/30 cursor-not-allowed opacity-80"
+              />
+            </div>
+          )}
 
-        {/* Country */}
-        <div className="space-y-2">
-          <Label className="text-white flex items-center gap-2 text-sm">
-            <MapPin className="h-4 w-4 text-cyan-400" />
-            Country
-          </Label>
-          <Input
-            value={formData.country || ""}
-            readOnly
-            className="bg-white/[0.06] text-white placeholder:text-white/40 text-sm rounded-lg h-12 border-cyan-400/30 cursor-not-allowed opacity-80"
-            placeholder="Country not available"
-          />
+          {/* Country */}
+          {formData.country && (
+            <div className="space-y-2">
+              <Label className="text-white flex items-center gap-2 text-sm">
+                <MapPin className="h-4 w-4 text-cyan-400" />
+                Country
+              </Label>
+              <Input
+                value={formData.country}
+                readOnly
+                className="bg-white/[0.06] text-white placeholder:text-white/40 text-sm rounded-lg h-12 border-cyan-400/30 cursor-not-allowed opacity-80"
+              />
+            </div>
+          )}
         </div>
-      </div>
+      )}
 
       {/* Core Offerings */}
       <div className="space-y-2">
