@@ -1054,9 +1054,9 @@ const EditableFollowupSuggestion: FC<EditableFollowupSuggestionProps> = ({
 
                   <div className="space-y-3">
                     {[
-                      { label: "Emails", type: "emails" as const, icon: <Mail className="w-3.5 h-3.5" />, key: "email" as const },
                       { label: "Calls", type: "calls" as const, icon: <Phone className="w-3.5 h-3.5" />, key: "call" as const },
                       { label: "WhatsApp", type: "whatsapp" as const, icon: <MessageCircle className="w-3.5 h-3.5" />, key: "whatsapp_message" as const },
+                      { label: "Emails", type: "emails" as const, icon: <Mail className="w-3.5 h-3.5" />, key: "email" as const },
                     ].map(({ label, type, icon, key }) => {
                       const timesArr = dayTaskTimes[day.day]?.[key] || [];
                       const countValue =

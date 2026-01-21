@@ -773,6 +773,8 @@ const LeadChat = ({
       queryClient.invalidateQueries({
         queryKey: whatsappConversationQueryKey,
       });
+      // Immediately refetch to show the sent message without waiting for polling
+      refetchWhatsAppConversation();
       // Also invalidate lead query for stage updates
       if (leadId) {
         queryClient.invalidateQueries({ queryKey: ["lead", leadId] });

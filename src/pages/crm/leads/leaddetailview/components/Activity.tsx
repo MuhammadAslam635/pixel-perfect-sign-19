@@ -1778,8 +1778,9 @@ const Activity: FC<ActivityProps> = ({
                                   </span>
                                   <span className="text-[11px] text-white/60">
                                     {template.numberOfDaysToRun} days ·{" "}
-                                    {template.numberOfEmails} emails ·{" "}
-                                    {template.numberOfCalls} calls
+                                    {template.numberOfCalls} calls ·{" "}
+                                    {template.numberOfWhatsappMessages || 0} whatsapp ·{" "}
+                                    {template.numberOfEmails} emails
                                   </span>
                                 </div>
                               </SelectItem>

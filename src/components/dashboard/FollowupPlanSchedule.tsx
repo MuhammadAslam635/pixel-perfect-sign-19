@@ -719,6 +719,7 @@ const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
         dayDate.setHours(hours || 9, minutes || 0, 0, 0);
 
         tasksForDay.push({
+          _id: `temp-${finalDayNumber}-${type}-${i}-${Date.now()}`,
           type,
           personId,
           day: finalDayNumber,
@@ -1324,6 +1325,7 @@ const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
           dayDate.setHours(hours || 9, minutes || 0, 0, 0);
 
           tasksByNewDay[finalDayNumber].push({
+            _id: `temp-${finalDayNumber}-${type}-${i}-${Date.now()}`,
             type,
             personId,
             day: finalDayNumber,
@@ -1664,9 +1666,9 @@ const FollowupPlanSchedule: FC<FollowupPlanScheduleProps> = ({
                   {/* Per-type counts and task tiles with time editing */}
                   <div className="space-y-4">
                     {[
-                      { label: "Emails", type: "emails" as const, icon: <Mail className="w-4 h-4" />, key: "email" as const },
                       { label: "Calls", type: "calls" as const, icon: <Phone className="w-4 h-4" />, key: "call" as const },
                       { label: "WhatsApp", type: "whatsapp" as const, icon: <MessageCircle className="w-4 h-4" />, key: "whatsapp_message" as const },
+                      { label: "Emails", type: "emails" as const, icon: <Mail className="w-4 h-4" />, key: "email" as const },
                     ].map(({ label, type, icon, key }) => {
                       const timesArr =
                         dayTaskTimes[day.day]?.[key] || [];
