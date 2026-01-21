@@ -350,15 +350,6 @@ export const IntegrationsTab = () => {
       return;
     }
 
-    if (!whatsappValidated) {
-      toast({
-        title: "Validation Required",
-        description: "Please validate your configuration before saving.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     // Validate required field
     if (!whatsappForm.apiKey) {
       toast({
@@ -2250,7 +2241,7 @@ export const IntegrationsTab = () => {
                   <Button
                     type="button"
                     onClick={handleWhatsAppConnect}
-                    disabled={isSavingWhatsApp || !whatsappValidated}
+                    disabled={isSavingWhatsApp}
                     className="w-full sm:w-auto bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3] text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{
                       boxShadow:

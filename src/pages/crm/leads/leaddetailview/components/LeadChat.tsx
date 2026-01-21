@@ -327,16 +327,13 @@ const LeadChat = ({
     ? "Add a WhatsApp number for this lead to start WhatsApp chats."
     : whatsappConnectionErrorMessage
       ? whatsappConnectionErrorMessage
-      : !whatsappReady
-        ? "Connect a WhatsApp number in Settings → Integrations."
-        : !normalizedLeadWhatsapp
-          ? "Lead WhatsApp number must include the country code."
-          : null;
+      : !normalizedLeadWhatsapp
+        ? "Lead WhatsApp number must include the country code."
+        : null;
 
   const whatsappInputsDisabled =
     whatsappStatusLoading ||
     Boolean(whatsappUnavailableMessage) ||
-    !whatsappReady ||
     !normalizedLeadWhatsapp;
   const canGenerateWhatsAppMessage = Boolean(lead?.companyId && lead?._id);
 
@@ -365,8 +362,7 @@ const LeadChat = ({
 
     const emailStatus = hasEmail ? "Connected" : "Unavailable";
 
-    const whatsappAvailable =
-      hasWhatsapp && (whatsappReady || isWhatsAppConnectionLoading);
+    const whatsappAvailable = hasWhatsapp;
     const smsAvailable = hasPhone && (twilioReady || twilioStatusLoading);
     const aiCallAvailable = hasPhone;
     const meetingBotAvailable = true; // Always available as it depends on meetings, not phone/email
@@ -402,7 +398,6 @@ const LeadChat = ({
     phoneNumber,
     isWhatsAppConnectionLoading,
     whatsappConnectionErrorMessage,
-    whatsappReady,
     twilioReady,
     twilioStatusLoading,
   ]);
@@ -467,9 +462,7 @@ const LeadChat = ({
     activeTab === "WhatsApp" &&
     Boolean(
       leadId &&
-      normalizedLeadWhatsapp &&
-      whatsappReady &&
-      whatsappPhoneNumberId,
+      normalizedLeadWhatsapp
     );
 
   const shouldPollWhatsApp = whatsappConversationEnabled;
@@ -928,7 +921,6 @@ const LeadChat = ({
   useEffect(() => {
     if (
       !whatsappConversationEnabled ||
-      !whatsappPhoneNumberId ||
       unreadInboundMessageIds.length === 0
     ) {
       return;
@@ -947,7 +939,6 @@ const LeadChat = ({
   }, [
     unreadInboundMessageIds,
     whatsappConversationEnabled,
-    whatsappPhoneNumberId,
     markReadMutation,
   ]);
 
