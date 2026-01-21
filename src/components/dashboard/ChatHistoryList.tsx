@@ -17,6 +17,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { cleanMarkdown } from "@/utils/commonFunctions";
 
 type ChatHistoryListProps = {
   chats: ChatSummary[];
@@ -63,7 +64,7 @@ const ChatHistoryList: FC<ChatHistoryListProps> = ({
 
   return (
     <div className="flex h-full w-full flex-col overflow-hidden">
-      <div className="pt-24 mb-6 space-y-4 flex-shrink-0 ">
+      <div className="mb-6 space-y-4 flex-shrink-0 ">
         <div className="relative mt-8">
           <Search className="pointer-events-none absolute left-5 top-1/2 size-4 -translate-y-1/2 text-white/60" />
           <Input
@@ -123,9 +124,12 @@ const ChatHistoryList: FC<ChatHistoryListProps> = ({
             ) : (
               filteredChats.map((chat) => {
                 const lastMessage = chat.messages?.at(-1);
-                const fullTitle = chat.title || "Untitled Conversation";
+                const cleanedTitle = cleanMarkdown(chat.title || "Untitled Conversation");
+                const fullTitle = cleanedTitle;
                 const truncatedTitle = truncateText(fullTitle, 18);
-
+                const cleanedLastMessage = lastMessage 
+                  ? cleanMarkdown(lastMessage.content)
+                  : "";
                 const isDeletingThisChat = deletingChatId === chat._id;
                 const isStreamingThisChat = streamingChatIds.includes(chat._id);
 
@@ -150,7 +154,7 @@ const ChatHistoryList: FC<ChatHistoryListProps> = ({
                         )}
                         <p
                           className="flex-1 truncate text-sm font-semibold text-white"
-                          title={chat.title || "Untitled Conversation"}
+                          title={fullTitle}
                         >
                           {truncatedTitle}
                         </p>
@@ -162,9 +166,9 @@ const ChatHistoryList: FC<ChatHistoryListProps> = ({
                       ) : lastMessage ? (
                         <p
                           className="mt-1 truncate text-[12px] text-white/60"
-                          title={lastMessage.content}
+                          title={cleanedLastMessage}
                         >
-                          {truncateText(lastMessage.content, 25)}
+                          {truncateText(cleanedLastMessage, 25)}
                         </p>
                       ) : (
                         <p className="mt-1 text-[12px] text-white/45">

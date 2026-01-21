@@ -43,6 +43,9 @@ const FIELD_LABELS: Record<string, string> = {
   existingPartners: "Existing Partners",
   dataChannels: "Data Channels",
   differentiators: "Differentiators",
+  address: "Address",
+  postalCode: "Postal Code",
+  country: "Country",
 };
 
 const OnboardingPage = () => {
@@ -60,7 +63,7 @@ const OnboardingPage = () => {
 
   // Auto-save debouncing
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
+
   // Track previous website to detect changes
   const previousWebsiteRef = useRef<string | undefined>(undefined);
 
@@ -102,6 +105,9 @@ const OnboardingPage = () => {
                 ? [...questions.coreOfferings]
                 : questions.coreOfferings,
               preferredCountries: questions.preferredCountries,
+              address: questions.address,
+              postalCode: questions.postalCode,
+              country: questions.country,
               idealCustomerProfile: questions.idealCustomerProfile,
               existingPartners: questions.existingPartners,
               dataChannels: questions.dataChannels,
@@ -109,7 +115,7 @@ const OnboardingPage = () => {
             };
 
             setFormData(formDataCopy);
-            
+
             // Initialize the previous website ref with the loaded website
             if (formDataCopy.website) {
               previousWebsiteRef.current = formDataCopy.website;
@@ -443,9 +449,12 @@ const OnboardingPage = () => {
       } else if (typeof value === "string") {
         const trimmed = value.trim();
         // Step 4 fields (differentiators) are optional, so don't require them
-        const isStep4Optional =
-          currentStep === 4 && field === "differentiators";
-        if (trimmed === "" && !isStep4Optional) {
+        // Address fields are optional/read-only from API
+        const isOptionalField =
+          (currentStep === 4 && field === "differentiators") ||
+          ["address", "postalCode", "country"].includes(field);
+
+        if (trimmed === "" && !isOptionalField) {
           newErrors[field] = `${label}: Required`;
           isValid = false;
         } else if (rules && trimmed !== "") {
@@ -528,28 +537,34 @@ const OnboardingPage = () => {
         if (!url) return '';
         return url.replace(/^https?:\/\//, '').replace(/\/$/, '').toLowerCase();
       };
-      
+
       const normalizedCurrent = normalizeUrl(currentWebsite);
       const normalizedPrevious = normalizeUrl(previousWebsiteRef.current);
-      
+
       // If website changed and both have values, clear cached data
       if (normalizedCurrent && normalizedPrevious && normalizedCurrent !== normalizedPrevious) {
         clearWebsiteCache();
-        
+
         // Clear company-related form fields since they're for the old website
         formUpdates.companyName = '';
         formUpdates.businessDescription = '';
         formUpdates.coreOfferings = [];
         formUpdates.idealCustomerProfile = '';
-        
+        formUpdates.address = '';
+        formUpdates.postalCode = '';
+        formUpdates.country = '';
+
         dataToSave.companyName = '';
         dataToSave.businessDescription = '';
         dataToSave.coreOfferings = [];
         dataToSave.idealCustomerProfile = '';
-        
+        dataToSave.address = '';
+        dataToSave.postalCode = '';
+        dataToSave.country = '';
+
         toast.info('Website changed - fetching new company information...');
       }
-      
+
       // Update the previous website ref
       previousWebsiteRef.current = currentWebsite;
     }
@@ -576,6 +591,9 @@ const OnboardingPage = () => {
             data: {
               companyName: cachedApollo.companyName,
               description: cachedApollo.description,
+              address: cachedApollo.address,
+              postalCode: cachedApollo.postalCode,
+              country: cachedApollo.country,
             },
           };
         } else {
@@ -592,6 +610,9 @@ const OnboardingPage = () => {
                 website: currentWebsite,
                 companyName: result.data.companyName,
                 description: result.data.description,
+                address: result.data.address,
+                postalCode: result.data.postalCode,
+                country: result.data.country,
                 fetchedAt: Date.now(),
               },
             });
@@ -599,6 +620,7 @@ const OnboardingPage = () => {
         }
 
         if (result.success && result.data) {
+          console.log("[Frontend Debug] Received Apollo Data:", result.data);
           // Auto-fill company name and description - always update when new data is fetched
           // Also clear core offerings and preferred countries for the new company
 
@@ -642,16 +664,35 @@ const OnboardingPage = () => {
 
             formUpdates.businessDescription = truncatedDescription;
             dataToSave.businessDescription = truncatedDescription;
+            formUpdates.businessDescription = truncatedDescription;
+            dataToSave.businessDescription = truncatedDescription;
+          }
+
+          if (result.data.address) {
+            formUpdates.address = result.data.address;
+            dataToSave.address = result.data.address;
+          }
+
+          if (result.data.postalCode) {
+            formUpdates.postalCode = result.data.postalCode;
+            dataToSave.postalCode = result.data.postalCode;
+          }
+
+          if (result.data.country) {
+            formUpdates.country = result.data.country;
+            dataToSave.country = result.data.country;
           }
 
           // Clear core offerings and preferred countries when fetching new company data
           // User will need to generate/select them again for the new company
           formUpdates.coreOfferings = [];
           formUpdates.preferredCountries = "";
+
           dataToSave.coreOfferings = [];
           dataToSave.preferredCountries = "";
 
           if (Object.keys(formUpdates).length > 0) {
+            console.log("[Frontend Debug] Applying Form Updates:", formUpdates);
             toast.success(
               "Company information fetched successfully! Please generate core offerings and select countries for the new company."
             );

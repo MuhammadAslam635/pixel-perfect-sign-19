@@ -160,20 +160,19 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
             setActiveTab("details");
             setShowLeads(false);
             if (activeTab !== "details") {
-                setShowLoadingSkeleton(true);
-                setMapLoaded(false);
-                setTimeout(() => setShowLoadingSkeleton(false), 500);
-                // Safety timeout for map: maximum 3s waiting for map, then force show
-                setTimeout(() => setMapLoaded(true), 3000);
+              setShowLoadingSkeleton(true);
+              setMapLoaded(false);
+              setTimeout(() => setShowLoadingSkeleton(false), 500);
+              // Safety timeout for map: maximum 3s waiting for map, then force show
+              setTimeout(() => setMapLoaded(true), 3000);
             }
           }}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 ${
-            activeTab === "details"
+          className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 ${activeTab === "details"
               ? "bg-white/10 text-white"
               : "text-white/60 hover:text-white hover:bg-white/5"
-          }`}
+            }`}
         >
           <motion.div
             animate={{
@@ -186,31 +185,30 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
           <span className="text-sm font-medium">Company Details</span>
         </motion.button>
         {hasLeadsPermission && (
-        <motion.button
-          onClick={() => {
-            setActiveTab("executives");
-            setShowLeads(true);
-          }}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 ${
-            activeTab === "executives"
-              ? "bg-white/10 text-white"
-              : "text-white/60 hover:text-white hover:bg-white/5"
-          }`}
-        >
-          <motion.div
-            animate={{
-              rotate: activeTab === "executives" ? [0, -10, 10, 0] : 0,
+          <motion.button
+            onClick={() => {
+              setActiveTab("executives");
+              setShowLeads(true);
             }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 ${activeTab === "executives"
+                ? "bg-white/10 text-white"
+                : "text-white/60 hover:text-white hover:bg-white/5"
+              }`}
           >
-            <Users className="w-4 h-4" />
-          </motion.div>
-          <span className="text-sm font-medium">
-            Executives {displayCompany?.people?.length ? `(${displayCompany.people.length})` : ""}
-          </span>
-        </motion.button>
+            <motion.div
+              animate={{
+                rotate: activeTab === "executives" ? [0, -10, 10, 0] : 0,
+              }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+            >
+              <Users className="w-4 h-4" />
+            </motion.div>
+            <span className="text-sm font-medium">
+              Executives {displayCompany?.people?.length ? `(${displayCompany.people.length})` : ""}
+            </span>
+          </motion.button>
         )}
       </div>
 
@@ -229,21 +227,21 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
                 {/* Show loading indicator at top if still generating */}
                 {(displayCompany.leadsGenerationStatus === 'in_progress' ||
                   displayCompany.leadsGenerationStatus === 'pending') && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="flex items-center justify-center gap-3 py-4 px-3 rounded-lg bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 mb-3"
-                  >
-                    <Loader2 className="w-5 h-5 text-primary animate-spin flex-shrink-0" />
-                    <div className="text-left flex-1">
-                      <p className="text-sm font-medium text-white">
-                        {displayCompany.people && displayCompany.people.length > 0
-                          ? 'Still finding more executives...'
-                          : 'Searching for executives...'}
-                      </p>
-                    </div>
-                  </motion.div>
-                )}
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="flex items-center justify-center gap-3 py-4 px-3 rounded-lg bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 mb-3"
+                    >
+                      <Loader2 className="w-5 h-5 text-primary animate-spin flex-shrink-0" />
+                      <div className="text-left flex-1">
+                        <p className="text-sm font-medium text-white">
+                          {displayCompany.people && displayCompany.people.length > 0
+                            ? 'Still finding more executives...'
+                            : 'Searching for executives...'}
+                        </p>
+                      </div>
+                    </motion.div>
+                  )}
 
                 {/* Show leads in real-time as they're found */}
                 {displayCompany.people && displayCompany.people.length > 0 && (
@@ -289,11 +287,10 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
                               <button
                                 type="button"
                                 disabled={!hasLinkedin}
-                                className={`flex h-7 w-7 items-center justify-center rounded-full border border-white/15 transition-colors ${
-                                  hasLinkedin
+                                className={`flex h-7 w-7 items-center justify-center rounded-full border border-white/15 transition-colors ${hasLinkedin
                                     ? "bg-white/15 text-white hover:bg-white/25"
                                     : "bg-white/10 text-white/40 cursor-not-allowed"
-                                }`}
+                                  }`}
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   if (!hasLinkedin) return;
@@ -306,9 +303,8 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
                                 }}
                               >
                                 <Linkedin
-                                  className={`h-3 w-3 ${
-                                    hasLinkedin ? "text-white" : "text-white/50"
-                                  }`}
+                                  className={`h-3 w-3 ${hasLinkedin ? "text-white" : "text-white/50"
+                                    }`}
                                 />
                               </button>
                             </div>
@@ -321,37 +317,41 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
 
                 {/* Show "No executives" only if completed and no leads found */}
                 {displayCompany.leadsGenerationStatus === 'completed' &&
-                 (!displayCompany.people || displayCompany.people.length === 0) && (
-                  <div className="flex items-center justify-center h-32">
-                    <p className="text-sm text-muted-foreground/60">
-                      No executives found for this company.
-                    </p>
-                  </div>
-                )}
+                  (!displayCompany.people || displayCompany.people.length === 0) && (
+                    <div className="flex flex-col items-center justify-center py-12 px-6 rounded-xl border border-white/10 bg-white/5 my-4">
+                      <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-4">
+                        <Users className="w-6 h-6 text-white/40" />
+                      </div>
+                      <h3 className="text-white font-medium text-base mb-2">No Leads Found</h3>
+                      <p className="text-white/60 text-sm text-center max-w-xs leading-relaxed">
+                        We've verified this company but couldn't identify any public executive contact information at this time.
+                      </p>
+                    </div>
+                  )}
 
                 {/* Show initial loader for newly created companies without any leads yet */}
                 {(!displayCompany.people || displayCompany.people.length === 0) &&
-                 displayCompany.leadsGenerationStatus !== 'completed' &&
-                 displayCompany.leadsGenerationStatus !== 'failed' &&
-                 displayCompany.leadsGenerationStatus !== 'in_progress' &&
-                 displayCompany.leadsGenerationStatus !== 'pending' &&
-                 new Date().getTime() - new Date(displayCompany.createdAt).getTime() < 30 * 60 * 1000 && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="flex flex-col items-center justify-center py-8 gap-3"
-                  >
-                    <div className="relative">
-                      <Loader2 className="w-12 h-12 text-primary animate-spin" />
-                      <div className="absolute inset-0 blur-xl bg-primary/30 animate-pulse" />
-                    </div>
-                    <div className="text-center">
-                      <p className="text-sm font-medium text-white mb-1">
-                        Searching for Executives...
-                      </p>
-                    </div>
-                  </motion.div>
-                )}
+                  displayCompany.leadsGenerationStatus !== 'completed' &&
+                  displayCompany.leadsGenerationStatus !== 'failed' &&
+                  displayCompany.leadsGenerationStatus !== 'in_progress' &&
+                  displayCompany.leadsGenerationStatus !== 'pending' &&
+                  new Date().getTime() - new Date(displayCompany.createdAt).getTime() < 30 * 60 * 1000 && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="flex flex-col items-center justify-center py-8 gap-3"
+                    >
+                      <div className="relative">
+                        <Loader2 className="w-12 h-12 text-primary animate-spin" />
+                        <div className="absolute inset-0 blur-xl bg-primary/30 animate-pulse" />
+                      </div>
+                      <div className="text-center">
+                        <p className="text-sm font-medium text-white mb-1">
+                          Searching for Executives...
+                        </p>
+                      </div>
+                    </motion.div>
+                  )}
               </>
             ) : displayCompany ? (
               <p className="text-sm text-muted-foreground/60">
@@ -370,91 +370,91 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
         {/* Company Details Tab Content */}
         {activeTab === "details" && (
           <div className="pt-1 relative min-h-[400px]">
-             {/* Skeleton Overlay - Shows during initial load or forced 500ms delay only */}
-             {(isCompanyLoading || showLoadingSkeleton) && (
-               <Card className="absolute inset-0 z-10 bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] border border-white/15 p-4 h-full">
-                 <div className="flex items-start gap-3 mb-4">
-                   <Skeleton className="h-12 w-12 rounded-lg bg-white/10" />
-                   <div className="flex-1 space-y-2">
-                     <Skeleton className="h-5 w-1/2 bg-white/10" />
-                     <Skeleton className="h-3 w-1/3 bg-white/5" />
-                   </div>
-                 </div>
-                 <div className="flex gap-3 mb-4">
-                   <Skeleton className="h-8 w-8 rounded-full bg-white/10" />
-                   <Skeleton className="h-8 w-8 rounded-full bg-white/10" />
-                 </div>
-                 <div className="space-y-2 mb-4">
-                   <Skeleton className="h-3 w-full bg-white/5" />
-                   <Skeleton className="h-3 w-5/6 bg-white/5" />
-                   <Skeleton className="h-3 w-4/6 bg-white/5" />
-                 </div>
-                 <div className="space-y-2">
-                   <Skeleton className="h-32 w-full rounded-lg bg-white/5" />
-                 </div>
-               </Card>
-             )}
-
-             {/* Actual Content */}
-             <div className={`${(isCompanyLoading || showLoadingSkeleton) ? 'opacity-0 pointer-events-none absolute inset-0' : 'opacity-100 relative'}`}>
-               {displayCompany ? (
-                <Card className="bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] border border-white/15 p-4 h-full overflow-y-auto">
-                {/* Logo and Name in same row */}
-                <div className="flex items-center gap-3 mb-4">
-                  <div>
-                    <CompanyLogoFallback
-                      name={displayCompany.name}
-                      logo={displayCompany.logo}
-                      size="md"
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-white -mb-1">
-                      {displayCompany.name}
-                    </h3>
-                    {/* Website below name */}
-                    {displayCompany.website && (
-                      <div className="flex items-center gap-2 text-white/80">
-                        {/* <Globe className="w-4 h-4" /> */}
-                        <a
-                          href={getFullUrl(displayCompany.website)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm hover:text-white hover:underline"
-                        >
-                          {formatWebsiteUrl(displayCompany.website)}
-                        </a>
-                      </div>
-                    )}
+            {/* Skeleton Overlay - Shows during initial load or forced 500ms delay only */}
+            {(isCompanyLoading || showLoadingSkeleton) && (
+              <Card className="absolute inset-0 z-10 bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] border border-white/15 p-4 h-full">
+                <div className="flex items-start gap-3 mb-4">
+                  <Skeleton className="h-12 w-12 rounded-lg bg-white/10" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-5 w-1/2 bg-white/10" />
+                    <Skeleton className="h-3 w-1/3 bg-white/5" />
                   </div>
                 </div>
+                <div className="flex gap-3 mb-4">
+                  <Skeleton className="h-8 w-8 rounded-full bg-white/10" />
+                  <Skeleton className="h-8 w-8 rounded-full bg-white/10" />
+                </div>
+                <div className="space-y-2 mb-4">
+                  <Skeleton className="h-3 w-full bg-white/5" />
+                  <Skeleton className="h-3 w-5/6 bg-white/5" />
+                  <Skeleton className="h-3 w-4/6 bg-white/5" />
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-32 w-full rounded-lg bg-white/5" />
+                </div>
+              </Card>
+            )}
 
-                {/* Social Icons */}
-                {(Boolean(companyLinkedIn) || Boolean(displayCompany.facebook) || Boolean(displayCompany.phone)) && (
-                  <div className="flex items-center gap-2 mb-4">
-                    {Boolean(companyLinkedIn) && (
-                      <a
-                        href={getFullUrl(companyLinkedIn || undefined)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-center w-6 h-6 rounded-full border border-white bg-white text-gray-900 transition-colors hover:bg-white/90"
-                        title="LinkedIn"
-                      >
-                        <Linkedin className="w-3.5 h-3.5" />
-                      </a>
-                    )}
-                    {Boolean(displayCompany.facebook) && (
-                      <a
-                        href={getFullUrl(displayCompany.facebook || undefined)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-center w-6 h-6 rounded-full border border-white bg-white text-gray-900 transition-colors hover:bg-white/90"
-                        title="Facebook"
-                      >
-                        <Facebook className="w-3.5 h-3.5" />
-                      </a>
-                    )}
-                    {/* {Boolean(displayCompany.phone) && (
+            {/* Actual Content */}
+            <div className={`${(isCompanyLoading || showLoadingSkeleton) ? 'opacity-0 pointer-events-none absolute inset-0' : 'opacity-100 relative'}`}>
+              {displayCompany ? (
+                <Card className="bg-gradient-to-r from-[#1f3032] via-[#243f42] to-[#1b2c2d] border border-white/15 p-4 h-full overflow-y-auto">
+                  {/* Logo and Name in same row */}
+                  <div className="flex items-center gap-3 mb-4">
+                    <div>
+                      <CompanyLogoFallback
+                        name={displayCompany.name}
+                        logo={displayCompany.logo}
+                        size="md"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-white -mb-1">
+                        {displayCompany.name}
+                      </h3>
+                      {/* Website below name */}
+                      {displayCompany.website && (
+                        <div className="flex items-center gap-2 text-white/80">
+                          {/* <Globe className="w-4 h-4" /> */}
+                          <a
+                            href={getFullUrl(displayCompany.website)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm hover:text-white hover:underline"
+                          >
+                            {formatWebsiteUrl(displayCompany.website)}
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Social Icons */}
+                  {(Boolean(companyLinkedIn) || Boolean(displayCompany.facebook) || Boolean(displayCompany.phone)) && (
+                    <div className="flex items-center gap-2 mb-4">
+                      {Boolean(companyLinkedIn) && (
+                        <a
+                          href={getFullUrl(companyLinkedIn || undefined)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-center w-6 h-6 rounded-full border border-white bg-white text-gray-900 transition-colors hover:bg-white/90"
+                          title="LinkedIn"
+                        >
+                          <Linkedin className="w-3.5 h-3.5" />
+                        </a>
+                      )}
+                      {Boolean(displayCompany.facebook) && (
+                        <a
+                          href={getFullUrl(displayCompany.facebook || undefined)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-center w-6 h-6 rounded-full border border-white bg-white text-gray-900 transition-colors hover:bg-white/90"
+                          title="Facebook"
+                        >
+                          <Facebook className="w-3.5 h-3.5" />
+                        </a>
+                      )}
+                      {/* {Boolean(displayCompany.phone) && (
                       <a
                         href={`tel:${displayCompany.phone}`}
                         className="flex items-center justify-center w-6 h-6 rounded-full border border-white bg-white text-gray-900 transition-colors hover:bg-white/90"
@@ -463,134 +463,133 @@ const CompanyExecutivesPanel: FC<CompanyExecutivesPanelProps> = ({
                         <Phone className="w-3.5 h-3.5" />
                       </a>
                     )} */}
-                  </div>
-                )}
-
-                {/* Description - Click to expand/collapse */}
-                {(displayCompany.description || displayCompany.about) && (
-                  <div className="mb-4">
-                    <p 
-                      className={`text-sm text-white/80 leading-relaxed cursor-pointer hover:text-white transition-colors ${
-                        isDescriptionExpanded ? '' : 'line-clamp-3'
-                      }`}
-                      onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
-                    >
-                      {displayCompany.description || displayCompany.about}
-                    </p>
-                  </div>
-                )}
-
-                {/* Details List */}
-                <div className="space-y-3.5">
-                  {/* Phone Number before address as requested */}
-                  {displayCompany.phone && (
-                    <div className="flex items-center gap-2">
-                      <Phone className="w-4 h-4 text-white/70 flex-shrink-0" />
-                      <div className="flex-1">
-                        <a
-                          href={`tel:${displayCompany.phone}`}
-                          className="text-sm text-white/80 hover:text-white hover:underline transition-colors"
-                        >
-                          {displayCompany.phone}
-                        </a>
-                      </div>
                     </div>
                   )}
 
-                  {/* Address */}
-                  {displayCompany.address && (
-                    <div className="space-y-2">
-                      <div className="flex items-start gap-2">
-                        <MapPin className="w-4 h-4 text-white/70 mt-0.5 flex-shrink-0" />
+                  {/* Description - Click to expand/collapse */}
+                  {(displayCompany.description || displayCompany.about) && (
+                    <div className="mb-4">
+                      <p
+                        className={`text-sm text-white/80 leading-relaxed cursor-pointer hover:text-white transition-colors ${isDescriptionExpanded ? '' : 'line-clamp-3'
+                          }`}
+                        onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                      >
+                        {displayCompany.description || displayCompany.about}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Details List */}
+                  <div className="space-y-3.5">
+                    {/* Phone Number before address as requested */}
+                    {displayCompany.phone && (
+                      <div className="flex items-center gap-2">
+                        <Phone className="w-4 h-4 text-white/70 flex-shrink-0" />
                         <div className="flex-1">
-                          <p className="text-sm text-white/80 leading-relaxed">
-                            {displayCompany.address}
-                          </p>
+                          <a
+                            href={`tel:${displayCompany.phone}`}
+                            className="text-sm text-white/80 hover:text-white hover:underline transition-colors"
+                          >
+                            {displayCompany.phone}
+                          </a>
                         </div>
                       </div>
-                      {/* Google Maps Embed */}
-                      {getGoogleMapsEmbedUrl(displayCompany.address) && (
-                        <div
-                          className="relative w-full h-32 rounded-lg overflow-hidden border border-white/10 cursor-pointer group hover:scale-[1.02] transition-transform duration-200"
-                          onClick={() => {
-                            const mapsUrl = getGoogleMapsUrl(displayCompany.address);
-                            if (mapsUrl) {
-                              window.open(mapsUrl, "_blank");
-                            }
-                          }}
-                          role="button"
-                          tabIndex={0}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" || e.key === " ") {
-                              e.preventDefault();
+                    )}
+
+                    {/* Address */}
+                    {displayCompany.address && (
+                      <div className="space-y-2">
+                        <div className="flex items-start gap-2">
+                          <MapPin className="w-4 h-4 text-white/70 mt-0.5 flex-shrink-0" />
+                          <div className="flex-1">
+                            <p className="text-sm text-white/80 leading-relaxed">
+                              {displayCompany.address}
+                            </p>
+                          </div>
+                        </div>
+                        {/* Google Maps Embed */}
+                        {getGoogleMapsEmbedUrl(displayCompany.address) && (
+                          <div
+                            className="relative w-full h-32 rounded-lg overflow-hidden border border-white/10 cursor-pointer group hover:scale-[1.02] transition-transform duration-200"
+                            onClick={() => {
                               const mapsUrl = getGoogleMapsUrl(displayCompany.address);
                               if (mapsUrl) {
                                 window.open(mapsUrl, "_blank");
                               }
-                            }
-                          }}
-                          title="Click to open in Google Maps"
-                        >
-                           {/* Map Loading Skeleton */}
-                           {!mapLoaded && (
-                               <Skeleton className="absolute inset-0 z-[5] w-full h-full bg-white/10 animate-pulse" />
-                           )}
-                          <iframe
-                            src={getGoogleMapsEmbedUrl(displayCompany.address) || ""}
-                            width="100%"
-                            height="100%"
-                            style={{ border: 0, opacity: mapLoaded ? 1 : 0, transition: 'opacity 0.3s ease-in' }}
-                            allowFullScreen
-                            loading="lazy"
-                            referrerPolicy="no-referrer-when-downgrade"
-                            className="pointer-events-none"
-                            onLoad={() => {
+                            }}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                const mapsUrl = getGoogleMapsUrl(displayCompany.address);
+                                if (mapsUrl) {
+                                  window.open(mapsUrl, "_blank");
+                                }
+                              }
+                            }}
+                            title="Click to open in Google Maps"
+                          >
+                            {/* Map Loading Skeleton */}
+                            {!mapLoaded && (
+                              <Skeleton className="absolute inset-0 z-[5] w-full h-full bg-white/10 animate-pulse" />
+                            )}
+                            <iframe
+                              src={getGoogleMapsEmbedUrl(displayCompany.address) || ""}
+                              width="100%"
+                              height="100%"
+                              style={{ border: 0, opacity: mapLoaded ? 1 : 0, transition: 'opacity 0.3s ease-in' }}
+                              allowFullScreen
+                              loading="lazy"
+                              referrerPolicy="no-referrer-when-downgrade"
+                              className="pointer-events-none"
+                              onLoad={() => {
                                 console.log("Map loaded");
                                 setMapLoaded(true);
-                            }}
-                          />
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                            <span className="text-xs text-white/0 group-hover:text-white/80 font-medium bg-black/50 px-3 py-1.5 rounded-lg">
-                              Click to open in Google Maps
-                            </span>
+                              }}
+                            />
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                              <span className="text-xs text-white/0 group-hover:text-white/80 font-medium bg-black/50 px-3 py-1.5 rounded-lg">
+                                Click to open in Google Maps
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                        )}
+                      </div>
+                    )}
 
 
-                  {displayCompany.employees && (
-                    <div className="flex items-center gap-2 text-sm text-white/70">
-                      <Users className="w-4 h-4" />
-                      <span>{displayCompany.employees} employees</span>
-                    </div>
-                  )}
+                    {displayCompany.employees && (
+                      <div className="flex items-center gap-2 text-sm text-white/70">
+                        <Users className="w-4 h-4" />
+                        <span>{displayCompany.employees} employees</span>
+                      </div>
+                    )}
 
-                  {displayCompany.foundedYear && (
-                    <div className="flex items-center gap-2 text-sm text-white/70">
-                      <Building2 className="w-4 h-4" />
-                      <span>Founded: {displayCompany.foundedYear}</span>
-                    </div>
-                  )}
+                    {displayCompany.foundedYear && (
+                      <div className="flex items-center gap-2 text-sm text-white/70">
+                        <Building2 className="w-4 h-4" />
+                        <span>Founded: {displayCompany.foundedYear}</span>
+                      </div>
+                    )}
 
-                  {displayCompany.marketCap && (
-                    <div className="flex items-center gap-2 text-sm text-white/70">
-                      <TrendingUp className="w-4 h-4" />
-                      <span>Market Cap: ${formatFinancialValue(displayCompany.marketCap as string)}</span>
-                    </div>
-                  )}
-                  
-                  {getRevenue() && (
-                    <div className="flex items-center gap-2 text-sm text-white/70">
-                      <DollarSign className="w-4 h-4" />
-                      <span>Revenue: ${formatFinancialValue(getRevenue())}</span>
-                    </div>
-                  )}
-                </div>
-              </Card>
-             ) : null}
-             </div>
+                    {displayCompany.marketCap && (
+                      <div className="flex items-center gap-2 text-sm text-white/70">
+                        <TrendingUp className="w-4 h-4" />
+                        <span>Market Cap: ${formatFinancialValue(displayCompany.marketCap as string)}</span>
+                      </div>
+                    )}
+
+                    {getRevenue() && (
+                      <div className="flex items-center gap-2 text-sm text-white/70">
+                        <DollarSign className="w-4 h-4" />
+                        <span>Revenue: ${formatFinancialValue(getRevenue())}</span>
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              ) : null}
+            </div>
           </div>
         )}
       </div>

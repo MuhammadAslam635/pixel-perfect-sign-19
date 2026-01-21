@@ -92,6 +92,7 @@ import CreateCampaignModal from "@/components/campaigns/CreateCampaignModal";
 import FacebookIcon from "@/components/icons/FacebookIcon";
 import AnalyticsCard from "@/components/campaigns/AnalyticsCard";
 import { useUserAggregatedAnalytics } from "@/hooks/useAnalytics";
+import { cleanMarkdown } from "@/utils/commonFunctions";
 
 const CampaignsPage = () => {
   const navigate = useNavigate();
@@ -122,6 +123,8 @@ const CampaignsPage = () => {
   const [initialCampaignData, setInitialCampaignData] = useState<
     Partial<CreateCampaignData> | undefined
   >(undefined);
+  const [aiSuggestionsEnabled, setAiSuggestionsEnabled] =
+    useState<boolean>(true);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -232,10 +235,10 @@ const CampaignsPage = () => {
         // Don't override if current selectedCampaign has completed status but updated has in-progress
         const shouldUpdate =
           JSON.stringify(updatedCampaign) !==
-            JSON.stringify(selectedCampaign) &&
+          JSON.stringify(selectedCampaign) &&
           !(
             selectedCampaign.processingStatus?.content?.status ===
-              "completed" &&
+            "completed" &&
             updatedCampaign.processingStatus?.content?.status === "in-progress"
           ) &&
           !(
@@ -673,6 +676,12 @@ const CampaignsPage = () => {
     }
   };
 
+  // helper function for clearmarkdown 
+  const renderCleanContent = (content?: string) => {
+    if (!content) return null;
+    return renderTextWithLinks(cleanMarkdown(content));
+  };
+
   return (
     <DashboardLayout>
       <main className="relative px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] pt-24 sm:pt-28 lg:pt-32 pb-8 flex flex-col gap-6 text-white flex-1 overflow-y-auto animate-in fade-in duration-1000">
@@ -763,8 +772,8 @@ const CampaignsPage = () => {
                     <div className="text-base sm:text-lg font-bold text-white mb-0.5">
                       {facebookAnalytics?.data?.[0]
                         ? formatNumber(
-                            facebookAnalytics.data[0].totalImpressions
-                          )
+                          facebookAnalytics.data[0].totalImpressions
+                        )
                         : "0"}
                     </div>
                     <div className="text-[10px] text-gray-500 mb-0.5">
@@ -773,8 +782,8 @@ const CampaignsPage = () => {
                     <div className="text-[10px] font-medium text-gray-500">
                       {facebookAnalytics?.data?.[0]
                         ? `${formatNumber(
-                            facebookAnalytics.data[0].totalReach
-                          )} reach`
+                          facebookAnalytics.data[0].totalReach
+                        )} reach`
                         : "No data"}
                     </div>
                   </div>
@@ -970,40 +979,65 @@ const CampaignsPage = () => {
         {suggestionsData && suggestionsData.data.docs.length > 0 && (
           <div className="flex flex-col">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-              <h2 className="text-xl sm:text-2xl font-normal text-white flex items-center gap-2">
-                AI Campaign Suggestions
-              </h2>
-              <Button
-                size="sm"
-                onClick={handleRegenerateSuggestions}
-                disabled={isRegeneratingSuggestions}
-                className="relative h-9 px-4 rounded-full border-0 text-white text-xs hover:bg-[#2F2F2F]/60 transition-all w-full sm:w-auto overflow-hidden"
-                style={{
-                  background: "#FFFFFF1A",
-                  boxShadow:
-                    "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
-                }}
-              >
-                <RefreshCw
-                  className={`w-4 h-4 mr-2 ${
-                    isRegeneratingSuggestions ? "animate-spin" : ""
-                  }`}
-                />
-                <span>
-                  {isRegeneratingSuggestions ? "Regenerating..." : "Regenerate"}
-                </span>
-              </Button>
+              <div className="flex items-center gap-3">
+                <Button
+                  size="sm"
+                  onClick={() => setAiSuggestionsEnabled(!aiSuggestionsEnabled)}
+                  variant="outline"
+                  className="relative h-9 px-4 rounded-full border-0 text-white text-xs hover:bg-[#2F2F2F]/60 transition-all w-full sm:w-auto overflow-hidden"
+                  style={{
+                    background: "#FFFFFF1A",
+                    boxShadow:
+                      "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                  }}
+                >
+                  <CircleIcon
+                    className={`w-4 h-4 mr-2 ${
+                      aiSuggestionsEnabled ? "fill-green-400" : "fill-gray-500"
+                    } ${aiSuggestionsEnabled ? "text-green-400" : "text-gray-500"}`}
+                  />
+                  <span>{aiSuggestionsEnabled ? "On" : "Off"}</span>
+                </Button>
+                {aiSuggestionsEnabled && (
+                  <h2 className="text-xl sm:text-2xl font-normal text-white flex items-center gap-2">
+                    AI Campaign Suggestions
+                  </h2>
+                )}
+              </div>
+              {aiSuggestionsEnabled && (
+                <Button
+                  size="sm"
+                  onClick={handleRegenerateSuggestions}
+                  disabled={isRegeneratingSuggestions}
+                  className="relative h-9 px-4 rounded-full border-0 text-white text-xs hover:bg-[#2F2F2F]/60 transition-all w-full sm:w-auto overflow-hidden"
+                  style={{
+                    background: "#FFFFFF1A",
+                    boxShadow:
+                      "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                  }}
+                >
+                  <RefreshCw
+                    className={`w-4 h-4 mr-2 ${
+                      isRegeneratingSuggestions ? "animate-spin" : ""
+                    }`}
+                  />
+                  <span>
+                    {isRegeneratingSuggestions ? "Regenerating..." : "Regenerate"}
+                  </span>
+                </Button>
+              )}
             </div>
 
             {/* Suggestions Carousel */}
-            <div className="relative -mx-4 sm:mx-0">
-              <div className="overflow-x-auto pb-4 px-4 sm:px-0 scrollbar-hide">
-                <div
-                  className="flex gap-3 sm:gap-4"
-                  style={{ minWidth: "min-content" }}
-                >
-                  {suggestionsData.data.docs.map((suggestion) => (
-                    <Card
+            {aiSuggestionsEnabled && (
+              <div className="relative -mx-4 sm:mx-0">
+                <div className="overflow-x-auto pb-4 px-4 sm:px-0 scrollbar-hide">
+                  <div
+                    className="flex gap-3 sm:gap-4"
+                    style={{ minWidth: "min-content" }}
+                  >
+                    {suggestionsData.data.docs.map((suggestion) => (
+                      <Card
                       key={suggestion._id}
                       className="relative border-[#FFFFFF4D] shadow-xl w-[280px] sm:w-[320px] lg:w-[340px] flex-shrink-0"
                       style={{
@@ -1103,10 +1137,10 @@ const CampaignsPage = () => {
                   ))}
                 </div>
               </div>
-            </div>
+              </div>
+            )}
           </div>
-        )}
-
+      )}
         {/* Recent Campaigns Section */}
         <div className="flex flex-col">
           {/* Header */}
@@ -1370,7 +1404,7 @@ const CampaignsPage = () => {
                   <CardContent className="p-4 sm:p-5 flex flex-col h-full">
                     <div className="flex items-start justify-between mb-3 sm:mb-4">
                       {getPlatformIcon(campaign.platform || [])}
-                      {campaign.location && (
+                      {/* {campaign.location && (
                         <div
                           className="flex items-center justify-center gap-1.5 flex-shrink-0 px-2 py-1"
                           style={{
@@ -1390,7 +1424,7 @@ const CampaignsPage = () => {
                             {campaign.location}
                           </span>
                         </div>
-                      )}
+                      )} */}
                     </div>
                     <h3 className="text-base sm:text-lg font-semibold text-white mb-2 leading-tight">
                       {campaign.name}
@@ -1437,11 +1471,10 @@ const CampaignsPage = () => {
                           if (currentPage > 1)
                             setCurrentPage((prev) => Math.max(prev - 1, 1));
                         }}
-                        className={`cursor-pointer hover:bg-white/10 transition-colors h-7 w-7 p-0 flex items-center justify-center [&>span]:hidden ${
-                          currentPage <= 1
+                        className={`cursor-pointer hover:bg-white/10 transition-colors h-7 w-7 p-0 flex items-center justify-center [&>span]:hidden ${currentPage <= 1
                             ? "opacity-50 cursor-not-allowed"
                             : ""
-                        }`}
+                          }`}
                       />
                     </PaginationItem>
 
@@ -1494,11 +1527,10 @@ const CampaignsPage = () => {
                               Math.min(prev + 1, data.data.totalPages)
                             );
                         }}
-                        className={`cursor-pointer hover:bg-white/10 transition-colors h-7 w-7 p-0 flex items-center justify-center [&>span]:hidden ${
-                          currentPage >= data.data.totalPages
+                        className={`cursor-pointer hover:bg-white/10 transition-colors h-7 w-7 p-0 flex items-center justify-center [&>span]:hidden ${currentPage >= data.data.totalPages
                             ? "opacity-50 cursor-not-allowed"
                             : ""
-                        }`}
+                          }`}
                       />
                     </PaginationItem>
                   </PaginationContent>
@@ -1539,8 +1571,8 @@ const CampaignsPage = () => {
 
             <div className="relative z-10 flex flex-col h-full min-h-0">
               {isLoadingCampaignDetails ||
-              !selectedCampaign ||
-              !editedCampaign ? (
+                !selectedCampaign ||
+                !editedCampaign ? (
                 <>
                   <DialogHeader className="px-6 pt-6 pb-4 flex-shrink-0 border-b border-white/10">
                     <DialogTitle className="text-xs sm:text-sm font-semibold text-white drop-shadow-lg">
@@ -1806,9 +1838,8 @@ const CampaignsPage = () => {
                                         </div>
                                       )}
                                       <p className="text-xs text-gray-300/90 whitespace-pre-wrap break-words">
-                                        {renderTextWithLinks(
-                                          selectedCampaign.researchDocs
-                                            .marketResearch.content
+                                       {renderCleanContent(
+                                          selectedCampaign.researchDocs.marketResearch.content
                                         )}
                                       </p>
                                     </div>
@@ -1864,10 +1895,9 @@ const CampaignsPage = () => {
                                         </div>
                                       )}
                                       <p className="text-xs text-gray-300/90 whitespace-pre-wrap break-words">
-                                        {renderTextWithLinks(
-                                          selectedCampaign.researchDocs
-                                            .offerServiceBrief.content
-                                        )}
+                                        {renderCleanContent(
+    selectedCampaign.researchDocs.offerServiceBrief.content
+  )}
                                       </p>
                                     </div>
                                   </AccordionContent>
@@ -1922,10 +1952,9 @@ const CampaignsPage = () => {
                                         </div>
                                       )}
                                       <p className="text-xs text-gray-300/90 whitespace-pre-wrap break-words">
-                                        {renderTextWithLinks(
-                                          selectedCampaign.researchDocs
-                                            .necessaryBriefs.content
-                                        )}
+                                         {renderCleanContent(
+    selectedCampaign.researchDocs.necessaryBriefs.content
+  )}
                                       </p>
                                     </div>
                                   </AccordionContent>
@@ -1979,10 +2008,9 @@ const CampaignsPage = () => {
                                         </div>
                                       )}
                                       <p className="text-xs text-gray-300/90 whitespace-pre-wrap break-words">
-                                        {renderTextWithLinks(
-                                          selectedCampaign.researchDocs
-                                            .brandDesign.content
-                                        )}
+                                         {renderCleanContent(
+    selectedCampaign.researchDocs.brandDesign.content
+  )}
                                       </p>
                                     </div>
                                   </AccordionContent>
@@ -1996,19 +2024,19 @@ const CampaignsPage = () => {
                     {/* Research Generation Indicator */}
                     {selectedCampaign.processingStatus?.research?.status ===
                       "in-progress" && (
-                      <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 mb-4">
-                        <div className="flex items-center gap-2 text-blue-400">
-                          <Search className="w-4 h-4" />
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          <span className="text-sm font-medium">
-                            Generating research documents...
-                          </span>
+                        <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 mb-4">
+                          <div className="flex items-center gap-2 text-blue-400">
+                            <Search className="w-4 h-4" />
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span className="text-sm font-medium">
+                              Generating research documents...
+                            </span>
+                          </div>
+                          <p className="text-xs text-blue-300/70 mt-1 ml-6">
+                            This may take a few moments
+                          </p>
                         </div>
-                        <p className="text-xs text-blue-300/70 mt-1 ml-6">
-                          This may take a few moments
-                        </p>
-                      </div>
-                    )}
+                      )}
 
                     {/* Content */}
                     <Card className="bg-white/5 backdrop-blur-sm border-white/10 shadow-lg">
@@ -2019,11 +2047,11 @@ const CampaignsPage = () => {
                             Content
                             {selectedCampaign.processingStatus?.content
                               ?.status === "in-progress" && (
-                              <div className="flex items-center gap-1 text-blue-400">
-                                <Loader2 className="w-3 h-3 animate-spin" />
-                                <span className="text-xs">Generating...</span>
-                              </div>
-                            )}
+                                <div className="flex items-center gap-1 text-blue-400">
+                                  <Loader2 className="w-3 h-3 animate-spin" />
+                                  <span className="text-xs">Generating...</span>
+                                </div>
+                              )}
                           </CardTitle>
                           <div className="flex items-center gap-2">
                             {!isEditing && (
@@ -2066,7 +2094,7 @@ const CampaignsPage = () => {
                       </CardHeader>
                       <CardContent className="px-4 pb-4">
                         {selectedCampaign.processingStatus?.content?.status ===
-                        "in-progress" ? (
+                          "in-progress" ? (
                           <div className="flex flex-col items-center justify-center py-8 text-center">
                             <Loader2 className="w-8 h-8 animate-spin text-blue-400 mb-3" />
                             <p className="text-sm text-blue-300 font-medium">
@@ -2112,11 +2140,11 @@ const CampaignsPage = () => {
                             )
                             {selectedCampaign.processingStatus?.media
                               ?.status === "in-progress" && (
-                              <div className="flex items-center gap-1 text-blue-400">
-                                <Loader2 className="w-3 h-3 animate-spin" />
-                                <span className="text-xs">Generating...</span>
-                              </div>
-                            )}
+                                <div className="flex items-center gap-1 text-blue-400">
+                                  <Loader2 className="w-3 h-3 animate-spin" />
+                                  <span className="text-xs">Generating...</span>
+                                </div>
+                              )}
                           </CardTitle>
                           <div className="flex items-center gap-2">
                             {!isEditing && (
@@ -2159,7 +2187,7 @@ const CampaignsPage = () => {
                       </CardHeader>
                       <CardContent className="px-4 pb-4">
                         {selectedCampaign.processingStatus?.media?.status ===
-                        "in-progress" ? (
+                          "in-progress" ? (
                           <div className="flex flex-col items-center justify-center py-8 text-center">
                             <Loader2 className="w-8 h-8 animate-spin text-blue-400 mb-3" />
                             <p className="text-sm text-blue-300 font-medium">
@@ -2239,8 +2267,8 @@ const CampaignsPage = () => {
                                     const newPlatforms =
                                       currentPlatforms.includes("facebook")
                                         ? currentPlatforms.filter(
-                                            (p) => p !== "facebook"
-                                          )
+                                          (p) => p !== "facebook"
+                                        )
                                         : [...currentPlatforms, "facebook"];
                                     setEditedCampaign({
                                       ...editedCampaign,
@@ -2259,9 +2287,9 @@ const CampaignsPage = () => {
                                       "facebook"
                                     )
                                       ? {
-                                          background:
-                                            "radial-gradient(circle at left, rgba(64, 102, 179, 0.4) 0%, rgba(103, 176, 183, 0.3) 50%, transparent 70%)",
-                                        }
+                                        background:
+                                          "radial-gradient(circle at left, rgba(64, 102, 179, 0.4) 0%, rgba(103, 176, 183, 0.3) 50%, transparent 70%)",
+                                      }
                                       : undefined
                                   }
                                 >
@@ -2281,8 +2309,8 @@ const CampaignsPage = () => {
                                     const newPlatforms =
                                       currentPlatforms.includes("google")
                                         ? currentPlatforms.filter(
-                                            (p) => p !== "google"
-                                          )
+                                          (p) => p !== "google"
+                                        )
                                         : [...currentPlatforms, "google"];
                                     setEditedCampaign({
                                       ...editedCampaign,
@@ -2297,9 +2325,9 @@ const CampaignsPage = () => {
                                   style={
                                     editedCampaign.platform?.includes("google")
                                       ? {
-                                          background:
-                                            "radial-gradient(circle at left, rgba(64, 102, 179, 0.4) 0%, rgba(103, 176, 183, 0.3) 50%, transparent 70%)",
-                                        }
+                                        background:
+                                          "radial-gradient(circle at left, rgba(64, 102, 179, 0.4) 0%, rgba(103, 176, 183, 0.3) 50%, transparent 70%)",
+                                      }
                                       : undefined
                                   }
                                 >

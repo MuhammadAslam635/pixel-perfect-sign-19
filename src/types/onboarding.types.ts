@@ -11,6 +11,9 @@ export type OnboardingStatus =
 export interface OnboardingQuestions {
   // Step 1: Company website
   website?: string;
+  address?: string;
+  postalCode?: string;
+  country?: string;
 
   // Step 2: Company Info
   companyName?: string;
@@ -124,6 +127,9 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
       "businessDescription",
       "coreOfferings",
       "preferredCountries",
+      "address",
+      "postalCode",
+      "country",
     ],
   },
   {
