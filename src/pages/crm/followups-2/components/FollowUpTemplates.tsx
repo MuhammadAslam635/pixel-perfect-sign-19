@@ -265,8 +265,8 @@ const FollowUpTemplates = forwardRef<
           const errorMessage = isAxiosError<{ message?: string }>(error)
             ? error.response?.data?.message ?? error.message
             : error instanceof Error
-            ? error.message
-            : "Please try again.";
+              ? error.message
+              : "Please try again.";
           toast({
             title: "Failed to start followup plan",
             description: errorMessage,
@@ -297,18 +297,16 @@ const FollowUpTemplates = forwardRef<
               <div className="relative pb-3">
                 <button
                   onClick={() => setActiveTab("plans")}
-                  className={`px-3 py-1 rounded-md text-2xl font-medium transition-all ${
-                    activeTab === "plans"
-                      ? "text-white"
-                      : "text-[#FFFFFF4D] hover:text-white/80"
-                  }`}
+                  className={`px-3 py-1 rounded-md text-2xl font-medium transition-all ${activeTab === "plans"
+                    ? "text-white"
+                    : "text-[#FFFFFF4D] hover:text-white/80"
+                    }`}
                 >
                   Active Followup Plans
                 </button>
                 <p
-                  className={`px-3 py-0.5 rounded-md text-[10px] font-light transition-all ${
-                    activeTab === "plans" ? "text-white/70" : "text-[#FFFFFF4D]"
-                  }`}
+                  className={`px-3 py-0.5 rounded-md text-[10px] font-light transition-all ${activeTab === "plans" ? "text-white/70" : "text-[#FFFFFF4D]"
+                    }`}
                 >
                   View and manage your active followup campaigns
                 </p>
@@ -316,23 +314,20 @@ const FollowUpTemplates = forwardRef<
               <div className="relative pb-3">
                 <button
                   onClick={() => setActiveTab("templates")}
-                  className={`px-3 py-1.5 rounded-md text-2xl font-medium transition-all ${
-                    activeTab === "templates"
-                      ? "text-white"
-                      : "text-[#FFFFFF4D] hover:text-white/80"
-                  }`}
+                  className={`px-3 py-1.5 rounded-md text-2xl font-medium transition-all ${activeTab === "templates"
+                    ? "text-white"
+                    : "text-[#FFFFFF4D] hover:text-white/80"
+                    }`}
                 >
                   Follow-up Templates
                 </button>
                 <p
-                  className={`px-3 py-0.5 rounded-md text-[10px] font-light transition-all ${
-                    activeTab === "templates"
-                      ? "text-white/70"
-                      : "text-[#FFFFFF4D]"
-                  }`}
+                  className={`px-3 py-0.5 rounded-md text-[10px] font-light transition-all ${activeTab === "templates"
+                    ? "text-white/70"
+                    : "text-[#FFFFFF4D]"
+                    }`}
                 >
-                  Centralize touchpoints for every prospect across emails,
-                  calls, and whatsapp
+                  Manage templates for emails, calls & WhatsApp
                 </p>
               </div>
             </div>
@@ -342,11 +337,10 @@ const FollowUpTemplates = forwardRef<
         {/* Bottom Border with Active Tab Indicator */}
         <div className="relative border-b border-white/20 mb-4">
           <div
-            className={`absolute bottom-0 h-[2px] bg-white transition-all duration-300 ${
-              activeTab === "plans"
-                ? "left-0 w-[280px]"
-                : "left-[300px] w-[260px]"
-            }`}
+            className={`absolute bottom-0 h-[2px] bg-white transition-all duration-300 ${activeTab === "plans"
+              ? "left-0 w-[280px]"
+              : "left-[300px] w-[260px]"
+              }`}
           />
         </div>
 
@@ -579,7 +573,7 @@ const FollowUpTemplates = forwardRef<
 
                       {/* Footer: Day Time and Run Button */}
                       {/* <div className="flex items-center justify-between pt-2"> */}
-                        {/* <span
+                      {/* <span
                           style={{
                             fontFamily: "Inter",
                             fontWeight: 400,
@@ -604,7 +598,7 @@ const FollowUpTemplates = forwardRef<
                             }
                           })()}
                         </span> */}
-                        {/* <Button
+                      {/* <Button
                           variant="ghost"
                           size="sm"
                           onClick={(e) => {
@@ -735,11 +729,10 @@ const FollowUpTemplates = forwardRef<
                               return (
                                 <CommandItem
                                   key={leadId}
-                                  className={`flex items-center gap-3 cursor-pointer px-2 py-2 transition-colors hover:bg-white/10 focus:bg-white/10 data-[selected='true']:bg-transparent data-[selected='true']:hover:bg-white/10 ${
-                                    isSelected
-                                      ? "bg-white/10 text-white"
-                                      : "text-white bg-transparent"
-                                  }`}
+                                  className={`flex items-center gap-3 cursor-pointer px-2 py-2 transition-colors hover:bg-white/10 focus:bg-white/10 data-[selected='true']:bg-transparent data-[selected='true']:hover:bg-white/10 ${isSelected
+                                    ? "bg-white/10 text-white"
+                                    : "text-white bg-transparent"
+                                    }`}
                                   onSelect={() =>
                                     handleToggleLeadSelection(leadItem)
                                   }
