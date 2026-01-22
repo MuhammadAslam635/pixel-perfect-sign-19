@@ -17,6 +17,7 @@ interface FollowupGeneratorProps {
   leadId: string;
   leadEmail: string;
   leadPhone: string;
+  leadWhatsApp: string;
 }
 
 type Channel = "email" | "sms" | "whatsapp";
@@ -27,6 +28,7 @@ export const FollowupGenerator: React.FC<FollowupGeneratorProps> = ({
   leadId,
   leadEmail,
   leadPhone,
+  leadWhatsApp,
 }) => {
   const [activeChannel, setActiveChannel] = useState<Channel>("email");
   const [messages, setMessages] = useState<Record<Channel, string>>({
@@ -114,11 +116,17 @@ export const FollowupGenerator: React.FC<FollowupGeneratorProps> = ({
         });
       } else if (activeChannel === "whatsapp") {
         // Send WhatsApp message using Wasender API
+        // Use WhatsApp-specific number, fallback to phone
+        const whatsappNumber = leadWhatsApp || leadPhone;
+        if (!whatsappNumber) {
+          throw new Error("No WhatsApp number available for this lead");
+        }
         await API.post("/whatsapp/messages/send", {
-          to: leadPhone,
+          to: whatsappNumber,
           text: body
         });
       } else {
+        // SMS uses regular phone number
         await API.post("/twilio/message", {
           to: leadPhone,
           body: body,
@@ -152,8 +160,9 @@ export const FollowupGenerator: React.FC<FollowupGeneratorProps> = ({
     switch (channelId) {
       case "email":
         return leadEmail || "No email available";
-      case "sms":
       case "whatsapp":
+        return leadWhatsApp || leadPhone || "No WhatsApp number available";
+      case "sms":
         return leadPhone || "No phone available";
       default:
         return "";

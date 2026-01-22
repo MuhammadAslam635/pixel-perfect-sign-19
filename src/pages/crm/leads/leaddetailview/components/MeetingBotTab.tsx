@@ -299,12 +299,12 @@ const MeetingBotTab: FC<MeetingBotTabProps> = ({ lead }) => {
             toast({ title: "SMS Sent", description: "Follow-up SMS sent successfully." });
 
         } else if (followupTab === "whatsapp") {
-            // Need destination phone number from lead
-            const phone = lead.phone;
-            if (!phone) throw new Error("Lead has no phone number for WhatsApp.");
+            // Use WhatsApp-specific number, fallback to phone
+            const whatsappNumber = lead.whatsapp || lead.phone;
+            if (!whatsappNumber) throw new Error("Lead has no WhatsApp number available.");
 
             await whatsappService.sendTextMessage({
-                to: phone,
+                to: whatsappNumber,
                 text: message
             });
             toast({ title: "WhatsApp Sent", description: "Follow-up WhatsApp message sent successfully." });

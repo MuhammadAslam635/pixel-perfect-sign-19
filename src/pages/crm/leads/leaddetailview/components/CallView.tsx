@@ -1530,7 +1530,8 @@ export const CallView = ({
                         transcript={selectedCallLog.transcriptionText || selectedCallLog.elevenlabsTranscript || ""}
                         leadId={lead?._id || ""}
                         leadEmail={lead?.email || ""}
-                        leadPhone={lead?.phone || lead?.whatsapp || ""}
+                        leadPhone={lead?.phone || ""}
+                        leadWhatsApp={lead?.whatsapp || ""}
                       />
                     </div>
 
