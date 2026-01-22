@@ -2559,6 +2559,12 @@ const LeadChat = ({
 
   // Helper function to format text with proper paragraph and signature spacing
   const formatTextWithSpacing = (normalizedText: string) => {
+    // Helper to process inline markdown formatting
+    const formatInline = (text: string) => {
+      // Replace **text** with <strong>text</strong>
+      return text.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+    };
+
     // Detect signature section (starts with "Best regards," "Regards," etc.)
     // Make pattern more flexible - can be at start of line or after newline
     const signaturePattern =
@@ -2578,7 +2584,7 @@ const LeadChat = ({
           const paragraphs = mainBody.split(/\n\n+/).filter((p) => p.trim());
           mainBodyHtml = paragraphs
             .map((para, index) => {
-              const formatted = para.trim().replace(/\n/g, "<br>");
+              const formatted = formatInline(para.trim()).replace(/\n/g, "<br>");
               const isLast = index === paragraphs.length - 1;
               return `<p style="margin: 0 0 ${
                 isLast ? "0" : "0.75rem"
@@ -2593,7 +2599,7 @@ const LeadChat = ({
               const isLast = index === lines.length - 1;
               return `<p style="margin: 0 0 ${
                 isLast ? "0" : "0.75rem"
-              } 0; line-height: 1.5;">${line.trim()}</p>`;
+              } 0; line-height: 1.5;">${formatInline(line.trim())}</p>`;
             })
             .join("");
         }
@@ -2608,7 +2614,7 @@ const LeadChat = ({
         .map((line, index) => {
           // Add margin-top to first line to create blank line before signature
           const marginTop = index === 0 ? "0.75rem" : "0";
-          return `<div style="line-height: 1.2; margin: ${marginTop} 0 0 0; padding: 0; display: block;">${line.trim()}</div>`;
+          return `<div style="line-height: 1.2; margin: ${marginTop} 0 0 0; padding: 0; display: block;">${formatInline(line.trim())}</div>`;
         })
         .join("");
 
@@ -2621,7 +2627,7 @@ const LeadChat = ({
           .filter((p) => p.trim());
         return paragraphs
           .map((para, index) => {
-            const formatted = para.trim().replace(/\n/g, "<br>");
+            const formatted = formatInline(para.trim()).replace(/\n/g, "<br>");
             const isLast = index === paragraphs.length - 1;
             return `<p style="margin: 0 0 ${
               isLast ? "0" : "0.75rem"
@@ -2636,7 +2642,7 @@ const LeadChat = ({
             const isLast = index === lines.length - 1;
             return `<p style="margin: 0 0 ${
               isLast ? "0" : "0.75rem"
-            } 0; line-height: 1.5;">${line.trim()}</p>`;
+            } 0; line-height: 1.5;">${formatInline(line.trim())}</p>`;
           })
           .join("");
       }
