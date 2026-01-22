@@ -44,8 +44,7 @@ const ChatHistoryList: FC<ChatHistoryListProps> = ({
   deletingChatId = null,
   streamingChatIds = [],
 }) => {
-  const truncateText = (text: string, limit: number) =>
-    text.length > limit ? `${text.slice(0, limit - 1)}…` : text;
+
 
   const filteredChats = useMemo(() => {
     if (!searchTerm) {
@@ -126,8 +125,7 @@ const ChatHistoryList: FC<ChatHistoryListProps> = ({
                 const lastMessage = chat.messages?.at(-1);
                 const cleanedTitle = cleanMarkdown(chat.title || "Untitled Conversation");
                 const fullTitle = cleanedTitle;
-                const truncatedTitle = truncateText(fullTitle, 18);
-                const cleanedLastMessage = lastMessage 
+                const cleanedLastMessage = lastMessage
                   ? cleanMarkdown(lastMessage.content)
                   : "";
                 const isDeletingThisChat = deletingChatId === chat._id;
@@ -156,7 +154,7 @@ const ChatHistoryList: FC<ChatHistoryListProps> = ({
                           className="flex-1 truncate text-sm font-semibold text-white"
                           title={fullTitle}
                         >
-                          {truncatedTitle}
+                          {fullTitle}
                         </p>
                       </div>
                       {isStreamingThisChat ? (
@@ -168,7 +166,7 @@ const ChatHistoryList: FC<ChatHistoryListProps> = ({
                           className="mt-1 truncate text-[12px] text-white/60"
                           title={cleanedLastMessage}
                         >
-                          {truncateText(cleanedLastMessage, 25)}
+                          {cleanedLastMessage}
                         </p>
                       ) : (
                         <p className="mt-1 text-[12px] text-white/45">
