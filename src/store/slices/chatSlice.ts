@@ -2,7 +2,27 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { ChatMessage, ChatSummary, ChatDetail } from "@/types/chat.types";
 import { StreamEvent } from "@/services/chat.service";
 
+// Generate a unique tab ID for this browser tab/window
+const generateTabId = (): string => {
+  // Try to get existing tab ID from sessionStorage (unique per tab)
+  const existingTabId = sessionStorage.getItem("chatTabId");
+  if (existingTabId) {
+    return existingTabId;
+  }
+
+  // Generate new tab ID
+  const newTabId = `tab_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  sessionStorage.setItem("chatTabId", newTabId);
+  return newTabId;
+};
+
+// Get the current tab ID (will be the same for the lifetime of this tab)
+export const CURRENT_TAB_ID = generateTabId();
+
 export interface ChatState {
+  // Tab isolation
+  tabId: string; // Current tab's unique ID
+
   // Chat selection and navigation
   selectedChatId: string | null;
   isCreatingNewChat: boolean;
@@ -29,10 +49,10 @@ export interface ChatState {
   // Chat operations
   deletingChatId: string | null;
 
-  // Message management
+  // Message management - now tab-isolated
   optimisticMessagesByChat: Record<string, ChatMessage[]>;
 
-  // Streaming state - support multiple concurrent chats
+  // Streaming state - support multiple concurrent chats - now tab-isolated
   streamingEventsByChat: Record<string, StreamEvent[]>; // Per-chat streaming events
   streamingChatIds: string[]; // Track which chats are currently streaming (supports multiple)
   useStreaming: boolean; // Default to streaming mode
@@ -48,6 +68,7 @@ export interface ChatState {
 }
 
 const initialState: ChatState = {
+  tabId: CURRENT_TAB_ID,
   selectedChatId: null,
   isCreatingNewChat: false,
   isMobileListOpen: false,
@@ -283,6 +304,16 @@ const chatSlice = createSlice({
       Object.assign(state, initialState);
     },
 
+    // Initialize tab - clears state from other tabs/sessions
+    initializeTab: (state) => {
+      // Clear optimistic messages and streaming state from other tabs
+      // These are tab-specific and shouldn't persist across tab reloads
+      state.optimisticMessagesByChat = {};
+      state.streamingEventsByChat = {};
+      state.streamingChatIds = [];
+      state.tabId = CURRENT_TAB_ID;
+    },
+
     // Temporary chat management
     createTemporaryChat: (state) => {
       const now = new Date().toISOString();
@@ -404,6 +435,7 @@ export const {
   clearTemporaryChat,
   convertTemporaryChat,
   handleUrlMessage,
+  initializeTab,
 } = chatSlice.actions;
 
 export default chatSlice.reducer;

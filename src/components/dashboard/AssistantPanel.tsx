@@ -9,6 +9,7 @@ import ChatInterface from "./ChatInterface";
 import ChatHistoryList from "./ChatHistoryList";
 import { toast } from "sonner";
 import { getAuthToken } from "@/utils/authHelpers";
+import { useTabIsolation } from "@/hooks/useTabIsolation";
 import {
   setSelectedChatId,
   setDeletingChatId,
@@ -31,6 +32,9 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
   const queryClient = useQueryClient();
   const hasAutoLoadedRef = useRef(false); // Track if we've already auto-loaded a chat
   const currentAuthTokenRef = useRef<string | null>(null); // Track current auth token
+
+  // Tab isolation - prevents state conflicts between multiple tabs
+  useTabIsolation();
 
   // Redux selectors
   const selectedChatId = useSelector((state: RootState) => state.chat.selectedChatId);

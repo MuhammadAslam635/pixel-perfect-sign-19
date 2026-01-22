@@ -9,6 +9,8 @@ import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import ChatList from "@/components/chat/ChatList";
 import ChatMessages from "@/components/chat/ChatMessages";
 import ChatComposer from "@/components/chat/ChatComposer";
+import MultipleTabsWarning from "@/components/chat/MultipleTabsWarning";
+import { useTabIsolation } from "@/hooks/useTabIsolation";
 import {
   fetchChatById,
   fetchChatList,
@@ -45,6 +47,7 @@ import {
   updateTemporaryChatTitle,
   saveComposerValueToCache,
   setComposerValue,
+  initializeTab,
 } from "@/store/slices/chatSlice";
 import {
   startStreamingTask,
@@ -63,6 +66,9 @@ const ChatPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
   const dispatch = useDispatch();
+
+  // Tab isolation - prevents state conflicts between multiple tabs
+  const { hasMultipleTabs } = useTabIsolation();
 
   // Redux selectors
   const selectedChatId = useSelector(
@@ -209,6 +215,11 @@ const ChatPage = () => {
 
   // Note: Removed sync effects to prevent infinite loops
   // Components will use query data directly instead of Redux state for chat data
+
+  // Initialize tab on mount - clears stale state from other tabs/sessions
+  useEffect(() => {
+    dispatch(initializeTab());
+  }, [dispatch]);
 
   // Cleanup old completed tasks every 5 minutes
   useEffect(() => {
@@ -1185,6 +1196,9 @@ const ChatPage = () => {
 
   return (
     <DashboardLayout>
+      {/* Warning when multiple tabs are detected */}
+      <MultipleTabsWarning show={hasMultipleTabs} />
+
       <Sheet
         open={isMobileListOpen}
         onOpenChange={(open) => dispatch(setIsMobileListOpen(open))}
