@@ -208,23 +208,28 @@ const OnboardingPanel = () => {
                   )}
 
                 {/* Preferred Countries */}
-                {questions.preferredCountries && (Array.isArray(questions.preferredCountries) ? questions.preferredCountries.length > 0 : false) && (
-                  <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                    <div className="flex items-start gap-3">
-                      <div className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-cyan-200 flex-shrink-0">
-                        <MapPin className="h-3.5 w-3.5" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-xs sm:text-sm font-semibold mb-1">
-                          Preferred Countries
-                        </h3>
-                        <p className="text-[10px] text-white/70">
-                          {Array.isArray(questions.preferredCountries) ? questions.preferredCountries.join(", ") : questions.preferredCountries}
-                        </p>
+                {questions.preferredCountries &&
+                  (Array.isArray(questions.preferredCountries)
+                    ? questions.preferredCountries.length > 0
+                    : false) && (
+                    <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                      <div className="flex items-start gap-3">
+                        <div className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-cyan-200 flex-shrink-0">
+                          <MapPin className="h-3.5 w-3.5" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-xs sm:text-sm font-semibold mb-1">
+                            Preferred Countries
+                          </h3>
+                          <p className="text-[10px] text-white/70">
+                            {Array.isArray(questions.preferredCountries)
+                              ? questions.preferredCountries.join(", ")
+                              : questions.preferredCountries}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
                 {/* Ideal Customer Profile */}
                 {questions.idealCustomerProfile && (

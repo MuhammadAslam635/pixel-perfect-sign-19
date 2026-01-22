@@ -20,7 +20,7 @@ import { getCountryOptions } from "@/utils/countries";
 import {
   updateOnboardingCache,
   getCachedCoreOfferings,
-} from "@/utils/onboardingCache"
+} from "@/utils/onboardingCache";
 
 interface CompanyInfoStepProps {
   formData: OnboardingQuestions;
@@ -206,10 +206,11 @@ const CompanyInfoStep = ({
           placeholder="Enter your company name"
           minLength={2}
           maxLength={200}
-          className={`bg-white/[0.06] text-white placeholder:text-white/40 text-sm rounded-lg h-12 ${errors.companyName
-            ? "border-red-500 ring-offset-red-500"
-            : "border-cyan-400/50"
-            }`}
+          className={`bg-white/[0.06] text-white placeholder:text-white/40 text-sm rounded-lg h-12 ${
+            errors.companyName
+              ? "border-red-500 ring-offset-red-500"
+              : "border-cyan-400/50"
+          }`}
         />
         {errors.companyName && (
           <p className="text-red-500 text-sm mt-1">{errors.companyName}</p>
@@ -234,10 +235,11 @@ const CompanyInfoStep = ({
           placeholder="Describe your business in 2-3 sentences..."
           minLength={10}
           maxLength={1000}
-          className={`bg-white/[0.06] text-white placeholder:text-white/40 min-h-[100px] scrollbar-hide text-sm rounded-lg ${errors.businessDescription
-            ? "border-red-500 ring-offset-red-500"
-            : "border-cyan-400/50"
-            }`}
+          className={`bg-white/[0.06] text-white placeholder:text-white/40 min-h-[100px] scrollbar-hide text-sm rounded-lg ${
+            errors.businessDescription
+              ? "border-red-500 ring-offset-red-500"
+              : "border-cyan-400/50"
+          }`}
         />
         {errors.businessDescription && (
           <p className="text-red-500 text-sm mt-1">
@@ -342,10 +344,11 @@ const CompanyInfoStep = ({
           }
           maxLength={500}
           disabled={isGenerating}
-          className={`bg-white/[0.06] text-white placeholder:text-white/40 text-sm rounded-lg h-12 ${errors.coreOfferings
-            ? "border-red-500 ring-offset-red-500"
-            : "border-cyan-400/50"
-            }`}
+          className={`bg-white/[0.06] text-white placeholder:text-white/40 text-sm rounded-lg h-12 ${
+            errors.coreOfferings
+              ? "border-red-500 ring-offset-red-500"
+              : "border-cyan-400/50"
+          }`}
         />
         {isGenerating && (
           <p className="text-xs text-cyan-400/70 flex items-center gap-1">
@@ -374,10 +377,11 @@ const CompanyInfoStep = ({
           placeholder="Select preferred countries or regions"
           searchPlaceholder="Search countries..."
           emptyMessage="No countries found."
-          className={`bg-white/[0.06] text-white placeholder:text-white/40 text-sm h-12 ${errors.preferredCountries
-            ? "border-red-500 ring-offset-red-500"
-            : "border-cyan-400/50"
-            }`}
+          className={`bg-white/[0.06] text-white placeholder:text-white/40 text-sm h-12 ${
+            errors.preferredCountries
+              ? "border-red-500 ring-offset-red-500"
+              : "border-cyan-400/50"
+          }`}
           maxDisplayItems={3}
         />
         {errors.preferredCountries && (

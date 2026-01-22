@@ -204,13 +204,17 @@ const OnboardingPage = () => {
       if (cleanedQuestions.preferredCountries) {
         if (typeof cleanedQuestions.preferredCountries === "string") {
           // Convert string to array
-          cleanedQuestions.preferredCountries = cleanedQuestions.preferredCountries
-            .split(",")
-            .map((c) => c.trim())
-            .filter(Boolean);
+          cleanedQuestions.preferredCountries =
+            cleanedQuestions.preferredCountries
+              .split(",")
+              .map((c) => c.trim())
+              .filter(Boolean);
         }
         // If it's already an array, keep it as is
-        if (Array.isArray(cleanedQuestions.preferredCountries) && cleanedQuestions.preferredCountries.length === 0) {
+        if (
+          Array.isArray(cleanedQuestions.preferredCountries) &&
+          cleanedQuestions.preferredCountries.length === 0
+        ) {
           delete cleanedQuestions.preferredCountries;
         }
       }
@@ -368,7 +372,6 @@ const OnboardingPage = () => {
           console.error("Error updating local user data:", e);
         }
       }
-
     } catch (error: any) {
       // Silently handle auto-save errors - don't show toasts for background saves
       console.error("Auto-save error (silent):", error);
@@ -537,35 +540,42 @@ const OnboardingPage = () => {
     // Check if website has changed to determine if we need to clear cached data
     if (currentStep === 1 && currentWebsite) {
       const normalizeUrl = (url: string | undefined) => {
-        if (!url) return '';
-        return url.replace(/^https?:\/\//, '').replace(/\/$/, '').toLowerCase();
+        if (!url) return "";
+        return url
+          .replace(/^https?:\/\//, "")
+          .replace(/\/$/, "")
+          .toLowerCase();
       };
 
       const normalizedCurrent = normalizeUrl(currentWebsite);
       const normalizedPrevious = normalizeUrl(previousWebsiteRef.current);
 
       // If website changed and both have values, clear cached data
-      if (normalizedCurrent && normalizedPrevious && normalizedCurrent !== normalizedPrevious) {
+      if (
+        normalizedCurrent &&
+        normalizedPrevious &&
+        normalizedCurrent !== normalizedPrevious
+      ) {
         clearWebsiteCache();
 
         // Clear company-related form fields since they're for the old website
-        formUpdates.companyName = '';
-        formUpdates.businessDescription = '';
+        formUpdates.companyName = "";
+        formUpdates.businessDescription = "";
         formUpdates.coreOfferings = [];
-        formUpdates.idealCustomerProfile = '';
-        formUpdates.address = '';
-        formUpdates.postalCode = '';
-        formUpdates.country = '';
+        formUpdates.idealCustomerProfile = "";
+        formUpdates.address = "";
+        formUpdates.postalCode = "";
+        formUpdates.country = "";
 
-        dataToSave.companyName = '';
-        dataToSave.businessDescription = '';
+        dataToSave.companyName = "";
+        dataToSave.businessDescription = "";
         dataToSave.coreOfferings = [];
-        dataToSave.idealCustomerProfile = '';
-        dataToSave.address = '';
-        dataToSave.postalCode = '';
-        dataToSave.country = '';
+        dataToSave.idealCustomerProfile = "";
+        dataToSave.address = "";
+        dataToSave.postalCode = "";
+        dataToSave.country = "";
 
-        toast.info('Website changed - fetching new company information...');
+        toast.info("Website changed - fetching new company information...");
       }
 
       // Update the previous website ref
@@ -963,10 +973,7 @@ const OnboardingPage = () => {
         {/* Top Section: Step Indicator (Static) */}
         <div className="w-full pt-12 pb-8 px-8 sm:px-12 lg:px-16 flex-none z-10 bg-background">
           <div className="max-w-4xl w-full mx-auto">
-            <StepIndicator
-              currentStep={currentStep}
-              steps={ONBOARDING_STEPS}
-            />
+            <StepIndicator currentStep={currentStep} steps={ONBOARDING_STEPS} />
           </div>
         </div>
 
