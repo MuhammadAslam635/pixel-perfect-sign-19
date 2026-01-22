@@ -54,7 +54,7 @@ const TodaysPriorityQueue: React.FC<TodaysPriorityQueueProps> = ({
   };
 
   return (
-    <Card className="bg-gray-900/50 border-gray-800 h-full">
+    <Card className="border-white/10 h-full bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-white/5 hover:scale-[1.01]">
       <CardHeader className="pb-4">
         <CardTitle className="text-white flex items-center gap-2">
           <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></div>

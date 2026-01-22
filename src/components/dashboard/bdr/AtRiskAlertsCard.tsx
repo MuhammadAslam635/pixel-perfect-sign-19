@@ -86,7 +86,7 @@ const AtRiskAlertsCard: React.FC<AtRiskAlertsCardProps> = ({
   });
 
   return (
-    <Card className="bg-gray-900/50 border-gray-800">
+    <Card className="border-white/10 bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-white/5 hover:scale-[1.01]">
       <CardHeader className="pb-4">
         <CardTitle className="text-white flex items-center gap-2">
           <AlertTriangle className="w-5 h-5 text-red-400" />

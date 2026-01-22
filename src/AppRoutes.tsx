@@ -19,6 +19,7 @@ const AgentsPage = lazy(() => import("@/pages/agents"));
 const AgentDetails = lazy(() => import("@/pages/agents/components/AgentDetails"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const SettingsPage = lazy(() => import("@/pages/Settings"));
+const Feedback = lazy(()=> import("@/pages/Feedback/Feedback"))
 const CompanyKnowledge = lazy(() => import("@/pages/companyKnowledgeBase"));
 const CampaignsPage = lazy(() => import("@/pages/campaigns"));
 const FacebookCampaignsPage = lazy(() => import("@/pages/campaigns/facebook"));
@@ -195,6 +196,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute moduleName="settings">
             <SettingsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/feedback"
+        element={
+          <ProtectedRoute moduleName="feedback">
+            <Feedback />
           </ProtectedRoute>
         }
       />

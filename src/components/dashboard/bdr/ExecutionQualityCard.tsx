@@ -34,10 +34,10 @@ const ExecutionQualityCard: React.FC<ExecutionQualityCardProps> = ({ quality }) 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
       {/* Speed to Lead */}
-      <Card className="bg-gray-900/50 border-gray-800">
+      <Card className="border-white/10 h-full bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-white/5 hover:scale-[1.01]">
         <CardHeader className="pb-3">
           <CardTitle className="text-white flex items-center gap-2 text-sm">
-            <Clock className="w-4 h-4 text-cyan-400" />
+            <Clock className="w-4 h-4" stroke="url(#dashboard-icon-gradient)"/>
             Speed-to-Lead
           </CardTitle>
         </CardHeader>
@@ -68,10 +68,10 @@ const ExecutionQualityCard: React.FC<ExecutionQualityCardProps> = ({ quality }) 
       </Card>
 
       {/* Follow-up Consistency */}
-      <Card className="bg-gray-900/50 border-gray-800">
+     <Card className="border-white/10 h-full bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-white/5 hover:scale-[1.01]">
         <CardHeader className="pb-3">
           <CardTitle className="text-white flex items-center gap-2 text-sm">
-            <CheckCircle className="w-4 h-4 text-cyan-400" />
+            <CheckCircle className="w-4 h-4" stroke="url(#dashboard-icon-gradient)"/>
             Follow-up Consistency
           </CardTitle>
         </CardHeader>
@@ -107,10 +107,10 @@ const ExecutionQualityCard: React.FC<ExecutionQualityCardProps> = ({ quality }) 
       </Card>
 
       {/* Conversation Effectiveness */}
-      <Card className="bg-gray-900/50 border-gray-800">
+      <Card className="border-white/10 h-full bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-white/5 hover:scale-[1.01]">
         <CardHeader className="pb-3">
           <CardTitle className="text-white flex items-center gap-2 text-sm">
-            <MessageSquare className="w-4 h-4 text-cyan-400" />
+            <MessageSquare className="w-4 h-4" stroke="url(#dashboard-icon-gradient)"/>
             Conversation Quality
           </CardTitle>
         </CardHeader>

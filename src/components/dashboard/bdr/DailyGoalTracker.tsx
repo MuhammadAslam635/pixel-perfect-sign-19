@@ -34,21 +34,21 @@ const DailyGoalTracker: React.FC<DailyGoalTrackerProps> = ({
       current: goals.conversationsStarted.current,
       dailyTarget: goals.conversationsStarted.dailyTarget,
       weeklyTarget: goals.conversationsStarted.weeklyTarget,
-      icon: <TrendingUp className="w-5 h-5" />,
+      icon: <TrendingUp className="w-5 h-5" stroke="url(#dashboard-icon-gradient)"/>,
     },
     {
       label: "Meetings Booked",
       current: goals.meetingsBooked.current,
       dailyTarget: goals.meetingsBooked.dailyTarget,
       weeklyTarget: goals.meetingsBooked.weeklyTarget,
-      icon: <Calendar className="w-5 h-5" />,
+      icon: <Calendar className="w-5 h-5" stroke="url(#dashboard-icon-gradient)"/>,
     },
     {
       label: "Qualified Opportunities",
       current: goals.qualifiedOpportunities.current,
       dailyTarget: goals.qualifiedOpportunities.dailyTarget,
       weeklyTarget: goals.qualifiedOpportunities.weeklyTarget,
-      icon: <Target className="w-5 h-5" />,
+      icon: <Target className="w-5 h-5" stroke="url(#dashboard-icon-gradient)"/>,
     },
   ];
 
@@ -60,12 +60,12 @@ const DailyGoalTracker: React.FC<DailyGoalTrackerProps> = ({
 
   return (
     <>
-      <Card className="bg-gray-900/50 border-gray-800">
+      <Card className="border-white/10 h-full bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-white/5 hover:scale-[1.01]">
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-white flex items-center gap-2">
-                <Target className="w-5 h-5 text-cyan-400" />
+                <Target className="w-5 h-5 text-cyan-400" stroke="url(#dashboard-icon-gradient)"/>
                 Daily Goal Tracker
               </CardTitle>
               <p className="text-gray-400 text-sm mt-1">

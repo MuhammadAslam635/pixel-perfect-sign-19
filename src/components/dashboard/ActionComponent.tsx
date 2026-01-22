@@ -182,6 +182,11 @@ export const ActionComponent = () => {
       meta: "Manage preferences",
       route: userRoleName === "Admin" ? "/admin/settings" : "/settings",
     },
+    {
+      title: "Feedback",
+      meta: "Provide feedback to improve the platform",
+      route: "/feedback",
+    },
     { title: "Sign out", meta: "Log out of EmpaTech OS", route: null },
   ].filter((item) => {
     // Show "Team" only for Company, CompanyAdmin, and Admin roles
