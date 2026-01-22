@@ -208,7 +208,7 @@ const OnboardingPanel = () => {
                   )}
 
                 {/* Preferred Countries */}
-                {questions.preferredCountries && (
+                {questions.preferredCountries && (Array.isArray(questions.preferredCountries) ? questions.preferredCountries.length > 0 : false) && (
                   <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
                     <div className="flex items-start gap-3">
                       <div className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-cyan-200 flex-shrink-0">
@@ -219,7 +219,7 @@ const OnboardingPanel = () => {
                           Preferred Countries
                         </h3>
                         <p className="text-[10px] text-white/70">
-                          {questions.preferredCountries}
+                          {Array.isArray(questions.preferredCountries) ? questions.preferredCountries.join(", ") : questions.preferredCountries}
                         </p>
                       </div>
                     </div>

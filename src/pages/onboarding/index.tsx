@@ -90,9 +90,6 @@ const OnboardingPage = () => {
         if (response.success && response.data) {
           setOnboardingData(response.data);
 
-          // Ensure we properly load all question data
-          const questions = response.data.questions || {};
-
           // Set form data with all existing values - ensure we preserve all fields
           // Make sure to handle all data types correctly (strings, arrays, etc.)
           if (questions && Object.keys(questions).length > 0) {
@@ -104,7 +101,14 @@ const OnboardingPage = () => {
               coreOfferings: Array.isArray(questions.coreOfferings)
                 ? [...questions.coreOfferings]
                 : questions.coreOfferings,
-              preferredCountries: questions.preferredCountries,
+              preferredCountries: Array.isArray(questions.preferredCountries)
+                ? [...questions.preferredCountries]
+                : typeof questions.preferredCountries === "string"
+                ? questions.preferredCountries
+                    .split(",")
+                    .map((c) => c.trim())
+                    .filter(Boolean)
+                : [],
               address: questions.address,
               postalCode: questions.postalCode,
               country: questions.country,
@@ -196,32 +200,28 @@ const OnboardingPage = () => {
       );
       const cleanedQuestions: Partial<OnboardingQuestions> = { ...dataToUse };
 
-      // Remove empty arrays and undefined values for fields not in current or previous steps
-      if (currentStepConfig) {
-        const allowedFields = new Set<string>();
-        // Include fields from current step and all previous steps
-        for (let i = 1; i <= currentStep; i++) {
-          const step = ONBOARDING_STEPS.find((s) => s.id === i);
-          if (step) {
-            step.fields.forEach((field) => allowedFields.add(field));
-          }
+      // Normalize preferredCountries to always be an array
+      if (cleanedQuestions.preferredCountries) {
+        if (typeof cleanedQuestions.preferredCountries === "string") {
+          // Convert string to array
+          cleanedQuestions.preferredCountries = cleanedQuestions.preferredCountries
+            .split(",")
+            .map((c) => c.trim())
+            .filter(Boolean);
         }
-
-        // Clean up fields not in allowed set
-        Object.keys(cleanedQuestions).forEach((key) => {
-          if (!allowedFields.has(key)) {
-            delete cleanedQuestions[key as keyof OnboardingQuestions];
-          }
-        });
-
-        // Remove empty arrays
-        Object.keys(cleanedQuestions).forEach((key) => {
-          const value = cleanedQuestions[key as keyof OnboardingQuestions];
-          if (Array.isArray(value) && value.length === 0) {
-            delete cleanedQuestions[key as keyof OnboardingQuestions];
-          }
-        });
+        // If it's already an array, keep it as is
+        if (Array.isArray(cleanedQuestions.preferredCountries) && cleanedQuestions.preferredCountries.length === 0) {
+          delete cleanedQuestions.preferredCountries;
+        }
       }
+
+      // Remove empty arrays
+      Object.keys(cleanedQuestions).forEach((key) => {
+        const value = cleanedQuestions[key as keyof OnboardingQuestions];
+        if (Array.isArray(value) && value.length === 0) {
+          delete cleanedQuestions[key as keyof OnboardingQuestions];
+        }
+      });
 
       await onboardingService.updateOnboarding({
         questions: cleanedQuestions,
@@ -421,14 +421,14 @@ const OnboardingPage = () => {
           isValid = false;
         }
       }
-      // Special handling for array fields (coreOfferings)
-      else if (field === "coreOfferings") {
+      // Special handling for array fields (coreOfferings, preferredCountries)
+      else if (field === "coreOfferings" || field === "preferredCountries") {
         if (Array.isArray(value)) {
           if (value.length === 0) {
-            newErrors[field] = "Core Offerings: At least one item required";
+            newErrors[field] = `${label}: At least one selection required`;
             isValid = false;
-          } else if (rules) {
-            // Validate each item in array
+          } else if (rules && field === "coreOfferings") {
+            // Validate each item in array (only for coreOfferings, preferredCountries items are just country names)
             const invalidItems = value.filter(
               (item) =>
                 typeof item === "string" &&
@@ -443,7 +443,7 @@ const OnboardingPage = () => {
             }
           }
         } else {
-          newErrors[field] = "Core Offerings: Required";
+          newErrors[field] = `${label}: At least one selection required`;
           isValid = false;
         }
       } else if (typeof value === "string") {
@@ -495,8 +495,11 @@ const OnboardingPage = () => {
       // I will remove the toast for `website` if I show it inline.
       // Actually, standard pattern is to use inline errors. I'll rely on inline errors.
       if (Object.keys(newErrors).length > 0) {
-        // Optionally show toast
-        // toast.error("Please fix the errors before proceeding");
+        // Show toast notification for the first error
+        const firstError = Object.values(newErrors)[0];
+        if (firstError) {
+          toast.error(firstError);
+        }
       }
       return false;
     }
@@ -686,10 +689,10 @@ const OnboardingPage = () => {
           // Clear core offerings and preferred countries when fetching new company data
           // User will need to generate/select them again for the new company
           formUpdates.coreOfferings = [];
-          formUpdates.preferredCountries = "";
+          formUpdates.preferredCountries = [];
 
           dataToSave.coreOfferings = [];
-          dataToSave.preferredCountries = "";
+          dataToSave.preferredCountries = [];
 
           if (Object.keys(formUpdates).length > 0) {
             console.log("[Frontend Debug] Applying Form Updates:", formUpdates);

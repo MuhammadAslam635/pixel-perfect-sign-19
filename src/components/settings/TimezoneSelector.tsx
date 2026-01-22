@@ -59,15 +59,15 @@ export const TimezoneSelector = ({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[400px] p-0 bg-[#1a1a2e] backdrop-blur-xl border-white/20" align="start">
+      <PopoverContent className="w-[400px] p-0 bg-[#1a1a2e] backdrop-blur-xl border-white/20 " align="start">
         <Command>
           <CommandInput
             placeholder="Search timezone..."
-            className="h-9 text-white bg-white/[0.05] border-white/10 placeholder:text-white/50"
+            className="h-9 text-white  border-white/10 placeholder:text-white/50"
           />
-          <CommandList>
+          <CommandList className="scrollbar-hide">
             <CommandEmpty className="text-white/70">No timezone found.</CommandEmpty>
-            <CommandGroup>
+            <CommandGroup className="scrollbar-hide">
               <CommandItem
                 value="none"
                 onSelect={() => handleSelect("none")}

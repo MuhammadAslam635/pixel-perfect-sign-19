@@ -19,7 +19,7 @@ export interface OnboardingQuestions {
   companyName?: string;
   businessDescription?: string;
   coreOfferings?: string[];
-  preferredCountries?: string;
+  preferredCountries?: string[];
 
   // Step 3: ICP
   idealCustomerProfile?: string;

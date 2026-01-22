@@ -54,18 +54,15 @@ const CompanyInfoStep = ({
   // Handle core offerings as comma-separated string
   const coreOfferingsString = formData.coreOfferings?.join(", ") || "";
 
-  // Handle preferred countries - convert between string (backend) and array (MultiSelect)
+  // Handle preferred countries - store as array directly
   const countryOptions = getCountryOptions();
-  const preferredCountriesArray = formData.preferredCountries
+  const preferredCountriesArray = Array.isArray(formData.preferredCountries)
     ? formData.preferredCountries
-      .split(",")
-      .map((c) => c.trim())
-      .filter(Boolean)
     : [];
 
   const handleCountriesChange = (selectedCountries: string[]) => {
-    // Convert array back to comma-separated string for backend
-    updateFormData({ preferredCountries: selectedCountries.join(", ") });
+    // Store as array directly
+    updateFormData({ preferredCountries: selectedCountries });
   };
 
   const handleCoreOfferingsChange = (value: string) => {
