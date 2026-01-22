@@ -126,3 +126,41 @@ export const formatDateInTimezone = (
     return null;
   }
 };
+
+/**
+ * Convert a local time string (HH:mm) to UTC time string (HH:mm)
+ * @param localTime - Time string in HH:mm format
+ * @returns UTC time string in HH:mm format
+ */
+export const convertLocalTimeToUTC = (localTime: string): string => {
+  if (!localTime || !localTime.includes(":")) return localTime;
+  try {
+    const [hours, minutes] = localTime.split(":").map(Number);
+    const dt = DateTime.now()
+      .set({ hour: hours, minute: minutes, second: 0, millisecond: 0 })
+      .toUTC();
+    return dt.toFormat("HH:mm");
+  } catch (error) {
+    console.warn("Error converting local time to UTC:", error);
+    return localTime;
+  }
+};
+
+/**
+ * Convert a UTC time string (HH:mm) to local time string (HH:mm)
+ * @param utcTime - Time string in HH:mm format
+ * @returns Local time string in HH:mm format
+ */
+export const convertUTCToLocalTime = (utcTime: string): string => {
+  if (!utcTime || !utcTime.includes(":")) return utcTime;
+  try {
+    const [hours, minutes] = utcTime.split(":").map(Number);
+    const dt = DateTime.utc()
+      .set({ hour: hours, minute: minutes, second: 0, millisecond: 0 })
+      .toLocal();
+    return dt.toFormat("HH:mm");
+  } catch (error) {
+    console.warn("Error converting UTC time to local:", error);
+    return utcTime;
+  }
+};
