@@ -33,6 +33,7 @@ import {
   removeStreamingChat,
   migrateStreamingEvents,
   setComposerValue,
+  initializeTab,
 } from "@/store/slices/chatSlice";
 import {
   startStreamingTask,
@@ -628,6 +629,11 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
     const newHeight = Math.min(textarea.scrollHeight, maxHeight);
     textarea.style.height = `${newHeight}px`;
   };
+
+  // Initialize tab on mount - clears stale state from other tabs/sessions
+  useEffect(() => {
+    dispatch(initializeTab());
+  }, [dispatch]);
 
   // Auto-scroll input to show latest text and resize
   useEffect(() => {
