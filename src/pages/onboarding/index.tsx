@@ -935,7 +935,7 @@ const OnboardingPage = () => {
   const isLastStep = currentStep === ONBOARDING_STEPS.length;
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="h-screen w-screen bg-background flex overflow-hidden">
       {/* Left Sidebar - 1/3 width */}
       <div className="hidden lg:flex lg:w-1/3 relative bg-background">
         <div className="w-full h-full flex flex-col items-center justify-between pt-8 pr-8">
@@ -956,116 +956,121 @@ const OnboardingPage = () => {
       </div>
 
       {/* Right Content - 2/3 width */}
-      <div className="w-full lg:w-2/3 flex flex-col min-h-screen">
-        <div className="flex-1 flex flex-col">
-          {/* Step Indicator - Full width, fixed from top */}
-          <div className="w-full pt-[100px] pb-24">
-            <div className="max-w-4xl pl-8 pr-4 sm:pl-12 sm:pr-6 lg:pl-16 lg:pr-8">
-              <StepIndicator
-                currentStep={currentStep}
-                steps={ONBOARDING_STEPS}
-              />
-            </div>
+      <div className="w-full lg:w-2/3 flex flex-col h-screen overflow-hidden bg-background relative">
+        {/* Top Section: Step Indicator (Static) */}
+        <div className="w-full pt-12 pb-8 px-8 sm:px-12 lg:px-16 flex-none z-10 bg-background">
+          <div className="max-w-4xl w-full mx-auto">
+            <StepIndicator
+              currentStep={currentStep}
+              steps={ONBOARDING_STEPS}
+            />
           </div>
+        </div>
 
-          {/* Form Content - Match step indicator width exactly */}
-          <div className="max-w-4xl pl-8 pr-4 sm:pl-12 sm:pr-6 lg:pl-16 lg:pr-8 w-full">
-            {/* Welcome Header - Only show on step 1 */}
-            {currentStep === 1 && (
-              <div className="mb-8">
-                <h1
-                  className="text-white mb-2 leading-[1.2]"
-                  style={{
-                    fontFamily: "Poppins, sans-serif",
-                    fontSize: "64px",
-                    fontWeight: 500,
-                  }}
+        {/* Flexible Middle Section: Content + Buttons */}
+        <div className="flex-1 min-h-0 flex flex-col w-full px-8 sm:px-12 lg:px-16 pb-8">
+          <div className="max-w-4xl w-full mx-auto flex flex-col h-full">
+            {/* Scrollable Form Area - Shrinks if needed, otherwise content height */}
+            <div className="flex-shrink overflow-y-auto scrollbar-hide min-h-0 pr-2 -mr-2">
+              {/* Welcome Header - Only show on step 1 */}
+              {currentStep === 1 && (
+                <div className="mb-8">
+                  <h1
+                    className="text-white mb-2 leading-[1.2]"
+                    style={{
+                      fontFamily: "Poppins, sans-serif",
+                      fontSize: "64px",
+                      fontWeight: 500,
+                    }}
+                  >
+                    Welcome to Empatech OS
+                  </h1>
+                  <p
+                    className="text-white/60 max-w-lg"
+                    style={{
+                      fontFamily: "Poppins, sans-serif",
+                      fontSize: "20px",
+                      fontWeight: 300,
+                    }}
+                  >
+                    Let's got to know your business so we can personalize your
+                    experience
+                  </p>
+                </div>
+              )}
+
+              {/* Step Title */}
+              {currentStep !== 1 && (
+                <div className="mb-6">
+                  <h2 className="text-lg sm:text-xl font-semibold text-white">
+                    {ONBOARDING_STEPS[currentStep - 1].title}
+                  </h2>
+                </div>
+              )}
+
+              {/* Step Content */}
+              <div className="space-y-6 pb-2">{renderStep()}</div>
+            </div>
+
+            {/* Navigation Buttons - Part of the flow but visible */}
+            <div className="flex-none pt-6 mt-auto md:mt-4">
+              <div className="flex items-center justify-between gap-4">
+                <Button
+                  variant="outline"
+                  onClick={handleSkip}
+                  className="border-cyan-400/50 text-white hover:bg-white/5"
+                  disabled={saving || completing}
                 >
-                  Welcome to Empatech OS
-                </h1>
-                <p
-                  className="text-white/60 max-w-lg"
-                  style={{
-                    fontFamily: "Poppins, sans-serif",
-                    fontSize: "20px",
-                    fontWeight: 300,
-                  }}
-                >
-                  Let's got to know your business so we can personalize your
-                  experience
-                </p>
-              </div>
-            )}
+                  Skip
+                </Button>
 
-            {/* Step Title */}
-            {currentStep !== 1 && (
-              <div className="mb-6">
-                <h2 className="text-lg sm:text-xl font-semibold text-white">
-                  {ONBOARDING_STEPS[currentStep - 1].title}
-                </h2>
-              </div>
-            )}
+                <div className="flex items-center gap-3 ml-auto">
+                  {currentStep > 1 && (
+                    <Button
+                      variant="outline"
+                      onClick={handleBack}
+                      disabled={saving || completing}
+                      className="border-cyan-400/50 text-white hover:bg-white/5"
+                    >
+                      Back
+                    </Button>
+                  )}
 
-            {/* Step Content */}
-            <div className="space-y-6 mb-8">{renderStep()}</div>
-
-            {/* Navigation Buttons - Right after form fields */}
-            <div className="flex items-center justify-between gap-4 mt-6">
-              <Button
-                variant="outline"
-                onClick={handleSkip}
-                className="border-cyan-400/50 text-white hover:bg-white/5"
-                disabled={saving || completing}
-              >
-                Skip
-              </Button>
-
-              <div className="flex items-center gap-3 ml-auto">
-                {currentStep > 1 && (
-                  <Button
-                    variant="outline"
-                    onClick={handleBack}
-                    disabled={saving || completing}
-                    className="border-cyan-400/50 text-white hover:bg-white/5"
-                  >
-                    Back
-                  </Button>
-                )}
-
-                {isLastStep ? (
-                  <Button
-                    onClick={handleComplete}
-                    disabled={completing || saving}
-                    className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:from-cyan-600 hover:to-blue-700 min-w-[120px]"
-                  >
-                    {completing ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Completing...
-                      </>
-                    ) : (
-                      <>
-                        <Check className="h-4 w-4 mr-2" />
-                        Complete
-                      </>
-                    )}
-                  </Button>
-                ) : (
-                  <Button
-                    onClick={handleNext}
-                    disabled={saving || completing || fetchingCompanyInfo}
-                    className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:from-cyan-600 hover:to-blue-700 min-w-[120px]"
-                  >
-                    {saving || fetchingCompanyInfo ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        {fetchingCompanyInfo ? "Fetching..." : "Saving..."}
-                      </>
-                    ) : (
-                      "Next"
-                    )}
-                  </Button>
-                )}
+                  {isLastStep ? (
+                    <Button
+                      onClick={handleComplete}
+                      disabled={completing || saving}
+                      className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:from-cyan-600 hover:to-blue-700 min-w-[120px]"
+                    >
+                      {completing ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Completing...
+                        </>
+                      ) : (
+                        <>
+                          <Check className="h-4 w-4 mr-2" />
+                          Complete
+                        </>
+                      )}
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={handleNext}
+                      disabled={saving || completing || fetchingCompanyInfo}
+                      className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:from-cyan-600 hover:to-blue-700 min-w-[120px]"
+                    >
+                      {saving || fetchingCompanyInfo ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          {fetchingCompanyInfo ? "Fetching..." : "Saving..."}
+                        </>
+                      ) : (
+                        "Next"
+                      )}
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
           </div>

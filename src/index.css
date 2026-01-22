@@ -183,6 +183,52 @@ All colors MUST be HSL.
   );
 }
 
+/* Custom styled scrollbar for main content */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 8px 0;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.15) 0%,
+    rgba(255, 255, 255, 0.25) 50%,
+    rgba(255, 255, 255, 0.15) 100%
+  );
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.2s ease;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    180deg,
+    rgba(183, 214, 216, 0.4) 0%,
+    rgba(183, 214, 216, 0.5) 50%,
+    rgba(183, 214, 216, 0.4) 100%
+  );
+  border-color: rgba(183, 214, 216, 0.3);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:active {
+  background: linear-gradient(
+    180deg,
+    rgba(183, 214, 216, 0.5) 0%,
+    rgba(183, 214, 216, 0.6) 50%,
+    rgba(183, 214, 216, 0.5) 100%
+  );
+}
+
 /* Gradient border-only utility: keeps inner fill visible */
 .border-only-gradient-cyan-blue {
   position: relative;
