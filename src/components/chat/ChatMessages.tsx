@@ -18,14 +18,15 @@ const getConfidenceScore = (message: ChatMessage): number | null => {
   // Try multiple patterns to catch all variations
   
   // Pattern 1: XML tag format: <CONFIDENCE_SCORE>85</CONFIDENCE_SCORE>
-  const xmlMatch = content.match(/<CONFIDENCE_SCORE>\s*(\d+)\s*<\/CONFIDENCE_SCORE>/i);
+  // Also catch typos like <CNFIDENCE_SCORE> (missing O), <CONFIDENCE_SCOR> (missing E), etc.
+  const xmlMatch = content.match(/<C[ON]?FIDENCE[_\s]*SCOR[E]?\s*(\d+)\s*<\/?C[ON]?FIDENCE[_\s]*SCOR[E]?>/i);
   if (xmlMatch) {
     const score = parseInt(xmlMatch[1], 10);
     if (score >= 0 && score <= 100) return score;
   }
 
   // Pattern 2: "CONFIDENCE_SCORE : 85%" or "CONFIDENCE_SCORE: 85%"
-  const underscoreMatch = content.match(/CONFIDENCE_SCORE\s*:\s*(\d+)[%)]?/i);
+  const underscoreMatch = content.match(/C[ON]?FIDENCE[_\s]*SCOR[E]?\s*:\s*(\d+)[%)]?/i);
   if (underscoreMatch) {
     const score = parseInt(underscoreMatch[1], 10);
     if (score >= 0 && score <= 100) return score;
@@ -108,14 +109,16 @@ const removeConfidenceText = (content: string): string => {
   cleanedContent = cleanedContent.replace(/Confidence\s+Score\s+\d+[%)]?\s*[✓✔]?/gi, '');
   cleanedContent = cleanedContent.replace(/Confidence\s+\d+[%)]?\s*[✓✔]?/gi, '');
 
-  // PASS 2: Remove XML-style confidence tags (case insensitive)
-  cleanedContent = cleanedContent.replace(/<CONFIDENCE_SCORE>\s*\d+\s*<\/CONFIDENCE_SCORE>/gi, '');
+  // PASS 2: Remove XML-style confidence tags (case insensitive, catch typos)
+  // Catch variations like <CONFIDENCE_SCORE>, <CNFIDENCE_SCORE> (missing O), <CONFIDENCE_SCOR> (missing E), etc.
+  // Use flexible pattern: C(?:ON|N)? matches C, CO, CON, or CN (for typos)
+  cleanedContent = cleanedContent.replace(/<C(?:ON|N)?FIDENCE[_\s]*SCOR[E]?\s*\d+\s*<\/?C(?:ON|N)?FIDENCE[_\s]*SCOR[E]?>/gi, '');
   
   // Remove patterns like "CONFIDENCE_SCORE : 85%" or "CONFIDENCE_SCORE: 85%" (uppercase with underscore)
-  cleanedContent = cleanedContent.replace(/CONFIDENCE_SCORE\s*:\s*\d+[%)]?/gi, '');
+  cleanedContent = cleanedContent.replace(/C(?:ON|N)?FIDENCE[_\s]*SCOR[E]?\s*:\s*\d+[%)]?/gi, '');
   
   // Remove patterns containing the XML Tag (Label + Tag, Code Block + Tag, or just Tag)
-  cleanedContent = cleanedContent.replace(/(?:(?:\n|^)\s*(?:##\s*|[*_]+|[|]\s*)?Confidence(?: Score)?[\s\S]*?)?(?:```|`)?<CONFIDENCE_SCORE>\s*\d+\s*<\/CONFIDENCE_SCORE>(?:```|`)?/gi, '');
+  cleanedContent = cleanedContent.replace(/(?:(?:\n|^)\s*(?:##\s*|[*_]+|[|]\s*)?Confidence(?: Score)?[\s\S]*?)?(?:```|`)?<C(?:ON|N)?FIDENCE[_\s]*SCOR[E]?\s*\d+\s*<\/?C(?:ON|N)?FIDENCE[_\s]*SCOR[E]?>(?:```|`)?/gi, '');
 
   // PASS 3: Remove markdown headers for confidence (any level: #, ##, ###, etc.)
   cleanedContent = cleanedContent.replace(/^#{1,6}\s*Confidence\s*(?:Score)?\s*$/gim, '');
