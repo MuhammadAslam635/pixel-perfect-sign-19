@@ -1,9 +1,11 @@
 import { motion } from "framer-motion";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
-import DataTable, { Column } from "@/data/DataTable";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { feedbackService } from "@/services/feedback.service";
 import { Label } from "@/components/ui/label";
@@ -13,27 +15,22 @@ import { FeedbackType } from "@/types/feedback.types";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { feedbackTypes } from "@/mocks/dropdownMock";
 import { useToast } from "@/hooks/use-toast";
-import { Pencil, Trash2 } from "lucide-react";
-
-type FeedbackRow = {
-  _id: string;
-  title: string;
-  type: string;
-  status: string;
-  createdAt: string;
-};
-
-const statusOptions = [
-  { value: "open", label: "Open" },
-  { value: "closed", label: "Closed" },
-];
+import { Pencil, Trash2, ChevronRight, Bug, Lightbulb, XCircle, AlertTriangle, Calendar, FileText, Search, Filter, X, Paperclip } from "lucide-react";
+import ConfirmDialog from "@/components/ui/confirm-dialog";
+import { useMemo } from "react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const Feedback = () => {
   const [open, setOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [feedbackToDelete, setFeedbackToDelete] = useState<string | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const { toast } = useToast();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [existingAttachments, setExistingAttachments] = useState<any[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "open" | "closed">("all");
 
   const [formData, setFormData] = useState({
     title: "",
@@ -42,13 +39,37 @@ const Feedback = () => {
     status: "open" as "open" | "closed",
   });
 
-  const { data: feedbackData = [], isLoading } = useQuery({
+  const { data: responseData, isLoading } = useQuery({
     queryKey: ["feedback"],
-    queryFn: feedbackService.getAllFeedbacks,
+    queryFn: () => feedbackService.getAllFeedbacks(),
   });
 
+  const feedbackData = responseData?.feedbacks || [];
+
+  // Filter feedback based on search and status
+  const filteredFeedback = useMemo(() => {
+    let filtered = feedbackData;
+
+    // Apply status filter
+    if (statusFilter !== "all") {
+      filtered = filtered.filter((item: any) => item.status === statusFilter);
+    }
+
+    // Apply search filter
+    if (searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase();
+      filtered = filtered.filter((item: any) =>
+        item.title?.toLowerCase().includes(searchLower) ||
+        item.description?.toLowerCase().includes(searchLower) ||
+        item.type?.toLowerCase().includes(searchLower)
+      );
+    }
+
+    return filtered;
+  }, [feedbackData, searchTerm, statusFilter]);
+
   const queryClient = useQueryClient();
-  
+
   const { mutate: createFeedback, isPending: isCreating } = useMutation({
     mutationFn: feedbackService.createFeedback,
     onSuccess: () => {
@@ -88,6 +109,8 @@ const Feedback = () => {
     onSuccess: () => {
       toast({ title: "Feedback deleted successfully" });
       queryClient.invalidateQueries({ queryKey: ["feedback"] });
+      setDeleteDialogOpen(false);
+      setFeedbackToDelete(null);
     },
     onError: (error: any) => {
       const errorMessage = error?.response?.data?.message || "Failed to delete feedback";
@@ -103,65 +126,66 @@ const Feedback = () => {
     setEditMode(false);
     setEditingId(null);
     setSelectedFiles([]);
+    setExistingAttachments([]);
   };
 
-  const columns: Column<FeedbackRow>[] = [
-    { key: "title", label: "Title" },
-    { key: "type", label: "Type" },
-    { key: "status", label: "Status" },
-    { key: "createdAt", label: "Created At" },
-    {
-      key: "_id",
-      label: "Actions",
-      render: (row) => (
-        <div className="flex gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => handleEdit(row)}
-            className="h-8 w-8 text-blue-400 hover:text-blue-300 hover:bg-blue-400/10"
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => handleDelete(row._id)}
-            className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-400/10"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
-      ),
-    },
-  ];
-
-  const data: FeedbackRow[] = feedbackData.map((item) => ({
-    _id: item._id,
-    title: item.title,
-    type: item.type,
-    status: item.status,
-    createdAt: new Date(item.createdAt).toLocaleDateString(),
-  }));
-
-  const handleEdit = (row: FeedbackRow) => {
-    const feedback = feedbackData.find((f) => f._id === row._id);
-    if (feedback) {
-      setFormData({
-        title: feedback.title,
-        description: feedback.description || "",
-        type: feedback.type,
-        status: feedback.status,
-      });
-      setEditingId(row._id);
-      setEditMode(true);
-      setOpen(true);
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case "bug":
+        return <Bug className="w-4 h-4" />;
+      case "improvement":
+        return <Lightbulb className="w-4 h-4" />;
+      case "error":
+        return <XCircle className="w-4 h-4" />;
+      case "failure":
+        return <AlertTriangle className="w-4 h-4" />;
+      default:
+        return <FileText className="w-4 h-4" />;
     }
   };
 
+  const getTypeBadgeColor = (type: string) => {
+    switch (type) {
+      case "bug":
+        return "bg-red-500/20 text-red-300 border-red-500/30";
+      case "improvement":
+        return "bg-blue-500/20 text-blue-300 border-blue-500/30";
+      case "error":
+        return "bg-orange-500/20 text-orange-300 border-orange-500/30";
+      case "failure":
+        return "bg-yellow-500/20 text-yellow-300 border-yellow-500/30";
+      default:
+        return "bg-white/10 text-white/70 border-white/20";
+    }
+  };
+
+  const getStatusBadgeColor = (status: string) => {
+    return status === "open"
+      ? "bg-yellow-500/20 text-yellow-300 border-yellow-500/30"
+      : "bg-green-500/20 text-green-300 border-green-500/30";
+  };
+
+  const handleEdit = (feedback: any) => {
+    setFormData({
+      title: feedback.title,
+      description: feedback.description || "",
+      type: feedback.type,
+      status: feedback.status,
+    });
+    setExistingAttachments(feedback.attachments || []);
+    setEditingId(feedback._id);
+    setEditMode(true);
+    setOpen(true);
+  };
+
   const handleDelete = (id: string) => {
-    if (window.confirm("Are you sure you want to delete this feedback?")) {
-      deleteFeedback(id);
+    setFeedbackToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (feedbackToDelete) {
+      deleteFeedback(feedbackToDelete);
     }
   };
 
@@ -180,23 +204,36 @@ const Feedback = () => {
     }
   };
 
+  const removeSelectedFile = (index: number) => {
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const removeExistingAttachment = (id: string) => {
+    setExistingAttachments((prev) => prev.filter((item) => item._id !== id));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Create FormData for file upload
     const formDataToSend = new FormData();
     formDataToSend.append('title', formData.title);
     formDataToSend.append('description', formData.description);
     formDataToSend.append('type', formData.type);
-    
+
     if (editMode) {
       formDataToSend.append('status', formData.status);
     }
-    
+
     // Append all selected files
     selectedFiles.forEach((file) => {
       formDataToSend.append('attachments', file);
     });
+
+    // If editing, send the remaining existing attachments as JSON string
+    if (editMode) {
+      formDataToSend.append('existingAttachments', JSON.stringify(existingAttachments));
+    }
 
     console.log("Files being sent:", selectedFiles);
 
@@ -219,131 +256,100 @@ const Feedback = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3, ease: "easeOut" }}
-        className="relative mt-32 mb-8 flex-1 overflow-hidden px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] text-white"
+        className="relative mt-32 mb-16 flex-1 overflow-hidden px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] text-white"
       >
         <motion.section
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3, ease: "easeOut", delay: 0.1 }}
-          className="mx-auto flex flex-col gap-8 space-y-3 pt-3 sm:pt-4 pb-6 px-3 sm:px-6 rounded-xl sm:rounded-[30px] w-full h-full border-0 sm:border sm:border-white/10 bg-transparent sm:bg-[linear-gradient(173.83deg,_rgba(255,255,255,0.08)_4.82%,_rgba(255,255,255,0)_38.08%,_rgba(255,255,255,0)_56.68%,_rgba(255,255,255,0.02)_95.1%)]"
+          className="mx-auto flex flex-col gap-8 space-y-3 pt-3 sm:pt-4 pb-16 px-3 sm:px-6 rounded-xl sm:rounded-[30px] w-full h-full border-0 sm:border sm:border-white/10 bg-transparent sm:bg-[linear-gradient(173.83deg,_rgba(255,255,255,0.08)_4.82%,_rgba(255,255,255,0)_38.08%,_rgba(255,255,255,0)_56.68%,_rgba(255,255,255,0.02)_95.1%)]"
         >
-          <div className="flex items-center justify-between">
-            <header className="flex flex-col gap-2">
-              <motion.h1
-                className="text-3xl font-semibold tracking-tight text-white sm:text-4xl"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
+          <div className="flex flex-col gap-6">
+            <div className="flex items-center justify-between">
+              <header className="flex flex-col gap-2">
+                <motion.h1
+                  className="text-3xl font-semibold tracking-tight text-white sm:text-4xl"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.6, delay: 0.4 }}
+                >
+                  Feedback
+                </motion.h1>
+                <motion.p
+                  className="max-w-2xl text-sm text-white/70 sm:text-base"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.6, delay: 0.6 }}
+                >
+                  Submit and review feedback
+                </motion.p>
+              </header>
+
+              <Dialog
+                open={open}
+                onOpenChange={(isOpen) => {
+                  setOpen(isOpen);
+                  if (!isOpen) resetForm();
+                }}
               >
-                Feedback
-              </motion.h1>
-              <motion.p
-                className="max-w-2xl text-sm text-white/70 sm:text-base"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.6 }}
-              >
-                Submit and review feedback
-              </motion.p>
-            </header>
+                <DialogTrigger asChild>
+                  <Button className={feedbackbtn}>Add Feedback</Button>
+                </DialogTrigger>
 
-            <Dialog
-              open={open}
-              onOpenChange={(isOpen) => {
-                setOpen(isOpen);
-                if (!isOpen) resetForm();
-              }}
-            >
-              <DialogTrigger asChild>
-                <Button className={feedbackbtn}>Add Feedback</Button>
-              </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>
+                      {editMode ? "Edit Feedback" : "Add Feedback"}
+                    </DialogTitle>
+                  </DialogHeader>
 
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle>
-                    {editMode ? "Edit Feedback" : "Add Feedback"}
-                  </DialogTitle>
-                </DialogHeader>
-
-                <div className="py-6 text-sm text-muted-foreground">
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                      <Label htmlFor="title" className="text-white/80">
-                        Title
-                      </Label>
-                      <Input
-                        name="title"
-                        value={formData.title}
-                        onChange={handleInputChange}
-                        placeholder="Enter feedback title"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <Label className="text-white/80">Description</Label>
-                      <Textarea
-                        name="description"
-                        value={formData.description}
-                        onChange={handleInputChange}
-                        placeholder="Enter description"
-                        rows={4}
-                      />
-                    </div>
-
-                    <div>
-                      <Label className="text-white/80">Type</Label>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="outline"
-                            className="w-full justify-between text-white border-white/20"
-                          >
-                            {feedbackTypes.find((t) => t.value === formData.type)
-                              ?.label}
-                          </Button>
-                        </DropdownMenuTrigger>
-
-                        <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)] bg-popover text-white border-white/20">
-                          {feedbackTypes.map((item) => (
-                            <DropdownMenuItem
-                              key={item.value}
-                              onSelect={() =>
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  type: item.value,
-                                }))
-                              }
-                            >
-                              {item.label}
-                            </DropdownMenuItem>
-                          ))}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-
-                    {editMode && (
+                  <div className="py-6 text-sm text-muted-foreground">
+                    <form onSubmit={handleSubmit} className="space-y-4">
                       <div>
-                        <Label className="text-white/80">Status</Label>
+                        <Label htmlFor="title" className="text-white/80">
+                          Title
+                        </Label>
+                        <Input
+                          name="title"
+                          value={formData.title}
+                          onChange={handleInputChange}
+                          placeholder="Enter feedback title"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <Label className="text-white/80">Description</Label>
+                        <Textarea
+                          name="description"
+                          value={formData.description}
+                          onChange={handleInputChange}
+                          placeholder="Enter description"
+                          rows={4}
+                        />
+                      </div>
+
+                      <div>
+                        <Label className="text-white/80">Type</Label>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button
                               variant="outline"
                               className="w-full justify-between text-white border-white/20"
                             >
-                              {statusOptions.find((s) => s.value === formData.status)
+                              {feedbackTypes.find((t) => t.value === formData.type)
                                 ?.label}
                             </Button>
                           </DropdownMenuTrigger>
 
                           <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)] bg-popover text-white border-white/20">
-                            {statusOptions.map((item) => (
+                            {feedbackTypes.map((item) => (
                               <DropdownMenuItem
                                 key={item.value}
                                 onSelect={() =>
                                   setFormData((prev) => ({
                                     ...prev,
-                                    status: item.value as "open" | "closed",
+                                    type: item.value,
                                   }))
                                 }
                               >
@@ -353,55 +359,233 @@ const Feedback = () => {
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
-                    )}
 
-                    <div>
-                      <Label className="text-white/80">Attachments</Label>
-                      <Input
-                        type="file"
-                        multiple
-                        onChange={handleFileChange}
-                        className="h-14 cursor-pointer text-white/80 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20"
-                      />
-                      {selectedFiles.length > 0 && (
-                        <div className="mt-2 text-xs text-white/60">
-                          {selectedFiles.length} file(s) selected
+
+
+                      <div className="space-y-3">
+                        <Label className="text-white/80">Attachments</Label>
+
+                        {/* Existing Attachments */}
+                        {editMode && existingAttachments.length > 0 && (
+                          <div className="space-y-2 mb-3">
+                            <p className="text-xs font-medium text-white/50 uppercase tracking-wider">Existing Files</p>
+                            {existingAttachments.map((file) => (
+                              <div key={file._id} className="flex items-center justify-between p-2 bg-white/5 border border-white/10 rounded-lg group/file">
+                                <div className="flex items-center gap-2 flex-1 min-w-0">
+                                  <FileText className="w-4 h-4 text-cyan-400 flex-shrink-0" />
+                                  <span className="text-xs text-white/80 truncate">{file.fileName}</span>
+                                </div>
+                                <Button
+                                  type="button"
+                                  onClick={() => removeExistingAttachment(file._id)}
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6 text-white/40 hover:text-red-400 hover:bg-red-400/10 opacity-0 group-hover/file:opacity-100 transition-opacity"
+                                >
+                                  <X className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Newly Selected Files */}
+                        {selectedFiles.length > 0 && (
+                          <div className="space-y-2 mb-3">
+                            <p className="text-xs font-medium text-white/50 uppercase tracking-wider">New Files</p>
+                            {selectedFiles.map((file, idx) => (
+                              <div key={idx} className="flex items-center justify-between p-2 bg-cyan-400/5 border border-cyan-400/20 rounded-lg group/file">
+                                <div className="flex items-center gap-2 flex-1 min-w-0">
+                                  <Paperclip className="w-4 h-4 text-cyan-400 flex-shrink-0" />
+                                  <span className="text-xs text-white/80 truncate">{file.name}</span>
+                                </div>
+                                <Button
+                                  type="button"
+                                  onClick={() => removeSelectedFile(idx)}
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6 text-white/40 hover:text-red-400 hover:bg-red-400/10 opacity-0 group-hover/file:opacity-100 transition-opacity"
+                                >
+                                  <X className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        <div className="relative">
+                          <Input
+                            type="file"
+                            multiple
+                            onChange={handleFileChange}
+                            className="h-14 cursor-pointer text-white/80 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20"
+                          />
+                          <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                            <Paperclip className="w-5 h-5 text-white/30" />
+                          </div>
                         </div>
-                      )}
-                    </div>
+                      </div>
 
-                    <div className="flex justify-end gap-2 pt-4">
-                      <Button
-                        type="submit"
-                        disabled={isCreating || isUpdating}
-                        className={feedbackbtn}
-                      >
-                        {isCreating || isUpdating
-                          ? "Submitting..."
-                          : editMode
-                          ? "Update Feedback"
-                          : "Submit Feedback"}
-                      </Button>
-                    </div>
-                  </form>
-                </div>
-              </DialogContent>
-            </Dialog>
+                      <div className="flex justify-end gap-2 pt-4">
+                        <Button
+                          type="submit"
+                          disabled={isCreating || isUpdating}
+                          className={feedbackbtn}
+                        >
+                          {isCreating || isUpdating
+                            ? "Submitting..."
+                            : editMode
+                              ? "Update Feedback"
+                              : "Submit Feedback"}
+                        </Button>
+                      </div>
+                    </form>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+
+            {/* Search and Filter Controls */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/50" />
+                <Input
+                  type="search"
+                  placeholder="Search feedback..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 bg-white/[0.05] border-white/10 text-white placeholder:text-white/50 focus:border-cyan-400/50 focus:ring-cyan-400/20"
+                />
+              </div>
+              <Select value={statusFilter} onValueChange={(value: any) => setStatusFilter(value)}>
+                <SelectTrigger className="w-full sm:w-[180px] bg-white/[0.05] border-white/10 text-white">
+                  <Filter className="w-4 h-4 mr-2" />
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#1a1a1a] border-white/10">
+                  <SelectItem value="all" className="text-white hover:bg-white/10">All Status</SelectItem>
+                  <SelectItem value="open" className="text-white hover:bg-white/10">Open</SelectItem>
+                  <SelectItem value="closed" className="text-white hover:bg-white/10">Closed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="flex-1 overflow-hidden">
             <div className="h-full overflow-y-auto">
-              <DataTable<FeedbackRow>
-                columns={columns}
-                data={data}
-                isLoading={isLoading}
-                emptyMessage="No feedback found"
-                className="bg-transparent text-white"
-              />
+              {isLoading ? (
+                <div className="flex flex-col items-center justify-center py-16">
+                  <div className="w-8 h-8 border-4 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin mb-3" />
+                  <p className="text-white/60 text-sm">Loading feedback...</p>
+                </div>
+              ) : feedbackData.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16">
+                  <FileText className="w-12 h-12 text-white/20 mb-3" />
+                  <p className="text-white/70 text-base font-medium mb-1">No feedback yet</p>
+                  <p className="text-white/50 text-sm">Submit your first feedback to get started</p>
+                </div>
+              ) : filteredFeedback.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16">
+                  <Search className="w-12 h-12 text-white/20 mb-3" />
+                  <p className="text-white/70 text-base font-medium mb-1">No results found</p>
+                  <p className="text-white/50 text-sm">Try adjusting your search or filters</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {filteredFeedback.map((feedback: any, index: number) => (
+                    <motion.div
+                      key={feedback._id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.2, delay: index * 0.03 }}
+                      className="group relative bg-white/[0.02] border border-white/10 rounded-xl transition-all duration-200"
+                    >
+                      <div className="flex items-center gap-4 p-4">
+                        {/* Type Badge */}
+                        <div className="flex-shrink-0">
+                          <Badge className={`${getTypeBadgeColor(feedback.type)} border flex items-center gap-1.5 px-2.5 py-1`}>
+                            {getTypeIcon(feedback.type)}
+                            <span className="capitalize text-xs">{feedback.type}</span>
+                          </Badge>
+                        </div>
+
+                        {/* Title & Description */}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-white font-medium text-sm mb-0.5 truncate">
+                            {feedback.title}
+                          </h3>
+                          {feedback.description && (
+                            <p className="text-white/50 text-xs truncate">
+                              {feedback.description}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Status Badge */}
+                        <div className="flex-shrink-0">
+                          <Badge className={`${getStatusBadgeColor(feedback.status)} border text-xs capitalize px-2.5 py-1`}>
+                            {feedback.status}
+                          </Badge>
+                        </div>
+
+                        {/* Date */}
+                        <div className="flex-shrink-0 hidden sm:flex items-center gap-1.5 text-white/40 text-xs">
+                          <Calendar className="w-3.5 h-3.5" />
+                          <span>{new Date(feedback.createdAt).toLocaleDateString()}</span>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex-shrink-0 flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEdit(feedback);
+                            }}
+                            disabled={feedback.status === "closed"}
+                            className={`h-8 w-8 ${feedback.status === "closed"
+                              ? "text-gray-500 cursor-not-allowed opacity-50"
+                              : "text-blue-400 hover:text-blue-300 hover:bg-blue-400/10"
+                              }`}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(feedback._id);
+                            }}
+                            className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-400/10"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </motion.section>
       </motion.main>
+
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        onCancel={() => {
+          setDeleteDialogOpen(false);
+          setFeedbackToDelete(null);
+        }}
+        onConfirm={confirmDelete}
+        title="Are you sure?"
+        description="This action cannot be undone. This will permanently delete your feedback."
+        confirmText="Delete"
+        cancelText="Cancel"
+        confirmVariant="destructive"
+      />
     </DashboardLayout>
   );
 };

@@ -5,12 +5,44 @@ export const feedbackService = {
     /**
      * Get all feedbacks
      */
-    getAllFeedbacks: async (): Promise<Feedback[]> => {
+    getAllFeedbacks: async (params?: { userId?: string; status?: string; page?: number; limit?: number }): Promise<any> => {
         try {
-            const response = await API.get<FeedbackResponse>("/feedback");
-            return response?.data?.data?.feedbacks;
+            const queryParams = new URLSearchParams();
+            if (params?.userId) queryParams.append('userId', params.userId);
+            if (params?.status) queryParams.append('status', params.status);
+            if (params?.page) queryParams.append('page', params.page.toString());
+            if (params?.limit) queryParams.append('limit', params.limit.toString());
+
+            const response = await API.get<FeedbackResponse>(`/feedback?${queryParams.toString()}`);
+            return response?.data?.data;
         } catch (error: any) {
             console.error("Failed to fetch feedbacks:", error);
+            throw error;
+        }
+    },
+
+    /**
+     * Get feedback statistics (Admin only)
+     */
+    getFeedbackStats: async (): Promise<any> => {
+        try {
+            const response = await API.get("/feedback/stats");
+            return response?.data?.data;
+        } catch (error: any) {
+            console.error("Failed to fetch feedback statistics:", error);
+            throw error;
+        }
+    },
+
+    /**
+     * Get single feedback by ID
+     */
+    getFeedbackById: async (id: string): Promise<Feedback> => {
+        try {
+            const response = await API.get<any>(`/feedback/${id}`);
+            return response?.data?.data;
+        } catch (error: any) {
+            console.error("Failed to fetch feedback:", error);
             throw error;
         }
     },

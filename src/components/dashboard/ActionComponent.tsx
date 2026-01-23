@@ -184,8 +184,8 @@ export const ActionComponent = () => {
     },
     {
       title: "Feedback",
-      meta: "Provide feedback to improve the platform",
-      route: "/feedback",
+      meta: userRoleName === "Admin" ? "Manage user feedback" : "Provide feedback to improve the platform",
+      route: userRoleName === "Admin" ? "/admin/feedbacks" : "/feedback",
     },
     { title: "Sign out", meta: "Log out of EmpaTech OS", route: null },
   ].filter((item) => {
@@ -208,7 +208,7 @@ export const ActionComponent = () => {
     // "Settings" Visibility Logic:
     if (item.title === "Settings") {
       // Admin always has access to their settings
-      if (userRoleName === "Admin") return true; 
+      if (userRoleName === "Admin") return true;
       // Check for permission for other users
       return canView("settings");
     }
@@ -229,9 +229,8 @@ export const ActionComponent = () => {
       <div className="flex items-center gap-1 p-2 px-4">
         <button
           aria-label="Toggle notifications"
-          className={`relative flex h-8 w-8 items-center justify-center rounded-full border border-white/10 text-white transition ${
-            notificationsOpen ? "ring-2 ring-cyan-400/40" : ""
-          }`}
+          className={`relative flex h-8 w-8 items-center justify-center rounded-full border border-white/10 text-white transition ${notificationsOpen ? "ring-2 ring-cyan-400/40" : ""
+            }`}
           type="button"
           onClick={() => {
             setNotificationsOpen((prev) => !prev);
@@ -264,9 +263,8 @@ export const ActionComponent = () => {
           <div className="h-8 w-8 flex items-center justify-center overflow-hidden rounded-full border border-white/25 bg-gradient-to-br from-cyan-500/20 to-blue-600/20">
             <AvatarFallback
               name={
-                `${currentUser?.firstName || ""} ${
-                  currentUser?.lastName || ""
-                }`.trim() ||
+                `${currentUser?.firstName || ""} ${currentUser?.lastName || ""
+                  }`.trim() ||
                 currentUser?.email ||
                 "User"
               }
@@ -277,9 +275,8 @@ export const ActionComponent = () => {
           </div>
           <div className="hidden lg:flex flex-col text-left text-xs leading-tight text-white/70">
             <span className="font-medium text-white">
-              {`${currentUser?.firstName || ""} ${
-                currentUser?.lastName || ""
-              }`.trim() ||
+              {`${currentUser?.firstName || ""} ${currentUser?.lastName || ""
+                }`.trim() ||
                 currentUser?.email?.split("@")[0] ||
                 "User"}
             </span>
@@ -310,9 +307,8 @@ export const ActionComponent = () => {
                         return (
                           <li
                             key={item._id}
-                            className={`${
-                              isUnread ? "bg-white/5" : ""
-                            } cursor-pointer hover:bg-white/10 transition-colors`}
+                            className={`${isUnread ? "bg-white/5" : ""
+                              } cursor-pointer hover:bg-white/10 transition-colors`}
                             onClick={() => handleMarkAsRead(item._id)}
                           >
                             <div className="flex items-start justify-between gap-2">

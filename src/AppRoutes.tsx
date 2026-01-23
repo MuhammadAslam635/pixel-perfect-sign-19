@@ -19,7 +19,7 @@ const AgentsPage = lazy(() => import("@/pages/agents"));
 const AgentDetails = lazy(() => import("@/pages/agents/components/AgentDetails"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const SettingsPage = lazy(() => import("@/pages/Settings"));
-const Feedback = lazy(()=> import("@/pages/Feedback/Feedback"))
+const Feedback = lazy(() => import("@/pages/Feedback/Feedback"))
 const CompanyKnowledge = lazy(() => import("@/pages/companyKnowledgeBase"));
 const CampaignsPage = lazy(() => import("@/pages/campaigns"));
 const FacebookCampaignsPage = lazy(() => import("@/pages/campaigns/facebook"));
@@ -79,6 +79,15 @@ const AdminIndustryCategories = lazy(
 );
 const AdminEnrichmentConfigs = lazy(
   () => import("@/pages/admin/EnrichmentConfigs")
+);
+const AdminFeedbacks = lazy(
+  () => import("@/pages/admin/feedbacks/AdminFeedbacks")
+);
+const UserFeedbackList = lazy(
+  () => import("@/pages/admin/feedbacks/UserFeedbackList")
+);
+const FeedbackDetail = lazy(
+  () => import("@/pages/admin/feedbacks/FeedbackDetail")
 );
 
 // Loading component for suspense fallback
@@ -158,127 +167,127 @@ const AppRoutes = () => {
           }
         />
 
-      {/* Protected Routes - Only accessible when logged in */}
-      <Route
-        path="/onboarding"
-        element={
-          <ProtectedRoute skipOnboardingCheck>
-            <OnboardingPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute moduleName="dashboard">
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/companies"
-        element={
-          <ProtectedRoute moduleName="companies">
-            <CompanyDetail />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/chat"
-        element={
-          <ProtectedRoute moduleName="chat">
-            <ChatPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/settings"
-        element={
-          <ProtectedRoute moduleName="settings">
-            <SettingsPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/feedback"
-        element={
-          <ProtectedRoute moduleName="feedback">
-            <Feedback />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/company-knowledge"
-        element={
-          <ProtectedRoute moduleName="company-knowledge">
-            <CompanyKnowledge />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/leads"
-        element={
-          <ProtectedRoute moduleName="leads">
-            <LeadsPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/agents"
-        element={
-          <ProtectedRoute moduleName="agents">
-            <AgentsPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/agent-detail/:name"
-        element={
-          <ProtectedRoute moduleName="agents">
-            <AgentDetails />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/leadchattest"
-        element={
-          <ProtectedRoute>
-            <LeadChat
-              selectedCallLogView={null}
-              setSelectedCallLogView={function (
-                value: SelectedCallLogView | null
-              ): void {
-                throw new Error("Function not implemented.");
-              }}
-            />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/campaigns"
-        element={
-          <ProtectedRoute moduleName="campaigns">
-            <CampaignsPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/prospects"
-        element={
-          <ProtectedRoute moduleName="clients">
-            <ProspectsPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/news"
-        element={
-          <ProtectedRoute>
-            <NewsPage />
-          </ProtectedRoute>
-        }
-      />
-      {/* <Route
+        {/* Protected Routes - Only accessible when logged in */}
+        <Route
+          path="/onboarding"
+          element={
+            <ProtectedRoute skipOnboardingCheck>
+              <OnboardingPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute moduleName="dashboard">
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/companies"
+          element={
+            <ProtectedRoute moduleName="companies">
+              <CompanyDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/chat"
+          element={
+            <ProtectedRoute moduleName="chat">
+              <ChatPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute moduleName="settings">
+              <SettingsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/feedback"
+          element={
+            <ProtectedRoute moduleName="feedback">
+              <Feedback />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/company-knowledge"
+          element={
+            <ProtectedRoute moduleName="company-knowledge">
+              <CompanyKnowledge />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/leads"
+          element={
+            <ProtectedRoute moduleName="leads">
+              <LeadsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/agents"
+          element={
+            <ProtectedRoute moduleName="agents">
+              <AgentsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/agent-detail/:name"
+          element={
+            <ProtectedRoute moduleName="agents">
+              <AgentDetails />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/leadchattest"
+          element={
+            <ProtectedRoute>
+              <LeadChat
+                selectedCallLogView={null}
+                setSelectedCallLogView={function (
+                  value: SelectedCallLogView | null
+                ): void {
+                  throw new Error("Function not implemented.");
+                }}
+              />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/campaigns"
+          element={
+            <ProtectedRoute moduleName="campaigns">
+              <CampaignsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/prospects"
+          element={
+            <ProtectedRoute moduleName="clients">
+              <ProspectsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/news"
+          element={
+            <ProtectedRoute>
+              <NewsPage />
+            </ProtectedRoute>
+          }
+        />
+        {/* <Route
         path="/followups"
         element={
           <ProtectedRoute moduleName="followup-templates">
@@ -472,6 +481,30 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute allowedRoles={["Admin"]}>
               <AdminEnrichmentConfigs />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/feedbacks"
+          element={
+            <ProtectedRoute allowedRoles={["Admin"]}>
+              <AdminFeedbacks />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/feedbacks/user/:userId"
+          element={
+            <ProtectedRoute allowedRoles={["Admin"]}>
+              <UserFeedbackList />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/feedbacks/:feedbackId"
+          element={
+            <ProtectedRoute allowedRoles={["Admin"]}>
+              <FeedbackDetail />
             </ProtectedRoute>
           }
         />
