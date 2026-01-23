@@ -114,15 +114,33 @@ const FeedbackDetail = () => {
         }
     };
 
-    const handleDownloadAttachment = (fileUrl: string, fileName: string) => {
-        // Create a temporary anchor element to trigger download
-        const link = document.createElement("a");
-        link.href = `/api${fileUrl}`;
-        link.download = fileName;
-        link.target = "_blank";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+    const handleDownloadAttachment = async (fileUrl: string, fileName: string) => {
+        const toastId = toast.loading("Downloading attachment...");
+        try {
+            const blob = await feedbackService.downloadAttachment(fileUrl);
+            
+            // Create a blob URL
+            const url = window.URL.createObjectURL(blob);
+            
+            // Create a temporary anchor element to trigger download
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = fileName;
+            link.target = "_blank";
+            document.body.appendChild(link);
+            link.click();
+            
+            // Cleanup
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+            
+            toast.dismiss(toastId);
+            toast.success("Download started");
+        } catch (error) {
+            console.error("Download failed:", error);
+            toast.dismiss(toastId);
+            toast.error("Failed to download attachment. Please try again.");
+        }
     };
 
     const getTypeIcon = (type: string) => {

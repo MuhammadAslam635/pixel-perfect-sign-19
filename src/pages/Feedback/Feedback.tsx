@@ -40,6 +40,8 @@ const Feedback = () => {
     status: "open" as "open" | "closed",
   });
 
+  const [formErrors, setFormErrors] = useState<{ title?: string; description?: string }>({});
+
   const { data: responseData, isLoading } = useQuery({
     queryKey: ["feedback"],
     queryFn: () => feedbackService.getAllFeedbacks(),
@@ -124,6 +126,7 @@ const Feedback = () => {
 
   const resetForm = () => {
     setFormData({ title: "", description: "", type: "improvement", status: "open" });
+    setFormErrors({});
     setEditMode(false);
     setViewMode(false);
     setEditingId(null);
@@ -178,6 +181,7 @@ const Feedback = () => {
     setEditingId(feedback._id);
     setEditMode(true);
     setOpen(true);
+    setFormErrors({});
   };
 
   const handleDelete = (id: string) => {
@@ -196,6 +200,9 @@ const Feedback = () => {
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    if (formErrors[name as keyof typeof formErrors]) {
+      setFormErrors((prev) => ({ ...prev, [name]: undefined }));
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -216,6 +223,22 @@ const Feedback = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validation
+    const errors: { title?: string; description?: string } = {};
+    if (!formData.title.trim()) {
+      errors.title = "Title is required";
+    }
+    if (!formData.description.trim()) {
+      errors.description = "Description is required";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+
+    setFormErrors({});
 
     // Create FormData for file upload
     const formDataToSend = new FormData();
@@ -262,9 +285,10 @@ const Feedback = () => {
     setEditMode(false);
     setEditingId(null);
     setOpen(true);
+    setFormErrors({});
   };
 
-  const downloadFileFrontend = (file: any) => {
+  const downloadFileFrontend = async (file: any) => {
     console.log("File being downloaded:", file);
 
     if (!file?.fileUrl) {
@@ -272,17 +296,35 @@ const Feedback = () => {
       return;
     }
 
-    // 🔥 convert relative → absolute URL
-    const absoluteUrl = `${window.location.origin}${file.fileUrl}`;
-
-    const link = document.createElement("a");
-    link.href = absoluteUrl;
-    link.download = file.fileName || "attachment";
-    link.target = "_blank";
-
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const toastId = toast({ title: "Downloading attachment..." });
+    
+    try {
+        const blob = await feedbackService.downloadAttachment(file.fileUrl);
+        
+        // Create a blob URL
+        const url = window.URL.createObjectURL(blob);
+        
+        // Create a temporary anchor element to trigger download
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = file.fileName || "attachment";
+        link.target = "_blank";
+        
+        document.body.appendChild(link);
+        link.click();
+        
+        // Cleanup
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        
+        toast({ title: "Download started" });
+    } catch (error) {
+        console.error("Download failed:", error);
+        toast({ 
+            title: "Failed to download attachment",
+            variant: "destructive"
+        });
+    }
   };
 
 
@@ -335,15 +377,15 @@ const Feedback = () => {
                   <Button className={feedbackbtn}>Add Feedback</Button>
                 </DialogTrigger>
 
-                <DialogContent className="sm:max-w-md">
+                <DialogContent className="sm:max-w-md max-h-[85vh] flex flex-col overflow-hidden">
                   <DialogHeader>
                     <DialogTitle>
                       {editMode ? "Edit Feedback" : "Add Feedback"}
                     </DialogTitle>
                   </DialogHeader>
 
-                  <div className="py-6 text-sm text-muted-foreground">
-                    <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="py-6 text-sm text-muted-foreground overflow-y-auto pr-2 scrollbar-hide">
+                    <form onSubmit={handleSubmit} className="space-y-4 px-2">
                       <div>
                         <Label htmlFor="title" className="text-white/80">
                           Title
@@ -353,10 +395,13 @@ const Feedback = () => {
                           value={formData.title}
                           onChange={handleInputChange}
                           placeholder="Enter feedback title"
-                          required
                           disabled={viewMode}
                           readOnly={viewMode}
+                          className={formErrors.title ? "border-red-500 focus-visible:ring-red-500" : ""}
                         />
+                         {formErrors.title && (
+                          <p className="text-red-500 text-xs mt-1 font-medium">{formErrors.title}</p>
+                        )}
                       </div>
 
                       <div>
@@ -367,17 +412,20 @@ const Feedback = () => {
                           onChange={handleInputChange}
                           placeholder="Enter description"
                           rows={4}
-                          required
                           disabled={viewMode}
                           readOnly={viewMode}
+                          className={formErrors.description ? "border-red-500 focus-visible:ring-red-500" : ""}
                         />
+                         {formErrors.description && (
+                          <p className="text-red-500 text-xs mt-1 font-medium">{formErrors.description}</p>
+                        )}
                       </div>
 
                       <div>
                         <Label className="text-white/80">Type</Label>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild disabled={viewMode}>
-                            <Button
+                           <Button
                               variant="outline"
                               className="w-full justify-between text-white border-white/20"
                             >

@@ -89,4 +89,24 @@ export const feedbackService = {
             throw error;
         }
     },
+
+    /**
+     * Download feedback attachment
+     */
+    downloadAttachment: async (fileUrl: string): Promise<Blob> => {
+        try {
+            // Remove /api prefix if present since baseURL already includes it
+            // fileUrl from DB is like /api/feedback/files/filename.jpg
+            // baseURL is like http://.../api
+            const cleanUrl = fileUrl.startsWith('/api/') ? fileUrl.substring(4) : fileUrl;
+            
+            const response = await API.get(cleanUrl, {
+                responseType: 'blob',
+            });
+            return response.data;
+        } catch (error: any) {
+            console.error("Failed to download attachment:", error);
+            throw error;
+        }
+    },
 };
