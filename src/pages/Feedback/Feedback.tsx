@@ -15,7 +15,7 @@ import { FeedbackType } from "@/types/feedback.types";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { feedbackTypes } from "@/mocks/dropdownMock";
 import { useToast } from "@/hooks/use-toast";
-import { Pencil, Trash2, ChevronRight, Bug, Lightbulb, XCircle, AlertTriangle, Calendar, FileText, Search, Filter, X, Paperclip } from "lucide-react";
+import { Pencil, Trash2, ChevronRight, Bug, Lightbulb, XCircle, AlertTriangle, Calendar, FileText, Search, Filter, X, Paperclip, Download } from "lucide-react";
 import ConfirmDialog from "@/components/ui/confirm-dialog";
 import { useMemo } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -377,172 +377,242 @@ const Feedback = () => {
                   <Button className={feedbackbtn}>Add Feedback</Button>
                 </DialogTrigger>
 
-                <DialogContent className="sm:max-w-md max-h-[85vh] flex flex-col overflow-hidden">
-                  <DialogHeader>
-                    <DialogTitle>
-                      {editMode ? "Edit Feedback" : "Add Feedback"}
+                <DialogContent
+                className="max-w-2xl max-h-[90vh] flex flex-col p-0 text-white border border-white/10 overflow-hidden rounded-[32px] shadow-[0_25px_60px_rgba(0,0,0,0.55)]"
+                style={{
+                  background: "#0a0a0a"
+                }}
+              >
+                <div
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    background: "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0) 38.08%, rgba(255, 255, 255, 0) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)"
+                  }}
+                />
+                
+                <div className="relative z-10 flex flex-col h-full min-h-0">
+                  <DialogHeader className="px-6 pt-6 pb-4 flex-shrink-0 border-b border-white/10">
+                    <DialogTitle className="text-lg sm:text-xl font-semibold text-white drop-shadow-lg -mb-1">
+                      {viewMode ? "View Feedback" : editMode ? "Edit Feedback" : "Add Feedback"}
                     </DialogTitle>
                   </DialogHeader>
 
-                  <div className="py-6 text-sm text-muted-foreground overflow-y-auto pr-2 scrollbar-hide">
-                    <form onSubmit={handleSubmit} className="space-y-4 px-2">
-                      <div>
-                        <Label htmlFor="title" className="text-white/80">
-                          Title
-                        </Label>
-                        <Input
-                          name="title"
-                          value={formData.title}
-                          onChange={handleInputChange}
-                          placeholder="Enter feedback title"
-                          disabled={viewMode}
-                          readOnly={viewMode}
-                          className={formErrors.title ? "border-red-500 focus-visible:ring-red-500" : ""}
-                        />
-                         {formErrors.title && (
-                          <p className="text-red-500 text-xs mt-1 font-medium">{formErrors.title}</p>
-                        )}
-                      </div>
+                  <div className="flex-1 overflow-y-auto px-6 space-y-4 scrollbar-hide py-4 min-h-0">
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                      
+                      {viewMode ? (
+                        /* View Mode Layout */
+                        <div className="space-y-6">
+                          <div className="flex justify-between items-start gap-4">
+                            <div className="flex-1 min-w-0">
+                               <h3 className="text-lg font-medium text-white leading-relaxed flex items-center gap-2 flex-wrap">
+                                 <span className="truncate">{formData.title}</span>
+                                 <Badge className={`${getTypeBadgeColor(formData.type)} border flex-shrink-0 flex items-center gap-1 px-2 py-0.5 h-5`}>
+                                       <span className="[&>svg]:w-3 [&>svg]:h-3 flex items-center">{getTypeIcon(formData.type)}</span>
+                                       <span className="capitalize text-[10px]">{formData.type}</span>
+                                   </Badge>
+                               </h3>
+                            </div>
+                              
+                            <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                               <Badge className={`${getStatusBadgeColor(formData.status)} border text-[10px] capitalize px-2 py-0.5 h-5`}>
+                                  {formData.status}
+                               </Badge>
+                            </div>
+                          </div>
 
-                      <div>
-                        <Label className="text-white/80">Description</Label>
-                        <Textarea
-                          name="description"
-                          value={formData.description}
-                          onChange={handleInputChange}
-                          placeholder="Enter description"
-                          rows={4}
-                          disabled={viewMode}
-                          readOnly={viewMode}
-                          className={formErrors.description ? "border-red-500 focus-visible:ring-red-500" : ""}
-                        />
-                         {formErrors.description && (
-                          <p className="text-red-500 text-xs mt-1 font-medium">{formErrors.description}</p>
-                        )}
-                      </div>
+                           
 
-                      <div>
-                        <Label className="text-white/80">Type</Label>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild disabled={viewMode}>
-                           <Button
-                              variant="outline"
-                              className="w-full justify-between text-white border-white/20"
-                            >
-                              {feedbackTypes.find((t) => t.value === formData.type)
-                                ?.label}
-                            </Button>
-                          </DropdownMenuTrigger>
+                           <div className="space-y-1.5">
+                             <Label className="text-white/50 text-xs font-medium uppercase tracking-wider">Description</Label>
+                             <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                                <p className="text-sm text-white/80 whitespace-pre-wrap leading-relaxed">{formData.description}</p>
+                             </div>
+                           </div>
 
-                          <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)] bg-popover text-white border-white/20">
-                            {feedbackTypes.map((item) => (
-                              <DropdownMenuItem
-                                key={item.value}
-                                onSelect={() =>
-                                  setFormData((prev) => ({
-                                    ...prev,
-                                    type: item.value,
-                                  }))
-                                }
-                              >
-                                {item.label}
-                              </DropdownMenuItem>
-                            ))}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-
-
-
-                      <div className="space-y-3">
-                        <Label className="text-white/80">Attachments</Label>
-                        {/* Existing Attachments */}
-                        {(editMode || viewMode) && existingAttachments.length > 0 && (
-                          <div className="space-y-2 mb-3">
-                            <p className="text-xs font-medium text-white/50 uppercase tracking-wider">Existing Files</p>
-                            {existingAttachments.map((file) => (
-                              <div key={file._id} className="flex items-center justify-between p-2 bg-white/5 border border-white/10 rounded-lg group/file">
-                                <div className="flex items-center gap-2 flex-1 min-w-0">
-                                  <FileText className="w-4 h-4 text-cyan-400 flex-shrink-0" />
-                                  {/* <span className="text-xs text-white/80 truncate">{file.fileName}</span> */}
-                                  <button
-                                    type="button"
-                                    onClick={() => downloadFileFrontend(file)}
-                                    className="text-xs text-cyan-400 hover:underline cursor-pointer truncate"
-                                  >
-                                    {file.fileName}
-                                  </button>
-
+                           {/* Attachments for View Mode */}
+                           <div className="space-y-3">
+                              <Label className="text-white/50 text-xs font-medium uppercase tracking-wider">Attachments</Label>
+                              {existingAttachments.length > 0 ? (
+                                <div className="space-y-2">
+                                     {existingAttachments.map((file) => (
+                                        <div key={file._id} className="flex items-center justify-between p-3 bg-white/5 border border-white/10 rounded-xl group/file hover:bg-white/10 transition-colors">
+                                             <div className="flex items-center gap-3 flex-1 min-w-0">
+                                                  <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center border border-white/5">
+                                                      <FileText className="w-4 h-4 text-cyan-400" />
+                                                  </div>
+                                                  <span className="text-sm text-white/90 truncate">{file.fileName}</span>
+                                             </div>
+                                             <Button
+                                                type="button"
+                                                onClick={() => downloadFileFrontend(file)}
+                                                 variant="ghost"
+                                                 size="icon"
+                                                 className="h-8 w-8 text-white/40 hover:text-cyan-400 hover:bg-cyan-400/10"
+                                                 title="Download"
+                                             >
+                                                <Download className="w-4 h-4" />
+                                             </Button>
+                                        </div>
+                                     ))}
                                 </div>
-                                <Button
-                                  type="button"
-                                  onClick={() => removeExistingAttachment(file._id)}
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-6 w-6 text-white/40 hover:text-red-400 hover:bg-red-400/10 opacity-0 group-hover/file:opacity-100 transition-opacity"
-                                >
-                                  <X className="w-3 h-3" />
-                                </Button>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-
-                        {/* Newly Selected Files */}
-                        {selectedFiles.length > 0 && (
-                          <div className="space-y-2 mb-3">
-                            <p className="text-xs font-medium text-white/50 uppercase tracking-wider">New Files</p>
-                            {selectedFiles.map((file, idx) => (
-                              <div key={idx} className="flex items-center justify-between p-2 bg-cyan-400/5 border border-cyan-400/20 rounded-lg group/file">
-                                <div className="flex items-center gap-2 flex-1 min-w-0">
-                                  <Paperclip className="w-4 h-4 text-cyan-400 flex-shrink-0" />
-                                  <span className="text-xs text-white/80 truncate">{file.name}</span>
-                                </div>
-                                <Button
-                                  type="button"
-                                  onClick={() => removeSelectedFile(idx)}
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-6 w-6 text-white/40 hover:text-red-400 hover:bg-red-400/10 opacity-0 group-hover/file:opacity-100 transition-opacity"
-                                >
-                                  <X className="w-3 h-3" />
-                                </Button>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-
-                        <div className="relative">
-                          <Input
-                            type="file"
-                            multiple
-                            onChange={handleFileChange}
-                            className="h-14 cursor-pointer text-white/80 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20"
-                          />
-                          <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                            <Paperclip className="w-5 h-5 text-white/30" />
-                          </div>
+                              ) : (
+                                <p className="text-sm text-white/40 italic">No attachments</p>
+                              )}
+                           </div>
                         </div>
-                      </div>
+                      ) : (
+                        /* Edit/Add Mode Layout */
+                        <>
+                          <div>
+                            <Label htmlFor="title" className="text-white/80">Title</Label>
+                            <Input
+                              name="title"
+                              value={formData.title}
+                              onChange={handleInputChange}
+                              placeholder="Enter feedback title"
+                              disabled={viewMode}
+                              readOnly={viewMode}
+                              className={`mt-1.5 bg-white/5 border-white/10 text-white ${formErrors.title ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+                            />
+                             {formErrors.title && (
+                              <p className="text-red-500 text-xs mt-1 font-medium">{formErrors.title}</p>
+                            )}
+                          </div>
 
-                      <div className="flex justify-end gap-2 pt-4">
-                        {!viewMode && (
-                          <Button
-                            type="submit"
-                            disabled={isCreating || isUpdating}
-                            className={feedbackbtn}
-                          >
-                            {isCreating || isUpdating
-                              ? "Submitting..."
-                              : editMode
-                                ? "Update Feedback"
-                                : "Submit Feedback"}
-                          </Button>
-                        )}
-                      </div>
+                          <div>
+                            <Label className="text-white/80">Description</Label>
+                            <Textarea
+                              name="description"
+                              value={formData.description}
+                              onChange={handleInputChange}
+                              placeholder="Enter description"
+                              rows={4}
+                              disabled={viewMode}
+                              readOnly={viewMode}
+                              className={`mt-1.5 bg-white/5 border-white/10 text-white scrollbar-hide ${formErrors.description ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+                            />
+                             {formErrors.description && (
+                              <p className="text-red-500 text-xs mt-1 font-medium">{formErrors.description}</p>
+                            )}
+                          </div>
+
+                          <div>
+                            <Label className="text-white/80">Type</Label>
+                            <div className="mt-1.5">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild disabled={viewMode}>
+                                 <Button
+                                     variant="outline"
+                                     className="w-full justify-between text-white border-white/10 bg-white/5 hover:bg-white/10"
+                                   >
+                                     {feedbackTypes.find((t) => t.value === formData.type)
+                                       ?.label || "Select Type"}
+                                   </Button>
+                                </DropdownMenuTrigger>
+
+                                <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)] bg-[#1a1a1a] text-white border-white/10">
+                                  {feedbackTypes.map((item) => (
+                                    <DropdownMenuItem
+                                      key={item.value}
+                                      className="hover:bg-white/10 cursor-pointer focus:bg-white/10 focus:text-white"
+                                      onSelect={() =>
+                                        setFormData((prev) => ({
+                                          ...prev,
+                                          type: item.value,
+                                        }))
+                                      }
+                                    >
+                                      {item.label}
+                                    </DropdownMenuItem>
+                                  ))}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          </div>
+
+                          <div className="space-y-3">
+                            <Label className="text-white/80">Attachments</Label>
+                            {/* Existing Attachments in Edit Mode */}
+                            {existingAttachments.length > 0 && (
+                              <div className="space-y-2 mb-3">
+                                <p className="text-xs font-medium text-white/50 uppercase tracking-wider">Existing Files</p>
+                                {existingAttachments.map((file) => (
+                                  <div key={file._id} className="flex items-center justify-between p-2 bg-white/5 border border-white/10 rounded-lg group/file">
+                                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                                      <FileText className="w-4 h-4 text-cyan-400 flex-shrink-0" />
+                                      <span className="text-xs text-white/80 truncate">{file.fileName}</span>
+                                    </div>
+                                    <Button
+                                      type="button"
+                                      onClick={() => removeExistingAttachment(file._id)}
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-6 w-6 text-white/40 hover:text-red-400 hover:bg-red-400/10 opacity-0 group-hover/file:opacity-100 transition-opacity"
+                                    >
+                                      <X className="w-3 h-3" />
+                                    </Button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* Newly Selected Files */}
+                            {selectedFiles.length > 0 && (
+                              <div className="space-y-2 mb-3">
+                                <p className="text-xs font-medium text-white/50 uppercase tracking-wider">New Files</p>
+                                {selectedFiles.map((file, idx) => (
+                                  <div key={idx} className="flex items-center justify-between p-2 bg-cyan-400/5 border border-cyan-400/20 rounded-lg group/file">
+                                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                                      <Paperclip className="w-4 h-4 text-cyan-400 flex-shrink-0" />
+                                      <span className="text-xs text-white/80 truncate">{file.name}</span>
+                                    </div>
+                                    <Button
+                                      type="button"
+                                      onClick={() => removeSelectedFile(idx)}
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-6 w-6 text-white/40 hover:text-red-400 hover:bg-red-400/10 opacity-0 group-hover/file:opacity-100 transition-opacity"
+                                    >
+                                      <X className="w-3 h-3" />
+                                    </Button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
+                            <div className="relative">
+                              <Input
+                                type="file"
+                                multiple
+                                onChange={handleFileChange}
+                                className="h-14 cursor-pointer text-white/80 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20 border-white/10 bg-white/5 hover:bg-white/10 transition-colors"
+                              />
+                              <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                                <Paperclip className="w-5 h-5 text-white/30" />
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex justify-end gap-2 pt-4">
+                              <Button
+                                type="submit"
+                                disabled={isCreating || isUpdating}
+                                className={feedbackbtn}
+                              >
+                                {isCreating || isUpdating
+                                  ? "Submitting..."
+                                  : editMode
+                                    ? "Update Feedback"
+                                    : "Submit Feedback"}
+                              </Button>
+                          </div>
+                        </>
+                      )}
                     </form>
                   </div>
-                </DialogContent>
+                </div>
+              </DialogContent>
               </Dialog>
             </div>
 
@@ -613,7 +683,7 @@ const Feedback = () => {
 
                         {/* Title & Description */}
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-white font-medium text-sm mb-0.5 truncate">
+                          <h3 className="text-white font-medium text-sm mb-0.5 truncate max-w-[150px] sm:max-w-[200px] md:max-w-[300px]">
                             {feedback.title}
                           </h3>
                           {feedback.description && (
@@ -623,54 +693,56 @@ const Feedback = () => {
                           )}
                         </div>
 
-                        {feedback.attachments?.length > 0 && (
-                          <div className="flex items-center gap-1 text-xs text-cyan-400 mt-1">
-                            <Paperclip className="w-3.5 h-3.5" />
-                            <span>{feedback.attachments.length} attachment(s)</span>
+                        <div className="flex items-center gap-4 ml-auto flex-shrink-0">
+                          {feedback.attachments?.length > 0 && (
+                            <div className="flex items-center gap-1 text-xs text-cyan-400">
+                              <Paperclip className="w-3.5 h-3.5" />
+                              <span>{feedback.attachments.length} attachment(s)</span>
+                            </div>
+                          )}
+
+                          {/* Status Badge */}
+                          <div className="flex-shrink-0">
+                            <Badge className={`${getStatusBadgeColor(feedback.status)} border text-xs capitalize px-2.5 py-1`}>
+                              {feedback.status}
+                            </Badge>
                           </div>
-                        )}
 
-                        {/* Status Badge */}
-                        <div className="flex-shrink-0">
-                          <Badge className={`${getStatusBadgeColor(feedback.status)} border text-xs capitalize px-2.5 py-1`}>
-                            {feedback.status}
-                          </Badge>
-                        </div>
+                          {/* Date */}
+                          <div className="flex-shrink-0 hidden sm:flex items-center gap-1.5 text-white/40 text-xs">
+                            <Calendar className="w-3.5 h-3.5" />
+                            <span>{new Date(feedback.createdAt).toLocaleDateString()}</span>
+                          </div>
 
-                        {/* Date */}
-                        <div className="flex-shrink-0 hidden sm:flex items-center gap-1.5 text-white/40 text-xs">
-                          <Calendar className="w-3.5 h-3.5" />
-                          <span>{new Date(feedback.createdAt).toLocaleDateString()}</span>
-                        </div>
-
-                        {/* Actions */}
-                        <div className="flex-shrink-0 flex items-center gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEdit(feedback);
-                            }}
-                            disabled={feedback.status === "closed"}
-                            className={`h-8 w-8 ${feedback.status === "closed"
-                              ? "text-gray-500 cursor-not-allowed opacity-50"
-                              : "text-blue-400 hover:text-blue-300 hover:bg-blue-400/10"
-                              }`}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDelete(feedback._id);
-                            }}
-                            className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-400/10"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          {/* Actions */}
+                          <div className="flex-shrink-0 flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEdit(feedback);
+                              }}
+                              disabled={feedback.status === "closed"}
+                              className={`h-8 w-8 ${feedback.status === "closed"
+                                ? "text-gray-500 cursor-not-allowed opacity-50"
+                                : "text-blue-400 hover:text-blue-300 hover:bg-blue-400/10"
+                                }`}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDelete(feedback._id);
+                              }}
+                              className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-400/10"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </motion.div>
