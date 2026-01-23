@@ -28,6 +28,7 @@ import {
     AlertTriangle,
 } from "lucide-react";
 import { feedbackService } from "@/services/feedback.service";
+import { userService } from "@/services/user.service";
 import { toast } from "sonner";
 import { sanitizeErrorMessage } from "@/utils/errorMessages";
 import { Feedback } from "@/types/feedback.types";
@@ -82,7 +83,25 @@ const UserFeedbackList = () => {
         if (!userId) return;
 
         setLoading(true);
+        // Reset user info
+        setUserInfo({ name: "", email: "" });
         try {
+            // Fetch user info
+            const userResponse = await userService.getUserById(userId);
+            if (userResponse.success && userResponse.data) {
+                setUserInfo({
+                    name: userResponse.data.name || userResponse.data.email || "Unknown User",
+                    email: userResponse.data.email || "",
+                });
+            } else {
+                // User not found - set default name but continue to fetch feedbacks
+                setUserInfo({
+                    name: "Unknown User",
+                    email: "",
+                });
+            }
+
+            // Fetch feedbacks
             const data = await feedbackService.getAllFeedbacks({
                 userId,
                 page: 1,
@@ -90,28 +109,31 @@ const UserFeedbackList = () => {
             });
 
             setFeedbacks(data.feedbacks || []);
-
-            // Extract user info from first feedback
-            if (data.feedbacks && data.feedbacks.length > 0) {
-                const firstFeedback = data.feedbacks[0];
-                if (firstFeedback.createdBy) {
-                    setUserInfo({
-                        name:
-                            (firstFeedback.createdBy as any).name ||
-                            (firstFeedback.createdBy as any).email ||
-                            "Unknown User",
-                        email: (firstFeedback.createdBy as any).email || "",
-                    });
-                }
-            }
         } catch (error: any) {
             console.error("Error fetching user feedbacks:", error);
-            toast.error(
-                sanitizeErrorMessage(
-                    error,
-                    "Unable to load feedbacks. Please try again."
-                )
-            );
+            // Set default user info on error
+            setUserInfo({
+                name: "Unknown User",
+                email: "",
+            });
+            // Try to fetch feedbacks anyway
+            try {
+                const data = await feedbackService.getAllFeedbacks({
+                    userId,
+                    page: 1,
+                    limit: 1000,
+                });
+                setFeedbacks(data.feedbacks || []);
+            } catch (feedbackError) {
+                console.error("Error fetching feedbacks:", feedbackError);
+                setFeedbacks([]);
+                toast.error(
+                    sanitizeErrorMessage(
+                        feedbackError,
+                        "Unable to load feedbacks. Please try again."
+                    )
+                );
+            }
         } finally {
             setLoading(false);
         }
@@ -197,12 +219,14 @@ const UserFeedbackList = () => {
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
                             <h1 className="text-2xl font-bold text-white my-2">
-                                {userInfo.name}'s Feedback
+                                {loading ? "Loading..." : `${userInfo.name}'s Feedback`}
                             </h1>
-                            <div className="flex items-center gap-2 text-white/60">
-                                <Mail className="w-4 h-4" />
-                                <span>{userInfo.email}</span>
-                            </div>
+                            {!loading && (
+                                <div className="flex items-center gap-2 text-white/60">
+                                    <Mail className="w-4 h-4" />
+                                    <span>{userInfo.email}</span>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

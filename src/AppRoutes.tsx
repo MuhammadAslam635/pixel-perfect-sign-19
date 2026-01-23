@@ -496,7 +496,7 @@ const AppRoutes = () => {
           path="/admin/feedbacks/user/:userId"
           element={
             <ProtectedRoute allowedRoles={["Admin"]}>
-              <UserFeedbackList />
+              <UserFeedbackList key={window.location.pathname} />
             </ProtectedRoute>
           }
         />
