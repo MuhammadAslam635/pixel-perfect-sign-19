@@ -38,7 +38,35 @@ export const RevenueAtRiskCard = () => {
       <div className="flex items-start gap-3">
         {/* Left Icon */}
         <div className="mt-1">
-          <AlertTriangle className="w-10 h-10" stroke="url(#dashboard-icon-gradient)" />
+          <svg
+            width="40"
+            height="40"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            {/* Outer triangle */}
+            <path
+              d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"
+              stroke="url(#dashboard-icon-gradient)" 
+              strokeWidth="2"
+            />
+            {/* Inner vertical line */}
+            <path
+              d="M12 9v4"
+              stroke="red"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+            {/* Inner dot */}
+            <circle
+              cx="12"
+              cy="17"
+              r="1"
+              fill="red"
+            />
+          </svg>
+
         </div>
 
         {/* Right Content */}
