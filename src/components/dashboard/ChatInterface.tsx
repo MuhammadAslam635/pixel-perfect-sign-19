@@ -953,20 +953,21 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
 
     const apiMessages = chatDetail?.messages ?? [];
     // For widget with temp chat ID, use optimistic messages with that ID
-    const optimisticMessages =
-      optimisticMessagesByChat[activeChatId || ""] || [];
+    // Use currentChatKey to ensure consistency with outer scope
+    const chatOptimisticMessages =
+      optimisticMessagesByChat[currentChatKey] || [];
 
     if (!apiMessages.length) {
-      return optimisticMessages;
+      return chatOptimisticMessages;
     }
 
-    if (!optimisticMessages.length) {
+    if (!chatOptimisticMessages.length) {
       return apiMessages;
     }
 
     const apiMessageIds = new Set(apiMessages.map((message) => message._id));
 
-    const filteredOptimistic = optimisticMessages.filter((message) => {
+    const filteredOptimistic = chatOptimisticMessages.filter((message) => {
       // If message ID exists in server messages, filter it out
       if (apiMessageIds.has(message._id)) {
         return false;
@@ -1007,7 +1008,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
     optimisticMessages,
     chatDetail?.messages,
     temporaryChat,
-    activeChatId,
+    currentChatKey,
     optimisticMessagesByChat,
   ]);
 
