@@ -14,40 +14,18 @@ import {
   type MultiSelectOption,
 } from "@/components/ui/multi-select";
 import { CountrySelect } from "@/components/ui/country-select";
-
-// Extract unique seniority levels from leads data
-const extractSeniorityLevels = (leads?: any[]): MultiSelectOption[] => {
-  if (!leads || !Array.isArray(leads) || leads.length === 0) {
-    return [];
-  }
-
-  try {
-    const senioritySet = new Set<string>();
-
-    leads.forEach((lead) => {
-      const seniority = lead?.seniority;
-      if (seniority && typeof seniority === "string" && seniority.trim()) {
-        senioritySet.add(seniority.trim().toLowerCase());
-      }
-    });
-
-    if (senioritySet.size === 0) {
-      return [];
-    }
-
-    return Array.from(senioritySet)
-      .sort()
-      .map((seniority) => ({
-        value: seniority,
-        label: seniority.charAt(0).toUpperCase() + seniority.slice(1).replace(/_/g, ' ')
-      }));
-  } catch (error) {
-    console.error('Error extracting seniority levels:', error);
-    return [];
-  }
-};
-
 import countryList from "react-select-country-list";
+
+// Predefined seniority levels (common across most organizations)
+const PREDEFINED_SENIORITY_OPTIONS: MultiSelectOption[] = [
+  { value: "c_suite", label: "C-Suite" },
+  { value: "vp", label: "VP" },
+  { value: "director", label: "Director" },
+  { value: "manager", label: "Manager" },
+  { value: "senior", label: "Senior" },
+  { value: "entry", label: "Entry Level" },
+  { value: "intern", label: "Intern" },
+];
 
 interface LeadsFiltersInlineProps {
   // Country filter
@@ -61,8 +39,6 @@ interface LeadsFiltersInlineProps {
   // Stage filter
   stageFilter: string[];
   onStageFilterChange: (value: string[]) => void;
-
-  leads?: any[]; // For extracting dynamic seniority levels
 
   // Checkbox filters
   hasEmailFilter: boolean;
@@ -94,7 +70,6 @@ export const LeadsFiltersInline = ({
   onSeniorityFilterChange,
   stageFilter,
   onStageFilterChange,
-  leads,
   hasEmailFilter,
   onHasEmailFilterChange,
   hasPhoneFilter,
@@ -108,10 +83,8 @@ export const LeadsFiltersInline = ({
   hasFavouriteFilter,
   onHasFavouriteFilterChange,
 }: LeadsFiltersInlineProps) => {
-  const seniorityOptions = useMemo(() => {
-    const options = extractSeniorityLevels(leads);
-    return options.length > 0 ? options : EMPTY_ARRAY;
-  }, [leads]);
+  // Use predefined seniority options
+  const seniorityOptions = PREDEFINED_SENIORITY_OPTIONS;
 
   const countryOptions = useMemo(
     () => countryList().getData().map((c) => ({ value: c.label, label: c.label })).sort((a, b) => {
@@ -289,7 +262,6 @@ interface LeadsFiltersPanelProps {
   // Seniority filter
   seniorityFilter: string[];
   onSeniorityFilterChange: (value: string[]) => void;
-  leads?: any[]; // For extracting dynamic seniority levels
 
   // Checkbox filters
   hasEmailFilter: boolean;
@@ -310,7 +282,6 @@ export const LeadsFiltersPanel = ({
   onCountryFilterChange,
   seniorityFilter,
   onSeniorityFilterChange,
-  leads,
   hasEmailFilter,
   onHasEmailFilterChange,
   hasPhoneFilter,
@@ -321,10 +292,8 @@ export const LeadsFiltersPanel = ({
   onResetFilters,
   onClose,
 }: LeadsFiltersPanelProps) => {
-  const seniorityOptions = useMemo(() => {
-    const options = extractSeniorityLevels(leads);
-    return options.length > 0 ? options : EMPTY_ARRAY;
-  }, [leads]);
+  // Use predefined seniority options
+  const seniorityOptions = PREDEFINED_SENIORITY_OPTIONS;
   return (
     <div className="flex flex-col gap-3 text-gray-100 text-xs">
       <div>

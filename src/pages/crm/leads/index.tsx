@@ -7,7 +7,7 @@ import { MultiSelect } from "@/components/ui/multi-select";
 import { Layers, Sparkles } from "lucide-react";
 import { CompanyPerson } from "@/services/companies.service";
 import { CrmNavigation } from "../shared/components/CrmNavigation";
-import { Lead } from "@/services/leads.service";
+import { Lead, LeadsQueryParams } from "@/services/leads.service";
 import { EmailDraftModal } from "./components/EmailDraftModal";
 import { LinkedinMessageModal } from "./components/LinkedinMessageModal";
 import { PhoneCallModal } from "./components/PhoneCallModal";
@@ -15,10 +15,7 @@ import { toast } from "sonner";
 import LeadsList from "./components/LeadsList";
 import { DetailsSidebar } from "../shared/components";
 import {
-  useCompaniesData,
-  useCompanyCrmStatsData,
-  useCrmStatsData,
-  useLeadsData,
+  useLeadsPageData,
 } from "../shared/hooks";
 import {
   connectionMessagesService,
@@ -39,6 +36,7 @@ import LeadEnrichmentModal from "@/components/lead-enrichment/LeadEnrichmentModa
 import SeniorityQuickSelector from "@/components/lead-enrichment/SeniorityQuickSelector";
 import { useEnrichmentConfigs } from "@/hooks/useEnrichmentConfigs";
 import type { SeniorityLevel } from "@/types/leadEnrichment";
+import { SENIORITY_OPTIONS } from "@/types/leadEnrichment";
 import { userService } from "@/services/user.service";
 import { usePermissions } from "@/hooks/usePermissions";
 
@@ -57,7 +55,12 @@ const index = () => {
   >([]);
 
   // Fetch dynamic enrichment configs
-  const { seniorityOptions } = useEnrichmentConfigs();
+  const { seniorityOptions: dynamicSeniorityOptions } = useEnrichmentConfigs();
+  const seniorityOptions = useMemo(() => {
+    return dynamicSeniorityOptions.length > 0
+      ? dynamicSeniorityOptions
+      : SENIORITY_OPTIONS;
+  }, [dynamicSeniorityOptions]);
 
   // Load user preferences on mount
   useEffect(() => {
@@ -485,19 +488,118 @@ const index = () => {
 
   // Leads filters and pagination
 
-  // Fetch all companies for the leads filter dropdown (limit to 500 for dropdown)
-  const { companies: allCompaniesForFilter, totalCompanies } = useCompaniesData(
-    {
-      page: 1,
-      limit: 500,
-    }
-  );
+  // Build leads query parameters for server-side filtering and pagination
+  const leadsParams: LeadsQueryParams = useMemo(() => {
+    const params: LeadsQueryParams = {
+      page: leadsPage,
+      limit: leadsLimit,
+    };
 
-  // Fetch all leads (without pagination) to count leads per company
-  const { leads: allLeadsForCount, query: leadsQuery } = useLeadsData(
-    { page: 1, limit: 10000 },
-    { enabled: true }
-  );
+    // Add search
+    if (leadsSearch) {
+      params.search = leadsSearch;
+    }
+
+    // Add company filter
+    if (leadsCompanyFilter.length > 0) {
+      params.companyId = leadsCompanyFilter.join(",");
+    }
+
+    // Add country filter
+    if (leadsCountryFilter.length > 0) {
+      params.country = leadsCountryFilter.join(",");
+    }
+
+    // Add seniority filter
+    if (leadsSeniorityFilter.length > 0) {
+      params.seniority = leadsSeniorityFilter.join(",");
+    }
+
+    // Add stage filter
+    if (leadsStageFilter.length > 0) {
+      params.stage = leadsStageFilter.join(",");
+    }
+
+    // Add boolean filters
+    if (leadsHasEmailFilter) {
+      params.hasEmail = true;
+    }
+    if (leadsHasPhoneFilter) {
+      params.hasPhone = true;
+    }
+    if (leadsHasLinkedinFilter) {
+      params.hasLinkedin = true;
+    }
+    if (leadsHasFavouriteFilter) {
+      params.isFavourite = true;
+    }
+
+    // Add sorting
+    if (leadsSortBy === "newest") {
+      params.sortBy = "createdAt";
+      params.sortOrder = -1;
+    } else if (leadsSortBy === "oldest") {
+      params.sortBy = "createdAt";
+      params.sortOrder = 1;
+    } else if (leadsSortBy === "name-asc") {
+      params.sortBy = "name";
+      params.sortOrder = 1;
+    } else if (leadsSortBy === "name-desc") {
+      params.sortBy = "name";
+      params.sortOrder = -1;
+    }
+
+    return params;
+  }, [
+    leadsPage,
+    leadsLimit,
+    leadsSearch,
+    leadsCompanyFilter,
+    leadsCountryFilter,
+    leadsSeniorityFilter,
+    leadsStageFilter,
+    leadsHasEmailFilter,
+    leadsHasPhoneFilter,
+    leadsHasLinkedinFilter,
+    leadsHasFavouriteFilter,
+    leadsSortBy,
+  ]);
+
+  // Stats filters for unified data fetching
+  const statsFilters = useMemo(() => ({
+    leadSearch: leadsSearch || undefined,
+    company:
+      leadsCompanyFilter.length > 0 ? leadsCompanyFilter.join(",") : undefined,
+    stage: leadsStageFilter.length > 0 ? leadsStageFilter : undefined,
+    seniority:
+      leadsSeniorityFilter.length > 0 ? leadsSeniorityFilter : undefined,
+    leadCountry:
+      leadsCountryFilter.length > 0 ? leadsCountryFilter.join(",") : undefined,
+    hasEmail: leadsHasEmailFilter || undefined,
+    hasPhone: leadsHasPhoneFilter || undefined,
+    hasLinkedin: leadsHasLinkedinFilter || undefined,
+    hasFavourite: leadsHasFavouriteFilter || undefined,
+  }), [
+    leadsSearch,
+    leadsCompanyFilter,
+    leadsStageFilter,
+    leadsSeniorityFilter,
+    leadsCountryFilter,
+    leadsHasEmailFilter,
+    leadsHasPhoneFilter,
+    leadsHasLinkedinFilter,
+    leadsHasFavouriteFilter
+  ]);
+
+  // Unified data fetching with server-side pagination
+  const { data: unifiedData, isLoading: leadsLoading } = useLeadsPageData(leadsParams, statsFilters);
+
+  // Extract data from unified response
+  const allCompaniesForFilter = unifiedData?.companiesForFilter || [];
+  const paginatedLeads = unifiedData?.leads || [];
+  const leadsPagination = unifiedData?.leadsPagination;
+  const companyFilteredStats = unifiedData?.companyStats;
+  const crmStats = unifiedData?.crmStats;
 
   const hasLeadAdvancedFilters = useMemo(
     () =>
@@ -521,191 +623,9 @@ const index = () => {
     ]
   );
 
-  // Client-side filtering logic setup using allLeadsForCount
-  const filteredLeads = useMemo(() => {
-    let result = [...(allLeadsForCount || [])];
-
-    // Text search (name, email, or company name)
-    if (leadsSearch) {
-      const searchLower = leadsSearch.toLowerCase();
-      result = result.filter(
-        (lead) =>
-          lead.name?.toLowerCase().includes(searchLower) ||
-          lead.email?.toLowerCase().includes(searchLower) ||
-          lead.companyName?.toLowerCase().includes(searchLower)
-      );
-    }
-
-    // Company filter (multi-select)
-    if (leadsCompanyFilter.length > 0) {
-      result = result.filter((lead) =>
-        leadsCompanyFilter.includes(lead.companyId)
-      );
-    }
-
-    // Country filter (multi-select)
-    if (leadsCountryFilter.length > 0) {
-      result = result.filter(
-        (lead) => lead.country && leadsCountryFilter.includes(lead.country)
-      );
-    }
-
-    // Position/Title filter (multi-select)
-    if (leadsSeniorityFilter.length > 0) {
-      result = result.filter(
-        (lead) =>
-          lead.seniority &&
-          leadsSeniorityFilter.some((seniority) =>
-            lead.seniority?.toLowerCase().includes(seniority.toLowerCase())
-          )
-      );
-    }
-
-    // Stage filter (multi-select)
-    if (leadsStageFilter.length > 0) {
-      result = result.filter((lead) => {
-        // Determine the lead's current stage
-        // Priority: manual stage > event-driven logic
-        let leadStage = "New"; // Default
-
-        if (lead.stage === "closed") {
-          leadStage = "Deal Closed";
-        } else if (lead.stage === "followup_close") {
-          leadStage = "Follow-up to Close";
-        } else if (lead.stage === "proposal_sent") {
-          leadStage = "Proposal Sent";
-        } else if (lead.stage === "appointment_booked") {
-          leadStage = "Appointment Booked";
-        } else if (lead.stage === "followup") {
-          leadStage = "Follow-up";
-        } else if (lead.stage === "interested") {
-          leadStage = "Interested";
-        } else if (lead.stage === "new") {
-          leadStage = "New";
-        } else {
-          // Fallback to New if no recognized stage
-          leadStage = "New";
-        }
-
-        return leadsStageFilter.includes(leadStage);
-      });
-    }
-
-    // Boolean filters
-    if (leadsHasEmailFilter) {
-      result = result.filter((lead) => lead.email);
-    }
-    if (leadsHasPhoneFilter) {
-      result = result.filter((lead) => lead.phone || lead.whatsapp);
-    }
-    if (leadsHasLinkedinFilter) {
-      result = result.filter((lead) => lead.linkedinUrl);
-    }
-    if (leadsHasFavouriteFilter) {
-      result = result.filter((lead) => lead.isFavourite === true);
-    }
-
-    // Sorting
-    if (leadsSortBy === "newest") {
-      result = result.sort((a, b) => {
-        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-        return dateB - dateA; // Newest first
-      });
-    } else if (leadsSortBy === "oldest") {
-      result = result.sort((a, b) => {
-        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-        return dateA - dateB; // Oldest first
-      });
-    } else if (leadsSortBy === "name-asc") {
-      result = result.sort((a, b) => {
-        const nameA = (a.name || "").toLowerCase();
-        const nameB = (b.name || "").toLowerCase();
-        return nameA.localeCompare(nameB); // A-Z
-      });
-    } else if (leadsSortBy === "name-desc") {
-      result = result.sort((a, b) => {
-        const nameA = (a.name || "").toLowerCase();
-        const nameB = (b.name || "").toLowerCase();
-        return nameB.localeCompare(nameA); // Z-A
-      });
-    }
-
-    return result;
-  }, [
-    allLeadsForCount,
-    leadsSearch,
-    leadsCompanyFilter,
-    leadsCountryFilter,
-    leadsSeniorityFilter,
-    leadsStageFilter,
-    leadsHasEmailFilter,
-    leadsHasPhoneFilter,
-    leadsHasLinkedinFilter,
-    leadsHasFavouriteFilter,
-    leadsSortBy,
-  ]);
-
-  // Client-side pagination
-  const { paginatedLeads, totalFilteredLeads, totalPages } = useMemo(() => {
-    const total = filteredLeads.length;
-    const pages = Math.ceil(total / leadsLimit);
-    const start = (leadsPage - 1) * leadsLimit;
-    const end = start + leadsLimit;
-    const sliced = filteredLeads.slice(start, end);
-
-    return {
-      paginatedLeads: sliced,
-      totalFilteredLeads: total,
-      totalPages: pages,
-    };
-  }, [filteredLeads, leadsPage, leadsLimit]);
-
-  // Use local data instead of server query for the list
-  const leadsLoading = leadsQuery.isLoading; // Correct loading check
-
-  // Create pagination object matching the expected interface
-  const clientPagination = {
-    page: leadsPage,
-    totalPages: totalPages,
-    totalDocs: totalFilteredLeads,
-    limit: leadsLimit,
-    hasNextPage: leadsPage < totalPages,
-    hasPrevPage: leadsPage > 1,
-    nextPage: leadsPage < totalPages ? leadsPage + 1 : null,
-    prevPage: leadsPage > 1 ? leadsPage - 1 : null,
-    offset: (leadsPage - 1) * leadsLimit,
-    pagingCounter: (leadsPage - 1) * leadsLimit + 1,
-  };
-
-  // Fetch total leads count without search/filter for stats
-  const { totalLeads: totalLeadsForStats } = useLeadsData(
-    { page: 1, limit: 1 },
-    { enabled: true }
-  );
-
-  // Fetch shared CRM stats for top cards (including companies and leads counts)
-  // Fetch shared CRM stats for top cards (including companies and leads counts)
-  const statsFilters = {
-    leadSearch: leadsSearch || undefined,
-    company:
-      leadsCompanyFilter.length > 0 ? leadsCompanyFilter.join(",") : undefined,
-    stage: leadsStageFilter.length > 0 ? leadsStageFilter : undefined,
-    seniority:
-      leadsSeniorityFilter.length > 0 ? leadsSeniorityFilter : undefined,
-    leadCountry:
-      leadsCountryFilter.length > 0 ? leadsCountryFilter.join(",") : undefined,
-    hasEmail: leadsHasEmailFilter || undefined,
-    hasPhone: leadsHasPhoneFilter || undefined,
-    hasLinkedin: leadsHasLinkedinFilter || undefined,
-    hasFavourite: leadsHasFavouriteFilter || undefined,
-  };
-
-  const { stats: companyFilteredStats } = useCompanyCrmStatsData(statsFilters);
-
-  // General CRM stats for outreach/response/active clients/messages sent
-  const { stats: crmStats } = useCrmStatsData();
+  // Server-side pagination - no client-side filtering needed
+  const totalFilteredLeads = leadsPagination?.totalDocs || 0;
+  const totalPages = leadsPagination?.totalPages || 1;
 
   // Calculate filtered counts for stats
   const effectiveTotalLeads = totalFilteredLeads;
@@ -715,14 +635,14 @@ const index = () => {
     // If we have search or filters, we calculate based on the filtered leads
     if (leadsSearch || hasLeadAdvancedFilters) {
       const uniqueCompanyIds = new Set(
-        filteredLeads.map((lead) => lead.companyId).filter(Boolean)
+        paginatedLeads.map((lead) => lead.companyId).filter(Boolean)
       );
       return uniqueCompanyIds.size;
     }
 
-    // Otherwise return the total count of companies in the system (including those with 0 leads)
-    return totalCompanies ?? 0;
-  }, [filteredLeads, leadsSearch, hasLeadAdvancedFilters, totalCompanies]);
+    // Otherwise return from stats
+    return companyFilteredStats?.totalCompanies ?? 0;
+  }, [paginatedLeads, leadsSearch, hasLeadAdvancedFilters, companyFilteredStats]);
 
   const stats = useMemo(
     () =>
@@ -767,15 +687,15 @@ const index = () => {
   ]);
 
   useEffect(() => {
-    if (!pendingLeadIdentifier || !allLeadsForCount) return;
+    if (!pendingLeadIdentifier || !paginatedLeads) return;
 
     const { email, name } = pendingLeadIdentifier;
 
     const matchedLead =
       (email &&
-        allLeadsForCount.find((lead) => lead.email?.toLowerCase() === email)) ||
+        paginatedLeads.find((lead) => lead.email?.toLowerCase() === email)) ||
       (name &&
-        allLeadsForCount.find((lead) => lead.name?.toLowerCase() === name));
+        paginatedLeads.find((lead) => lead.name?.toLowerCase() === name));
 
     if (matchedLead) {
       setSelectedLeadId(matchedLead._id);
@@ -784,7 +704,7 @@ const index = () => {
     } else if (!leadsLoading) {
       setPendingLeadIdentifier(null);
     }
-  }, [pendingLeadIdentifier, allLeadsForCount, leadsLoading]);
+  }, [pendingLeadIdentifier, paginatedLeads, leadsLoading]);
 
   const handleLeadClick = (leadId: string) => {
     setSelectedLeadId((prev) => (prev === leadId ? null : leadId));
@@ -801,14 +721,14 @@ const index = () => {
     setSelectedExecutiveFallback(executive);
     setPendingLeadIdentifier({ email, name });
 
-    if (allLeadsForCount && allLeadsForCount.length > 0) {
+    if (paginatedLeads && paginatedLeads.length > 0) {
       const matchedLead =
         (email &&
-          allLeadsForCount.find(
+          paginatedLeads.find(
             (lead) => lead.email?.toLowerCase() === email
           )) ||
         (name &&
-          allLeadsForCount.find((lead) => lead.name?.toLowerCase() === name));
+          paginatedLeads.find((lead) => lead.name?.toLowerCase() === name));
 
       if (matchedLead) {
         setSelectedLeadId(matchedLead._id);
@@ -820,7 +740,7 @@ const index = () => {
 
   const isSidebarOpen =
     selectedLeadId !== null || selectedExecutiveFallback !== null;
-  const selectedLeadDetails: Lead | undefined = allLeadsForCount?.find(
+  const selectedLeadDetails: Lead | undefined = paginatedLeads?.find(
     (lead) => lead._id === selectedLeadId
   );
 
@@ -900,18 +820,10 @@ const index = () => {
                         <Layers className="w-4 h-4 text-gray-400" />
                       </div>
                       <MultiSelect
-                        options={allCompaniesForFilter.map((company) => {
-                          const companyLeadsCount = allLeadsForCount.filter(
-                            (lead) => lead.companyId === company._id
-                          ).length;
-
-                          return {
-                            value: company._id,
-                            label: `${company.name} (${companyLeadsCount} ${
-                              companyLeadsCount === 1 ? "lead" : "leads"
-                            })`,
-                          };
-                        })}
+                        options={allCompaniesForFilter.map((company) => ({
+                          value: company._id,
+                          label: company.name,
+                        }))}
                         value={leadsCompanyFilter}
                         onChange={setLeadsCompanyFilter}
                         placeholder="All Companies"
@@ -955,7 +867,6 @@ const index = () => {
                               onSeniorityFilterChange={setLeadsSeniorityFilter}
                               stageFilter={leadsStageFilter}
                               onStageFilterChange={setLeadsStageFilter}
-                              leads={allLeadsForCount}
                               sortBy={leadsSortBy}
                               onSortByChange={setLeadsSortBy}
                               hasEmailFilter={leadsHasEmailFilter}
@@ -1010,7 +921,7 @@ const index = () => {
           </div>
 
           {/* Stats Cards */}
-          <StatsCards stats={stats} />
+          <StatsCards stats={stats} isLoading={leadsLoading} />
 
           {/* Split View */}
           <div
@@ -1112,7 +1023,7 @@ const index = () => {
         }}
         onEnrichmentComplete={(searchId) => {
           toast.success("Enrichment completed! Leads list will refresh.");
-          leadsQuery.refetch();
+          queryClient.invalidateQueries({ queryKey: ["leads-page-unified"] });
           queryClient.invalidateQueries({ queryKey: ["companies"] });
           setEnrichmentModalOpen(false);
         }}

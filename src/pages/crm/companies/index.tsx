@@ -12,8 +12,7 @@ import CompaniesList from "./components/CompaniesList";
 import { DetailsSidebar } from "../shared/components";
 import {
   useCompaniesData,
-  useCompanyCrmStatsData,
-  useCrmStatsData,
+  useCompaniesPageData,
 } from "../shared/hooks";
 import { CompaniesQueryParams } from "@/services/companies.service";
 import {
@@ -27,6 +26,7 @@ import LeadEnrichmentModal from "@/components/lead-enrichment/LeadEnrichmentModa
 import SeniorityQuickSelector from "@/components/lead-enrichment/SeniorityQuickSelector";
 import { useEnrichmentConfigs } from "@/hooks/useEnrichmentConfigs";
 import type { SeniorityLevel } from "@/types/leadEnrichment";
+import { SENIORITY_OPTIONS } from "@/types/leadEnrichment";
 import { userService } from "@/services/user.service";
 import { usePermissions } from "@/hooks/usePermissions";
 
@@ -68,7 +68,12 @@ const index = () => {
   >([]);
 
   // Fetch dynamic enrichment configs
-  const { seniorityOptions } = useEnrichmentConfigs();
+  const { seniorityOptions: dynamicSeniorityOptions } = useEnrichmentConfigs();
+  const seniorityOptions = useMemo(() => {
+    return dynamicSeniorityOptions.length > 0
+      ? dynamicSeniorityOptions
+      : SENIORITY_OPTIONS;
+  }, [dynamicSeniorityOptions]);
 
   // Load user preferences on mount
   useEffect(() => {
@@ -190,10 +195,21 @@ const index = () => {
   ]);
 
   const {
-    query: companiesQuery,
-    companies,
-    totalCompanies: filteredTotalCompanies,
-  } = useCompaniesData(companiesParams);
+    data: unifiedData,
+    isLoading: loading,
+    refetch,
+    error,
+  } = useCompaniesPageData(companiesParams);
+
+  // Mock companiesQuery for compatibility with existing logic
+  const companiesQuery = { refetch, error, isLoading: loading };
+
+  const companies = unifiedData?.companies || [];
+  const filteredTotalCompanies = unifiedData?.companiesPagination?.totalDocs;
+  const companyCrmStats = unifiedData?.companyStats;
+  const crmStats = unifiedData?.crmStats;
+  const totalCompaniesForStats = unifiedData?.totalCompaniesCount;
+  const allCompaniesForFilters = unifiedData?.allCompaniesForFilters || [];
 
   // Check if any company has leads being generated
   const hasCompaniesGeneratingLeads = useMemo(
@@ -209,31 +225,11 @@ const index = () => {
     if (!hasCompaniesGeneratingLeads) return;
 
     const intervalId = setInterval(() => {
-      companiesQuery.refetch();
+      refetch();
     }, 5000); // Refresh every 5 seconds
 
     return () => clearInterval(intervalId);
-  }, [hasCompaniesGeneratingLeads, companiesQuery]);
-
-  // Filter-aware CRM stats for companies page
-  const { stats: companyCrmStats } = useCompanyCrmStatsData(companiesParams);
-
-  // General CRM stats for outreach/response/active clients/messages sent
-  const { stats: crmStats } = useCrmStatsData();
-
-  // Fallbacks if filtered stats are not yet available
-  const { totalCompanies: totalCompaniesForStats } = useCompaniesData({
-    page: 1,
-    limit: 1,
-  });
-
-  // Fetch all companies (unfiltered) to get full list of industries for the dropdown
-  const { companies: allCompaniesForFilters } = useCompaniesData({
-    page: 1,
-    limit: 1000, // Get a large number to capture all unique industries
-  });
-
-  // Prefer filtered stats, fall back to existing counts
+  }, [hasCompaniesGeneratingLeads, refetch]);
   const effectiveTotalCompanies =
     companyCrmStats?.totalCompanies ??
     filteredTotalCompanies ??
@@ -266,7 +262,7 @@ const index = () => {
     ]
   );
 
-  const loading = companiesQuery.isLoading;
+  // loading is already defined from unified hook
 
   const stats = useMemo(
     () =>
@@ -478,7 +474,7 @@ const index = () => {
             </motion.div>
           </div>
           {/* Stats Cards */}
-          <StatsCards stats={stats} />
+          <StatsCards stats={stats} isLoading={loading} />
 
           {/* Companies List */}
           <div className="flex flex-col lg:flex-row items-stretch gap-2 sm:gap-3 md:gap-4 lg:gap-6 flex-1 min-h-0 overflow-hidden">
@@ -494,7 +490,7 @@ const index = () => {
                 search={companiesSearch}
                 onSearchChange={setCompaniesSearch}
                 page={companiesPage}
-                totalPages={companiesQuery.data?.data.totalPages || 1}
+                totalPages={unifiedData?.companiesPagination?.totalPages || 1}
                 onPageChange={setCompaniesPage}
                 totalCompanies={filteredTotalCompanies}
                 showFilters={false}
@@ -530,7 +526,7 @@ const index = () => {
           }}
           onEnrichmentComplete={(searchId) => {
             toast.success("Enrichment completed! Companies list will refresh.");
-            companiesQuery.refetch();
+            refetch();
             setEnrichmentModalOpen(false);
           }}
         />
