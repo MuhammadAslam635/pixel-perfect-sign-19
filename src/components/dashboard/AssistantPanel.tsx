@@ -15,7 +15,6 @@ import {
   setDeletingChatId,
   removeOptimisticMessages,
   setComposerValue,
-  createTemporaryChat,
 } from "@/store/slices/chatSlice";
 
 type AssistantPanelProps = {
@@ -157,14 +156,17 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
   };
 
   const handleStartNewChat = () => {
-    // Create a new temporary chat (like Chat.tsx does)
-    dispatch(createTemporaryChat());
+    // Clear selected chat ID
+    dispatch(setSelectedChatId(null));
 
     // Clear composer input value
     dispatch(setComposerValue(""));
 
     // Clear local messages
     setLocalMessages([]);
+
+    // Clear optimistic messages for new chat
+    dispatch(removeOptimisticMessages("__new_chat__"));
 
     // Close chat list and clear search
     setShowChatList(false);

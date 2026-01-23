@@ -22,6 +22,7 @@ import rehypeRaw from "rehype-raw";
 import rehypeSanitize from "rehype-sanitize";
 import { useToast } from "@/components/ui/use-toast";
 import { sanitizeErrorMessage } from "@/utils/errorMessages";
+import { getAuthToken } from "@/utils/authHelpers";
 import {
   setSelectedChatId,
   addOptimisticMessage,
@@ -1118,17 +1119,25 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
         updatedAt: new Date().toISOString(),
       };
 
-      queryClient.setQueryData<ChatSummary[]>(
-        ["chatList"],
-        (oldChatList = []) => {
-          // Check if chat already exists (shouldn't for new chats, but just in case)
-          const exists = oldChatList.some((chat) => chat._id === actualChatId);
-          if (exists) {
-            return oldChatList;
-          }
-          return [optimisticChat, ...oldChatList];
+      const updateChatList = (oldChatList: ChatSummary[] = []) => {
+        // Check if chat already exists (shouldn't for new chats, but just in case)
+        const exists = oldChatList.some((chat) => chat._id === actualChatId);
+        if (exists) {
+          return oldChatList;
         }
-      );
+        return [optimisticChat, ...oldChatList];
+      };
+
+      // Update both cache entries: Chat page and Dashboard
+      queryClient.setQueryData<ChatSummary[]>(["chatList"], updateChatList);
+
+      const authToken = getAuthToken();
+      if (authToken) {
+        queryClient.setQueryData<ChatSummary[]>(
+          ["chatList", authToken],
+          updateChatList
+        );
+      }
     }
 
     // Start long-running task tracking
@@ -1238,53 +1247,64 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
         }
 
         // Update chat list - replace optimistic chat with real chat
+        const updateChatListWithRealChat = (oldChatList: ChatSummary[] = []) => {
+          if (isNewChatCreated) {
+            // Remove the optimistic chat (with temp ID) and add the real chat
+            const filteredList = oldChatList.filter(
+              (chat) => chat._id !== actualChatId
+            );
+            const newChat: ChatSummary = {
+              _id: newChatId,
+              title: (result.data.title as string) || "New Conversation",
+              createdAt:
+                (result.data.createdAt as string) || new Date().toISOString(),
+              updatedAt:
+                (result.data.updatedAt as string) || new Date().toISOString(),
+            };
+            return [newChat, ...filteredList];
+          } else {
+            // For existing chats, update the chat's updatedAt and move it to the top
+            const updatedChatList = oldChatList.map((chat) => {
+              if (chat._id === newChatId) {
+                return {
+                  ...chat,
+                  title: (result.data.title as string) || chat.title,
+                  updatedAt:
+                    (result.data.updatedAt as string) ||
+                    new Date().toISOString(),
+                };
+              }
+              return chat;
+            });
+
+            // Move the updated chat to the top
+            const updatedChat = updatedChatList.find(
+              (chat) => chat._id === newChatId
+            );
+            if (updatedChat) {
+              return [
+                updatedChat,
+                ...updatedChatList.filter((chat) => chat._id !== newChatId),
+              ];
+            }
+
+            return updatedChatList;
+          }
+        };
+
+        // Update both cache entries: Chat page and Dashboard
         queryClient.setQueryData<ChatSummary[]>(
           ["chatList"],
-          (oldChatList = []) => {
-            if (isNewChatCreated) {
-              // Remove the optimistic chat (with temp ID) and add the real chat
-              const filteredList = oldChatList.filter(
-                (chat) => chat._id !== actualChatId
-              );
-              const newChat: ChatSummary = {
-                _id: newChatId,
-                title: (result.data.title as string) || "New Conversation",
-                createdAt:
-                  (result.data.createdAt as string) || new Date().toISOString(),
-                updatedAt:
-                  (result.data.updatedAt as string) || new Date().toISOString(),
-              };
-              return [newChat, ...filteredList];
-            } else {
-              // For existing chats, update the chat's updatedAt and move it to the top
-              const updatedChatList = oldChatList.map((chat) => {
-                if (chat._id === newChatId) {
-                  return {
-                    ...chat,
-                    title: (result.data.title as string) || chat.title,
-                    updatedAt:
-                      (result.data.updatedAt as string) ||
-                      new Date().toISOString(),
-                  };
-                }
-                return chat;
-              });
-
-              // Move the updated chat to the top
-              const updatedChat = updatedChatList.find(
-                (chat) => chat._id === newChatId
-              );
-              if (updatedChat) {
-                return [
-                  updatedChat,
-                  ...updatedChatList.filter((chat) => chat._id !== newChatId),
-                ];
-              }
-
-              return updatedChatList;
-            }
-          }
+          updateChatListWithRealChat
         );
+
+        const authToken = getAuthToken();
+        if (authToken) {
+          queryClient.setQueryData<ChatSummary[]>(
+            ["chatList", authToken],
+            updateChatListWithRealChat
+          );
+        }
 
         // Clear optimistic messages for the old chat key and move to new chat
         if (isNewChatCreated) {
@@ -1328,8 +1348,6 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
           dispatch(removeOptimisticMessages(actualChatId));
         }
 
-        // Don't invalidate queries - we've already updated the cache with setQueryData
-        // Invalidating would cause a full refetch and refresh the whole chat
       }
     } catch (error: any) {
       console.error("Streaming error:", error);
@@ -1345,12 +1363,20 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
 
       // Remove optimistic chat entry if it was a new chat
       if (isNewChat) {
-        queryClient.setQueryData<ChatSummary[]>(
-          ["chatList"],
-          (oldChatList = []) => {
-            return oldChatList.filter((chat) => chat._id !== actualChatId);
-          }
-        );
+        const removeOptimisticChat = (oldChatList: ChatSummary[] = []) => {
+          return oldChatList.filter((chat) => chat._id !== actualChatId);
+        };
+
+        // Remove from both cache entries: Chat page and Dashboard
+        queryClient.setQueryData<ChatSummary[]>(["chatList"], removeOptimisticChat);
+
+        const authToken = getAuthToken();
+        if (authToken) {
+          queryClient.setQueryData<ChatSummary[]>(
+            ["chatList", authToken],
+            removeOptimisticChat
+          );
+        }
       }
 
       // Mark long-running task as error
@@ -1399,7 +1425,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
     }
   };
 
-  const hasActiveChat = activeChatId || selectedMessages.length > 0;
+  const hasActiveChat = selectedMessages.length > 0;
 
   return (
     <div className="flex-1 min-h-0 flex flex-col overflow-hidden w-[calc(100%-2rem)] h-full">
