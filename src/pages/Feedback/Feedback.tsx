@@ -31,6 +31,7 @@ const Feedback = () => {
   const [existingAttachments, setExistingAttachments] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "open" | "closed">("all");
+  const [viewMode, setViewMode] = useState(false);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -124,6 +125,7 @@ const Feedback = () => {
   const resetForm = () => {
     setFormData({ title: "", description: "", type: "improvement", status: "open" });
     setEditMode(false);
+    setViewMode(false);
     setEditingId(null);
     setSelectedFiles([]);
     setExistingAttachments([]);
@@ -247,6 +249,43 @@ const Feedback = () => {
     }
   };
 
+  const handleView = (feedback: any) => {
+    setFormData({
+      title: feedback.title,
+      description: feedback.description || "",
+      type: feedback.type,
+      status: feedback.status,
+    });
+
+    setExistingAttachments(feedback.attachments || []);
+    setViewMode(true);
+    setEditMode(false);
+    setEditingId(null);
+    setOpen(true);
+  };
+
+  const downloadFileFrontend = (file: any) => {
+    console.log("File being downloaded:", file);
+
+    if (!file?.fileUrl) {
+      toast({ title: "File URL not found" });
+      return;
+    }
+
+    // 🔥 convert relative → absolute URL
+    const absoluteUrl = `${window.location.origin}${file.fileUrl}`;
+
+    const link = document.createElement("a");
+    link.href = absoluteUrl;
+    link.download = file.fileName || "attachment";
+    link.target = "_blank";
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+
   const feedbackbtn =
     "bg-gradient-to-r from-[#69B4B7] to-[#3E64B4] hover:from-[#69B4B7]/80 hover:to-[#3E64B4]/80 text-white font-semibold rounded-full px-4 sm:px-6 h-10 shadow-[0_5px_18px_rgba(103,176,183,0.35)] hover:shadow-[0_8px_24px_rgba(103,176,183,0.45)] transition-all whitespace-nowrap";
 
@@ -315,6 +354,8 @@ const Feedback = () => {
                           onChange={handleInputChange}
                           placeholder="Enter feedback title"
                           required
+                          disabled={viewMode}
+                          readOnly={viewMode}
                         />
                       </div>
 
@@ -326,13 +367,16 @@ const Feedback = () => {
                           onChange={handleInputChange}
                           placeholder="Enter description"
                           rows={4}
+                          required
+                          disabled={viewMode}
+                          readOnly={viewMode}
                         />
                       </div>
 
                       <div>
                         <Label className="text-white/80">Type</Label>
                         <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
+                          <DropdownMenuTrigger asChild disabled={viewMode}>
                             <Button
                               variant="outline"
                               className="w-full justify-between text-white border-white/20"
@@ -364,16 +408,23 @@ const Feedback = () => {
 
                       <div className="space-y-3">
                         <Label className="text-white/80">Attachments</Label>
-
                         {/* Existing Attachments */}
-                        {editMode && existingAttachments.length > 0 && (
+                        {(editMode || viewMode) && existingAttachments.length > 0 && (
                           <div className="space-y-2 mb-3">
                             <p className="text-xs font-medium text-white/50 uppercase tracking-wider">Existing Files</p>
                             {existingAttachments.map((file) => (
                               <div key={file._id} className="flex items-center justify-between p-2 bg-white/5 border border-white/10 rounded-lg group/file">
                                 <div className="flex items-center gap-2 flex-1 min-w-0">
                                   <FileText className="w-4 h-4 text-cyan-400 flex-shrink-0" />
-                                  <span className="text-xs text-white/80 truncate">{file.fileName}</span>
+                                  {/* <span className="text-xs text-white/80 truncate">{file.fileName}</span> */}
+                                  <button
+                                    type="button"
+                                    onClick={() => downloadFileFrontend(file)}
+                                    className="text-xs text-cyan-400 hover:underline cursor-pointer truncate"
+                                  >
+                                    {file.fileName}
+                                  </button>
+
                                 </div>
                                 <Button
                                   type="button"
@@ -427,17 +478,19 @@ const Feedback = () => {
                       </div>
 
                       <div className="flex justify-end gap-2 pt-4">
-                        <Button
-                          type="submit"
-                          disabled={isCreating || isUpdating}
-                          className={feedbackbtn}
-                        >
-                          {isCreating || isUpdating
-                            ? "Submitting..."
-                            : editMode
-                              ? "Update Feedback"
-                              : "Submit Feedback"}
-                        </Button>
+                        {!viewMode && (
+                          <Button
+                            type="submit"
+                            disabled={isCreating || isUpdating}
+                            className={feedbackbtn}
+                          >
+                            {isCreating || isUpdating
+                              ? "Submitting..."
+                              : editMode
+                                ? "Update Feedback"
+                                : "Submit Feedback"}
+                          </Button>
+                        )}
                       </div>
                     </form>
                   </div>
@@ -495,6 +548,7 @@ const Feedback = () => {
                   {filteredFeedback.map((feedback: any, index: number) => (
                     <motion.div
                       key={feedback._id}
+                      onClick={() => handleView(feedback)}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.2, delay: index * 0.03 }}
@@ -520,6 +574,13 @@ const Feedback = () => {
                             </p>
                           )}
                         </div>
+
+                        {feedback.attachments?.length > 0 && (
+                          <div className="flex items-center gap-1 text-xs text-cyan-400 mt-1">
+                            <Paperclip className="w-3.5 h-3.5" />
+                            <span>{feedback.attachments.length} attachment(s)</span>
+                          </div>
+                        )}
 
                         {/* Status Badge */}
                         <div className="flex-shrink-0">
