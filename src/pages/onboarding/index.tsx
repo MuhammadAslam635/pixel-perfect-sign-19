@@ -92,6 +92,7 @@ const OnboardingPage = () => {
 
           // Set form data with all existing values - ensure we preserve all fields
           // Make sure to handle all data types correctly (strings, arrays, etc.)
+          const questions = response.data.questions;
           if (questions && Object.keys(questions).length > 0) {
             // Deep copy to ensure we don't lose any nested data
             const formDataCopy: OnboardingQuestions = {

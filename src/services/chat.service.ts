@@ -130,6 +130,11 @@ export const sendStreamingChatMessage = async (
           console.error('Error parsing error response:', parseError);
         }
         
+        // For server errors (5xx), provide user-friendly message
+        if (response.status >= 500) {
+          throw new Error('The server encountered an error. Please check your internet connection and try again.');
+        }
+        
         throw new Error(errorMessage);
       }
 
@@ -165,7 +170,14 @@ export const sendStreamingChatMessage = async (
                   if (data.type === 'result' && data.success) {
                     resolve(data);
                   } else if (data.type === 'error') {
-                    reject(new Error(data.message || 'Streaming error'));
+                    // Provide user-friendly error message for streaming errors
+                    const errorMsg = data.message || data.error || 'Streaming error';
+                    const lowerErrorMsg = errorMsg.toLowerCase();
+                    if (lowerErrorMsg.includes('internet') || lowerErrorMsg.includes('connection') || lowerErrorMsg.includes('network')) {
+                      reject(new Error(errorMsg));
+                    } else {
+                      reject(new Error('Connection interrupted. Please check your internet connection and try again.'));
+                    }
                   }
                 } catch (parseError) {
                   console.error('Failed to parse SSE data:', parseError);
@@ -177,14 +189,39 @@ export const sendStreamingChatMessage = async (
             }
           }
         } catch (error) {
-          reject(error);
+          // Handle stream reading errors (network interruptions, etc.)
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          if (
+            errorMessage.includes('NetworkError') ||
+            errorMessage.includes('Failed to fetch') ||
+            errorMessage.includes('ECONNREFUSED') ||
+            errorMessage.includes('ETIMEDOUT') ||
+            errorMessage.includes('ERR_NETWORK')
+          ) {
+            reject(new Error('Connection lost. Please check your internet connection and try again.'));
+          } else {
+            reject(error);
+          }
         }
       };
 
       readStream();
     }).catch(error => {
       if (error.name !== 'AbortError') {
-        reject(error);
+        // Handle fetch errors (network issues, etc.)
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        if (
+          errorMessage.includes('Failed to fetch') ||
+          errorMessage.includes('NetworkError') ||
+          errorMessage.includes('ECONNREFUSED') ||
+          errorMessage.includes('ETIMEDOUT') ||
+          errorMessage.includes('ERR_NETWORK') ||
+          errorMessage.includes('ERR_INTERNET_DISCONNECTED')
+        ) {
+          reject(new Error('Unable to connect to the server. Please check your internet connection and try again.'));
+        } else {
+          reject(error);
+        }
       }
     });
   });
