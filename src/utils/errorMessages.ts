@@ -1,11 +1,80 @@
 /**
  * Sanitizes error messages to remove technical details and make them user-friendly.
  * Removes HTTP status codes, request information, technical error codes, and other technical details.
+ * Handles connectivity errors and server errors (500) with user-friendly messages.
  */
 export function sanitizeErrorMessage(
   error: unknown,
   fallbackMessage: string = "Something went wrong. Please try again."
 ): string {
+  // Check for connectivity/network errors and server errors first
+  if (error && typeof error === "object") {
+    const axiosError = error as {
+      response?: { status?: number; data?: { message?: string } };
+      code?: string;
+      message?: string;
+      request?: unknown;
+    };
+
+    // Handle server errors (5xx) - these have a response
+    if (axiosError.response) {
+      const status = axiosError.response.status;
+      
+      // Handle 500 server errors
+      if (status === 500) {
+        return "The server encountered an error. Please try again in a moment. If the problem persists, check your internet connection.";
+      }
+
+      // Handle other 5xx server errors
+      if (status && status >= 500) {
+        return "The server is temporarily unavailable. Please check your internet connection and try again.";
+      }
+
+      // For other response errors (4xx, etc.), continue with normal processing below
+    } else {
+      // No response means it's likely a network/connectivity error
+      // Check for specific network error codes
+      const networkErrorCodes = [
+        "ECONNREFUSED",
+        "ETIMEDOUT",
+        "ENOTFOUND",
+        "ECONNRESET",
+        "ENETUNREACH",
+        "ERR_NETWORK",
+        "ERR_INTERNET_DISCONNECTED",
+        "ERR_CONNECTION_REFUSED",
+        "ERR_CONNECTION_TIMED_OUT",
+        "ERR_CONNECTION_RESET",
+      ];
+
+      const errorCode = axiosError.code || "";
+      const errorMessage = axiosError.message || "";
+
+      // Check if it's a network error
+      if (
+        networkErrorCodes.some(
+          (code) =>
+            errorCode.includes(code) ||
+            errorMessage.toUpperCase().includes(code)
+        ) ||
+        errorMessage.includes("Network Error") ||
+        errorMessage.includes("network error") ||
+        errorMessage.includes("Failed to fetch") ||
+        errorMessage.includes("failed to fetch") ||
+        errorMessage.includes("Load failed") ||
+        errorMessage.includes("load failed")
+      ) {
+        return "Unable to connect to the server. Please check your internet connection and try again.";
+      }
+
+      // Generic network error (no response and no specific code)
+      // If it's an axios error without a response, it's likely a network issue
+      if ("code" in error || "request" in error) {
+        return "Connection error. Please check your internet connection and try again.";
+      }
+    }
+  }
+
   let message = fallbackMessage;
 
   // Extract message from various error formats
@@ -35,6 +104,19 @@ export function sanitizeErrorMessage(
     }
   } else if (typeof error === "string") {
     message = error;
+    
+    // Check for connectivity-related strings
+    if (
+      message.includes("Failed to fetch") ||
+      message.includes("failed to fetch") ||
+      message.includes("NetworkError") ||
+      message.includes("network error") ||
+      message.includes("ECONNREFUSED") ||
+      message.includes("ETIMEDOUT") ||
+      message.includes("ENOTFOUND")
+    ) {
+      return "Unable to connect to the server. Please check your internet connection and try again.";
+    }
   }
 
   // Remove HTTP status codes (e.g., "404", "500", "Status: 400", "HTTP 404")

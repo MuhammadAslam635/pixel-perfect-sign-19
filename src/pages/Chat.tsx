@@ -896,7 +896,7 @@ const ChatPage = () => {
         title: "Unable to send message",
         description: sanitizeErrorMessage(
           error,
-          "We could not deliver your message. Please try again."
+          "We could not deliver your message. Please check your internet connection and try again."
         ),
         variant: "destructive",
       });
