@@ -1106,27 +1106,9 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
       );
     }
 
-    // For new chats, immediately add to chat list optimistically
-    if (isNewChat) {
-      const optimisticChat: ChatSummary = {
-        _id: actualChatId, // Use temp chat ID for now
-        title:
-          trimmedMessage.length > 50
-            ? trimmedMessage.substring(0, 50) + "..."
-            : trimmedMessage,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-
-      queryClient.setQueryData<ChatSummary[]>(["chatList"], (oldChatList = []) => {
-        // Check if chat already exists (shouldn't for new chats, but just in case)
-        const exists = oldChatList.some((chat) => chat._id === actualChatId);
-        if (exists) {
-          return oldChatList;
-        }
-        return [optimisticChat, ...oldChatList];
-      });
-    }
+    // DON'T add temp chats to chatList cache - they should only exist in optimisticMessagesByChat
+    // The real chat will be added when the server responds
+    // This prevents temp chats from appearing in chat history
 
     // Start long-running task tracking
     streamingStartTimeRef.current = Date.now();
@@ -1338,12 +1320,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
         dispatch(removeOptimisticMessages(currentChatKey));
       }
 
-      // Remove optimistic chat entry if it was a new chat
-      if (isNewChat) {
-        queryClient.setQueryData<ChatSummary[]>(["chatList"], (oldChatList = []) => {
-          return oldChatList.filter((chat) => chat._id !== actualChatId);
-        });
-      }
+      // Temp chats are no longer added to chatList, so no cleanup needed
 
       // Mark long-running task as error
       dispatch(

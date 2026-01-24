@@ -176,12 +176,12 @@ const ChatPage = () => {
     queryKey: ["chatList"],
     queryFn: fetchChatList,
     staleTime: 30_000,
+    // Always filter out temp chats when reading from cache or fresh data
+    select: (data) => data.filter(chat => !chat._id.startsWith("temp_")),
   });
 
-  // Filter out temp chats from the fetched list (they're stale after tab initialization)
-  const filteredChatList = useMemo(() => {
-    return fetchedChatList.filter(chat => !chat._id.startsWith("temp_"));
-  }, [fetchedChatList]);
+  // Use the already filtered list
+  const filteredChatList = fetchedChatList;
 
   const {
     data: selectedChat,
@@ -200,12 +200,11 @@ const ChatPage = () => {
   const isChatDetailLoading = isFetchedChatDetailLoading;
   const selectedChatDetail = selectedChat;
 
-  // Include temporary chat in the list
+  // Include temporary chat in the list AND active temp chats (being processed)
   const fullChatList = useMemo(() => {
     const list = [...chatList];
-    // Only include temporaryChat if we're actually viewing it (selectedChatId === "__new_chat__")
-    // Once a message is sent, the chat gets a temp ID and is added to chatList
-    // We don't want to show both the temporaryChat and the actual chat
+
+    // Include temporaryChat if we're viewing it (before first message)
     if (temporaryChat && selectedChatId === "__new_chat__") {
       list.unshift({
         _id: temporaryChat.id,
@@ -215,8 +214,27 @@ const ChatPage = () => {
         messages: temporaryChat.messages,
       });
     }
+
+    // Include active temp chats (currently being processed)
+    // These are chats with temp IDs that have optimistic messages
+    if (selectedChatId && selectedChatId.startsWith("temp_")) {
+      const hasOptimisticMessages = optimisticMessagesByChat[selectedChatId]?.length > 0;
+      // Only include if it has messages and is not already in the list
+      if (hasOptimisticMessages && !list.some(chat => chat._id === selectedChatId)) {
+        const firstMessage = optimisticMessagesByChat[selectedChatId][0];
+        list.unshift({
+          _id: selectedChatId,
+          title: firstMessage.content.length > 50
+            ? firstMessage.content.substring(0, 50) + "..."
+            : firstMessage.content,
+          createdAt: firstMessage.createdAt,
+          updatedAt: firstMessage.createdAt,
+        });
+      }
+    }
+
     return list;
-  }, [chatList, temporaryChat, selectedChatId]);
+  }, [chatList, temporaryChat, selectedChatId, optimisticMessagesByChat]);
 
   // Note: Removed sync effects to prevent infinite loops
   // Components will use query data directly instead of Redux state for chat data
@@ -224,6 +242,15 @@ const ChatPage = () => {
   // Initialize tab on mount - clears stale state from other tabs/sessions
   useEffect(() => {
     dispatch(initializeTab());
+
+    // Clear selected chat if it's a stale temp chat (no messages)
+    if (selectedChatId && selectedChatId.startsWith("temp_")) {
+      const hasMessages = optimisticMessagesByChat[selectedChatId]?.length > 0;
+      if (!hasMessages) {
+        // This is a stale temp chat, clear it
+        dispatch(setSelectedChatId(null));
+      }
+    }
   }, [dispatch]);
 
   // Cleanup old completed tasks every 5 minutes
@@ -558,28 +585,8 @@ const ChatPage = () => {
         addOptimisticMessage({ chatId: actualChatId, message: tempMessage })
       );
 
-      // CRITICAL: Immediately add to chat list optimistically so it's visible
-      const optimisticChat: ChatSummary = {
-        _id: actualChatId, // Use temp chat ID
-        title:
-          trimmedMessage.length > 50
-            ? trimmedMessage.substring(0, 50) + "..."
-            : trimmedMessage,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-
-      queryClient.setQueryData<ChatSummary[]>(
-        ["chatList"],
-        (oldChatList = []) => {
-          // Check if chat already exists
-          const exists = oldChatList.some((chat) => chat._id === actualChatId);
-          if (exists) {
-            return oldChatList;
-          }
-          return [optimisticChat, ...oldChatList];
-        }
-      );
+      // Temp chats are managed in fullChatList via optimisticMessagesByChat
+      // Don't add to cache - will be added when server responds with real ID
 
       // CRITICAL: Save current composer value before switching to temp chat ID
       dispatch(saveComposerValueToCache());
@@ -795,14 +802,7 @@ const ChatPage = () => {
             })
           );
 
-          // Remove the optimistic chat with temp ID from the list
-          // The real chat has already been added above
-          queryClient.setQueryData<ChatSummary[]>(
-            ["chatList"],
-            (oldChatList = []) => {
-              return oldChatList.filter((chat) => chat._id !== actualChatId);
-            }
-          );
+          // Temp chats are not in cache, no cleanup needed
 
           dispatch(
             convertTemporaryChat({

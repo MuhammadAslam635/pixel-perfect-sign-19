@@ -37,11 +37,28 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
   // Tab isolation - prevents state conflicts between multiple tabs
   useTabIsolation();
 
-  // Redux selectors
+  // Redux selectors - MUST be declared before any hooks that use them
   const selectedChatId = useSelector((state: RootState) => state.chat.selectedChatId);
   const deletingChatId = useSelector((state: RootState) => state.chat.deletingChatId);
   const streamingChatIds = useSelector((state: RootState) => state.chat.streamingChatIds);
   const optimisticMessagesByChat = useSelector((state: RootState) => state.chat.optimisticMessagesByChat);
+
+  // Clear selected chat if it's a temp chat without messages on mount
+  const hasInitialSelectionCleanupRef = useRef(false);
+  useEffect(() => {
+    if (!hasInitialSelectionCleanupRef.current) {
+      hasInitialSelectionCleanupRef.current = true;
+
+      // Clear selected chat if it's a temp chat without messages
+      if (selectedChatId && selectedChatId.startsWith("temp_")) {
+        const hasMessages = optimisticMessagesByChat[selectedChatId]?.length > 0;
+        if (!hasMessages) {
+          dispatch(setSelectedChatId(null));
+          setLocalMessages([]);
+        }
+      }
+    }
+  }, [selectedChatId, optimisticMessagesByChat, dispatch]);
 
   // Get current auth token to identify user changes
   const getCurrentAuthToken = (): string | null => {
@@ -58,6 +75,8 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
     queryFn: fetchChatList,
     staleTime: 30_000,
     enabled: !!currentAuthToken, // Only fetch if we have an auth token
+    // Always filter out temp chats when reading from cache or fresh data
+    select: (data) => data.filter(chat => !chat._id.startsWith("temp_")),
   });
 
   // Detect user/company change and reset state
@@ -116,7 +135,7 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
   // Use a ref to track previous chat list to avoid unnecessary updates
   const prevChatListRef = useRef<string>("");
   useEffect(() => {
-    // Filter out temp chats from API response (they shouldn't be in DB, but just in case they're in cache)
+    // Double-check: filter out temp chats (apiChatList should already be filtered by select)
     const filteredList = apiChatList.filter(chat => !chat._id.startsWith("temp_"));
     const chatListKey = filteredList.map(chat => chat._id).join(",");
     if (prevChatListRef.current !== chatListKey) {
