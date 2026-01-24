@@ -431,7 +431,8 @@ const Feedback = () => {
 
                             {/* Description Section */}
                             <div className="space-y-2">
-                              <Label className="text-white/90 text-base font-normal uppercase font-medium pl-1">Description</Label>
+                              <Label className="text-white/90 text-base
+                               uppercase font-medium pl-1">Description</Label>
                               <div className="bg-[#121212] rounded-2xl p-5 border border-white/5">
                                 <p className="text-xs sm:text-sm/5 text-white/70 whitespace-pre-wrap tracking-wide leading-relaxed ">
                                   {formData.description}
@@ -680,7 +681,7 @@ const Feedback = () => {
                       transition={{ duration: 0.2, delay: index * 0.03 }}
                       className="group relative bg-white/[0.02] border border-white/10 rounded-xl transition-all duration-200"
                     >
-                      <div className="flex items-center gap-4 p-4">
+                      <div className="flex items-center gap-4 p-4 cursor-pointer hover:bg-white/[0.05] transition-all duration-200">
                         {/* Type Badge */}
                         <div className="flex-shrink-0">
                           <Badge className={`${getTypeBadgeColor(feedback.type)} border flex items-center gap-1.5 px-2.5 py-1`}>
