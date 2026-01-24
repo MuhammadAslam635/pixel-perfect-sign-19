@@ -15,7 +15,7 @@ import { FeedbackType } from "@/types/feedback.types";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { feedbackTypes } from "@/mocks/dropdownMock";
 import { useToast } from "@/hooks/use-toast";
-import { Pencil, Trash2, ChevronRight, Bug, Lightbulb, XCircle, AlertTriangle, Calendar, FileText, Search, Filter, X, Paperclip, Download } from "lucide-react";
+import { Pencil, Trash2, ChevronRight, Bug, Lightbulb, XCircle, AlertTriangle, Calendar, FileText, Search, Filter, X, Paperclip, Download, Timer, CheckCircle, AlertCircle } from "lucide-react";
 import ConfirmDialog from "@/components/ui/confirm-dialog";
 import { useMemo } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -30,14 +30,14 @@ const Feedback = () => {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [existingAttachments, setExistingAttachments] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "open" | "closed">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "open" | "in-progress" | "closed">("all");
   const [viewMode, setViewMode] = useState(false);
 
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     type: "improvement" as FeedbackType,
-    status: "open" as "open" | "closed",
+    status: "open" as "open" | "in-progress" | "closed",
   });
 
   const [formErrors, setFormErrors] = useState<{ title?: string; description?: string }>({});
@@ -165,9 +165,9 @@ const Feedback = () => {
   };
 
   const getStatusBadgeColor = (status: string) => {
-    return status === "open"
-      ? "bg-yellow-500/20 text-yellow-300 border-yellow-500/30"
-      : "bg-green-500/20 text-green-300 border-green-500/30";
+    if (status === "open") return "bg-yellow-500/20 text-yellow-300 border-yellow-500/30";
+    if (status === "in-progress") return "bg-blue-500/20 text-blue-300 border-blue-500/30";
+    return "bg-green-500/20 text-green-300 border-green-500/30";
   };
 
   const handleEdit = (feedback: any) => {
@@ -337,7 +337,7 @@ const Feedback = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3, ease: "easeOut" }}
-        className="relative mt-32 mb-16 flex-1 overflow-hidden px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] text-white"
+        className="relative mt-32 mb-4 h-[calc(100vh-12rem)] flex-1 overflow-hidden px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] text-white"
       >
         <motion.section
           initial={{ opacity: 0 }}
@@ -403,52 +403,64 @@ const Feedback = () => {
                       {viewMode ? (
                         /* View Mode Layout */
                         <div className="space-y-6">
-                          <div className="flex justify-between items-start gap-4">
-                            <div className="flex-1 min-w-0">
-                               <h3 className="text-lg font-medium text-white leading-relaxed flex items-center gap-2 flex-wrap">
-                                 <span className="truncate">{formData.title}</span>
-                                 <Badge className={`${getTypeBadgeColor(formData.type)} border flex-shrink-0 flex items-center gap-1 px-2 py-0.5 h-5`}>
-                                       <span className="[&>svg]:w-3 [&>svg]:h-3 flex items-center">{getTypeIcon(formData.type)}</span>
-                                       <span className="capitalize text-[10px]">{formData.type}</span>
-                                   </Badge>
-                               </h3>
+                          {/* Badges and Title Section */}
+                          <div className="space-y-4">
+                            {/* Badges Row */}
+                            <div className="flex flex-wrap items-center gap-2">
+                                {/* Type Badge */}
+                                <Badge className={`${getTypeBadgeColor(formData.type)} border inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[10px] rounded-full`}>
+                                     <span className="[&>svg]:w-3 [&>svg]:h-3 flex items-center">{getTypeIcon(formData.type)}</span>
+                                     <span className="capitalize">{formData.type}</span>
+                                 </Badge>
+
+                                 {/* Status Badge */}
+                                 <Badge className={`${getStatusBadgeColor(formData.status)} border inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[10px] rounded-full`}>
+                                    {formData.status === "open" ? (
+                                        <AlertCircle className="w-3 h-3" />
+                                    ) : formData.status === "in-progress" ? (
+                                        <Timer className="w-3 h-3" />
+                                    ) : (
+                                        <CheckCircle className="w-3 h-3" />
+                                    )}
+                                    <span className="capitalize">{formData.status.replace(/-/g, " ")}</span>
+                                 </Badge>
                             </div>
-                              
-                            <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
-                               <Badge className={`${getStatusBadgeColor(formData.status)} border text-[10px] capitalize px-2 py-0.5 h-5`}>
-                                  {formData.status}
-                               </Badge>
-                            </div>
+
+                            {/* Title */}
+                            <h3 className="text-lg sm:text-xl font-semibold text-white leading-tight break-words">
+                                {formData.title}
+                            </h3>
                           </div>
 
-                           
-
-                           <div className="space-y-1.5">
-                             <Label className="text-white/50 text-xs font-medium uppercase tracking-wider">Description</Label>
-                             <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                                <p className="text-sm text-white/80 whitespace-pre-wrap leading-relaxed">{formData.description}</p>
+                           {/* Description Section */}
+                           <div className="space-y-2">
+                             <Label className="text-white/90 text-base font-normal uppercase font-medium pl-1">Description</Label>
+                             <div className="bg-[#121212] rounded-2xl p-5 border border-white/5">
+                                <p className="text-xs sm:text-sm/5 text-white/70 whitespace-pre-wrap tracking-wide leading-relaxed ">
+                                  {formData.description}
+                                </p>
                              </div>
                            </div>
 
-                           {/* Attachments for View Mode */}
-                           <div className="space-y-3">
-                              <Label className="text-white/50 text-xs font-medium uppercase tracking-wider">Attachments</Label>
-                              {existingAttachments.length > 0 ? (
+                           {/* Attachments Section */}
+                           {existingAttachments.length > 0 && (
+                             <div className="space-y-3">
+                                <Label className="text-white/90 text-base uppercase font-medium pl-1">Attachments</Label>
                                 <div className="space-y-2">
                                      {existingAttachments.map((file) => (
-                                        <div key={file._id} className="flex items-center justify-between p-3 bg-white/5 border border-white/10 rounded-xl group/file hover:bg-white/10 transition-colors">
-                                             <div className="flex items-center gap-3 flex-1 min-w-0">
-                                                  <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center border border-white/5">
-                                                      <FileText className="w-4 h-4 text-cyan-400" />
+                                        <div key={file._id} className="flex items-center justify-between p-3 bg-[#121212] border border-white/10 rounded-xl group/file hover:border-white/20 transition-all">
+                                             <div className="flex items-center gap-4 flex-1 min-w-0">
+                                                  <div className="w-10 h-10 rounded-lg bg-cyan-950/30 flex items-center justify-center border border-cyan-500/20 text-cyan-400">
+                                                      <FileText className="w-5 h-5" />
                                                   </div>
-                                                  <span className="text-sm text-white/90 truncate">{file.fileName}</span>
+                                                  <span className="text-sm font-medium text-white/90 truncate">{file.fileName}</span>
                                              </div>
                                              <Button
                                                 type="button"
                                                 onClick={() => downloadFileFrontend(file)}
                                                  variant="ghost"
                                                  size="icon"
-                                                 className="h-8 w-8 text-white/40 hover:text-cyan-400 hover:bg-cyan-400/10"
+                                                 className="h-10 w-10 rounded-full border border-cyan-500/20 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/20 hover:border-cyan-500/50 transition-all ml-3 flex-shrink-0"
                                                  title="Download"
                                              >
                                                 <Download className="w-4 h-4" />
@@ -456,10 +468,8 @@ const Feedback = () => {
                                         </div>
                                      ))}
                                 </div>
-                              ) : (
-                                <p className="text-sm text-white/40 italic">No attachments</p>
-                              )}
-                           </div>
+                             </div>
+                           )}
                         </div>
                       ) : (
                         /* Edit/Add Mode Layout */
@@ -636,6 +646,7 @@ const Feedback = () => {
                 <SelectContent className="bg-[#1a1a1a] border-white/10">
                   <SelectItem value="all" className="text-white hover:bg-white/10">All Status</SelectItem>
                   <SelectItem value="open" className="text-white hover:bg-white/10">Open</SelectItem>
+                  <SelectItem value="in-progress" className="text-white hover:bg-white/10">In Progress</SelectItem>
                   <SelectItem value="closed" className="text-white hover:bg-white/10">Closed</SelectItem>
                 </SelectContent>
               </Select>
@@ -643,7 +654,7 @@ const Feedback = () => {
           </div>
 
           <div className="flex-1 overflow-hidden">
-            <div className="h-full overflow-y-auto">
+            <div className="h-full overflow-y-auto scrollbar-hide pr-2">
               {isLoading ? (
                 <div className="flex flex-col items-center justify-center py-16">
                   <div className="w-8 h-8 border-4 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin mb-3" />
@@ -704,7 +715,7 @@ const Feedback = () => {
                           {/* Status Badge */}
                           <div className="flex-shrink-0">
                             <Badge className={`${getStatusBadgeColor(feedback.status)} border text-xs capitalize px-2.5 py-1`}>
-                              {feedback.status}
+                              {feedback.status.replace(/-/g, " ")}
                             </Badge>
                           </div>
 

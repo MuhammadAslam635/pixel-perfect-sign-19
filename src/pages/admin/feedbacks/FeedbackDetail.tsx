@@ -27,6 +27,8 @@ import {
     XCircle,
     AlertTriangle,
     Paperclip,
+    Loader2,
+    Timer,
 } from "lucide-react";
 import { feedbackService } from "@/services/feedback.service";
 import { toast } from "sonner";
@@ -101,8 +103,8 @@ const FeedbackDetail = () => {
 
         setUpdating(true);
         try {
-            await feedbackService.updateFeedback(feedback._id, { status: newStatus as "open" | "closed" });
-            setFeedback({ ...feedback, status: newStatus as "open" | "closed" });
+            await feedbackService.updateFeedback(feedback._id, { status: newStatus as "open" | "in-progress" | "closed" });
+            setFeedback({ ...feedback, status: newStatus as "open" | "in-progress" | "closed" });
             toast.success(`Feedback marked as ${newStatus}`);
         } catch (error: any) {
             console.error("Error updating feedback status:", error);
@@ -174,9 +176,9 @@ const FeedbackDetail = () => {
     };
 
     const getStatusBadgeColor = (status: string) => {
-        return status === "open"
-            ? "bg-yellow-500/20 text-yellow-300 border-yellow-500/30"
-            : "bg-green-500/20 text-green-300 border-green-500/30";
+        if (status === "open") return "bg-yellow-500/20 text-yellow-300 border-yellow-500/30";
+        if (status === "in-progress") return "bg-blue-500/20 text-blue-300 border-blue-500/30";
+        return "bg-green-500/20 text-green-300 border-green-500/30";
     };
 
     const formatFileSize = (bytes: number) => {
@@ -274,10 +276,12 @@ const FeedbackDetail = () => {
                                     >
                                         {feedback.status === "open" ? (
                                             <AlertCircle className="w-3.5 h-3.5" />
+                                        ) : feedback.status === "in-progress" ? (
+                                            <Timer className="w-3.5 h-3.5" />
                                         ) : (
                                             <CheckCircle className="w-3.5 h-3.5" />
                                         )}
-                                        <span className="capitalize">{feedback.status}</span>
+                                        <span className="capitalize">{feedback.status.replace(/-/g, " ")}</span>
                                     </Badge>
                                 </div>
 
@@ -320,6 +324,7 @@ const FeedbackDetail = () => {
                                     </SelectTrigger>
                                     <SelectContent className="bg-[#1a1a1a] border-white/10">
                                         <SelectItem value="open" className="text-white hover:bg-white/10">Open</SelectItem>
+                                        <SelectItem value="in-progress" className="text-white hover:bg-white/10">In Progress</SelectItem>
                                         <SelectItem value="closed" className="text-white hover:bg-white/10">Closed</SelectItem>
                                     </SelectContent>
                                 </Select>

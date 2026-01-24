@@ -1,5 +1,5 @@
 export type FeedbackType = "improvement" | "failure" | "bug" | "error";
-export type FeedbackStatus = "open" | "closed";
+export type FeedbackStatus = "open" | "in-progress" | "closed";
 
 export interface FeedbackAttachment {
     fileId?: string;

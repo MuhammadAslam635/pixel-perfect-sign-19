@@ -26,6 +26,7 @@ import {
     Lightbulb,
     XCircle,
     AlertTriangle,
+    Timer,
 } from "lucide-react";
 import { feedbackService } from "@/services/feedback.service";
 import { userService } from "@/services/user.service";
@@ -175,9 +176,9 @@ const UserFeedbackList = () => {
     };
 
     const getStatusBadgeColor = (status: string) => {
-        return status === "open"
-            ? "bg-yellow-500/20 text-yellow-300 border-yellow-500/30"
-            : "bg-green-500/20 text-green-300 border-green-500/30";
+        if (status === "open") return "bg-yellow-500/20 text-yellow-300 border-yellow-500/30";
+        if (status === "in-progress") return "bg-blue-500/20 text-blue-300 border-blue-500/30";
+        return "bg-green-500/20 text-green-300 border-green-500/30";
     };
 
     const handleFeedbackClick = (feedbackId: string) => {
@@ -232,7 +233,7 @@ const UserFeedbackList = () => {
                 </div>
 
                 {/* Stats Summary */}
-                <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-3">
+                <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-4">
                     <Card className="bg-[linear-gradient(135deg,rgba(58,62,75,0.82),rgba(28,30,40,0.94))] border-white/10">
                         <CardHeader className="pb-2">
                             <CardTitle className="text-white/70 flex items-center gap-2 text-sm">
@@ -264,6 +265,20 @@ const UserFeedbackList = () => {
                     <Card className="bg-[linear-gradient(135deg,rgba(58,62,75,0.82),rgba(28,30,40,0.94))] border-white/10">
                         <CardHeader className="pb-2">
                             <CardTitle className="text-white/70 flex items-center gap-2 text-sm">
+                                <Timer className="w-4 h-4 text-blue-400" />
+                                In Progress
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-6 pt-0">
+                            <div className="text-2xl sm:text-3xl font-bold text-blue-400">
+                                {feedbacks.filter((f) => f.status === "in-progress").length}
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="bg-[linear-gradient(135deg,rgba(58,62,75,0.82),rgba(28,30,40,0.94))] border-white/10">
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-white/70 flex items-center gap-2 text-sm">
                                 <CheckCircle className="w-4 h-4" />
                                 Closed
                             </CardTitle>
@@ -288,6 +303,7 @@ const UserFeedbackList = () => {
                                 <SelectContent>
                                     <SelectItem value="all">All Status</SelectItem>
                                     <SelectItem value="open">Open</SelectItem>
+                                    <SelectItem value="in-progress">In Progress</SelectItem>
                                     <SelectItem value="closed">Closed</SelectItem>
                                 </SelectContent>
                             </Select>
@@ -344,10 +360,12 @@ const UserFeedbackList = () => {
                                                     >
                                                         {feedback.status === "open" ? (
                                                             <AlertCircle className="w-3 h-3 mr-1" />
+                                                        ) : feedback.status === "in-progress" ? (
+                                                            <Timer className="w-3 h-3 mr-1" />
                                                         ) : (
                                                             <CheckCircle className="w-3 h-3 mr-1" />
                                                         )}
-                                                        <span className="capitalize">{feedback.status}</span>
+                                                        <span className="capitalize">{feedback.status.replace(/-/g, " ")}</span>
                                                     </Badge>
                                                 </div>
 

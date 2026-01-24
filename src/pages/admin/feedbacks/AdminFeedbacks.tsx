@@ -26,12 +26,14 @@ interface UserFeedbackStats {
     userEmail: string;
     totalFeedbacks: number;
     openFeedbacks: number;
+    inProgressFeedbacks: number;
     closedFeedbacks: number;
 }
 
 interface GlobalStats {
     totalFeedbacks: number;
     openFeedbacks: number;
+    inProgressFeedbacks: number;
     closedFeedbacks: number;
     totalUsers: number;
 }
@@ -62,6 +64,7 @@ const AdminFeedbacks = () => {
     const [globalStats, setGlobalStats] = useState<GlobalStats>({
         totalFeedbacks: 0,
         openFeedbacks: 0,
+        inProgressFeedbacks: 0,
         closedFeedbacks: 0,
         totalUsers: 0,
     });
@@ -200,6 +203,32 @@ const AdminFeedbacks = () => {
                     <Card className="bg-[linear-gradient(135deg,rgba(58,62,75,0.82),rgba(28,30,40,0.94))] border-white/10 hover:border-white/20 transition-all duration-300">
                         <CardHeader className="pb-2">
                             <CardTitle className="text-white/70 flex items-center gap-2 text-sm">
+                                <CheckCircle2 className="w-4 h-4 text-blue-400" />
+                                In Progress
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-6 pt-0">
+                            <div className="text-2xl sm:text-3xl font-bold text-blue-400">
+                                {loading ? (
+                                    <div className="animate-pulse">...</div>
+                                ) : (
+                                    globalStats.inProgressFeedbacks.toLocaleString()
+                                )}
+                            </div>
+                            <p className="text-xs text-white/60 mt-1">
+                                {globalStats.totalFeedbacks > 0
+                                    ? `${Math.round(
+                                        (globalStats.inProgressFeedbacks / globalStats.totalFeedbacks) *
+                                        100
+                                    )}% active`
+                                    : "No feedbacks"}
+                            </p>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="bg-[linear-gradient(135deg,rgba(58,62,75,0.82),rgba(28,30,40,0.94))] border-white/10 hover:border-white/20 transition-all duration-300">
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-white/70 flex items-center gap-2 text-sm">
                                 <CheckCircle2 className="w-4 h-4" />
                                 Closed Feedbacks
                             </CardTitle>
@@ -322,6 +351,12 @@ const AdminFeedbacks = () => {
                                                         {user.openFeedbacks}
                                                     </div>
                                                     <div className="text-xs text-white/50">Open</div>
+                                                </div>
+                                                <div className="text-center">
+                                                    <div className="text-base font-semibold text-blue-400">
+                                                        {user.inProgressFeedbacks}
+                                                    </div>
+                                                    <div className="text-xs text-white/50">In Progress</div>
                                                 </div>
                                                 <div className="text-center">
                                                     <div className="text-base font-semibold text-green-400">
