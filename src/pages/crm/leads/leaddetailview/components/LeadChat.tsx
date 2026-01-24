@@ -123,9 +123,14 @@ const normalizePhoneNumber = (raw?: string | null): string | null => {
     formatted = "+" + formatted.slice(2);
   }
 
+  // Add + prefix if missing (for international numbers)
   if (!formatted.startsWith("+")) {
     if (/^\d{10}$/.test(formatted)) {
+      // US 10-digit number - add +1
       formatted = "+1" + formatted;
+    } else if (/^\d{7,14}$/.test(formatted)) {
+      // International number without + - add it
+      formatted = "+" + formatted;
     } else {
       return null;
     }
