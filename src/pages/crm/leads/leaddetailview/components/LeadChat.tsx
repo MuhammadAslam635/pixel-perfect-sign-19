@@ -300,44 +300,18 @@ const LeadChat = ({
     textarea.style.height = `${newHeight}px`;
   };
 
-  const {
-    data: whatsappConnectionsData,
-    isLoading: isWhatsAppConnectionLoading,
-    isError: isWhatsAppConnectionError,
-    error: whatsappConnectionsError,
-  } = useQuery({
-    queryKey: ["whatsapp-connections"],
-    queryFn: whatsappService.getConnections,
-    staleTime: 120000,
-  });
-
-  const whatsappConnections =
-    whatsappConnectionsData?.credentials || EMPTY_ARRAY;
-  const primaryWhatsAppConnection = whatsappConnections[0] || null;
-  const whatsappPhoneNumberId = primaryWhatsAppConnection?.phoneNumber || null;
-  const whatsappReady = whatsappConnections.length > 0;
-
-  const whatsappConnectionErrorMessage = isWhatsAppConnectionError
-    ? sanitizeErrorMessage(
-        whatsappConnectionsError,
-        "Failed to load WhatsApp connection."
-      )
-    : null;
-
   const twilioReady = twilioConnection.ready;
   const twilioStatusLoading = twilioConnection.loading;
-  const whatsappStatusLoading = isWhatsAppConnectionLoading;
 
+  // WhatsApp is now globally configured via environment variables
+  // Just check if lead has a valid WhatsApp number
   const whatsappUnavailableMessage = !whatsappNumber
     ? "Add a WhatsApp number for this lead to start WhatsApp chats."
-    : whatsappConnectionErrorMessage
-      ? whatsappConnectionErrorMessage
-      : !normalizedLeadWhatsapp
-        ? "Lead WhatsApp number must include the country code."
-        : null;
+    : !normalizedLeadWhatsapp
+      ? "Lead WhatsApp number must include the country code."
+      : null;
 
   const whatsappInputsDisabled =
-    whatsappStatusLoading ||
     Boolean(whatsappUnavailableMessage) ||
     !normalizedLeadWhatsapp;
   const canGenerateWhatsAppMessage = Boolean(lead?.companyId && lead?._id);
@@ -347,15 +321,12 @@ const LeadChat = ({
     const hasWhatsapp = Boolean(whatsappNumber);
     const hasEmail = Boolean(emailAddress);
 
+    // WhatsApp is globally configured - show "Ready" when lead has valid WhatsApp number
     const whatsappStatus = !hasWhatsapp
       ? "Add WhatsApp number"
-      : isWhatsAppConnectionLoading
-        ? "Checking..."
-        : whatsappConnectionErrorMessage
-          ? "Error"
-          : whatsappReady
-            ? "Connected"
-            : "Not connected";
+      : !normalizedLeadWhatsapp
+        ? "Invalid format"
+        : "Ready";
 
     const smsStatus = !hasPhone
       ? "Add phone"
@@ -367,7 +338,7 @@ const LeadChat = ({
 
     const emailStatus = hasEmail ? "Connected" : "Unavailable";
 
-    const whatsappAvailable = hasWhatsapp;
+    const whatsappAvailable = hasWhatsapp && Boolean(normalizedLeadWhatsapp);
     const smsAvailable = hasPhone && (twilioReady || twilioStatusLoading);
     const aiCallAvailable = hasPhone;
     const meetingBotAvailable = true; // Always available as it depends on meetings, not phone/email
@@ -401,8 +372,8 @@ const LeadChat = ({
   }, [
     emailAddress,
     phoneNumber,
-    isWhatsAppConnectionLoading,
-    whatsappConnectionErrorMessage,
+    whatsappNumber,
+    normalizedLeadWhatsapp,
     twilioReady,
     twilioStatusLoading,
   ]);
@@ -3794,12 +3765,7 @@ const LeadChat = ({
       <div className="flex flex-col w-full flex-1 min-h-0 px-1">
         {activeTab === "WhatsApp" ? (
           <div className="flex flex-1 flex-col min-h-0 relative">
-            {whatsappStatusLoading ? (
-              <div className="flex flex-1 flex-col items-center justify-center gap-3 py-20 text-white/70">
-                <Loader2 className="h-6 w-6 animate-spin text-white" />
-                <p>Checking WhatsApp connection...</p>
-              </div>
-            ) : whatsappUnavailableMessage ? (
+            {whatsappUnavailableMessage ? (
               <div className="flex w-full flex-1 items-center justify-center py-20 text-center text-white/70">
                 {whatsappUnavailableMessage}
               </div>
