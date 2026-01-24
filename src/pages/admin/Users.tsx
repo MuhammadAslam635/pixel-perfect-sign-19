@@ -29,6 +29,7 @@ import {
   Sparkles,
   AlertTriangle,
   Settings,
+  Loader2,
 } from "lucide-react";
 import { adminService, CompanyAdmin, Company } from "@/services/admin.service";
 import { rbacService } from "@/services/rbac.service";
@@ -80,6 +81,7 @@ const AdminUsers = () => {
   const [provisioningModalOpen, setProvisioningModalOpen] = useState(false);
   const [selectedUserForProvisioning, setSelectedUserForProvisioning] =
     useState<UserWithCompany | null>(null);
+  const [togglingUsers, setTogglingUsers] = useState<Record<string, boolean>>({});
 
   const [statistics, setStatistics] = useState({
     totalUsers: 0,
@@ -361,6 +363,8 @@ const AdminUsers = () => {
 
     const newStatus = currentStatus === "active" ? "inactive" : "active";
 
+    setTogglingUsers(prev => ({ ...prev, [userId]: true }));
+
     try {
       const user = allUsers.find((u) => u._id === userId);
       if (!user) {
@@ -427,6 +431,8 @@ const AdminUsers = () => {
     } catch (error: any) {
       console.error("Error updating status:", error);
       toast.error(error.response?.data?.message || "Failed to update status");
+    } finally {
+      setTogglingUsers(prev => ({ ...prev, [userId]: false }));
     }
   };
 
@@ -953,6 +959,7 @@ const AdminUsers = () => {
                                               user.status || "inactive"
                                             )
                                           }
+                                          disabled={togglingUsers[user._id]}
                                           className={`${
                                             user.status === "active"
                                               ? "bg-red-600/20 text-red-400 border border-red-600/30 hover:bg-red-600/30"
@@ -960,7 +967,12 @@ const AdminUsers = () => {
                                           } rounded-full px-4 py-2 text-xs`}
                                           size="sm"
                                         >
-                                          {user.status === "active" ? (
+                                          {togglingUsers[user._id] ? (
+                                            <>
+                                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                              {user.status === "active" ? "Deactivating..." : "Activating..."}
+                                            </>
+                                          ) : user.status === "active" ? (
                                             <>
                                               <XCircle className="h-4 w-4 mr-2" />
                                               Deactivate
