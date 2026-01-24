@@ -178,6 +178,11 @@ const ChatPage = () => {
     staleTime: 30_000,
   });
 
+  // Filter out temp chats from the fetched list (they're stale after tab initialization)
+  const filteredChatList = useMemo(() => {
+    return fetchedChatList.filter(chat => !chat._id.startsWith("temp_"));
+  }, [fetchedChatList]);
+
   const {
     data: selectedChat,
     isFetching: isChatDetailFetching,
@@ -190,7 +195,7 @@ const ChatPage = () => {
   });
 
   // Use query data directly instead of Redux state to avoid sync loops
-  const chatList = fetchedChatList;
+  const chatList = filteredChatList;
   const isChatListLoading = isFetchedChatListLoading;
   const isChatDetailLoading = isFetchedChatDetailLoading;
   const selectedChatDetail = selectedChat;

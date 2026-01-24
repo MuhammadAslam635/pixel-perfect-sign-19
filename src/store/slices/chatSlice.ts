@@ -306,11 +306,17 @@ const chatSlice = createSlice({
 
     // Initialize tab - clears state from other tabs/sessions
     initializeTab: (state) => {
-      // Clear optimistic messages and streaming state from other tabs
-      // These are tab-specific and shouldn't persist across tab reloads
-      state.optimisticMessagesByChat = {};
-      state.streamingEventsByChat = {};
-      state.streamingChatIds = [];
+      // Only clear state if this is a different tab
+      // If returning to the same tab (after navigation), preserve the state
+      if (state.tabId !== CURRENT_TAB_ID) {
+        // This is a different tab - clear optimistic messages and streaming state from other tabs
+        // These are tab-specific and shouldn't persist across tabs
+        state.optimisticMessagesByChat = {};
+        state.streamingEventsByChat = {};
+        state.streamingChatIds = [];
+        state.tabId = CURRENT_TAB_ID;
+      }
+      // If same tab, just ensure tabId is set (but keep existing state)
       state.tabId = CURRENT_TAB_ID;
     },
 

@@ -15,6 +15,7 @@ import {
   setDeletingChatId,
   removeOptimisticMessages,
   setComposerValue,
+  removeStreamingChat,
 } from "@/store/slices/chatSlice";
 
 type AssistantPanelProps = {
@@ -40,6 +41,7 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
   const selectedChatId = useSelector((state: RootState) => state.chat.selectedChatId);
   const deletingChatId = useSelector((state: RootState) => state.chat.deletingChatId);
   const streamingChatIds = useSelector((state: RootState) => state.chat.streamingChatIds);
+  const optimisticMessagesByChat = useSelector((state: RootState) => state.chat.optimisticMessagesByChat);
 
   // Get current auth token to identify user changes
   const getCurrentAuthToken = (): string | null => {
@@ -50,9 +52,9 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
   const currentAuthToken = getCurrentAuthToken();
 
   // Fetch chat list from API (always from database, filtered by userId)
-  // Include auth token in query key to ensure different users get different cache entries
+  // Use consistent query key with Chat page
   const { data: apiChatList = [], isLoading: isChatListLoading } = useQuery({
-    queryKey: ["chatList", currentAuthToken],
+    queryKey: ["chatList"],
     queryFn: fetchChatList,
     staleTime: 30_000,
     enabled: !!currentAuthToken, // Only fetch if we have an auth token
@@ -67,9 +69,8 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
       currentAuthTokenRef.current !== null &&
       currentAuthTokenRef.current !== authToken
     ) {
-      // User/company has changed - invalidate queries and reset state
-      queryClient.invalidateQueries({ queryKey: ["chatList"] });
-      queryClient.invalidateQueries({ queryKey: ["chatDetail"] });
+      // User/company has changed - clear cache and reset state
+      queryClient.clear(); // Clear all queries to avoid stale data from previous user
       dispatch(setSelectedChatId(null));
       setLocalMessages([]);
       setChatHistory([]);
@@ -80,14 +81,47 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
     currentAuthTokenRef.current = authToken;
   }, [currentAuthToken, queryClient]);
 
+  // Clean up stale temporary chats from cache
+  const lastCleanupTimeRef = useRef<number>(0);
+  useEffect(() => {
+    const now = Date.now();
+    // Only run cleanup once per second to avoid excessive updates
+    if (now - lastCleanupTimeRef.current < 1000) {
+      return;
+    }
+    lastCleanupTimeRef.current = now;
+
+    // Remove temp chats from cache
+    queryClient.setQueryData<ChatSummary[]>(
+      ["chatList"],
+      (oldList = []) => {
+        if (!oldList) return [];
+        const filtered = oldList.filter(chat => !chat._id.startsWith("temp_"));
+        // Only return new array if something changed to avoid infinite loops
+        return filtered.length !== oldList.length ? filtered : oldList;
+      }
+    );
+
+    // If selected chat is a temp chat that no longer has optimistic messages, clear it
+    if (selectedChatId && selectedChatId.startsWith("temp_")) {
+      const hasOptimisticMessages = optimisticMessagesByChat[selectedChatId]?.length > 0;
+      if (!hasOptimisticMessages) {
+        dispatch(setSelectedChatId(null));
+        setLocalMessages([]);
+      }
+    }
+  }, [queryClient, selectedChatId, dispatch, chatHistory, optimisticMessagesByChat]);
+
   // Update chat history from API response
   // Use a ref to track previous chat list to avoid unnecessary updates
   const prevChatListRef = useRef<string>("");
   useEffect(() => {
-    const chatListKey = apiChatList.map(chat => chat._id).join(",");
+    // Filter out temp chats from API response (they shouldn't be in DB, but just in case they're in cache)
+    const filteredList = apiChatList.filter(chat => !chat._id.startsWith("temp_"));
+    const chatListKey = filteredList.map(chat => chat._id).join(",");
     if (prevChatListRef.current !== chatListKey) {
       prevChatListRef.current = chatListKey;
-      setChatHistory(apiChatList);
+      setChatHistory(filteredList);
     }
   }, [apiChatList]);
 
@@ -130,6 +164,59 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
     currentAuthToken,
     // Removed dispatch - it's stable and doesn't need to be in deps
   ]);
+
+  // Restore chat when returning from navigation
+  // If selectedChatId exists and chat is/was streaming, refetch to get latest state
+  const isRestoringRef = useRef(false);
+  useEffect(() => {
+    // Check if this chat was streaming (might have completed while away)
+    const wasStreaming = streamingChatIds.includes(selectedChatId || "");
+    const hasOptimisticMessages = selectedChatId && optimisticMessagesByChat[selectedChatId]?.length > 0;
+
+    if (
+      selectedChatId &&
+      !isChatListLoading &&
+      !isRestoringRef.current &&
+      !selectedChatId.startsWith("temp_") && // Don't refetch temp chats
+      (wasStreaming || hasOptimisticMessages) // Only refetch if chat was in progress
+    ) {
+      isRestoringRef.current = true;
+
+      // Invalidate and refetch to get latest state from server
+      queryClient.invalidateQueries({ queryKey: ["chatDetail", selectedChatId] });
+
+      queryClient
+        .fetchQuery({
+          queryKey: ["chatDetail", selectedChatId],
+          queryFn: async () => {
+            const { fetchChatById } = await import("@/services/chat.service");
+            return fetchChatById(selectedChatId);
+          },
+        })
+        .then((chatDetail) => {
+          if (chatDetail?.messages) {
+            setLocalMessages(chatDetail.messages);
+            // If we got complete messages from server, clear optimistic messages
+            if (chatDetail.messages.length > 0) {
+              dispatch(removeOptimisticMessages(selectedChatId));
+              // Also clear from streaming state if it's complete
+              const lastMessage = chatDetail.messages[chatDetail.messages.length - 1];
+              if (lastMessage?.role === "assistant") {
+                // Response is complete, remove from streaming
+                dispatch(removeStreamingChat(selectedChatId));
+              }
+            }
+          }
+        })
+        .catch((error) => {
+          console.error("Failed to restore chat:", error);
+          // Don't clear selection on error - keep showing optimistic messages
+        })
+        .finally(() => {
+          isRestoringRef.current = false;
+        });
+    }
+  }, [selectedChatId, isChatListLoading, queryClient, dispatch, streamingChatIds, optimisticMessagesByChat]);
 
   const handleSelectChat = (chatId: string) => {
     dispatch(setSelectedChatId(chatId));
@@ -189,9 +276,8 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
       dispatch(removeOptimisticMessages(chatId));
 
       toast.success("Chat deleted");
-      const authToken = getCurrentAuthToken();
       await queryClient.invalidateQueries({
-        queryKey: ["chatList", authToken],
+        queryKey: ["chatList"],
       });
       await queryClient.invalidateQueries({ queryKey: ["chatDetail", chatId] });
     } catch (error: any) {
