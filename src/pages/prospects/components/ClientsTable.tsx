@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useClients, useSyncFromAirtableTable } from "@/hooks/useProspects";
+import { useClients } from "@/hooks/useProspects";
 import type { Client } from "@/services/clients.service";
 import ClientDetailsModal from "./ClientDetailsModal";
 import { useToast } from "@/hooks/use-toast";
@@ -120,9 +120,6 @@ const ClientsTable: React.FC<ClientsTableProps> = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { toast } = useToast();
 
-  const { mutate: syncFromAirtable, isPending: isSyncing } =
-    useSyncFromAirtableTable();
-
   // Debounce search query
   React.useEffect(() => {
     const timer = setTimeout(() => {
@@ -141,7 +138,7 @@ const ClientsTable: React.FC<ClientsTableProps> = ({
     [currentPage, debouncedSearch]
   );
 
-  const { data, isLoading, error } = useClients(queryParams);
+  const { data, isLoading, error, refetch, isRefetching } = useClients(queryParams);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -184,25 +181,20 @@ const ClientsTable: React.FC<ClientsTableProps> = ({
     setSelectedClient(null);
   };
 
-  const handleSync = () => {
-    syncFromAirtable(
-      {},
-      {
-        onSuccess: (response) => {
-          toast({
-            title: "Sync Successful",
-            description: response.message,
-          });
-        },
-        onError: (error: any) => {
-          toast({
-            title: "Sync Failed",
-            description: sanitizeErrorMessage(error, "Failed to sync"),
-            variant: "destructive",
-          });
-        },
-      }
-    );
+  const handleRefresh = async () => {
+    try {
+      await refetch();
+      toast({
+        title: "Refreshed",
+        description: "Data has been refreshed",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Refresh Failed",
+        description: sanitizeErrorMessage(error, "Failed to refresh data"),
+        variant: "destructive",
+      });
+    }
   };
 
   if (error) {
@@ -254,8 +246,8 @@ const ClientsTable: React.FC<ClientsTableProps> = ({
               />
             </div>
             <button
-              onClick={handleSync}
-              disabled={isSyncing}
+              onClick={handleRefresh}
+              disabled={isRefetching || isLoading}
               className="group relative overflow-hidden flex items-center justify-center h-10 rounded-full border border-white/40 px-3.5 gap-2 text-xs font-medium tracking-wide transition-all duration-400 ease-elastic text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/15 before:to-transparent before:transition-all before:duration-300 before:ease-in-out hover:before:from-white/25 hover:before:duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
                 background: "#FFFFFF1A",
@@ -274,11 +266,11 @@ const ClientsTable: React.FC<ClientsTableProps> = ({
               ></div>
               <RefreshCwIcon
                 className={`h-4 w-4 flex-shrink-0 transition-[color,filter] duration-250 ease-in-out text-white drop-shadow-[0_8px_18px_rgba(62,100,180,0.45)] ${
-                  isSyncing ? "animate-spin" : ""
+                  isRefetching || isLoading ? "animate-spin" : ""
                 }`}
               />
               <span className="whitespace-nowrap relative z-10">
-                {isSyncing ? "Syncing..." : "Sync"}
+                {isRefetching || isLoading ? "Refreshing..." : "Refresh"}
               </span>
             </button>
           </CardContent>
