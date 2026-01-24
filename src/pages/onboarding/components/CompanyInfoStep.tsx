@@ -248,55 +248,71 @@ const CompanyInfoStep = ({
         )}
       </div>
 
-      {/* Address Details - Only show if we have at least one address field */}
-      {(formData.address || formData.postalCode || formData.country) && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Full Address */}
-          {formData.address && (
-            <div className="space-y-2 md:col-span-2">
-              <Label className="text-white flex items-center gap-2 text-sm">
-                <MapPin className="h-4 w-4 text-cyan-400" />
-                Address
-              </Label>
-              <Input
-                value={formData.address}
-                readOnly
-                className="bg-white/[0.06] text-white placeholder:text-white/40 text-sm rounded-lg h-12 border-cyan-400/30 cursor-not-allowed opacity-80"
-              />
-            </div>
-          )}
-
-          {/* Postal Code */}
-          {formData.postalCode && (
-            <div className="space-y-2">
-              <Label className="text-white flex items-center gap-2 text-sm">
-                <MapPin className="h-4 w-4 text-cyan-400" />
-                Postal Code
-              </Label>
-              <Input
-                value={formData.postalCode}
-                readOnly
-                className="bg-white/[0.06] text-white placeholder:text-white/40 text-sm rounded-lg h-12 border-cyan-400/30 cursor-not-allowed opacity-80"
-              />
-            </div>
-          )}
-
-          {/* Country */}
-          {formData.country && (
-            <div className="space-y-2">
-              <Label className="text-white flex items-center gap-2 text-sm">
-                <MapPin className="h-4 w-4 text-cyan-400" />
-                Country
-              </Label>
-              <Input
-                value={formData.country}
-                readOnly
-                className="bg-white/[0.06] text-white placeholder:text-white/40 text-sm rounded-lg h-12 border-cyan-400/30 cursor-not-allowed opacity-80"
-              />
-            </div>
+      {/* Address Details - Always show as editable fields */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Full Address */}
+        <div className="space-y-2 md:col-span-2">
+          <Label className="text-white flex items-center gap-2 text-sm">
+            <MapPin className="h-4 w-4 text-cyan-400" />
+            Address (Optional)
+          </Label>
+          <Input
+            value={formData.address || ""}
+            onChange={(e) => updateFormData({ address: e.target.value })}
+            placeholder="Enter company address"
+            className={`bg-white/[0.06] text-white placeholder:text-white/40 text-sm rounded-lg h-12 ${
+              errors.address
+                ? "border-red-500 ring-offset-red-500"
+                : "border-cyan-400/50"
+            }`}
+          />
+          {errors.address && (
+            <p className="text-red-500 text-sm mt-1">{errors.address}</p>
           )}
         </div>
-      )}
+
+        {/* Postal Code */}
+        <div className="space-y-2">
+          <Label className="text-white flex items-center gap-2 text-sm">
+            <MapPin className="h-4 w-4 text-cyan-400" />
+            Postal Code (Optional)
+          </Label>
+          <Input
+            value={formData.postalCode || ""}
+            onChange={(e) => updateFormData({ postalCode: e.target.value })}
+            placeholder="Enter postal code"
+            className={`bg-white/[0.06] text-white placeholder:text-white/40 text-sm rounded-lg h-12 ${
+              errors.postalCode
+                ? "border-red-500 ring-offset-red-500"
+                : "border-cyan-400/50"
+            }`}
+          />
+          {errors.postalCode && (
+            <p className="text-red-500 text-sm mt-1">{errors.postalCode}</p>
+          )}
+        </div>
+
+        {/* Country */}
+        <div className="space-y-2">
+          <Label className="text-white flex items-center gap-2 text-sm">
+            <MapPin className="h-4 w-4 text-cyan-400" />
+            Country (Optional)
+          </Label>
+          <Input
+            value={formData.country || ""}
+            onChange={(e) => updateFormData({ country: e.target.value })}
+            placeholder="Enter country"
+            className={`bg-white/[0.06] text-white placeholder:text-white/40 text-sm rounded-lg h-12 ${
+              errors.country
+                ? "border-red-500 ring-offset-red-500"
+                : "border-cyan-400/50"
+            }`}
+          />
+          {errors.country && (
+            <p className="text-red-500 text-sm mt-1">{errors.country}</p>
+          )}
+        </div>
+      </div>
 
       {/* Core Offerings */}
       <div className="space-y-2">
