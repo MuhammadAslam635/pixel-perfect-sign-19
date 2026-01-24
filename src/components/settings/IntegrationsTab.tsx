@@ -23,10 +23,6 @@ import { RefreshCw, Settings } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { sanitizeErrorMessage } from "@/utils/errorMessages";
 import { getUserData } from "@/utils/authHelpers";
-import {
-  WhatsAppCredential,
-  whatsappService,
-} from "@/services/whatsapp.service";
 import { mailgunService } from "@/services/mailgun.service";
 import {
   facebookService,
@@ -39,10 +35,8 @@ import {
   type FacebookAdAccount,
   type FacebookIntegration,
 } from "@/services/facebook.service";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { AdminGlobalIntegrationsTab } from "@/components/admin/integrations/AdminGlobalIntegrationsTab";
 import facebookLogo from "@/assets/facebook-icon.svg";
-import whatsappLogo from "@/assets/whatsappIcon.png";
 import mailgunLogo from "@/assets/mailgun-icon.png";
 
 interface IntegrationResponse {
@@ -83,22 +77,6 @@ export const IntegrationsTab = () => {
   const [adAccounts, setAdAccounts] = useState<FacebookAdAccount[]>([]);
   const [isLoadingAdAccounts, setIsLoadingAdAccounts] = useState(false);
   const [selectedAdAccountId, setSelectedAdAccountId] = useState<string>("");
-  const [whatsappConnections, setWhatsAppConnections] = useState<
-    WhatsAppCredential[]
-  >([]);
-  const [isLoadingWhatsApp, setIsLoadingWhatsApp] = useState(false);
-  const [isSavingWhatsApp, setIsSavingWhatsApp] = useState(false);
-  const [showWhatsAppForm, setShowWhatsAppForm] = useState(false);
-  const [whatsappForm, setWhatsAppForm] = useState({
-    apiKey: "",
-    phoneNumber: "",
-    webhookSecret: "",
-  });
-  const [disconnectDialog, setDisconnectDialog] = useState<{
-    open: boolean;
-    phoneNumberId: string | null;
-  }>({ open: false, phoneNumberId: null });
-  const [isDisconnectingWhatsApp, setIsDisconnectingWhatsApp] = useState(false);
   const [mailgunConfig, setMailgunConfig] = useState({
     apiKey: "",
     domain: "",
@@ -114,8 +92,6 @@ export const IntegrationsTab = () => {
   const [isSuggestingEmail, setIsSuggestingEmail] = useState(false);
   const [existingEmail, setExistingEmail] = useState<string>("");
   const [emailPrefix, setEmailPrefix] = useState<string>("");
-  const [isValidatingWhatsApp, setIsValidatingWhatsApp] = useState(false);
-  const [whatsappValidated, setWhatsappValidated] = useState(false);
   const [isMicrosoftStatusLoading, setIsMicrosoftStatusLoading] =
     useState(false);
   const [isMicrosoftActionLoading, setIsMicrosoftActionLoading] =
@@ -244,8 +220,6 @@ export const IntegrationsTab = () => {
     });
 
   const isAdmin = user?.role === "Admin";
-  const canManageWhatsApp =
-    user?.role === "Company" || user?.role === "CompanyAdmin";
   const canManageMailgun = user?.role === "Company";
   const canManageMicrosoft =
     user?.role === "Company" || user?.role === "CompanyAdmin";
@@ -256,41 +230,6 @@ export const IntegrationsTab = () => {
 
   const facebookConnected = facebookStatus?.connected ?? false;
   const facebookIntegration = facebookStatus?.integration;
-
-  const resetWhatsAppForm = () => {
-    setWhatsAppForm({
-      apiKey: "",
-      phoneNumber: "",
-      webhookSecret: "",
-    });
-    setWhatsappValidated(false);
-  };
-
-  const fetchWhatsAppConnections = async () => {
-    if (!user?.token) return;
-
-    setIsLoadingWhatsApp(true);
-    try {
-      const response = await whatsappService.getConnections();
-      if (response?.success) {
-        setWhatsAppConnections(response.credentials || []);
-      }
-    } catch (error: unknown) {
-      console.error("Error loading WhatsApp connections:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load WhatsApp connections.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoadingWhatsApp(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchWhatsAppConnections();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.token]);
 
   const fetchMicrosoftStatus = async () => {
     if (!user?.token) {
@@ -331,161 +270,6 @@ export const IntegrationsTab = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.token]);
 
-  const primaryWhatsAppConnection = whatsappConnections[0] || null;
-
-  const handleWhatsAppInputChange = (
-    field: keyof typeof whatsappForm,
-    value: string
-  ) => {
-    setWhatsAppForm((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleWhatsAppConnect = async () => {
-    if (!canManageWhatsApp) {
-      toast({
-        title: "Access restricted",
-        description:
-          "Only company owners or company admins can manage WhatsApp settings.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Validate required field
-    if (!whatsappForm.apiKey) {
-      toast({
-        title: "Missing information",
-        description: "Please enter your Wasender API key.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!user?.token) {
-      toast({
-        title: "Error",
-        description: "User not authenticated. Please login again.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsSavingWhatsApp(true);
-    try {
-      const payload = {
-        apiKey: whatsappForm.apiKey.trim(),
-        phoneNumber: whatsappForm.phoneNumber.trim() || undefined,
-        webhookSecret: whatsappForm.webhookSecret.trim() || undefined,
-      };
-
-      const response = await whatsappService.connect(payload);
-
-      if (response.success) {
-        toast({
-          title: "WhatsApp connected",
-          description: response.message,
-        });
-        resetWhatsAppForm();
-        setShowWhatsAppForm(false);
-        fetchWhatsAppConnections();
-      }
-    } catch (error: unknown) {
-      console.error("Error connecting WhatsApp:", error);
-      toast({
-        title: "Error",
-        description: "Failed to connect WhatsApp. Please verify your details.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSavingWhatsApp(false);
-    }
-  };
-
-  const handleToggleWhatsAppForm = () => {
-    if (!canManageWhatsApp) {
-      toast({
-        title: "Access restricted",
-        description:
-          "Only company owners or company admins can manage WhatsApp settings.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!showWhatsAppForm) {
-      if (primaryWhatsAppConnection) {
-        setWhatsAppForm({
-          apiKey: "", // Don't populate sensitive API key
-          phoneNumber: primaryWhatsAppConnection.phoneNumber || "",
-          webhookSecret: "", // Don't populate sensitive webhook secret
-        });
-      } else {
-        resetWhatsAppForm();
-      }
-    }
-
-    setShowWhatsAppForm((prev) => !prev);
-  };
-
-  const requestWhatsAppDisconnect = () => {
-    if (!canManageWhatsApp) {
-      toast({
-        title: "Access restricted",
-        description:
-          "Only company owners or company admins can manage WhatsApp settings.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!user?.token) {
-      toast({
-        title: "Error",
-        description: "User not authenticated. Please login again.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setDisconnectDialog({ open: true, phoneNumberId: "wasender" });
-  };
-
-  const handleWhatsAppDisconnect = async () => {
-    if (!disconnectDialog.phoneNumberId) {
-      return;
-    }
-
-    if (!user?.token) {
-      toast({
-        title: "Error",
-        description: "User not authenticated. Please login again.",
-        variant: "destructive",
-      });
-      setDisconnectDialog({ open: false, phoneNumberId: null });
-      return;
-    }
-
-    try {
-      setIsDisconnectingWhatsApp(true);
-      await whatsappService.disconnect();
-
-      toast({
-        title: "Disconnected",
-        description: "WhatsApp disconnected successfully.",
-      });
-      fetchWhatsAppConnections();
-    } catch (error: unknown) {
-      console.error("Error disconnecting WhatsApp:", error);
-      toast({
-        title: "Error",
-        description: "Failed to disconnect WhatsApp number.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsDisconnectingWhatsApp(false);
-      setDisconnectDialog({ open: false, phoneNumberId: null });
-    }
-  };
 
   const {
     data: integrationData,
@@ -1407,66 +1191,6 @@ export const IntegrationsTab = () => {
     }
   };
 
-  const handleValidateWhatsAppConfig = async () => {
-    if (!canManageWhatsApp) {
-      toast({
-        title: "Access restricted",
-        description:
-          "Only company owners or company admins can manage WhatsApp settings.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Validate required field
-    if (!whatsappForm.apiKey) {
-      toast({
-        title: "Missing information",
-        description: "Please enter your Wasender API key.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!user?.token) {
-      toast({
-        title: "Error",
-        description: "User not authenticated. Please login again.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsValidatingWhatsApp(true);
-    try {
-      const response = await whatsappService.validateConfig({
-        apiKey: whatsappForm.apiKey.trim(),
-      });
-
-      if (response?.success) {
-        setWhatsappValidated(true);
-        toast({
-          title: "Configuration Validated",
-          description:
-            response.message ||
-            "WhatsApp configuration validated successfully!",
-        });
-      }
-    } catch (error: any) {
-      console.error("Error validating WhatsApp config:", error);
-      setWhatsappValidated(false);
-      toast({
-        title: "Validation Failed",
-        description: sanitizeErrorMessage(
-          error,
-          "Failed to validate WhatsApp configuration. Please check your credentials."
-        ),
-        variant: "destructive",
-      });
-    } finally {
-      setIsValidatingWhatsApp(false);
-    }
-  };
 
   // Handle prefix change and auto-suggest email
   const handleEmailPrefixChange = async (prefix: string) => {
@@ -2042,223 +1766,6 @@ export const IntegrationsTab = () => {
           )}
         </div>
 
-        <div className="space-y-4 sm:space-y-6 rounded-2xl sm:rounded-3xl border border-white/10 bg-white/[0.02] p-4 sm:p-5">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-3 sm:gap-4">
-              <div className="flex-shrink-0 w-[30px] h-[30px] flex items-center justify-center overflow-hidden">
-                <img
-                  src={whatsappLogo}
-                  alt="WhatsApp logo"
-                  className="w-[30px] h-[30px] object-cover scale-150"
-                />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="font-medium text-white text-sm sm:text-base">
-                  WhatsApp Business
-                </p>
-                <p className="text-xs sm:text-sm text-white/60 break-words">
-                  {isLoadingWhatsApp
-                    ? "Checking connection..."
-                    : whatsappConnections.length > 0
-                    ? `${whatsappConnections.length} connected number${
-                        whatsappConnections.length > 1 ? "s" : ""
-                      }`
-                    : "Connect a WhatsApp Business account to send messages."}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 flex-shrink-0">
-              {whatsappConnections.length > 0 && (
-                <span className="flex items-center gap-1 text-xs sm:text-sm text-emerald-400">
-                  <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                  <span className="hidden sm:inline">Connected</span>
-                </span>
-              )}
-              <Button
-                type="button"
-                size="sm"
-                onClick={handleToggleWhatsAppForm}
-                className="w-full sm:w-auto bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3] text-xs sm:text-sm"
-                style={{
-                  boxShadow:
-                    "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
-                }}
-                disabled={!canManageWhatsApp}
-              >
-                {!canManageWhatsApp
-                  ? "Restricted"
-                  : showWhatsAppForm
-                  ? "Close"
-                  : primaryWhatsAppConnection
-                  ? "Edit Number"
-                  : "Connect"}
-              </Button>
-            </div>
-          </div>
-
-          {!canManageWhatsApp && (
-            <p className="text-xs text-amber-300 break-words">
-              Contact your company admin to update WhatsApp configuration.
-            </p>
-          )}
-
-          {whatsappConnections.length > 0 && (
-            <div className="space-y-4 pt-4 border-t border-white/10">
-              {whatsappConnections.map((connection) => (
-                <div
-                  key={connection.id}
-                  className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"
-                >
-                  <div className="space-y-1 text-xs sm:text-sm text-white/80 min-w-0 flex-1">
-                    <p className="text-sm sm:text-base font-semibold text-white break-words">
-                      {connection.phoneNumber || "WhatsApp Connected"}
-                    </p>
-                    <p className="text-xs text-white/60">
-                      Status: <span className="text-emerald-400 capitalize">{connection.status}</span>
-                    </p>
-                    {connection.apiKey && (
-                      <p className="text-xs text-white/60">
-                        API Key: {connection.apiKey}
-                      </p>
-                    )}
-                  </div>
-
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="w-full sm:w-auto border-rose-400/50 text-rose-300 hover:bg-rose-500/10 disabled:opacity-60 disabled:cursor-not-allowed text-xs sm:text-sm flex-shrink-0"
-                    onClick={() => requestWhatsAppDisconnect()}
-                    disabled={!canManageWhatsApp}
-                  >
-                    Disconnect
-                  </Button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {showWhatsAppForm && (
-            <div className="space-y-4 pt-4 border-t border-white/10">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2 sm:col-span-2">
-                  <Label className="text-white/80 text-sm">
-                    Wasender API Key <span className="text-rose-400">*</span>
-                  </Label>
-                  <Input
-                    type="password"
-                    value={whatsappForm.apiKey}
-                    onChange={(event) =>
-                      handleWhatsAppInputChange("apiKey", event.target.value)
-                    }
-                    placeholder="Enter your Wasender API key"
-                    className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 text-sm sm:text-base"
-                  />
-                  <p className="text-xs text-white/50">
-                    Get your API key from{" "}
-                    <a
-                      href="https://wasenderapi.com"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-cyan-400 hover:text-cyan-300 underline"
-                    >
-                      wasenderapi.com
-                    </a>
-                  </p>
-                </div>
-                <div className="space-y-2 sm:col-span-2">
-                  <Label className="text-white/80 text-sm">
-                    Phone Number <span className="text-white/40">(Optional)</span>
-                  </Label>
-                  <Input
-                    value={whatsappForm.phoneNumber}
-                    onChange={(event) =>
-                      handleWhatsAppInputChange(
-                        "phoneNumber",
-                        event.target.value
-                      )
-                    }
-                    placeholder="Enter WhatsApp number in E.164 format (e.g., +1234567890)"
-                    className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 text-sm sm:text-base"
-                  />
-                  <p className="text-xs text-white/50">
-                    Optional: For reference only
-                  </p>
-                </div>
-                <div className="space-y-2 sm:col-span-2">
-                  <Label className="text-white/80 text-sm">
-                    Webhook Secret <span className="text-white/40">(Optional)</span>
-                  </Label>
-                  <Input
-                    type="password"
-                    value={whatsappForm.webhookSecret}
-                    onChange={(event) =>
-                      handleWhatsAppInputChange(
-                        "webhookSecret",
-                        event.target.value
-                      )
-                    }
-                    placeholder="Enter webhook secret for signature verification"
-                    className="bg-white/[0.06] border-white/10 text-white placeholder:text-white/40 text-sm sm:text-base"
-                  />
-                  <p className="text-xs text-white/50">
-                    Optional: For webhook signature verification (get from Wasender dashboard)
-                  </p>
-                </div>
-              </div>
-
-              {whatsappValidated && (
-                <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/30 p-3">
-                  <p className="text-emerald-400 text-sm font-medium flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                    Configuration validated successfully
-                  </p>
-                </div>
-              )}
-
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    resetWhatsAppForm();
-                    setShowWhatsAppForm(false);
-                    setWhatsappValidated(false);
-                  }}
-                  className="w-full sm:w-auto border-white/20 text-white/70 hover:bg-white/10 text-sm"
-                >
-                  Cancel
-                </Button>
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    onClick={handleValidateWhatsAppConfig}
-                    disabled={isValidatingWhatsApp || isSavingWhatsApp}
-                    variant="outline"
-                    className="w-full sm:w-auto border-cyan-400/50 text-cyan-300 hover:bg-cyan-500/10 text-sm"
-                  >
-                    {isValidatingWhatsApp
-                      ? "Validating..."
-                      : "Check Configuration"}
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={handleWhatsAppConnect}
-                    disabled={isSavingWhatsApp}
-                    className="w-full sm:w-auto bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3] text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={{
-                      boxShadow:
-                        "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
-                    }}
-                  >
-                    {isSavingWhatsApp ? "Saving..." : "Save Connection"}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
 
         {/* Mailgun Integration - Hidden: Now managed by Admin in Members & Permissions */}
         {false && (
@@ -2561,19 +2068,6 @@ export const IntegrationsTab = () => {
         )}
       </CardContent>
 
-      <ConfirmDialog
-        open={disconnectDialog.open}
-        title="Disconnect WhatsApp number?"
-        description="Messages will no longer be sent from this number after disconnecting."
-        confirmText="Disconnect"
-        cancelText="Cancel"
-        confirmVariant="destructive"
-        isPending={isDisconnectingWhatsApp}
-        onConfirm={handleWhatsAppDisconnect}
-        onCancel={() =>
-          setDisconnectDialog({ open: false, phoneNumberId: null })
-        }
-      />
     </Card>
   );
 };

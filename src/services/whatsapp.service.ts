@@ -1,15 +1,5 @@
 import API from "@/utils/api";
 
-export interface WhatsAppCredential {
-  id: string;
-  companyId: string;
-  phoneNumber?: string;
-  status: string;
-  apiKey?: string; // Masked API key
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface WhatsAppThread {
   contactPhone: string;
   contactName?: string | null;
@@ -63,32 +53,6 @@ type PaginatedResponse<T> = {
 };
 
 class WhatsAppService {
-  async getConnections(): Promise<{
-    success: boolean;
-    credentials: WhatsAppCredential[];
-  }> {
-    const response = await API.get("/whatsapp/connection");
-    return response.data;
-  }
-
-  async connect(payload: {
-    apiKey: string;
-    phoneNumber?: string;
-    webhookSecret?: string;
-  }): Promise<{
-    success: boolean;
-    message: string;
-    credential: WhatsAppCredential;
-  }> {
-    const response = await API.post("/whatsapp/connection", payload);
-    return response.data;
-  }
-
-  async disconnect(): Promise<{ success: boolean; message: string }> {
-    const response = await API.delete("/whatsapp/connection");
-    return response.data;
-  }
-
   async sendTextMessage(payload: {
     to: string;
     text: string;
@@ -131,19 +95,6 @@ class WhatsAppService {
     message: string;
   }> {
     const response = await API.delete(`/whatsapp/messages/${messageId}`);
-    return response.data;
-  }
-
-  async validateConfig(payload: {
-    apiKey: string;
-  }): Promise<{
-    success: boolean;
-    message: string;
-    data?: {
-      valid: boolean;
-    };
-  }> {
-    const response = await API.post("/integration/whatsapp/validate", payload);
     return response.data;
   }
 }
