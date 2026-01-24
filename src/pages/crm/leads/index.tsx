@@ -809,7 +809,7 @@ const index = () => {
                   <div className="flex w-full flex-wrap items-center justify-end gap-1.5 sm:gap-2">
                     {/* Search Input */}
                     <SearchInput
-                      placeholder="Search leads by name, email, or company..."
+                      placeholder="Search leads..."
                       value={leadsSearch}
                       onChange={setLeadsSearch}
                     />

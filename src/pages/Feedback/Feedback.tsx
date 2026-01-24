@@ -431,7 +431,7 @@ const Feedback = () => {
 
                             {/* Description Section */}
                             <div className="space-y-2">
-                              <Label className="text-white/90 text-base font-normal uppercase font-medium pl-1">Description</Label>
+                              <Label className="text-white/90 text-base font-normal uppercase pl-1">Description</Label>
                               <div className="bg-[#121212] rounded-2xl p-5 border border-white/5">
                                 <p className="text-xs sm:text-sm/5 text-white/70 whitespace-pre-wrap tracking-wide leading-relaxed ">
                                   {formData.description}
