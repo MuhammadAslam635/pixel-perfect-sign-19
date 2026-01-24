@@ -215,26 +215,27 @@ const ChatPage = () => {
       });
     }
 
-    // Include active temp chats (currently being processed)
-    // These are chats with temp IDs that have optimistic messages
-    if (selectedChatId && selectedChatId.startsWith("temp_")) {
-      const hasOptimisticMessages = optimisticMessagesByChat[selectedChatId]?.length > 0;
-      // Only include if it has messages and is not already in the list
-      if (hasOptimisticMessages && !list.some(chat => chat._id === selectedChatId)) {
-        const firstMessage = optimisticMessagesByChat[selectedChatId][0];
-        list.unshift({
-          _id: selectedChatId,
-          title: firstMessage.content.length > 50
-            ? firstMessage.content.substring(0, 50) + "..."
-            : firstMessage.content,
-          createdAt: firstMessage.createdAt,
-          updatedAt: firstMessage.createdAt,
-        });
+    // Include ALL active temp chats (currently being processed)
+    // Check all temp chats in optimisticMessagesByChat
+    Object.keys(optimisticMessagesByChat).forEach(chatId => {
+      if (chatId.startsWith("temp_") && optimisticMessagesByChat[chatId]?.length > 0) {
+        // Only include if not already in the list
+        if (!list.some(chat => chat._id === chatId)) {
+          const firstMessage = optimisticMessagesByChat[chatId][0];
+          list.unshift({
+            _id: chatId,
+            title: firstMessage.content.length > 50
+              ? firstMessage.content.substring(0, 50) + "..."
+              : firstMessage.content,
+            createdAt: firstMessage.createdAt,
+            updatedAt: firstMessage.createdAt,
+          });
+        }
       }
-    }
+    });
 
     return list;
-  }, [chatList, temporaryChat, selectedChatId, optimisticMessagesByChat]);
+  }, [chatList, temporaryChat, optimisticMessagesByChat]);
 
   // Note: Removed sync effects to prevent infinite loops
   // Components will use query data directly instead of Redux state for chat data

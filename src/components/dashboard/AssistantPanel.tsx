@@ -1,5 +1,5 @@
 import { List, Plus } from "lucide-react";
-import { FC, useState, useEffect, useRef } from "react";
+import { FC, useState, useEffect, useRef, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store/store";
@@ -143,6 +143,32 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
       setChatHistory(filteredList);
     }
   }, [apiChatList]);
+
+  // Compute full chat list including active temp chats (currently being processed)
+  const fullChatHistory = useMemo(() => {
+    const list = [...chatHistory];
+
+    // Include ALL active temp chats (currently being processed)
+    // Check all temp chats in optimisticMessagesByChat
+    Object.keys(optimisticMessagesByChat).forEach(chatId => {
+      if (chatId.startsWith("temp_") && optimisticMessagesByChat[chatId]?.length > 0) {
+        // Only include if not already in the list
+        if (!list.some(chat => chat._id === chatId)) {
+          const firstMessage = optimisticMessagesByChat[chatId][0];
+          list.unshift({
+            _id: chatId,
+            title: firstMessage.content.length > 50
+              ? firstMessage.content.substring(0, 50) + "..."
+              : firstMessage.content,
+            createdAt: firstMessage.createdAt,
+            updatedAt: firstMessage.createdAt,
+          });
+        }
+      }
+    });
+
+    return list;
+  }, [chatHistory, optimisticMessagesByChat]);
 
   // Auto-load the most recent chat on initial mount only (for current user)
   // Use a ref to track the first chat ID to avoid re-triggering
@@ -372,7 +398,7 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
   >
       {showChatList ? (
         <ChatHistoryList
-          chats={chatHistory}
+          chats={fullChatHistory}
           selectedChatId={selectedChatId}
           onSelectChat={handleSelectChat}
           onStartNewChat={handleStartNewChat}
