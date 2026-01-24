@@ -1113,7 +1113,7 @@ const ChatPage = () => {
 
     return [...apiMessages, ...filteredOptimistic];
   }, [
-    optimisticMessages,
+    optimisticMessagesByChat,
     selectedChat?.messages,
     temporaryChat,
     selectedChatId,
@@ -1195,7 +1195,7 @@ const ChatPage = () => {
     );
   }, [
     streamingChatIds,
-    optimisticMessages.length,
+    optimisticMessagesByChat,
     selectedChatId,
     temporaryChat,
   ]);
