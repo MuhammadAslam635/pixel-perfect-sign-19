@@ -213,6 +213,12 @@ export const ActionComponent = () => {
       return canView("settings");
     }
 
+    // "Feedback" Visibility Logic:
+    if (item.title === "Feedback") {
+      if (userRoleName === "Admin") return true;
+      return canView("feedback");
+    }
+
     return true;
   });
 

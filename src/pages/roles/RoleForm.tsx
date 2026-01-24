@@ -123,6 +123,7 @@ const RoleForm = () => {
       modules.map((module) => {
         const rolePermission = rolePermissionData.find(
           (p) =>
+            p.module &&
             (typeof p.module === "string" ? p.module : p.module._id) ===
             module._id
         );
@@ -217,7 +218,7 @@ const RoleForm = () => {
     } catch (error: any) {
       toast.error(
         error?.response?.data?.message ||
-          `Failed to ${isEditMode ? "update" : "create"} role`
+        `Failed to ${isEditMode ? "update" : "create"} role`
       );
     } finally {
       setLoading(false);
@@ -372,8 +373,8 @@ const RoleForm = () => {
                       // Get available actions from module permissions
                       const availableActions = mp.module.permissions
                         ? mp.module.permissions.map(
-                            (p) => p.action as PermissionAction
-                          )
+                          (p) => p.action as PermissionAction
+                        )
                         : [];
                       const allSelected =
                         mp.selectedActions.length === availableActions.length &&
@@ -422,7 +423,7 @@ const RoleForm = () => {
 
                           <div className="pl-8 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                             {mp.module.permissions &&
-                            mp.module.permissions.length > 0 ? (
+                              mp.module.permissions.length > 0 ? (
                               mp.module.permissions.map((perm) => {
                                 const action = perm.action as PermissionAction;
                                 return (

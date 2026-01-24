@@ -53,11 +53,10 @@ const DashboardHeader = () => {
 
   return (
     <header
-      className={`fixed left-0 right-0 z-50 flex h-24 items-center gap-4 p-2 mx-w-full overflow-visible transition-all duration-300 ${
-        isScrolled || !isPageScrollable
-          ? "bg-[rgba(15,15,20,0.85)] backdrop-blur-xl border-b border-white/10"
-          : "bg-transparent"
-      }`}
+      className={`fixed left-0 right-0 z-[100] flex h-24 items-center gap-4 p-2 mx-w-full overflow-visible transition-all duration-300 ${isScrolled || !isPageScrollable
+        ? "bg-[rgba(15,15,20,0.85)] backdrop-blur-xl border-b border-white/10"
+        : "bg-transparent"
+        }`}
     >
       <div className="px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] flex w-full max-w-full items-center justify-between gap-3 sm:gap-4 lg:gap-0">
         <div className="flex items-center gap-3 flex-shrink-0">
@@ -124,11 +123,10 @@ export const AdminHeader = () => {
 
   return (
     <header
-      className={`fixed left-0 right-0 z-50 flex h-24 items-center gap-4 p-2 mx-w-full overflow-visible transition-all duration-300 ${
-        isScrolled || !isPageScrollable
-          ? "bg-[rgba(15,15,20,0.85)] backdrop-blur-xl border-b border-white/10"
-          : "bg-transparent"
-      }`}
+      className={`fixed left-0 right-0 z-[100] flex h-24 items-center gap-4 p-2 mx-w-full overflow-visible transition-all duration-300 ${isScrolled || !isPageScrollable
+        ? "bg-[rgba(15,15,20,0.85)] backdrop-blur-xl border-b border-white/10"
+        : "bg-transparent"
+        }`}
     >
       <div className="px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] flex w-full max-w-full items-center justify-between gap-3 sm:gap-4 lg:gap-0">
         <div className="flex items-center gap-3 flex-shrink-0">

@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
-import { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,6 @@ import { feedbackTypes } from "@/mocks/dropdownMock";
 import { useToast } from "@/hooks/use-toast";
 import { Pencil, Trash2, ChevronRight, Bug, Lightbulb, XCircle, AlertTriangle, Calendar, FileText, Search, Filter, X, Paperclip, Download, Timer, CheckCircle, AlertCircle } from "lucide-react";
 import ConfirmDialog from "@/components/ui/confirm-dialog";
-import { useMemo } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const Feedback = () => {
@@ -81,10 +80,10 @@ const Feedback = () => {
       setOpen(false);
       resetForm();
     },
-    onError: () => {
+    onError: (error: any) => {
+      const errorMessage = error?.response?.data?.message || "Failed to create feedback";
       toast({
-        title: "Failed! Fill All field",
-        variant: "destructive",
+        title: errorMessage,
       });
     },
   });
@@ -102,7 +101,6 @@ const Feedback = () => {
       const errorMessage = error?.response?.data?.message || "Failed to update feedback";
       toast({
         title: errorMessage,
-        variant: "destructive",
       });
     },
   });
@@ -119,7 +117,6 @@ const Feedback = () => {
       const errorMessage = error?.response?.data?.message || "Failed to delete feedback";
       toast({
         title: errorMessage,
-        variant: "destructive",
       });
     },
   });
@@ -296,34 +293,34 @@ const Feedback = () => {
       return;
     }
 
-    const toastId = toast({ title: "Downloading attachment..." });
-    
+    // const toastId = toast({ title: "Downloading attachment..." });
+
     try {
-        const blob = await feedbackService.downloadAttachment(file.fileUrl);
-        
-        // Create a blob URL
-        const url = window.URL.createObjectURL(blob);
-        
-        // Create a temporary anchor element to trigger download
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = file.fileName || "attachment";
-        link.target = "_blank";
-        
-        document.body.appendChild(link);
-        link.click();
-        
-        // Cleanup
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-        
-        toast({ title: "Download started" });
+      const blob = await feedbackService.downloadAttachment(file.fileUrl);
+
+      // Create a blob URL
+      const url = window.URL.createObjectURL(blob);
+
+      // Create a temporary anchor element to trigger download
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = file.fileName || "attachment";
+      link.target = "_blank";
+
+      document.body.appendChild(link);
+      link.click();
+
+      // Cleanup
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast({ title: "Download started" });
     } catch (error) {
-        console.error("Download failed:", error);
-        toast({ 
-            title: "Failed to download attachment",
-            variant: "destructive"
-        });
+      console.error("Download failed:", error);
+      toast({
+        title: "Failed to download attachment",
+        variant: "destructive"
+      });
     }
   };
 
@@ -378,233 +375,233 @@ const Feedback = () => {
                 </DialogTrigger>
 
                 <DialogContent
-                className="max-w-2xl max-h-[90vh] flex flex-col p-0 text-white border border-white/10 overflow-hidden rounded-[32px] shadow-[0_25px_60px_rgba(0,0,0,0.55)]"
-                style={{
-                  background: "#0a0a0a"
-                }}
-              >
-                <div
-                  className="absolute inset-0 pointer-events-none"
+                  className="max-w-2xl max-h-[90vh] flex flex-col p-0 text-white border border-white/10 overflow-hidden rounded-[32px] shadow-[0_25px_60px_rgba(0,0,0,0.55)]"
                   style={{
-                    background: "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0) 38.08%, rgba(255, 255, 255, 0) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)"
+                    background: "#0a0a0a"
                   }}
-                />
-                
-                <div className="relative z-10 flex flex-col h-full min-h-0">
-                  <DialogHeader className="px-6 pt-6 pb-4 flex-shrink-0 border-b border-white/10">
-                    <DialogTitle className="text-lg sm:text-xl font-semibold text-white drop-shadow-lg -mb-1">
-                      {viewMode ? "View Feedback" : editMode ? "Edit Feedback" : "Add Feedback"}
-                    </DialogTitle>
-                  </DialogHeader>
+                >
+                  <div
+                    className="absolute inset-0 pointer-events-none"
+                    style={{
+                      background: "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0) 38.08%, rgba(255, 255, 255, 0) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)"
+                    }}
+                  />
 
-                  <div className="flex-1 overflow-y-auto px-6 space-y-4 scrollbar-hide py-4 min-h-0">
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                      
-                      {viewMode ? (
-                        /* View Mode Layout */
-                        <div className="space-y-6">
-                          {/* Badges and Title Section */}
-                          <div className="space-y-4">
-                            {/* Badges Row */}
-                            <div className="flex flex-wrap items-center gap-2">
+                  <div className="relative z-10 flex flex-col h-full min-h-0">
+                    <DialogHeader className="px-6 pt-6 pb-4 flex-shrink-0 border-b border-white/10">
+                      <DialogTitle className="text-lg sm:text-xl font-semibold text-white drop-shadow-lg -mb-1">
+                        {viewMode ? "View Feedback" : editMode ? "Edit Feedback" : "Add Feedback"}
+                      </DialogTitle>
+                    </DialogHeader>
+
+                    <div className="flex-1 overflow-y-auto px-6 space-y-4 scrollbar-hide py-4 min-h-0">
+                      <form onSubmit={handleSubmit} className="space-y-4">
+
+                        {viewMode ? (
+                          /* View Mode Layout */
+                          <div className="space-y-6">
+                            {/* Badges and Title Section */}
+                            <div className="space-y-4">
+                              {/* Badges Row */}
+                              <div className="flex flex-wrap items-center gap-2">
                                 {/* Type Badge */}
                                 <Badge className={`${getTypeBadgeColor(formData.type)} border inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[10px] rounded-full`}>
-                                     <span className="[&>svg]:w-3 [&>svg]:h-3 flex items-center">{getTypeIcon(formData.type)}</span>
-                                     <span className="capitalize">{formData.type}</span>
-                                 </Badge>
+                                  <span className="[&>svg]:w-3 [&>svg]:h-3 flex items-center">{getTypeIcon(formData.type)}</span>
+                                  <span className="capitalize">{formData.type}</span>
+                                </Badge>
 
-                                 {/* Status Badge */}
-                                 <Badge className={`${getStatusBadgeColor(formData.status)} border inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[10px] rounded-full`}>
-                                    {formData.status === "open" ? (
-                                        <AlertCircle className="w-3 h-3" />
-                                    ) : formData.status === "in-progress" ? (
-                                        <Timer className="w-3 h-3" />
-                                    ) : (
-                                        <CheckCircle className="w-3 h-3" />
-                                    )}
-                                    <span className="capitalize">{formData.status.replace(/-/g, " ")}</span>
-                                 </Badge>
+                                {/* Status Badge */}
+                                <Badge className={`${getStatusBadgeColor(formData.status)} border inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[10px] rounded-full`}>
+                                  {formData.status === "open" ? (
+                                    <AlertCircle className="w-3 h-3" />
+                                  ) : formData.status === "in-progress" ? (
+                                    <Timer className="w-3 h-3" />
+                                  ) : (
+                                    <CheckCircle className="w-3 h-3" />
+                                  )}
+                                  <span className="capitalize">{formData.status.replace(/-/g, " ")}</span>
+                                </Badge>
+                              </div>
+
+                              {/* Title */}
+                              <h3 className="text-lg sm:text-xl font-semibold text-white leading-tight break-words">
+                                {formData.title}
+                              </h3>
                             </div>
 
-                            {/* Title */}
-                            <h3 className="text-lg sm:text-xl font-semibold text-white leading-tight break-words">
-                                {formData.title}
-                            </h3>
-                          </div>
-
-                           {/* Description Section */}
-                           <div className="space-y-2">
-                             <Label className="text-white/90 text-base font-normal uppercase font-medium pl-1">Description</Label>
-                             <div className="bg-[#121212] rounded-2xl p-5 border border-white/5">
+                            {/* Description Section */}
+                            <div className="space-y-2">
+                              <Label className="text-white/90 text-base font-normal uppercase font-medium pl-1">Description</Label>
+                              <div className="bg-[#121212] rounded-2xl p-5 border border-white/5">
                                 <p className="text-xs sm:text-sm/5 text-white/70 whitespace-pre-wrap tracking-wide leading-relaxed ">
                                   {formData.description}
                                 </p>
-                             </div>
-                           </div>
+                              </div>
+                            </div>
 
-                           {/* Attachments Section */}
-                           {existingAttachments.length > 0 && (
-                             <div className="space-y-3">
+                            {/* Attachments Section */}
+                            {existingAttachments.length > 0 && (
+                              <div className="space-y-3">
                                 <Label className="text-white/90 text-base uppercase font-medium pl-1">Attachments</Label>
                                 <div className="space-y-2">
-                                     {existingAttachments.map((file) => (
-                                        <div key={file._id} className="flex items-center justify-between p-3 bg-[#121212] border border-white/10 rounded-xl group/file hover:border-white/20 transition-all">
-                                             <div className="flex items-center gap-4 flex-1 min-w-0">
-                                                  <div className="w-10 h-10 rounded-lg bg-cyan-950/30 flex items-center justify-center border border-cyan-500/20 text-cyan-400">
-                                                      <FileText className="w-5 h-5" />
-                                                  </div>
-                                                  <span className="text-sm font-medium text-white/90 truncate">{file.fileName}</span>
-                                             </div>
-                                             <Button
-                                                type="button"
-                                                onClick={() => downloadFileFrontend(file)}
-                                                 variant="ghost"
-                                                 size="icon"
-                                                 className="h-10 w-10 rounded-full border border-cyan-500/20 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/20 hover:border-cyan-500/50 transition-all ml-3 flex-shrink-0"
-                                                 title="Download"
-                                             >
-                                                <Download className="w-4 h-4" />
-                                             </Button>
+                                  {existingAttachments.map((file) => (
+                                    <div key={file._id} className="flex items-center justify-between p-3 bg-[#121212] border border-white/10 rounded-xl group/file hover:border-white/20 transition-all">
+                                      <div className="flex items-center gap-4 flex-1 min-w-0">
+                                        <div className="w-10 h-10 rounded-lg bg-cyan-950/30 flex items-center justify-center border border-cyan-500/20 text-cyan-400">
+                                          <FileText className="w-5 h-5" />
                                         </div>
-                                     ))}
-                                </div>
-                             </div>
-                           )}
-                        </div>
-                      ) : (
-                        /* Edit/Add Mode Layout */
-                        <>
-                          <div>
-                            <Label htmlFor="title" className="text-white/80">Title</Label>
-                            <Input
-                              name="title"
-                              value={formData.title}
-                              onChange={handleInputChange}
-                              placeholder="Enter feedback title"
-                              disabled={viewMode}
-                              readOnly={viewMode}
-                              className={`mt-1.5 bg-white/5 border-white/10 text-white ${formErrors.title ? "border-red-500 focus-visible:ring-red-500" : ""}`}
-                            />
-                             {formErrors.title && (
-                              <p className="text-red-500 text-xs mt-1 font-medium">{formErrors.title}</p>
-                            )}
-                          </div>
-
-                          <div>
-                            <Label className="text-white/80">Description</Label>
-                            <Textarea
-                              name="description"
-                              value={formData.description}
-                              onChange={handleInputChange}
-                              placeholder="Enter description"
-                              rows={4}
-                              disabled={viewMode}
-                              readOnly={viewMode}
-                              className={`mt-1.5 bg-white/5 border-white/10 text-white scrollbar-hide ${formErrors.description ? "border-red-500 focus-visible:ring-red-500" : ""}`}
-                            />
-                             {formErrors.description && (
-                              <p className="text-red-500 text-xs mt-1 font-medium">{formErrors.description}</p>
-                            )}
-                          </div>
-
-                          <div>
-                            <Label className="text-white/80">Type</Label>
-                            <div className="mt-1.5">
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild disabled={viewMode}>
-                                 <Button
-                                     variant="outline"
-                                     className="w-full justify-between text-white border-white/10 bg-white/5 hover:bg-white/10"
-                                   >
-                                     {feedbackTypes.find((t) => t.value === formData.type)
-                                       ?.label || "Select Type"}
-                                   </Button>
-                                </DropdownMenuTrigger>
-
-                                <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)] bg-[#1a1a1a] text-white border-white/10">
-                                  {feedbackTypes.map((item) => (
-                                    <DropdownMenuItem
-                                      key={item.value}
-                                      className="hover:bg-white/10 cursor-pointer focus:bg-white/10 focus:text-white"
-                                      onSelect={() =>
-                                        setFormData((prev) => ({
-                                          ...prev,
-                                          type: item.value,
-                                        }))
-                                      }
-                                    >
-                                      {item.label}
-                                    </DropdownMenuItem>
+                                        <span className="text-sm font-medium text-white/90 truncate">{file.fileName}</span>
+                                      </div>
+                                      <Button
+                                        type="button"
+                                        onClick={() => downloadFileFrontend(file)}
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-10 w-10 rounded-full border border-cyan-500/20 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/20 hover:border-cyan-500/50 transition-all ml-3 flex-shrink-0"
+                                        title="Download"
+                                      >
+                                        <Download className="w-4 h-4" />
+                                      </Button>
+                                    </div>
                                   ))}
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </div>
+                                </div>
+                              </div>
+                            )}
                           </div>
-
-                          <div className="space-y-3">
-                            <Label className="text-white/80">Attachments</Label>
-                            {/* Existing Attachments in Edit Mode */}
-                            {existingAttachments.length > 0 && (
-                              <div className="space-y-2 mb-3">
-                                <p className="text-xs font-medium text-white/50 uppercase tracking-wider">Existing Files</p>
-                                {existingAttachments.map((file) => (
-                                  <div key={file._id} className="flex items-center justify-between p-2 bg-white/5 border border-white/10 rounded-lg group/file">
-                                    <div className="flex items-center gap-2 flex-1 min-w-0">
-                                      <FileText className="w-4 h-4 text-cyan-400 flex-shrink-0" />
-                                      <span className="text-xs text-white/80 truncate">{file.fileName}</span>
-                                    </div>
-                                    <Button
-                                      type="button"
-                                      onClick={() => removeExistingAttachment(file._id)}
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-6 w-6 text-white/40 hover:text-red-400 hover:bg-red-400/10 opacity-0 group-hover/file:opacity-100 transition-opacity"
-                                    >
-                                      <X className="w-3 h-3" />
-                                    </Button>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-
-                            {/* Newly Selected Files */}
-                            {selectedFiles.length > 0 && (
-                              <div className="space-y-2 mb-3">
-                                <p className="text-xs font-medium text-white/50 uppercase tracking-wider">New Files</p>
-                                {selectedFiles.map((file, idx) => (
-                                  <div key={idx} className="flex items-center justify-between p-2 bg-cyan-400/5 border border-cyan-400/20 rounded-lg group/file">
-                                    <div className="flex items-center gap-2 flex-1 min-w-0">
-                                      <Paperclip className="w-4 h-4 text-cyan-400 flex-shrink-0" />
-                                      <span className="text-xs text-white/80 truncate">{file.name}</span>
-                                    </div>
-                                    <Button
-                                      type="button"
-                                      onClick={() => removeSelectedFile(idx)}
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-6 w-6 text-white/40 hover:text-red-400 hover:bg-red-400/10 opacity-0 group-hover/file:opacity-100 transition-opacity"
-                                    >
-                                      <X className="w-3 h-3" />
-                                    </Button>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-
-                            <div className="relative">
+                        ) : (
+                          /* Edit/Add Mode Layout */
+                          <>
+                            <div>
+                              <Label htmlFor="title" className="text-white/80">Title</Label>
                               <Input
-                                type="file"
-                                multiple
-                                onChange={handleFileChange}
-                                className="h-14 cursor-pointer text-white/80 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20 border-white/10 bg-white/5 hover:bg-white/10 transition-colors"
+                                name="title"
+                                value={formData.title}
+                                onChange={handleInputChange}
+                                placeholder="Enter feedback title"
+                                disabled={viewMode}
+                                readOnly={viewMode}
+                                className={`mt-1.5 bg-white/5 border-white/10 text-white ${formErrors.title ? "border-red-500 focus-visible:ring-red-500" : ""}`}
                               />
-                              <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                                <Paperclip className="w-5 h-5 text-white/30" />
+                              {formErrors.title && (
+                                <p className="text-red-500 text-xs mt-1 font-medium">{formErrors.title}</p>
+                              )}
+                            </div>
+
+                            <div>
+                              <Label className="text-white/80">Description</Label>
+                              <Textarea
+                                name="description"
+                                value={formData.description}
+                                onChange={handleInputChange}
+                                placeholder="Enter description"
+                                rows={4}
+                                disabled={viewMode}
+                                readOnly={viewMode}
+                                className={`mt-1.5 bg-white/5 border-white/10 text-white scrollbar-hide ${formErrors.description ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+                              />
+                              {formErrors.description && (
+                                <p className="text-red-500 text-xs mt-1 font-medium">{formErrors.description}</p>
+                              )}
+                            </div>
+
+                            <div>
+                              <Label className="text-white/80">Type</Label>
+                              <div className="mt-1.5">
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild disabled={viewMode}>
+                                    <Button
+                                      variant="outline"
+                                      className="w-full justify-between text-white border-white/10 bg-white/5 hover:bg-white/10"
+                                    >
+                                      {feedbackTypes.find((t) => t.value === formData.type)
+                                        ?.label || "Select Type"}
+                                    </Button>
+                                  </DropdownMenuTrigger>
+
+                                  <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)] bg-[#1a1a1a] text-white border-white/10">
+                                    {feedbackTypes.map((item) => (
+                                      <DropdownMenuItem
+                                        key={item.value}
+                                        className="hover:bg-white/10 cursor-pointer focus:bg-white/10 focus:text-white"
+                                        onSelect={() =>
+                                          setFormData((prev) => ({
+                                            ...prev,
+                                            type: item.value,
+                                          }))
+                                        }
+                                      >
+                                        {item.label}
+                                      </DropdownMenuItem>
+                                    ))}
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
                               </div>
                             </div>
-                          </div>
 
-                          <div className="flex justify-end gap-2 pt-4">
+                            <div className="space-y-3">
+                              <Label className="text-white/80">Attachments</Label>
+                              {/* Existing Attachments in Edit Mode */}
+                              {existingAttachments.length > 0 && (
+                                <div className="space-y-2 mb-3">
+                                  <p className="text-xs font-medium text-white/50 uppercase tracking-wider">Existing Files</p>
+                                  {existingAttachments.map((file) => (
+                                    <div key={file._id} className="flex items-center justify-between p-2 bg-white/5 border border-white/10 rounded-lg group/file">
+                                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                                        <FileText className="w-4 h-4 text-cyan-400 flex-shrink-0" />
+                                        <span className="text-xs text-white/80 truncate">{file.fileName}</span>
+                                      </div>
+                                      <Button
+                                        type="button"
+                                        onClick={() => removeExistingAttachment(file._id)}
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-6 w-6 text-white/40 hover:text-red-400 hover:bg-red-400/10 opacity-0 group-hover/file:opacity-100 transition-opacity"
+                                      >
+                                        <X className="w-3 h-3" />
+                                      </Button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+
+                              {/* Newly Selected Files */}
+                              {selectedFiles.length > 0 && (
+                                <div className="space-y-2 mb-3">
+                                  <p className="text-xs font-medium text-white/50 uppercase tracking-wider">New Files</p>
+                                  {selectedFiles.map((file, idx) => (
+                                    <div key={idx} className="flex items-center justify-between p-2 bg-cyan-400/5 border border-cyan-400/20 rounded-lg group/file">
+                                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                                        <Paperclip className="w-4 h-4 text-cyan-400 flex-shrink-0" />
+                                        <span className="text-xs text-white/80 truncate">{file.name}</span>
+                                      </div>
+                                      <Button
+                                        type="button"
+                                        onClick={() => removeSelectedFile(idx)}
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-6 w-6 text-white/40 hover:text-red-400 hover:bg-red-400/10 opacity-0 group-hover/file:opacity-100 transition-opacity"
+                                      >
+                                        <X className="w-3 h-3" />
+                                      </Button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+
+                              <div className="relative">
+                                <Input
+                                  type="file"
+                                  multiple
+                                  onChange={handleFileChange}
+                                  className="h-14 cursor-pointer text-white/80 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20 border-white/10 bg-white/5 hover:bg-white/10 transition-colors"
+                                />
+                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                                  <Paperclip className="w-5 h-5 text-white/30" />
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex justify-end gap-2 pt-4">
                               <Button
                                 type="submit"
                                 disabled={isCreating || isUpdating}
@@ -616,13 +613,13 @@ const Feedback = () => {
                                     ? "Update Feedback"
                                     : "Submit Feedback"}
                               </Button>
-                          </div>
-                        </>
-                      )}
-                    </form>
+                            </div>
+                          </>
+                        )}
+                      </form>
+                    </div>
                   </div>
-                </div>
-              </DialogContent>
+                </DialogContent>
               </Dialog>
             </div>
 
@@ -760,10 +757,10 @@ const Feedback = () => {
                   ))}
                 </div>
               )}
-            </div>
-          </div>
-        </motion.section>
-      </motion.main>
+            </div >
+          </div >
+        </motion.section >
+      </motion.main >
 
       <ConfirmDialog
         open={deleteDialogOpen}
@@ -778,7 +775,7 @@ const Feedback = () => {
         cancelText="Cancel"
         confirmVariant="destructive"
       />
-    </DashboardLayout>
+    </DashboardLayout >
   );
 };
 
