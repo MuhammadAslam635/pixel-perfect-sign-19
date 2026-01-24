@@ -56,6 +56,7 @@ class WhatsAppService {
   async sendTextMessage(payload: {
     to: string;
     text: string;
+    leadId?: string;
   }): Promise<{ success: boolean; data: WhatsAppMessage }> {
     const response = await API.post("/whatsapp/messages/send", payload);
     return response.data;

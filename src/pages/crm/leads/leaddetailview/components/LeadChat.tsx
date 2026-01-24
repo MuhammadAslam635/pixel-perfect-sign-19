@@ -748,6 +748,7 @@ const LeadChat = ({
       whatsappService.sendTextMessage({
         to: normalizedLeadWhatsapp as string,
         text: payload.text,
+        leadId: leadId || undefined,
       }),
     onSuccess: () => {
       setWhatsappInput("");
