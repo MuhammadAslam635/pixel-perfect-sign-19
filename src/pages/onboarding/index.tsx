@@ -105,11 +105,11 @@ const OnboardingPage = () => {
               preferredCountries: Array.isArray(questions.preferredCountries)
                 ? [...questions.preferredCountries]
                 : typeof questions.preferredCountries === "string"
-                ? questions.preferredCountries
+                  ? questions.preferredCountries
                     .split(",")
                     .map((c) => c.trim())
                     .filter(Boolean)
-                : [],
+                  : [],
               address: questions.address,
               postalCode: questions.postalCode,
               country: questions.country,
@@ -477,9 +477,11 @@ const OnboardingPage = () => {
         }
       } else if (value === undefined || value === null) {
         // Step 4 fields are optional
-        const isStep4Optional =
-          currentStep === 4 && field === "differentiators";
-        if (!isStep4Optional) {
+        const isOptionalField =
+          (currentStep === 4 && field === "differentiators") ||
+          ["address", "postalCode", "country"].includes(field);
+
+        if (!isOptionalField) {
           newErrors[field] = `${label}: Required`;
           isValid = false;
         }
