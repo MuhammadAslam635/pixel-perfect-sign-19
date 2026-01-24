@@ -600,7 +600,8 @@ const ChatPage = () => {
       // This ensures when we switch back, it's properly empty
       dispatch(setComposerValue(""));
     } else {
-      // Add to optimistic messages for existing chats
+      // CRITICAL: For existing chats, use actualChatId (not selectedChatId) to ensure consistency
+      // This prevents creating duplicate chats or adding messages to wrong chat
       dispatch(
         addOptimisticMessage({ chatId: actualChatId, message: tempMessage })
       );
@@ -683,6 +684,13 @@ const ChatPage = () => {
                 createdAt: event.data.createdAt || new Date().toISOString(),
                 updatedAt: event.data.updatedAt || new Date().toISOString(),
               });
+            }
+
+            // CRITICAL: Clear optimistic messages immediately to prevent duplicates
+            // Clear for both old (temp) and new (real) chat IDs
+            dispatch(removeOptimisticMessages(actualChatId));
+            if (realChatId !== actualChatId) {
+              dispatch(removeOptimisticMessages(realChatId));
             }
 
             // Clear streaming state when result is received
@@ -822,8 +830,11 @@ const ChatPage = () => {
             );
           }
 
-          // Clear optimistic messages after converting temporary chat (messages are now in server response)
-          dispatch(removeOptimisticMessages(newChatId));
+          // CRITICAL: Clear optimistic messages from all relevant chat IDs to prevent duplicates
+          // The server response already includes all messages
+          dispatch(removeOptimisticMessages(actualChatId)); // temp chat ID
+          dispatch(removeOptimisticMessages(newChatId)); // real chat ID
+          dispatch(removeOptimisticMessages("__new_chat__")); // new chat key
 
           // Clear streaming state for the new chat ID (result received)
           dispatch(removeStreamingChat(newChatId));

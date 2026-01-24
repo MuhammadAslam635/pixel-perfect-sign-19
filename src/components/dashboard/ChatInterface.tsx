@@ -1100,9 +1100,10 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
         onChatIdChange(actualChatId);
       }
     } else {
-      // For existing chats, add optimistic message
+      // For existing chats, add optimistic message using the actual chat ID
+      // CRITICAL: Use actualChatId instead of currentChatKey to ensure consistency
       dispatch(
-        addOptimisticMessage({ chatId: currentChatKey, message: tempMessage })
+        addOptimisticMessage({ chatId: actualChatId, message: tempMessage })
       );
     }
 
@@ -1182,6 +1183,13 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
                 createdAt: event.data.createdAt || new Date().toISOString(),
                 updatedAt: event.data.updatedAt || new Date().toISOString(),
               });
+            }
+
+            // CRITICAL: Clear optimistic messages immediately to prevent duplicates
+            // Clear for both old (temp) and new (real) chat IDs
+            dispatch(removeOptimisticMessages(actualChatId));
+            if (realChatId !== actualChatId) {
+              dispatch(removeOptimisticMessages(realChatId));
             }
 
             // Clear streaming state when result is received
@@ -1275,23 +1283,13 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
             })
           );
 
-          // For widget: move optimistic messages from temp chat ID to real chat ID
-          // Get optimistic messages from the temp chat ID
-          const tempOptimisticMessages =
-            optimisticMessagesByChat[actualChatId] || [];
-          if (tempOptimisticMessages.length > 0) {
-            // Move messages to the real chat ID
-            tempOptimisticMessages.forEach((msg) => {
-              dispatch(
-                addOptimisticMessage({ chatId: newChatId, message: msg })
-              );
-            });
-            // Remove optimistic messages from temp chat ID
-            dispatch(removeOptimisticMessages(actualChatId));
-          } else {
-            // Fallback: remove optimistic messages if none found
-            dispatch(removeOptimisticMessages(currentChatKey));
-          }
+          // CRITICAL: For new chats, just clear optimistic messages - don't move them
+          // The server response already includes all messages (including the user's message)
+          // Moving optimistic messages would create duplicates
+          dispatch(removeOptimisticMessages(actualChatId));
+          dispatch(removeOptimisticMessages(currentChatKey));
+          // Also clear from the new chat ID if any were added there
+          dispatch(removeOptimisticMessages(newChatId));
 
           // Update long-running task's chatId to the real chat ID if it exists
           if (tempMessage._id) {
