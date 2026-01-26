@@ -35,6 +35,9 @@ import {
   setComposerValue,
   initializeTab,
 } from "@/store/slices/chatSlice";
+import { useChatSync } from "@/hooks/useChatSync";
+import { useStreamingSync } from "@/hooks/useStreamingSync";
+import { useChatDrafts } from "@/hooks/useChatDrafts";
 import {
   startStreamingTask,
   updateStreamingTask,
@@ -524,6 +527,9 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
   const accumulatedMessageRef = useRef<string>(""); // Track accumulated message during transcription
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { triggerRefresh, triggerMigration } = useChatSync();
+  const { broadcastEvent } = useStreamingSync();
+  const { saveDraft, removeDraft } = useChatDrafts();
 
   // Redux selectors
   const selectedChatId = useSelector(
@@ -543,6 +549,9 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
   );
   const composerValue = useSelector(
     (state: RootState) => state.chat.composerValue
+  );
+  const remoteStreamingChatIds = useSelector(
+    (state: RootState) => state.chat.remoteStreamingChatIds
   );
 
   // Use Redux composerValue for message input, but keep local state for interim transcript
@@ -598,13 +607,14 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
     // For existing chats (with real IDs or temp IDs), check if THIS specific chat is streaming
     const isStreamingThisChat =
       streamingChatIds.includes(activeChatId) ||
+      (remoteStreamingChatIds && remoteStreamingChatIds.includes(activeChatId)) ||
       streamingChatIdRef.current === activeChatId;
 
     const hasOptimisticMessages = optimisticMessages.length > 0;
 
     // Show indicator if streaming for this specific chat OR if this chat has optimistic messages
     return isStreamingThisChat || hasOptimisticMessages;
-  }, [streamingChatIds, optimisticMessages.length, activeChatId]);
+  }, [streamingChatIds, remoteStreamingChatIds, optimisticMessages.length, activeChatId]);
 
   const isSendingMessage = isCurrentChatSending;
 
@@ -1084,6 +1094,9 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
     };
 
     dispatch(setComposerValue(""));
+    
+    // Save draft for other tabs to see "User Query" immediately
+    saveDraft(actualChatId, trimmedMessage, "New Conversation");
 
     // For new chats in widget, use optimistic messages with actualChatId (not temporary chat)
     // This prevents creating a temporary chat that would appear on the chat page
@@ -1141,12 +1154,65 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
         },
         (event: StreamEvent) => {
           // Use actualChatId for events, but if we get a result event, we know the real chat ID
-          const eventChatId =
-            event.type === "result" && event.data?.chatId
-              ? event.data.chatId
-              : actualChatId;
+          // CRITICAL: If we get a real ID from ANY event (not just result), we should migrate immediately
+          // This ensures that if the server creates the chat early, other tabs can see it and sync status
+          const eventChatId = event.data?.chatId || actualChatId;
+          const realChatId = event.data?.chatId;
 
           dispatch(addStreamingEvent({ chatId: eventChatId, event }));
+          broadcastEvent(eventChatId, event);
+          // CRITICAL: If we switched to a real ID, also broadcast to the temp ID 
+          // so tabs watching the temp ID (before sync) receive the result and can migrate.
+          if (eventChatId && eventChatId !== actualChatId) {
+             broadcastEvent(actualChatId, event);
+          }
+
+          // If we have a real chat ID and we are currently tracking a temp ID, migrate to real ID
+          if (realChatId && realChatId !== actualChatId && isNewChat) {
+             // 1. Migrate events
+             dispatch(migrateStreamingEvents({
+               oldChatId: actualChatId,
+               newChatId: realChatId
+             }));
+             
+             // 2. Migrate streaming tracking (this ensures useStreamingSync broadcasts the Real ID)
+             dispatch(removeStreamingChat(actualChatId));
+             dispatch(addStreamingChat(realChatId));
+             
+             // 3. Update local ref so we know which one to clear later
+             finalChatId = realChatId; 
+             // Don't update streamingChatIdRef since we might still reference actualChatId in this scope?? 
+             // Actually better to keep actualChatId as is for logic flow and valid scope
+             
+             // 3b. Sync draft to new ID (so other tabs switch to tracking real ID content)
+             saveDraft(realChatId, trimmedMessage, "New Conversation");
+             removeDraft(actualChatId);
+             
+             // 4. Trigger refresh in other tabs so they see the new chat in list
+             triggerRefresh();
+             triggerMigration(actualChatId, realChatId);
+             
+             // 5. Update optimistic messages
+             // Move optimistic messages to the real chat ID
+             // This ensures that when we eventually switch to the real chat ID locally, messages are there
+             const optimisticMsgs = optimisticMessagesByChat[actualChatId] || [];
+             if (optimisticMsgs.length > 0) {
+               optimisticMsgs.forEach(msg => {
+                 dispatch(addOptimisticMessage({ 
+                   chatId: realChatId, 
+                   message: { ...msg, chatId: realChatId } 
+                 }));
+               });
+               dispatch(removeOptimisticMessages(actualChatId));
+             }
+             
+             // 6. If we are still viewing the temp chat, switch selection to real chat
+             // Only if activeChatId matches (meaning user hasn't switched away)
+             if (!activeChatId || activeChatId === actualChatId) {
+               dispatch(setSelectedChatId(realChatId));
+               onChatIdChange(realChatId);
+             }
+          }
 
           // Update long-running task with streaming progress
           if (event.step) {
@@ -1201,6 +1267,29 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
           }
         }
       );
+
+
+
+      // Redundant Broadcast: Ensure the final result is broadcasted even if onEvent missed it or race conditions occurred.
+      // This is the definitive "Success" signal for other tabs.
+      if (result.data) {
+          const completionEvent: StreamEvent = {
+              type: 'result',
+              data: result.data,
+              success: true,
+              timestamp: new Date().toISOString()
+          };
+          const realChatId = result.data.chatId;
+          
+          // Broadcast to Real ID
+          if (realChatId) {
+             broadcastEvent(realChatId, completionEvent);
+          }
+          // Broadcast to Temp ID (if different) 
+          if (actualChatId && realChatId !== actualChatId) {
+             broadcastEvent(actualChatId, completionEvent);
+          }
+      }
 
       const newChatId = result.data.chatId;
       finalChatId = newChatId || actualChatId; // Update final chat ID
@@ -1363,6 +1452,11 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
         streamingTimeoutRef.current = null;
       }
       streamingStartTimeRef.current = null;
+      
+      // Clear draft after a short delay to ensure UI has synced with real data
+      setTimeout(() => {
+        if (finalChatId) removeDraft(finalChatId);
+      }, 2000);
     }
   };
 

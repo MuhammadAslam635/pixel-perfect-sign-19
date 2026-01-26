@@ -55,6 +55,7 @@ export interface ChatState {
   // Streaming state - support multiple concurrent chats - now tab-isolated
   streamingEventsByChat: Record<string, StreamEvent[]>; // Per-chat streaming events
   streamingChatIds: string[]; // Track which chats are currently streaming (supports multiple)
+  remoteStreamingChatIds: string[]; // Track streams from OTHER tabs (for sync)
   useStreaming: boolean; // Default to streaming mode
 
   // UI state
@@ -81,6 +82,7 @@ const initialState: ChatState = {
   optimisticMessagesByChat: {},
   streamingEventsByChat: {},
   streamingChatIds: [],
+  remoteStreamingChatIds: [],
   useStreaming: true,
   isChatListLoading: false,
   isChatDetailLoading: false,
@@ -246,6 +248,10 @@ const chatSlice = createSlice({
         // Ensure no duplicates
         state.streamingChatIds = Array.from(new Set(state.streamingChatIds));
       }
+    },
+
+    setRemoteStreamingChatIds: (state, action: PayloadAction<string[]>) => {
+      state.remoteStreamingChatIds = action.payload;
     },
 
     setUseStreaming: (state, action: PayloadAction<boolean>) => {
@@ -425,6 +431,7 @@ export const {
   clearStreamingEvents,
   clearAllStreamingEvents,
   migrateStreamingEvents,
+  setRemoteStreamingChatIds,
   setUseStreaming,
   setChatList,
   setIsChatListLoading,

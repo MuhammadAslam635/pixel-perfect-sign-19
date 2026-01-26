@@ -17,6 +17,8 @@ import {
   setComposerValue,
   removeStreamingChat,
 } from "@/store/slices/chatSlice";
+import { useStreamingSync } from "@/hooks/useStreamingSync";
+import { useChatSync } from "@/hooks/useChatSync";
 
 type AssistantPanelProps = {
   isDesktop: boolean;
@@ -36,6 +38,10 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
 
   // Tab isolation - prevents state conflicts between multiple tabs
   useTabIsolation();
+  // Sync streaming status across tabs
+  useStreamingSync();
+  // Sync chat list across tabs
+  useChatSync();
 
   // Redux selectors - MUST be declared before any hooks that use them
   const selectedChatId = useSelector((state: RootState) => state.chat.selectedChatId);
@@ -129,7 +135,7 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
         setLocalMessages([]);
       }
     }
-  }, [queryClient, selectedChatId, dispatch, chatHistory, optimisticMessagesByChat]);
+  }, [queryClient, selectedChatId, dispatch, optimisticMessagesByChat]);
 
   // Update chat history from API response
   // Use a ref to track previous chat list to avoid unnecessary updates
@@ -154,15 +160,55 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
       if (chatId.startsWith("temp_") && optimisticMessagesByChat[chatId]?.length > 0) {
         // Only include if not already in the list
         if (!list.some(chat => chat._id === chatId)) {
-          const firstMessage = optimisticMessagesByChat[chatId][0];
-          list.unshift({
-            _id: chatId,
-            title: firstMessage.content.length > 50
-              ? firstMessage.content.substring(0, 50) + "..."
-              : firstMessage.content,
-            createdAt: firstMessage.createdAt,
-            updatedAt: firstMessage.createdAt,
-          });
+          // Check for potential duplicates (real chats created very recently)
+          // Temp ID format: temp_TIMESTAMP_RANDOM
+          const parts = chatId.split('_');
+          let isDuplicate = false;
+          
+          if (parts.length >= 2) {
+            const tempTimestamp = parseInt(parts[1]);
+            const firstMessage = optimisticMessagesByChat[chatId]?.[0];
+            const firstContent = firstMessage?.content?.trim();
+
+            if (!isNaN(tempTimestamp) && firstContent) {
+              isDuplicate = list.some(realChat => {
+                // IMPORTANT: Never deduplicate against other temporary chats
+                if (realChat._id.startsWith("temp_") || realChat._id === "__new_chat__") {
+                  return false;
+                }
+
+                const realTime = new Date(realChat.createdAt).getTime();
+                // Check if created within 60 seconds of temp chat
+                const isTimeClose = Math.abs(realTime - tempTimestamp) < 60000;
+                
+                if (!isTimeClose) return false;
+
+                // If time is close, verify content match to avoid false positives
+                // (e.g. user sending two different chats in quick succession)
+                if (realChat.messages && realChat.messages.length > 0) {
+                  const realFirstContent = realChat.messages[0].content.trim();
+                  // Return true only if content roughly matches
+                  return realFirstContent === firstContent;
+                }
+
+                // If no messages available in summary, rely on time overlap (fallback)
+                // But strictly requires time overlap
+                return true;
+              });
+            }
+          }
+
+          if (!isDuplicate) {
+            const firstMessage = optimisticMessagesByChat[chatId][0];
+            list.unshift({
+              _id: chatId,
+              title: firstMessage.content.length > 50
+                ? firstMessage.content.substring(0, 50) + "..."
+                : firstMessage.content,
+              createdAt: firstMessage.createdAt,
+              updatedAt: firstMessage.createdAt,
+            });
+          }
         }
       }
     });
