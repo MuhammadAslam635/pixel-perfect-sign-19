@@ -1,5 +1,5 @@
 import { List, Plus } from "lucide-react";
-import { FC, useState, useEffect, useRef, useMemo } from "react";
+import { FC, useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store/store";
@@ -16,6 +16,7 @@ import {
   removeOptimisticMessages,
   setComposerValue,
   removeStreamingChat,
+  selectIsChatStreaming,
 } from "@/store/slices/chatSlice";
 import { useStreamingSync } from "@/hooks/useStreamingSync";
 import { useChatSync } from "@/hooks/useChatSync";
@@ -46,7 +47,9 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
   // Redux selectors - MUST be declared before any hooks that use them
   const selectedChatId = useSelector((state: RootState) => state.chat.selectedChatId);
   const deletingChatId = useSelector((state: RootState) => state.chat.deletingChatId);
-  const streamingChatIds = useSelector((state: RootState) => state.chat.streamingChatIds);
+  const isSelectedChatStreaming = useSelector((state: RootState) => 
+    selectIsChatStreaming(state, selectedChatId)
+  );
   const optimisticMessagesByChat = useSelector((state: RootState) => state.chat.optimisticMessagesByChat);
 
   // Clear selected chat if it's a temp chat without messages on mount
@@ -104,7 +107,7 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
 
     // Update current auth token reference
     currentAuthTokenRef.current = authToken;
-  }, [currentAuthToken, queryClient]);
+  }, [currentAuthToken, queryClient, dispatch]);
 
   // Clean up stale temporary chats from cache
   const lastCleanupTimeRef = useRef<number>(0);
@@ -216,6 +219,30 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
     return list;
   }, [chatHistory, optimisticMessagesByChat]);
 
+  const handleSelectChat = useCallback((chatId: string) => {
+    dispatch(setSelectedChatId(chatId));
+    setShowChatList(false);
+    // Don't fetch chat messages for temporary IDs - they only exist in optimistic state
+    if (chatId?.startsWith("temp_")) {
+      setLocalMessages([]);
+      return;
+    }
+    // Fetch chat messages for selected chat
+    queryClient
+      .fetchQuery({
+        queryKey: ["chatDetail", chatId],
+        queryFn: async () => {
+          const { fetchChatById } = await import("@/services/chat.service");
+          return fetchChatById(chatId);
+        },
+      })
+      .then((chatDetail) => {
+        if (chatDetail?.messages) {
+          setLocalMessages(chatDetail.messages);
+        }
+      });
+  }, [dispatch, queryClient]);
+
   // Auto-load the most recent chat on initial mount only (for current user)
   // Use a ref to track the first chat ID to avoid re-triggering
   const firstChatIdRef = useRef<string | null>(null);
@@ -248,12 +275,12 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
       handleSelectChat(firstChatId);
     }
   }, [
-    apiChatList.length, // Only depend on length, not the array itself
+    apiChatList,
     selectedChatId,
-    // Removed localMessages.length - it causes infinite loop when handleSelectChat sets it
     isChatListLoading,
     currentAuthToken,
-    // Removed dispatch - it's stable and doesn't need to be in deps
+    handleSelectChat,
+    localMessages.length
   ]);
 
   // Restore chat when returning from navigation
@@ -261,7 +288,7 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
   const isRestoringRef = useRef(false);
   useEffect(() => {
     // Check if this chat was streaming (might have completed while away)
-    const wasStreaming = streamingChatIds.includes(selectedChatId || "");
+    const wasStreaming = isSelectedChatStreaming;
     const hasOptimisticMessages = selectedChatId && optimisticMessagesByChat[selectedChatId]?.length > 0;
 
     if (
@@ -272,6 +299,7 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
       (wasStreaming || hasOptimisticMessages) // Only refetch if chat was in progress
     ) {
       isRestoringRef.current = true;
+      console.log('[AssistantPanel] Restoring potentially active chat:', { selectedChatId, wasStreaming, hasOptimisticMessages });
 
       // Invalidate and refetch to get latest state from server
       queryClient.invalidateQueries({ queryKey: ["chatDetail", selectedChatId] });
@@ -307,31 +335,7 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
           isRestoringRef.current = false;
         });
     }
-  }, [selectedChatId, isChatListLoading, queryClient, dispatch, streamingChatIds, optimisticMessagesByChat]);
-
-  const handleSelectChat = (chatId: string) => {
-    dispatch(setSelectedChatId(chatId));
-    setShowChatList(false);
-    // Don't fetch chat messages for temporary IDs - they only exist in optimistic state
-    if (chatId?.startsWith("temp_")) {
-      setLocalMessages([]);
-      return;
-    }
-    // Fetch chat messages for selected chat
-    queryClient
-      .fetchQuery({
-        queryKey: ["chatDetail", chatId],
-        queryFn: async () => {
-          const { fetchChatById } = await import("@/services/chat.service");
-          return fetchChatById(chatId);
-        },
-      })
-      .then((chatDetail) => {
-        if (chatDetail?.messages) {
-          setLocalMessages(chatDetail.messages);
-        }
-      });
-  };
+  }, [selectedChatId, isChatListLoading, queryClient, dispatch, isSelectedChatStreaming, optimisticMessagesByChat]);
 
   const handleStartNewChat = () => {
     // Clear selected chat ID
@@ -371,12 +375,11 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
         queryKey: ["chatList"],
       });
       await queryClient.invalidateQueries({ queryKey: ["chatDetail", chatId] });
-    } catch (error: any) {
+    } catch (error) {
       console.error("Failed to delete chat", error);
-      toast.error(
-        error.response?.data?.message ||
-          "Failed to delete the chat. Please try again."
-      );
+      const errorMessage = (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        "Failed to delete the chat. Please try again.";
+      toast.error(errorMessage);
     } finally {
       dispatch(setDeletingChatId(null));
     }
@@ -453,7 +456,6 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
           isLoading={isChatListLoading}
           onDeleteChat={handleDeleteChat}
           deletingChatId={deletingChatId}
-          streamingChatIds={streamingChatIds}
         />
       ) : (
         <ChatInterface
