@@ -6,13 +6,24 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ActiveNavButton } from "@/components/ui/primary-btn";
-import { Loader2, RefreshCcw, Trash2, CalendarDays, Copy } from "lucide-react";
+import { Loader2, RefreshCcw, Trash2, CalendarDays, Copy, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   calendarService,
   LeadMeetingRecord,
   AvailableSlot,
 } from "@/services/calendar.service";
+import { emailService } from "@/services/email.service";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
 import ConfirmDialog from "@/components/ui/confirm-dialog";
 import { CrmNavigation } from "@/pages/crm/shared/components/CrmNavigation";
@@ -68,6 +79,9 @@ const CalendarPage: FC = () => {
   const [selectedDate, setSelectedDate] = useState<number | null>(null);
   const [meetingPendingDelete, setMeetingPendingDelete] =
     useState<LeadMeetingRecord | null>(null);
+  const [meetingToInvite, setMeetingToInvite] = useState<LeadMeetingRecord | null>(null);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [isInviting, setIsInviting] = useState(false);
   const { toast } = useToast();
 
   const todayRef = useMemo(() => new Date(), []);
@@ -366,6 +380,68 @@ const CalendarPage: FC = () => {
       (leadMeetingsError as Error)?.message ||
       "Failed to load meetings"
     : null;
+
+  const handleSendInvitation = async () => {
+    if (!meetingToInvite || !inviteEmail) return;
+
+    setIsInviting(true);
+    try {
+      const timeRange = formatDateTimeRange(
+        meetingToInvite.startDateTime,
+        meetingToInvite.endDateTime,
+        meetingToInvite.timezone
+      );
+
+      const meetingDetails = `
+Subject: ${meetingToInvite.subject}
+Time: ${timeRange}
+${meetingToInvite.joinLink ? `Join Link: ${meetingToInvite.joinLink}` : ""}
+${meetingToInvite.body ? `\nDescription: ${meetingToInvite.body}` : ""}
+      `;
+
+      await emailService.sendEmail({
+        to: [inviteEmail],
+        subject: `Invitation: ${meetingToInvite.subject}`,
+        text: `You have been invited to a meeting.\n\n${meetingDetails}`,
+        html: `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
+            <h2 style="color: #4f46e5;">Meeting Invitation</h2>
+            <p>You have been invited to join the following meeting:</p>
+            <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+              <p style="margin: 0;"><strong>Subject:</strong> ${meetingToInvite.subject}</p>
+              <p style="margin: 5px 0 0 0;"><strong>Time:</strong> ${timeRange}</p>
+            </div>
+            ${meetingToInvite.joinLink ? `
+              <div style="margin: 25px 0;">
+                <a href="${meetingToInvite.joinLink}" style="background-color: #4f46e5; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold; display: inline-block;">Join Meeting</a>
+              </div>
+            ` : ""}
+            ${meetingToInvite.body ? `
+              <div style="margin-top: 20px; border-top: 1px solid #e5e7eb; padding-top: 15px;">
+                <p style="font-size: 0.9em; color: #6b7280; margin-bottom: 5px;">Description:</p>
+                <div style="font-size: 0.95em; line-height: 1.5;">${meetingToInvite.body}</div>
+              </div>
+            ` : ""}
+          </div>
+        `
+      });
+
+      toast({
+        title: "Invitation Sent",
+        description: `Invitation successfully sent to ${inviteEmail}`,
+      });
+      setMeetingToInvite(null);
+      setInviteEmail("");
+    } catch (error: any) {
+      toast({
+        title: "Failed to send invitation",
+        description: error?.message || "Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsInviting(false);
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -837,6 +913,15 @@ const CalendarPage: FC = () => {
                                     Copy Link
                                     {/* <Copy className="w-3.5 h-3.5" /> */}
                                   </Button>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-xs h-7 px-3 border-emerald-400/40 text-emerald-300 hover:text-emerald-200 hover:bg-emerald-500/10"
+                                    onClick={() => setMeetingToInvite(meeting)}
+                                  >
+                                    Invite via Email
+                                  </Button>
                                 </>
                               )}
                             </div>
@@ -876,6 +961,66 @@ const CalendarPage: FC = () => {
         confirmVariant="destructive"
         isPending={deleteMeetingMutation.isPending}
       />
+
+      {/* Invite Modal */}
+      <Dialog open={!!meetingToInvite} onOpenChange={(open) => !open && setMeetingToInvite(null)}>
+        <DialogContent className="sm:max-w-[425px] bg-[#1a2c2d] border-white/10 text-white">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold text-white flex items-center gap-2">
+              <Mail className="w-5 h-5 text-emerald-400" />
+              Invite via Email
+            </DialogTitle>
+            <DialogDescription className="text-white/60">
+              Send an invitation for "{meetingToInvite?.subject}"
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="email" className="text-sm font-medium text-white/80">
+                Email Address
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="colleague@example.com"
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+                className="bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-emerald-500/50 focus:ring-emerald-500/20"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSendInvitation();
+                  }
+                }}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setMeetingToInvite(null)}
+              className="text-white/60 hover:text-white hover:bg-white/5"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleSendInvitation}
+              disabled={!inviteEmail || isInviting}
+              className="bg-emerald-600 hover:bg-emerald-500 text-white border-none shadow-lg shadow-emerald-900/20"
+            >
+              {isInviting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                "Send Invitation"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 };
