@@ -13,6 +13,7 @@ import {
 import { usePermissions } from "@/hooks/usePermissions";
 import LongRunningTasksButton from "@/components/navigation/LongRunningTasksButton";
 import { AvatarFallback } from "@/components/ui/avatar-fallback";
+import { notificationSoundManager, loadSoundPreference } from "@/utils/notificationSound";
 
 // Helper function to get seen notifications from localStorage
 const getSeenNotifications = (): Set<string> => {
@@ -119,18 +120,29 @@ export const ActionComponent = () => {
         notification.is_read === "No"
     );
 
-    // Show toast for each new notification
-    newNotifications.forEach((notification) => {
-      toast(notification.title || "New Notification", {
-        description: notification.message,
-        duration: 5000,
+    // Show toast for each new notification and play sound
+    if (newNotifications.length > 0) {
+      newNotifications.forEach((notification) => {
+        toast(notification.title || "New Notification", {
+          description: notification.message,
+          duration: 5000,
+        });
       });
-    });
+      
+      // Play notification sound once for new notifications
+      notificationSoundManager.play();
+    }
 
     // Update previous notification IDs and persist to localStorage
     previousNotificationIdsRef.current = currentNotificationIds;
     saveSeenNotifications(currentNotificationIds);
   }, [notifications]);
+
+  // Initialize sound preference on mount
+  useEffect(() => {
+    const savedSound = loadSoundPreference();
+    notificationSoundManager.setSound(savedSound);
+  }, []);
 
   const handleLogout = () => {
     dispatch(logout());

@@ -13,9 +13,26 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/components/ui/use-toast";
 import { notificationService } from "@/services/notification.service";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Volume2 } from "lucide-react";
+import {
+  SOUND_OPTIONS,
+  SoundOption,
+  loadSoundPreference,
+  saveSoundPreference,
+  notificationSoundManager,
+} from "@/utils/notificationSound";
 
 export const NotificationsTab = () => {
   const [loading, setLoading] = useState(true);
+  const [notificationSound, setNotificationSound] = useState<SoundOption>('pop');
+  const [isPlayingSound, setIsPlayingSound] = useState(false);
   const [preferences, setPreferences] = useState<any>({
     meeting: { scheduled: true, created: true },
     email: { sent: true, followUp: true },
@@ -35,6 +52,10 @@ export const NotificationsTab = () => {
 
   useEffect(() => {
     fetchPreferences();
+    // Load sound preference from localStorage
+    const savedSound = loadSoundPreference();
+    setNotificationSound(savedSound);
+    notificationSoundManager.setSound(savedSound);
   }, []);
 
   const fetchPreferences = async () => {
@@ -77,6 +98,28 @@ export const NotificationsTab = () => {
     }));
   };
 
+  const handleSoundChange = async (sound: SoundOption) => {
+    setNotificationSound(sound);
+    saveSoundPreference(sound);
+    
+    // Test play the selected sound
+    if (sound !== 'off') {
+      try {
+        setIsPlayingSound(true);
+        await notificationSoundManager.testPlay(sound);
+        setTimeout(() => setIsPlayingSound(false), 1000);
+      } catch (error) {
+        console.error('Failed to play sound:', error);
+        toast({
+          variant: "destructive",
+          title: "Sound Preview Failed",
+          description: "Unable to play sound. Check if sound files exist.",
+        });
+        setIsPlayingSound(false);
+      }
+    }
+  };
+
   const handleSave = async (event: React.FormEvent) => {
     event.preventDefault();
     try {
@@ -104,12 +147,49 @@ export const NotificationsTab = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.2 }}
           >
-            <CardTitle className="text-white text-lg font-semibold">
-              Notification Preferences
-            </CardTitle>
-            <CardDescription className="text-white/60">
-              Choose how you want to stay informed.
-            </CardDescription>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <CardTitle className="text-white text-lg font-semibold">
+                  Notification Preferences
+                </CardTitle>
+                <CardDescription className="text-white/60">
+                  Choose how you want to stay informed.
+                </CardDescription>
+              </div>
+              <div className="flex flex-col items-end gap-1">
+                <div className="flex items-center gap-2 min-w-[200px]">
+                  <Volume2 className={`h-4 w-4 transition-all ${
+                    isPlayingSound 
+                      ? 'text-cyan-400 scale-110 animate-pulse' 
+                      : 'text-cyan-500/80'
+                  }`} />
+                  <Select value={notificationSound} onValueChange={handleSoundChange}>
+                    <SelectTrigger className="bg-white/[0.06] border-white/10 text-white hover:bg-white/[0.08] focus:ring-2 focus:ring-cyan-500/50 transition-colors">
+                      <SelectValue placeholder="Select sound" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#1B1B1B] border-white/10 text-white backdrop-blur-xl">
+                      {SOUND_OPTIONS.map((option) => (
+                        <SelectItem
+                          key={option.value}
+                          value={option.value}
+                          className="text-white hover:bg-white/10 focus:bg-cyan-500/20 cursor-pointer"
+                        >
+                          <div className="flex items-center justify-between w-full gap-3">
+                            <div className="flex flex-col py-0.5">
+                              <span className="font-medium">{option.label}</span>
+                              <span className="text-xs text-white/60">{option.description}</span>
+                            </div>
+                            {option.value !== 'off' && (
+                              <Volume2 className="h-3.5 w-3.5 text-cyan-500/60" />
+                            )}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
           </motion.div>
         </CardHeader>
         <CardContent className="p-6">
