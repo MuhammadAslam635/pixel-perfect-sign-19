@@ -925,9 +925,8 @@ const index = () => {
 
           {/* Split View */}
           <div
-            className={`flex flex-col lg:flex-row items-stretch flex-1 min-h-0 overflow-hidden ${
-              isSidebarOpen ? "gap-2 sm:gap-3 md:gap-4 lg:gap-6" : ""
-            }`}
+            className={`flex flex-col lg:flex-row items-stretch flex-1 min-h-0 overflow-hidden ${isSidebarOpen ? "gap-2 sm:gap-3 md:gap-4 lg:gap-6" : ""
+              }`}
           >
             {/* Left: Companies/Leads List */}
             <div className="relative pt-3 sm:pt-4 px-3 sm:px-6 rounded-xl sm:rounded-[30px] w-full h-full border-0 sm:border sm:border-white/10 bg-transparent sm:bg-[linear-gradient(173.83deg,_rgba(255,255,255,0.08)_4.82%,_rgba(255,255,255,0)_38.08%,_rgba(255,255,255,0)_56.68%,_rgba(255,255,255,0.02)_95.1%)] flex-1 min-w-0 flex flex-col overflow-hidden">
@@ -1019,7 +1018,8 @@ const index = () => {
         onClose={() => setEnrichmentModalOpen(false)}
         selectedSeniorities={selectedSeniorities}
         onEnrichmentStart={(searchId, mode) => {
-          toast.success(`Enrichment started! Tracking ID: ${searchId}`);
+          // Notification is now shown in bell icon instead of toast
+          console.log(`Enrichment started with tracking ID: ${searchId}`);
         }}
         onEnrichmentComplete={(searchId) => {
           toast.success("Enrichment completed! Leads list will refresh.");

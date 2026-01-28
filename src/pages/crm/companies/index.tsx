@@ -41,7 +41,7 @@ const COMPANY_EMPLOYEE_RANGES = [
 type ViewMode = "compact" | "detailed" | "card";
 
 const index = () => {
-  const { canCreate} = usePermissions();
+  const { canCreate } = usePermissions();
   const navigate = useNavigate();
 
   // Check if user is a viewer (supports both legacy and new RBAC)
@@ -374,14 +374,14 @@ const index = () => {
 
                 {/* Enrich Leads Button */}
                 {canCreate("leads") && (
-                <Button
-                  onClick={() => setEnrichmentModalOpen(true)}
-                  className="bg-gradient-to-r from-[#69B4B7] to-[#3E64B4] hover:from-[#69B4B7]/80 hover:to-[#3E64B4]/80 text-white font-semibold rounded-full px-4 sm:px-6 h-10 shadow-[0_5px_18px_rgba(103,176,183,0.35)] hover:shadow-[0_8px_24px_rgba(103,176,183,0.45)] transition-all whitespace-nowrap"
-                >
-                  <Sparkles className="w-4 h-4" />
-                  <span className="hidden sm:inline">Find Leads</span>
-                  <span className="sm:hidden">Find</span>
-                </Button>
+                  <Button
+                    onClick={() => setEnrichmentModalOpen(true)}
+                    className="bg-gradient-to-r from-[#69B4B7] to-[#3E64B4] hover:from-[#69B4B7]/80 hover:to-[#3E64B4]/80 text-white font-semibold rounded-full px-4 sm:px-6 h-10 shadow-[0_5px_18px_rgba(103,176,183,0.35)] hover:shadow-[0_8px_24px_rgba(103,176,183,0.45)] transition-all whitespace-nowrap"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    <span className="hidden sm:inline">Find Leads</span>
+                    <span className="sm:hidden">Find</span>
+                  </Button>
                 )}
               </div>
 
@@ -495,7 +495,7 @@ const index = () => {
                 totalCompanies={filteredTotalCompanies}
                 showFilters={false}
                 selectedCompany={selectedCompany}
-                onViewAllLeads={() => {}}
+                onViewAllLeads={() => { }}
                 onExecutiveSelect={handleExecutiveSelect}
                 onMobileExecutivesViewChange={setIsMobileExecutivesView}
                 pageSize={companiesLimit}
@@ -522,7 +522,8 @@ const index = () => {
           onClose={() => setEnrichmentModalOpen(false)}
           selectedSeniorities={selectedSeniorities}
           onEnrichmentStart={(searchId, mode) => {
-            toast.success(`Enrichment started! Tracking ID: ${searchId}`);
+            // Notification is now shown in bell icon instead of toast
+            console.log(`Enrichment started with tracking ID: ${searchId}`);
           }}
           onEnrichmentComplete={(searchId) => {
             toast.success("Enrichment completed! Companies list will refresh.");
