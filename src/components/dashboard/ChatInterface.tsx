@@ -1382,6 +1382,13 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
             dispatch(clearStreamingEvents(realChatId));
             lastCompletionTimeRef.current[realChatId] = Date.now(); // Mark completion time
             
+            // IMMEDIATE CLEANUP: Update refs immediately to prevent finally block from re-cleaning
+            isStreamingRef.current = false;
+            // Only clear streaming chat ID if this was the chat that was streaming
+            if (streamingChatIdRef.current === actualChatId || streamingChatIdRef.current === realChatId) {
+                streamingChatIdRef.current = null;
+            }
+            
             // Complete the long-running task immediately
             dispatch(
               completeStreamingTask({
@@ -1554,51 +1561,57 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
       });
     } finally {
       isSendingRef.current = false;
-      isStreamingRef.current = false;
-      // Only clear streaming chat ID if this was the chat that was streaming
-      if (streamingChatIdRef.current === actualChatId) {
-        streamingChatIdRef.current = null;
-      }
-      // Remove from streaming chats set (if not already removed in success handler)
-      // Clean up both actualChatId and finalChatId to handle all cases
-      dispatch(removeStreamingChat(actualChatId));
-      dispatch(removeStreamingChat(finalChatId));
-      dispatch(clearStreamingEvents(actualChatId));
-      dispatch(clearStreamingEvents(finalChatId));
-      if (finalChatId !== actualChatId) {
-         dispatch(clearStreamingEvents(finalChatId));
-      }
-      
-      // Force removal from remote list just in case it was added by sync
-      // This is a local fix for the dashboard "Thinking..." stutter
-      dispatch(clearStreamingEvents(actualChatId));
-      dispatch(clearStreamingEvents(finalChatId));
-      if (finalChatId !== actualChatId) {
-         dispatch(clearStreamingEvents(finalChatId));
-      }
-      
-      // Force removal from remote list just in case it was added by sync
-      // This is a local fix for the dashboard "Thinking..." stutter
-      if (remoteStreamingChatIds && remoteStreamingChatIds.includes(actualChatId)) {
-        dispatch(setRemoteStreamingChatIds(remoteStreamingChatIds.filter(id => id !== actualChatId)));
-      }
-      lastCompletionTimeRef.current[actualChatId] = Date.now(); // Mark completion time for this chat only
-      if (finalChatId !== actualChatId) {
-         lastCompletionTimeRef.current[finalChatId] = Date.now();
-      }
-      
-      // CRITICAL: Ensure optimistic messages are cleared in finally block as a safety net
-      // This guarantees the "Thinking..." indicator is removed even if other cleanup fails
-      dispatch(removeOptimisticMessages(actualChatId));
-      dispatch(removeOptimisticMessages(finalChatId));
 
-      // Complete or clear the long-running task for both IDs
-      dispatch(
-        completeStreamingTask({
-          chatId: finalChatId,
-          messageId: tempMessage._id,
-        })
-      );
+      // FALLBACK CLEANUP: Only clean up if not already done in result event handler
+      const needsCleanup = isStreamingRef.current;
+      
+      if (needsCleanup) {
+        isStreamingRef.current = false;
+        // Only clear streaming chat ID if this was the chat that was streaming
+        if (streamingChatIdRef.current === actualChatId) {
+          streamingChatIdRef.current = null;
+        }
+        // Remove from streaming chats set (if not already removed in success handler)
+        // Clean up both actualChatId and finalChatId to handle all cases
+        dispatch(removeStreamingChat(actualChatId));
+        dispatch(removeStreamingChat(finalChatId));
+        dispatch(clearStreamingEvents(actualChatId));
+        dispatch(clearStreamingEvents(finalChatId));
+        if (finalChatId !== actualChatId) {
+           dispatch(clearStreamingEvents(finalChatId));
+        }
+        
+        // Force removal from remote list just in case it was added by sync
+        // This is a local fix for the dashboard "Thinking..." stutter
+        dispatch(clearStreamingEvents(actualChatId));
+        dispatch(clearStreamingEvents(finalChatId));
+        if (finalChatId !== actualChatId) {
+           dispatch(clearStreamingEvents(finalChatId));
+        }
+        
+        // Force removal from remote list just in case it was added by sync
+        // This is a local fix for the dashboard "Thinking..." stutter
+        if (remoteStreamingChatIds && remoteStreamingChatIds.includes(actualChatId)) {
+          dispatch(setRemoteStreamingChatIds(remoteStreamingChatIds.filter(id => id !== actualChatId)));
+        }
+        lastCompletionTimeRef.current[actualChatId] = Date.now(); // Mark completion time for this chat only
+        if (finalChatId !== actualChatId) {
+           lastCompletionTimeRef.current[finalChatId] = Date.now();
+        }
+        
+        // CRITICAL: Ensure optimistic messages are cleared in finally block as a safety net
+        // This guarantees the "Thinking..." indicator is removed even if other cleanup fails
+        dispatch(removeOptimisticMessages(actualChatId));
+        dispatch(removeOptimisticMessages(finalChatId));
+  
+        // Complete or clear the long-running task for both IDs
+        dispatch(
+          completeStreamingTask({
+            chatId: finalChatId,
+            messageId: tempMessage._id,
+          })
+        );
+      }
       // Also complete for actualChatId if different
       if (actualChatId !== finalChatId) {
         dispatch(

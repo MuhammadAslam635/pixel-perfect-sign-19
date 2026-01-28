@@ -546,8 +546,8 @@ const ChatPage = () => {
                    (isStreamingRemote && !isRecentlyFinished) || 
                    hasOptimisticMessages;
 
-    // Debug logging as requested
-    console.log('[ChatPage] isCurrentChatSending state:', {
+    // Debug logging as requested - using console.dir for full depth
+    const isCurrentChatSendingState = {
       result,
       selectedChatId,
       isSelectedChatStreaming,
@@ -558,8 +558,13 @@ const ChatPage = () => {
       streamingChatIdRef: streamingChatIdRef.current,
       isStreamingRemote,
       isRecentlyFinished,
-      lastCompletion
-    });
+      lastCompletion,
+      // Additional debug info
+      optimisticMessagesForChat: optimisticMessages,
+      remoteStreamingChatIds,
+    };
+    console.log('[ChatPage] isCurrentChatSending state:', isCurrentChatSendingState);
+    console.dir(isCurrentChatSendingState, { depth: null });
 
     return result;
   }, [isSelectedChatStreaming, optimisticMessagesByChat, selectedChatId, localStreamingChatId, remoteStreamingChatIds]);
@@ -825,9 +830,15 @@ const ChatPage = () => {
     streamingStartTimeRef.current = Date.now();
 
     // Set timeout to start long-running task only after 10 seconds if still processing
+    const taskCreatedRef = { current: false }; // Track if task was actually created
     streamingTimeoutRef.current = setTimeout(() => {
       if (isStreamingRef.current) {
         // Task is still running after 10 seconds, start tracking it
+        taskCreatedRef.current = true; // Mark that task was created
+        console.log('[CHAT] Creating long-running task (10s threshold reached):', { 
+          chatId: actualChatId, 
+          messageId: tempMessage._id 
+        });
         dispatch(
           startStreamingTask({
             chatId: actualChatId,
@@ -899,13 +910,35 @@ const ChatPage = () => {
              if (isStillOnSameChat) {
                dispatch(setSelectedChatId(realChatId));
              }
+             
+             // CRITICAL: Update long-running task's chatId to the real chat ID
+             // This ensures subsequent updateStreamingTask and completeStreamingTask calls can find the task
+             console.log('[CHAT] Updating task chatId during event migration:', { 
+               messageId: tempMessage._id, 
+               oldChatId: actualChatId, 
+               newChatId: realChatId 
+             });
+             dispatch(
+               updateTask({
+                 id: tempMessage._id,
+                 updates: { chatId: realChatId },
+               })
+             );
           }
 
           // Update long-running task with streaming progress
-          if (event.step) {
+          // Use the real chatId if available (after migration), otherwise use actualChatId
+          // Only update if task was actually created (i.e., processing took >10 seconds)
+          const taskChatId = finalChatId || actualChatId;
+          if (event.step && taskCreatedRef.current) {
+            console.log('[CHAT] Updating task step:', { 
+              messageId: tempMessage._id, 
+              chatId: taskChatId, 
+              step: event.step 
+            });
             dispatch(
               updateStreamingTask({
-                chatId: actualChatId,
+                chatId: taskChatId,
                 messageId: tempMessage._id,
                 step: event.step,
               })
@@ -942,19 +975,59 @@ const ChatPage = () => {
               });
             }
 
-            // CRITICAL: Clear optimistic messages immediately to prevent duplicates
-            // Clear for both old (temp) and new (real) chat IDs
-            dispatch(removeOptimisticMessages(actualChatId));
+            // IMMEDIATE CLEANUP: Clean up streaming state as soon as result arrives
+            // This prevents the "Thinking..." indicator from lingering after the response is visible
+            console.log('[CHAT] Immediate cleanup on result event:', { actualChatId, finalChatId: realChatId });
+            
+            // Update refs immediately
+            isStreamingRef.current = false;
+            if (streamingChatIdRef.current === actualChatId || streamingChatIdRef.current === realChatId) {
+              streamingChatIdRef.current = null;
+              setLocalStreamingChatId(null);
+            }
+            
+            // Clear optimistic messages ONLY for this specific chat's IDs
+            dispatch(removeOptimisticMessages(actualChatId)); // temp or existing chat ID
             if (realChatId !== actualChatId) {
-              dispatch(removeOptimisticMessages(realChatId));
+              dispatch(removeOptimisticMessages(realChatId)); // real chat ID if migrated
+            }
+            
+            // Clear streaming state ONLY for the final chat ID
+            dispatch(removeStreamingChat(realChatId));
+            dispatch(clearStreamingEvents(realChatId));
+            
+            // Mark completion time for recent finish check
+            lastCompletionTimeRef.current[actualChatId] = Date.now();
+            if (realChatId !== actualChatId) {
+              lastCompletionTimeRef.current[realChatId] = Date.now();
             }
 
-            // Clear streaming state when result is received
-            dispatch(removeStreamingChat(realChatId));
-            // Clear events after a brief delay to allow UI to show completion
-            setTimeout(() => {
-              dispatch(clearStreamingEvents(realChatId));
-            }, 500);
+            // Complete or clear the long-running task
+            if (taskCreatedRef.current) {
+              console.log('[CHAT] Completing long-running task on result:', { 
+                actualChatId, 
+                finalChatId: realChatId, 
+                messageId: tempMessage._id
+              });
+              dispatch(
+                completeStreamingTask({
+                  chatId: realChatId,
+                  messageId: tempMessage._id,
+                })
+              );
+            } else {
+              console.log('[CHAT] Skipping task completion (completed in <10s):', { 
+                actualChatId, 
+                finalChatId: realChatId, 
+                messageId: tempMessage._id 
+              });
+            }
+            
+            // Clear timeout
+            if (streamingTimeoutRef.current) {
+              clearTimeout(streamingTimeoutRef.current);
+              streamingTimeoutRef.current = null;
+            }
           }
         }
       );
@@ -1096,21 +1169,11 @@ const ChatPage = () => {
             );
           }
 
-          // CRITICAL: Clear optimistic messages from all relevant chat IDs to prevent duplicates
-          // The server response already includes all messages
-          dispatch(removeOptimisticMessages(actualChatId)); // temp chat ID
-          dispatch(removeOptimisticMessages(newChatId)); // real chat ID
-          dispatch(removeOptimisticMessages("__new_chat__")); // new chat key
-
-          // Clear streaming state for the new chat ID (result received)
-          dispatch(removeStreamingChat(newChatId));
-          dispatch(clearStreamingEvents(newChatId));
+          // Note: Optimistic messages and streaming state cleanup moved to finally block
+          // to prevent duplicate cleanup calls that can affect other active chats
         } else {
-          // For existing chats, clear optimistic messages after server response
-          dispatch(removeOptimisticMessages(actualChatId));
-          // Clear streaming state (result received)
-          dispatch(removeStreamingChat(actualChatId));
-          dispatch(clearStreamingEvents(actualChatId));
+          // Note: Optimistic messages and streaming state cleanup moved to finally block
+          // to prevent duplicate cleanup calls that can affect other active chats
           lastCompletionTimeRef.current[actualChatId] = Date.now(); // Mark completion time
         }
 
@@ -1185,35 +1248,64 @@ const ChatPage = () => {
         variant: "destructive",
       });
     } finally {
-      isStreamingRef.current = false;
-      // Only clear streaming chat ID if this was the chat that was streaming
-      if (streamingChatIdRef.current === actualChatId) {
-        streamingChatIdRef.current = null;
-        setLocalStreamingChatId(null);
-      }
-      // Remove from streaming chats set (if not already removed in success handler)
-      dispatch(removeStreamingChat(finalChatId));
-      dispatch(clearStreamingEvents(finalChatId));
+      // FALLBACK CLEANUP: Only clean up if not already done in result event handler
+      // This handles error cases, timeouts, or if result event didn't trigger cleanup
       
-      // Mark completion time for recent finish check
-      lastCompletionTimeRef.current[actualChatId] = Date.now();
-      if (finalChatId !== actualChatId) {
-        lastCompletionTimeRef.current[finalChatId] = Date.now();
-      }
+      // Check if cleanup was already done (isStreamingRef will be false if result handler ran)
+      const needsCleanup = isStreamingRef.current;
+      
+      if (needsCleanup) {
+        console.log('[CHAT] Finally block cleanup (error/timeout case):', { actualChatId, finalChatId });
+        
+        isStreamingRef.current = false;
+        // Only clear streaming chat ID if this was the chat that was streaming
+        if (streamingChatIdRef.current === actualChatId || streamingChatIdRef.current === finalChatId) {
+          streamingChatIdRef.current = null;
+          setLocalStreamingChatId(null);
+        }
+        
+        // Clear optimistic messages ONLY for this specific chat's IDs
+        dispatch(removeOptimisticMessages(actualChatId)); // temp or existing chat ID
+        if (finalChatId && finalChatId !== actualChatId) {
+          dispatch(removeOptimisticMessages(finalChatId)); // real chat ID if migrated
+        }
+        
+        // Clear streaming state ONLY for the final chat ID (or actual if no migration)
+        const chatIdToClean = finalChatId || actualChatId;
+        dispatch(removeStreamingChat(chatIdToClean));
+        dispatch(clearStreamingEvents(chatIdToClean));
+        
+        // Mark completion time for recent finish check
+        lastCompletionTimeRef.current[actualChatId] = Date.now();
+        if (finalChatId !== actualChatId) {
+          lastCompletionTimeRef.current[finalChatId] = Date.now();
+        }
 
-      // Complete or clear the long-running task
-      dispatch(
-        completeStreamingTask({
-          chatId: actualChatId,
-          messageId: tempMessage._id,
-        })
-      );
+        // Complete or clear the long-running task
+        if (taskCreatedRef.current) {
+          console.log('[CHAT] Completing long-running task (error/timeout):', { 
+            actualChatId, 
+            finalChatId, 
+            messageId: tempMessage._id,
+            usingChatId: finalChatId || actualChatId 
+          });
+          dispatch(
+            completeStreamingTask({
+              chatId: finalChatId || actualChatId,
+              messageId: tempMessage._id,
+            })
+          );
+        }
 
-      // Clear timeout
-      if (streamingTimeoutRef.current) {
-        clearTimeout(streamingTimeoutRef.current);
-        streamingTimeoutRef.current = null;
+        // Clear timeout
+        if (streamingTimeoutRef.current) {
+          clearTimeout(streamingTimeoutRef.current);
+          streamingTimeoutRef.current = null;
+        }
+      } else {
+        console.log('[CHAT] Skipping finally cleanup (already done in result handler):', { actualChatId, finalChatId });
       }
+      
       streamingStartTimeRef.current = null;
     }
   };

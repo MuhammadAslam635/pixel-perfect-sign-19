@@ -194,14 +194,21 @@ export const useStreamingSync = () => {
 
   // 7. Helper to broadcast an event
   const broadcastEvent = useCallback((chatId: string, event: StreamEvent) => {
-    broadcastChannelRef.current?.postMessage({
-      type: "STREAM_EVENT",
-      payload: { 
-        chatId, 
-        event, 
-        originTabId: tabId 
-      },
-    });
+    try {
+      if (broadcastChannelRef.current) {
+        broadcastChannelRef.current.postMessage({
+          type: "STREAM_EVENT",
+          payload: { 
+            chatId, 
+            event, 
+            originTabId: tabId 
+          },
+        });
+      }
+    } catch (error) {
+      // Ignore errors if channel is closed/closing (common during navigation or extensive re-renders)
+      console.warn('[StreamingSync] Broadcast failed (channel likely closed):', error);
+    }
   }, [tabId]);
 
   return { broadcastEvent };

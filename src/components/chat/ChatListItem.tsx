@@ -49,10 +49,18 @@ const chatItemVariants: Variants = {
 
 const ChatListItem = forwardRef<HTMLDivElement, ChatListItemProps>(
   ({ chat, isSelected, isDeleting, onSelect, onOption, onDelete }, ref) => {
-  // Granular subscription - only re-renders when THIS chat's streaming status changes
-  const isStreaming = useSelector((state: RootState) =>
-    selectIsChatStreaming(state, chat._id)
-  );
+  // Granular subscription - check if THIS chat is streaming
+  // CRITICAL: Must re-render when streaming state changes for this specific chat
+  const isStreaming = useSelector((state: RootState) => {
+    const streamingStatus = state.chat.streamingStatusByChat[chat._id];
+    const result = streamingStatus?.isStreaming || false;
+    
+    // Debug logging to understand streaming state
+    // Debug logging removed for cleanliness
+    // console.log('[ChatListItem] Streaming check:', ...);
+    
+    return result;
+  }); // Removed custom equality - let React-Redux handle it
 
   const lastMessage = chat.messages?.at(-1);
   const fullTitle = chat.title || "Untitled Conversation";

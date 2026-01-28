@@ -197,13 +197,21 @@ const chatSlice = createSlice({
 
     removeStreamingChat: (state, action: PayloadAction<string>) => {
       const chatId = action.payload;
-      console.log('[STREAMING] removeStreamingChat called:', { chatId, tabId: state.tabId });
+      console.log('[STREAMING] removeStreamingChat called:', { 
+        chatId, 
+        tabId: state.tabId,
+        allStreamingChats: Object.keys(state.streamingStatusByChat).filter(id => state.streamingStatusByChat[id]?.isStreaming),
+        beforeState: { ...state.streamingStatusByChat }
+      });
       
       // LAZY DELETION: Don't delete the entry, just set isStreaming to false
       // This preserves the state for cleanup/migration logic and prevents "not found" errors
       if (state.streamingStatusByChat[chatId]) {
         state.streamingStatusByChat[chatId].isStreaming = false;
-        console.log('[STREAMING] Marked chat as not streaming:', { chatId });
+        console.log('[STREAMING] Marked chat as not streaming:', { 
+          chatId,
+          remainingStreamingChats: Object.keys(state.streamingStatusByChat).filter(id => state.streamingStatusByChat[id]?.isStreaming)
+        });
       } else {
         console.log('[STREAMING] Chat not found in streaming status (no-op):', { chatId });
       }
@@ -384,7 +392,12 @@ const chatSlice = createSlice({
         messages: [],
       };
       state.isCreatingNewChat = true;
+      
+      // Allow users to start new chats even while others are streaming
+      // The chat list items check their own streaming status independently
+      console.log('[CHAT_SLICE] Setting selectedChatId to __new_chat__');
       state.selectedChatId = "__new_chat__";
+      
       state.composerValue = "";
     },
 
