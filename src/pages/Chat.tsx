@@ -992,9 +992,17 @@ const ChatPage = () => {
               dispatch(removeOptimisticMessages(realChatId)); // real chat ID if migrated
             }
             
-            // Clear streaming state ONLY for the final chat ID
-            dispatch(removeStreamingChat(realChatId));
-            dispatch(clearStreamingEvents(realChatId));
+            // Clear streaming state for BOTH IDs to ensure complete cleanup
+            // This is critical: if actualChatId is a temp ID and realChatId is different,
+            // we need to clear streaming status for BOTH to prevent the thinking animation from persisting
+            dispatch(removeStreamingChat(actualChatId)); // Clear temp ID first
+            if (realChatId !== actualChatId) {
+              dispatch(removeStreamingChat(realChatId)); // Clear real ID if different
+            }
+            dispatch(clearStreamingEvents(actualChatId)); // Clear events for temp ID
+            if (realChatId !== actualChatId) {
+              dispatch(clearStreamingEvents(realChatId)); // Clear events for real ID if different
+            }
             
             // Mark completion time for recent finish check
             lastCompletionTimeRef.current[actualChatId] = Date.now();
@@ -1150,14 +1158,21 @@ const ChatPage = () => {
             })
           );
 
-          // Temp chats are not in cache, no cleanup needed
-
-          dispatch(
-            convertTemporaryChat({
-              realChatId: newChatId,
-              title: computedTitle,
-            })
-          );
+          // DON'T call convertTemporaryChat here - it re-adds optimistic messages!
+          // We already have real messages from the server, so just clear the temp chat
+          // and update the selected chat ID
+          dispatch(clearTemporaryChat());
+          
+          // Update selected chat ID if user is still on this chat
+          const currentlyViewing = selectedChatIdRef.current;
+          const isStillOnSameChat = 
+            currentlyViewing === actualChatId || 
+            currentlyViewing === newChatId ||
+            currentlyViewing === "__new_chat__";
+          
+          if (isStillOnSameChat) {
+            dispatch(setSelectedChatId(newChatId));
+          }
 
           // Update long-running task's chatId to the real chat ID if it exists
           if (tempMessage._id) {
