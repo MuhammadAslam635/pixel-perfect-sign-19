@@ -157,37 +157,40 @@ export const NotificationsTab = () => {
                 </CardDescription>
               </div>
               <div className="flex flex-col items-end gap-1">
-                <div className="flex items-center gap-2 min-w-[200px]">
-                  <Volume2 className={`h-4 w-4 transition-all ${
-                    isPlayingSound 
-                      ? 'text-cyan-400 scale-110 animate-pulse' 
-                      : 'text-cyan-500/80'
-                  }`} />
-                  <Select value={notificationSound} onValueChange={handleSoundChange}>
-                    <SelectTrigger className="bg-white/[0.06] border-white/10 text-white hover:bg-white/[0.08] focus:ring-2 focus:ring-cyan-500/50 transition-colors">
-                      <SelectValue placeholder="Select sound" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-[#1B1B1B] border-white/10 text-white backdrop-blur-xl">
-                      {SOUND_OPTIONS.map((option) => (
-                        <SelectItem
-                          key={option.value}
-                          value={option.value}
-                          className="text-white hover:bg-white/10 focus:bg-cyan-500/20 cursor-pointer"
-                        >
-                          <div className="flex items-center justify-between w-full gap-3">
-                            <div className="flex flex-col py-0.5">
-                              <span className="font-medium">{option.label}</span>
-                              <span className="text-xs text-white/60">{option.description}</span>
+                <Select value={notificationSound} onValueChange={handleSoundChange}>
+                  <SelectTrigger className="min-w-[200px] bg-white/[0.06] border-white/10 text-white hover:bg-white/[0.08] focus:ring-2 focus:ring-cyan-500/50 transition-all">
+                    <SelectValue placeholder="Select sound" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#1B1B1B] border-white/10 text-white backdrop-blur-xl" align="start">
+                    {SOUND_OPTIONS.map((option) => (
+                      <SelectItem
+                        key={option.value}
+                        value={option.value}
+                        className="text-white hover:bg-white/10 focus:bg-cyan-500/20 cursor-pointer transition-colors pl-3"
+                      >
+                        <div className="flex items-center gap-3 w-full text-left">
+                          {option.value !== 'off' ? (
+                            <Volume2 className={`h-4 w-4 flex-shrink-0 transition-all ${
+                              isPlayingSound && notificationSound === option.value
+                                ? 'text-cyan-400 scale-110 animate-pulse'
+                                : 'text-cyan-500/70'
+                            }`} />
+                          ) : (
+                            <div className="h-4 w-4 flex-shrink-0 rounded-full border-2 border-white/30 relative">
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <div className="w-2.5 h-0.5 bg-white/50 rotate-45 absolute" />
+                              </div>
                             </div>
-                            {option.value !== 'off' && (
-                              <Volume2 className="h-3.5 w-3.5 text-cyan-500/60" />
-                            )}
+                          )}
+                          <div className="flex flex-col flex-1 min-w-0 text-left">
+                            <span className="font-medium text-sm text-left">{option.label}</span>
+                            <span className="text-xs text-white/50 text-left">{option.description}</span>
                           </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </motion.div>
