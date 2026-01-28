@@ -1,3 +1,6 @@
+import { feedbackService } from "@/services/feedback.service";
+import { toast } from "sonner";
+
 // clear markdown function 
 export const cleanMarkdown = (text: string): string => {
     if (!text) return text;
@@ -31,4 +34,37 @@ export const cleanMarkdown = (text: string): string => {
     cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
     cleaned = cleaned.trim();
     return cleaned;
+};
+
+// format file sizes function 
+export const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + " " + sizes[i];
+};
+
+
+// download attachment function 
+export const handleDownloadAttachment = async (fileUrl: string, fileName: string) => {
+    const toastId = toast.loading("Downloading attachment...");
+    try {
+        const blob = await feedbackService.downloadAttachment(fileUrl);
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = fileName;
+        link.target = "_blank";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        toast.dismiss(toastId);
+        toast.success("Download started");
+    } catch (error) {
+        console.error("Download failed:", error);
+        toast.dismiss(toastId);
+        toast.error("Failed to download attachment. Please try again.");
+    }
 };

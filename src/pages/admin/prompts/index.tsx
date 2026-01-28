@@ -1,26 +1,15 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { AdminLayout } from "@/components/dashboard/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
 import { Settings, MessageSquare, Phone, Mail } from "lucide-react";
-import {
-  connectionMessagesService,
-  type Prompt,
-  type PromptType,
-} from "@/services/connectionMessages.service";
+import { connectionMessagesService, type Prompt, type PromptType } from "@/services/connectionMessages.service";
 import { adminService, type Company } from "@/services/admin.service";
 import { toast } from "sonner";
 import { sanitizeErrorMessage } from "@/utils/errorMessages";
 import { PromptManagement } from "./components/PromptManagement";
-import { PromptForm } from "./components/PromptForm";
+import { StatCard } from "./components/StatCard";
+import { PromptDialog } from "./components/PromptDialog";
+import { DeletePromptDialog } from "./components/DeletePromptDialog";
 
 const PromptsPage = () => {
   const [prompts, setPrompts] = useState<Prompt[]>([]);
@@ -59,55 +48,39 @@ const PromptsPage = () => {
   const fetchPrompts = async () => {
     try {
       setLoading(true);
-      // Use admin endpoint for pagination support
       const response = await adminService.getPromptsPaginated({
-        limit: 1000, // Get all for statistics
+        limit: 1000,
       });
-
-      // Map company information to prompts
-      // Note: Backend already populates companyId with { _id, name, industry } when it exists
-      // For global prompts, companyId will be null
       const promptsWithCompanyInfo = response.data.prompts.map((prompt) => {
-        // Check if this is a company-specific prompt (has companyId)
         const hasCompanyId =
           prompt.companyId !== null && prompt.companyId !== undefined;
-
         if (hasCompanyId) {
-          // Check if companyId is already populated (has _id property)
           if (typeof prompt.companyId === "object" && prompt.companyId._id) {
-            // Already populated by backend - company-specific prompt
             return {
               ...prompt,
               company: {
                 _id: prompt.companyId._id,
                 name: prompt.companyId.name,
               },
-              // Keep companyId as-is for filtering
               companyId: prompt.companyId,
             };
           } else if (typeof prompt.companyId === "string") {
-            // If not populated, look up in companies array
             const company = companies.find((c) => c._id === prompt.companyId);
             return {
               ...prompt,
               company: company
                 ? { _id: company._id, name: company.name }
                 : undefined,
-              // Keep companyId as string for filtering
               companyId: prompt.companyId,
             };
           }
         }
-
-        // Global prompt (companyId is null or undefined)
         return {
           ...prompt,
           company: undefined,
-          companyId: null, // Explicitly set to null for global prompts
+          companyId: null,
         };
       });
-
-
       setPrompts(promptsWithCompanyInfo);
       updateStatistics(promptsWithCompanyInfo);
     } catch (error) {
@@ -149,38 +122,39 @@ const PromptsPage = () => {
 
   useEffect(() => {
     const loadData = async () => {
-      await fetchCompanies(); // Load companies first
-      await fetchPrompts(); // Then load prompts with company mapping
+      await fetchCompanies();
+      await fetchPrompts();
     };
     loadData();
   }, []);
-
+  const resetFormState = () => {
+    setFormData({
+      promptType: "linkedin",
+      promptCategory: "system",
+      stage: "general",
+      content: "",
+      name: "",
+      description: "",
+      metadata: {
+        model: "gpt-4o-mini",
+        temperature: 0.7,
+      },
+    });
+    setSelectedCompanyForPrompt(null);
+    setIsDialogOpen(false);
+    setSelectedPrompt(null);
+  };
   const handleCreatePrompt = async () => {
     try {
       const payload = {
         companyId: selectedCompanyForPrompt?._id || null,
         ...formData,
       };
-
       const response = await connectionMessagesService.createOrUpdatePrompt(
         payload
       );
       toast.success(response.message);
-
-      setFormData({
-        promptType: "linkedin",
-        promptCategory: "system",
-        stage: "general",
-        content: "",
-        name: "",
-        description: "",
-        metadata: {
-          model: "gpt-4o-mini",
-          temperature: 0.7,
-        },
-      });
-      setSelectedCompanyForPrompt(null);
-      setIsDialogOpen(false);
+      resetFormState();
       fetchPrompts();
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to create prompt");
@@ -203,22 +177,16 @@ const PromptsPage = () => {
       },
     });
 
-    // Handle company selection - check if prompt has companyId (company-specific) or is global
     const companyId = prompt.companyId;
-
-    // Check if companyId exists and is not null
     if (!companyId || companyId === null) {
-      // Global prompt - no company selected
       setSelectedCompanyForPrompt(null);
     } else {
-      // Type guard function to check if companyId is a populated object
       const isPopulatedCompany = (
         id: string | { _id: string; name?: string; industry?: string } | null
       ): id is { _id: string; name?: string; industry?: string } => {
         return typeof id === "object" && id !== null && "_id" in id;
       };
 
-      // Extract company ID whether it's an object (populated) or string
       let companyIdValue: string | null = null;
 
       if (isPopulatedCompany(companyId)) {
@@ -228,14 +196,11 @@ const PromptsPage = () => {
       }
 
       if (companyIdValue) {
-        // Try to find company in the companies list
         const company = companies.find((c) => c._id === companyIdValue);
         if (company) {
           setSelectedCompanyForPrompt(company);
         } else {
-          // If company not found in list, but we have company info from populated data
           if (isPopulatedCompany(companyId)) {
-            // Create a temporary company object from populated data
             setSelectedCompanyForPrompt({
               _id: companyId._id,
               name: companyId.name || "Unknown Company",
@@ -256,33 +221,14 @@ const PromptsPage = () => {
 
   const handleUpdatePrompt = async () => {
     if (!selectedPrompt) return;
-
     try {
       const payload = {
         companyId: selectedCompanyForPrompt?._id || null,
         ...formData,
       };
-
-      const response = await connectionMessagesService.createOrUpdatePrompt(
-        payload
-      );
+      const response = await connectionMessagesService.createOrUpdatePrompt(payload);
       toast.success(response.message);
-
-      setSelectedPrompt(null);
-      setFormData({
-        promptType: "linkedin",
-        promptCategory: "system",
-        stage: "general",
-        content: "",
-        name: "",
-        description: "",
-        metadata: {
-          model: "gpt-4o-mini",
-          temperature: 0.7,
-        },
-      });
-      setSelectedCompanyForPrompt(null);
-      setIsDialogOpen(false);
+      resetFormState();
       fetchPrompts();
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to update prompt");
@@ -296,7 +242,6 @@ const PromptsPage = () => {
 
   const confirmDeletePrompt = async () => {
     if (!promptToDelete) return;
-
     try {
       await connectionMessagesService.deletePrompt(promptToDelete._id);
       toast.success("Prompt deleted successfully");
@@ -363,80 +308,40 @@ const PromptsPage = () => {
           transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
           className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5"
         >
-          <Card className="bg-[linear-gradient(135deg,rgba(58,62,75,0.82),rgba(28,30,40,0.94))] border-white/10 hover:border-white/20 transition-all duration-300">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-white/70 flex items-center gap-2 text-sm">
-                <Settings className="w-4 h-4" />
-                Total Prompts
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6 pt-0">
-              <div className="text-2xl sm:text-3xl font-bold text-white">
-                {statistics.totalPrompts}
-              </div>
-              <p className="text-xs text-white/60 mt-1">All prompt types</p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-[linear-gradient(135deg,rgba(58,62,75,0.82),rgba(28,30,40,0.94))] border-white/10 hover:border-white/20 transition-all duration-300">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-white/70 flex items-center gap-2 text-sm">
-                <MessageSquare className="w-4 h-4" />
-                LinkedIn
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6 pt-0">
-              <div className="text-2xl sm:text-3xl font-bold text-blue-400">
-                {statistics.linkedinPrompts}
-              </div>
-              <p className="text-xs text-white/60 mt-1">LinkedIn prompts</p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-[linear-gradient(135deg,rgba(58,62,75,0.82),rgba(28,30,40,0.94))] border-white/10 hover:border-white/20 transition-all duration-300">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-white/70 flex items-center gap-2 text-sm">
-                <Mail className="w-4 h-4" />
-                Email
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6 pt-0">
-              <div className="text-2xl sm:text-3xl font-bold text-green-400">
-                {statistics.emailPrompts}
-              </div>
-              <p className="text-xs text-white/60 mt-1">Email prompts</p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-[linear-gradient(135deg,rgba(58,62,75,0.82),rgba(28,30,40,0.94))] border-white/10 hover:border-white/20 transition-all duration-300">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-white/70 flex items-center gap-2 text-sm">
-                <Phone className="w-4 h-4" />
-                Phone
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6 pt-0">
-              <div className="text-2xl sm:text-3xl font-bold text-purple-400">
-                {statistics.phonePrompts}
-              </div>
-              <p className="text-xs text-white/60 mt-1">Phone prompts</p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-[linear-gradient(135deg,rgba(58,62,75,0.82),rgba(28,30,40,0.94))] border-white/10 hover:border-white/20 transition-all duration-300">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-white/70 flex items-center gap-2 text-sm">
-                <MessageSquare className="w-4 h-4" />
-                WhatsApp
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6 pt-0">
-              <div className="text-2xl sm:text-3xl font-bold text-cyan-400">
-                {statistics.whatsappPrompts}
-              </div>
-              <p className="text-xs text-white/60 mt-1">WhatsApp prompts</p>
-            </CardContent>
-          </Card>
+          <StatCard
+            title="Total Prompts"
+            icon={Settings}
+            value={statistics.totalPrompts}
+            label="All prompt types"
+          />
+          <StatCard
+            title="LinkedIn"
+            icon={MessageSquare}
+            value={statistics.linkedinPrompts}
+            label="LinkedIn prompts"
+            valueColor="text-blue-400"
+          />
+          <StatCard
+            title="Email"
+            icon={Mail}
+            value={statistics.emailPrompts}
+            label="Email prompts"
+            valueColor="text-green-400"
+          />
+          <StatCard
+            title="Phone"
+            icon={Phone}
+            value={statistics.phonePrompts}
+            label="Phone prompts"
+            valueColor="text-purple-400"
+          />
+          <StatCard
+            title="WhatsApp"
+            icon={MessageSquare}
+            value={statistics.whatsappPrompts}
+            label="WhatsApp prompts"
+            valueColor="text-cyan-400"
+          />
         </motion.div>
 
         {/* Prompt Management Section */}
@@ -456,148 +361,27 @@ const PromptsPage = () => {
         </motion.div>
 
         {/* Prompt Dialog */}
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="bg-[linear-gradient(135deg,rgba(58,62,75,0.95),rgba(28,30,40,0.98))] border-cyan-500/20 text-white max-w-[95vw] lg:max-w-7xl w-[95vw] max-h-[95vh] overflow-y-auto hide-scrollbar">
-            <DialogHeader className="border-b border-white/10 pb-4">
-              <DialogTitle className="text-2xl font-bold flex items-center gap-3">
-                {selectedPrompt ? (
-                  <>
-                    <span>Edit Prompt</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Create New Prompt</span>
-                  </>
-                )}
-              </DialogTitle>
-              <DialogDescription className="text-white/60 text-sm">
-                {selectedPrompt
-                  ? "Update the existing prompt configuration and customize variables"
-                  : "Create a new AI prompt for connection messages with dynamic variables"}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="mt-4">
-              <PromptForm
-                formData={formData}
-                selectedCompanyForPrompt={selectedCompanyForPrompt}
-                companies={companies}
-                companiesLoading={companiesLoading}
-                onFormDataChange={handleFormDataChange}
-                onCompanySelect={(company) => {
-                  setSelectedCompanyForPrompt(company);
-                }}
-                onSubmit={
-                  selectedPrompt ? handleUpdatePrompt : handleCreatePrompt
-                }
-                onCancel={() => setIsDialogOpen(false)}
-                isEditing={!!selectedPrompt}
-              />
-            </div>
-          </DialogContent>
-        </Dialog>
+        <PromptDialog
+          isOpen={isDialogOpen}
+          onOpenChange={setIsDialogOpen}
+          selectedPrompt={selectedPrompt}
+          formData={formData}
+          selectedCompanyForPrompt={selectedCompanyForPrompt}
+          companies={companies}
+          companiesLoading={companiesLoading}
+          onFormDataChange={handleFormDataChange}
+          onCompanySelect={(company) => setSelectedCompanyForPrompt(company)}
+          onSubmit={selectedPrompt ? handleUpdatePrompt : handleCreatePrompt}
+        />
 
         {/* Delete Confirmation Dialog */}
-        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-          <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-md w-[95vw]">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <div className="w-6 h-6 bg-red-600/20 rounded-full flex items-center justify-center">
-                  <svg
-                    className="w-4 h-4 text-red-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                    />
-                  </svg>
-                </div>
-                Delete Prompt
-              </DialogTitle>
-              <DialogDescription>
-                Are you sure you want to delete this prompt? This action cannot
-                be undone.
-              </DialogDescription>
-            </DialogHeader>
-
-            {promptToDelete && (
-              <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 bg-cyan-600/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <svg
-                      className="w-4 h-4 text-cyan-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                      />
-                    </svg>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-white font-medium text-sm">
-                      {promptToDelete.promptType.charAt(0).toUpperCase() +
-                        promptToDelete.promptType.slice(1)}{" "}
-                      Prompt
-                    </p>
-                    <p className="text-white/60 text-xs">
-                      {promptToDelete.promptCategory
-                        .replace("_", " ")
-                        .replace(/\b\w/g, (l) => l.toUpperCase())}
-                      {promptToDelete.companyId
-                        ? ` • Company-specific`
-                        : ` • Global`}
-                    </p>
-                    {promptToDelete.companyId && (
-                      <p className="text-cyan-400 text-xs font-mono truncate">
-                        Company:{" "}
-                        {companies.find(
-                          (c) => c._id === promptToDelete!.companyId
-                        )?.name || "Unknown"}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div className="flex flex-col sm:flex-row justify-end gap-2 mt-4">
-              <Button
-                variant="outline"
-                onClick={() => setIsDeleteDialogOpen(false)}
-                className="w-full sm:w-auto"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={confirmDeletePrompt}
-                className="bg-red-600 hover:bg-red-700 w-full sm:w-auto"
-              >
-                Delete Prompt
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        <style>{`
-          .hide-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-          }
-          .hide-scrollbar::-webkit-scrollbar {
-            display: none;
-            width: 0;
-            height: 0;
-          }
-        `}</style>
+        <DeletePromptDialog
+          isOpen={isDeleteDialogOpen}
+          onOpenChange={setIsDeleteDialogOpen}
+          promptToDelete={promptToDelete}
+          companies={companies}
+          onConfirm={confirmDeletePrompt}
+        />
       </motion.main>
     </AdminLayout>
   );

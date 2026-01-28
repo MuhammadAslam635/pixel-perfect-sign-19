@@ -121,16 +121,14 @@ const SettingsPage = () => {
                       <TabsTrigger
                         key={tab.value}
                         value={tab.value}
-                        className={`flex w-full items-center justify-start gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-all ${
-                          isActive
-                            ? "bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white"
-                            : "text-white/70 hover:bg-white/10 hover:text-white"
-                        }`}
+                        className={`flex w-full items-center justify-start gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-all ${isActive
+                          ? "bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white"
+                          : "text-white/70 hover:bg-white/10 hover:text-white"
+                          }`}
                       >
                         <Icon
-                          className={`h-4 w-4 shrink-0 transition-colors ${
-                            isActive ? "text-white" : "text-white/70"
-                          }`}
+                          className={`h-4 w-4 shrink-0 transition-colors ${isActive ? "text-white" : "text-white/70"
+                            }`}
                         />
                         <span className="text-left">{tab.label}</span>
                       </TabsTrigger>

@@ -70,15 +70,15 @@ const LeadChat = lazy(
 const LeadsPage = lazy(() => import("@/pages/crm/leads"));
 const CalendarPage = lazy(() => import("@/pages/crm/calendar"));
 const OnboardingPage = lazy(() => import("@/pages/onboarding"));
-const AdminDashboard = lazy(() => import("@/pages/admin/Dashboard"));
+const AdminDashboard = lazy(() => import("@/pages/admin/dashboard/Dashboard"));
 const AdminPrompts = lazy(() => import("@/pages/admin/prompts"));
-const AdminSettings = lazy(() => import("@/pages/admin/Settings"));
-const AdminUsers = lazy(() => import("@/pages/admin/Users"));
+const AdminSettings = lazy(() => import("@/pages/admin/settings/Settings"));
+const AdminUsers = lazy(() => import("@/pages/admin/users/Users"));
 const AdminIndustryCategories = lazy(
-  () => import("@/pages/admin/IndustryCategories")
+  () => import("@/pages/admin/industryCategories/IndustryCategories")
 );
 const AdminEnrichmentConfigs = lazy(
-  () => import("@/pages/admin/EnrichmentConfigs")
+  () => import("@/pages/admin/enrichmentConfig/EnrichmentConfigs")
 );
 const AdminFeedbacks = lazy(
   () => import("@/pages/admin/feedbacks/AdminFeedbacks")

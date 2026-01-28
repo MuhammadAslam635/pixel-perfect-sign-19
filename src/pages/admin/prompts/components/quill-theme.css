@@ -1,0 +1,57 @@
+/* Container */
+.prompt-quill .ql-container {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.9);
+    font-family: Monaco, Menlo, monospace;
+    font-size: 14px;
+    height: 350px;
+}
+
+/* Editor text */
+.prompt-quill .ql-editor {
+    color: rgba(255, 255, 255, 0.9) !important;
+    background: transparent !important;
+    min-height: 350px;
+}
+
+/* Placeholder text */
+.prompt-quill .ql-editor.ql-blank::before {
+    color: rgba(255, 255, 255, 0.4);
+    font-style: normal;
+}
+
+/* Toolbar */
+.prompt-quill .ql-toolbar {
+    background: rgba(255, 255, 255, 0.05);
+    border: none;
+}
+
+/* Toolbar icons */
+.prompt-quill .ql-stroke {
+    stroke: rgba(255, 255, 255, 0.7);
+}
+
+.prompt-quill .ql-fill {
+    fill: rgba(255, 255, 255, 0.7);
+}
+
+/* Active / hover toolbar buttons */
+.prompt-quill button:hover,
+.prompt-quill button.ql-active {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Inline code */
+.prompt-quill .ql-editor code {
+    background: rgba(6, 182, 212, 0.2);
+    color: rgb(103, 232, 249);
+    padding: 2px 4px;
+    border-radius: 4px;
+}
+
+/* Code block */
+.prompt-quill .ql-code-block-container {
+    background: rgba(0, 0, 0, 0.3);
+    border-left: 3px solid rgb(6, 182, 212);
+}

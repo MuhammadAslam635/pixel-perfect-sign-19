@@ -4,61 +4,26 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { AdminLayout } from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import {
-    MessageSquare,
-    MessageSquareText,
-    CheckCircle2,
-    XCircle,
-    Search,
-    User,
-    Mail,
-    ChevronRight,
-} from "lucide-react";
+import { MessageSquare, MessageSquareText, CheckCircle2, XCircle, Search, User, } from "lucide-react";
 import { feedbackService } from "@/services/feedback.service";
 import { toast } from "sonner";
 import { sanitizeErrorMessage } from "@/utils/errorMessages";
-
-interface UserFeedbackStats {
-    userId: string;
-    userName: string;
-    userEmail: string;
-    totalFeedbacks: number;
-    openFeedbacks: number;
-    inProgressFeedbacks: number;
-    closedFeedbacks: number;
-}
-
-interface GlobalStats {
-    totalFeedbacks: number;
-    openFeedbacks: number;
-    inProgressFeedbacks: number;
-    closedFeedbacks: number;
-    totalUsers: number;
-}
+import { UserFeedbackStats, GlobalStats } from "@/types/feedback.types";
+import { UserRow } from "./UserRow";
 
 const AdminFeedbacks = () => {
     const navigate = useNavigate();
     const authState = useSelector((state: RootState) => state.auth);
 
     // Get user's role name
-    const getUserRoleName = (): string | null => {
+    const userRoleName = useMemo(() => {
         const user = authState.user;
         if (!user) return null;
-
-        if (user.roleId && typeof user.roleId === "object") {
-            return (user.roleId as any).name;
-        }
-
-        if (user.role && typeof user.role === "string") {
-            return user.role;
-        }
-
+        if (user.roleId && typeof user.roleId === "object") return (user.roleId as any).name;
+        if (user.role && typeof user.role === "string") return user.role;
         return null;
-    };
-
-    const userRoleName = getUserRoleName();
+    }, [authState.user])
 
     const [userStats, setUserStats] = useState<UserFeedbackStats[]>([]);
     const [globalStats, setGlobalStats] = useState<GlobalStats>({
@@ -116,9 +81,10 @@ const AdminFeedbacks = () => {
         );
     }, [userStats, searchTerm]);
 
-    const handleUserClick = (userId: string) => {
-        navigate(`/admin/feedbacks/user/${userId}`);
-    };
+    const handleUserClick = useCallback(
+        (userId: string) => navigate(`/admin/feedbacks/user/${userId}`),
+        [navigate]
+    );
 
     if (userRoleName !== "Admin") {
         return (
@@ -138,143 +104,79 @@ const AdminFeedbacks = () => {
         );
     }
 
+    const statsCards = useMemo(() => ([
+        {
+            title: "Total Feedbacks",
+            icon: MessageSquare,
+            value: globalStats.totalFeedbacks,
+            color: "text-white",
+            footer: "All submissions",
+        },
+        {
+            title: "Open Feedbacks",
+            icon: MessageSquareText,
+            value: globalStats.openFeedbacks,
+            color: "text-yellow-400",
+            footer: globalStats.totalFeedbacks
+                ? `${Math.round((globalStats.openFeedbacks / globalStats.totalFeedbacks) * 100)}% pending`
+                : "No feedbacks",
+        },
+        {
+            title: "In Progress",
+            icon: CheckCircle2,
+            value: globalStats.inProgressFeedbacks,
+            color: "text-blue-400",
+            footer: globalStats.totalFeedbacks
+                ? `${Math.round((globalStats.inProgressFeedbacks / globalStats.totalFeedbacks) * 100)}% active`
+                : "No feedbacks",
+        },
+        {
+            title: "Closed Feedbacks",
+            icon: CheckCircle2,
+            value: globalStats.closedFeedbacks,
+            color: "text-green-400",
+            footer: globalStats.totalFeedbacks
+                ? `${Math.round((globalStats.closedFeedbacks / globalStats.totalFeedbacks) * 100)}% resolved`
+                : "No feedbacks",
+        },
+        {
+            title: "Active Users",
+            icon: User,
+            value: globalStats.totalUsers,
+            color: "text-cyan-400",
+            footer: "Users with feedback",
+        },
+    ]), [globalStats]);
+
     return (
         <AdminLayout>
             <main className="relative px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] mt-20 sm:mt-20 lg:mt-24 xl:mt-28 mb-8 flex flex-col gap-6 text-white flex-1 overflow-y-auto">
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
-                        <h1 className="text-2xl font-bold text-white my-2">
-                            Feedback Management
-                        </h1>
-                        <p className="text-white/60">
-                            View and manage user feedback across the system
-                        </p>
+                        <h1 className="text-2xl font-bold text-white my-2">Feedback Management</h1>
+                        <p className="text-white/60">View and manage user feedback across the system</p>
                     </div>
                 </div>
-
                 {/* Statistics Cards */}
-                <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-                    <Card className="bg-[linear-gradient(135deg,rgba(58,62,75,0.82),rgba(28,30,40,0.94))] border-white/10 hover:border-white/20 transition-all duration-300">
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-white/70 flex items-center gap-2 text-sm">
-                                <MessageSquare className="w-4 h-4" />
-                                Total Feedbacks
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-6 pt-0">
-                            <div className="text-2xl sm:text-3xl font-bold text-white">
-                                {loading ? (
-                                    <div className="animate-pulse">...</div>
-                                ) : (
-                                    globalStats.totalFeedbacks.toLocaleString()
-                                )}
-                            </div>
-                            <p className="text-xs text-white/60 mt-1">All submissions</p>
-                        </CardContent>
-                    </Card>
-
-                    <Card className="bg-[linear-gradient(135deg,rgba(58,62,75,0.82),rgba(28,30,40,0.94))] border-white/10 hover:border-white/20 transition-all duration-300">
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-white/70 flex items-center gap-2 text-sm">
-                                <MessageSquareText className="w-4 h-4" />
-                                Open Feedbacks
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-6 pt-0">
-                            <div className="text-2xl sm:text-3xl font-bold text-yellow-400">
-                                {loading ? (
-                                    <div className="animate-pulse">...</div>
-                                ) : (
-                                    globalStats.openFeedbacks.toLocaleString()
-                                )}
-                            </div>
-                            <p className="text-xs text-white/60 mt-1">
-                                {globalStats.totalFeedbacks > 0
-                                    ? `${Math.round(
-                                        (globalStats.openFeedbacks / globalStats.totalFeedbacks) *
-                                        100
-                                    )}% pending`
-                                    : "No feedbacks"}
-                            </p>
-                        </CardContent>
-                    </Card>
-
-                    <Card className="bg-[linear-gradient(135deg,rgba(58,62,75,0.82),rgba(28,30,40,0.94))] border-white/10 hover:border-white/20 transition-all duration-300">
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-white/70 flex items-center gap-2 text-sm">
-                                <CheckCircle2 className="w-4 h-4 text-blue-400" />
-                                In Progress
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-6 pt-0">
-                            <div className="text-2xl sm:text-3xl font-bold text-blue-400">
-                                {loading ? (
-                                    <div className="animate-pulse">...</div>
-                                ) : (
-                                    globalStats.inProgressFeedbacks.toLocaleString()
-                                )}
-                            </div>
-                            <p className="text-xs text-white/60 mt-1">
-                                {globalStats.totalFeedbacks > 0
-                                    ? `${Math.round(
-                                        (globalStats.inProgressFeedbacks / globalStats.totalFeedbacks) *
-                                        100
-                                    )}% active`
-                                    : "No feedbacks"}
-                            </p>
-                        </CardContent>
-                    </Card>
-
-                    <Card className="bg-[linear-gradient(135deg,rgba(58,62,75,0.82),rgba(28,30,40,0.94))] border-white/10 hover:border-white/20 transition-all duration-300">
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-white/70 flex items-center gap-2 text-sm">
-                                <CheckCircle2 className="w-4 h-4" />
-                                Closed Feedbacks
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-6 pt-0">
-                            <div className="text-2xl sm:text-3xl font-bold text-green-400">
-                                {loading ? (
-                                    <div className="animate-pulse">...</div>
-                                ) : (
-                                    globalStats.closedFeedbacks.toLocaleString()
-                                )}
-                            </div>
-                            <p className="text-xs text-white/60 mt-1">
-                                {globalStats.totalFeedbacks > 0
-                                    ? `${Math.round(
-                                        (globalStats.closedFeedbacks /
-                                            globalStats.totalFeedbacks) *
-                                        100
-                                    )}% resolved`
-                                    : "No feedbacks"}
-                            </p>
-                        </CardContent>
-                    </Card>
-
-                    <Card className="bg-[linear-gradient(135deg,rgba(58,62,75,0.82),rgba(28,30,40,0.94))] border-white/10 hover:border-white/20 transition-all duration-300">
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-white/70 flex items-center gap-2 text-sm">
-                                <User className="w-4 h-4" />
-                                Active Users
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-6 pt-0">
-                            <div className="text-2xl sm:text-3xl font-bold text-cyan-400">
-                                {loading ? (
-                                    <div className="animate-pulse">...</div>
-                                ) : (
-                                    globalStats.totalUsers.toLocaleString()
-                                )}
-                            </div>
-                            <p className="text-xs text-white/60 mt-1">
-                                Users with feedback
-                            </p>
-                        </CardContent>
-                    </Card>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    {statsCards.map(({ title, icon: Icon, value, color, footer }) => (
+                        <Card key={title} className="bg-[linear-gradient(135deg,rgba(58,62,75,0.82),rgba(28,30,40,0.94))] border-white/10">
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-white/70 flex items-center gap-2 text-sm">
+                                    <Icon className="w-4 h-4" />
+                                    {title}
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-6 pt-0">
+                                <div className={`text-3xl font-bold ${color}`}>
+                                    {loading ? "..." : value.toLocaleString()}
+                                </div>
+                                <p className="text-xs text-white/60 mt-1">{footer}</p>
+                            </CardContent>
+                        </Card>
+                    ))}
                 </div>
-
                 {/* Search */}
                 <Card className="bg-[linear-gradient(135deg,rgba(58,62,75,0.82),rgba(28,30,40,0.94))] border-white/10">
                     <CardContent className="p-4 sm:p-6">
@@ -294,7 +196,6 @@ const AdminFeedbacks = () => {
                         </div>
                     </CardContent>
                 </Card>
-
                 {/* Users List */}
                 <Card className="bg-[linear-gradient(135deg,rgba(58,62,75,0.82),rgba(28,30,40,0.94))] border-white/10 mb-12">
                     <CardHeader>
@@ -320,58 +221,12 @@ const AdminFeedbacks = () => {
                             </div>
                         ) : (
                             <div className="space-y-2">
-                                {filteredUsers.map((user, index) => (
-                                    <div
+                                {filteredUsers.map((user) => (
+                                    <UserRow
                                         key={user.userId}
-                                        onClick={() => handleUserClick(user.userId)}
-                                        className="group relative bg-white/[0.02] hover:bg-white/[0.05] border border-white/10 hover:border-cyan-400/50 rounded-xl transition-all duration-200 cursor-pointer"
-                                    >
-                                        <div className="flex items-center gap-4 p-4">
-                                            {/* User Info */}
-                                            <div className="flex-1 min-w-0">
-                                                <h3 className="text-white font-medium text-sm mb-0.5 truncate group-hover:text-cyan-400 transition-colors">
-                                                    {user.userName || "Unknown User"}
-                                                </h3>
-                                                <div className="flex items-center gap-1.5 text-white/50 text-xs">
-                                                    <Mail className="w-3 h-3" />
-                                                    <span className="truncate">{user.userEmail}</span>
-                                                </div>
-                                            </div>
-
-                                            {/* Stats */}
-                                            <div className="flex items-center gap-6">
-                                                <div className="text-center hidden sm:block">
-                                                    <div className="text-base font-semibold text-white">
-                                                        {user.totalFeedbacks}
-                                                    </div>
-                                                    <div className="text-xs text-white/50">Total</div>
-                                                </div>
-                                                <div className="text-center">
-                                                    <div className="text-base font-semibold text-yellow-400">
-                                                        {user.openFeedbacks}
-                                                    </div>
-                                                    <div className="text-xs text-white/50">Open</div>
-                                                </div>
-                                                <div className="text-center">
-                                                    <div className="text-base font-semibold text-blue-400">
-                                                        {user.inProgressFeedbacks}
-                                                    </div>
-                                                    <div className="text-xs text-white/50">In Progress</div>
-                                                </div>
-                                                <div className="text-center">
-                                                    <div className="text-base font-semibold text-green-400">
-                                                        {user.closedFeedbacks}
-                                                    </div>
-                                                    <div className="text-xs text-white/50">Closed</div>
-                                                </div>
-                                            </div>
-
-                                            {/* Chevron */}
-                                            <div className="flex-shrink-0">
-                                                <ChevronRight className="w-5 h-5 text-white/20 group-hover:text-cyan-400 group-hover:translate-x-1 transition-all" />
-                                            </div>
-                                        </div>
-                                    </div>
+                                        user={user}
+                                        onClick={handleUserClick}
+                                    />
                                 ))}
                             </div>
                         )}

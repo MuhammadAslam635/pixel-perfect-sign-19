@@ -40,3 +40,29 @@ export interface UpdateFeedbackPayload {
     status?: FeedbackStatus;
     attachments?: FeedbackAttachment[];
 }
+
+export interface UserFeedbackStats {
+    userId: string;
+    userName: string;
+    userEmail: string;
+    totalFeedbacks: number;
+    openFeedbacks: number;
+    inProgressFeedbacks: number;
+    closedFeedbacks: number;
+}
+
+export interface GlobalStats {
+    totalFeedbacks: number;
+    openFeedbacks: number;
+    inProgressFeedbacks: number;
+    closedFeedbacks: number;
+    totalUsers: number;
+}
+
+export interface FeedbackStatsResponse {
+    success: boolean;
+    data: {
+        globalStats: GlobalStats;
+        userStats: UserFeedbackStats[];
+    }
+}

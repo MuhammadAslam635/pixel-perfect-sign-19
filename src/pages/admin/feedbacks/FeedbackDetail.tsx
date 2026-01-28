@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
@@ -6,56 +6,28 @@ import { AdminLayout } from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
-import {
-    ArrowLeft,
-    Calendar,
-    User,
-    Mail,
-    Download,
-    FileText,
-    AlertCircle,
-    CheckCircle,
-    Bug,
-    Lightbulb,
-    XCircle,
-    AlertTriangle,
-    Paperclip,
-    Loader2,
-    Timer,
-} from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowLeft, Calendar, User, Mail, Download, FileText, XCircle, Paperclip } from "lucide-react";
 import { feedbackService } from "@/services/feedback.service";
 import { toast } from "sonner";
 import { sanitizeErrorMessage } from "@/utils/errorMessages";
 import { Feedback } from "@/types/feedback.types";
+import { formatFileSize, handleDownloadAttachment } from "@/utils/commonFunctions";
+import { getFeedbackStatusConfig, getFeedbackTypeConfig } from "@/utils/feedback.config";
+
 
 const FeedbackDetail = () => {
     const navigate = useNavigate();
     const { feedbackId } = useParams<{ feedbackId: string }>();
     const authState = useSelector((state: RootState) => state.auth);
 
-    const getUserRoleName = (): string | null => {
+    const userRoleName = useMemo(() => {
         const user = authState.user;
         if (!user) return null;
-
-        if (user.roleId && typeof user.roleId === "object") {
-            return (user.roleId as any).name;
-        }
-
-        if (user.role && typeof user.role === "string") {
-            return user.role;
-        }
-
+        if (user.roleId && typeof user.roleId === "object") return (user.roleId as any).name;
+        if (user.role && typeof user.role === "string") return user.role;
         return null;
-    };
-
-    const userRoleName = getUserRoleName();
+    }, [authState.user])
 
     const [feedback, setFeedback] = useState<Feedback | null>(null);
     const [loading, setLoading] = useState(false);
@@ -79,7 +51,6 @@ const FeedbackDetail = () => {
 
     const fetchFeedback = async () => {
         if (!feedbackId) return;
-
         setLoading(true);
         try {
             const data = await feedbackService.getFeedbackById(feedbackId);
@@ -100,7 +71,6 @@ const FeedbackDetail = () => {
 
     const handleStatusChange = async (newStatus: string) => {
         if (!feedback) return;
-
         setUpdating(true);
         try {
             await feedbackService.updateFeedback(feedback._id, { status: newStatus as "open" | "in-progress" | "closed" });
@@ -115,80 +85,6 @@ const FeedbackDetail = () => {
             setUpdating(false);
         }
     };
-
-    const handleDownloadAttachment = async (fileUrl: string, fileName: string) => {
-        const toastId = toast.loading("Downloading attachment...");
-        try {
-            const blob = await feedbackService.downloadAttachment(fileUrl);
-            
-            // Create a blob URL
-            const url = window.URL.createObjectURL(blob);
-            
-            // Create a temporary anchor element to trigger download
-            const link = document.createElement("a");
-            link.href = url;
-            link.download = fileName;
-            link.target = "_blank";
-            document.body.appendChild(link);
-            link.click();
-            
-            // Cleanup
-            document.body.removeChild(link);
-            window.URL.revokeObjectURL(url);
-            
-            toast.dismiss(toastId);
-            toast.success("Download started");
-        } catch (error) {
-            console.error("Download failed:", error);
-            toast.dismiss(toastId);
-            toast.error("Failed to download attachment. Please try again.");
-        }
-    };
-
-    const getTypeIcon = (type: string) => {
-        switch (type) {
-            case "bug":
-                return <Bug className="w-5 h-5" />;
-            case "improvement":
-                return <Lightbulb className="w-5 h-5" />;
-            case "error":
-                return <XCircle className="w-5 h-5" />;
-            case "failure":
-                return <AlertTriangle className="w-5 h-5" />;
-            default:
-                return <FileText className="w-5 h-5" />;
-        }
-    };
-
-    const getTypeBadgeColor = (type: string) => {
-        switch (type) {
-            case "bug":
-                return "bg-red-500/20 text-red-300 border-red-500/30";
-            case "improvement":
-                return "bg-blue-500/20 text-blue-300 border-blue-500/30";
-            case "error":
-                return "bg-orange-500/20 text-orange-300 border-orange-500/30";
-            case "failure":
-                return "bg-yellow-500/20 text-yellow-300 border-yellow-500/30";
-            default:
-                return "bg-white/10 text-white/70 border-white/20";
-        }
-    };
-
-    const getStatusBadgeColor = (status: string) => {
-        if (status === "open") return "bg-yellow-500/20 text-yellow-300 border-yellow-500/30";
-        if (status === "in-progress") return "bg-blue-500/20 text-blue-300 border-blue-500/30";
-        return "bg-green-500/20 text-green-300 border-green-500/30";
-    };
-
-    const formatFileSize = (bytes: number) => {
-        if (bytes === 0) return "0 Bytes";
-        const k = 1024;
-        const sizes = ["Bytes", "KB", "MB", "GB"];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return Math.round(bytes / Math.pow(k, i) * 100) / 100 + " " + sizes[i];
-    };
-
     if (userRoleName !== "Admin") {
         return (
             <AdminLayout>
@@ -206,7 +102,6 @@ const FeedbackDetail = () => {
             </AdminLayout>
         );
     }
-
     if (loading) {
         return (
             <AdminLayout>
@@ -219,7 +114,6 @@ const FeedbackDetail = () => {
             </AdminLayout>
         );
     }
-
     if (!feedback) {
         return (
             <AdminLayout>
@@ -240,9 +134,7 @@ const FeedbackDetail = () => {
             </AdminLayout>
         );
     }
-
     const createdBy = feedback.createdBy as any;
-
     return (
         <AdminLayout>
             <main className="relative px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] mt-20 sm:mt-20 lg:mt-24 xl:mt-28 mb-8 flex flex-col text-white flex-1 overflow-y-auto">
@@ -261,28 +153,31 @@ const FeedbackDetail = () => {
                         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
                             <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-3">
-                                    <Badge
-                                        className={`${getTypeBadgeColor(
-                                            feedback.type
-                                        )} border flex items-center gap-1.5 px-3 py-1`}
-                                    >
-                                        {getTypeIcon(feedback.type)}
-                                        <span className="capitalize">{feedback.type}</span>
-                                    </Badge>
-                                    <Badge
-                                        className={`${getStatusBadgeColor(
-                                            feedback.status
-                                        )} border flex items-center gap-1.5 px-3 py-1`}
-                                    >
-                                        {feedback.status === "open" ? (
-                                            <AlertCircle className="w-3.5 h-3.5" />
-                                        ) : feedback.status === "in-progress" ? (
-                                            <Timer className="w-3.5 h-3.5" />
-                                        ) : (
-                                            <CheckCircle className="w-3.5 h-3.5" />
-                                        )}
-                                        <span className="capitalize">{feedback.status.replace(/-/g, " ")}</span>
-                                    </Badge>
+                                    {(() => {
+                                        const typeConfig = getFeedbackTypeConfig(feedback.type);
+                                        const TypeIcon = typeConfig.icon;
+                                        return (
+                                            <Badge
+                                                className={`${typeConfig.color} border flex items-center gap-1.5 px-3 py-1`}
+                                            >
+                                                <TypeIcon className="w-5 h-5" />
+                                                <span className="capitalize">{feedback.type}</span>
+                                            </Badge>
+                                        );
+                                    })()}
+
+                                    {(() => {
+                                        const statusConfig = getFeedbackStatusConfig(feedback.status);
+                                        const StatusIcon = statusConfig.icon;
+                                        return (
+                                            <Badge
+                                                className={`${statusConfig.color} border flex items-center gap-1.5 px-3 py-1`}
+                                            >
+                                                <StatusIcon className="w-3.5 h-3.5" />
+                                                <span className="capitalize">{statusConfig.label}</span>
+                                            </Badge>
+                                        );
+                                    })()}
                                 </div>
 
                                 <h1 className="text-2xl sm:text-3xl font-bold text-white mb-4">
