@@ -11,6 +11,7 @@ import { AdminGlobalIntegrationsTab } from "@/components/admin/integrations/Admi
 import { AdminCompanyMailgunTab } from "@/components/admin/integrations/AdminCompanyMailgunTab";
 import { PerplexityPromptTab } from "@/components/settings/PerplexityPromptTab";
 import {
+  Bell,
   Lock,
   Plug,
   Settings as SettingsIcon,
@@ -55,6 +56,12 @@ const AdminSettings = () => {
         value: "security",
         label: "Security",
         icon: Lock,
+        hidden: false,
+      },
+      {
+        value: "notifications",
+        label: "Notifications",
+        icon: Bell,
         hidden: false,
       },
       {
@@ -206,7 +213,7 @@ const AdminSettings = () => {
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.2, ease: "easeOut" }}
                     >
-                      <NotificationsTab />
+                      <NotificationsTab isSystemAdmin={true} />
                     </motion.div>
                   </TabsContent>
 

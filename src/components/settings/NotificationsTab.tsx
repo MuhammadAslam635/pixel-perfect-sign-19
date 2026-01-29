@@ -29,7 +29,11 @@ import {
   notificationSoundManager,
 } from "@/utils/notificationSound";
 
-export const NotificationsTab = () => {
+interface NotificationsTabProps {
+  isSystemAdmin?: boolean;
+}
+
+export const NotificationsTab = ({ isSystemAdmin }: NotificationsTabProps) => {
   const [loading, setLoading] = useState(true);
   const [notificationSound, setNotificationSound] = useState<SoundOption>('pop');
   const [isPlayingSound, setIsPlayingSound] = useState(false);
@@ -153,7 +157,9 @@ export const NotificationsTab = () => {
                   Notification Preferences
                 </CardTitle>
                 <CardDescription className="text-white/60">
-                  Choose how you want to stay informed.
+                  {isSystemAdmin
+                    ? "Control which notifications you receive from companies and users in your hierarchy. If you turn off a type, you won't receive those notifications from anyone below you."
+                    : "Choose how you want to stay informed."}
                 </CardDescription>
               </div>
               <div className="flex flex-col items-end gap-1">
@@ -196,8 +202,8 @@ export const NotificationsTab = () => {
           </motion.div>
         </CardHeader>
         <CardContent className="p-6">
-          {/* Scrollable container with fixed height */}
-          <div className="max-h-[400px] overflow-y-auto scrollbar-hide space-y-5 pr-2">
+          {/* Keep a fixed-height rows scroller (no visible scrollbar), but avoid page scroll */}
+          <div className="max-h-[400px] overflow-y-auto scrollbar-hide space-y-5 pr-2 pb-6">
 
             {/* Calendar/Meeting Notifications */}
             <div className="flex items-center justify-between gap-4">
@@ -389,7 +395,7 @@ export const NotificationsTab = () => {
           <Button
             type="submit"
             disabled={loading}
-            className="mt-4 bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3]"
+            className="bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3]"
             style={{
               boxShadow:
                 "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
