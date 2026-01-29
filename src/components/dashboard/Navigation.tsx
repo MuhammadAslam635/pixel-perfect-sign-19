@@ -296,7 +296,7 @@ export const Navigation = () => {
           >
             {isActive && (
               <div
-                className="absolute -left-2 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[100px] h-[100px] rounded-full pointer-events-none animate-in fade-in zoom-in-95 duration-200"
+                className="absolute -left-6 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[100px] h-[100px] rounded-full pointer-events-none animate-in fade-in zoom-in-95 duration-200"
                 style={{
                   background:
                     "linear-gradient(180deg, #67B0B7 0%, #4066B3 100%)",
@@ -397,7 +397,7 @@ export const AdminNavigation = () => {
           >
             {isActive && (
               <div
-                className="absolute -left-2 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[100px] h-[100px] rounded-full pointer-events-none animate-in fade-in zoom-in-95 duration-200"
+                className="absolute -left-6 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[100px] h-[100px] rounded-full pointer-events-none animate-in fade-in zoom-in-95 duration-200"
                 style={{
                   background:
                     "linear-gradient(180deg, #67B0B7 0%, #4066B3 100%)",
