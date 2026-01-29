@@ -4,6 +4,7 @@ import { MobileNavigation } from "./MobileNavigation";
 import Logo from "../Logo";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { CompleteProfileButton } from "@/components/completeProfile/CompleteProfileButton";
 
 const DashboardHeader = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -66,7 +67,10 @@ const DashboardHeader = () => {
           </Link>
         </div>
         <Navigation />
-        <ActionComponent />
+        <div className="flex items-center gap-3">
+          <CompleteProfileButton />
+          <ActionComponent />
+        </div>
       </div>
     </header>
   );
@@ -141,7 +145,10 @@ export const AdminHeader = () => {
           </Link>
         </div>
         <AdminNavigation />
-        <ActionComponent />
+        <div className="flex items-center gap-3">
+          <CompleteProfileButton />
+          <ActionComponent />
+        </div>
       </div>
     </header>
   );

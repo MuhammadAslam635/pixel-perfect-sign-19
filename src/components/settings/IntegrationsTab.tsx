@@ -344,6 +344,8 @@ export const IntegrationsTab = () => {
         description: success,
       });
       refetchFacebookStatus();
+      // Dispatch event for profile completion tracking
+      window.dispatchEvent(new CustomEvent("facebook_connected"));
       shouldClear = true;
     }
 
@@ -365,6 +367,8 @@ export const IntegrationsTab = () => {
         description: "Your Microsoft account is now linked.",
       });
       fetchMicrosoftStatus();
+      // Dispatch event for profile completion tracking
+      window.dispatchEvent(new CustomEvent("microsoft_connected"));
       shouldClear = true;
     }
 
@@ -376,6 +380,21 @@ export const IntegrationsTab = () => {
           "We could not connect to Microsoft. Please try again.",
         variant: "destructive",
       });
+      shouldClear = true;
+    }
+
+    // Check for Google connection
+    const googleParam = params.get("google");
+    const gmailParam = params.get("gmail");
+
+    if (googleParam === "connected" || gmailParam === "connected") {
+      toast({
+        title: "Google connected",
+        description: "Your Google account is now linked.",
+      });
+      refetch(); // Refetch Google integration status
+      // Dispatch event for profile completion tracking
+      window.dispatchEvent(new CustomEvent("google_connected"));
       shouldClear = true;
     }
 
