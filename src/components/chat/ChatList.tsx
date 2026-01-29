@@ -1,15 +1,24 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   Search,
   MessageCircle,
   Loader2,
   PenSquare,
+  Users,
+  X,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChatSummary } from "@/types/chat.types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import ChatListItem from "./ChatListItem";
 
@@ -26,6 +35,15 @@ type ChatListProps = {
   onDeleteChat?: (chatId: string) => void;
   deletingChatId?: string | null;
   isCreatingNewChat?: boolean;
+  isCompanyAdmin?: boolean;
+  selectedAdminUserId?: string | null;
+  onAdminUserChange?: (userId: string | null) => void;
+  adminUsers?: any[];
+  loadingAdminUsers?: boolean;
+  adminUserChats?: ChatSummary[];
+  selectedAdminChatId?: string | null;
+  onSelectAdminChat?: (chatId: string | null) => void;
+  loadingAdminChats?: boolean;
 };
 
 const ChatList = ({
@@ -40,8 +58,16 @@ const ChatList = ({
   className,
   onDeleteChat,
   deletingChatId = null,
+  isCompanyAdmin = false,
+  selectedAdminUserId = null,
+  onAdminUserChange,
+  adminUsers = [],
+  loadingAdminUsers = false,
+  adminUserChats = [],
+  selectedAdminChatId = null,
+  onSelectAdminChat,
+  loadingAdminChats = false,
 }: ChatListProps) => {
-
   const newChatButtonVariants = {
     idle: { scale: 1 },
     hover: {
@@ -55,19 +81,22 @@ const ChatList = ({
   };
 
   const filteredChats = useMemo(() => {
+    // If viewing admin user's chats, show those instead
+    const baseChats = selectedAdminUserId ? adminUserChats : chats;
+
     if (!searchTerm) {
-      return chats;
+      return baseChats;
     }
 
     const query = searchTerm.toLowerCase();
-    return chats.filter((chat) => {
+    return baseChats.filter((chat) => {
       const titleMatch = chat.title?.toLowerCase().includes(query);
       const messageMatch = chat.messages?.some((message) =>
         message.content.toLowerCase().includes(query)
       );
       return titleMatch || messageMatch;
     });
-  }, [chats, searchTerm]);
+  }, [chats, searchTerm, selectedAdminUserId, adminUserChats]);
 
   const handleChatOptions = (chatId: string) => {
     onChatOptions?.(chatId);
@@ -98,6 +127,53 @@ const ChatList = ({
           </Button>
         </motion.div>
 
+        {/* Admin View User Chats Dropdown */}
+        {isCompanyAdmin && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 px-2">
+              <Users className="size-4 text-white/60" />
+              <label className="text-xs font-medium text-white/60">View User</label>
+              {selectedAdminUserId && (
+                <button
+                  onClick={() => onAdminUserChange?.(null)}
+                  className="ml-auto text-white/40 hover:text-white/60 transition"
+                >
+                  <X className="size-3" />
+                </button>
+              )}
+            </div>
+            <Select 
+              value={selectedAdminUserId || ""} 
+              onValueChange={(value) => onAdminUserChange?.(value || null)}
+            >
+              <SelectTrigger className="bg-white/5 border-white/10 text-white h-9 text-sm">
+                <SelectValue placeholder="Select a user..." />
+              </SelectTrigger>
+              <SelectContent className="bg-[#1A1A24] border-white/10">
+                {loadingAdminUsers ? (
+                  <div className="flex items-center justify-center py-4 text-white/50 text-sm">
+                    <Loader2 className="h-3 w-3 animate-spin mr-2" />
+                    Loading users...
+                  </div>
+                ) : adminUsers.length === 0 ? (
+                  <div className="py-4 text-center text-white/50 text-sm">
+                    No users found
+                  </div>
+                ) : (
+                  adminUsers.map((user) => (
+                    <SelectItem key={user._id} value={user._id}>
+                      <div className="flex flex-col">
+                        <span className="text-sm">{user.name}</span>
+                        <span className="text-xs text-white/60">{user.email}</span>
+                      </div>
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
         <div className="relative">
           <Search className="pointer-events-none absolute left-5 top-1/2 z-10 size-4 -translate-y-1/2 text-white/60" />
           <Input
@@ -119,7 +195,7 @@ const ChatList = ({
       <div className="flex-1 overflow-hidden">
         <ScrollArea className="h-full" hideScrollbars>
           <div className="space-y-1.5 pr-1">
-            {isLoading ? (
+            {(isLoading || (selectedAdminUserId && loadingAdminChats)) ? (
               <div className="flex h-64 items-center justify-center text-muted-foreground/70">
                 <Loader2 className="size-5 animate-spin" />
                 <span className="ml-2 text-sm">Loading chats…</span>
@@ -142,9 +218,9 @@ const ChatList = ({
                   <ChatListItem
                     key={chat._id}
                     chat={chat}
-                    isSelected={selectedChatId === chat._id}
+                    isSelected={selectedAdminUserId ? selectedAdminChatId === chat._id : selectedChatId === chat._id}
                     isDeleting={deletingChatId === chat._id}
-                    onSelect={onSelectChat}
+                    onSelect={selectedAdminUserId ? (chatId) => onSelectAdminChat?.(chatId) : onSelectChat}
                     onOption={handleChatOptions}
                     onDelete={onDeleteChat}
                   />

@@ -20,6 +20,9 @@ import {
   sendChatMessage,
   SendChatMessagePayload,
   deleteChatById,
+  fetchUserChatList,
+  fetchUserChatDetail,
+  fetchCompanyUsers,
 } from "@/services/chat.service";
 import { ChatDetail, ChatSummary, ChatMessage } from "@/types/chat.types";
 import { useToast } from "@/components/ui/use-toast";
@@ -162,6 +165,40 @@ const ChatPage = () => {
   const [localStreamingChatId, setLocalStreamingChatId] = useState<string | null>(null); // State to trigger re-renders
   const lastCompletionTimeRef = useRef<Record<string, number>>({}); // Track when we last finished a stream per chat
   // Note: selectedChatIdRef is already declared and synced higher up via useEffect.
+
+  const authState = useSelector((state: RootState) => state.auth);
+  const currentUser = authState.user;
+
+  // Get user's role to determine if they're a company admin
+  const getUserRole = (): string | null => {
+    if (!currentUser) return null;
+    if (currentUser.roleId && typeof currentUser.roleId === "object") {
+      return (currentUser.roleId as any).name;
+    }
+    if (currentUser.role && typeof currentUser.role === "string") {
+      return currentUser.role;
+    }
+    return null;
+  };
+
+  const userRole = getUserRole();
+  const isCompanyAdmin = userRole === "CompanyAdmin" || userRole === "Company";
+  
+  // Check if user is company owner (parentCompany === null) - only they can view other users' chats
+  const isCompanyOwner = isCompanyAdmin && (
+    !currentUser?.parentCompany || 
+    currentUser.parentCompany === null
+  );
+
+  // Admin user view state
+  const [selectedAdminUserId, setSelectedAdminUserId] = useState<string | null>(null);
+  const [adminUserChats, setAdminUserChats] = useState<ChatSummary[]>([]);
+  const [selectedAdminChatId, setSelectedAdminChatId] = useState<string | null>(null);
+  const [adminChatDetail, setAdminChatDetail] = useState<ChatDetail | null>(null);
+  const [loadingAdminChats, setLoadingAdminChats] = useState(false);
+  const [loadingAdminChatDetail, setLoadingAdminChatDetail] = useState(false);
+  const [adminUsers, setAdminUsers] = useState<any[]>([]);
+  const [loadingAdminUsers, setLoadingAdminUsers] = useState(false);
 
   // Animation variants for page transitions
   const pageVariants = {
@@ -422,6 +459,81 @@ const ChatPage = () => {
 
     return () => clearInterval(cleanupInterval);
   }, [dispatch]);
+
+  // Fetch company users for admin dropdown when admin is logged in
+  useEffect(() => {
+    if (!isCompanyOwner) {
+      return;
+    }
+
+    const fetchAdminUsers = async () => {
+      try {
+        setLoadingAdminUsers(true);
+        const users = await fetchCompanyUsers();
+        if (users) {
+          setAdminUsers(users);
+        }
+      } catch (error) {
+        console.error("Failed to fetch company users:", error);
+        toast.error("Failed to load company users");
+      } finally {
+        setLoadingAdminUsers(false);
+      }
+    };
+
+    fetchAdminUsers();
+  }, [isCompanyOwner, toast]);
+
+  // Fetch admin user's chat list when selected
+  useEffect(() => {
+    if (!selectedAdminUserId) {
+      setAdminUserChats([]);
+      setSelectedAdminChatId(null);
+      return;
+    }
+
+    const fetchAdminChats = async () => {
+      try {
+        setLoadingAdminChats(true);
+        const data = await fetchUserChatList(selectedAdminUserId);
+        if (data?.chats) {
+          setAdminUserChats(data.chats);
+        }
+      } catch (error) {
+        console.error("Failed to fetch admin user chats:", error);
+        toast.error("Failed to load user chats");
+      } finally {
+        setLoadingAdminChats(false);
+      }
+    };
+
+    fetchAdminChats();
+  }, [selectedAdminUserId, toast]);
+
+  // Fetch admin user's specific chat detail when selected
+  useEffect(() => {
+    if (!selectedAdminUserId || !selectedAdminChatId) {
+      setAdminChatDetail(null);
+      return;
+    }
+
+    const fetchAdminChatDetail = async () => {
+      try {
+        setLoadingAdminChatDetail(true);
+        const data = await fetchUserChatDetail(selectedAdminUserId, selectedAdminChatId);
+        if (data) {
+          setAdminChatDetail(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch admin user chat detail:", error);
+        toast.error("Failed to load chat details");
+      } finally {
+        setLoadingAdminChatDetail(false);
+      }
+    };
+
+    fetchAdminChatDetail();
+  }, [selectedAdminUserId, selectedAdminChatId, toast]);
 
   useEffect(() => {
     if (chatList.length === 0) {
@@ -1421,6 +1533,11 @@ const ChatPage = () => {
   };
 
   const resolvedChatTitle = useMemo(() => {
+    // If viewing an admin user's chat, show their chat title
+    if (selectedAdminUserId && selectedAdminChatId && adminChatDetail) {
+      return adminChatDetail.title || "Chat";
+    }
+
     // Handle temporary chat
     if (selectedChatId === "__new_chat__" && temporaryChat) {
       return temporaryChat.title;
@@ -1432,12 +1549,17 @@ const ChatPage = () => {
     const summary =
       fullChatList.find((chat) => chat._id === selectedChatId) ?? null;
     return summary?.title;
-  }, [fullChatList, selectedChat, selectedChatId, temporaryChat]);
+  }, [fullChatList, selectedChat, selectedChatId, temporaryChat, selectedAdminUserId, selectedAdminChatId, adminChatDetail]);
 
   const currentChatKey = selectedChatId ?? NEW_CHAT_KEY;
   const optimisticMessages = optimisticMessagesByChat[currentChatKey] ?? [];
 
   const selectedMessages = useMemo(() => {
+    // If viewing an admin user's chat, show their messages
+    if (selectedAdminUserId && selectedAdminChatId && adminChatDetail) {
+      return adminChatDetail.messages || [];
+    }
+
     // CRITICAL: Only use temporaryChat for "__new_chat__" (before first message is sent)
     // Once a message is sent, the chat gets a temp ID and messages go to optimisticMessagesByChat
     if (selectedChatId === "__new_chat__" && temporaryChat) {
@@ -1560,7 +1682,10 @@ const ChatPage = () => {
     temporaryChat,
     optimisticMessagesByChat,
     selectedChatId,
-    remoteDrafts
+    remoteDrafts,
+    selectedAdminUserId,
+    selectedAdminChatId,
+    adminChatDetail
   ]);
 
 
@@ -1596,7 +1721,7 @@ const ChatPage = () => {
           variants={pageVariants}
           className="mt-28 flex w-full justify-center px-4 pb-6 sm:px-6 md:px-10 lg:fixed lg:inset-0 lg:mt-0 lg:px-12 lg:pt-28 xl:px-16"
         >
-          <div className="flex w-full lg:h-full flex-col gap-6">
+          <div className="flex w-full lg:h-full flex-col gap-6 relative">
             <section className="flex flex-col gap-6 lg:h-full lg:flex-row lg:items-stretch lg:overflow-hidden">
               <div className="hidden lg:flex lg:h-full lg:shrink-0">
                 <div className="overflow-visible p-1 -m-1">
@@ -1612,6 +1737,15 @@ const ChatPage = () => {
                     onDeleteChat={handleDeleteChat}
                     deletingChatId={deletingChatId}
                     isCreatingNewChat={isCreatingNewChat}
+                    isCompanyAdmin={isCompanyOwner}
+                    selectedAdminUserId={selectedAdminUserId}
+                    onAdminUserChange={setSelectedAdminUserId}
+                    adminUsers={adminUsers}
+                    loadingAdminUsers={loadingAdminUsers}
+                    adminUserChats={adminUserChats}
+                    selectedAdminChatId={selectedAdminChatId}
+                    onSelectAdminChat={setSelectedAdminChatId}
+                    loadingAdminChats={loadingAdminChats}
                   />
                 </div>
               </div>
@@ -1647,47 +1781,61 @@ const ChatPage = () => {
                      })()
                    }
                    isStreaming={isCurrentChatSending}
+                   isReadOnly={!!selectedAdminUserId}
                  />
 
                 <AnimatePresence mode="sync">
-                  <motion.div
-                    key={hasActiveConversation ? "composer" : "empty"}
-                    initial="hidden"
-                    animate="visible"
-                    exit="hidden"
-                    variants={composerVariants}
-                    className="space-y-3"
-                  >
-                    {pendingFile ? (
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        className="flex items-center justify-between rounded-2xl border border-primary/30 bg-primary/10 px-4 py-2 text-sm text-primary"
-                      >
-                        <span className="truncate">
-                          Attached file: {pendingFile.name}
-                        </span>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="size-8 text-primary hover:text-primary"
-                          onClick={() => dispatch(setPendingFile(null))}
+                  {selectedAdminUserId ? (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      className="rounded-2xl border border-white/10 bg-white/5 px-6 py-4 text-center"
+                    >
+                      <p className="text-sm text-white/60">
+                        Viewing user's chat in read-only mode. You cannot send messages on behalf of this user.
+                      </p>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key={hasActiveConversation ? "composer" : "empty"}
+                      initial="hidden"
+                      animate="visible"
+                      exit="hidden"
+                      variants={composerVariants}
+                      className="space-y-3"
+                    >
+                      {pendingFile ? (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.95 }}
+                          className="flex items-center justify-between rounded-2xl border border-primary/30 bg-primary/10 px-4 py-2 text-sm text-primary"
                         >
-                          <X className="size-4" />
-                        </Button>
-                      </motion.div>
-                    ) : null}
+                          <span className="truncate">
+                            Attached file: {pendingFile.name}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-8 text-primary hover:text-primary"
+                            onClick={() => dispatch(setPendingFile(null))}
+                          >
+                            <X className="size-4" />
+                          </Button>
+                        </motion.div>
+                      ) : null}
 
-                    <ChatComposer
-                      key={selectedChatId || "__new_chat__"}
-                      onSend={handleSendMessage}
-                      isSending={isCurrentChatSending}
-                      isAwaitingResponse={isCurrentChatSending}
-                      disabled={isConversationLoading}
-                      onUploadFile={(file) => dispatch(setPendingFile(file))}
-                    />
-                  </motion.div>
+                      <ChatComposer
+                        key={selectedChatId || "__new_chat__"}
+                        onSend={handleSendMessage}
+                        isSending={isCurrentChatSending}
+                        isAwaitingResponse={isCurrentChatSending}
+                        disabled={isConversationLoading}
+                        onUploadFile={(file) => dispatch(setPendingFile(file))}
+                      />
+                    </motion.div>
+                  )}
                 </AnimatePresence>
               </div>
             </section>
