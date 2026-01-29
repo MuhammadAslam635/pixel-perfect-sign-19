@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   Briefcase,
@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import leadEnrichmentService from "@/services/leadEnrichment.service";
 import { COUNTRIES, REGIONS } from "@/types/leadEnrichment";
 import { toast } from "sonner";
@@ -37,7 +38,7 @@ const BusinessSpecificTab = ({
   const [businessQuery, setBusinessQuery] = useState("");
   const [locationType, setLocationType] = useState<"country" | "region">("country");
   const [selectedLocation, setSelectedLocation] = useState("");
-  const [maxCompanies, setMaxCompanies] = useState(10);
+  const [maxCompanies, setMaxCompanies] = useState(3);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleEnrich = async () => {
@@ -97,9 +98,22 @@ const BusinessSpecificTab = ({
     toast.info("Form cleared");
   };
 
-  // Get unique regions and sorted countries
-  const uniqueRegions = [...new Set(REGIONS)].sort();
-  const sortedCountries = [...COUNTRIES].sort((a, b) => a.name.localeCompare(b.name));
+  // Memoize location options for better performance
+  const regionOptions = useMemo(() => {
+    const uniqueRegions = [...new Set(REGIONS)].sort();
+    return uniqueRegions.map(region => ({
+      label: region,
+      value: region,
+    }));
+  }, []);
+
+  const countryOptions = useMemo(() => {
+    const sortedCountries = [...COUNTRIES].sort((a, b) => a.name.localeCompare(b.name));
+    return sortedCountries.map(country => ({
+      label: country.name,
+      value: country.name,
+    }));
+  }, []);
 
   return (
     <motion.div
@@ -169,37 +183,14 @@ const BusinessSpecificTab = ({
         <label className="text-sm font-medium text-white/70">
           {locationType === "country" ? "Select Country" : "Select Region"}
         </label>
-        <Select
+        <SearchableSelect
+          options={locationType === "country" ? countryOptions : regionOptions}
           value={selectedLocation}
           onValueChange={setSelectedLocation}
-        >
-          <SelectTrigger className="bg-gradient-to-br from-gray-800/50 to-gray-900/30 border border-white/10 text-white">
-            <SelectValue placeholder={`Select ${locationType}...`} />
-          </SelectTrigger>
-          <SelectContent className="bg-gray-800 border-gray-700 max-h-[300px]">
-            {locationType === "country" ? (
-              sortedCountries.map((country) => (
-                <SelectItem
-                  key={country.code}
-                  value={country.name}
-                  className="text-white hover:bg-gray-700"
-                >
-                  {country.name}
-                </SelectItem>
-              ))
-            ) : (
-              uniqueRegions.map((region) => (
-                <SelectItem
-                  key={region}
-                  value={region}
-                  className="text-white hover:bg-gray-700"
-                >
-                  {region}
-                </SelectItem>
-              ))
-            )}
-          </SelectContent>
-        </Select>
+          placeholder={`Select ${locationType}...`}
+          searchPlaceholder={`Search ${locationType}s...`}
+          emptyMessage={`No ${locationType} found.`}
+        />
         <p className="text-xs text-white/50">
           {locationType === "country"
             ? "Filter companies by specific country"
