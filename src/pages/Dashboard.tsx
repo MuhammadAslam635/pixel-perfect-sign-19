@@ -55,6 +55,18 @@ const Dashboard = () => {
     }
   }, []);
 
+  // Check if user skipped onboarding and show complete profile panel
+  useEffect(() => {
+    const skippedFlag = sessionStorage.getItem("onboarding_skipped");
+    if (skippedFlag === "true" && (userRole === "Company" || userRole === "CompanyAdmin")) {
+      // Delay to ensure panel component is mounted
+      setTimeout(() => {
+        console.log("[Dashboard] User skipped onboarding, showing complete profile panel");
+        window.dispatchEvent(new CustomEvent("show_complete_profile_panel"));
+      }, 500);
+    }
+  }, [userRole]);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
 

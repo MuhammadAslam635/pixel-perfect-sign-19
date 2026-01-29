@@ -14,6 +14,7 @@ import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { updateUser } from "./store/slices/authSlice";
 import { fetchAndSyncUser } from "./utils/authSync";
+import { CompleteProfilePanel } from "@/components/completeProfile/CompleteProfilePanel";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -58,6 +59,7 @@ const App = () => (
           }}
         >
           <AppRoutes />
+          <CompleteProfilePanel />
           <Suspense fallback={null}>
             <SkylarFloatingWidget />
           </Suspense>
