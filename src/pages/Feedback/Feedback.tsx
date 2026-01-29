@@ -70,6 +70,15 @@ const Feedback = () => {
     return filtered;
   }, [feedbackData, searchTerm, statusFilter]);
 
+  // Helper function to format file size
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+  };
+
   const queryClient = useQueryClient();
 
   const { mutate: createFeedback, isPending: isCreating } = useMutation({
@@ -205,8 +214,30 @@ const Feedback = () => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const files = Array.from(e.target.files);
-      setSelectedFiles(files);
-      console.log("New files selected:", files);
+      const maxSize = 300 * 1024 * 1024; // 300MB in bytes
+      const validFiles: File[] = [];
+      const oversizedFiles: string[] = [];
+
+      files.forEach((file) => {
+        if (file.size > maxSize) {
+          oversizedFiles.push(file.name);
+        } else {
+          validFiles.push(file);
+        }
+      });
+
+      if (oversizedFiles.length > 0) {
+        toast({
+          title: "File size limit exceeded",
+          description: `The following file(s) exceed the 300MB limit: ${oversizedFiles.join(", ")}`,
+          variant: "destructive",
+        });
+      }
+
+      if (validFiles.length > 0) {
+        setSelectedFiles(validFiles);
+        console.log("Valid files selected:", validFiles);
+      }
     }
   };
 
@@ -572,7 +603,10 @@ const Feedback = () => {
                                     <div key={idx} className="flex items-center justify-between p-2 bg-cyan-400/5 border border-cyan-400/20 rounded-lg group/file">
                                       <div className="flex items-center gap-2 flex-1 min-w-0">
                                         <Paperclip className="w-4 h-4 text-cyan-400 flex-shrink-0" />
-                                        <span className="text-xs text-white/80 truncate">{file.name}</span>
+                                        <div className="flex flex-col min-w-0">
+                                          <span className="text-xs text-white/80 truncate">{file.name}</span>
+                                          <span className="text-[10px] text-white/50">{formatFileSize(file.size)}</span>
+                                        </div>
                                       </div>
                                       <Button
                                         type="button"
@@ -588,16 +622,21 @@ const Feedback = () => {
                                 </div>
                               )}
 
-                              <div className="relative">
-                                <Input
-                                  type="file"
-                                  multiple
-                                  onChange={handleFileChange}
-                                  className="h-14 cursor-pointer text-white/80 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20 border-white/10 bg-white/5 hover:bg-white/10 transition-colors"
-                                />
-                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                                  <Paperclip className="w-5 h-5 text-white/30" />
+                              <div className="space-y-2">
+                                <div className="relative">
+                                  <Input
+                                    type="file"
+                                    multiple
+                                    onChange={handleFileChange}
+                                    className="h-14 cursor-pointer text-white/80 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20 border-white/10 bg-white/5 hover:bg-white/10 transition-colors"
+                                  />
+                                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                                    <Paperclip className="w-5 h-5 text-white/30" />
+                                  </div>
                                 </div>
+                                <p className="text-xs text-white/50">
+                                  You can upload any file type (images, videos, documents, etc.). Maximum file size: 300MB per file.
+                                </p>
                               </div>
                             </div>
 
