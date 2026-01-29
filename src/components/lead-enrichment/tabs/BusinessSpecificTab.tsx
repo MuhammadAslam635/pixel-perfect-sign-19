@@ -1,0 +1,290 @@
+import { useState } from "react";
+import { motion } from "framer-motion";
+import {
+  Briefcase,
+  AlertCircle,
+  Loader2,
+  MapPin,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import leadEnrichmentService from "@/services/leadEnrichment.service";
+import { COUNTRIES, REGIONS } from "@/types/leadEnrichment";
+import { toast } from "sonner";
+import type {
+  BusinessEnrichmentRequest,
+  SeniorityLevel,
+} from "@/types/leadEnrichment";
+
+interface BusinessSpecificTabProps {
+  selectedSeniorities?: SeniorityLevel[];
+  onEnrichmentStart: (searchId: string, estimatedTime: string) => void;
+}
+
+const BusinessSpecificTab = ({
+  selectedSeniorities = [],
+  onEnrichmentStart,
+}: BusinessSpecificTabProps) => {
+  const [businessQuery, setBusinessQuery] = useState("");
+  const [locationType, setLocationType] = useState<"country" | "region">("country");
+  const [selectedLocation, setSelectedLocation] = useState("");
+  const [maxCompanies, setMaxCompanies] = useState(10);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleEnrich = async () => {
+    // Validation
+    if (!businessQuery.trim()) {
+      toast.error("Please enter a business description or search query");
+      return;
+    }
+
+    if (!selectedLocation) {
+      toast.error("Please select a location");
+      return;
+    }
+
+    if (maxCompanies < 1 || maxCompanies > 50) {
+      toast.error("Maximum companies must be between 1 and 50");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const request: BusinessEnrichmentRequest = {
+        query: businessQuery.trim(),
+        location: selectedLocation,
+        maxCompanies,
+        selectedSeniorities: selectedSeniorities.length > 0 ? selectedSeniorities : undefined,
+      };
+
+      const response = await leadEnrichmentService.enrichByBusiness(request);
+
+      if (response.success) {
+        toast.success(
+          `Found ${response.data.companiesFound} companies! Starting enrichment...`
+        );
+        onEnrichmentStart(
+          response.data.searchId,
+          response.data.estimatedTime
+        );
+      } else {
+        toast.error("Failed to start enrichment");
+      }
+    } catch (error: any) {
+      console.error("Enrichment error:", error);
+      toast.error(
+        error.response?.data?.message || "Failed to start enrichment"
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleClear = () => {
+    setBusinessQuery("");
+    setSelectedLocation("");
+    setMaxCompanies(10);
+    toast.info("Form cleared");
+  };
+
+  // Get unique regions and sorted countries
+  const uniqueRegions = [...new Set(REGIONS)].sort();
+  const sortedCountries = [...COUNTRIES].sort((a, b) => a.name.localeCompare(b.name));
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      className="space-y-6"
+    >
+      {/* Description */}
+      <Alert className="bg-gradient-to-br from-gray-800/30 to-gray-900/20 border border-white/10">
+        <Briefcase className="w-4 h-4 text-[#69B4B7]" />
+        <AlertDescription className="text-white/70 text-sm">
+          <strong className="text-[#69B4B7]">Business-Focused Search:</strong>{" "}
+          Enter your business query (e.g., "AI startups", "SaaS companies", "Manufacturing") and select a location to discover matching companies and their executives.
+        </AlertDescription>
+      </Alert>
+
+      {/* Business Query Input */}
+      <div className="space-y-3">
+        <label className="text-sm font-medium text-white/70 flex items-center gap-2">
+          <Briefcase className="w-4 h-4 text-blue-400" />
+          Business Description / Search Query
+        </label>
+        <Input
+          type="text"
+          placeholder="e.g., AI startups, SaaS companies, Healthcare providers..."
+          value={businessQuery}
+          onChange={(e) => setBusinessQuery(e.target.value)}
+          className="bg-gradient-to-br from-gray-800/50 to-gray-900/30 border border-white/10 text-white placeholder:text-white/30"
+        />
+        <p className="text-xs text-white/50">
+          Describe the type of business or industry you're looking for
+        </p>
+      </div>
+
+      <Separator className="bg-white/10" />
+
+      {/* Location Type Selector */}
+      <div className="space-y-3">
+        <label className="text-sm font-medium text-white/70 flex items-center gap-2">
+          <MapPin className="w-4 h-4 text-green-400" />
+          Location Type
+        </label>
+        <Select
+          value={locationType}
+          onValueChange={(value: "country" | "region") => {
+            setLocationType(value);
+            setSelectedLocation(""); // Reset location when type changes
+          }}
+        >
+          <SelectTrigger className="bg-gradient-to-br from-gray-800/50 to-gray-900/30 border border-white/10 text-white">
+            <SelectValue placeholder="Select location type" />
+          </SelectTrigger>
+          <SelectContent className="bg-gray-800 border-gray-700">
+            <SelectItem value="country" className="text-white hover:bg-gray-700">
+              Country
+            </SelectItem>
+            <SelectItem value="region" className="text-white hover:bg-gray-700">
+              Region
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Location Selector */}
+      <div className="space-y-3">
+        <label className="text-sm font-medium text-white/70">
+          {locationType === "country" ? "Select Country" : "Select Region"}
+        </label>
+        <Select
+          value={selectedLocation}
+          onValueChange={setSelectedLocation}
+        >
+          <SelectTrigger className="bg-gradient-to-br from-gray-800/50 to-gray-900/30 border border-white/10 text-white">
+            <SelectValue placeholder={`Select ${locationType}...`} />
+          </SelectTrigger>
+          <SelectContent className="bg-gray-800 border-gray-700 max-h-[300px]">
+            {locationType === "country" ? (
+              sortedCountries.map((country) => (
+                <SelectItem
+                  key={country.code}
+                  value={country.name}
+                  className="text-white hover:bg-gray-700"
+                >
+                  {country.name}
+                </SelectItem>
+              ))
+            ) : (
+              uniqueRegions.map((region) => (
+                <SelectItem
+                  key={region}
+                  value={region}
+                  className="text-white hover:bg-gray-700"
+                >
+                  {region}
+                </SelectItem>
+              ))
+            )}
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-white/50">
+          {locationType === "country"
+            ? "Filter companies by specific country"
+            : "Filter companies by geographic region"}
+        </p>
+      </div>
+
+      <Separator className="bg-white/10" />
+
+      {/* Max Companies */}
+      <div className="space-y-3">
+        <label className="text-sm font-medium text-white/70">
+          Maximum Companies to Find
+        </label>
+        <Input
+          type="number"
+          min={1}
+          max={50}
+          value={maxCompanies}
+          onChange={(e) => setMaxCompanies(parseInt(e.target.value) || 10)}
+          className="bg-gradient-to-br from-gray-800/50 to-gray-900/30 border border-white/10 text-white"
+        />
+        <p className="text-xs text-white/50">
+          Maximum 50 companies per search (recommended: 10-20 for faster results)
+        </p>
+      </div>
+
+      {/* Query Summary */}
+      {businessQuery && selectedLocation && (
+        <div className="p-3 bg-gradient-to-br from-gray-800/30 to-gray-900/20 border border-white/10 rounded-lg">
+          <p className="text-xs text-white/70">
+            <strong className="text-[#69B4B7]">Search Summary:</strong>
+            <span className="ml-2">
+              Find up to <strong>{maxCompanies}</strong> companies matching "
+              <strong>{businessQuery}</strong>" in{" "}
+              <strong>{selectedLocation}</strong>
+              {selectedSeniorities.length > 0 && (
+                <>, enriched with <strong>{selectedSeniorities.length}</strong> seniority levels</>
+              )}
+            </span>
+          </p>
+        </div>
+      )}
+
+      {/* Action Buttons */}
+      <div className="pt-4 flex justify-end gap-3">
+        {(businessQuery || selectedLocation) && (
+          <Button
+            variant="ghost"
+            onClick={handleClear}
+            className="text-white/50 hover:text-white hover:bg-white/5"
+          >
+            Clear Form
+          </Button>
+        )}
+        <Button
+          onClick={handleEnrich}
+          disabled={
+            !businessQuery.trim() ||
+            !selectedLocation ||
+            isSubmitting ||
+            maxCompanies < 1 ||
+            maxCompanies > 50
+          }
+          className="bg-gradient-to-r from-[#69B4B7] via-[#5486D0] to-[#3E64B3] hover:brightness-110 px-8"
+        >
+          {isSubmitting ? (
+            <>
+              <motion.div
+                className="w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+              />
+              Discovering Companies...
+            </>
+          ) : (
+            <>
+              <Briefcase className="w-4 h-4 mr-2" />
+              Discover & Enrich Companies
+            </>
+          )}
+        </Button>
+      </div>
+    </motion.div>
+  );
+};
+
+export default BusinessSpecificTab;

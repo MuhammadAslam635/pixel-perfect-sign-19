@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import DomainSpecificTab from "./tabs/DomainSpecificTab";
 import AdvancedQueryTab from "./tabs/AdvancedQueryTab";
+import BusinessSpecificTab from "./tabs/BusinessSpecificTab";
 import type {
   EnrichmentMode,
   EnrichmentFilters,
@@ -127,12 +128,18 @@ const LeadEnrichmentModal = ({
             className="w-full mt-4"
           >
             {/* Tab Selector */}
-            <TabsList className="grid w-full grid-cols-2 bg-gradient-to-br from-gray-800/50 to-gray-900/30 border border-white/10 p-1">
+            <TabsList className="grid w-full grid-cols-3 bg-gradient-to-br from-gray-800/50 to-gray-900/30 border border-white/10 p-1">
               <TabsTrigger
                 value="domain"
                 className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#69B4B7] data-[state=active]:via-[#5486D0] data-[state=active]:to-[#3E64B3] data-[state=active]:text-white text-white/50 transition-all"
               >
                 Domain Specific
+              </TabsTrigger>
+              <TabsTrigger
+                value="business"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#69B4B7] data-[state=active]:via-[#5486D0] data-[state=active]:to-[#3E64B3] data-[state=active]:text-white text-white/50 transition-all"
+              >
+                Business Specific
               </TabsTrigger>
               <TabsTrigger
                 value="query"
@@ -163,6 +170,15 @@ const LeadEnrichmentModal = ({
                 />
               </TabsContent>
 
+              <TabsContent value="business" className="mt-0">
+                <BusinessSpecificTab
+                  selectedSeniorities={selectedSeniorities}
+                  onEnrichmentStart={(searchId, estimatedTime) =>
+                    handleEnrichmentStart(searchId, estimatedTime, "business")
+                  }
+                />
+              </TabsContent>
+
               <TabsContent value="query" className="mt-0">
                 <AdvancedQueryTab
                   selectedSeniorities={selectedSeniorities}
@@ -184,6 +200,13 @@ const LeadEnrichmentModal = ({
                   Domain Specific:
                 </span>{" "}
                 Direct enrichment without AI search - faster processing
+              </>
+            ) : activeTab === "business" ? (
+              <>
+                <span className="font-semibold text-[#69B4B7]">
+                  Business Specific:
+                </span>{" "}
+                Search by business type and location to discover matching companies
               </>
             ) : (
               <>

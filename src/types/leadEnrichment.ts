@@ -132,7 +132,7 @@ export const SENIORITY_OPTIONS: SeniorityOption[] = [
 // ENRICHMENT MODES
 // ========================================
 
-export type EnrichmentMode = "domain" | "query";
+export type EnrichmentMode = "domain" | "query" | "business";
 
 // ========================================
 // DIRECT DOMAIN ENRICHMENT (TAB 1)
@@ -166,6 +166,29 @@ export interface QueryEnrichmentRequest {
 }
 
 export interface QueryEnrichmentResponse {
+  success: boolean;
+  message: string;
+  data: {
+    searchId: string;
+    companiesFound: number;
+    domainsExtracted: number;
+    estimatedTime: string;
+    query: string;
+  };
+}
+
+// ========================================
+// BUSINESS SPECIFIC ENRICHMENT (TAB 3)
+// ========================================
+
+export interface BusinessEnrichmentRequest {
+  query: string; // Business description/search query
+  location?: string; // Country or region
+  maxCompanies?: number;
+  selectedSeniorities?: SeniorityLevel[];
+}
+
+export interface BusinessEnrichmentResponse {
   success: boolean;
   message: string;
   data: {
