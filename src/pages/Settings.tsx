@@ -11,7 +11,8 @@ import { IntegrationsTab } from "@/components/settings/IntegrationsTab";
 import { SecurityTab } from "@/components/settings/SecurityTab";
 import { AdminProfileTab } from "@/components/settings/AdminProfileTab";
 import { RootState } from "@/store/store";
-import { Lock, Plug, Settings as SettingsIcon, User } from "lucide-react";
+import { Lock, Plug, Settings as SettingsIcon, User, Sparkles } from "lucide-react";
+import { PerplexityPromptTab } from "@/components/settings/PerplexityPromptTab";
 
 const SettingsPage = () => {
   const location = useLocation();
@@ -63,6 +64,12 @@ const SettingsPage = () => {
         label: "Notifications",
         icon: SettingsIcon,
         hidden: false,
+      },
+      {
+        value: "ai-research-prompt",
+        label: "AI Research Prompt",
+        icon: Sparkles,
+        hidden: !canAccessIntegrations,
       },
     ];
 
@@ -206,6 +213,21 @@ const SettingsPage = () => {
                       <NotificationsTab />
                     </motion.div>
                   </TabsContent>
+
+                  {canAccessIntegrations && (
+                    <TabsContent
+                      value="ai-research-prompt"
+                      className="mt-0 space-y-6"
+                    >
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.2, ease: "easeOut" }}
+                      >
+                        <PerplexityPromptTab />
+                      </motion.div>
+                    </TabsContent>
+                  )}
                 </motion.div>
               </AnimatePresence>
             </div>
