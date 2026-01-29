@@ -109,9 +109,9 @@ export const CompleteProfileButton = () => {
     <button
       onClick={handleClick}
       className={cn(
-        "group relative overflow-hidden flex-none flex h-10 items-center justify-start rounded-full",
-        "border border-white/40 px-3.5 gap-2",
-        "text-xs font-medium tracking-wide sm:text-sm",
+        "group relative overflow-hidden flex-none flex h-8 items-center justify-start rounded-full",
+        "border border-white/40 px-2.5 gap-1.5",
+        "text-[11px] font-medium tracking-wide",
         "text-white transition-all duration-300 ease-out",
         "hover:shadow-[0_16px_28px_rgba(0,0,0,0.35)]",
         "before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5",
@@ -128,15 +128,15 @@ export const CompleteProfileButton = () => {
       aria-label="Complete your profile setup"
     >
       {/* Icon */}
-      <Sparkles className="h-[16px] w-[16px] flex-shrink-0 text-white/85 transition-colors duration-300 group-hover:text-white" />
+      <Sparkles className="h-[13px] w-[13px] flex-shrink-0 text-white/85 transition-colors duration-300 group-hover:text-white" />
 
       {/* Text */}
       <span className="whitespace-nowrap hidden sm:inline">Complete Profile</span>
       <span className="whitespace-nowrap inline sm:hidden">Profile</span>
 
       {/* Progress Badge */}
-      <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-400/20 border border-cyan-400/30">
-        <span className="text-xs font-semibold text-cyan-400">{progress}%</span>
+      <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-cyan-400/20 border border-cyan-400/30">
+        <span className="text-[10px] font-semibold text-cyan-400">{progress}%</span>
       </div>
     </button>
   );
