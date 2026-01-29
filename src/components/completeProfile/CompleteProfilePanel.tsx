@@ -109,6 +109,7 @@ export const CompleteProfilePanel = () => {
 
     // Check populated roleId (new RBAC system)
     if (currentUser.roleId && typeof currentUser.roleId === "object") {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return (currentUser.roleId as any).name;
     }
 
@@ -142,21 +143,15 @@ export const CompleteProfilePanel = () => {
             updatePanelCollapsedState(userId, false);
           }
         }
-        // Check statuses when panel is shown
-        checkAllTasksStatus();
+        // Don't check statuses immediately to prevent blink during animation
+        // Status is already loaded from hook
       }
     };
 
     const handleTogglePanel = () => {
       if (shouldShowPanel && !isComplete) {
-        setIsVisible((prev) => {
-          const newState = !prev;
-          // If opening, check statuses
-          if (newState) {
-            setTimeout(() => checkAllTasksStatus(), 100);
-          }
-          return newState;
-        });
+        setIsVisible((prev) => !prev);
+        // Don't check statuses immediately to prevent blink during animation
       }
     };
 
@@ -182,17 +177,11 @@ export const CompleteProfilePanel = () => {
         handleHidePanel
       );
     };
-  }, [shouldShowPanel, isComplete, checkAllTasksStatus]);
+  }, [shouldShowPanel, isComplete, checkAllTasksStatus, userId]);
 
-  // Check task statuses when panel becomes visible
-  useEffect(() => {
-    if (isVisible && !isCheckingStatuses) {
-      setIsCheckingStatuses(true);
-      checkAllTasksStatus().finally(() => {
-        setIsCheckingStatuses(false);
-      });
-    }
-  }, [isVisible]);
+  // Don't check statuses immediately when panel opens to prevent blink
+  // Status is already loaded from hook and will be checked on events only
+  // This ensures smooth animation without content shift
 
   // Re-check statuses when page becomes visible (user returns from another tab/page)
   useEffect(() => {
@@ -211,43 +200,46 @@ export const CompleteProfilePanel = () => {
     };
   }, [isVisible, isCheckingStatuses, checkAllTasksStatus]);
 
-  // Listen for integration connection events
+  // Listen for integration connection/disconnection and file upload/delete events
   useEffect(() => {
-    const handleMicrosoftConnected = () => {
-      toast.success("Microsoft account connected!");
+    const handleTaskUpdate = (eventName: string) => () => {
+      console.log(`[CompleteProfilePanel] ⚡ ${eventName} event → Refreshing status...`);
       checkAllTasksStatus();
     };
 
-    const handleFacebookConnected = () => {
-      toast.success("Facebook account connected!");
-      checkAllTasksStatus();
-    };
+    // All events that should trigger a status refresh
+    const events = [
+      // Task completion events
+      "microsoft_connected",
+      "facebook_connected",
+      "google_connected",
+      "knowledge_base_updated",
+      "proposal_updated",
+      "onboarding_updated",
+      // Task uncompletion events (disconnect/delete)
+      "microsoft_disconnected",
+      "facebook_disconnected",
+      "google_disconnected",
+    ];
 
-    const handleGoogleConnected = () => {
-      toast.success("Google account connected!");
-      checkAllTasksStatus();
-    };
-
-    window.addEventListener("microsoft_connected", handleMicrosoftConnected);
-    window.addEventListener("facebook_connected", handleFacebookConnected);
-    window.addEventListener("google_connected", handleGoogleConnected);
+    // Add listeners for all events
+    const handlers = events.map((event) => {
+      const handler = handleTaskUpdate(event);
+      window.addEventListener(event, handler);
+      return { event, handler };
+    });
 
     return () => {
-      window.removeEventListener(
-        "microsoft_connected",
-        handleMicrosoftConnected
-      );
-      window.removeEventListener(
-        "facebook_connected",
-        handleFacebookConnected
-      );
-      window.removeEventListener("google_connected", handleGoogleConnected);
+      handlers.forEach(({ event, handler }) => {
+        window.removeEventListener(event, handler);
+      });
     };
   }, [checkAllTasksStatus]);
 
-  // Auto-hide when complete
+  // Auto-hide when complete, but allow reopening if incomplete again
   useEffect(() => {
     if (isComplete && isVisible) {
+      console.log("[CompleteProfilePanel] 🎉 Profile complete! Auto-hiding panel...");
       toast.success("Profile setup complete! 🎉");
       setTimeout(() => {
         setIsVisible(false);
@@ -255,8 +247,14 @@ export const CompleteProfilePanel = () => {
     }
   }, [isComplete, isVisible]);
 
-  // Don't render if user shouldn't see panel or if complete
-  if (!shouldShowPanel || isComplete) {
+  // Only show if user should see panel AND not complete
+  // This allows panel to reappear if user uncompletes tasks later
+  if (!shouldShowPanel) {
+    return null;
+  }
+
+  // If complete and not visible, don't render
+  if (isComplete && !isVisible) {
     return null;
   }
 
@@ -311,7 +309,7 @@ export const CompleteProfilePanel = () => {
       {!isCollapsed && (
         <div
           className={cn(
-            "fixed inset-0 bg-black/20 backdrop-blur-sm z-[998] transition-opacity duration-300",
+            "fixed inset-0 bg-black/20 backdrop-blur-sm z-[998] transition-opacity duration-500 ease-in-out",
             isVisible ? "opacity-100" : "opacity-0 pointer-events-none"
           )}
           onClick={handleClose}
@@ -321,11 +319,12 @@ export const CompleteProfilePanel = () => {
       {/* Panel */}
       <div
         className={cn(
-          "fixed bottom-5 right-5 z-[999] transition-all duration-300 ease-out",
+          "fixed bottom-5 right-5 z-[999] transition-all duration-500 ease-in-out",
           "md:bottom-8 md:right-8",
+          "will-change-transform",
           isVisible
-            ? "translate-x-0 opacity-100"
-            : "translate-x-[calc(100%+40px)] opacity-0",
+            ? "translate-x-0 opacity-100 scale-100"
+            : "translate-x-[calc(100%+40px)] opacity-0 scale-95",
           isCollapsed
             ? "w-[280px]"
             : "w-[400px] max-w-[calc(100vw-40px)]"
@@ -334,7 +333,8 @@ export const CompleteProfilePanel = () => {
         <div
           className={cn(
             "bg-[rgba(15,15,20,0.95)] backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl",
-            "overflow-hidden flex flex-col transition-all duration-300",
+            "overflow-hidden flex flex-col transition-all duration-500 ease-in-out",
+            "will-change-[max-height]",
             isCollapsed ? "max-h-[140px]" : "max-h-[calc(100vh-100px)]"
           )}
         >

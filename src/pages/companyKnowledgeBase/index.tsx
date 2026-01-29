@@ -135,6 +135,8 @@ const CompanyKnowledgePage = () => {
       setDeleteOpen(false);
       setDeleteId(null);
       setPage((prevPage) => Math.min(prevPage, totalPages));
+      // Dispatch event to update profile completion
+      window.dispatchEvent(new CustomEvent("knowledge_base_updated"));
     },
     onError: (error: any) => {
       toast({
@@ -155,6 +157,8 @@ const CompanyKnowledgePage = () => {
     queryClient.invalidateQueries({ queryKey: ["company-knowledge"] });
     setUploadOpen(false);
     setPage(1);
+    // Dispatch event to update profile completion
+    window.dispatchEvent(new CustomEvent("knowledge_base_updated"));
   };
 
   const handleKnowledgeDocumentClick = (doc: any) => {
