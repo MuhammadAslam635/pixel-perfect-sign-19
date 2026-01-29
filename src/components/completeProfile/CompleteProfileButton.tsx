@@ -117,8 +117,7 @@ export const CompleteProfileButton = () => {
         "before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5",
         "before:rounded-t-full before:bg-gradient-to-b before:from-white/15 before:to-transparent",
         "before:transition-all before:duration-300 before:ease-in-out",
-        "hover:before:from-white/25 hover:before:duration-200",
-        "animate-in fade-in slide-in-from-right-5 duration-500"
+        "hover:before:from-white/25 hover:before:duration-200"
       )}
       style={{
         background: "#FFFFFF1A",
