@@ -48,19 +48,23 @@ const BusinessSpecificTab = ({
       return;
     }
 
-    // Location is now optional
-    // if (!selectedLocation) {
-    //   toast.error("Please select a location");
-    //   return;
-    // }
+    if (!selectedLocation) {
+      toast.error("Please select a location");
+      return;
+    }
+
+    if (maxCompanies < 1 || maxCompanies > 50) {
+      toast.error("Maximum companies must be between 1 and 50");
+      return;
+    }
 
     setIsSubmitting(true);
 
     try {
       const request: BusinessEnrichmentRequest = {
         query: businessQuery.trim(),
-        location: selectedLocation || undefined, // Optional
-        maxCompanies: 1000, // Fetch all matching companies
+        location: selectedLocation,
+        maxCompanies,
         selectedSeniorities: selectedSeniorities.length > 0 ? selectedSeniorities : undefined,
       };
 
@@ -123,7 +127,7 @@ const BusinessSpecificTab = ({
         <Briefcase className="w-4 h-4 text-[#69B4B7]" />
         <AlertDescription className="text-white/70 text-sm">
           <strong className="text-[#69B4B7]">Business-Focused Search:</strong>{" "}
-          Search by company name (e.g., "tamimipeb", "Microsoft") or business type (e.g., "AI startups", "SaaS companies"). Location is optional. Will fetch ALL matching companies from Apollo.
+          Search by company name (e.g., "tamimipeb", "Microsoft") or business type (e.g., "AI startups", "SaaS companies") and select location to discover matching companies and their executives.
         </AlertDescription>
       </Alert>
 
@@ -151,7 +155,7 @@ const BusinessSpecificTab = ({
       <div className="space-y-3">
         <label className="text-sm font-medium text-white/70 flex items-center gap-2">
           <MapPin className="w-4 h-4 text-green-400" />
-          Location Filter (Optional)
+          Location Type
         </label>
         <Select
           value={locationType}
@@ -177,31 +181,52 @@ const BusinessSpecificTab = ({
       {/* Location Selector */}
       <div className="space-y-3">
         <label className="text-sm font-medium text-white/70">
-          {locationType === "country" ? "Select Country (Optional)" : "Select Region (Optional)"}
+          {locationType === "country" ? "Select Country" : "Select Region"}
         </label>
         <SearchableSelect
           options={locationType === "country" ? countryOptions : regionOptions}
           value={selectedLocation}
           onValueChange={setSelectedLocation}
-          placeholder={`Select ${locationType} (optional)...`}
+          placeholder={`Select ${locationType}...`}
           searchPlaceholder={`Search ${locationType}s...`}
           emptyMessage={`No ${locationType} found.`}
         />
         <p className="text-xs text-white/50">
-          Leave empty to search globally, or filter by {locationType === "country" ? "country" : "region"}
+          {locationType === "country"
+            ? "Filter companies by specific country"
+            : "Filter companies by geographic region"}
+        </p>
+      </div>
+
+      <Separator className="bg-white/10" />
+
+      {/* Max Companies */}
+      <div className="space-y-3">
+        <label className="text-sm font-medium text-white/70">
+          Maximum Companies to Find
+        </label>
+        <Input
+          type="number"
+          min={1}
+          max={50}
+          value={maxCompanies}
+          onChange={(e) => setMaxCompanies(parseInt(e.target.value) || 3)}
+          className="bg-gradient-to-br from-gray-800/50 to-gray-900/30 border border-white/10 text-white"
+        />
+        <p className="text-xs text-white/50">
+          Maximum 50 companies per search (recommended: 10-20 for faster results)
         </p>
       </div>
 
       {/* Query Summary */}
-      {businessQuery && (
+      {businessQuery && selectedLocation && (
         <div className="p-3 bg-gradient-to-br from-gray-800/30 to-gray-900/20 border border-white/10 rounded-lg">
           <p className="text-xs text-white/70">
             <strong className="text-[#69B4B7]">Search Summary:</strong>
             <span className="ml-2">
-              Find ALL companies matching "<strong>{businessQuery}</strong>"
-              {selectedLocation && (
-                <> in <strong>{selectedLocation}</strong></>
-              )}
+              Find up to <strong>{maxCompanies}</strong> companies matching "
+              <strong>{businessQuery}</strong>" in{" "}
+              <strong>{selectedLocation}</strong>
               {selectedSeniorities.length > 0 && (
                 <>, enriched with <strong>{selectedSeniorities.length}</strong> seniority levels</>
               )}
@@ -223,7 +248,13 @@ const BusinessSpecificTab = ({
         )}
         <Button
           onClick={handleEnrich}
-          disabled={!businessQuery.trim() || isSubmitting}
+          disabled={
+            !businessQuery.trim() ||
+            !selectedLocation ||
+            isSubmitting ||
+            maxCompanies < 1 ||
+            maxCompanies > 50
+          }
           className="bg-gradient-to-r from-[#69B4B7] via-[#5486D0] to-[#3E64B3] hover:brightness-110 px-8"
         >
           {isSubmitting ? (
@@ -238,7 +269,7 @@ const BusinessSpecificTab = ({
           ) : (
             <>
               <Briefcase className="w-4 h-4 mr-2" />
-              Discover & Enrich All Companies
+              Discover & Enrich Companies
             </>
           )}
         </Button>
