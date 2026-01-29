@@ -17,7 +17,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { RefreshCw, Save, Mail } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { RefreshCw, Save, Mail, Edit, CheckCircle } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { getUserData } from "@/utils/authHelpers";
 import { adminService } from "@/services/admin.service";
@@ -30,14 +38,22 @@ interface Company {
   email: string;
 }
 
+interface CompanyWithMailgun extends Company {
+  mailgunEmail?: string;
+  isConnected?: boolean;
+}
+
 export const AdminCompanyMailgunTab = () => {
-  const [companies, setCompanies] = useState<Company[]>([]);
+  const [allCompanies, setAllCompanies] = useState<Company[]>([]);
+  const [companiesWithMailgun, setCompaniesWithMailgun] = useState<CompanyWithMailgun[]>([]);
+  const [companiesWithoutMailgun, setCompaniesWithoutMailgun] = useState<Company[]>([]);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>("");
   const [loadingCompanies, setLoadingCompanies] = useState(false);
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [saving, setSaving] = useState(false);
   const [validating, setValidating] = useState(false);
   const [suggestingEmail, setSuggestingEmail] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   const [mailgunConfig, setMailgunConfig] = useState({
     apiKey: "",
@@ -67,17 +83,23 @@ export const AdminCompanyMailgunTab = () => {
     if (selectedCompanyId) {
       fetchMailgunStatus();
     } else {
-      setMailgunStatus(null);
-      setMailgunConfig({
-        apiKey: "",
-        domain: "",
-        apiUrl: "",
-        webhookSigningKey: "",
-      });
-      setMailgunEmail("");
-      setSuggestedEmail("");
+      resetForm();
     }
   }, [selectedCompanyId]);
+
+  const resetForm = () => {
+    setMailgunStatus(null);
+    setMailgunConfig({
+      apiKey: "",
+      domain: "",
+      apiUrl: "",
+      webhookSigningKey: "",
+    });
+    setMailgunEmail("");
+    setSuggestedEmail("");
+    setEmailPrefix("");
+    setIsEditMode(false);
+  };
 
   const fetchCompanies = async () => {
     if (!user?.token) return;
@@ -92,7 +114,11 @@ export const AdminCompanyMailgunTab = () => {
       });
 
       if (response.success && response.data) {
-        setCompanies(response.data.companies as unknown as any);
+        const companies = response.data.companies as unknown as Company[];
+        setAllCompanies(companies);
+        
+        // Fetch Mailgun status for all companies to categorize them
+        await categorizeCompanies(companies);
       }
     } catch (error: any) {
       console.error("Error fetching companies:", error);
@@ -103,6 +129,37 @@ export const AdminCompanyMailgunTab = () => {
       });
     } finally {
       setLoadingCompanies(false);
+    }
+  };
+
+  const categorizeCompanies = async (companies: Company[]) => {
+    try {
+      const withMailgun: CompanyWithMailgun[] = [];
+      const withoutMailgun: Company[] = [];
+
+      // Check each company's Mailgun status
+      for (const company of companies) {
+        try {
+          const response = await adminService.getCompanyMailgunStatus(company._id);
+          if (response.success && response.data && response.data.hasMailgun) {
+            withMailgun.push({
+              ...company,
+              mailgunEmail: response.data.mailgunEmail || undefined,
+              isConnected: response.data.isConnected,
+            });
+          } else {
+            withoutMailgun.push(company);
+          }
+        } catch (error) {
+          // If error, assume no Mailgun
+          withoutMailgun.push(company);
+        }
+      }
+
+      setCompaniesWithMailgun(withMailgun);
+      setCompaniesWithoutMailgun(withoutMailgun);
+    } catch (error) {
+      console.error("Error categorizing companies:", error);
     }
   };
 
@@ -123,8 +180,13 @@ export const AdminCompanyMailgunTab = () => {
 
         // If Mailgun exists, load the configuration
         if (response.data.hasMailgun) {
-          // Note: We don't expose the actual API key for security
-          // Admin needs to re-enter credentials to update
+          const config = response.data.mailgunConfig || {};
+          setMailgunConfig({
+            apiKey: config.apiKey || "",
+            domain: config.domain || "",
+            apiUrl: config.apiUrl || "",
+            webhookSigningKey: config.webhookSigningKey || "",
+          });
           setMailgunEmail(response.data.mailgunEmail || "");
         }
       }
@@ -134,6 +196,11 @@ export const AdminCompanyMailgunTab = () => {
     } finally {
       setLoadingStatus(false);
     }
+  };
+
+  const handleEditCompany = (companyId: string) => {
+    setSelectedCompanyId(companyId);
+    setIsEditMode(true);
   };
 
   const handleInputChange = (
@@ -173,7 +240,6 @@ export const AdminCompanyMailgunTab = () => {
 
     setValidating(true);
     try {
-      // Validate by attempting to save (backend will validate)
       const response = await adminService.saveCompanyMailgunConfig(
         selectedCompanyId,
         {
@@ -215,7 +281,6 @@ export const AdminCompanyMailgunTab = () => {
 
     setSuggestingEmail(true);
     try {
-      // Generate suggested email
       const domain = mailgunConfig.domain.trim();
       const prefix = emailPrefix
         .trim()
@@ -288,17 +353,13 @@ export const AdminCompanyMailgunTab = () => {
           title: "Success",
           description: "Mailgun configuration saved successfully.",
         });
-        await fetchMailgunStatus();
+        
+        // Refresh the companies list to update categorization
+        await fetchCompanies();
+        
         // Reset form
-        setMailgunConfig({
-          apiKey: "",
-          domain: "",
-          apiUrl: "",
-          webhookSigningKey: "",
-        });
-        setMailgunEmail("");
-        setEmailPrefix("");
-        setSuggestedEmail("");
+        setSelectedCompanyId("");
+        resetForm();
       }
     } catch (error: any) {
       console.error("Error saving Mailgun config:", error);
@@ -314,7 +375,7 @@ export const AdminCompanyMailgunTab = () => {
     }
   };
 
-  const selectedCompany = companies.find((c) => c._id === selectedCompanyId);
+  const selectedCompany = allCompanies.find((c) => c._id === selectedCompanyId);
 
   return (
     <Card className="border-white/10 bg-white/[0.04] backdrop-blur-xl text-white">
@@ -335,25 +396,106 @@ export const AdminCompanyMailgunTab = () => {
       </CardHeader>
 
       <CardContent className="space-y-6 p-6">
-        {/* Company Selection */}
+        {/* Companies with Mailgun - Table */}
+        {companiesWithMailgun.length > 0 && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-white/90">
+                Companies with Mailgun Configured
+              </h3>
+              <span className="text-xs text-white/60">
+                {companiesWithMailgun.length} {companiesWithMailgun.length === 1 ? 'company' : 'companies'}
+              </span>
+            </div>
+            <div className="rounded-lg border border-white/10 overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-white/10 hover:bg-white/5">
+                    <TableHead className="text-white/70">Company Name</TableHead>
+                    <TableHead className="text-white/70">Mailgun Email</TableHead>
+                    <TableHead className="text-white/70">Status</TableHead>
+                    <TableHead className="text-white/70 text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {companiesWithMailgun.map((company) => (
+                    <TableRow
+                      key={company._id}
+                      className="border-white/10 hover:bg-white/5 cursor-pointer"
+                      onClick={() => handleEditCompany(company._id)}
+                    >
+                      <TableCell className="text-white font-medium">
+                        {company.company || company.name || company.email}
+                      </TableCell>
+                      <TableCell className="text-white/70">
+                        {company.mailgunEmail || "N/A"}
+                      </TableCell>
+                      <TableCell>
+                        {company.isConnected ? (
+                          <span className="flex items-center gap-1 text-xs text-emerald-400">
+                            <CheckCircle className="h-3 w-3" />
+                            Connected
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1 text-xs text-amber-400">
+                            <span className="h-2 w-2 rounded-full bg-amber-400" />
+                            Not Connected
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditCompany(company._id);
+                          }}
+                          className="text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10"
+                        >
+                          <Edit className="h-4 w-4 mr-1" />
+                          Edit
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        )}
+
+        {/* Company Selection - Only companies without Mailgun */}
         <div className="space-y-2">
-          <Label className="text-white/80 text-sm">Select Company</Label>
+          <Label className="text-white/80 text-sm">
+            {isEditMode ? "Selected Company" : "Add Mailgun to Company"}
+          </Label>
           <Select
             value={selectedCompanyId}
             onValueChange={setSelectedCompanyId}
             disabled={loadingCompanies}
           >
             <SelectTrigger className="bg-white/[0.06] border-white/10 text-white">
-              <SelectValue placeholder="Select a company" />
+              <SelectValue placeholder="Select a company without Mailgun" />
             </SelectTrigger>
             <SelectContent>
-              {companies.map((company) => (
+              {companiesWithoutMailgun.map((company) => (
                 <SelectItem key={company._id} value={company._id}>
                   {company.company || company.name || company.email}
                 </SelectItem>
               ))}
+              {companiesWithoutMailgun.length === 0 && (
+                <SelectItem value="none" disabled>
+                  All companies have Mailgun configured
+                </SelectItem>
+              )}
             </SelectContent>
           </Select>
+          {companiesWithoutMailgun.length === 0 && (
+            <p className="text-xs text-white/50">
+              All companies already have Mailgun configured. Select a company from the table above to edit.
+            </p>
+          )}
         </div>
 
         {/* Mailgun Status */}
