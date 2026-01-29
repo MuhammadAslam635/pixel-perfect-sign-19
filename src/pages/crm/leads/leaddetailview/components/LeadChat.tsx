@@ -5099,12 +5099,16 @@ const LeadChat = ({
                               node={node}
                               onUpdate={(index, text) => {
                                 const updated = [...v2EditedHeadings];
-                                updated[index] = { ...updated[index], text };
+                                const level = updated[index].level;
+                                const original = "#".repeat(level) + " " + text;
+                                updated[index] = { ...updated[index], text, original };
                                 setV2EditedHeadings(updated);
                               }}
                               onCommit={async (index, text) => {
                                 const updated = [...v2EditedHeadings];
-                                updated[index] = { ...updated[index], text };
+                                const level = updated[index].level;
+                                const original = "#".repeat(level) + " " + text;
+                                updated[index] = { ...updated[index], text, original };
                                 
                                 await handleSaveV2Headings(updated, index);
                                 
