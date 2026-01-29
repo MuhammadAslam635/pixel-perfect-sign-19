@@ -126,8 +126,12 @@ const BusinessSpecificTab = ({
       <Alert className="bg-gradient-to-br from-gray-800/30 to-gray-900/20 border border-white/10">
         <Briefcase className="w-4 h-4 text-[#69B4B7]" />
         <AlertDescription className="text-white/70 text-sm">
-          <strong className="text-[#69B4B7]">Business-Focused Search:</strong>{" "}
-          Search by company name (e.g., "tamimipeb", "Microsoft") or business type (e.g., "AI startups", "SaaS companies") and select location to discover matching companies and their executives.
+          <strong className="text-[#69B4B7]">Smart Business Search:</strong>{" "}
+          <div className="mt-2 space-y-1">
+            <div>✓ <strong>Exact Company:</strong> "tamimipeb" → finds ONLY tamimipeb with ALL executives</div>
+            <div>✓ <strong>Industry Type:</strong> "construction companies" → finds up to {maxCompanies} companies</div>
+            <div className="text-white/50 text-xs mt-2">System prioritizes exact company match first, then falls back to industry search.</div>
+          </div>
         </AlertDescription>
       </Alert>
 
@@ -220,18 +224,21 @@ const BusinessSpecificTab = ({
 
       {/* Query Summary */}
       {businessQuery && selectedLocation && (
-        <div className="p-3 bg-gradient-to-br from-gray-800/30 to-gray-900/20 border border-white/10 rounded-lg">
+        <div className="p-3 bg-gradient-to-br from-gray-800/30 to-gray-900/20 border border-white/10 rounded-lg space-y-2">
           <p className="text-xs text-white/70">
-            <strong className="text-[#69B4B7]">Search Summary:</strong>
-            <span className="ml-2">
-              Find up to <strong>{maxCompanies}</strong> companies matching "
-              <strong>{businessQuery}</strong>" in{" "}
-              <strong>{selectedLocation}</strong>
-              {selectedSeniorities.length > 0 && (
-                <>, enriched with <strong>{selectedSeniorities.length}</strong> seniority levels</>
-              )}
-            </span>
+            <strong className="text-[#69B4B7]">Search Strategy:</strong>
           </p>
+          <div className="text-xs text-white/60 space-y-1 ml-2">
+            <div>1️⃣ Try exact match for "<strong>{businessQuery}</strong>" in <strong>{selectedLocation}</strong></div>
+            <div className="ml-4 text-white/50">→ If found: Enrich ONLY that company with ALL executives</div>
+            <div>2️⃣ If not found: Search by business type/industry</div>
+            <div className="ml-4 text-white/50">→ Find up to <strong>{maxCompanies}</strong> matching companies</div>
+            {selectedSeniorities.length > 0 && (
+              <div className="mt-2 pt-2 border-t border-white/10">
+                Filter executives: <strong>{selectedSeniorities.length}</strong> seniority levels selected
+              </div>
+            )}
+          </div>
         </div>
       )}
 
