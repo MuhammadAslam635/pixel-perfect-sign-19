@@ -175,6 +175,16 @@ export const useProfileCompletion = (): UseProfileCompletionReturn => {
   const progress = calculateProgress(completionData);
   const isComplete = isProfileComplete(completionData);
 
+  // Log completion status changes
+  useEffect(() => {
+    if (completionData) {
+      console.log("[useProfileCompletion] Progress:", progress, "% | Complete:", isComplete);
+      if (isComplete) {
+        console.log("[useProfileCompletion] 🎉 All 6 tasks completed!");
+      }
+    }
+  }, [progress, isComplete, completionData]);
+
   return {
     completionData,
     progress,

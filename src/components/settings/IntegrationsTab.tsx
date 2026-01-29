@@ -484,6 +484,8 @@ export const IntegrationsTab = () => {
         description: "Your Microsoft account has been disconnected.",
       });
       fetchMicrosoftStatus();
+      // Dispatch event to update profile completion
+      window.dispatchEvent(new CustomEvent("microsoft_disconnected"));
     } catch (error: unknown) {
       console.error("Error disconnecting Microsoft:", error);
       toast({
@@ -563,6 +565,8 @@ export const IntegrationsTab = () => {
             "Your Google account has been successfully disconnected.",
         });
         refetch();
+        // Dispatch event to update profile completion
+        window.dispatchEvent(new CustomEvent("google_disconnected"));
       }
     } catch (error: unknown) {
       console.error("Error disconnecting Google:", error);
@@ -713,6 +717,8 @@ export const IntegrationsTab = () => {
           "Your Facebook account has been successfully disconnected.",
       });
       setSelectedPageId("");
+      // Dispatch event to update profile completion
+      window.dispatchEvent(new CustomEvent("facebook_disconnected"));
     } catch (error: unknown) {
       console.error("Error disconnecting Facebook:", error);
       toast({
