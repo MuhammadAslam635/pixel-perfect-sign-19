@@ -177,6 +177,12 @@ const LeadChat = ({
     [whatsappNumber],
   );
 
+  const backendUrl = useMemo(() => {
+    const baseUrl =
+      import.meta.env.VITE_APP_BACKEND_URL || "http://localhost:3000/api";
+    return baseUrl.replace(/\/api$/, "");
+  }, []);
+
   const [smsInput, setSmsInput] = useState("");
   const [smsSendError, setSmsSendError] = useState<string | null>(null);
   const [whatsappInput, setWhatsappInput] = useState("");
@@ -4882,6 +4888,47 @@ const LeadChat = ({
                                 __html: emailBodyHtml,
                               }}
                             />
+                          )}
+
+                          {email.attachments && email.attachments.length > 0 && (
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              {email.attachments.map((attachment, idx) => (
+                                <div
+                                  key={idx}
+                                  className={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-[10px] transition-all border group cursor-pointer ${
+                                    isOutbound
+                                      ? "bg-white/10 border-white/20 hover:bg-white/20 text-white"
+                                      : "bg-white/5 border-white/10 hover:bg-white/10 text-white/90"
+                                  }`}
+                                  onClick={() => {
+                                    if (attachment.url) {
+                                      const fullUrl = attachment.url.startsWith("http")
+                                        ? attachment.url
+                                        : `${backendUrl}${attachment.url}`;
+                                      window.open(fullUrl, "_blank");
+                                    }
+                                  }}
+                                  title={`Download ${attachment.filename}`}
+                                >
+                                  <Paperclip
+                                    size={12}
+                                    className="opacity-70 flex-shrink-0"
+                                  />
+                                  <span className="truncate max-w-[150px] font-medium">
+                                    {attachment.filename}
+                                  </span>
+                                  {attachment.size && (
+                                    <span className="text-[9px] opacity-50 flex-shrink-0">
+                                      ({(attachment.size / 1024).toFixed(1)} KB)
+                                    </span>
+                                  )}
+                                  <Download
+                                    size={12}
+                                    className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 flex-shrink-0"
+                                  />
+                                </div>
+                              ))}
+                            </div>
                           )}
                         </div>
                       </div>
