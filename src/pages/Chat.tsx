@@ -754,10 +754,12 @@ const ChatPage = () => {
 
   // Typing indicator should reflect actual streaming/pending states, not optimistic bubbles.
   const isThinkingIndicatorVisible = useMemo(() => {
-    const isStreamingLocal = !!localStreamingChatId && localStreamingChatId === selectedChatId;
+    const isStreamingLocal =
+      !!localStreamingChatId && localStreamingChatId === selectedChatId;
     const isLocalStream = isSelectedChatStreaming || isStreamingLocal;
     const isStreamingRemote =
-      remoteStreamingChatIds && remoteStreamingChatIds.includes(selectedChatId || "");
+      remoteStreamingChatIds &&
+      remoteStreamingChatIds.includes(selectedChatId || "");
 
     // Indicator should reflect actual streaming only; do not hold after completion.
     // The assistant message display delay is handled in selectedMessages.
@@ -1809,7 +1811,8 @@ const ChatPage = () => {
     let delayedServer = serverWithStableIds;
     if (selectedChatId) {
       const lastCompletion = lastCompletionTimeRef.current[selectedChatId] || 0;
-      const withinDelay = Date.now() - lastCompletion < RESPONSE_APPEAR_DELAY_MS;
+      const withinDelay =
+        Date.now() - lastCompletion < RESPONSE_APPEAR_DELAY_MS;
       if (withinDelay && serverWithStableIds.length > 0) {
         const lastIdx = serverWithStableIds.length - 1;
         const lastMsg = serverWithStableIds[lastIdx];

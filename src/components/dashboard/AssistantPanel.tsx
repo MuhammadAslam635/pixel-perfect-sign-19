@@ -286,8 +286,18 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
   // Restore chat when returning from navigation
   // If selectedChatId exists and chat is/was streaming, refetch to get latest state
   const isRestoringRef = useRef(false);
+  // Track the last chat ID we attempted to restore to prevent re-running on same chat
+  const lastRestoredChatIdRef = useRef<string | null>(null);
+
   useEffect(() => {
+    // If we're already on the same chat we last restored/checked, don't run again
+    // This prevents background refreshes (isChatListLoading toggling) from triggering restoration
+    if (selectedChatId === lastRestoredChatIdRef.current) {
+      return;
+    }
+
     // Check if this chat was streaming (might have completed while away)
+    // Note: capturing values from scope since we removed them from deps
     const wasStreaming = isSelectedChatStreaming;
     const hasOptimisticMessages = selectedChatId && optimisticMessagesByChat[selectedChatId]?.length > 0;
 
@@ -295,47 +305,52 @@ const AssistantPanel: FC<AssistantPanelProps> = ({ isDesktop }) => {
       selectedChatId &&
       !isChatListLoading &&
       !isRestoringRef.current &&
-      !selectedChatId.startsWith("temp_") && // Don't refetch temp chats
-      (wasStreaming || hasOptimisticMessages) // Only refetch if chat was in progress
+      !selectedChatId.startsWith("temp_") // Don't refetch temp chats
     ) {
-      isRestoringRef.current = true;
-      console.log('[AssistantPanel] Restoring potentially active chat:', { selectedChatId, wasStreaming, hasOptimisticMessages });
+      // Only mark as restored if we're actually proceeding or deciding we don't need to
+      // (i.e., not blocked by loading state)
+      lastRestoredChatIdRef.current = selectedChatId;
 
-      // Invalidate and refetch to get latest state from server
-      queryClient.invalidateQueries({ queryKey: ["chatDetail", selectedChatId] });
+      if (wasStreaming || hasOptimisticMessages) {
+        isRestoringRef.current = true;
+        console.log('[AssistantPanel] Restoring potentially active chat:', { selectedChatId, wasStreaming, hasOptimisticMessages });
 
-      queryClient
-        .fetchQuery({
-          queryKey: ["chatDetail", selectedChatId],
-          queryFn: async () => {
-            const { fetchChatById } = await import("@/services/chat.service");
-            return fetchChatById(selectedChatId);
-          },
-        })
-        .then((chatDetail) => {
-          if (chatDetail?.messages) {
-            setLocalMessages(chatDetail.messages);
-            // If we got complete messages from server, clear optimistic messages
-            if (chatDetail.messages.length > 0) {
-              dispatch(removeOptimisticMessages(selectedChatId));
-              // Also clear from streaming state if it's complete
-              const lastMessage = chatDetail.messages[chatDetail.messages.length - 1];
-              if (lastMessage?.role === "assistant") {
-                // Response is complete, remove from streaming
-                dispatch(removeStreamingChat(selectedChatId));
+        // Invalidate and refetch to get latest state from server
+        queryClient.invalidateQueries({ queryKey: ["chatDetail", selectedChatId] });
+
+        queryClient
+          .fetchQuery({
+            queryKey: ["chatDetail", selectedChatId],
+            queryFn: async () => {
+              const { fetchChatById } = await import("@/services/chat.service");
+              return fetchChatById(selectedChatId);
+            },
+          })
+          .then((chatDetail) => {
+            if (chatDetail?.messages) {
+              setLocalMessages(chatDetail.messages);
+              // If we got complete messages from server, clear optimistic messages
+              if (chatDetail.messages.length > 0) {
+                dispatch(removeOptimisticMessages(selectedChatId));
+                // Also clear from streaming state if it's complete
+                const lastMessage = chatDetail.messages[chatDetail.messages.length - 1];
+                if (lastMessage?.role === "assistant") {
+                  // Response is complete, remove from streaming
+                  dispatch(removeStreamingChat(selectedChatId));
+                }
               }
             }
-          }
-        })
-        .catch((error) => {
-          console.error("Failed to restore chat:", error);
-          // Don't clear selection on error - keep showing optimistic messages
-        })
-        .finally(() => {
-          isRestoringRef.current = false;
-        });
+          })
+          .catch((error) => {
+            console.error("Failed to restore chat:", error);
+            // Don't clear selection on error - keep showing optimistic messages
+          })
+          .finally(() => {
+            isRestoringRef.current = false;
+          });
+      }
     }
-  }, [selectedChatId, isChatListLoading, queryClient, dispatch, isSelectedChatStreaming, optimisticMessagesByChat]);
+  }, [selectedChatId, isChatListLoading, queryClient, dispatch]);
 
   const handleStartNewChat = () => {
     // Clear selected chat ID
