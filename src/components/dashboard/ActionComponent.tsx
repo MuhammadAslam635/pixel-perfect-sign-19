@@ -99,6 +99,20 @@ export const ActionComponent = () => {
   // Use custom hook for marking notification as read
   const markAsReadMutation = useMarkNotificationAsRead();
 
+  // Function to mark notification as read
+  const handleMarkAsRead = React.useCallback((notificationId: string) => {
+    // Find the notification to check if it's already read
+    const notification = notifications.find((n) => n._id === notificationId);
+
+    // If already read, don't do anything
+    if (notification?.is_read === "Yes") {
+      return;
+    }
+
+    // Call the mutation
+    markAsReadMutation.mutate(notificationId);
+  }, [notifications, markAsReadMutation]);
+
   // Show error toast if notifications fail to load
   useEffect(() => {
     if (notificationsError) {
@@ -121,34 +135,29 @@ export const ActionComponent = () => {
 
     // Show toast for each new notification
     newNotifications.forEach((notification) => {
-      toast(notification.title || "New Notification", {
+      const toastId = toast(notification.title || "New Notification", {
         description: notification.message,
         duration: 5000,
+        onDismiss: () => {
+          // Mark the notification as read when user closes the toast using the X button
+          handleMarkAsRead(notification._id);
+        },
+        onAutoClose: () => {
+          // Also mark as read when toast auto-closes
+          handleMarkAsRead(notification._id);
+        },
       });
     });
 
     // Update previous notification IDs and persist to localStorage
     previousNotificationIdsRef.current = currentNotificationIds;
     saveSeenNotifications(currentNotificationIds);
-  }, [notifications]);
+  }, [notifications, handleMarkAsRead]);
 
   const handleLogout = () => {
     dispatch(logout());
     toast.success("Logged out successfully");
     navigate("/");
-  };
-
-  const handleMarkAsRead = (notificationId: string) => {
-    // Find the notification to check if it's already read
-    const notification = notifications.find((n) => n._id === notificationId);
-
-    // If already read, don't do anything
-    if (notification?.is_read === "Yes") {
-      return;
-    }
-
-    // Call the mutation
-    markAsReadMutation.mutate(notificationId);
   };
 
   useEffect(() => {
