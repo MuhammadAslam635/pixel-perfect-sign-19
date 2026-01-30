@@ -286,7 +286,9 @@ export const Navigation = () => {
                 : "text-white/85 hover:text-white hover:shadow-[0_16px_28px_rgba(0,0,0,0.35)] hover:z-10"
             } snap-start lg:snap-center before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/15 before:to-transparent before:transition-none hover:before:from-white/25`}
             style={{
-              background: "#FFFFFF1A",
+              background: isActive
+                ? "linear-gradient(90deg, #67B0B7 0%, #4066B3 30%, #FFFFFF1A 100%)"
+                : "#FFFFFF1A",
               boxShadow:
                 "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
             }}
@@ -387,7 +389,9 @@ export const AdminNavigation = () => {
                 : "text-white/85 hover:text-white hover:shadow-[0_16px_28px_rgba(0,0,0,0.35)] hover:z-10"
             } snap-start lg:snap-center before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/15 before:to-transparent before:transition-all before:duration-300 before:ease-in-out hover:before:from-white/25 hover:before:duration-200`}
             style={{
-              background: "#FFFFFF1A",
+              background: isActive
+                ? "linear-gradient(90deg, #67B0B7 0%, #4066B3 30%, #FFFFFF1A 100%)"
+                : "#FFFFFF1A",
               boxShadow:
                 "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
             }}
