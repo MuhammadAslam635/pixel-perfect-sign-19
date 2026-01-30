@@ -149,17 +149,17 @@ const ChatList = ({
               value={selectedAdminUserId || ""} 
               onValueChange={(value) => onAdminUserChange?.(value || null)}
             >
-              <SelectTrigger className="bg-white/5 border-white/10 text-white min-h-12 h-auto py-2.5 px-3 text-sm">
+            <SelectTrigger className="bg-white/[0.06] border-white/10 text-white min-h-12 h-auto py-2.5 px-3 text-sm hover:bg-white/[0.08] focus:ring-2 focus:ring-cyan-500/40 transition-all">
                 <SelectValue placeholder="Select a user..." />
               </SelectTrigger>
-              <SelectContent className="bg-[#1A1A24] border-white/10 py-2">
+              <SelectContent className="bg-[#1B1B1B] border-white/10 text-white py-2 backdrop-blur-xl">
                 {loadingAdminUsers ? (
-                  <div className="flex items-center justify-center py-4 text-white/50 text-sm">
+                  <div className="flex items-center justify-center py-4 text-white/60 text-sm">
                     <Loader2 className="h-3 w-3 animate-spin mr-2" />
                     Loading users...
                   </div>
                 ) : adminUsers.length === 0 ? (
-                  <div className="py-4 text-center text-white/50 text-sm">
+                  <div className="py-4 text-center text-white/60 text-sm">
                     No users found
                   </div>
                 ) : (
@@ -168,7 +168,12 @@ const ChatList = ({
                       .filter(Boolean)
                       .join(" ") || user.name || "";
                     return (
-                      <SelectItem key={user._id} value={user._id} textValue={fullName} className="py-2.5 px-3 pl-3 [&>span:first-child]:hidden">
+                      <SelectItem
+                        key={user._id}
+                        value={user._id}
+                        textValue={fullName}
+                        className="py-2.5 px-3 pl-3 text-white/90 focus:text-white focus:bg-white/10 data-[highlighted]:bg-white/10 data-[highlighted]:text-white"
+                      >
                         <div className="flex flex-col gap-0.5">
                           <span className="text-sm font-medium">{fullName}</span>
                           <span className="text-xs text-white/60">{user.email}</span>
