@@ -383,6 +383,9 @@ export const ActionComponent = () => {
                     </li>
                   ))}
                 </ul>
+                <div className="mt-4 px-3 text-[10px] text-white/30 font-medium tracking-wider">
+                  Version 1.1
+                </div>
               </>
             )}
           </div>
