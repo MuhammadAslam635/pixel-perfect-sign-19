@@ -6,7 +6,8 @@ import LeadDetailCard from "./components/LeadDetailCard";
 import LeadChat from "./components/LeadChat";
 import Activity from "./components/Activity";
 import { leadsService } from "@/services/leads.service";
-import { useLeadStageWebSocket } from "@/hooks/useLeadStageWebSocket";
+import { useLeadStageSSE } from "@/hooks/useLeadStageSSE";
+// import { useLeadStageWebSocket } from "@/hooks/useLeadStageWebSocket";
 import {
   leadSummaryService,
   LeadSummaryResponse,
@@ -81,8 +82,8 @@ const LeadDetailView = () => {
   const [showCloseDealDialog, setShowCloseDealDialog] = useState(false);
   const queryClient = useQueryClient();
 
-  // Initialize WebSocket for real-time lead stage updates
-  useLeadStageWebSocket(leadId);
+  // Initialize SSE for real-time lead stage updates
+  useLeadStageSSE(leadId);
 
   const mapStageToLabel = (stage: string | null | undefined): string => {
     switch (stage) {
