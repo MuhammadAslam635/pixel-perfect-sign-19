@@ -473,21 +473,29 @@ export const AdminCompanyMailgunTab = () => {
           <Select
             value={selectedCompanyId}
             onValueChange={setSelectedCompanyId}
-            disabled={loadingCompanies}
+            disabled={loadingCompanies || isEditMode}
           >
             <SelectTrigger className="bg-white/[0.06] border-white/10 text-white">
               <SelectValue placeholder="Select a company without Mailgun" />
             </SelectTrigger>
             <SelectContent>
-              {companiesWithoutMailgun.map((company) => (
-                <SelectItem key={company._id} value={company._id}>
-                  {company.company || company.name || company.email}
+              {isEditMode && selectedCompany ? (
+                <SelectItem key={selectedCompany._id} value={selectedCompany._id}>
+                  {selectedCompany.company || selectedCompany.name || selectedCompany.email}
                 </SelectItem>
-              ))}
-              {companiesWithoutMailgun.length === 0 && (
-                <SelectItem value="none" disabled>
-                  All companies have Mailgun configured
-                </SelectItem>
+              ) : (
+                <>
+                  {companiesWithoutMailgun.map((company) => (
+                    <SelectItem key={company._id} value={company._id}>
+                      {company.company || company.name || company.email}
+                    </SelectItem>
+                  ))}
+                  {companiesWithoutMailgun.length === 0 && (
+                    <SelectItem value="none" disabled>
+                      All companies have Mailgun configured
+                    </SelectItem>
+                  )}
+                </>
               )}
             </SelectContent>
           </Select>
@@ -612,7 +620,7 @@ export const AdminCompanyMailgunTab = () => {
               <div className="space-y-2">
                 <Label className="text-white/80 text-sm">
                   Email Prefix{" "}
-                  <span className="text-white/50 text-xs">(optional)</span>
+                  {/* <span className="text-white/50 text-xs">(optional)</span> */}
                 </Label>
                 <div className="flex gap-2">
                   <Input
