@@ -14,9 +14,16 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { getUserData } from "@/utils/authHelpers";
 import { companyConfigService } from "@/services/companyConfig.service";
-import { Info, RefreshCw, Copy, Check } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 
 const DEFAULT_PROMPT = `Conduct comprehensive professional research on the following individual:
 
@@ -82,7 +89,6 @@ export const PerplexityPromptTab = ({ companyId, companyName }: PerplexityPrompt
   const [prompt, setPrompt] = useState<string>("");
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
-  const [copiedVariable, setCopiedVariable] = useState<string | null>(null);
 
   const availableVariables = [
     { name: "{{name}}", description: "Lead's full name" },
@@ -94,11 +100,7 @@ export const PerplexityPromptTab = ({ companyId, companyName }: PerplexityPrompt
     { name: "{{description}}", description: "Bio or description" },
   ];
 
-  const handleCopyVariable = (variable: string) => {
-    navigator.clipboard.writeText(variable);
-    setCopiedVariable(variable);
-    setTimeout(() => setCopiedVariable(null), 2000);
-  };
+
 
   const handleInsertVariable = (variable: string) => {
     const textarea = document.getElementById(
@@ -161,7 +163,7 @@ export const PerplexityPromptTab = ({ companyId, companyName }: PerplexityPrompt
       toast({
         title: "Access restricted",
         description:
-          "Only system admins, company owners or company admins can manage Perplexity prompts.",
+          "Only system admins, company owners or company admins can manage prompts.",
         variant: "destructive",
       });
       return;
@@ -180,7 +182,7 @@ export const PerplexityPromptTab = ({ companyId, companyName }: PerplexityPrompt
         toast({
           title: "Prompt updated",
           description:
-            "Perplexity research prompt has been saved successfully.",
+            "Research prompt has been saved successfully.",
         });
         setHasChanges(false);
         refetch();
@@ -205,7 +207,7 @@ export const PerplexityPromptTab = ({ companyId, companyName }: PerplexityPrompt
           toast({
             title: "Access denied",
             description:
-              "You don't have permission to manage Perplexity prompts.",
+              "You don't have permission to manage prompts.",
             variant: "destructive",
           });
           return;
@@ -234,12 +236,12 @@ export const PerplexityPromptTab = ({ companyId, companyName }: PerplexityPrompt
       <Card className="border-white/10 bg-white/[0.04] backdrop-blur-xl text-white">
         <CardHeader className="border-b border-white/10 bg-white/[0.02]">
           <CardTitle className="text-white text-lg font-semibold">
-            Perplexity Research Prompt
+            Research Prompt
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6">
           <p className="text-white/60">
-            Contact your company admin to manage the Perplexity research prompt.
+            Contact your company admin to manage the research prompt.
           </p>
         </CardContent>
       </Card>
@@ -255,7 +257,7 @@ export const PerplexityPromptTab = ({ companyId, companyName }: PerplexityPrompt
           transition={{ duration: 0.4, delay: 0.2 }}
         >
           <CardTitle className="text-white text-lg font-semibold">
-            Perplexity Research Prompt {companyName && <span className="text-cyan-400">- {companyName}</span>}
+             Research Prompt {companyName && <span className="text-cyan-400">- {companyName}</span>}
           </CardTitle>
           <CardDescription className="text-white/60">
             {companyName 
@@ -277,65 +279,38 @@ export const PerplexityPromptTab = ({ companyId, companyName }: PerplexityPrompt
           </div>
         ) : (
           <>
-            <div className="rounded-lg bg-blue-500/10 border border-blue-500/30 p-4">
-              <div className="flex items-start gap-3">
-                <Info className="h-5 w-5 text-blue-400 flex-shrink-0 mt-0.5" />
-                <div className="space-y-3 flex-1">
-                  <div>
-                    <p className="text-blue-300 font-medium text-sm mb-2">
-                      Available Variables
-                    </p>
-                    <p className="text-blue-200/70 text-xs">
-                      Click any variable to insert it into your prompt, or click
-                      the copy icon to copy it.
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="space-y-2">
+              <Label htmlFor="perplexity-prompt" className="text-white/80">
+                Research Prompt Template
+              </Label>
+              <div className="flex items-center justify-between gap-3 mb-2">
+                <Select
+                  onValueChange={(value) => {
+                    handleInsertVariable(value);
+                  }}
+                >
+                  <SelectTrigger className="w-[280px] bg-white/[0.06] border-white/10 text-white hover:bg-white/10 transition-colors">
+                    <SelectValue placeholder="Insert Variable..." />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#1a1f2e] border-white/10 text-white">
                     {availableVariables.map((variable) => (
-                      <div
+                      <SelectItem
                         key={variable.name}
-                        className="flex items-center justify-between gap-2 p-2 rounded-md bg-white/5 hover:bg-white/10 transition-colors cursor-pointer group"
-                        onClick={() => handleInsertVariable(variable.name)}
+                        value={variable.name}
+                        className="hover:bg-white/10 focus:bg-white/10 cursor-pointer"
                       >
-                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
                           <code className="text-cyan-400 font-mono text-xs font-semibold">
                             {variable.name}
                           </code>
-                          <span className="text-blue-200/60 text-xs truncate">
-                            {variable.description}
+                          <span className="text-white/60 text-xs">
+                            - {variable.description}
                           </span>
                         </div>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleCopyVariable(variable.name);
-                          }}
-                          className="flex-shrink-0 p-1 rounded hover:bg-white/10 transition-colors"
-                          title="Copy variable"
-                        >
-                          {copiedVariable === variable.name ? (
-                            <Check className="h-3.5 w-3.5 text-emerald-400" />
-                          ) : (
-                            <Copy className="h-3.5 w-3.5 text-blue-300/60 group-hover:text-blue-300" />
-                          )}
-                        </button>
-                      </div>
+                      </SelectItem>
                     ))}
-                  </div>
-                  <p className="text-blue-200/70 text-xs pt-2 border-t border-blue-500/20">
-                    These variables will be automatically replaced with actual
-                    lead data when research is conducted.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="perplexity-prompt" className="text-white/80">
-                  Research Prompt Template
-                </Label>
+                  </SelectContent>
+                </Select>
                 <Button
                   type="button"
                   variant="ghost"

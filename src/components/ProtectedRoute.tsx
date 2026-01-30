@@ -54,7 +54,12 @@ const ProtectedRoute = ({
 
   // Check if user needs to complete onboarding (Company/CompanyAdmin roles only)
   // Skip if already on onboarding page or if skipOnboardingCheck is true
+  // Only redirect to onboarding once per session - after that, let users navigate freely
+  // They'll be reminded via the CompleteProfilePanel instead
   if (!skipOnboardingCheck && window.location.pathname !== '/onboarding') {
+    // Check if we've already shown the onboarding redirect in this session
+    const hasRedirectedToOnboarding = sessionStorage.getItem('has_redirected_to_onboarding') === 'true';
+    
     if (onboardingLoading && (sessionUser?.role === 'Company' || sessionUser?.role === 'CompanyAdmin')) {
       return (
         <div className="flex min-h-screen items-center justify-center text-white/60">
@@ -63,7 +68,10 @@ const ProtectedRoute = ({
       );
     }
 
-    if (requiresOnboarding) {
+    // Only redirect if we haven't already redirected in this session
+    if (requiresOnboarding && !hasRedirectedToOnboarding) {
+      // Mark that we've redirected in this session
+      sessionStorage.setItem('has_redirected_to_onboarding', 'true');
       return <Navigate to="/onboarding" replace />;
     }
   }

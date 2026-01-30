@@ -226,3 +226,51 @@ export const sendStreamingChatMessage = async (
     });
   });
 };
+
+// Company Admin - view user's chat history endpoints
+
+export interface CompanyUser {
+  _id: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
+export const fetchCompanyUsers = async (): Promise<CompanyUser[]> => {
+  const response = await API.get<{ success: boolean; data: CompanyUser[] }>(
+    "/chat/company/users"
+  );
+  return response.data.data ?? [];
+};
+
+export const fetchUserChatList = async (
+  userId: string
+): Promise<{ user: { _id: string; name: string; email: string }; chats: ChatSummary[] } | null> => {
+  if (!userId) {
+    return null;
+  }
+
+  const response = await API.get<{
+    success: boolean;
+    data: {
+      user: { _id: string; name: string; email: string };
+      chats: ChatSummary[];
+    };
+  }>(`/chat/user/${userId}`);
+  return response.data.data;
+};
+
+export const fetchUserChatDetail = async (
+  userId: string,
+  chatId: string
+): Promise<ChatDetail | null> => {
+  if (!userId || !chatId) {
+    return null;
+  }
+
+  const response = await API.get<{ success: boolean; data: ChatDetail }>(
+    `/chat/user/${userId}/${chatId}`
+  );
+  return response.data.data;
+};
+

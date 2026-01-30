@@ -344,6 +344,8 @@ export const IntegrationsTab = () => {
         description: success,
       });
       refetchFacebookStatus();
+      // Dispatch event for profile completion tracking
+      window.dispatchEvent(new CustomEvent("facebook_connected"));
       shouldClear = true;
     }
 
@@ -365,6 +367,8 @@ export const IntegrationsTab = () => {
         description: "Your Microsoft account is now linked.",
       });
       fetchMicrosoftStatus();
+      // Dispatch event for profile completion tracking
+      window.dispatchEvent(new CustomEvent("microsoft_connected"));
       shouldClear = true;
     }
 
@@ -376,6 +380,21 @@ export const IntegrationsTab = () => {
           "We could not connect to Microsoft. Please try again.",
         variant: "destructive",
       });
+      shouldClear = true;
+    }
+
+    // Check for Google connection
+    const googleParam = params.get("google");
+    const gmailParam = params.get("gmail");
+
+    if (googleParam === "connected" || gmailParam === "connected") {
+      toast({
+        title: "Google connected",
+        description: "Your Google account is now linked.",
+      });
+      refetch(); // Refetch Google integration status
+      // Dispatch event for profile completion tracking
+      window.dispatchEvent(new CustomEvent("google_connected"));
       shouldClear = true;
     }
 
@@ -465,6 +484,8 @@ export const IntegrationsTab = () => {
         description: "Your Microsoft account has been disconnected.",
       });
       fetchMicrosoftStatus();
+      // Dispatch event to update profile completion
+      window.dispatchEvent(new CustomEvent("microsoft_disconnected"));
     } catch (error: unknown) {
       console.error("Error disconnecting Microsoft:", error);
       toast({
@@ -544,6 +565,8 @@ export const IntegrationsTab = () => {
             "Your Google account has been successfully disconnected.",
         });
         refetch();
+        // Dispatch event to update profile completion
+        window.dispatchEvent(new CustomEvent("google_disconnected"));
       }
     } catch (error: unknown) {
       console.error("Error disconnecting Google:", error);
@@ -694,6 +717,8 @@ export const IntegrationsTab = () => {
           "Your Facebook account has been successfully disconnected.",
       });
       setSelectedPageId("");
+      // Dispatch event to update profile completion
+      window.dispatchEvent(new CustomEvent("facebook_disconnected"));
     } catch (error: unknown) {
       console.error("Error disconnecting Facebook:", error);
       toast({
@@ -1974,9 +1999,9 @@ export const IntegrationsTab = () => {
                     <div className="space-y-2">
                       <Label className="text-white/80 text-sm">
                         Email Prefix{" "}
-                        <span className="text-white/50 text-xs">
+                        {/* <span className="text-white/50 text-xs">
                           (optional)
-                        </span>
+                        </span> */}
                       </Label>
                       <Input
                         value={emailPrefix}

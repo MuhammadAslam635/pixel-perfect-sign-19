@@ -6,6 +6,8 @@ import type {
   DomainEnrichmentResponse,
   QueryEnrichmentRequest,
   QueryEnrichmentResponse,
+  BusinessEnrichmentRequest,
+  BusinessEnrichmentResponse,
   EnrichmentStatusResponse,
 } from "@/types/leadEnrichment";
 
@@ -75,6 +77,19 @@ export const leadEnrichmentService = {
     request: QueryEnrichmentRequest
   ): Promise<QueryEnrichmentResponse> => {
     const response = await API.post("/leads/enrichment/query", request);
+    return response.data;
+  },
+
+  /**
+   * Business Specific Enrichment (Tab 3)
+   * Search companies by business query and location
+   *
+   * @param request - Business enrichment request with query and location
+   */
+  enrichByBusiness: async (
+    request: BusinessEnrichmentRequest
+  ): Promise<BusinessEnrichmentResponse> => {
+    const response = await API.post("/leads/enrichment/business", request);
     return response.data;
   },
 

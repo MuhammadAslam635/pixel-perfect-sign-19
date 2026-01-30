@@ -9,7 +9,7 @@ import { IntegrationsTab } from "@/components/settings/IntegrationsTab";
 import { NotificationsTab } from "@/components/settings/NotificationsTab";
 import { AdminGlobalIntegrationsTab } from "@/components/admin/integrations/AdminGlobalIntegrationsTab";
 import { AdminCompanyMailgunTab } from "@/components/admin/integrations/AdminCompanyMailgunTab";
-import { PerplexityPromptTab } from "@/components/settings/PerplexityPromptTab";
+
 import {
   Bell,
   Lock,
@@ -18,7 +18,6 @@ import {
   User,
   Shield,
   Database,
-  Sparkles,
 } from "lucide-react";
 
 const AdminSettings = () => {
@@ -76,12 +75,7 @@ const AdminSettings = () => {
         icon: Database,
         hidden: !canAccessIntegrations,
       },
-      {
-        value: "ai-research-prompt",
-        label: "AI Research Prompt",
-        icon: Sparkles,
-        hidden: false,
-      },
+
     ];
 
     return baseTabs.filter((tab) => !tab.hidden);
@@ -99,7 +93,7 @@ const AdminSettings = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3, ease: "easeOut", delay: 0.1 }}
-          className="mx-auto flex flex-col gap-8 space-y-3 pt-3 sm:pt-4 px-3 sm:px-6 rounded-xl sm:rounded-[30px] w-full border-0 sm:border sm:border-white/10 bg-transparent sm:bg-[linear-gradient(173.83deg,_rgba(255,255,255,0.08)_4.82%,_rgba(255,255,255,0)_38.08%,_rgba(255,255,255,0)_56.68%,_rgba(255,255,255,0.02)_95.1%)] min-h-[600px] flex-1"
+          className="mx-auto flex flex-col gap-8 space-y-3 pt-3 sm:pt-4 pb-6 px-3 sm:px-6 rounded-xl sm:rounded-[30px] w-full border-0 sm:border sm:border-white/10 bg-transparent sm:bg-[linear-gradient(173.83deg,_rgba(255,255,255,0.08)_4.82%,_rgba(255,255,255,0)_38.08%,_rgba(255,255,255,0)_56.68%,_rgba(255,255,255,0.02)_95.1%)] min-h-[600px] flex-1"
         >
           <header className="flex flex-col gap-2">
             <motion.h1
@@ -321,21 +315,7 @@ const AdminSettings = () => {
                     </TabsContent>
                   )}
 
-                  <TabsContent
-                    value="ai-research-prompt"
-                    className="mt-0 space-y-6"
-                  >
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.2, ease: "easeOut" }}
-                    >
-                      <PerplexityPromptTab 
-                        companyId={companyId || undefined} 
-                        companyName={companyName || undefined} 
-                      />
-                    </motion.div>
-                  </TabsContent>
+
                 </motion.div>
               </AnimatePresence>
             </div>

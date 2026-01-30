@@ -41,6 +41,11 @@ export const usePermissions = () => {
         return true;
       }
 
+      // Global modules accessible to all authenticated users
+      if (["settings", "feedback"].includes(moduleName)) {
+         return true;
+      }
+
       const moduleAccess = permissionsState.modulesByName[moduleName];
       if (!moduleAccess) {
         return false;
@@ -124,6 +129,11 @@ export const usePermissions = () => {
     if (!user) return [];
 
     if (legacyRole === "Admin" || isSystemAdmin(userRole)) {
+      return ["view", "create", "edit", "delete"];
+    }
+
+    // Global modules accessible to all authenticated users
+    if (["settings", "feedback"].includes(moduleName)) {
       return ["view", "create", "edit", "delete"];
     }
 

@@ -9,6 +9,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -30,6 +38,7 @@ import {
   AlertTriangle,
   Settings,
   Loader2,
+  Trash2,
 } from "lucide-react";
 import { adminService, CompanyAdmin, Company } from "@/services/admin.service";
 import { rbacService } from "@/services/rbac.service";
@@ -82,6 +91,9 @@ const AdminUsers = () => {
   const [selectedUserForProvisioning, setSelectedUserForProvisioning] =
     useState<UserWithCompany | null>(null);
   const [togglingUsers, setTogglingUsers] = useState<Record<string, boolean>>({});
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<UserWithCompany | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const [statistics, setStatistics] = useState({
     totalUsers: 0,
@@ -433,6 +445,34 @@ const AdminUsers = () => {
       toast.error(error.response?.data?.message || "Failed to update status");
     } finally {
       setTogglingUsers(prev => ({ ...prev, [userId]: false }));
+    }
+  };
+
+  const handleHardDelete = (user: UserWithCompany) => {
+    if (!user || !user._id) return;
+    setUserToDelete(user);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmHardDelete = async () => {
+    if (!userToDelete || !userToDelete._id) return;
+
+    setDeleting(true);
+    try {
+      await adminService.hardDeleteUser(userToDelete._id);
+      toast.success("User hard deleted successfully");
+      // Refresh data after deletion
+      fetchAllUsers();
+      calculateStatistics();
+      setDeleteDialogOpen(false);
+      setUserToDelete(null);
+    } catch (error: any) {
+      console.error("Error hard deleting user:", error);
+      toast.error(
+        error?.response?.data?.message || "Failed to hard delete user"
+      );
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -985,6 +1025,22 @@ const AdminUsers = () => {
                                           )}
                                         </Button>
                                       )}
+                                      
+                                      {/* Hard delete button - show for all users except System Admins */}
+                                      {user.role !== "Admin" && 
+                                       (user.roleId && typeof user.roleId === "object" 
+                                         ? (user.roleId as Role).name !== "Admin"
+                                         : true) && (
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => handleHardDelete(user)}
+                                          className="rounded-full px-4 py-2 text-xs bg-red-700/10 text-red-300 border border-red-500/40 hover:bg-red-700/25 hover:text-red-100 whitespace-nowrap"
+                                        >
+                                          <Trash2 className="h-4 w-4 mr-2" />
+                                          Delete
+                                        </Button>
+                                      )}
                                     </div>
                                   </td>
                                 </tr>
@@ -1018,6 +1074,86 @@ const AdminUsers = () => {
             }}
           />
         )}
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle className="text-red-400">Confirm User Deletion</DialogTitle>
+              <DialogDescription className="pt-2">
+                {userToDelete && (
+                  <>
+                    Are you sure you want to permanently delete user{" "}
+                    <span className="font-semibold text-white">
+                      {userToDelete.name ||
+                        `${userToDelete.firstName || ""} ${userToDelete.lastName || ""}`.trim() ||
+                        userToDelete.email}
+                    </span>
+                    ?
+                  </>
+                )}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+              <p className="text-sm text-white/70 mb-2">
+                This action will permanently delete:
+              </p>
+              <ul className="list-disc list-inside text-sm text-white/60 space-y-1 ml-2">
+                <li>Twilio phone number and application</li>
+                <li>ElevenLabs AI agent and phone number</li>
+                <li>All meetings scheduled by this user</li>
+                <li>Personal integrations and configurations</li>
+                <li>User account and email data</li>
+                {userToDelete?.role === "Company" && (
+                  <>
+                    <li className="text-red-300 font-semibold">
+                      ALL sub-users (employees) and their personal assets
+                    </li>
+                    <li className="text-red-300 font-semibold">
+                      ALL company data (campaigns, files, prompts, followup plans, etc.)
+                    </li>
+                    <li className="text-red-300 font-semibold">
+                      ALL company meetings, integrations, and communications
+                    </li>
+                  </>
+                )}
+              </ul>
+              <p className="text-sm text-red-400 font-semibold mt-4">
+                This action cannot be undone.
+              </p>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setDeleteDialogOpen(false);
+                  setUserToDelete(null);
+                }}
+                disabled={deleting}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={confirmHardDelete}
+                disabled={deleting}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                {deleting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete User
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </main>
     </AdminLayout>
   );

@@ -278,6 +278,7 @@ type ChatMessagesProps = {
   onOpenChatList?: () => void;
   streamingEvents?: StreamEvent[];
   isStreaming?: boolean;
+  isReadOnly?: boolean;
 };
 
 const ChatMessages = ({
@@ -289,6 +290,7 @@ const ChatMessages = ({
   onOpenChatList,
   streamingEvents = [],
   isStreaming = false,
+  isReadOnly = false,
 }: ChatMessagesProps) => {
   const conversation = useMemo(() => messages ?? [], [messages]);
   const scrollAreaRef = useRef<HTMLDivElement | null>(null);

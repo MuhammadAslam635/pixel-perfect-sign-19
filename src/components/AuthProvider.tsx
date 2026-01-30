@@ -4,6 +4,10 @@ import { getUserData } from "@/utils/authHelpers";
 import { loginSuccess } from "@/store/slices/authSlice";
 import { fetchUserPermissions } from "@/store/slices/permissionsSlice";
 import { AppDispatch } from "@/store/store";
+import {
+  shouldShowOnFirstLogin,
+  markFirstLoginShown,
+} from "@/utils/profileCompletionStorage";
 
 /**
  * AuthProvider component to restore authentication state on app load
@@ -15,7 +19,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     // Restore auth state from localStorage on app mount
-    const restoreAuthState = () => {
+    const restoreAuthState = async () => {
       try {
         const userData = getUserData();
 
@@ -32,6 +36,33 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             })
           );
           dispatch(fetchUserPermissions());
+
+          // Check if profile completion panel should be shown
+          // Only for Company and CompanyAdmin roles
+          const userRole = userData.role;
+          const isCompanyRole =
+            userRole === "Company" || userRole === "CompanyAdmin";
+
+          if (isCompanyRole && userData._id) {
+            // Small delay to ensure UI is ready
+            setTimeout(() => {
+              // Check if user skipped onboarding
+              const onboardingSkipped = sessionStorage.getItem("onboarding_skipped");
+              
+              // Show panel if:
+              // 1. First time login (and not coming from skip - Dashboard handles skip)
+              if (shouldShowOnFirstLogin(userData._id) && onboardingSkipped !== "true") {
+                // Dispatch event to show the panel
+                window.dispatchEvent(
+                  new CustomEvent("show_complete_profile_panel")
+                );
+                // Mark that we've shown it on first login
+                markFirstLoginShown(userData._id);
+              }
+              // Note: onboarding_skipped flag is kept active until user closes panel
+              // This allows user to navigate freely while completing tasks
+            }, 1000);
+          }
         }
       } catch (error) {
         console.error("Failed to restore auth state:", error);
