@@ -1438,6 +1438,13 @@ const ChatPage = () => {
   };
 
   const handleStartNewChat = () => {
+    // If viewing another user's chat as admin, go back to own chats first
+    if (selectedAdminUserId) {
+      setSelectedAdminUserId(null);
+      setSelectedAdminChatId(null);
+      setAdminChatDetail(null);
+    }
+
     // Save current composer value before switching
     dispatch(saveComposerValueToCache());
 
