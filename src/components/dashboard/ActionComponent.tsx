@@ -158,7 +158,7 @@ export const ActionComponent = () => {
     // Update previous notification IDs and persist to localStorage
     previousNotificationIdsRef.current = currentNotificationIds;
     saveSeenNotifications(currentNotificationIds);
-  }, [notifications, handleMarkAsRead]);
+  }, [notifications]);
 
   // Initialize sound preference on mount
   useEffect(() => {
