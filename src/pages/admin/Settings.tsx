@@ -150,6 +150,9 @@ const AdminSettings = () => {
                   })}
                 </TabsList>
               </div>
+              <div className="mt-6 px-4 text-[11px] text-white/30 font-medium tracking-wider">
+                Version 1.1
+              </div>
             </div>
 
             {/* Content area */}
