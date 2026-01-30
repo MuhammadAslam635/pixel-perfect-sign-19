@@ -25,7 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { RefreshCw, Save, Mail, Edit, CheckCircle } from "lucide-react";
+import { RefreshCw, Save, Mail, Edit, CheckCircle, ArrowLeft } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { getUserData } from "@/utils/authHelpers";
 import { adminService } from "@/services/admin.service";
@@ -201,6 +201,11 @@ export const AdminCompanyMailgunTab = () => {
   const handleEditCompany = (companyId: string) => {
     setSelectedCompanyId(companyId);
     setIsEditMode(true);
+  };
+
+  const handleBack = () => {
+    setSelectedCompanyId("");
+    resetForm();
   };
 
   const handleInputChange = (
@@ -396,95 +401,91 @@ export const AdminCompanyMailgunTab = () => {
       </CardHeader>
 
       <CardContent className="space-y-6 p-6">
-        {/* Companies with Mailgun - Table */}
-        {companiesWithMailgun.length > 0 && (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-white/90">
-                Companies with Mailgun Configured
-              </h3>
-              <span className="text-xs text-white/60">
-                {companiesWithMailgun.length} {companiesWithMailgun.length === 1 ? 'company' : 'companies'}
-              </span>
-            </div>
-            <div className="rounded-lg border border-white/10 overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-white/10 hover:bg-white/5">
-                    <TableHead className="text-white/70">Company Name</TableHead>
-                    <TableHead className="text-white/70">Mailgun Email</TableHead>
-                    <TableHead className="text-white/70">Status</TableHead>
-                    <TableHead className="text-white/70 text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {companiesWithMailgun.map((company) => (
-                    <TableRow
-                      key={company._id}
-                      className="border-white/10 hover:bg-white/5 cursor-pointer"
-                      onClick={() => handleEditCompany(company._id)}
-                    >
-                      <TableCell className="text-white font-medium">
-                        {company.company || company.name || company.email}
-                      </TableCell>
-                      <TableCell className="text-white/70">
-                        {company.mailgunEmail || "N/A"}
-                      </TableCell>
-                      <TableCell>
-                        {company.isConnected ? (
-                          <span className="flex items-center gap-1 text-xs text-emerald-400">
-                            <CheckCircle className="h-3 w-3" />
-                            Connected
-                          </span>
-                        ) : (
-                          <span className="flex items-center gap-1 text-xs text-amber-400">
-                            <span className="h-2 w-2 rounded-full bg-amber-400" />
-                            Not Connected
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEditCompany(company._id);
-                          }}
-                          className="text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10"
+        {!selectedCompanyId ? (
+          <>
+            {/* Companies with Mailgun - Table */}
+            {companiesWithMailgun.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-white/90">
+                    Companies with Mailgun Configured
+                  </h3>
+                  <span className="text-xs text-white/60">
+                    {companiesWithMailgun.length} {companiesWithMailgun.length === 1 ? 'company' : 'companies'}
+                  </span>
+                </div>
+                <div className="rounded-lg border border-white/10 overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="border-white/10 hover:bg-white/5">
+                        <TableHead className="text-white/70">Company Name</TableHead>
+                        <TableHead className="text-white/70">Mailgun Email</TableHead>
+                        <TableHead className="text-white/70">Status</TableHead>
+                        <TableHead className="text-white/70 text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {companiesWithMailgun.map((company) => (
+                        <TableRow
+                          key={company._id}
+                          className="border-white/10 hover:bg-white/5 cursor-pointer"
+                          onClick={() => handleEditCompany(company._id)}
                         >
-                          <Edit className="h-4 w-4 mr-1" />
-                          Edit
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
-        )}
+                          <TableCell className="text-white font-medium">
+                            {company.company || company.name || company.email}
+                          </TableCell>
+                          <TableCell className="text-white/70">
+                            {company.mailgunEmail || "N/A"}
+                          </TableCell>
+                          <TableCell>
+                            {company.isConnected ? (
+                              <span className="flex items-center gap-1 text-xs text-emerald-400">
+                                <CheckCircle className="h-3 w-3" />
+                                Connected
+                              </span>
+                            ) : (
+                              <span className="flex items-center gap-1 text-xs text-amber-400">
+                                <span className="h-2 w-2 rounded-full bg-amber-400" />
+                                Not Connected
+                              </span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditCompany(company._id);
+                              }}
+                              className="text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10"
+                            >
+                              <Edit className="h-4 w-4 mr-1" />
+                              Edit
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            )}
 
-        {/* Company Selection - Only companies without Mailgun */}
-        <div className="space-y-2">
-          <Label className="text-white/80 text-sm">
-            {isEditMode ? "Selected Company" : "Add Mailgun to Company"}
-          </Label>
-          <Select
-            value={selectedCompanyId}
-            onValueChange={setSelectedCompanyId}
-            disabled={loadingCompanies || isEditMode}
-          >
-            <SelectTrigger className="bg-white/[0.06] border-white/10 text-white">
-              <SelectValue placeholder="Select a company without Mailgun" />
-            </SelectTrigger>
-            <SelectContent>
-              {isEditMode && selectedCompany ? (
-                <SelectItem key={selectedCompany._id} value={selectedCompany._id}>
-                  {selectedCompany.company || selectedCompany.name || selectedCompany.email}
-                </SelectItem>
-              ) : (
-                <>
+            {/* Company Selection - Only companies without Mailgun */}
+            <div className="space-y-2">
+              <Label className="text-white/80 text-sm">
+                Add Mailgun to Company
+              </Label>
+              <Select
+                value={selectedCompanyId}
+                onValueChange={setSelectedCompanyId}
+                disabled={loadingCompanies}
+              >
+                <SelectTrigger className="bg-white/[0.06] border-white/10 text-white">
+                  <SelectValue placeholder="Select a company without Mailgun" />
+                </SelectTrigger>
+                <SelectContent>
                   {companiesWithoutMailgun.map((company) => (
                     <SelectItem key={company._id} value={company._id}>
                       {company.company || company.name || company.email}
@@ -495,47 +496,65 @@ export const AdminCompanyMailgunTab = () => {
                       All companies have Mailgun configured
                     </SelectItem>
                   )}
-                </>
-              )}
-            </SelectContent>
-          </Select>
-          {companiesWithoutMailgun.length === 0 && (
-            <p className="text-xs text-white/50">
-              All companies already have Mailgun configured. Select a company from the table above to edit.
-            </p>
-          )}
-        </div>
-
-        {/* Mailgun Status */}
-        {selectedCompanyId && mailgunStatus && (
-          <div className="rounded-lg border p-3 bg-white/[0.03]">
-            <div className="flex items-center justify-between">
-              <span className="text-xs sm:text-sm text-white/80 font-medium">
-                Mailgun Status
-              </span>
-              {mailgunStatus.isConnected ? (
-                <span className="flex items-center gap-1 text-xs sm:text-sm text-emerald-400">
-                  <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                  Connected
-                </span>
-              ) : (
-                <span className="flex items-center gap-1 text-xs sm:text-sm text-amber-400">
-                  <span className="h-2 w-2 rounded-full bg-amber-400" />
-                  Not Connected
-                </span>
+                </SelectContent>
+              </Select>
+              {companiesWithoutMailgun.length === 0 && companiesWithMailgun.length > 0 && (
+                <p className="text-xs text-white/50">
+                  All companies already have Mailgun configured. Select a company from the table above to edit.
+                </p>
               )}
             </div>
-            {mailgunStatus.mailgunEmail && (
-              <p className="text-xs text-white/60 mt-2">
-                Email: {mailgunStatus.mailgunEmail}
-              </p>
-            )}
-          </div>
-        )}
+          </>
+        ) : (
+          <>
+            {/* Back Button and Selected Company Header */}
+            <div className="flex items-center justify-between gap-4 pb-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleBack}
+                className="text-white/70 hover:text-white hover:bg-white/10"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to List
+              </Button>
+              <div className="text-right">
+                <span className="text-xs text-white/50 block">Editing Configuration for</span>
+                <span className="text-sm font-semibold text-cyan-400">
+                  {selectedCompany?.company || selectedCompany?.name || selectedCompany?.email}
+                </span>
+              </div>
+            </div>
 
-        {/* Mailgun Configuration Form */}
-        {selectedCompanyId && (
-          <motion.div
+            {/* Mailgun Status */}
+            {mailgunStatus && (
+              <div className="rounded-lg border p-3 bg-white/[0.03]">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs sm:text-sm text-white/80 font-medium">
+                    Mailgun Status
+                  </span>
+                  {mailgunStatus.isConnected ? (
+                    <span className="flex items-center gap-1 text-xs sm:text-sm text-emerald-400">
+                      <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                      Connected
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1 text-xs sm:text-sm text-amber-400">
+                      <span className="h-2 w-2 rounded-full bg-amber-400" />
+                      Not Connected
+                    </span>
+                  )}
+                </div>
+                {mailgunStatus.mailgunEmail && (
+                  <p className="text-xs text-white/60 mt-2">
+                    Email: {mailgunStatus.mailgunEmail}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Mailgun Configuration Form */}
+            <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.3 }}
@@ -714,7 +733,8 @@ export const AdminCompanyMailgunTab = () => {
               </Button>
             </div>
           </motion.div>
-        )}
+        </>
+      )}
       </CardContent>
     </Card>
   );
