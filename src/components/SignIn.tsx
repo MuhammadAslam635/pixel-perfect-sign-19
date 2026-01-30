@@ -87,6 +87,11 @@ const SignIn = () => {
         // Only check for Company and CompanyAdmin roles
         const userRole = response.user.role;
         if (userRole === "Company" || userRole === "CompanyAdmin") {
+          // Clear any previous session flags on new login
+          sessionStorage.removeItem("has_redirected_to_onboarding");
+          sessionStorage.removeItem("onboarding_skipped");
+          sessionStorage.removeItem("onboarding_just_completed");
+          
           setCheckingOnboarding(true);
           try {
             const onboardingResponse =

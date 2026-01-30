@@ -134,22 +134,25 @@ const ChatList = ({
               <Users className="size-4 text-white/60" />
               <label className="text-xs font-medium text-white/60">View User</label>
               {selectedAdminUserId && (
-                <button
+                <Button
                   onClick={() => onAdminUserChange?.(null)}
-                  className="ml-auto text-white/40 hover:text-white/60 transition"
+                  variant="ghost"
+                  size="sm"
+                  className="ml-auto h-8 px-3 text-white/60 hover:text-white hover:bg-white/10 transition"
                 >
-                  <X className="size-3" />
-                </button>
+                  <X className="size-4 mr-1.5" />
+                  <span className="text-xs">Cancel</span>
+                </Button>
               )}
             </div>
             <Select 
               value={selectedAdminUserId || ""} 
               onValueChange={(value) => onAdminUserChange?.(value || null)}
             >
-              <SelectTrigger className="bg-white/5 border-white/10 text-white h-9 text-sm">
+              <SelectTrigger className="bg-white/5 border-white/10 text-white min-h-12 h-auto py-2.5 px-3 text-sm">
                 <SelectValue placeholder="Select a user..." />
               </SelectTrigger>
-              <SelectContent className="bg-[#1A1A24] border-white/10">
+              <SelectContent className="bg-[#1A1A24] border-white/10 py-2">
                 {loadingAdminUsers ? (
                   <div className="flex items-center justify-center py-4 text-white/50 text-sm">
                     <Loader2 className="h-3 w-3 animate-spin mr-2" />
@@ -160,14 +163,19 @@ const ChatList = ({
                     No users found
                   </div>
                 ) : (
-                  adminUsers.map((user) => (
-                    <SelectItem key={user._id} value={user._id}>
-                      <div className="flex flex-col">
-                        <span className="text-sm">{user.name}</span>
-                        <span className="text-xs text-white/60">{user.email}</span>
-                      </div>
-                    </SelectItem>
-                  ))
+                  adminUsers.map((user) => {
+                    const fullName = [user.firstName, user.lastName]
+                      .filter(Boolean)
+                      .join(" ") || user.name || "";
+                    return (
+                      <SelectItem key={user._id} value={user._id} textValue={fullName} className="py-2.5 px-3 pl-3 [&>span:first-child]:hidden">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-sm font-medium">{fullName}</span>
+                          <span className="text-xs text-white/60">{user.email}</span>
+                        </div>
+                      </SelectItem>
+                    );
+                  })
                 )}
               </SelectContent>
             </Select>

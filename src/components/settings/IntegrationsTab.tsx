@@ -1999,9 +1999,9 @@ export const IntegrationsTab = () => {
                     <div className="space-y-2">
                       <Label className="text-white/80 text-sm">
                         Email Prefix{" "}
-                        <span className="text-white/50 text-xs">
+                        {/* <span className="text-white/50 text-xs">
                           (optional)
-                        </span>
+                        </span> */}
                       </Label>
                       <Input
                         value={emailPrefix}

@@ -326,7 +326,7 @@ export const CompleteProfilePanel = () => {
             ? "translate-x-0 opacity-100 scale-100"
             : "translate-x-[calc(100%+40px)] opacity-0 scale-95",
           isCollapsed
-            ? "w-[280px]"
+            ? "w-[340px]"
             : "w-[400px] max-w-[calc(100vw-40px)]"
         )}
       >
@@ -335,18 +335,18 @@ export const CompleteProfilePanel = () => {
             "bg-[rgba(15,15,20,0.95)] backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl",
             "overflow-hidden flex flex-col transition-all duration-500 ease-in-out",
             "will-change-[max-height]",
-            isCollapsed ? "max-h-[140px]" : "max-h-[calc(100vh-100px)]"
+            isCollapsed ? "max-h-[115px]" : "max-h-[calc(100vh-100px)]"
           )}
         >
           {/* Header */}
-          <div className="p-6 pb-4 border-b border-white/10">
+          <div className="p-4 pb-3 border-b border-white/10">
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1">
-                <h3 className="text-xl font-semibold text-white mb-1">
+                <h3 className="text-lg font-semibold text-white mb-0.5">
                   Complete Profile
                 </h3>
                 {!isCollapsed && (
-                  <p className="text-sm text-white/60">
+                  <p className="text-xs text-white/60">
                     {incompleteTasks.length === 0
                       ? "All tasks completed!"
                       : `${incompleteTasks.length} ${
@@ -382,12 +382,12 @@ export const CompleteProfilePanel = () => {
             </div>
 
             {/* Progress Bar */}
-            <div className="mt-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-medium text-white/70">
+            <div className="mt-3">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[10px] font-medium text-white/70">
                   Progress
                 </span>
-                <span className="text-xs font-semibold text-cyan-400">
+                <span className="text-[10px] font-semibold text-cyan-400">
                   {progress}%
                 </span>
               </div>
@@ -406,8 +406,8 @@ export const CompleteProfilePanel = () => {
 
           {/* Collapsed State - Show quick summary */}
           {isCollapsed && (
-            <div className="px-6 py-3 text-center">
-              <p className="text-sm text-white/60">
+            <div className="px-4 py-2 text-center">
+              <p className="text-xs text-white/60">
                 {incompleteTasks.length === 0 ? (
                   <span className="text-green-400">All tasks completed! 🎉</span>
                 ) : (

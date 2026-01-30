@@ -776,6 +776,8 @@ const OnboardingPage = () => {
     // Set sessionStorage to allow skipping in current session
     // This will be cleared on next login, so user will be redirected back to onboarding
     sessionStorage.setItem("onboarding_skipped", "true");
+    // Also set the has_redirected flag so user won't be redirected again in this session
+    sessionStorage.setItem("has_redirected_to_onboarding", "true");
     toast.info(
       "You can complete onboarding later. You'll be prompted to complete it on your next login."
     );
@@ -808,6 +810,10 @@ const OnboardingPage = () => {
         // This prevents the ProtectedRoute from redirecting back to onboarding
         // before the backend status is fully synced
         sessionStorage.setItem("onboarding_just_completed", "true");
+        
+        // Clear the redirect flag since onboarding is now complete
+        sessionStorage.removeItem("has_redirected_to_onboarding");
+        sessionStorage.removeItem("onboarding_skipped");
 
         // Refresh canonical user data from server and sync localStorage + redux
         try {
