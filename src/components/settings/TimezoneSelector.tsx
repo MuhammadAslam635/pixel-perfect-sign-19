@@ -49,7 +49,7 @@ export const TimezoneSelector = ({
           role="combobox"
           aria-expanded={open}
           disabled={disabled}
-          className="w-full justify-between bg-white/[0.06] border-white/10 text-white hover:bg-white/[0.08]"
+          className="w-full h-12 rounded-xl justify-between bg-white/[0.04] border-white/10 text-white hover:bg-white/[0.08] px-4"
         >
           <span className="truncate">
             {value
@@ -59,7 +59,7 @@ export const TimezoneSelector = ({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[400px] p-0 bg-[#1a1a2e] backdrop-blur-xl border-white/20 " align="start">
+      <PopoverContent className="w-[400px] p-0 bg-popover backdrop-blur-xl border-white/10" align="start">
         <Command>
           <CommandInput
             placeholder="Search timezone..."

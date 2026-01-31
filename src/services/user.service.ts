@@ -107,6 +107,10 @@ export interface UserPreferences {
     selectedSeniorities: string[];
   };
   timezone: string | null;
+  activeHours: {
+    start: string;
+    end: string;
+  };
 }
 
 export interface UserPreferencesResponse {
@@ -308,6 +312,10 @@ export const userService = {
   updateUserPreferences: async (data: {
     selectedSeniorities?: string[];
     timezone?: string | null;
+    activeHours?: {
+      start: string;
+      end: string;
+    };
   }): Promise<UserPreferencesResponse> => {
     try {
       const response = await API.put("/users/preferences", data);
