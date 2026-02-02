@@ -212,6 +212,14 @@ const AppRoutes = () => {
           }
         />
         <Route
+          path="/feedback/:feedbackId/chat"
+          element={
+            <ProtectedRoute moduleName="feedback">
+              <FeedbackChat />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/feedback"
           element={
             <ProtectedRoute moduleName="feedback">
