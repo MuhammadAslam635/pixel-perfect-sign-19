@@ -63,6 +63,29 @@ export interface AcceptInvitationData {
   timezone?: string | null;
 }
 
+
+export interface Setup2FAResponse {
+  success: boolean;
+  secret: string;
+  qrCode: string;
+}
+
+export interface Enable2FAData {
+  token: string;
+}
+
+export interface Disable2FAData {
+  password: string;
+  token?: string;
+  backupCode?: string;
+}
+
+export interface VerifyLogin2FAData {
+  mfaToken: string;
+  token?: string;
+  backupCode?: string;
+}
+
 export const authService = {
   /**
    * Register a new user
@@ -186,6 +209,64 @@ export const authService = {
   acceptInvitation: async (data: AcceptInvitationData): Promise<AuthResponse> => {
     try {
       const response = await API.post("/invite/accept", data);
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  /**
+   * Setup 2FA (Generate Secret)
+   */
+  setup2FA: async (): Promise<Setup2FAResponse> => {
+    try {
+      const response = await API.post("/2fa/setup");
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  /**
+   * Enable 2FA
+   */
+  enable2FA: async (data: Enable2FAData): Promise<AuthResponse> => {
+    try {
+      const response = await API.post("/2fa/enable", data);
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  /**
+   * Disable 2FA
+   */
+  disable2FA: async (data: Disable2FAData): Promise<AuthResponse> => {
+    try {
+      const response = await API.post("/2fa/disable", data);
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  /**
+   * Verify Login 2FA
+   */
+  verifyLogin2FA: async (data: VerifyLogin2FAData): Promise<AuthResponse> => {
+    try {
+      const response = await API.post("/2fa/verify-login", data);
+      
+      if (response.data.success && response.data.token) {
+        // Store user data with token in localStorage
+        const userWithToken = {
+          ...response.data.user,
+          token: response.data.token,
+        };
+        setAuthToken(response.data.token, userWithToken);
+      }
+      
       return response.data;
     } catch (error: any) {
       throw error;

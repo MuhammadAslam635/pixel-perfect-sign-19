@@ -15,6 +15,8 @@ interface AuthState {
   user: User | null;
   loading: boolean;
   error: string | null;
+  mfaRequired: boolean;
+  mfaToken: string | null;
 }
 
 // Initialize state from localStorage
@@ -30,6 +32,8 @@ const initialState: AuthState = {
     : null,
   loading: false,
   error: null,
+  mfaRequired: false,
+  mfaToken: null,
 };
 
 const authSlice = createSlice({
@@ -65,9 +69,15 @@ const authSlice = createSlice({
         state.user = { ...state.user, ...action.payload };
       }
     },
+    setMfaRequired: (state, action: PayloadAction<{ required: boolean; token: string | null }>) => {
+      state.mfaRequired = action.payload.required;
+      state.mfaToken = action.payload.token;
+      state.loading = false;
+      state.error = null;
+    },
   },
 });
 
-export const { loginStart, loginSuccess, loginFailure, logout, updateUser } =
+export const { loginStart, loginSuccess, loginFailure, logout, updateUser, setMfaRequired } =
   authSlice.actions;
 export default authSlice.reducer;
