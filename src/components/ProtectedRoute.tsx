@@ -35,10 +35,8 @@ const ProtectedRoute = ({
   const sessionUser = user || getUserData();
 
   // Check onboarding status for Company/CompanyAdmin users
-  const { requiresOnboarding, loading: onboardingLoading } = useOnboardingStatus(
-    sessionUser?.role,
-    isAuth && !skipOnboardingCheck
-  );
+  const { requiresOnboarding, loading: onboardingLoading } =
+    useOnboardingStatus(sessionUser?.role, isAuth && !skipOnboardingCheck);
 
   if (!isAuth) {
     return <Navigate to="/" replace />;
@@ -56,11 +54,15 @@ const ProtectedRoute = ({
   // Skip if already on onboarding page or if skipOnboardingCheck is true
   // Only redirect to onboarding once per session - after that, let users navigate freely
   // They'll be reminded via the CompleteProfilePanel instead
-  if (!skipOnboardingCheck && window.location.pathname !== '/onboarding') {
+  if (!skipOnboardingCheck && window.location.pathname !== "/onboarding") {
     // Check if we've already shown the onboarding redirect in this session
-    const hasRedirectedToOnboarding = sessionStorage.getItem('has_redirected_to_onboarding') === 'true';
-    
-    if (onboardingLoading && (sessionUser?.role === 'Company' || sessionUser?.role === 'CompanyAdmin')) {
+    const hasRedirectedToOnboarding =
+      sessionStorage.getItem("has_redirected_to_onboarding") === "true";
+
+    if (
+      onboardingLoading &&
+      (sessionUser?.role === "Company" || sessionUser?.role === "CompanyAdmin")
+    ) {
       return (
         <div className="flex min-h-screen items-center justify-center text-white/60">
           Checking onboarding status...
@@ -71,16 +73,21 @@ const ProtectedRoute = ({
     // Only redirect if we haven't already redirected in this session
     if (requiresOnboarding && !hasRedirectedToOnboarding) {
       // Mark that we've redirected in this session
-      sessionStorage.setItem('has_redirected_to_onboarding', 'true');
+      sessionStorage.setItem("has_redirected_to_onboarding", "true");
       return <Navigate to="/onboarding" replace />;
     }
   }
-  // Admin users can only access admin routes
+  // Admin users can only access admin routes (except feedback support chat so they can respond)
   if (
     sessionUser?.role === "Admin" &&
     !window.location.pathname.startsWith("/admin/")
   ) {
-    return <Navigate to="/admin/dashboard" replace />;
+    const isFeedbackSupportChat = /^\/feedback\/[^/]+\/chat$/.test(
+      window.location.pathname
+    );
+    if (!isFeedbackSupportChat) {
+      return <Navigate to="/admin/dashboard" replace />;
+    }
   }
 
   // New RBAC check - takes precedence
@@ -89,13 +96,18 @@ const ProtectedRoute = ({
     // Note: checkPermission inside usePermissions hook should use the updated logic from rbacHelpers
     // But we add a double-check here for safety
     if (isRestrictedModule(moduleName) && permissionsReady) {
-         const hasAccess = checkPermission(moduleName, requiredActions, requireAllActions);
-         if (!hasAccess) {
-             const userRole = sessionUser?.role;
-             const dashboardPath = userRole === "Admin" ? "/admin/dashboard" : "/dashboard";
-             // Optional: Show toast here? "Access Denied: Restricted Module"
-             return <Navigate to={dashboardPath} replace />;
-         }
+      const hasAccess = checkPermission(
+        moduleName,
+        requiredActions,
+        requireAllActions
+      );
+      if (!hasAccess) {
+        const userRole = sessionUser?.role;
+        const dashboardPath =
+          userRole === "Admin" ? "/admin/dashboard" : "/dashboard";
+        // Optional: Show toast here? "Access Denied: Restricted Module"
+        return <Navigate to={dashboardPath} replace />;
+      }
     }
 
     if (!permissionsReady && !isSysAdmin()) {
@@ -136,4 +148,3 @@ const ProtectedRoute = ({
 };
 
 export default ProtectedRoute;
-
