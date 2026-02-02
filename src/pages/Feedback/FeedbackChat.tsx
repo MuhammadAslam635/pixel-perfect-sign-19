@@ -1,5 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,6 +15,8 @@ const FeedbackChat = () => {
   const { feedbackId } = useParams<{ feedbackId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const currentUser = useSelector((state: RootState) => state.auth.user);
+  const currentUserId = currentUser?._id ?? "";
   const [messages, setMessages] = useState<FeedbackChatMessageType[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
@@ -92,9 +96,9 @@ const FeedbackChat = () => {
 
   return (
     <DashboardLayout>
-      <main className="relative mt-32 mb-4 h-[calc(100vh-12rem)] flex-1 overflow-hidden px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[66px] text-white">
-        <div className="mx-auto flex flex-col h-full max-w-3xl border border-white/10 rounded-2xl bg-[linear-gradient(173.83deg,_rgba(255,255,255,0.08)_4.82%,_rgba(255,255,255,0)_38.08%)]">
-          <div className="flex items-center gap-2 p-4 border-b border-white/10">
+      <main className="relative mt-32 mb-4 h-[calc(100vh-12rem)] flex-1 overflow-hidden px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12 2xl:px-16 text-white">
+        <div className="mx-auto flex flex-col h-full w-full max-w-full sm:max-w-2xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl 2xl:max-w-6xl border border-white/10 rounded-2xl bg-[linear-gradient(173.83deg,_rgba(255,255,255,0.08)_4.82%,_rgba(255,255,255,0)_38.08%)]">
+          <div className="flex items-center gap-2 p-4 border-b border-white/10 shrink-0">
             <Button
               variant="ghost"
               size="icon"
@@ -103,18 +107,20 @@ const FeedbackChat = () => {
             >
               <ArrowLeft className="w-4 h-4" />
             </Button>
-            <MessageSquare className="w-5 h-5 text-cyan-400" />
-            <h1 className="text-lg font-semibold">Support chat</h1>
-            <span className="text-white/50 text-sm ml-1">(Feedback)</span>
+            <MessageSquare className="w-5 h-5 text-cyan-400 shrink-0" />
+            <h1 className="text-lg font-semibold truncate">Support chat</h1>
+            <span className="text-white/50 text-sm ml-1 shrink-0 hidden sm:inline">
+              (Feedback)
+            </span>
           </div>
 
           {loading ? (
-            <div className="flex-1 flex items-center justify-center">
+            <div className="flex-1 flex items-center justify-center min-h-0">
               <Loader2 className="w-8 h-8 animate-spin text-cyan-400" />
             </div>
           ) : (
             <>
-              <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-hide">
+              <div className="flex-1 overflow-y-auto p-4 sm:p-5 md:p-6 space-y-3 min-h-0 scrollbar-hide">
                 {messages.length === 0 ? (
                   <p className="text-white/50 text-center py-8">
                     No messages yet. Start the conversation.
@@ -123,11 +129,26 @@ const FeedbackChat = () => {
                   messages.map((msg) => {
                     const sender =
                       typeof msg.senderId === "object" ? msg.senderId : null;
-                    const name = sender?.name || sender?.email || "User";
+                    const senderId =
+                      typeof msg.senderId === "object"
+                        ? (msg.senderId as any)?._id
+                        : msg.senderId;
+                    const isCurrentUser =
+                      senderId &&
+                      currentUserId &&
+                      String(senderId) === String(currentUserId);
+                    const name =
+                      sender?.name ||
+                      sender?.email ||
+                      (isCurrentUser ? "You" : "Support");
                     return (
                       <div
                         key={msg._id}
-                        className="flex flex-col gap-1 max-w-[85%] rounded-xl px-4 py-2 bg-white/5 border border-white/10"
+                        className={`flex flex-col gap-1 max-w-[85%] sm:max-w-[80%] md:max-w-[75%] rounded-xl px-4 py-2.5 ${
+                          isCurrentUser
+                            ? "ml-auto bg-cyan-500/20 border border-cyan-400/30 text-right"
+                            : "mr-auto bg-white/5 border border-white/10 text-left"
+                        }`}
                       >
                         <p className="text-white/70 text-xs font-medium">
                           {name}
@@ -145,7 +166,7 @@ const FeedbackChat = () => {
                 <div ref={messagesEndRef} />
               </div>
 
-              <div className="p-4 border-t border-white/10 flex gap-2">
+              <div className="p-3 sm:p-4 border-t border-white/10 flex gap-2 shrink-0">
                 <Textarea
                   placeholder="Type a message..."
                   value={input}
@@ -156,7 +177,7 @@ const FeedbackChat = () => {
                       handleSend();
                     }
                   }}
-                  className="min-h-[44px] max-h-32 resize-none bg-black/30 border-white/10 text-white placeholder:text-white/50"
+                  className="min-h-[44px] max-h-32 resize-none bg-black/30 border-white/10 text-white placeholder:text-white/50 flex-1 min-w-0"
                   rows={1}
                 />
                 <Button
