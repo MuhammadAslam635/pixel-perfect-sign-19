@@ -15,10 +15,8 @@ const FeedbackChat = () => {
   const { feedbackId } = useParams<{ feedbackId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [chat, setChat] = useState<{
-    participantUserId?: { _id: string } | string;
-    participantSupportId?: { _id: string } | string;
-  } | null>(null);
+  const currentUser = useSelector((state: RootState) => state.auth.user);
+  const currentUserId = currentUser?._id ?? "";
   const [messages, setMessages] = useState<FeedbackChatMessageType[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
@@ -43,9 +41,9 @@ const FeedbackChat = () => {
     if (!feedbackId) return;
     setLoading(true);
     try {
-      const { chat: chatData, messages: msgs } =
-        await feedbackService.getFeedbackChat(feedbackId);
-      setChat(chatData ?? null);
+      const { messages: msgs } = await feedbackService.getFeedbackChat(
+        feedbackId
+      );
       setMessages(msgs || []);
     } catch (error: any) {
       console.error("Error loading feedback chat:", error);
@@ -135,26 +133,21 @@ const FeedbackChat = () => {
                       typeof msg.senderId === "object"
                         ? (msg.senderId as any)?._id
                         : msg.senderId;
-                    const participantUserId =
-                      chat?.participantUserId &&
-                      (typeof chat.participantUserId === "object"
-                        ? (chat.participantUserId as any)?._id
-                        : chat.participantUserId);
-                    const isUserMessage =
+                    const isFromCurrentUser =
                       senderId &&
-                      participantUserId &&
-                      String(senderId) === String(participantUserId);
+                      currentUserId &&
+                      String(senderId) === String(currentUserId);
                     const name =
                       sender?.name ||
                       sender?.email ||
-                      (isUserMessage ? "User" : "Support");
+                      (isFromCurrentUser ? "You" : "Support");
                     return (
                       <div
                         key={msg._id}
                         className={`flex flex-col gap-1 max-w-[85%] sm:max-w-[80%] md:max-w-[75%] rounded-xl px-4 py-2.5 ${
-                          isUserMessage
-                            ? "mr-auto text-left bg-white/5 border border-white/10"
-                            : "ml-auto text-right bg-cyan-500/20 border border-cyan-400/30"
+                          isFromCurrentUser
+                            ? "ml-auto text-right bg-cyan-500/20 border border-cyan-400/30"
+                            : "mr-auto text-left bg-white/5 border border-white/10"
                         }`}
                       >
                         <p className="text-white/70 text-xs font-medium">
@@ -162,14 +155,14 @@ const FeedbackChat = () => {
                         </p>
                         <p
                           className={`text-white text-sm whitespace-pre-wrap break-words ${
-                            isUserMessage ? "text-left" : "text-right"
+                            isFromCurrentUser ? "text-right" : "text-left"
                           }`}
                         >
                           {msg.content}
                         </p>
                         <p
                           className={`text-white/40 text-xs ${
-                            isUserMessage ? "text-left" : "text-right"
+                            isFromCurrentUser ? "text-right" : "text-left"
                           }`}
                         >
                           {new Date(msg.createdAt).toLocaleString()}
