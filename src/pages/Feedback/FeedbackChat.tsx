@@ -1,6 +1,7 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { RootState } from "@/store/store";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -9,87 +10,81 @@ import { feedbackService } from "@/services/feedback.service";
 import { useToast } from "@/hooks/use-toast";
 import { sanitizeErrorMessage } from "@/utils/errorMessages";
 import { ArrowLeft, Send, Loader2, MessageSquare } from "lucide-react";
-import type { FeedbackChatMessage as FeedbackChatMessageType } from "@/types/feedback.types";
+
+const FEEDBACK_CHAT_QUERY_KEY = "feedbackChat";
 
 const FeedbackChat = () => {
   const { feedbackId } = useParams<{ feedbackId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const currentUser = useSelector((state: RootState) => state.auth.user);
   const currentUserId = currentUser?._id ?? "";
-  const [messages, setMessages] = useState<FeedbackChatMessageType[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [sending, setSending] = useState(false);
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const {
+    data: chatData,
+    isLoading: loading,
+    error,
+    isError,
+  } = useQuery({
+    queryKey: [FEEDBACK_CHAT_QUERY_KEY, feedbackId],
+    queryFn: () => feedbackService.getFeedbackChat(feedbackId!),
+    enabled: !!feedbackId,
+    refetchInterval: 5000,
+    retry: 1,
+  });
+
+  const sendMessageMutation = useMutation({
+    mutationFn: ({
+      feedbackId: id,
+      content,
+    }: {
+      feedbackId: string;
+      content: string;
+    }) => feedbackService.sendFeedbackChatMessage(id, content),
+    onSuccess: (_, variables) => {
+      setInput("");
+      queryClient.invalidateQueries({
+        queryKey: [FEEDBACK_CHAT_QUERY_KEY, variables.feedbackId],
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: sanitizeErrorMessage(error, "Failed to send message"),
+        variant: "destructive",
+      });
+    },
+  });
+
+  const messages = chatData?.messages ?? [];
 
   useEffect(() => {
     if (!feedbackId) {
       toast({ title: "Feedback ID required", variant: "destructive" });
       navigate("/feedback");
-      return;
     }
-    loadChat();
-    pollRef.current = setInterval(loadMessages, 5000);
-    return () => {
-      if (pollRef.current) clearInterval(pollRef.current);
-    };
-  }, [feedbackId]);
+  }, [feedbackId, navigate, toast]);
 
-  const loadChat = async () => {
-    if (!feedbackId) return;
-    setLoading(true);
-    try {
-      const { messages: msgs } = await feedbackService.getFeedbackChat(
-        feedbackId
-      );
-      setMessages(msgs || []);
-    } catch (error: any) {
-      console.error("Error loading feedback chat:", error);
+  useEffect(() => {
+    if (isError && error) {
       toast({
         title: sanitizeErrorMessage(error, "Failed to load chat"),
         variant: "destructive",
       });
       navigate("/feedback");
-    } finally {
-      setLoading(false);
     }
-  };
-
-  const loadMessages = async () => {
-    if (!feedbackId) return;
-    try {
-      const msgs = await feedbackService.getFeedbackChatMessages(feedbackId);
-      setMessages(msgs || []);
-    } catch {
-      // ignore poll errors
-    }
-  };
+  }, [isError, error, navigate, toast]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSend = async () => {
+  const handleSend = () => {
     const text = input.trim();
-    if (!feedbackId || !text || sending) return;
-    setSending(true);
-    try {
-      const newMsg = await feedbackService.sendFeedbackChatMessage(
-        feedbackId,
-        text
-      );
-      setMessages((prev) => [...prev, newMsg]);
-      setInput("");
-    } catch (error: any) {
-      toast({
-        title: sanitizeErrorMessage(error, "Failed to send message"),
-        variant: "destructive",
-      });
-    } finally {
-      setSending(false);
-    }
+    if (!feedbackId || !text || sendMessageMutation.isPending) return;
+    sendMessageMutation.mutate({ feedbackId, content: text });
   };
 
   if (!feedbackId) return null;
@@ -190,10 +185,10 @@ const FeedbackChat = () => {
                 />
                 <Button
                   onClick={handleSend}
-                  disabled={sending || !input.trim()}
+                  disabled={sendMessageMutation.isPending || !input.trim()}
                   className="bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-400/30 shrink-0"
                 >
-                  {sending ? (
+                  {sendMessageMutation.isPending ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
                     <Send className="w-4 h-4" />
