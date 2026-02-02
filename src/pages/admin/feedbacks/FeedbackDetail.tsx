@@ -63,6 +63,7 @@ const FeedbackDetail = () => {
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [loading, setLoading] = useState(false);
   const [updating, setUpdating] = useState(false);
+  const [closingNote, setClosingNote] = useState("");
 
   useEffect(() => {
     if (userRoleName !== "Admin") {
