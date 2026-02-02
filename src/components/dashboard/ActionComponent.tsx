@@ -256,7 +256,7 @@ export const ActionComponent = () => {
       <div className="flex items-center gap-1 p-2 px-4">
         <button
           aria-label="Toggle notifications"
-          className={`relative flex h-8 w-8 items-center justify-center rounded-full border border-white/10 text-white transition ${notificationsOpen ? "ring-2 ring-cyan-400/40" : ""
+          className={`relative flex h-8 w-8 items-center justify-center rounded-full border border-white/10 text-white !transition-none ${notificationsOpen ? "ring-2 ring-cyan-400/40" : ""
             }`}
           type="button"
           onClick={() => {
@@ -335,7 +335,7 @@ export const ActionComponent = () => {
                           <li
                             key={item._id}
                             className={`${isUnread ? "bg-white/5" : ""
-                              } cursor-pointer hover:bg-white/10 transition-colors`}
+                              } cursor-pointer hover:bg-white/10 !transition-none`}
                             onClick={() => handleMarkAsRead(item._id)}
                           >
                             <div className="flex items-start justify-between gap-2">

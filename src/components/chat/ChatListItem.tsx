@@ -1,6 +1,5 @@
 import { FC, forwardRef } from "react";
 import { useSelector } from "react-redux";
-import { motion, Variants } from "framer-motion";
 import { Loader2, EllipsisVertical, Trash2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -30,22 +29,7 @@ interface ChatListItemProps {
 const truncateText = (text: string, limit: number) =>
   text.length > limit ? `${text.slice(0, limit - 1)}…` : text;
 
-const chatItemVariants: Variants = {
-  hidden: { opacity: 0, scale: 0.95 },
-  visible: {
-    opacity: 1,
-    scale: 1,
-    transition: { 
-      duration: 0.3, 
-      ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] 
-    },
-  },
-  exit: {
-    opacity: 0,
-    scale: 0.95,
-    transition: { duration: 0.2 },
-  },
-};
+
 
 const ChatListItem = forwardRef<HTMLDivElement, ChatListItemProps>(
   ({ chat, isSelected, isDeleting, onSelect, onOption, onDelete }, ref) => {
@@ -67,13 +51,10 @@ const ChatListItem = forwardRef<HTMLDivElement, ChatListItemProps>(
   const truncatedTitle = truncateText(fullTitle, 18);
 
   return (
-    <motion.div
+    <div
       ref={ref}
-      layout
-      exit="exit"
-      variants={chatItemVariants}
       className={cn(
-        "group flex w-full items-center rounded-2xl border border-[#2B2A38]/40 bg-[#FFFFFF0A] px-4 py-4 shadow-[0_0_80px_rgba(0,0,0,0.08)] transition-all duration-300",
+        "group flex w-full items-center rounded-2xl border border-[#2B2A38]/40 bg-[#FFFFFF0A] px-4 py-4 shadow-[0_0_80px_rgba(0,0,0,0.08)] !transition-none",
         isSelected
           ? "border-white/60 bg-white/10 shadow-[0_0_90px_rgba(0,0,0,0.15)]"
           : "hover:border-white/30 hover:bg-white/12 hover:shadow-[0_0_90px_rgba(0,0,0,0.12)]"
@@ -133,7 +114,7 @@ const ChatListItem = forwardRef<HTMLDivElement, ChatListItemProps>(
               onOption(chat._id);
             }}
             className={cn(
-              "ml-3 flex size-7 items-center justify-center rounded-full border border-transparent transition",
+              "ml-3 flex size-7 items-center justify-center rounded-full border border-transparent !transition-none",
               isSelected ? "bg-white/20" : "hover:bg-white/10"
             )}
             aria-label="Chat options"
@@ -162,7 +143,7 @@ const ChatListItem = forwardRef<HTMLDivElement, ChatListItemProps>(
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-    </motion.div>
+    </div>
   );
   }
 );

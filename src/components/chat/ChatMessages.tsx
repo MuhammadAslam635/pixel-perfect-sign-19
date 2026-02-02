@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, FC } from "react";
 import { Download, Loader2, Menu, Sparkles } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import { ChatMessage } from "@/types/chat.types";
 import { StreamEvent } from "@/services/chat.service";
 import StreamingProgress from "./StreamingProgress";
@@ -295,83 +294,7 @@ const ChatMessages = ({
   const conversation = useMemo(() => messages ?? [], [messages]);
   const scrollAreaRef = useRef<HTMLDivElement | null>(null);
 
-  // Animation variants for messages
-  const messageVariants = {
-    hidden: {
-      opacity: 0,
-      y: 20,
-      scale: 0.95,
-    },
-    visible: {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      transition: {
-        duration: 0.4,
-        ease: [0.25, 0.46, 0.45, 0.94] as any, // Custom easing for smooth animation
-      },
-    },
-    exit: {
-      opacity: 0,
-      scale: 0.95,
-      transition: {
-        duration: 0.2,
-      },
-    },
-  };
 
-  const typingVariants = {
-    hidden: {
-      opacity: 0,
-      scale: 0.8,
-      y: 10,
-    },
-    visible: {
-      opacity: 1,
-      scale: 1,
-      y: 0,
-      transition: {
-        duration: 0.3,
-        ease: "easeOut" as any,
-      },
-    },
-  };
-
-  // Bouncing dots animation for typing indicator
-  const dotVariants = {
-    animate: {
-      y: [0, -8, 0],
-      transition: {
-        duration: 0.8,
-        repeat: Infinity,
-        ease: "easeInOut" as any,
-      },
-    },
-  };
-
-  const dotVariants2 = {
-    animate: {
-      y: [0, -8, 0],
-      transition: {
-        duration: 0.8,
-        repeat: Infinity,
-        ease: "easeInOut" as any,
-        delay: 0.2,
-      },
-    },
-  };
-
-  const dotVariants3 = {
-    animate: {
-      y: [0, -8, 0],
-      transition: {
-        duration: 0.8,
-        repeat: Infinity,
-        ease: "easeInOut" as any,
-        delay: 0.4,
-      },
-    },
-  };
 
   // Confidence Badge Component
   const ConfidenceBadge: FC<{ score: number }> = ({ score }) => {
@@ -573,7 +496,7 @@ const ChatMessages = ({
         ref={scrollAreaRef}
         className="flex-1 min-h-0 space-y-4 overflow-y-auto scrollbar-hide px-6 py-6 sm:px-10 sm:py-8"
       >
-        <AnimatePresence mode="popLayout">
+
           {conversation.map((message) => {
             const isAssistant = message.role !== "user";
             // Get confidence score (prioritizes database field, falls back to content extraction)
@@ -582,13 +505,8 @@ const ChatMessages = ({
             const displayContent = removeConfidenceText(message.content);
             
             return (
-              <motion.div
+              <div
                 key={message._id}
-                layout
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-                variants={messageVariants}
                 className={cn(
                   "flex w-full",
                   isAssistant ? "justify-start" : "justify-end"
@@ -630,7 +548,7 @@ const ChatMessages = ({
                       ),
                       tr: ({ node, ...props }) => (
                         <tr
-                          className="transition-colors hover:bg-white/5"
+                          className="hover:bg-white/5 !transition-none"
                           {...props}
                         />
                       ),
@@ -694,33 +612,23 @@ const ChatMessages = ({
                     <ConfidenceBadge score={confidenceScore} />
                   )}
                 </div>
-              </motion.div>
+              </div>
             );
           })}
           {isSending && (
-            <motion.div
+            <div
               key="typing-indicator"
-              initial="hidden"
-              animate="visible"
-              exit="hidden"
-              variants={typingVariants}
               className="flex justify-start"
             >
               <div className="flex items-start gap-3 rounded-2xl bg-white/5 px-4 pt-4 pb-4 text-sm text-white/80">
                 <div className="flex items-center gap-1 pt-2">
-                  <motion.div
-                    animate="animate"
-                    variants={dotVariants}
+                  <div
                     className="w-2 h-2 bg-white/60 rounded-full"
                   />
-                  <motion.div
-                    animate="animate"
-                    variants={dotVariants2}
+                  <div
                     className="w-2 h-2 bg-white/60 rounded-full"
                   />
-                  <motion.div
-                    animate="animate"
-                    variants={dotVariants3}
+                  <div
                     className="w-2 h-2 bg-white/60 rounded-full"
                   />
                 </div>
@@ -732,9 +640,9 @@ const ChatMessages = ({
                   />
                 </div>
               </div>
-            </motion.div>
+            </div>
           )}
-        </AnimatePresence>
+
       </div>
     </div>
   );

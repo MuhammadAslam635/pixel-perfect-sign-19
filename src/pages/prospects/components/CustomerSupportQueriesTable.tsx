@@ -1,6 +1,4 @@
 import React, { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import type { Variants } from "framer-motion";
 import { EyeIcon, RefreshCwIcon, MoreVertical, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -119,98 +117,11 @@ const CustomerSupportQueriesTable: React.FC = () => {
     );
   }
 
-  const containerVariants: Variants = {
-    hidden: {
-      opacity: 0,
-      y: 30,
-      scale: 0.98,
-      filter: "blur(5px)",
-    },
-    visible: {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      filter: "blur(0px)",
-      transition: {
-        duration: 0.7,
-        ease: [0.25, 0.46, 0.45, 0.94] as const,
-        staggerChildren: 0.1,
-        delayChildren: 0.1,
-      },
-    },
-  };
 
-  const tableVariants = {
-    hidden: {
-      opacity: 0,
-      scale: 0.95,
-      y: 20,
-    },
-    visible: {
-      opacity: 1,
-      scale: 1,
-      y: 0,
-      transition: {
-        duration: 0.6,
-        ease: [0.25, 0.46, 0.45, 0.94] as const,
-        staggerChildren: 0.06,
-        delayChildren: 0.3,
-      },
-    },
-  } satisfies Variants;
-
-  const headerVariants = {
-    hidden: {
-      opacity: 0,
-      y: -15,
-      scale: 0.95,
-    },
-    visible: {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      transition: {
-        duration: 0.5,
-        ease: [0.25, 0.46, 0.45, 0.94] as const,
-      },
-    },
-  } satisfies Variants;
-
-  const rowVariants: Variants = {
-    hidden: {
-      opacity: 0,
-      y: 15,
-      scale: 0.98,
-      filter: "blur(2px)",
-    },
-    visible: {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      filter: "blur(0px)",
-      transition: {
-        duration: 0.4,
-        ease: [0.25, 0.46, 0.45, 0.94] as const,
-      },
-    },
-    exit: {
-      opacity: 0,
-      y: -10,
-      scale: 0.95,
-      filter: "blur(2px)",
-      transition: {
-        duration: 0.3,
-        ease: [0.25, 0.46, 0.45, 0.94] as const,
-      },
-    },
-  };
 
   return (
-    <motion.div
+    <div
       className="w-full"
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
     >
       <div
         className="border border-[#FFFFFF0D] p-6 rounded-xl"
@@ -238,7 +149,7 @@ const CustomerSupportQueriesTable: React.FC = () => {
             <button
               onClick={handleRefresh}
               disabled={isRefetching || isLoading}
-              className="group relative overflow-hidden flex items-center justify-center h-10 rounded-full border border-white/40 px-3.5 gap-2 text-xs font-medium tracking-wide transition-all duration-400 ease-elastic text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/15 before:to-transparent before:transition-all before:duration-300 before:ease-in-out hover:before:from-white/25 hover:before:duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="group relative overflow-hidden flex items-center justify-center h-10 rounded-full border border-white/40 px-3.5 gap-2 text-xs font-medium tracking-wide text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/15 before:to-transparent !transition-none hover:before:from-white/25 disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
                 background: "#FFFFFF1A",
                 boxShadow:
@@ -255,7 +166,7 @@ const CustomerSupportQueriesTable: React.FC = () => {
                 }}
               ></div>
               <RefreshCwIcon
-                className={`h-4 w-4 flex-shrink-0 transition-[color,filter] duration-250 ease-in-out text-white drop-shadow-[0_8px_18px_rgba(62,100,180,0.45)] ${
+                className={`h-4 w-4 flex-shrink-0 text-white drop-shadow-[0_8px_18px_rgba(62,100,180,0.45)] !transition-none ${
                   isRefetching || isLoading ? "animate-spin" : ""
                 }`}
               />
@@ -267,128 +178,73 @@ const CustomerSupportQueriesTable: React.FC = () => {
         </Card>
 
         {isLoading ? (
-          <motion.div
+          <div
             className="space-y-3 p-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
           >
             {Array.from({ length: 5 }).map((_, i) => (
-              <motion.div
+              <div
                 key={i}
                 className="flex space-x-4"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{
-                  duration: 0.4,
-                  delay: i * 0.1,
-                  ease: "easeOut",
-                }}
               >
                 <Skeleton className="h-4 flex-1 bg-white/10" />
                 <Skeleton className="h-4 flex-1 bg-white/10" />
                 <Skeleton className="h-4 w-24 bg-white/10" />
                 <Skeleton className="h-4 w-24 bg-white/10" />
-              </motion.div>
+              </div>
             ))}
-          </motion.div>
+          </div>
         ) : (
           <>
             {/* Header */}
-            <motion.div
+            <div
               className="mb-4 border border-[#FFFFFF1A] rounded-xl overflow-hidden"
-              variants={headerVariants}
             >
-              <motion.div
+              <div
                 className="grid grid-cols-[1.2fr_1fr_1fr_0.8fr_0.8fr_0.8fr_80px] items-center gap-4 px-6 py-4 bg-[#FFFFFF05]"
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{
-                  duration: 0.4,
-                  delay: 0.2,
-                  ease: [0.25, 0.46, 0.45, 0.94] as const,
-                }}
               >
-                <motion.div
+                <div
                   className="text-sm text-gray-400"
-                  whileHover={{
-                    color: "#ffffff",
-                    transition: { duration: 0.2 },
-                  }}
                 >
                   Name
-                </motion.div>
-                <motion.div
+                </div>
+                <div
                   className="text-sm text-gray-400"
-                  whileHover={{
-                    color: "#ffffff",
-                    scale: 1.02,
-                    transition: { duration: 0.2 },
-                  }}
                 >
                   Email
-                </motion.div>
-                <motion.div
+                </div>
+                <div
                   className="text-sm text-gray-400"
-                  whileHover={{
-                    color: "#ffffff",
-                    scale: 1.02,
-                    transition: { duration: 0.2 },
-                  }}
                 >
                   Phone
-                </motion.div>
-                <motion.div
+                </div>
+                <div
                   className="text-sm text-gray-400"
-                  whileHover={{
-                    color: "#ffffff",
-                    scale: 1.02,
-                    transition: { duration: 0.2 },
-                  }}
                 >
                   Start Time
-                </motion.div>
-                <motion.div
+                </div>
+                <div
                   className="text-sm text-gray-400"
-                  whileHover={{
-                    color: "#ffffff",
-                    scale: 1.02,
-                    transition: { duration: 0.2 },
-                  }}
                 >
                   Status
-                </motion.div>
-                <motion.div
+                </div>
+                <div
                   className="text-sm text-gray-400 text-center"
-                  whileHover={{
-                    color: "#ffffff",
-                    scale: 1.02,
-                    transition: { duration: 0.2 },
-                  }}
                 >
                   Messages
-                </motion.div>
-                <motion.div
+                </div>
+                <div
                   className="text-sm text-gray-400 text-center"
-                  whileHover={{
-                    color: "#ffffff",
-                    scale: 1.02,
-                    transition: { duration: 0.2 },
-                  }}
                 >
                   Actions
-                </motion.div>
-              </motion.div>
-            </motion.div>
+                </div>
+              </div>
+            </div>
 
             {/* Table Body */}
-            <motion.div
+            <div
               className="rounded-2xl overflow-hidden bg-[#FFFFFF03]"
-              variants={tableVariants}
-              initial="hidden"
-              animate="visible"
             >
-              <AnimatePresence mode="popLayout">
+
                 {data?.data.docs.map((query, index) => {
                   // Parse personalContactInfo for queries view
                   let contactInfo = null;
@@ -401,65 +257,33 @@ const CustomerSupportQueriesTable: React.FC = () => {
                   }
 
                   return (
-                    <motion.div
+                    <div
                       key={query._id}
-                      variants={rowVariants}
-                      layout
-                      layoutId={query._id}
-                      whileHover={{
-                        backgroundColor: "rgba(255, 255, 255, 0.08)",
-                        boxShadow: "0 8px 25px rgba(0, 0, 0, 0.15)",
-                        transition: {
-                          duration: 0.3,
-                          ease: [0.25, 0.46, 0.45, 0.94],
-                          backgroundColor: { duration: 0.2 },
-                        },
-                      }}
-
-                      className="grid grid-cols-[1.2fr_1fr_1fr_0.8fr_0.8fr_0.8fr_80px] items-center gap-4 px-6 py-4 border-b border-[#FFFFFF0D] last:border-b-0 cursor-pointer relative overflow-hidden"
+                      className="grid grid-cols-[1.2fr_1fr_1fr_0.8fr_0.8fr_0.8fr_80px] items-center gap-4 px-6 py-4 border-b border-[#FFFFFF0D] last:border-b-0 cursor-pointer relative overflow-hidden hover:bg-white/10 hover:shadow-[0_8px_25px_rgba(0,0,0,0.15)] !transition-none"
                     >
-                      <motion.div
+                      <div
                         className="font-medium text-white truncate text-sm"
                         title={contactInfo?.name || "N/A"}
-                        whileHover={{
-                          color: "#ffffff",
-                          transition: { duration: 0.2 },
-                        }}
                       >
                         {contactInfo?.name || "N/A"}
-                      </motion.div>
-                      <motion.div
+                      </div>
+                      <div
                         className="text-gray-300 text-sm truncate"
                         title={contactInfo?.email || "N/A"}
-                        whileHover={{
-                          scale: 1.02,
-                          color: "#ffffff",
-                          transition: { duration: 0.2 },
-                        }}
                       >
                         {contactInfo?.email || "N/A"}
-                      </motion.div>
-                      <motion.div
+                      </div>
+                      <div
                         className="text-gray-300 text-sm truncate"
                         title={contactInfo?.phone || "N/A"}
-                        whileHover={{
-                          scale: 1.02,
-                          color: "#ffffff",
-                          transition: { duration: 0.2 },
-                        }}
                       >
                         {contactInfo?.phone || "N/A"}
-                      </motion.div>
-                      <motion.div
+                      </div>
+                      <div
                         className="text-gray-300 text-sm"
-                        whileHover={{
-                          scale: 1.02,
-                          color: "#ffffff",
-                          transition: { duration: 0.2 },
-                        }}
                       >
                         {formatDate(query.startTime)}
-                      </motion.div>
+                      </div>
                       <div>
                         <Badge
                           className={`${getStatusColor(
@@ -476,58 +300,40 @@ const CustomerSupportQueriesTable: React.FC = () => {
                         <TooltipProvider>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <motion.button
-                                className="p-2 rounded-full text-gray-300"
-                                whileHover={{
-                                  backgroundColor: "rgba(255, 255, 255, 0.1)",
-                                  rotate: 90,
-                                  transition: { duration: 0.2 },
-                                }}
-                                whileTap={{ scale: 0.95 }}
-                              >
-                                <MoreVertical className="h-5 w-5" />
-                              </motion.button>
+                               <button
+                                 className="p-2 rounded-full text-gray-300 hover:bg-white/10 !transition-none"
+                               >
+                                 <MoreVertical className="h-5 w-5" />
+                               </button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent
                               align="end"
                               className="bg-[#1a1a1a] border-[#2a2a2a] text-gray-200 shadow-lg rounded-lg w-40"
                             >
-                              <motion.div
-                                whileHover={{
-                                  backgroundColor: "rgba(255, 255, 255, 0.1)",
-                                  transition: { duration: 0.15 },
-                                }}
-                                whileTap={{ scale: 0.98 }}
-                              >
                                 <DropdownMenuItem
-                                  onClick={() => handleViewDetails(query)}
-                                  className="flex items-center gap-2 px-3 py-2 cursor-pointer"
-                                >
-                                  <EyeIcon size={16} /> View Details
-                                </DropdownMenuItem>
-                              </motion.div>
+                                 onClick={() => handleViewDetails(query)}
+                                 className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-white/10 !transition-none"
+                               >
+                                 <EyeIcon size={16} /> View Details
+                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TooltipProvider>
                       </div>
-                    </motion.div>
+                    </div>
                   );
                 })}
                 {data && data.data.docs.length === 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.3 }}
+                  <div
                     className="text-center text-gray-400 py-8"
                   >
                     {debouncedSearch
                       ? `No queries found matching "${debouncedSearch}"`
                       : "No queries found"}
-                  </motion.div>
+                  </div>
                 )}
-              </AnimatePresence>
-            </motion.div>
+
+            </div>
 
             {/* Pagination */}
             {data && data.data.totalPages > 1 && (
@@ -647,7 +453,7 @@ const CustomerSupportQueriesTable: React.FC = () => {
         onClose={handleCloseModal}
         viewType="queries"
       />
-    </motion.div>
+    </div>
   );
 };
 

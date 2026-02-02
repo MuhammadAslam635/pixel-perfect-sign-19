@@ -7,7 +7,6 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import { ChatSummary } from "@/types/chat.types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -68,17 +67,7 @@ const ChatList = ({
   onSelectAdminChat,
   loadingAdminChats = false,
 }: ChatListProps) => {
-  const newChatButtonVariants = {
-    idle: { scale: 1 },
-    hover: {
-      scale: 1.02,
-      transition: { duration: 0.2, ease: "easeOut" as any },
-    },
-    tap: {
-      scale: 0.98,
-      transition: { duration: 0.1 },
-    },
-  };
+
 
   const filteredChats = useMemo(() => {
     // If viewing admin user's chats, show those instead
@@ -111,12 +100,7 @@ const ChatList = ({
       )}
     >
       <div className="mb-6 space-y-4">
-        <motion.div
-          variants={newChatButtonVariants}
-          initial="idle"
-          whileHover="hover"
-          whileTap="tap"
-        >
+        <div>
           <Button
             variant="ghost"
             className="group flex w-full items-center justify-start gap-3 rounded-2xl px-2 py-2 text-left text-sm font-medium text-white transition hover:bg-transparent hover:text-white/90"
@@ -125,7 +109,7 @@ const ChatList = ({
             <PenSquare className="size-5 text-white/70 transition group-hover:text-white/90" />
             <span>New Chat</span>
           </Button>
-        </motion.div>
+        </div>
 
         {/* Admin View User Chats Dropdown */}
         {isCompanyAdmin && (
@@ -226,19 +210,19 @@ const ChatList = ({
                 </Button>
               </div>
             ) : (
-              <AnimatePresence mode="popLayout">
+              <>
                 {filteredChats.map((chat) => (
                   <ChatListItem
                     key={chat._id}
                     chat={chat}
                     isSelected={selectedAdminUserId ? selectedAdminChatId === chat._id : selectedChatId === chat._id}
                     isDeleting={deletingChatId === chat._id}
-                    onSelect={selectedAdminUserId ? (chatId) => onSelectAdminChat?.(chatId) : onSelectChat}
+                    onSelect={selectedAdminUserId ? ((chatId) => onSelectAdminChat?.(chatId)) : onSelectChat}
                     onOption={handleChatOptions}
                     onDelete={onDeleteChat}
                   />
                 ))}
-              </AnimatePresence>
+              </>
             )}
           </div>
         </ScrollArea>

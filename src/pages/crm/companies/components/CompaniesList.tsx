@@ -1,5 +1,4 @@
 import { FC, useEffect, useMemo, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -320,12 +319,8 @@ const CompaniesList: FC<CompaniesListProps> = ({
 
   // Render loading state with skeleton placeholders
   const renderLoading = () => (
-    <motion.div
+    <div
       key="companies-loading"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.3 }}
       className={
         viewMode === "card"
           ? "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"
@@ -333,15 +328,8 @@ const CompaniesList: FC<CompaniesListProps> = ({
       }
     >
       {Array.from({ length: viewMode === "card" ? 8 : 5 }).map((_, index) => (
-        <motion.div
+        <div
           key={index}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{
-            duration: 0.4,
-            delay: index * 0.1,
-            ease: "easeOut",
-          }}
           className={
             viewMode === "card"
               ? "w-full aspect-[3/1] rounded-lg border-0 bg-gradient-to-br from-gray-800/50 to-gray-900/30 border-white/10 overflow-hidden"
@@ -376,19 +364,15 @@ const CompaniesList: FC<CompaniesListProps> = ({
               </>
             )}
           </div>
-        </motion.div>
+        </div>
       ))}
-    </motion.div>
+    </div>
   );
 
   // Render empty state
   const renderEmpty = () => (
-    <motion.div
+    <div
       key="companies-empty"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.3 }}
       className="flex flex-col items-center justify-center py-16 px-4"
     >
       <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-4">
@@ -402,7 +386,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
           ? "Try adjusting your search terms or clear the filter to see all companies."
           : "There are no companies in the database yet."}
       </p>
-    </motion.div>
+    </div>
   );
 
   // Render company card
@@ -420,7 +404,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
       return (
         <Card
           key={company._id}
-          className={`relative flex items-center gap-3 overflow-hidden border-0 rounded-xl p-2 pb-3 transition-all duration-300 hover:bg-white/5 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] cursor-pointer backdrop-blur-[22.6px]`}
+          className={`relative flex items-center gap-3 overflow-hidden border-0 rounded-xl p-2 pb-3 hover:bg-white/5 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] cursor-pointer backdrop-blur-[22.6px] !transition-none`}
           style={{
             background: `linear-gradient(180deg, rgba(104, 177, 184, 0.1) 0%, rgba(104, 177, 184, 0.08) 100%), radial-gradient(50% 100% at 50% 0%, rgba(104, 177, 184, 0.1) 0%, rgba(104, 177, 184, 0) 100%)`,
           }}
@@ -536,7 +520,7 @@ const CompaniesList: FC<CompaniesListProps> = ({
     return (
       <Card
         key={company._id}
-        className={`relative flex flex-col gap-0.5 sm:gap-1 md:flex-row md:items-center md:justify-between overflow-hidden border-0 mb-1.5 sm:mb-2 rounded-[16px] sm:rounded-[20px] md:rounded-[30px] px-3 sm:px-4 md:px-5 py-1.5 sm:py-2 transition-all duration-300 hover:bg-white/5 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] ${viewMode !== "compact" ? "backdrop-blur-[22.6px]" : ""
+        className={`relative flex flex-col gap-0.5 sm:gap-1 md:flex-row md:items-center md:justify-between overflow-hidden border-0 mb-1.5 sm:mb-2 rounded-[16px] sm:rounded-[20px] md:rounded-[30px] px-3 sm:px-4 md:px-5 py-1.5 sm:py-2 hover:bg-white/5 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] !transition-none ${viewMode !== "compact" ? "backdrop-blur-[22.6px]" : ""
           }`}
         style={{
           background: `linear-gradient(180deg, rgba(104, 177, 184, 0.1) 0%, rgba(104, 177, 184, 0.08) 100%), radial-gradient(50% 100% at 50% 0%, rgba(104, 177, 184, 0.1) 0%, rgba(104, 177, 184, 0) 100%)`,
@@ -890,18 +874,10 @@ const CompaniesList: FC<CompaniesListProps> = ({
   // Mobile executives view - show only executives list
   if (mobileExecutivesView && selectedCompany) {
     return (
-      <AnimatePresence mode="wait">
-        <motion.div
-          key="mobile-executives-view"
-          className="flex flex-col md:hidden"
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: 20 }}
-          transition={{
-            duration: 0.35,
-            ease: [0.4, 0, 0.2, 1],
-          }}
-        >
+      <div
+        key="mobile-executives-view"
+        className="flex flex-col md:hidden"
+      >
           <div className="hidden sm:flex items-center gap-3 mb-4 pb-3 border-b border-white/10">
             <Button
               variant="ghost"
@@ -919,15 +895,8 @@ const CompaniesList: FC<CompaniesListProps> = ({
               {selectedCompany.name} - Executives
             </h3>
           </div>
-          <motion.div
+          <div
             className="pb-4"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{
-              duration: 0.35,
-              ease: [0.4, 0, 0.2, 1],
-            }}
           >
             <div className="flex items-center gap-3 mb-3 sm:hidden">
               <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
@@ -948,9 +917,8 @@ const CompaniesList: FC<CompaniesListProps> = ({
                 onExecutiveSelect={onExecutiveSelect}
               />
             </Card>
-          </motion.div>
-        </motion.div>
-      </AnimatePresence>
+          </div>
+        </div>
     );
   }
 
@@ -960,92 +928,51 @@ const CompaniesList: FC<CompaniesListProps> = ({
     >
       {renderPageSizeSelector("top")}
       <div className="w-full pb-4 flex-1 min-h-0 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={viewMode}
-            className="w-full"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{
-              duration: 0.2,
-              ease: "easeInOut",
-            }}
-            layout
-          >
-            <AnimatePresence mode="wait">
-              {(() => {
+        <div
+          key={viewMode}
+          className="w-full"
+        >
+          {(() => {
                 if (loading) return renderLoading();
                 if (displayedCompanies.length === 0) return renderEmpty();
 
-                // Wrap in motion.div to provide layout context and single child for AnimatePresence
                 return (
-                  <motion.div
+                  <div
                     key={`companies-grid-${displayedCompanies.length}`}
-                    initial={{ opacity: 0 }}
-                    animate={{
-                      opacity: 1,
-                      transition: { duration: 0.4, ease: "easeOut" },
-                    }}
-                    exit={{
-                      opacity: 0,
-                      transition: { duration: 0.2, ease: "easeIn" },
-                    }}
                     className={
                       viewMode === "card"
                         ? "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"
                         : "space-y-4"
                     }
-                    layout
                   >
                     {displayedCompanies.map((company, index) => (
-                      <motion.div
+                      <div
                         key={company._id}
-                        layout
-                        initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                        transition={{
-                          duration: 0.3,
-                          ease: "easeOut",
-                          delay: index * 0.05,
-                        }}
                       >
                         {renderCompanyCard(company)}
                         {/* Executives panel below the company card should not appear on desktop */}
-                        <AnimatePresence>
-                          {selectedCompanyId === company._id &&
-                            viewMode !== "card" && (
-                              <motion.div
-                                className="block lg:hidden mt-2 mb-2"
-                                initial={{ opacity: 0, height: 0, y: -10 }}
-                                animate={{ opacity: 1, height: "auto", y: 0 }}
-                                exit={{ opacity: 0, height: 0, y: -10 }}
-                                transition={{
-                                  duration: 0.35,
-                                  ease: [0.4, 0, 0.2, 1],
-                                }}
-                              >
-                                <Card className="bg-[#1f3032] border-[#3A3A3A] p-3 sm:p-4">
-                                  <CompanyExecutivesPanel
-                                    company={selectedCompany}
-                                    onViewAllLeads={
-                                      onViewAllLeads || (() => { })
-                                    }
-                                    onExecutiveSelect={onExecutiveSelect}
-                                  />
-                                </Card>
-                              </motion.div>
-                            )}
-                        </AnimatePresence>
-                      </motion.div>
+                        {selectedCompanyId === company._id &&
+                          viewMode !== "card" && (
+                            <div
+                              className="block lg:hidden mt-2 mb-2"
+                            >
+                              <Card className="bg-[#1f3032] border-[#3A3A3A] p-3 sm:p-4">
+                                <CompanyExecutivesPanel
+                                  company={selectedCompany}
+                                  onViewAllLeads={
+                                    onViewAllLeads || (() => { })
+                                  }
+                                  onExecutiveSelect={onExecutiveSelect}
+                                />
+                              </Card>
+                            </div>
+                          )}
+                      </div>
                     ))}
-                  </motion.div>
+                  </div>
                 );
               })()}
-            </AnimatePresence>
-          </motion.div>
-        </AnimatePresence>
+          </div>
       </div>
 
       {isMobile && companies.length > 2 && (

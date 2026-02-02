@@ -119,12 +119,12 @@ const Dashboard = () => {
         </svg>
         
         {/* Left Side - Skylar Assistant Panel */}
-        <div className="w-full lg:basis-1/2 lg:min-w-0 flex-1 min-h-0 overflow-hidden animate-in fade-in slide-in-from-left-8 duration-700 p-1">
+        <div className="w-full lg:basis-1/2 lg:min-w-0 flex-1 min-h-0 overflow-hidden p-1">
           <AssistantPanel isDesktop={isDesktop} />
         </div>
 
         {/* Right Side - BDR Dashboard */}
-        <div className="scrollbar-hide lg:flex w-full flex-col gap-4 overflow-y-auto pr-1 md:gap-5 lg:basis-1/2 lg:min-w-0 lg:pr-3 max-h-[calc(100vh-8rem)] bg-transparent animate-in fade-in slide-in-from-right-8 duration-700 p-1">
+        <div className="scrollbar-hide lg:flex w-full flex-col gap-4 overflow-y-auto pr-1 md:gap-5 lg:basis-1/2 lg:min-w-0 lg:pr-3 max-h-[calc(100vh-8rem)] bg-transparent p-1">
           <BDRDashboard />
         </div>
       </main>
@@ -133,7 +133,7 @@ const Dashboard = () => {
     const bdrMobileLayout = (
       <main className="relative z-10 flex flex-col gap-6 px-5 pt-28 pb-12 text-white lg:hidden">
         <BDRDashboard />
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 animation-delay-[1050ms]">
+        <div>
           <MobileAssistantCTA />
         </div>
       </main>
@@ -160,52 +160,52 @@ const Dashboard = () => {
             <stop offset="100%" stopColor="#283CB3" />
           </linearGradient>
         </defs>
-      </svg>      <div className="w-full lg:basis-1/2 lg:min-w-0 flex-1 min-h-0 overflow-hidden animate-in fade-in slide-in-from-left-8 duration-700 p-1">
+      </svg>      <div className="w-full lg:basis-1/2 lg:min-w-0 flex-1 min-h-0 overflow-hidden p-1">
         <AssistantPanel isDesktop={isDesktop} />
       </div>
 
-      <div className="scrollbar-hide lg:flex w-full flex-col gap-4 overflow-y-auto pr-1 md:gap-5 lg:basis-1/2 lg:min-w-0 lg:pr-3 max-h-[calc(100vh-8rem)] bg-transparent animate-in fade-in slide-in-from-right-8 duration-700 p-1">
+      <div className="scrollbar-hide lg:flex w-full flex-col gap-4 overflow-y-auto pr-1 md:gap-5 lg:basis-1/2 lg:min-w-0 lg:pr-3 max-h-[calc(100vh-8rem)] bg-transparent p-1">
         {/* Row 1 - Analytics Cards (Above StatsCard) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <ActiveQualifiedLeadsCard />
           <WinRateCard />
         </div>
 
         {/* Row 2 - Analytics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <RevenueAtRiskCard />
           <SpeedToLeadCard />
         </div>
 
         {/* Row 3 - Analytics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-300">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FollowupExecutionCard />
           <ProposalThroughputCard />
         </div>
 
         {/* Existing StatsCard */}
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 animation-delay-[450ms]">
+        <div>
           <StatsCard />
         </div>
 
         {/* Row 4 - Deals at Risk (Full Width) */}
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 animation-delay-[600ms] px-2">
+        <div className="px-2">
           <DealsAtRiskCard />
         </div>
 
         <div className="p-2 mt-6">
-          <div className="grid grid-cols-2 gap-4 lg:gap-4 mb-6 animate-in fade-in slide-in-from-bottom-4 duration-500 animation-delay-[600ms]">
+          <div className="grid grid-cols-2 gap-4 lg:gap-4 mb-6">
             <LeadsScoreDistributionCard />
             {/* <CommunicationHubCard />
             <ProposalsToSendCard /> */}
           </div>
 
-          <div className="grid grid-cols-2 gap-4 lg:gap-4 mb-6 animate-in fade-in slide-in-from-bottom-4 duration-500 animation-delay-[750ms]">
+          <div className="grid grid-cols-2 gap-4 lg:gap-4 mb-6">
             {/* <TopLeadsCard />
             <CalendarCard /> */}
           </div>
 
-          <div className="grid grid-cols-2 gap-4 lg:gap-4 mb-6 animate-in fade-in slide-in-from-bottom-4 duration-500 animation-delay-[900ms]">
+          <div className="grid grid-cols-2 gap-4 lg:gap-4 mb-6">
             {/* <FollowupTasksCard /> */}
             <div></div> {/* Empty space for balance */}
           </div>
@@ -217,49 +217,49 @@ const Dashboard = () => {
   const mobileLayout = (
     <main className="relative z-10 flex flex-col gap-6 px-5 pt-28 pb-12 text-white lg:hidden">
       {/* Row 1 - Analytics Cards */}
-      <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="grid grid-cols-2 gap-4">
         <ActiveQualifiedLeadsCard />
         <WinRateCard />
       </div>
 
       {/* Row 2 - Analytics Cards */}
-      <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150">
+      <div className="grid grid-cols-2 gap-4">
         <RevenueAtRiskCard />
         <SpeedToLeadCard />
       </div>
 
       {/* Row 3 - Analytics Cards */}
-      <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-300">
+      <div className="grid grid-cols-2 gap-4">
         <FollowupExecutionCard />
         <ProposalThroughputCard />
       </div>
 
       {/* Existing StatsCard */}
-      <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 animation-delay-[450ms]">
+      <div>
         <StatsCard />
       </div>
 
       {/* Row 4 - Deals at Risk */}
-      <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 animation-delay-[600ms]">
+      <div>
         <DealsAtRiskCard />
       </div>
 
       <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500 animation-delay-[750ms]">
+        <div className="grid grid-cols-2 gap-4">
           <LeadsScoreDistributionCard />
         </div>
 
-        <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500 animation-delay-[900ms]">
+        <div className="grid grid-cols-2 gap-4">
           {/* <TopLeadsCard />
           <CalendarCard /> */}
         </div>
 
-        <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500 animation-delay-[1050ms]">
+        <div className="grid grid-cols-2 gap-4">
           {/* <FollowupTasksCard /> */}
         </div>
       </div>
 
-      <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 animation-delay-[1050ms]">
+      <div>
         <MobileAssistantCTA />
       </div>
     </main>

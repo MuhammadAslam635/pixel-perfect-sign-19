@@ -112,12 +112,12 @@ export const CompleteProfileButton = () => {
         "group relative overflow-hidden flex-none flex h-9 items-center justify-start rounded-full",
         "border border-white/40 pl-2.5 pr-2.5 gap-2",
         "text-sm font-medium tracking-wide",
-        "text-white/85 transition-[background-color,box-shadow,color] duration-300 ease-out",
+        "text-white/85",
         "hover:text-white hover:shadow-[0_16px_28px_rgba(0,0,0,0.35)]",
         "before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5",
         "before:rounded-t-full before:bg-gradient-to-b before:from-white/15 before:to-transparent",
-        "before:transition-all before:duration-300 before:ease-in-out",
-        "hover:before:from-white/25 hover:before:duration-200"
+        "before:transition-none",
+        "hover:before:from-white/25"
       )}
       style={{
         background: "#FFFFFF1A",
@@ -127,7 +127,7 @@ export const CompleteProfileButton = () => {
       aria-label="Complete your profile setup"
     >
       {/* Icon */}
-      <Sparkles className="h-4 w-4 flex-shrink-0 text-white/85 transition-colors duration-300 group-hover:text-white" />
+      <Sparkles className="h-4 w-4 flex-shrink-0 text-white/85 group-hover:text-white" />
 
       {/* Text */}
       <span className="whitespace-nowrap hidden sm:inline">Complete Profile</span>

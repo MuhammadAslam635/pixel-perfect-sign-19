@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AxiosError } from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams, useLocation } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
@@ -215,44 +214,7 @@ const ChatPage = () => {
   const [adminUsers, setAdminUsers] = useState<any[]>([]);
   const [loadingAdminUsers, setLoadingAdminUsers] = useState(false);
 
-  // Animation variants for page transitions
-  const pageVariants = {
-    hidden: {
-      opacity: 0,
-      scale: 0.98,
-    },
-    visible: {
-      opacity: 1,
-      scale: 1,
-      transition: {
-        duration: 0.4,
-        ease: "easeOut",
-      },
-    },
-    exit: {
-      opacity: 0,
-      scale: 0.98,
-      transition: {
-        duration: 0.3,
-      },
-    },
-  } as any;
 
-  const composerVariants = {
-    hidden: {
-      opacity: 0,
-      y: 20,
-    },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.3,
-        ease: "easeOut",
-        delay: 0.1,
-      },
-    } as any,
-  };
 
   // Helper to derive a conversation title from messages when server doesn't provide one
   const deriveTitleFromMessages = (messages: any[] | undefined) => {
@@ -1931,11 +1893,7 @@ const ChatPage = () => {
         open={isMobileListOpen}
         onOpenChange={(open) => dispatch(setIsMobileListOpen(open))}
       >
-        <motion.main
-          initial="hidden"
-          animate="visible"
-          exit="exit"
-          variants={pageVariants}
+        <main
           className="mt-28 flex w-full justify-center px-4 pb-6 sm:px-6 md:px-10 lg:fixed lg:inset-0 lg:mt-0 lg:px-12 lg:pt-28 xl:px-16"
         >
           <div className="flex w-full lg:h-full flex-col gap-6 relative">
@@ -2002,33 +1960,23 @@ const ChatPage = () => {
                   isReadOnly={!!selectedAdminUserId}
                 />
 
-                <AnimatePresence mode="sync">
+
                   {selectedAdminUserId ? (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 10 }}
+                    <div
                       className="rounded-2xl border border-white/10 bg-white/5 px-6 py-4 text-center"
                     >
                       <p className="text-sm text-white/60">
                         Viewing user's chat in read-only mode. You cannot send
                         messages on behalf of this user.
                       </p>
-                    </motion.div>
+                    </div>
                   ) : (
-                    <motion.div
+                    <div
                       key={hasActiveConversation ? "composer" : "empty"}
-                      initial="hidden"
-                      animate="visible"
-                      exit="hidden"
-                      variants={composerVariants}
                       className="space-y-3"
                     >
                       {pendingFile ? (
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.95 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.95 }}
+                        <div
                           className="flex items-center justify-between rounded-2xl border border-primary/30 bg-primary/10 px-4 py-2 text-sm text-primary"
                         >
                           <span className="truncate">
@@ -2042,7 +1990,7 @@ const ChatPage = () => {
                           >
                             <X className="size-4" />
                           </Button>
-                        </motion.div>
+                        </div>
                       ) : null}
 
                       <ChatComposer
@@ -2053,13 +2001,13 @@ const ChatPage = () => {
                         disabled={isConversationLoading}
                         onUploadFile={(file) => dispatch(setPendingFile(file))}
                       />
-                    </motion.div>
+                    </div>
                   )}
-                </AnimatePresence>
+
               </div>
             </section>
           </div>
-        </motion.main>
+        </main>
 
         <SheetContent
           side="left"
