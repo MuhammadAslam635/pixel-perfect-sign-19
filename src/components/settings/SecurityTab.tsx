@@ -18,6 +18,7 @@ import { toast } from "@/components/ui/use-toast";
 import API from "@/utils/api";
 import { RootState } from "@/store/store";
 import { logout } from "@/store/slices/authSlice";
+import { TwoFactorSettings } from "./TwoFactorSettings";
 
 interface PasswordFormState {
   id: string;
@@ -247,56 +248,75 @@ export const SecurityTab = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <div className="space-y-6">
+      <form onSubmit={handleSubmit}>
+        <Card className="border-white/10 bg-white/[0.04] backdrop-blur-xl text-white">
+          <CardHeader className="border-b border-white/10 bg-white/[0.02]">
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.2 }}
+            >
+              <CardTitle className="text-white text-lg font-semibold">
+                Password
+              </CardTitle>
+            </motion.div>
+          </CardHeader>
+          <CardContent className="space-y-5 p-6">
+            {renderPasswordField(
+              "old_password",
+              "Current Password",
+              "Enter current password",
+              showOld,
+              () => setShowOld((prev) => !prev)
+            )}
+            {renderPasswordField(
+              "new_password",
+              "New Password",
+              "Enter new password",
+              showNew,
+              () => setShowNew((prev) => !prev)
+            )}
+            {renderPasswordField(
+              "confirm_password",
+              "Confirm Password",
+              "Confirm new password",
+              showConfirm,
+              () => setShowConfirm((prev) => !prev)
+            )}
+          </CardContent>
+          <CardFooter className="justify-end border-t border-white/10 bg-white/[0.02]">
+            <Button
+              type="submit"
+              className="mt-4 bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3]"
+              style={{
+                boxShadow:
+                  "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+              }}
+            >
+              Update Password
+            </Button>
+          </CardFooter>
+        </Card>
+      </form>
+
       <Card className="border-white/10 bg-white/[0.04] backdrop-blur-xl text-white">
         <CardHeader className="border-b border-white/10 bg-white/[0.02]">
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
+            transition={{ duration: 0.4, delay: 0.3 }}
           >
             <CardTitle className="text-white text-lg font-semibold">
-              Security
+              Two-Factor Authentication
             </CardTitle>
           </motion.div>
         </CardHeader>
-        <CardContent className="space-y-5 p-6">
-          {renderPasswordField(
-            "old_password",
-            "Current Password",
-            "Enter current password",
-            showOld,
-            () => setShowOld((prev) => !prev)
-          )}
-          {renderPasswordField(
-            "new_password",
-            "New Password",
-            "Enter new password",
-            showNew,
-            () => setShowNew((prev) => !prev)
-          )}
-          {renderPasswordField(
-            "confirm_password",
-            "Confirm Password",
-            "Confirm new password",
-            showConfirm,
-            () => setShowConfirm((prev) => !prev)
-          )}
+        <CardContent className="p-6">
+           <TwoFactorSettings />
         </CardContent>
-        <CardFooter className="justify-end border-t border-white/10 bg-white/[0.02]">
-          <Button
-            type="submit"
-            className="mt-4 bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3]"
-            style={{
-              boxShadow:
-                "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
-            }}
-          >
-            Update Password
-          </Button>
-        </CardFooter>
       </Card>
-    </form>
+    </div>
   );
 };
 
