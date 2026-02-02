@@ -33,6 +33,13 @@ import {
   StickyNote,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { feedbackService } from "@/services/feedback.service";
 import { toast } from "sonner";
 import { sanitizeErrorMessage } from "@/utils/errorMessages";
@@ -64,6 +71,8 @@ const FeedbackDetail = () => {
   const [loading, setLoading] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [closingNote, setClosingNote] = useState("");
+  const [closeModalOpen, setCloseModalOpen] = useState(false);
+  const [modalClosingNote, setModalClosingNote] = useState("");
 
   useEffect(() => {
     if (userRoleName !== "Admin") {
@@ -102,7 +111,10 @@ const FeedbackDetail = () => {
     }
   };
 
-  const handleStatusChange = async (newStatus: string) => {
+  const handleStatusChange = async (
+    newStatus: string,
+    optionalNote?: string
+  ) => {
     if (!feedback) return;
 
     setUpdating(true);
@@ -113,19 +125,24 @@ const FeedbackDetail = () => {
       } = {
         status: newStatus as "open" | "in-progress" | "closed",
       };
+      const noteToUse = optionalNote ?? closingNote;
       if (
         newStatus === "closed" &&
-        closingNote.trim() &&
+        noteToUse.trim() &&
         userRoleName === "Admin"
       ) {
-        payload.adminNote = closingNote.trim();
+        payload.adminNote = noteToUse.trim();
       }
       const updated = await feedbackService.updateFeedback(
         feedback._id,
         payload
       );
       setFeedback(updated);
-      if (newStatus === "closed" && closingNote.trim()) setClosingNote("");
+      if (newStatus === "closed") {
+        setClosingNote("");
+        setModalClosingNote("");
+        setCloseModalOpen(false);
+      }
       toast.success(`Feedback marked as ${newStatus}`);
     } catch (error: any) {
       console.error("Error updating feedback status:", error);
@@ -138,6 +155,10 @@ const FeedbackDetail = () => {
     } finally {
       setUpdating(false);
     }
+  };
+
+  const handleCloseConfirm = () => {
+    handleStatusChange("closed", modalClosingNote);
   };
 
   const handleAddAdminNote = async () => {
@@ -383,7 +404,13 @@ const FeedbackDetail = () => {
                 </span>
                 <Select
                   value={feedback.status}
-                  onValueChange={handleStatusChange}
+                  onValueChange={(newValue) => {
+                    if (newValue === "closed" && userRoleName === "Admin") {
+                      setCloseModalOpen(true);
+                    } else {
+                      handleStatusChange(newValue);
+                    }
+                  }}
                   disabled={updating}
                 >
                   <SelectTrigger className="w-full bg-black/35 border border-white/10 text-white hover:border-white/20 transition-colors">
@@ -433,19 +460,6 @@ const FeedbackDetail = () => {
                         "Add note"
                       )}
                     </Button>
-                  </div>
-                )}
-                {feedback.status !== "closed" && userRoleName === "Admin" && (
-                  <div className="mt-2 space-y-1">
-                    <span className="text-white/60 text-xs">
-                      Closing note (when setting to Closed):
-                    </span>
-                    <Textarea
-                      placeholder="Note to show user when closing..."
-                      value={closingNote}
-                      onChange={(e) => setClosingNote(e.target.value)}
-                      className="min-h-[60px] bg-black/35 border-white/10 text-white text-sm"
-                    />
                   </div>
                 )}
               </div>
@@ -553,6 +567,54 @@ const FeedbackDetail = () => {
             </Card>
           )}
         </div>
+
+        {/* Modal: Add note when closing (Admin only) */}
+        <Dialog
+          open={closeModalOpen}
+          onOpenChange={(open) => {
+            setCloseModalOpen(open);
+            if (!open) setModalClosingNote("");
+          }}
+        >
+          <DialogContent className="bg-[#1a1a1a] border-white/10 text-white max-w-md">
+            <DialogHeader>
+              <DialogTitle>Close feedback</DialogTitle>
+            </DialogHeader>
+            <p className="text-white/70 text-sm">
+              Add an optional note for the user (visible to them when they view
+              this feedback).
+            </p>
+            <Textarea
+              placeholder="Closing note (optional)..."
+              value={modalClosingNote}
+              onChange={(e) => setModalClosingNote(e.target.value)}
+              className="min-h-[80px] bg-black/35 border-white/10 text-white placeholder:text-white/50"
+            />
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setCloseModalOpen(false);
+                  setModalClosingNote("");
+                }}
+                className="border-white/20 text-white hover:bg-white/10"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleCloseConfirm}
+                disabled={updating}
+                className="bg-cyan-600 hover:bg-cyan-700 text-white"
+              >
+                {updating ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  "Close feedback"
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </main>
     </AdminLayout>
   );

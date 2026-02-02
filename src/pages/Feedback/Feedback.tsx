@@ -1115,6 +1115,18 @@ const Feedback = () => {
                               size="icon"
                               onClick={(e) => {
                                 e.stopPropagation();
+                                navigate(`/feedback/${feedback._id}/chat`);
+                              }}
+                              className="h-8 w-8 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-400/10"
+                              title="Support chat"
+                            >
+                              <MessageSquare className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 handleEdit(feedback);
                               }}
                               disabled={feedback.status === "closed"}
