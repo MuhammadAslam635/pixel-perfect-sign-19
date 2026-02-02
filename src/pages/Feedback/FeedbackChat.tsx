@@ -15,8 +15,10 @@ const FeedbackChat = () => {
   const { feedbackId } = useParams<{ feedbackId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const currentUser = useSelector((state: RootState) => state.auth.user);
-  const currentUserId = currentUser?._id ?? "";
+  const [chat, setChat] = useState<{
+    participantUserId?: { _id: string } | string;
+    participantSupportId?: { _id: string } | string;
+  } | null>(null);
   const [messages, setMessages] = useState<FeedbackChatMessageType[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
@@ -41,9 +43,9 @@ const FeedbackChat = () => {
     if (!feedbackId) return;
     setLoading(true);
     try {
-      const { chat, messages: msgs } = await feedbackService.getFeedbackChat(
-        feedbackId
-      );
+      const { chat: chatData, messages: msgs } =
+        await feedbackService.getFeedbackChat(feedbackId);
+      setChat(chatData ?? null);
       setMessages(msgs || []);
     } catch (error: any) {
       console.error("Error loading feedback chat:", error);
@@ -133,30 +135,43 @@ const FeedbackChat = () => {
                       typeof msg.senderId === "object"
                         ? (msg.senderId as any)?._id
                         : msg.senderId;
-                    const isCurrentUser =
+                    const participantUserId =
+                      chat?.participantUserId &&
+                      (typeof chat.participantUserId === "object"
+                        ? (chat.participantUserId as any)?._id
+                        : chat.participantUserId);
+                    const isUserMessage =
                       senderId &&
-                      currentUserId &&
-                      String(senderId) === String(currentUserId);
+                      participantUserId &&
+                      String(senderId) === String(participantUserId);
                     const name =
                       sender?.name ||
                       sender?.email ||
-                      (isCurrentUser ? "You" : "Support");
+                      (isUserMessage ? "User" : "Support");
                     return (
                       <div
                         key={msg._id}
                         className={`flex flex-col gap-1 max-w-[85%] sm:max-w-[80%] md:max-w-[75%] rounded-xl px-4 py-2.5 ${
-                          isCurrentUser
-                            ? "ml-auto bg-cyan-500/20 border border-cyan-400/30 text-right"
-                            : "mr-auto bg-white/5 border border-white/10 text-left"
+                          isUserMessage
+                            ? "mr-auto text-left bg-white/5 border border-white/10"
+                            : "ml-auto text-right bg-cyan-500/20 border border-cyan-400/30"
                         }`}
                       >
                         <p className="text-white/70 text-xs font-medium">
                           {name}
                         </p>
-                        <p className="text-white text-sm whitespace-pre-wrap break-words">
+                        <p
+                          className={`text-white text-sm whitespace-pre-wrap break-words ${
+                            isUserMessage ? "text-left" : "text-right"
+                          }`}
+                        >
                           {msg.content}
                         </p>
-                        <p className="text-white/40 text-xs">
+                        <p
+                          className={`text-white/40 text-xs ${
+                            isUserMessage ? "text-left" : "text-right"
+                          }`}
+                        >
                           {new Date(msg.createdAt).toLocaleString()}
                         </p>
                       </div>

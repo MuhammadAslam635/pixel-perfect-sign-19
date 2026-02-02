@@ -70,7 +70,6 @@ const FeedbackDetail = () => {
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [loading, setLoading] = useState(false);
   const [updating, setUpdating] = useState(false);
-  const [closingNote, setClosingNote] = useState("");
   const [closeModalOpen, setCloseModalOpen] = useState(false);
   const [modalClosingNote, setModalClosingNote] = useState("");
 
@@ -125,13 +124,12 @@ const FeedbackDetail = () => {
       } = {
         status: newStatus as "open" | "in-progress" | "closed",
       };
-      const noteToUse = optionalNote ?? closingNote;
       if (
         newStatus === "closed" &&
-        noteToUse.trim() &&
+        optionalNote?.trim() &&
         userRoleName === "Admin"
       ) {
-        payload.adminNote = noteToUse.trim();
+        payload.adminNote = optionalNote.trim();
       }
       const updated = await feedbackService.updateFeedback(
         feedback._id,
@@ -139,7 +137,6 @@ const FeedbackDetail = () => {
       );
       setFeedback(updated);
       if (newStatus === "closed") {
-        setClosingNote("");
         setModalClosingNote("");
         setCloseModalOpen(false);
       }
@@ -159,23 +156,6 @@ const FeedbackDetail = () => {
 
   const handleCloseConfirm = () => {
     handleStatusChange("closed", modalClosingNote);
-  };
-
-  const handleAddAdminNote = async () => {
-    if (!feedback || !closingNote.trim()) return;
-    setUpdating(true);
-    try {
-      const updated = await feedbackService.updateFeedback(feedback._id, {
-        adminNote: closingNote.trim(),
-      });
-      setFeedback(updated);
-      setClosingNote("");
-      toast.success("Note added");
-    } catch (error: any) {
-      toast.error(sanitizeErrorMessage(error, "Failed to add note."));
-    } finally {
-      setUpdating(false);
-    }
   };
 
   const handleDownloadAttachment = async (
@@ -437,31 +417,6 @@ const FeedbackDetail = () => {
                     </SelectItem>
                   </SelectContent>
                 </Select>
-                {feedback.status === "closed" && userRoleName === "Admin" && (
-                  <div className="mt-2 space-y-1">
-                    <span className="text-white/60 text-xs">
-                      Add note (visible to user):
-                    </span>
-                    <Textarea
-                      placeholder="Additional note..."
-                      value={closingNote}
-                      onChange={(e) => setClosingNote(e.target.value)}
-                      className="min-h-[60px] bg-black/35 border-white/10 text-white text-sm"
-                    />
-                    <Button
-                      size="sm"
-                      onClick={handleAddAdminNote}
-                      disabled={updating || !closingNote.trim()}
-                      className="w-full"
-                    >
-                      {updating ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        "Add note"
-                      )}
-                    </Button>
-                  </div>
-                )}
               </div>
             </div>
           </div>
