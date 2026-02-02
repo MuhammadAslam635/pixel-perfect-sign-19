@@ -135,12 +135,12 @@ const LeadEnrichmentModal = ({
               >
                 Domain Specific
               </TabsTrigger>
-              <TabsTrigger
+              {/* <TabsTrigger
                 value="business"
                 className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#69B4B7] data-[state=active]:via-[#5486D0] data-[state=active]:to-[#3E64B3] data-[state=active]:text-white text-white/50 transition-all"
               >
                 Business Specific
-              </TabsTrigger>
+              </TabsTrigger> */}
               <TabsTrigger
                 value="query"
                 className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#69B4B7] data-[state=active]:via-[#5486D0] data-[state=active]:to-[#3E64B3] data-[state=active]:text-white text-white/50 transition-all"
