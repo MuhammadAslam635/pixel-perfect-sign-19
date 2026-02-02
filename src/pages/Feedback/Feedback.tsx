@@ -665,22 +665,23 @@ const Feedback = () => {
                                   Re-open
                                 </Button>
                               )}
-                              {viewingFeedback?._id && (
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  onClick={() => {
-                                    setOpen(false);
-                                    navigate(
-                                      `/feedback/${viewingFeedback._id}/chat`
-                                    );
-                                  }}
-                                  className="border-white/20 text-white hover:bg-white/10"
-                                >
-                                  <MessageSquare className="w-4 h-4 mr-2" />
-                                  Support chat
-                                </Button>
-                              )}
+                              {viewingFeedback?._id &&
+                                viewingFeedback?.status !== "closed" && (
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => {
+                                      setOpen(false);
+                                      navigate(
+                                        `/feedback/${viewingFeedback._id}/chat`
+                                      );
+                                    }}
+                                    className="border-white/20 text-white hover:bg-white/10"
+                                  >
+                                    <MessageSquare className="w-4 h-4 mr-2" />
+                                    Support chat
+                                  </Button>
+                                )}
                             </div>
                           </div>
                         ) : (
@@ -1041,9 +1042,15 @@ const Feedback = () => {
                               size="icon"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                navigate(`/feedback/${feedback._id}/chat`);
+                                if (feedback.status !== "closed")
+                                  navigate(`/feedback/${feedback._id}/chat`);
                               }}
-                              className="h-8 w-8 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-400/10"
+                              disabled={feedback.status === "closed"}
+                              className={`h-8 w-8 ${
+                                feedback.status === "closed"
+                                  ? "text-gray-500 cursor-not-allowed opacity-50"
+                                  : "text-cyan-400 hover:text-cyan-300 hover:bg-cyan-400/10"
+                              }`}
                               title="Support chat"
                             >
                               <MessageSquare className="h-4 w-4" />
