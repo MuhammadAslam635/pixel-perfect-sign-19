@@ -60,14 +60,16 @@ const adminNavLinks: NavLink[] = [
     label: "Categories",
     icon: FolderTree,
     path: "/admin/industry-categories",
-    match: (pathname: string) => pathname.startsWith("/admin/industry-categories"),
+    match: (pathname: string) =>
+      pathname.startsWith("/admin/industry-categories"),
   },
   {
     id: "admin-enrichment-configs",
     label: "Enrichment Configs",
     icon: Settings2,
     path: "/admin/enrichment-configs",
-    match: (pathname: string) => pathname.startsWith("/admin/enrichment-configs"),
+    match: (pathname: string) =>
+      pathname.startsWith("/admin/enrichment-configs"),
   },
   {
     id: "prompts",
@@ -109,7 +111,13 @@ const navLinks: NavLink[] = [
     moduleName: "prospects",
     match: (pathname: string) => pathname.startsWith("/prospects"),
   },
-  { id: "chat", label: "Chat", icon: MessageSquare, path: "/chat", moduleName: "chat" },
+  {
+    id: "chat",
+    label: "Chat",
+    icon: MessageSquare,
+    path: "/chat",
+    moduleName: "chat",
+  },
   {
     id: "emails",
     label: "Emails",
@@ -118,7 +126,13 @@ const navLinks: NavLink[] = [
     moduleName: "emails", // Assuming 'emails' module exists, need to verify
     match: (pathname: string) => pathname.startsWith("/emails"),
   },
-  { id: "agents", label: "Agents", icon: Bot, path: "/agents", moduleName: "agents" },
+  {
+    id: "agents",
+    label: "Agents",
+    icon: Bot,
+    path: "/agents",
+    moduleName: "agents",
+  },
   {
     id: "campaigns",
     label: "Campaigns",
@@ -192,12 +206,12 @@ export const MobileNavigation = () => {
   const filteredNavLinks = linksToUse.filter((link) => {
     // 1. Check Module Permissions (New RBAC)
     if (link.moduleName) {
-         // Admin can always view
-         if (userRole === 'Admin') return true;
-         
-         if (!canView(link.moduleName)) {
-           return false;
-         }
+      // Admin can always view
+      if (userRole === "Admin") return true;
+
+      if (!canView(link.moduleName)) {
+        return false;
+      }
     }
 
     // 2. Check Legacy Roles
@@ -279,7 +293,7 @@ export const MobileNavigation = () => {
       <button
         onClick={() => setIsOpen(!isOpen)}
         ref={triggerRef}
-        className="lg:hidden flex items-center justify-center p-2 hover:bg-white/10 rounded-lg transition-colors relative z-50"
+        className="md:hidden flex items-center justify-center p-2 hover:bg-white/10 rounded-lg transition-colors relative z-50"
         aria-label="Toggle navigation"
         type="button"
       >
@@ -293,7 +307,7 @@ export const MobileNavigation = () => {
           {typeof window !== "undefined" &&
             createPortal(
               <div
-                className="lg:hidden cursor-pointer transition-opacity duration-200"
+                className="md:hidden cursor-pointer transition-opacity duration-200"
                 style={{
                   position: "fixed",
                   top: 0,
@@ -312,7 +326,7 @@ export const MobileNavigation = () => {
                 }}
                 aria-label="Close navigation"
               />,
-              document.body
+              document.body,
             )}
 
           {/* Navigation Panel - Rendered via portal */}
@@ -320,7 +334,7 @@ export const MobileNavigation = () => {
             createPortal(
               <div
                 ref={panelRef}
-                className="fixed left-0 top-0 h-screen w-80 text-white z-50 lg:hidden shadow-none overflow-hidden border-r border-white/10 bg-black/20 backdrop-blur-xl"
+                className="fixed left-0 top-0 h-screen w-80 text-white z-50 md:hidden shadow-none overflow-hidden border-r border-white/10 bg-black/20 backdrop-blur-xl"
                 style={{
                   isolation: "isolate",
                 }}
@@ -664,7 +678,7 @@ export const MobileNavigation = () => {
                   </nav>
                 </div>
               </div>,
-              document.body
+              document.body,
             )}
         </>
       )}

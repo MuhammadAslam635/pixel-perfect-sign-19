@@ -22,6 +22,11 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 import { usePermissions } from "@/hooks/usePermissions";
 import { isRestrictedModule } from "@/utils/restrictedModules";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 type NavLink = {
   id: string;
@@ -125,14 +130,16 @@ const adminNavLinks: NavLink[] = [
     label: "Categories",
     icon: FolderTree,
     path: "/admin/industry-categories",
-    match: (pathname: string) => pathname.startsWith("/admin/industry-categories"),
+    match: (pathname: string) =>
+      pathname.startsWith("/admin/industry-categories"),
   },
   {
     id: "admin-enrichment-configs",
     label: "Enrichment Configs",
     icon: Settings2,
     path: "/admin/enrichment-configs",
-    match: (pathname: string) => pathname.startsWith("/admin/enrichment-configs"),
+    match: (pathname: string) =>
+      pathname.startsWith("/admin/enrichment-configs"),
   },
   {
     id: "prompts",
@@ -152,7 +159,7 @@ const adminNavLinks: NavLink[] = [
 
 const resolveActiveNav = (pathname: string, links: NavLink[]) => {
   const match = links.find((link) =>
-    link.match ? link.match(pathname) : link.path === pathname
+    link.match ? link.match(pathname) : link.path === pathname,
   );
   return match?.id ?? "home";
 };
@@ -163,12 +170,11 @@ export const Navigation = () => {
   const { user } = useSelector((state: RootState) => state.auth);
   // Permission hook
   const { canView } = usePermissions();
-  
+
   const sessionUser = user || getUserData();
 
   // Get user's role name - prioritize roleId over legacy role
   const getUserRoleName = (): string | null => {
-
     if (!sessionUser) return null;
 
     // PRIORITY 1: Check populated roleId (new RBAC system)
@@ -191,38 +197,44 @@ export const Navigation = () => {
       // Special handling for CRM button - show if user has ANY CRM module permission
       if (link.id === "crm") {
         // Admin can always view
-        if (userRole === 'Admin') return true;
-        
+        if (userRole === "Admin") return true;
+
         // Show CRM if user has permission for any CRM module
-        const crmModules = ["companies", "leads", "calendar", "followups", "emails"];
-        return crmModules.some(module => canView(module));
+        const crmModules = [
+          "companies",
+          "leads",
+          "calendar",
+          "followups",
+          "emails",
+        ];
+        return crmModules.some((module) => canView(module));
       }
 
       // 1. Check Module Permissions (New RBAC)
       if (link.moduleName) {
-         // Admin can always view
-         if (userRole === 'Admin') return true;
-         
-         // CRITICAL: Hide restricted modules from navigation
-         if (isRestrictedModule(link.moduleName)) {
-           // We already know userRole !== 'Admin' (checked above)
-           // But what if user is 'CompanyAdmin'? 
-           // Navigation check above: userRole === 'Admin' only checks for System Admin string?
-           // userRole is derived from getUserRoleName() which prioritizes valid RBAC role name.
-           // If user is CompanyAdmin, userRole="CompanyAdmin".
-           // Admin check above handles "Admin". CompanyAdmin needs check.
-           if (userRole === 'Company' || userRole === 'CompanyAdmin') {
-             // Continue to standard permission check or allow
-             // Generally CompanyAdmin has full access, so canView should return true.
-           } else {
-             // Not an admin -> Block absolutely
-             return false;
-           }
-         }
-         
-         if (!canView(link.moduleName)) {
-           return false;
-         }
+        // Admin can always view
+        if (userRole === "Admin") return true;
+
+        // CRITICAL: Hide restricted modules from navigation
+        if (isRestrictedModule(link.moduleName)) {
+          // We already know userRole !== 'Admin' (checked above)
+          // But what if user is 'CompanyAdmin'?
+          // Navigation check above: userRole === 'Admin' only checks for System Admin string?
+          // userRole is derived from getUserRoleName() which prioritizes valid RBAC role name.
+          // If user is CompanyAdmin, userRole="CompanyAdmin".
+          // Admin check above handles "Admin". CompanyAdmin needs check.
+          if (userRole === "Company" || userRole === "CompanyAdmin") {
+            // Continue to standard permission check or allow
+            // Generally CompanyAdmin has full access, so canView should return true.
+          } else {
+            // Not an admin -> Block absolutely
+            return false;
+          }
+        }
+
+        if (!canView(link.moduleName)) {
+          return false;
+        }
       }
 
       // 2. Check Legacy Roles
@@ -236,7 +248,7 @@ export const Navigation = () => {
     });
   }, [userRole, canView]);
   const [activeNav, setActiveNav] = useState(
-    resolveActiveNav(location.pathname, filteredNavLinks)
+    resolveActiveNav(location.pathname, filteredNavLinks),
   );
 
   const actionsRef = useRef<HTMLDivElement>(null);
@@ -247,7 +259,7 @@ export const Navigation = () => {
 
   const handleNavigate = (link: NavLink) => {
     setActiveNav(link.id);
-    
+
     // Special handling for CRM button - navigate to first accessible CRM module
     if (link.id === "crm") {
       const crmModules = [
@@ -257,10 +269,12 @@ export const Navigation = () => {
         { name: "followups", path: "/followups" },
         { name: "emails", path: "/emails/inbox" },
       ];
-      
+
       // Find first CRM module user has access to
-      const firstAccessibleModule = crmModules.find(module => canView(module.name));
-      
+      const firstAccessibleModule = crmModules.find((module) =>
+        canView(module.name),
+      );
+
       if (firstAccessibleModule) {
         navigate(firstAccessibleModule.path);
       } else {
@@ -273,51 +287,57 @@ export const Navigation = () => {
   };
 
   return (
-    <nav className="hidden lg:flex scrollbar-hide flex-1 min-w-0 w-full lg:w-[780px] items-center justify-start lg:justify-center gap-1.5 overflow-x-auto flex-nowrap snap-x snap-mandatory pl-2 sm:pl-2 md:pl-3 pr-2 sm:pr-3">
+    <nav className="hidden md:flex scrollbar-hide flex-1 min-w-0 w-full nav-xl:w-[780px] items-center justify-center gap-1.5 overflow-x-auto flex-nowrap snap-x snap-mandatory pl-2 sm:pl-2 md:pl-3 pr-2 sm:pr-3">
       {filteredNavLinks.map((link) => {
         const Icon = link.icon;
         const isActive = activeNav === link.id;
         return (
-            <button
-            key={link.id}
-            className={`group relative overflow-hidden flex-none flex h-9 items-center justify-start rounded-full border border-white/40 pl-2.5 pr-2.5 gap-2 text-sm font-medium tracking-wide !transition-none ${
-              isActive
-                ? "text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] before:from-white/25 z-10"
-                : "text-white/85 hover:text-white hover:shadow-[0_16px_28px_rgba(0,0,0,0.35)] hover:z-10"
-            } snap-start lg:snap-center before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/15 before:to-transparent before:!transition-none hover:before:from-white/25`}
-            style={{
-              background: isActive
-                ? "linear-gradient(90deg, #67B0B7 0%, #4066B3 30%, #FFFFFF1A 100%)"
-                : "#FFFFFF1A",
-              boxShadow:
-                "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
-            }}
-            onClick={() => handleNavigate(link)}
-            aria-label={link.label}
-            type="button"
-          >
-            {isActive && (
-              <div
-                className="absolute -left-6 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[100px] h-[100px] rounded-full pointer-events-none"
+          <Tooltip key={link.id} delayDuration={300}>
+            <TooltipTrigger asChild>
+              <button
+                className={`group relative overflow-hidden flex-none flex h-9 items-center justify-start rounded-full border border-white/40 pl-2.5 pr-2.5 gap-2 text-sm font-medium tracking-wide !transition-none ${
+                  isActive
+                    ? "text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] before:from-white/25 z-10"
+                    : "text-white/85 hover:text-white hover:shadow-[0_16px_28px_rgba(0,0,0,0.35)] hover:z-10"
+                } snap-start nav-xl:snap-center before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/15 before:to-transparent before:!transition-none hover:before:from-white/25`}
                 style={{
-                  background:
-                    "linear-gradient(180deg, #67B0B7 0%, #4066B3 100%)",
-                  filter: "blur(20px)",
-                  WebkitFilter: "blur(20px)",
+                  background: isActive
+                    ? "linear-gradient(90deg, #67B0B7 0%, #4066B3 30%, #FFFFFF1A 100%)"
+                    : "#FFFFFF1A",
+                  boxShadow:
+                    "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
                 }}
-              ></div>
-            )}
-            <Icon
-              className={`h-4 w-4 flex-shrink-0 !transition-none ${
-                isActive
-                  ? "text-white drop-shadow-[0_8px_18px_rgba(62,100,180,0.45)]"
-                  : "text-white/85 group-hover:text-white group-hover:drop-shadow-[0_4px_12px_rgba(255,255,255,0.3)]"
-              }`}
-            />
-            <span className="whitespace-nowrap">
-              {link.label}
-            </span>
-          </button>
+                onClick={() => handleNavigate(link)}
+                aria-label={link.label}
+                type="button"
+              >
+                {isActive && (
+                  <div
+                    className="absolute -left-6 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[100px] h-[100px] rounded-full pointer-events-none"
+                    style={{
+                      background:
+                        "linear-gradient(180deg, #67B0B7 0%, #4066B3 100%)",
+                      filter: "blur(20px)",
+                      WebkitFilter: "blur(20px)",
+                    }}
+                  ></div>
+                )}
+                <Icon
+                  className={`h-4 w-4 flex-shrink-0 !transition-none ${
+                    isActive
+                      ? "text-white drop-shadow-[0_8px_18px_rgba(62,100,180,0.45)]"
+                      : "text-white/85 group-hover:text-white group-hover:drop-shadow-[0_4px_12px_rgba(255,255,255,0.3)]"
+                  }`}
+                />
+                <span className="whitespace-nowrap hidden nav-xl:block">
+                  {link.label}
+                </span>
+              </button>
+            </TooltipTrigger>
+            <TooltipContent className="nav-xl:hidden">
+              <p>{link.label}</p>
+            </TooltipContent>
+          </Tooltip>
         );
       })}
     </nav>
@@ -359,7 +379,7 @@ export const AdminNavigation = () => {
   }, [isAdmin]);
 
   const [activeNav, setActiveNav] = useState(
-    resolveActiveNav(location.pathname, filteredNavLinks)
+    resolveActiveNav(location.pathname, filteredNavLinks),
   );
 
   const actionsRef = useRef<HTMLDivElement>(null);
@@ -376,51 +396,57 @@ export const AdminNavigation = () => {
   if (!isAdmin) return null;
 
   return (
-    <nav className="hidden lg:flex scrollbar-hide flex-1 min-w-0 w-full lg:w-[780px] items-center justify-start lg:justify-center gap-1.5 overflow-x-auto flex-nowrap snap-x snap-mandatory pl-2 sm:pl-2 md:pl-3 pr-2 sm:pr-3">
+    <nav className="hidden md:flex scrollbar-hide flex-1 min-w-0 w-full nav-xl:w-[780px] items-center justify-center gap-1.5 overflow-x-auto flex-nowrap snap-x snap-mandatory pl-2 sm:pl-2 md:pl-3 pr-2 sm:pr-3">
       {filteredNavLinks.map((link) => {
         const Icon = link.icon;
         const isActive = activeNav === link.id;
         return (
-            <button
-            key={link.id}
-            className={`group relative overflow-hidden flex-none flex h-9 items-center justify-start rounded-full border border-white/40 pl-2.5 pr-2.5 gap-2 text-sm font-medium tracking-wide !transition-none ${
-              isActive
-                ? "text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] before:from-white/25 z-10"
-                : "text-white/85 hover:text-white hover:shadow-[0_16px_28px_rgba(0,0,0,0.35)] hover:z-10"
-            } snap-start lg:snap-center before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/15 before:to-transparent before:!transition-none hover:before:from-white/25`}
-            style={{
-              background: isActive
-                ? "linear-gradient(90deg, #67B0B7 0%, #4066B3 30%, #FFFFFF1A 100%)"
-                : "#FFFFFF1A",
-              boxShadow:
-                "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
-            }}
-            onClick={() => handleNavigate(link)}
-            aria-label={link.label}
-            type="button"
-          >
-            {isActive && (
-              <div
-                className="absolute -left-6 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[100px] h-[100px] rounded-full pointer-events-none"
+          <Tooltip key={link.id} delayDuration={300}>
+            <TooltipTrigger asChild>
+              <button
+                className={`group relative overflow-hidden flex-none flex h-9 items-center justify-start rounded-full border border-white/40 pl-2.5 pr-2.5 gap-2 text-sm font-medium tracking-wide !transition-none ${
+                  isActive
+                    ? "text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] before:from-white/25 z-10"
+                    : "text-white/85 hover:text-white hover:shadow-[0_16px_28px_rgba(0,0,0,0.35)] hover:z-10"
+                } snap-start nav-xl:snap-center before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/15 before:to-transparent before:!transition-none hover:before:from-white/25`}
                 style={{
-                  background:
-                    "linear-gradient(180deg, #67B0B7 0%, #4066B3 100%)",
-                  filter: "blur(20px)",
-                  WebkitFilter: "blur(20px)",
+                  background: isActive
+                    ? "linear-gradient(90deg, #67B0B7 0%, #4066B3 30%, #FFFFFF1A 100%)"
+                    : "#FFFFFF1A",
+                  boxShadow:
+                    "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
                 }}
-              ></div>
-            )}
-            <Icon
-              className={`h-4 w-4 flex-shrink-0 !transition-none ${
-                isActive
-                  ? "text-white drop-shadow-[0_8px_18px_rgba(62,100,180,0.45)]"
-                  : "text-white/85 group-hover:text-white group-hover:drop-shadow-[0_4px_12px_rgba(255,255,255,0.3)]"
-              }`}
-            />
-            <span className="whitespace-nowrap">
-              {link.label}
-            </span>
-          </button>
+                onClick={() => handleNavigate(link)}
+                aria-label={link.label}
+                type="button"
+              >
+                {isActive && (
+                  <div
+                    className="absolute -left-6 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[100px] h-[100px] rounded-full pointer-events-none"
+                    style={{
+                      background:
+                        "linear-gradient(180deg, #67B0B7 0%, #4066B3 100%)",
+                      filter: "blur(20px)",
+                      WebkitFilter: "blur(20px)",
+                    }}
+                  ></div>
+                )}
+                <Icon
+                  className={`h-4 w-4 flex-shrink-0 !transition-none ${
+                    isActive
+                      ? "text-white drop-shadow-[0_8px_18px_rgba(62,100,180,0.45)]"
+                      : "text-white/85 group-hover:text-white group-hover:drop-shadow-[0_4px_12px_rgba(255,255,255,0.3)]"
+                  }`}
+                />
+                <span className="whitespace-nowrap hidden nav-xl:block">
+                  {link.label}
+                </span>
+              </button>
+            </TooltipTrigger>
+            <TooltipContent className="nav-xl:hidden">
+              <p>{link.label}</p>
+            </TooltipContent>
+          </Tooltip>
         );
       })}
     </nav>
