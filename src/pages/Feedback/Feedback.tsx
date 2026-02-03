@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,8 @@ const Feedback = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "open" | "in-progress" | "closed">("all");
   const [viewMode, setViewMode] = useState(false);
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 10;
 
   const [formData, setFormData] = useState({
     title: "",
@@ -42,22 +44,22 @@ const Feedback = () => {
   const [formErrors, setFormErrors] = useState<{ title?: string; description?: string }>({});
 
   const { data: responseData, isLoading } = useQuery({
-    queryKey: ["feedback"],
-    queryFn: () => feedbackService.getAllFeedbacks(),
+    queryKey: ["feedback", page, statusFilter],
+    queryFn: () => feedbackService.getAllFeedbacks({
+      page,
+      limit: itemsPerPage,
+      status: statusFilter !== "all" ? statusFilter : undefined,
+    }),
   });
 
   const feedbackData = responseData?.feedbacks || [];
+  const paginationData = responseData?.pagination || { page: 1, limit: itemsPerPage, total: 0, pages: 1 };
 
-  // Filter feedback based on search and status
+  // Filter feedback based on search (client-side for search term)
   const filteredFeedback = useMemo(() => {
     let filtered = feedbackData;
 
-    // Apply status filter
-    if (statusFilter !== "all") {
-      filtered = filtered.filter((item: any) => item.status === statusFilter);
-    }
-
-    // Apply search filter
+    // Apply search filter (client-side since API might not support search)
     if (searchTerm.trim()) {
       const searchLower = searchTerm.toLowerCase();
       filtered = filtered.filter((item: any) =>
@@ -68,7 +70,79 @@ const Feedback = () => {
     }
 
     return filtered;
-  }, [feedbackData, searchTerm, statusFilter]);
+  }, [feedbackData, searchTerm]);
+
+  // Use server-side pagination data
+  const totalPages = paginationData.pages || 1;
+  const totalItems = paginationData.total || 0;
+  
+  // For display, use filtered feedback (if search is active) or paginated feedback
+  const displayFeedback = filteredFeedback;
+  
+  // Debug: Log pagination data
+  useEffect(() => {
+    if (responseData) {
+      console.log("Feedback pagination data:", {
+        totalPages,
+        totalItems,
+        currentPage: page,
+        feedbacksCount: feedbackData.length,
+        paginationData,
+      });
+    }
+  }, [responseData, totalPages, totalItems, page, feedbackData.length, paginationData]);
+
+  // Reset to page 1 when status filter changes
+  useEffect(() => {
+    setPage(1);
+  }, [statusFilter]);
+
+  // Calculate pagination pages to display
+  const paginationPages = useMemo<(number | "ellipsis")[] | null>(() => {
+    if (totalPages <= 1) return null;
+
+    const pagesToUse = totalPages;
+    let startPage = Math.max(1, page - 1);
+    let endPage = startPage + 2;
+
+    if (endPage > pagesToUse) {
+      endPage = pagesToUse;
+      startPage = Math.max(1, endPage - 2);
+    }
+
+    const pages: (number | "ellipsis")[] = [];
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+
+    if (endPage < pagesToUse) {
+      if (endPage < pagesToUse - 1) pages.push("ellipsis");
+      pages.push(pagesToUse);
+    }
+
+    return pages;
+  }, [page, totalPages]);
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+    // Scroll to top of feedback list
+    const feedbackContainer = document.querySelector('.overflow-y-auto');
+    if (feedbackContainer) {
+      feedbackContainer.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handlePrevious = () => {
+    if (page > 1) {
+      handlePageChange(page - 1);
+    }
+  };
+
+  const handleNext = () => {
+    if (page < totalPages) {
+      handlePageChange(page + 1);
+    }
+  };
 
   // Helper function to format file size
   const formatFileSize = (bytes: number): string => {
@@ -373,7 +447,7 @@ const Feedback = () => {
           transition={{ duration: 0.3, ease: "easeOut", delay: 0.1 }}
           className="mx-auto flex flex-col gap-8 space-y-3 pt-3 sm:pt-4 pb-16 px-3 sm:px-6 rounded-xl sm:rounded-[30px] w-full h-full border-0 sm:border sm:border-white/10 bg-transparent sm:bg-[linear-gradient(173.83deg,_rgba(255,255,255,0.08)_4.82%,_rgba(255,255,255,0)_38.08%,_rgba(255,255,255,0)_56.68%,_rgba(255,255,255,0.02)_95.1%)]"
         >
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-6 flex-shrink-0">
             <div className="flex items-center justify-between">
               <header className="flex flex-col gap-2">
                 <motion.h1
@@ -689,8 +763,8 @@ const Feedback = () => {
             </div>
           </div>
 
-          <div className="flex-1 overflow-hidden">
-            <div className="h-full overflow-y-auto scrollbar-hide pr-2">
+          <div className="flex-1 overflow-hidden flex flex-col min-h-0">
+            <div className="flex-1 overflow-y-auto scrollbar-hide pr-2">
               {isLoading ? (
                 <div className="flex flex-col items-center justify-center py-16">
                   <div className="w-8 h-8 border-4 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin mb-3" />
@@ -710,7 +784,7 @@ const Feedback = () => {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {filteredFeedback.map((feedback: any, index: number) => (
+                  {displayFeedback.map((feedback: any, index: number) => (
                     <motion.div
                       key={feedback._id}
                       onClick={() => handleView(feedback)}
@@ -796,10 +870,89 @@ const Feedback = () => {
                   ))}
                 </div>
               )}
-            </div >
-          </div >
-        </motion.section >
-      </motion.main >
+            </div>
+            
+            {/* Pagination Controls */}
+            {/* Show pagination when we have more than 1 page and no search is active (search filters client-side) */}
+            {!searchTerm.trim() && totalPages > 1 && !isLoading && paginationPages && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
+                className="flex items-center justify-end pt-4 pb-2 flex-shrink-0 border-t border-white/5 mt-2"
+              >
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handlePrevious}
+                    disabled={page === 1}
+                    className="px-3 bg-[#FFFFFF1A] border-0 text-gray-300 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{
+                      boxShadow:
+                        "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                    }}
+                  >
+                    <span className="hidden sm:inline">Previous</span>
+                    <span className="sm:hidden">Prev</span>
+                  </Button>
+
+                  <div className="flex items-center space-x-1">
+                    {paginationPages.map((p, idx) => {
+                      if (p === "ellipsis") {
+                        return (
+                          <span key={idx} className="px-2 text-gray-300">
+                            ...
+                          </span>
+                        );
+                      }
+                      const pageNumber = p as number;
+                      const isActive = page === pageNumber;
+                      return (
+                        <Button
+                          key={idx}
+                          variant={isActive ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => handlePageChange(pageNumber)}
+                          className={`w-9 h-9 p-0 ${
+                            isActive
+                              ? "bg-white/20 text-white"
+                              : "bg-[#FFFFFF1A] border-0 text-gray-300 hover:bg-white/10"
+                          }`}
+                          style={
+                            !isActive
+                              ? {
+                                  boxShadow:
+                                    "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                                }
+                              : undefined
+                          }
+                        >
+                          {pageNumber}
+                        </Button>
+                      );
+                    })}
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleNext}
+                    disabled={page === totalPages}
+                    className="px-3 bg-[#FFFFFF1A] border-0 text-gray-300 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{
+                      boxShadow:
+                        "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                    }}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </motion.div>
+            )}
+          </div>
+        </motion.section>
+      </motion.main>
 
       <ConfirmDialog
         open={deleteDialogOpen}
