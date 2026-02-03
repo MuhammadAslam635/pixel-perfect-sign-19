@@ -225,8 +225,8 @@ const UserList = () => {
         typeof user.roleId === "object"
           ? (user.roleId as Role)
           : user.roleId
-          ? roleMap[user.roleId as string]
-          : null;
+            ? roleMap[user.roleId as string]
+            : null;
 
       if (roleObject) {
         roleName = roleObject.displayName;
@@ -316,8 +316,8 @@ const UserList = () => {
     } catch (error: any) {
       toast.error(
         error?.response?.data?.message ||
-          error?.response?.data?.errors?.[0]?.msg ||
-          "Failed to send invitation"
+        error?.response?.data?.errors?.[0]?.msg ||
+        "Failed to send invitation"
       );
     } finally {
       setInviteSubmitting(false);
@@ -330,8 +330,8 @@ const UserList = () => {
       typeof userData.roleId === "object"
         ? (userData.roleId as Role)
         : userData.roleId
-        ? roleMap[userData.roleId as string]
-        : null;
+          ? roleMap[userData.roleId as string]
+          : null;
 
     if (roleObject) {
       return (
@@ -592,10 +592,10 @@ const UserList = () => {
               >
                 <span
                   className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[120px] h-[120px] rounded-full pointer-events-none opacity-60 blur-[26px] bg-[#222B2C]/95"
-                  // style={{
-                  //   background:
-                  //     "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
-                  // }}
+                // style={{
+                //   background:
+                //     "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
+                // }}
                 />
                 <Shield className="h-5 w-5 relative z-10" />
                 <span className="hidden sm:block relative z-10">Roles</span>
@@ -649,8 +649,8 @@ const UserList = () => {
                     >
                       {/* Glow effect behind the role container */}
                       <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/10 via-blue-500/5 to-transparent blur-xl opacity-30 pointer-events-none" />
-                      
-                      <Card 
+
+                      <Card
                         className="relative rounded-3xl border transition-all duration-200 w-full overflow-hidden shadow-xl"
                         style={{
                           background: "linear-gradient(173.83deg, rgba(255, 255, 255, 0.05) 4.82%, rgba(255, 255, 255, 0) 38.08%, rgba(255, 255, 255, 0) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
@@ -711,7 +711,7 @@ const UserList = () => {
                                                 <Eye className="h-4 w-4 text-white/70" />
                                                 View Profile
                                               </DropdownMenuItem>
-                                              
+
                                               {/* Removed Delete/Edit actions from direct view to match design simplicity, can add back if requested */}
                                               {/* Assuming "View Profile" leads to edit details */}
 
@@ -730,7 +730,7 @@ const UserList = () => {
                                         </DropdownMenuContent>
                                       </DropdownMenu>
                                     </div>
-                                    
+
                                     <div className="flex-shrink-0">
                                       <AvatarFallback
                                         name={resolveUserDisplayName(user)}
@@ -739,7 +739,7 @@ const UserList = () => {
                                         className="border-2 border-white/10 shadow-lg"
                                       />
                                     </div>
-                                    
+
                                     <div className="flex-1 text-left min-w-0">
                                       <h4 className="text-white font-medium text-sm truncate pr-6 group-hover:text-cyan-400 transition-colors">
                                         {resolveUserDisplayName(user)}
@@ -781,9 +781,8 @@ const UserList = () => {
                   <PaginationItem>
                     <PaginationPrevious
                       onClick={handlePrevious}
-                      className={`cursor-pointer hover:bg-white/10 transition-colors h-7 w-7 p-0 flex items-center justify-center [&>span]:hidden ${
-                        page === 1 ? "opacity-50 cursor-not-allowed" : ""
-                      }`}
+                      className={`cursor-pointer hover:bg-white/10 transition-colors h-7 w-7 p-0 flex items-center justify-center [&>span]:hidden ${page === 1 ? "opacity-50 cursor-not-allowed" : ""
+                        }`}
                     />
                   </PaginationItem>
                   {paginationPages?.map((p, idx) => (
@@ -804,9 +803,8 @@ const UserList = () => {
                   <PaginationItem>
                     <PaginationNext
                       onClick={handleNext}
-                      className={`cursor-pointer hover:bg-white/10 transition-colors h-7 w-7 p-0 flex items-center justify-center [&>span]:hidden ${
-                        page === totalPages ? "opacity-50 cursor-not-allowed" : ""
-                      }`}
+                      className={`cursor-pointer hover:bg-white/10 transition-colors h-7 w-7 p-0 flex items-center justify-center [&>span]:hidden ${page === totalPages ? "opacity-50 cursor-not-allowed" : ""
+                        }`}
                     />
                   </PaginationItem>
                 </PaginationContent>
@@ -824,7 +822,7 @@ const UserList = () => {
           }
         }}
       >
-      <DialogContent className="w-[92vw] max-w-xl sm:max-w-2xl bg-[linear-gradient(173.83deg,_rgba(255,255,255,0.08)_4.82%,_rgba(255,255,255,0)_38.08%,_rgba(255,255,255,0)_56.68%,_rgba(255,255,255,0.02)_95.1%)] text-white border border-white/10 rounded-2xl sm:rounded-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6 space-y-5 backdrop-blur-md scrollbar-hide">
+        <DialogContent className="w-[92vw] max-w-xl sm:max-w-2xl bg-[linear-gradient(173.83deg,_rgba(255,255,255,0.08)_4.82%,_rgba(255,255,255,0)_38.08%,_rgba(255,255,255,0)_56.68%,_rgba(255,255,255,0.02)_95.1%)] text-white border border-white/10 rounded-2xl sm:rounded-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6 space-y-5 backdrop-blur-md scrollbar-hide">
           <DialogHeader className="space-y-2">
             <DialogTitle className="text-2xl font-semibold text-white">
               Invite a teammate
@@ -944,9 +942,8 @@ const UserList = () => {
       <ConfirmDialog
         open={deleteDialogOpen}
         title={`Delete User`}
-        description={`Are you sure you want to delete user '${
-          deleteData?.name || "this user"
-        }'? This action cannot be undone.`}
+        description={`Are you sure you want to delete user '${deleteData?.name || "this user"
+          }'? This action cannot be undone.`}
         confirmText="Delete"
         cancelText="Cancel"
         confirmVariant="destructive"

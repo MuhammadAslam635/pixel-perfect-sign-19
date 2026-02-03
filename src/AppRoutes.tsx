@@ -2,7 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import { Suspense, lazy } from "react";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import PublicRoute from "@/components/PublicRoute";
-import type { SelectedCallLogView } from "@/pages/crm/leads/leaddetailview";
+import type { SelectedCallLogView } from "@/pages/company/crm/leads/leaddetailview";
 
 // Lazy load all page components
 const Index = lazy(() => import("@/pages/auth/Index"));
@@ -12,63 +12,63 @@ const ResetPassword = lazy(() => import("@/pages/auth/ResetPassword"));
 const ChangePassword = lazy(() => import("@/pages/auth/ChangePassword"));
 const VerifyEmail = lazy(() => import("@/pages/auth/VerifyEmail"));
 const ResendEmail = lazy(() => import("@/pages/auth/ResendEmail"));
-const Dashboard = lazy(() => import("@/pages/Dashboard"));
-const CompanyDetail = lazy(() => import("@/pages/crm/companies"));
-const ChatPage = lazy(() => import("@/pages/Chat"));
-const AgentsPage = lazy(() => import("@/pages/agents"));
-const AgentDetails = lazy(() => import("@/pages/agents/components/AgentDetails"));
+const Dashboard = lazy(() => import("@/pages/company/dashboard/Dashboard"));
+const CompanyDetail = lazy(() => import("@/pages/company/crm/companies"));
+const ChatPage = lazy(() => import("@/pages/company/skylarChat/Chat"));
+const AgentsPage = lazy(() => import("@/pages/company/agents"));
+const AgentDetails = lazy(() => import("@/pages/company/agents/components/AgentDetails"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const SettingsPage = lazy(() => import("@/pages/Settings"));
 const Feedback = lazy(() => import("@/pages/Feedback/Feedback"))
-const CompanyKnowledge = lazy(() => import("@/pages/companyKnowledgeBase"));
-const CampaignsPage = lazy(() => import("@/pages/campaigns"));
-const FacebookCampaignsPage = lazy(() => import("@/pages/campaigns/facebook"));
+const CompanyKnowledge = lazy(() => import("@/pages/company/companyKnowledgeBase"));
+const CampaignsPage = lazy(() => import("@/pages/company/campaigns"));
+const FacebookCampaignsPage = lazy(() => import("@/pages/company/campaigns/facebook"));
 const FacebookCampaignAnalysisPage = lazy(
-  () => import("@/pages/campaigns/facebook/analysis")
+  () => import("@/pages/company/campaigns/facebook/analysis")
 );
-const ProspectsPage = lazy(() => import("@/pages/prospects"));
-const NewsPage = lazy(() => import("@/pages/News"));
+const ProspectsPage = lazy(() => import("@/pages/company/prospects"));
+const NewsPage = lazy(() => import("@/pages/company/news/News"));
 const UserList = lazy(() => import("@/pages/users/UserList"));
 const UserCreate = lazy(() => import("@/pages/users/UserCreate"));
 const UserEdit = lazy(() => import("@/pages/users/UserEdit"));
 // const ContactNow = lazy(() => import("@/pages/twilio-calling/ContactNow"));
-const FollowupTemplatesPage = lazy(() => import("@/pages/crm/followups"));
-const FollowUp2Page = lazy(() => import("@/pages/crm/followups-2"));
-const LeadDetailView = lazy(() => import("@/pages/crm/leads/leaddetailview"));
+// const FollowupTemplatesPage = lazy(() => import("@/pages/company/crm/followups"));
+const FollowUp2Page = lazy(() => import("@/pages/company/crm/followups"));
+const LeadDetailView = lazy(() => import("@/pages/company/crm/leads/leaddetailview"));
 const RoleList = lazy(() => import("@/pages/roles/RoleList"));
 const RoleForm = lazy(() => import("@/pages/roles/RoleForm"));
 const ModuleList = lazy(() => import("@/pages/modules/ModuleList"));
 const InboxPage = lazy(() =>
-  import("@/pages/crm/emails").then((module) => ({ default: module.InboxPage }))
+  import("@/pages/company/crm/emails").then((module) => ({ default: module.InboxPage }))
 );
 const ThreadsPage = lazy(() =>
-  import("@/pages/crm/emails").then((module) => ({
+  import("@/pages/company/crm/emails").then((module) => ({
     default: module.ThreadsPage,
   }))
 );
 const ComposePage = lazy(() =>
-  import("@/pages/crm/emails").then((module) => ({
+  import("@/pages/company/crm/emails").then((module) => ({
     default: module.ComposePage,
   }))
 );
 const EmailDetailPage = lazy(() =>
-  import("@/pages/crm/emails").then((module) => ({
+  import("@/pages/company/crm/emails").then((module) => ({
     default: module.EmailDetailPage,
   }))
 );
 const ThreadDetailPage = lazy(() =>
-  import("@/pages/crm/emails").then((module) => ({
+  import("@/pages/company/crm/emails").then((module) => ({
     default: module.ThreadDetailPage,
   }))
 );
 const StatsPage = lazy(() =>
-  import("@/pages/crm/emails").then((module) => ({ default: module.StatsPage }))
+  import("@/pages/company/crm/emails").then((module) => ({ default: module.StatsPage }))
 );
 const LeadChat = lazy(
-  () => import("@/pages/crm/leads/leaddetailview/components/LeadChat")
+  () => import("@/pages/company/crm/leads/leaddetailview/components/LeadChat")
 );
-const LeadsPage = lazy(() => import("@/pages/crm/leads"));
-const CalendarPage = lazy(() => import("@/pages/crm/calendar"));
+const LeadsPage = lazy(() => import("@/pages/company/crm/leads"));
+const CalendarPage = lazy(() => import("@/pages/company/crm/calendar"));
 const OnboardingPage = lazy(() => import("@/pages/onboarding"));
 const AdminDashboard = lazy(() => import("@/pages/admin/dashboard/Dashboard"));
 const AdminPrompts = lazy(() => import("@/pages/admin/prompts"));
