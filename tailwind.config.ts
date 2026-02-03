@@ -19,6 +19,7 @@ export default {
     },
     extend: {
       screens: {
+        "nav-xl": "1700px",
         fhd: "1920px",
         uhd: "2048px",
       },
