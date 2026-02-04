@@ -115,8 +115,22 @@ const index = () => {
   }, [viewMode]);
 
   const [leadsCountryFilter, setLeadsCountryFilter] = useState<string[]>([]);
+  
+  // Load saved seniority filter from localStorage on mount
+  const loadSavedSeniorityFilter = (): string[] => {
+    try {
+      const saved = localStorage.getItem("savedSeniorityFilter");
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (error) {
+      console.error("Failed to load saved seniority filter:", error);
+    }
+    return [];
+  };
+
   const [leadsSeniorityFilter, setLeadsSeniorityFilter] = useState<string[]>(
-    []
+    () => loadSavedSeniorityFilter()
   );
   const [leadsCompanyFilter, setLeadsCompanyFilter] = useState<string[]>([]);
   const [leadsStageFilter, setLeadsStageFilter] = useState<string[]>([]);
@@ -126,10 +140,22 @@ const index = () => {
   const [leadsHasFavouriteFilter, setLeadsHasFavouriteFilter] = useState(false);
   const [leadsSortBy, setLeadsSortBy] = useState<string>("newest");
 
+  // Ensure saved seniority filter persists across page remounts
+  // The initial state already loads from localStorage, but this ensures it stays in sync
+  useEffect(() => {
+    const saved = loadSavedSeniorityFilter();
+    // If we have a saved filter and current filter is empty, restore it
+    if (saved.length > 0 && leadsSeniorityFilter.length === 0) {
+      setLeadsSeniorityFilter(saved);
+    }
+  }, []); // Only run on mount
+
   // Reset filters
   const resetLeadAdvancedFilters = () => {
     setLeadsCountryFilter([]);
-    setLeadsSeniorityFilter([]);
+    // Preserve saved seniority filter instead of clearing it
+    const savedFilter = loadSavedSeniorityFilter();
+    setLeadsSeniorityFilter(savedFilter);
     setLeadsStageFilter([]);
     setLeadsHasEmailFilter(false);
     setLeadsHasPhoneFilter(false);
