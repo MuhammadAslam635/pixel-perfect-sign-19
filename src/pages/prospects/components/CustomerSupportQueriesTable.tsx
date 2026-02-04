@@ -240,10 +240,12 @@ const CustomerSupportQueriesTable: React.FC = () => {
               </div>
             </div>
 
-            {/* Table Body */}
-            <div
-              className="rounded-2xl overflow-hidden bg-[#FFFFFF03]"
-            >
+            {/* Table Body - Scrollable Container */}
+            <div className="w-full max-h-[150px] overflow-hidden flex flex-col min-h-0">
+              <div className="flex-1 min-h-0 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                <div
+                  className="rounded-2xl overflow-hidden bg-[#FFFFFF03]"
+                >
 
                 {data?.data.docs.map((query, index) => {
                   // Parse personalContactInfo for queries view
@@ -332,7 +334,8 @@ const CustomerSupportQueriesTable: React.FC = () => {
                       : "No queries found"}
                   </div>
                 )}
-
+                </div>
+              </div>
             </div>
 
             {/* Pagination */}

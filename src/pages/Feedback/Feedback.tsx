@@ -525,7 +525,7 @@ const Feedback = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3, ease: "easeOut", delay: 0.1 }}
-          className="mx-auto flex flex-col gap-8 space-y-3 pt-3 sm:pt-4 pb-16 px-3 sm:px-6 rounded-xl sm:rounded-[30px] w-full h-full border-0 sm:border sm:border-white/10 bg-transparent sm:bg-[linear-gradient(173.83deg,_rgba(255,255,255,0.08)_4.82%,_rgba(255,255,255,0)_38.08%,_rgba(255,255,255,0)_56.68%,_rgba(255,255,255,0.02)_95.1%)]"
+          className="mx-auto flex flex-col gap-8 space-y-3 pt-3 sm:pt-4 pb-16 px-3 sm:px-6 rounded-xl sm:rounded-[30px] w-full h-full border-0 sm:border sm:border-white/10 bg-transparent sm:bg-[linear-gradient(173.83deg,_rgba(255,255,255,0.08)_4.82%,_rgba(255,255,255,0)_38.08%,_rgba(255,255,255,0)_56.68%,_rgba(255,255,255,0.02)_95.1%)] flex flex-col overflow-hidden"
         >
           <div className="flex flex-col gap-6 flex-shrink-0">
             <div className="flex items-center justify-between">
@@ -1013,8 +1013,8 @@ const Feedback = () => {
             </div>
           </div>
 
-          <div className="flex-1 overflow-hidden flex flex-col min-h-0">
-            <div className="flex-1 overflow-y-auto scrollbar-hide pr-2">
+          <div className="w-full max-h-[300px] overflow-hidden flex flex-col min-h-0">
+            <div className="flex-1 min-h-0 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pr-2">
               {isLoading ? (
                 <div className="flex flex-col items-center justify-center py-16">
                   <div className="w-8 h-8 border-4 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin mb-3" />
@@ -1166,81 +1166,96 @@ const Feedback = () => {
             </div>
             
             {/* Pagination Controls */}
-            {/* Show pagination when we have more than 1 page and no search is active (search filters client-side) */}
-            {!searchTerm.trim() && totalPages > 1 && !isLoading && paginationPages && (
+            {!isLoading && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
-                className="flex items-center justify-end pt-4 pb-2 flex-shrink-0 border-t border-white/5 mt-2"
+                className="flex items-center justify-between pt-4 pb-2 flex-shrink-0 border-t border-white/5 mt-2"
               >
-                <div className="flex items-center space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handlePrevious}
-                    disabled={page === 1}
-                    className="px-3 bg-[#FFFFFF1A] border-0 text-gray-300 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={{
-                      boxShadow:
-                        "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
-                    }}
-                  >
-                    <span className="hidden sm:inline">Previous</span>
-                    <span className="sm:hidden">Prev</span>
-                  </Button>
-
-                  <div className="flex items-center space-x-1">
-                    {paginationPages.map((p, idx) => {
-                      if (p === "ellipsis") {
-                        return (
-                          <span key={idx} className="px-2 text-gray-300">
-                            ...
-                          </span>
-                        );
-                      }
-                      const pageNumber = p as number;
-                      const isActive = page === pageNumber;
-                      return (
-                        <Button
-                          key={idx}
-                          variant={isActive ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => handlePageChange(pageNumber)}
-                          className={`w-9 h-9 p-0 ${
-                            isActive
-                              ? "bg-white/20 text-white"
-                              : "bg-[#FFFFFF1A] border-0 text-gray-300 hover:bg-white/10"
-                          }`}
-                          style={
-                            !isActive
-                              ? {
-                                  boxShadow:
-                                    "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
-                                }
-                              : undefined
-                          }
-                        >
-                          {pageNumber}
-                        </Button>
-                      );
-                    })}
-                  </div>
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleNext}
-                    disabled={page === totalPages}
-                    className="px-3 bg-[#FFFFFF1A] border-0 text-gray-300 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={{
-                      boxShadow:
-                        "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
-                    }}
-                  >
-                    Next
-                  </Button>
+                {/* Pagination Info */}
+                <div className="text-xs text-white/60">
+                  {searchTerm.trim() ? (
+                    filteredFeedback.length > 0
+                      ? `Showing ${filteredFeedback.length} of ${totalItems} sessions`
+                      : "No sessions to display"
+                  ) : totalItems > 0 ? (
+                    `Showing ${(page - 1) * itemsPerPage + 1} to ${Math.min(page * itemsPerPage, totalItems)} of ${totalItems} sessions`
+                  ) : (
+                    "No sessions to display"
+                  )}
                 </div>
+                
+                {/* Show pagination controls when we have more than 1 page and no search is active */}
+                {!searchTerm.trim() && totalPages > 1 && paginationPages && (
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handlePrevious}
+                      disabled={page === 1}
+                      className="px-3 bg-[#FFFFFF1A] border-0 text-gray-300 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{
+                        boxShadow:
+                          "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                      }}
+                    >
+                      <span className="hidden sm:inline">Previous</span>
+                      <span className="sm:hidden">Prev</span>
+                    </Button>
+
+                    <div className="flex items-center space-x-1">
+                      {paginationPages.map((p, idx) => {
+                        if (p === "ellipsis") {
+                          return (
+                            <span key={idx} className="px-2 text-gray-300">
+                              ...
+                            </span>
+                          );
+                        }
+                        const pageNumber = p as number;
+                        const isActive = page === pageNumber;
+                        return (
+                          <Button
+                            key={idx}
+                            variant={isActive ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => handlePageChange(pageNumber)}
+                            className={`w-9 h-9 p-0 ${
+                              isActive
+                                ? "bg-white/20 text-white"
+                                : "bg-[#FFFFFF1A] border-0 text-gray-300 hover:bg-white/10"
+                            }`}
+                            style={
+                              !isActive
+                                ? {
+                                    boxShadow:
+                                      "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                                  }
+                                : undefined
+                            }
+                          >
+                            {pageNumber}
+                          </Button>
+                        );
+                      })}
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleNext}
+                      disabled={page === totalPages}
+                      className="px-3 bg-[#FFFFFF1A] border-0 text-gray-300 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{
+                        boxShadow:
+                          "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                      }}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                )}
               </motion.div>
             )}
           </div>

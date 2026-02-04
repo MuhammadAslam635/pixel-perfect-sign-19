@@ -11,7 +11,7 @@ const ProspectsPage = () => {
   return (
     <DashboardLayout>
       <main
-        className="relative mt-10 px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12 2xl:px-16 py-6 sm:py-8 md:py-10 lg:py-12 xl:py-16 pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-6 sm:pb-8 flex flex-col gap-4 sm:gap-6 text-white min-h-0 overflow-y-auto scrollbar-hide"
+        className="relative mt-10 px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12 2xl:px-16 py-6 sm:py-8 md:py-10 lg:py-12 xl:py-16 pt-12 sm:pt-16 pb-6 sm:pb-8 md:pb-6 flex flex-col gap-4 sm:gap-6 text-white min-h-0 max-h-full"
       >
         <div
           className="max-w-[1600px] mx-auto w-full min-h-0"
@@ -24,16 +24,16 @@ const ProspectsPage = () => {
             <div className="flex flex-col lg:flex-row items-start gap-2 sm:gap-3 md:gap-4 lg:gap-6">
               {/* Main Content Area */}
               <div
-                className="relative pt-3 sm:pt-4 py-4 sm:py-6 md:py-8 lg:py-10 px-3 sm:px-6 rounded-xl sm:rounded-[30px] w-full border-0 sm:border sm:border-white/10 bg-transparent sm:bg-[linear-gradient(173.83deg,_rgba(255,255,255,0.08)_4.82%,_rgba(255,255,255,0)_38.08%,_rgba(255,255,255,0)_56.68%,_rgba(255,255,255,0.02)_95.1%)]"
+                className="relative pt-0 sm:pt-1 py-1 sm:py-2 md:py-4 lg:py-6 px-3 sm:px-6 rounded-xl sm:rounded-[30px] w-full border-0 sm:border sm:border-white/10 bg-transparent sm:bg-[linear-gradient(173.83deg,_rgba(255,255,255,0.08)_4.82%,_rgba(255,255,255,0)_38.08%,_rgba(255,255,255,0)_56.68%,_rgba(255,255,255,0.02)_95.1%)]"
               >
                 <div
-                  className="mb-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4"
+                  className="mb-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4"
                 >
                   <div
                     className="flex-1"
                   >
                     <h1
-                      className="text-3xl font-bold text-white"
+                      className="text-2xl font-bold text-white"
                     >
                       Customer Support
                     </h1>
