@@ -109,6 +109,8 @@ const ProposalExamplesPanel = () => {
       setDeleteOpen(false);
       setDeleteId(null);
       setPage((prevPage) => Math.min(prevPage, totalPages));
+      // Dispatch event to update profile completion
+      window.dispatchEvent(new CustomEvent("proposal_updated"));
     },
     onError: (error: any) => {
       toast({
@@ -191,6 +193,8 @@ const ProposalExamplesPanel = () => {
       setTags([]);
       setDocumentName("");
       setPage(1);
+      // Dispatch event to update profile completion
+      window.dispatchEvent(new CustomEvent("proposal_updated"));
     } catch (error: any) {
       toast({
         title: "Upload failed",

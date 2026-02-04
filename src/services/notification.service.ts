@@ -12,6 +12,11 @@ export interface Notification {
   updatedAt?: string;
   title?: string;
   meta?: string;
+  // Hierarchical fields
+  companyId?: string;
+  originatingUserId?: string;
+  priority?: 'high' | 'medium' | 'low';
+  category?: 'onboarding' | 'meeting' | 'lead_enrichment' | 'campaign' | 'user_management' | 'system' | 'other';
 }
 
 export interface NotificationResponse {
@@ -63,7 +68,30 @@ export const notificationService = {
    */
   markAllAsRead: async (): Promise<any> => {
     try {
-      const response = await API.post("/notifications/read-all");
+      const response = await API.post("/notifications/mark-all-read");
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+  /**
+   * Get user notification preferences
+   */
+  getPreferences: async (): Promise<any> => {
+    try {
+      const response = await API.get("/notifications/preferences");
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  /**
+   * Update user notification preferences
+   */
+  updatePreferences: async (notifications: any): Promise<any> => {
+    try {
+      const response = await API.put("/notifications/preferences", { notifications });
       return response.data;
     } catch (error: any) {
       throw error;

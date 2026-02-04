@@ -173,10 +173,7 @@ const longRunningTasksSlice = createSlice({
       );
     },
 
-    // Get running tasks count (for badge display)
-    getRunningTasksCount: (state) => {
-      return state.tasks.filter(task => task.status === 'running').length;
-    },
+
   },
 });
 

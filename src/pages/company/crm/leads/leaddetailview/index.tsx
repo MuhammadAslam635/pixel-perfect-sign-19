@@ -6,7 +6,7 @@ import LeadDetailCard from "./components/LeadDetailCard";
 import LeadChat from "./components/LeadChat";
 import Activity from "./components/Activity";
 import { leadsService } from "@/services/leads.service";
-import { useLeadStageWebSocket } from "@/hooks/useLeadStageWebSocket";
+import { useLeadStageSSE } from "@/hooks/useLeadStageSSE";
 import { leadSummaryService, LeadSummaryResponse } from "@/services/leadSummary.service";
 import { Loader2, ArrowLeft, Check, Sparkles, Heart, RefreshCw, Calendar, FileText, Target, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -34,8 +34,8 @@ const LeadDetailView = () => {
   const [showCloseDealDialog, setShowCloseDealDialog] = useState(false);
   const queryClient = useQueryClient();
 
-  // Initialize WebSocket for real-time lead stage updates
-  useLeadStageWebSocket(leadId);
+  // Initialize SSE for real-time lead stage updates
+  useLeadStageSSE(leadId);
 
   const mapStageToLabel = (stage: string | null | undefined): string => {
     switch (stage) {

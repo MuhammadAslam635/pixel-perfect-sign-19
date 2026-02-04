@@ -21,6 +21,7 @@ const SkylarFloatingWidget = () => {
     location.pathname === "/change-password" ||
     location.pathname === "/onboarding" ||
     location.pathname.startsWith("/leads/") ||
+    location.pathname.startsWith("/feedback/") ||
     location.pathname.startsWith("/admin/");
 
   if (isHiddenPage) {

@@ -105,11 +105,11 @@ const OnboardingPage = () => {
               preferredCountries: Array.isArray(questions.preferredCountries)
                 ? [...questions.preferredCountries]
                 : typeof questions.preferredCountries === "string"
-                ? questions.preferredCountries
+                  ? questions.preferredCountries
                     .split(",")
                     .map((c) => c.trim())
                     .filter(Boolean)
-                : [],
+                  : [],
               address: questions.address,
               postalCode: questions.postalCode,
               country: questions.country,
@@ -477,9 +477,11 @@ const OnboardingPage = () => {
         }
       } else if (value === undefined || value === null) {
         // Step 4 fields are optional
-        const isStep4Optional =
-          currentStep === 4 && field === "differentiators";
-        if (!isStep4Optional) {
+        const isOptionalField =
+          (currentStep === 4 && field === "differentiators") ||
+          ["address", "postalCode", "country"].includes(field);
+
+        if (!isOptionalField) {
           newErrors[field] = `${label}: Required`;
           isValid = false;
         }
@@ -751,6 +753,14 @@ const OnboardingPage = () => {
   };
 
   const handleSkip = async () => {
+    // Check if onboarding is already completed
+    // If completed, don't change status or trigger skip behavior
+    if (onboardingData?.status === "completed") {
+      console.log("[Onboarding] Already completed, navigating to dashboard without changing status");
+      navigate("/dashboard", { replace: true });
+      return;
+    }
+
     // Skip validation and save current progress silently
     // Don't show errors since user is intentionally skipping
     try {
@@ -766,6 +776,8 @@ const OnboardingPage = () => {
     // Set sessionStorage to allow skipping in current session
     // This will be cleared on next login, so user will be redirected back to onboarding
     sessionStorage.setItem("onboarding_skipped", "true");
+    // Also set the has_redirected flag so user won't be redirected again in this session
+    sessionStorage.setItem("has_redirected_to_onboarding", "true");
     toast.info(
       "You can complete onboarding later. You'll be prompted to complete it on your next login."
     );
@@ -798,6 +810,10 @@ const OnboardingPage = () => {
         // This prevents the ProtectedRoute from redirecting back to onboarding
         // before the backend status is fully synced
         sessionStorage.setItem("onboarding_just_completed", "true");
+        
+        // Clear the redirect flag since onboarding is now complete
+        sessionStorage.removeItem("has_redirected_to_onboarding");
+        sessionStorage.removeItem("onboarding_skipped");
 
         // Refresh canonical user data from server and sync localStorage + redux
         try {
@@ -1026,14 +1042,24 @@ const OnboardingPage = () => {
             {/* Navigation Buttons - Part of the flow but visible */}
             <div className="flex-none pt-6 mt-auto md:mt-4">
               <div className="flex items-center justify-between gap-4">
-                <Button
-                  variant="outline"
-                  onClick={handleSkip}
-                  className="border-cyan-400/50 text-white hover:bg-white/5"
-                  disabled={saving || completing}
-                >
-                  Skip
-                </Button>
+                {onboardingData?.status !== "completed" ? (
+                  <Button
+                    variant="outline"
+                    onClick={handleSkip}
+                    className="border-cyan-400/50 text-white hover:bg-white/5"
+                    disabled={saving || completing}
+                  >
+                    Skip
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate("/dashboard", { replace: true })}
+                    className="border-cyan-400/50 text-white hover:bg-white/5"
+                  >
+                    Back to Dashboard
+                  </Button>
+                )}
 
                 <div className="flex items-center gap-3 ml-auto">
                   {currentStep > 1 && (

@@ -229,7 +229,7 @@ const DomainSpecificTab = ({
       className="space-y-6"
     >
       {/* Description */}
-      <Alert className="bg-gradient-to-br from-gray-800/30 to-gray-900/20 border border-white/10">
+      {/* <Alert className="bg-gradient-to-br from-gray-800/30 to-gray-900/20 border border-white/10">
         <Building2 className="w-4 h-4 text-[#69B4B7]" />
         <AlertDescription className="text-white/70 text-sm">
           <strong className="text-[#69B4B7]">Direct Domain Enrichment:</strong>{" "}
@@ -237,7 +237,7 @@ const DomainSpecificTab = ({
           bypasses Perplexity and sends requests straight to the Apollo
           microservice for faster processing.
         </AlertDescription>
-      </Alert>
+      </Alert> */}
 
       {/* Seniority Levels */}
       <div className="bg-gradient-to-br from-gray-800/20 to-gray-900/10 rounded-lg border border-white/10 p-4">

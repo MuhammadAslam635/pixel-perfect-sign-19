@@ -19,7 +19,8 @@ const AgentsPage = lazy(() => import("@/pages/company/agents"));
 const AgentDetails = lazy(() => import("@/pages/company/agents/components/AgentDetails"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const SettingsPage = lazy(() => import("@/pages/Settings"));
-const Feedback = lazy(() => import("@/pages/Feedback/Feedback"))
+const Feedback = lazy(() => import("@/pages/Feedback/Feedback"));
+const FeedbackChat = lazy(() => import("@/pages/Feedback/FeedbackChat"));
 const CompanyKnowledge = lazy(() => import("@/pages/company/companyKnowledgeBase"));
 const CampaignsPage = lazy(() => import("@/pages/company/campaigns"));
 const FacebookCampaignsPage = lazy(() => import("@/pages/company/campaigns/facebook"));
@@ -205,6 +206,14 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute moduleName="settings">
               <SettingsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/feedback/:feedbackId/chat"
+          element={
+            <ProtectedRoute moduleName="feedback">
+              <FeedbackChat />
             </ProtectedRoute>
           }
         />
@@ -487,7 +496,7 @@ const AppRoutes = () => {
         <Route
           path="/admin/feedbacks"
           element={
-            <ProtectedRoute allowedRoles={["Admin"]}>
+            <ProtectedRoute allowedRoles={["Admin", "CompanyAdmin", "Company"]}>
               <AdminFeedbacks />
             </ProtectedRoute>
           }
@@ -495,7 +504,7 @@ const AppRoutes = () => {
         <Route
           path="/admin/feedbacks/user/:userId"
           element={
-            <ProtectedRoute allowedRoles={["Admin"]}>
+            <ProtectedRoute allowedRoles={["Admin", "CompanyAdmin", "Company"]}>
               <UserFeedbackList key={window.location.pathname} />
             </ProtectedRoute>
           }
@@ -503,7 +512,7 @@ const AppRoutes = () => {
         <Route
           path="/admin/feedbacks/:feedbackId"
           element={
-            <ProtectedRoute allowedRoles={["Admin"]}>
+            <ProtectedRoute allowedRoles={["Admin", "CompanyAdmin", "Company"]}>
               <FeedbackDetail />
             </ProtectedRoute>
           }

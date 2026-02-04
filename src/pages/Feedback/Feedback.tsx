@@ -2,7 +2,13 @@ import { motion } from "framer-motion";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,24 +18,60 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { FeedbackType } from "@/types/feedback.types";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { feedbackTypes } from "@/mocks/dropdownMock";
 import { useToast } from "@/hooks/use-toast";
-import { Pencil, Trash2, ChevronRight, Bug, Lightbulb, XCircle, AlertTriangle, Calendar, FileText, Search, Filter, X, Paperclip, Download, Timer, CheckCircle, AlertCircle } from "lucide-react";
+import {
+  Pencil,
+  Trash2,
+  ChevronRight,
+  Bug,
+  Lightbulb,
+  XCircle,
+  AlertTriangle,
+  Calendar,
+  FileText,
+  Search,
+  Filter,
+  X,
+  Paperclip,
+  Download,
+  Timer,
+  CheckCircle,
+  AlertCircle,
+  MessageSquare,
+  RotateCcw,
+  StickyNote,
+} from "lucide-react";
 import ConfirmDialog from "@/components/ui/confirm-dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const Feedback = () => {
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [feedbackToDelete, setFeedbackToDelete] = useState<string | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [viewingFeedback, setViewingFeedback] = useState<any>(null);
   const { toast } = useToast();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [existingAttachments, setExistingAttachments] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "open" | "in-progress" | "closed">("all");
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "open" | "in-progress" | "closed"
+  >("all");
   const [viewMode, setViewMode] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -39,7 +81,10 @@ const Feedback = () => {
     status: "open" as "open" | "in-progress" | "closed",
   });
 
-  const [formErrors, setFormErrors] = useState<{ title?: string; description?: string }>({});
+  const [formErrors, setFormErrors] = useState<{
+    title?: string;
+    description?: string;
+  }>({});
 
   const { data: responseData, isLoading } = useQuery({
     queryKey: ["feedback"],
@@ -60,15 +105,25 @@ const Feedback = () => {
     // Apply search filter
     if (searchTerm.trim()) {
       const searchLower = searchTerm.toLowerCase();
-      filtered = filtered.filter((item: any) =>
-        item.title?.toLowerCase().includes(searchLower) ||
-        item.description?.toLowerCase().includes(searchLower) ||
-        item.type?.toLowerCase().includes(searchLower)
+      filtered = filtered.filter(
+        (item: any) =>
+          item.title?.toLowerCase().includes(searchLower) ||
+          item.description?.toLowerCase().includes(searchLower) ||
+          item.type?.toLowerCase().includes(searchLower)
       );
     }
 
     return filtered;
   }, [feedbackData, searchTerm, statusFilter]);
+
+  // Helper function to format file size
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
+  };
 
   const queryClient = useQueryClient();
 
@@ -81,7 +136,8 @@ const Feedback = () => {
       resetForm();
     },
     onError: (error: any) => {
-      const errorMessage = error?.response?.data?.message || "Failed to create feedback";
+      const errorMessage =
+        error?.response?.data?.message || "Failed to create feedback";
       toast({
         title: errorMessage,
       });
@@ -98,7 +154,8 @@ const Feedback = () => {
       resetForm();
     },
     onError: (error: any) => {
-      const errorMessage = error?.response?.data?.message || "Failed to update feedback";
+      const errorMessage =
+        error?.response?.data?.message || "Failed to update feedback";
       toast({
         title: errorMessage,
       });
@@ -114,15 +171,39 @@ const Feedback = () => {
       setFeedbackToDelete(null);
     },
     onError: (error: any) => {
-      const errorMessage = error?.response?.data?.message || "Failed to delete feedback";
+      const errorMessage =
+        error?.response?.data?.message || "Failed to delete feedback";
       toast({
         title: errorMessage,
       });
     },
   });
 
+  const { mutate: reopenFeedback, isPending: isReopening } = useMutation({
+    mutationFn: (id: string) =>
+      feedbackService.updateFeedback(id, { status: "open" }),
+    onSuccess: () => {
+      toast({ title: "Feedback re-opened" });
+      queryClient.invalidateQueries({ queryKey: ["feedback"] });
+      setOpen(false);
+      setViewingFeedback(null);
+      resetForm();
+    },
+    onError: (error: any) => {
+      toast({
+        title: error?.response?.data?.message || "Failed to re-open feedback",
+        variant: "destructive",
+      });
+    },
+  });
+
   const resetForm = () => {
-    setFormData({ title: "", description: "", type: "improvement", status: "open" });
+    setFormData({
+      title: "",
+      description: "",
+      type: "improvement",
+      status: "open",
+    });
     setFormErrors({});
     setEditMode(false);
     setViewMode(false);
@@ -162,8 +243,10 @@ const Feedback = () => {
   };
 
   const getStatusBadgeColor = (status: string) => {
-    if (status === "open") return "bg-yellow-500/20 text-yellow-300 border-yellow-500/30";
-    if (status === "in-progress") return "bg-blue-500/20 text-blue-300 border-blue-500/30";
+    if (status === "open")
+      return "bg-yellow-500/20 text-yellow-300 border-yellow-500/30";
+    if (status === "in-progress")
+      return "bg-blue-500/20 text-blue-300 border-blue-500/30";
     return "bg-green-500/20 text-green-300 border-green-500/30";
   };
 
@@ -193,7 +276,9 @@ const Feedback = () => {
   };
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -205,8 +290,32 @@ const Feedback = () => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const files = Array.from(e.target.files);
-      setSelectedFiles(files);
-      console.log("New files selected:", files);
+      const maxSize = 300 * 1024 * 1024; // 300MB in bytes
+      const validFiles: File[] = [];
+      const oversizedFiles: string[] = [];
+
+      files.forEach((file) => {
+        if (file.size > maxSize) {
+          oversizedFiles.push(file.name);
+        } else {
+          validFiles.push(file);
+        }
+      });
+
+      if (oversizedFiles.length > 0) {
+        toast({
+          title: "File size limit exceeded",
+          description: `The following file(s) exceed the 300MB limit: ${oversizedFiles.join(
+            ", "
+          )}`,
+          variant: "destructive",
+        });
+      }
+
+      if (validFiles.length > 0) {
+        setSelectedFiles(validFiles);
+        console.log("Valid files selected:", validFiles);
+      }
     }
   };
 
@@ -239,22 +348,25 @@ const Feedback = () => {
 
     // Create FormData for file upload
     const formDataToSend = new FormData();
-    formDataToSend.append('title', formData.title);
-    formDataToSend.append('description', formData.description);
-    formDataToSend.append('type', formData.type);
+    formDataToSend.append("title", formData.title);
+    formDataToSend.append("description", formData.description);
+    formDataToSend.append("type", formData.type);
 
     if (editMode) {
-      formDataToSend.append('status', formData.status);
+      formDataToSend.append("status", formData.status);
     }
 
     // Append all selected files
     selectedFiles.forEach((file) => {
-      formDataToSend.append('attachments', file);
+      formDataToSend.append("attachments", file);
     });
 
     // If editing, send the remaining existing attachments as JSON string
     if (editMode) {
-      formDataToSend.append('existingAttachments', JSON.stringify(existingAttachments));
+      formDataToSend.append(
+        "existingAttachments",
+        JSON.stringify(existingAttachments)
+      );
     }
 
     console.log("Files being sent:", selectedFiles);
@@ -276,7 +388,7 @@ const Feedback = () => {
       type: feedback.type,
       status: feedback.status,
     });
-
+    setViewingFeedback(feedback);
     setExistingAttachments(feedback.attachments || []);
     setViewMode(true);
     setEditMode(false);
@@ -319,11 +431,10 @@ const Feedback = () => {
       console.error("Download failed:", error);
       toast({
         title: "Failed to download attachment",
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
-
 
   const feedbackbtn =
     "bg-gradient-to-r from-[#69B4B7] to-[#3E64B4] hover:from-[#69B4B7]/80 hover:to-[#3E64B4]/80 text-white font-semibold rounded-full px-4 sm:px-6 h-10 shadow-[0_5px_18px_rgba(103,176,183,0.35)] hover:shadow-[0_8px_24px_rgba(103,176,183,0.45)] transition-all whitespace-nowrap";
@@ -377,26 +488,30 @@ const Feedback = () => {
                 <DialogContent
                   className="max-w-2xl max-h-[90vh] flex flex-col p-0 text-white border border-white/10 overflow-hidden rounded-[32px] shadow-[0_25px_60px_rgba(0,0,0,0.55)]"
                   style={{
-                    background: "#0a0a0a"
+                    background: "#0a0a0a",
                   }}
                 >
                   <div
                     className="absolute inset-0 pointer-events-none"
                     style={{
-                      background: "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0) 38.08%, rgba(255, 255, 255, 0) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)"
+                      background:
+                        "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0) 38.08%, rgba(255, 255, 255, 0) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
                     }}
                   />
 
                   <div className="relative z-10 flex flex-col h-full min-h-0">
                     <DialogHeader className="px-6 pt-6 pb-4 flex-shrink-0 border-b border-white/10">
                       <DialogTitle className="text-lg sm:text-xl font-semibold text-white drop-shadow-lg -mb-1">
-                        {viewMode ? "View Feedback" : editMode ? "Edit Feedback" : "Add Feedback"}
+                        {viewMode
+                          ? "View Feedback"
+                          : editMode
+                            ? "Edit Feedback"
+                            : "Add Feedback"}
                       </DialogTitle>
                     </DialogHeader>
 
                     <div className="flex-1 overflow-y-auto px-6 space-y-4 scrollbar-hide py-4 min-h-0">
                       <form onSubmit={handleSubmit} className="space-y-4">
-
                         {viewMode ? (
                           /* View Mode Layout */
                           <div className="space-y-6">
@@ -405,13 +520,25 @@ const Feedback = () => {
                               {/* Badges Row */}
                               <div className="flex flex-wrap items-center gap-2">
                                 {/* Type Badge */}
-                                <Badge className={`${getTypeBadgeColor(formData.type)} border inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[10px] rounded-full`}>
-                                  <span className="[&>svg]:w-3 [&>svg]:h-3 flex items-center">{getTypeIcon(formData.type)}</span>
-                                  <span className="capitalize">{formData.type}</span>
+                                <Badge
+                                  className={`${getTypeBadgeColor(
+                                    formData.type
+                                  )} border inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[10px] rounded-full`}
+                                >
+                                  <span className="[&>svg]:w-3 [&>svg]:h-3 flex items-center">
+                                    {getTypeIcon(formData.type)}
+                                  </span>
+                                  <span className="capitalize">
+                                    {formData.type}
+                                  </span>
                                 </Badge>
 
                                 {/* Status Badge */}
-                                <Badge className={`${getStatusBadgeColor(formData.status)} border inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[10px] rounded-full`}>
+                                <Badge
+                                  className={`${getStatusBadgeColor(
+                                    formData.status
+                                  )} border inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[10px] rounded-full`}
+                                >
                                   {formData.status === "open" ? (
                                     <AlertCircle className="w-3 h-3" />
                                   ) : formData.status === "in-progress" ? (
@@ -419,7 +546,9 @@ const Feedback = () => {
                                   ) : (
                                     <CheckCircle className="w-3 h-3" />
                                   )}
-                                  <span className="capitalize">{formData.status.replace(/-/g, " ")}</span>
+                                  <span className="capitalize">
+                                    {formData.status.replace(/-/g, " ")}
+                                  </span>
                                 </Badge>
                               </div>
 
@@ -431,8 +560,9 @@ const Feedback = () => {
 
                             {/* Description Section */}
                             <div className="space-y-2">
-                              <Label className="text-white/90 text-base
-                               uppercase font-medium pl-1">Description</Label>
+                              <Label className="text-white/90 text-base uppercase font-medium pl-1">
+                                Description
+                              </Label>
                               <div className="bg-[#121212] rounded-2xl p-5 border border-white/5">
                                 <p className="text-xs sm:text-sm/5 text-white/70 whitespace-pre-wrap tracking-wide leading-relaxed ">
                                   {formData.description}
@@ -443,19 +573,28 @@ const Feedback = () => {
                             {/* Attachments Section */}
                             {existingAttachments.length > 0 && (
                               <div className="space-y-3">
-                                <Label className="text-white/90 text-base uppercase font-medium pl-1">Attachments</Label>
+                                <Label className="text-white/90 text-base uppercase font-medium pl-1">
+                                  Attachments
+                                </Label>
                                 <div className="space-y-2">
                                   {existingAttachments.map((file) => (
-                                    <div key={file._id} className="flex items-center justify-between p-3 bg-[#121212] border border-white/10 rounded-xl group/file hover:border-white/20 transition-all">
+                                    <div
+                                      key={file._id}
+                                      className="flex items-center justify-between p-3 bg-[#121212] border border-white/10 rounded-xl group/file hover:border-white/20 transition-all"
+                                    >
                                       <div className="flex items-center gap-4 flex-1 min-w-0">
                                         <div className="w-10 h-10 rounded-lg bg-cyan-950/30 flex items-center justify-center border border-cyan-500/20 text-cyan-400">
                                           <FileText className="w-5 h-5" />
                                         </div>
-                                        <span className="text-sm font-medium text-white/90 truncate">{file.fileName}</span>
+                                        <span className="text-sm font-medium text-white/90 truncate">
+                                          {file.fileName}
+                                        </span>
                                       </div>
                                       <Button
                                         type="button"
-                                        onClick={() => downloadFileFrontend(file)}
+                                        onClick={() =>
+                                          downloadFileFrontend(file)
+                                        }
                                         variant="ghost"
                                         size="icon"
                                         className="h-10 w-10 rounded-full border border-cyan-500/20 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/20 hover:border-cyan-500/50 transition-all ml-3 flex-shrink-0"
@@ -468,12 +607,90 @@ const Feedback = () => {
                                 </div>
                               </div>
                             )}
+
+                            {/* Notes from support (visible to user) */}
+                            {viewingFeedback?.adminNotes &&
+                              viewingFeedback.adminNotes.length > 0 && (
+                                <div className="space-y-3">
+                                  <Label className="text-white/90 text-base uppercase font-medium pl-1 flex items-center gap-2">
+                                    <StickyNote className="w-4 h-4" />
+                                    Notes from support
+                                  </Label>
+                                  <div className="space-y-2">
+                                    {viewingFeedback.adminNotes.map(
+                                      (note: any, idx: number) => (
+                                        <div
+                                          key={idx}
+                                          className="p-3 bg-[#121212] border border-white/10 rounded-xl"
+                                        >
+                                          <p className="text-sm text-white/80 whitespace-pre-wrap">
+                                            {note.content}
+                                          </p>
+                                          <p className="text-xs text-white/40 mt-2">
+                                            {typeof note.addedBy === "object" &&
+                                              note.addedBy?.name
+                                              ? note.addedBy.name
+                                              : "Support"}{" "}
+                                            ·{" "}
+                                            {new Date(
+                                              note.addedAt
+                                            ).toLocaleString()}
+                                          </p>
+                                        </div>
+                                      )
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+
+                            {/* View mode actions: Re-open + Support chat */}
+                            <div className="flex flex-wrap items-center gap-2 pt-4 border-t border-white/10">
+                              {formData.status === "closed" && (
+                                <Button
+                                  type="button"
+                                  onClick={() =>
+                                    viewingFeedback?._id &&
+                                    reopenFeedback(viewingFeedback._id)
+                                  }
+                                  disabled={
+                                    isReopening || !viewingFeedback?._id
+                                  }
+                                  className="bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-400/30"
+                                >
+                                  {isReopening ? (
+                                    <Timer className="w-4 h-4 animate-spin mr-2" />
+                                  ) : (
+                                    <RotateCcw className="w-4 h-4 mr-2" />
+                                  )}
+                                  Re-open
+                                </Button>
+                              )}
+                              {viewingFeedback?._id &&
+                                viewingFeedback?.status !== "closed" && (
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => {
+                                      setOpen(false);
+                                      navigate(
+                                        `/feedback/${viewingFeedback._id}/chat`
+                                      );
+                                    }}
+                                    className="border-white/20 text-white hover:bg-white/10"
+                                  >
+                                    <MessageSquare className="w-4 h-4 mr-2" />
+                                    Support chat
+                                  </Button>
+                                )}
+                            </div>
                           </div>
                         ) : (
                           /* Edit/Add Mode Layout */
                           <>
                             <div>
-                              <Label htmlFor="title" className="text-white/80">Title</Label>
+                              <Label htmlFor="title" className="text-white/80">
+                                Title
+                              </Label>
                               <Input
                                 name="title"
                                 value={formData.title}
@@ -481,15 +698,22 @@ const Feedback = () => {
                                 placeholder="Enter feedback title"
                                 disabled={viewMode}
                                 readOnly={viewMode}
-                                className={`mt-1.5 bg-white/5 border-white/10 text-white ${formErrors.title ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+                                className={`mt-1.5 bg-white/5 border-white/10 text-white ${formErrors.title
+                                    ? "border-red-500 focus-visible:ring-red-500"
+                                    : ""
+                                  }`}
                               />
                               {formErrors.title && (
-                                <p className="text-red-500 text-xs mt-1 font-medium">{formErrors.title}</p>
+                                <p className="text-red-500 text-xs mt-1 font-medium">
+                                  {formErrors.title}
+                                </p>
                               )}
                             </div>
 
                             <div>
-                              <Label className="text-white/80">Description</Label>
+                              <Label className="text-white/80">
+                                Description
+                              </Label>
                               <Textarea
                                 name="description"
                                 value={formData.description}
@@ -498,10 +722,15 @@ const Feedback = () => {
                                 rows={4}
                                 disabled={viewMode}
                                 readOnly={viewMode}
-                                className={`mt-1.5 bg-white/5 border-white/10 text-white scrollbar-hide ${formErrors.description ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+                                className={`mt-1.5 bg-white/5 border-white/10 text-white scrollbar-hide ${formErrors.description
+                                    ? "border-red-500 focus-visible:ring-red-500"
+                                    : ""
+                                  }`}
                               />
                               {formErrors.description && (
-                                <p className="text-red-500 text-xs mt-1 font-medium">{formErrors.description}</p>
+                                <p className="text-red-500 text-xs mt-1 font-medium">
+                                  {formErrors.description}
+                                </p>
                               )}
                             </div>
 
@@ -509,13 +738,17 @@ const Feedback = () => {
                               <Label className="text-white/80">Type</Label>
                               <div className="mt-1.5">
                                 <DropdownMenu>
-                                  <DropdownMenuTrigger asChild disabled={viewMode}>
+                                  <DropdownMenuTrigger
+                                    asChild
+                                    disabled={viewMode}
+                                  >
                                     <Button
                                       variant="outline"
                                       className="w-full justify-between text-white border-white/10 bg-white/5 hover:bg-white/10"
                                     >
-                                      {feedbackTypes.find((t) => t.value === formData.type)
-                                        ?.label || "Select Type"}
+                                      {feedbackTypes.find(
+                                        (t) => t.value === formData.type
+                                      )?.label || "Select Type"}
                                     </Button>
                                   </DropdownMenuTrigger>
 
@@ -540,20 +773,31 @@ const Feedback = () => {
                             </div>
 
                             <div className="space-y-3">
-                              <Label className="text-white/80">Attachments</Label>
+                              <Label className="text-white/80">
+                                Attachments
+                              </Label>
                               {/* Existing Attachments in Edit Mode */}
                               {existingAttachments.length > 0 && (
                                 <div className="space-y-2 mb-3">
-                                  <p className="text-xs font-medium text-white/50 uppercase tracking-wider">Existing Files</p>
+                                  <p className="text-xs font-medium text-white/50 uppercase tracking-wider">
+                                    Existing Files
+                                  </p>
                                   {existingAttachments.map((file) => (
-                                    <div key={file._id} className="flex items-center justify-between p-2 bg-white/5 border border-white/10 rounded-lg group/file">
+                                    <div
+                                      key={file._id}
+                                      className="flex items-center justify-between p-2 bg-white/5 border border-white/10 rounded-lg group/file"
+                                    >
                                       <div className="flex items-center gap-2 flex-1 min-w-0">
                                         <FileText className="w-4 h-4 text-cyan-400 flex-shrink-0" />
-                                        <span className="text-xs text-white/80 truncate">{file.fileName}</span>
+                                        <span className="text-xs text-white/80 truncate">
+                                          {file.fileName}
+                                        </span>
                                       </div>
                                       <Button
                                         type="button"
-                                        onClick={() => removeExistingAttachment(file._id)}
+                                        onClick={() =>
+                                          removeExistingAttachment(file._id)
+                                        }
                                         variant="ghost"
                                         size="icon"
                                         className="h-6 w-6 text-white/40 hover:text-red-400 hover:bg-red-400/10 opacity-0 group-hover/file:opacity-100 transition-opacity"
@@ -568,12 +812,24 @@ const Feedback = () => {
                               {/* Newly Selected Files */}
                               {selectedFiles.length > 0 && (
                                 <div className="space-y-2 mb-3">
-                                  <p className="text-xs font-medium text-white/50 uppercase tracking-wider">New Files</p>
+                                  <p className="text-xs font-medium text-white/50 uppercase tracking-wider">
+                                    New Files
+                                  </p>
                                   {selectedFiles.map((file, idx) => (
-                                    <div key={idx} className="flex items-center justify-between p-2 bg-cyan-400/5 border border-cyan-400/20 rounded-lg group/file">
+                                    <div
+                                      key={idx}
+                                      className="flex items-center justify-between p-2 bg-cyan-400/5 border border-cyan-400/20 rounded-lg group/file"
+                                    >
                                       <div className="flex items-center gap-2 flex-1 min-w-0">
                                         <Paperclip className="w-4 h-4 text-cyan-400 flex-shrink-0" />
-                                        <span className="text-xs text-white/80 truncate">{file.name}</span>
+                                        <div className="flex flex-col min-w-0">
+                                          <span className="text-xs text-white/80 truncate">
+                                            {file.name}
+                                          </span>
+                                          <span className="text-[10px] text-white/50">
+                                            {formatFileSize(file.size)}
+                                          </span>
+                                        </div>
                                       </div>
                                       <Button
                                         type="button"
@@ -589,16 +845,23 @@ const Feedback = () => {
                                 </div>
                               )}
 
-                              <div className="relative">
-                                <Input
-                                  type="file"
-                                  multiple
-                                  onChange={handleFileChange}
-                                  className="h-14 cursor-pointer text-white/80 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20 border-white/10 bg-white/5 hover:bg-white/10 transition-colors"
-                                />
-                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                                  <Paperclip className="w-5 h-5 text-white/30" />
+                              <div className="space-y-2">
+                                <div className="relative">
+                                  <Input
+                                    type="file"
+                                    multiple
+                                    onChange={handleFileChange}
+                                    className="h-14 cursor-pointer text-white/80 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20 border-white/10 bg-white/5 hover:bg-white/10 transition-colors"
+                                  />
+                                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                                    <Paperclip className="w-5 h-5 text-white/30" />
+                                  </div>
                                 </div>
+                                <p className="text-xs text-white/50">
+                                  You can upload any file type (images, videos,
+                                  documents, etc.). Maximum file size: 300MB per
+                                  file.
+                                </p>
                               </div>
                             </div>
 
@@ -636,16 +899,39 @@ const Feedback = () => {
                   className="pl-10 bg-white/[0.05] border-white/10 text-white placeholder:text-white/50 focus:border-cyan-400/50 focus:ring-cyan-400/20"
                 />
               </div>
-              <Select value={statusFilter} onValueChange={(value: any) => setStatusFilter(value)}>
+              <Select
+                value={statusFilter}
+                onValueChange={(value: any) => setStatusFilter(value)}
+              >
                 <SelectTrigger className="w-full sm:w-[180px] bg-white/[0.05] border-white/10 text-white">
                   <Filter className="w-4 h-4 mr-2" />
                   <SelectValue placeholder="Filter by status" />
                 </SelectTrigger>
                 <SelectContent className="bg-[#1a1a1a] border-white/10">
-                  <SelectItem value="all" className="text-white hover:bg-white/10">All Status</SelectItem>
-                  <SelectItem value="open" className="text-white hover:bg-white/10">Open</SelectItem>
-                  <SelectItem value="in-progress" className="text-white hover:bg-white/10">In Progress</SelectItem>
-                  <SelectItem value="closed" className="text-white hover:bg-white/10">Closed</SelectItem>
+                  <SelectItem
+                    value="all"
+                    className="text-white hover:bg-white/10"
+                  >
+                    All Status
+                  </SelectItem>
+                  <SelectItem
+                    value="open"
+                    className="text-white hover:bg-white/10"
+                  >
+                    Open
+                  </SelectItem>
+                  <SelectItem
+                    value="in-progress"
+                    className="text-white hover:bg-white/10"
+                  >
+                    In Progress
+                  </SelectItem>
+                  <SelectItem
+                    value="closed"
+                    className="text-white hover:bg-white/10"
+                  >
+                    Closed
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -661,14 +947,22 @@ const Feedback = () => {
               ) : feedbackData.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16">
                   <FileText className="w-12 h-12 text-white/20 mb-3" />
-                  <p className="text-white/70 text-base font-medium mb-1">No feedback yet</p>
-                  <p className="text-white/50 text-sm">Submit your first feedback to get started</p>
+                  <p className="text-white/70 text-base font-medium mb-1">
+                    No feedback yet
+                  </p>
+                  <p className="text-white/50 text-sm">
+                    Submit your first feedback to get started
+                  </p>
                 </div>
               ) : filteredFeedback.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16">
                   <Search className="w-12 h-12 text-white/20 mb-3" />
-                  <p className="text-white/70 text-base font-medium mb-1">No results found</p>
-                  <p className="text-white/50 text-sm">Try adjusting your search or filters</p>
+                  <p className="text-white/70 text-base font-medium mb-1">
+                    No results found
+                  </p>
+                  <p className="text-white/50 text-sm">
+                    Try adjusting your search or filters
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -684,9 +978,15 @@ const Feedback = () => {
                       <div className="flex items-center gap-4 p-4 cursor-pointer hover:bg-white/[0.05] transition-all duration-200">
                         {/* Type Badge */}
                         <div className="flex-shrink-0">
-                          <Badge className={`${getTypeBadgeColor(feedback.type)} border flex items-center gap-1.5 px-2.5 py-1`}>
+                          <Badge
+                            className={`${getTypeBadgeColor(
+                              feedback.type
+                            )} border flex items-center gap-1.5 px-2.5 py-1`}
+                          >
                             {getTypeIcon(feedback.type)}
-                            <span className="capitalize text-xs">{feedback.type}</span>
+                            <span className="capitalize text-xs">
+                              {feedback.type}
+                            </span>
                           </Badge>
                         </div>
 
@@ -706,13 +1006,19 @@ const Feedback = () => {
                           {feedback.attachments?.length > 0 && (
                             <div className="flex items-center gap-1 text-xs text-cyan-400">
                               <Paperclip className="w-3.5 h-3.5" />
-                              <span>{feedback.attachments.length} attachment(s)</span>
+                              <span>
+                                {feedback.attachments.length} attachment(s)
+                              </span>
                             </div>
                           )}
 
                           {/* Status Badge */}
                           <div className="flex-shrink-0">
-                            <Badge className={`${getStatusBadgeColor(feedback.status)} border text-xs capitalize px-2.5 py-1`}>
+                            <Badge
+                              className={`${getStatusBadgeColor(
+                                feedback.status
+                              )} border text-xs capitalize px-2.5 py-1`}
+                            >
                               {feedback.status.replace(/-/g, " ")}
                             </Badge>
                           </div>
@@ -720,7 +1026,11 @@ const Feedback = () => {
                           {/* Date */}
                           <div className="flex-shrink-0 hidden sm:flex items-center gap-1.5 text-white/40 text-xs">
                             <Calendar className="w-3.5 h-3.5" />
-                            <span>{new Date(feedback.createdAt).toLocaleDateString()}</span>
+                            <span>
+                              {new Date(
+                                feedback.createdAt
+                              ).toLocaleDateString()}
+                            </span>
                           </div>
 
                           {/* Actions */}
@@ -730,12 +1040,29 @@ const Feedback = () => {
                               size="icon"
                               onClick={(e) => {
                                 e.stopPropagation();
+                                if (feedback.status !== "closed")
+                                  navigate(`/feedback/${feedback._id}/chat`);
+                              }}
+                              disabled={feedback.status === "closed"}
+                              className={`h-8 w-8 ${feedback.status === "closed"
+                                  ? "text-gray-500 cursor-not-allowed opacity-50"
+                                  : "text-cyan-400 hover:text-cyan-300 hover:bg-cyan-400/10"
+                                }`}
+                              title="Support chat"
+                            >
+                              <MessageSquare className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 handleEdit(feedback);
                               }}
                               disabled={feedback.status === "closed"}
                               className={`h-8 w-8 ${feedback.status === "closed"
-                                ? "text-gray-500 cursor-not-allowed opacity-50"
-                                : "text-blue-400 hover:text-blue-300 hover:bg-blue-400/10"
+                                  ? "text-gray-500 cursor-not-allowed opacity-50"
+                                  : "text-blue-400 hover:text-blue-300 hover:bg-blue-400/10"
                                 }`}
                             >
                               <Pencil className="h-4 w-4" />
@@ -758,10 +1085,10 @@ const Feedback = () => {
                   ))}
                 </div>
               )}
-            </div >
-          </div >
-        </motion.section >
-      </motion.main >
+            </div>
+          </div>
+        </motion.section>
+      </motion.main>
 
       <ConfirmDialog
         open={deleteDialogOpen}
@@ -776,7 +1103,7 @@ const Feedback = () => {
         cancelText="Cancel"
         confirmVariant="destructive"
       />
-    </DashboardLayout >
+    </DashboardLayout>
   );
 };
 

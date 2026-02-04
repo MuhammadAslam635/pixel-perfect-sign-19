@@ -4,6 +4,7 @@ import { MobileNavigation } from "./MobileNavigation";
 import Logo from "../Logo";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { CompleteProfileButton } from "@/components/completeProfile/CompleteProfileButton";
 
 const DashboardHeader = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -53,7 +54,7 @@ const DashboardHeader = () => {
 
   return (
     <header
-      className={`fixed left-0 right-0 z-[100] flex h-24 items-center gap-4 p-2 mx-w-full overflow-visible transition-all duration-300 ${isScrolled || !isPageScrollable
+      className={`fixed left-0 right-0 z-[100] flex h-24 items-center gap-4 p-2 mx-w-full overflow-visible ${isScrolled || !isPageScrollable
         ? "bg-[rgba(15,15,20,0.85)] backdrop-blur-xl border-b border-white/10"
         : "bg-transparent"
         }`}
@@ -66,7 +67,10 @@ const DashboardHeader = () => {
           </Link>
         </div>
         <Navigation />
-        <ActionComponent />
+        <div className="flex items-center gap-3">
+          <CompleteProfileButton />
+          <ActionComponent />
+        </div>
       </div>
     </header>
   );
@@ -123,7 +127,7 @@ export const AdminHeader = () => {
 
   return (
     <header
-      className={`fixed left-0 right-0 z-[100] flex h-24 items-center gap-4 p-2 mx-w-full overflow-visible transition-all duration-300 ${isScrolled || !isPageScrollable
+      className={`fixed left-0 right-0 z-[100] flex h-24 items-center gap-4 p-2 mx-w-full overflow-visible ${isScrolled || !isPageScrollable
         ? "bg-[rgba(15,15,20,0.85)] backdrop-blur-xl border-b border-white/10"
         : "bg-transparent"
         }`}
@@ -141,7 +145,10 @@ export const AdminHeader = () => {
           </Link>
         </div>
         <AdminNavigation />
-        <ActionComponent />
+        <div className="flex items-center gap-3">
+          <CompleteProfileButton />
+          <ActionComponent />
+        </div>
       </div>
     </header>
   );

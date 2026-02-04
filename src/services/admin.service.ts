@@ -437,4 +437,19 @@ export const adminService = {
       throw error;
     }
   },
+
+  /**
+   * Hard delete a user (Admin only)
+   * Permanently deletes user and all their personal data and assets
+   */
+  hardDeleteUser: async (
+    userId: string
+  ): Promise<{ success: boolean; message: string }> => {
+    try {
+      const response = await API.delete(`/admin/users/${userId}/hard-delete`);
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  },
 };

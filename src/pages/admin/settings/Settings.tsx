@@ -10,7 +10,7 @@ import { NotificationsTab } from "@/components/settings/NotificationsTab";
 import { AdminGlobalIntegrationsTab } from "@/components/admin/integrations/AdminGlobalIntegrationsTab";
 import { AdminCompanyMailgunTab } from "@/components/admin/integrations/AdminCompanyMailgunTab";
 import { PerplexityPromptTab } from "@/components/settings/PerplexityPromptTab";
-import { Lock, Plug, User, Shield, Database, Sparkles } from "lucide-react";
+import { Lock, Plug, User, Shield, Database, Sparkles, Bell } from "lucide-react";
 
 const FadeIn: React.FC<{ children: React.ReactNode; delay?: number }> = ({ children, delay = 0 }) => (
   <motion.div
@@ -51,6 +51,7 @@ const AdminSettings = () => {
         ]
         : []),
       { value: "ai-research-prompt", label: "AI Research Prompt", icon: Sparkles },
+      { value: "notifications", label: "Notifications", icon: Bell },
     ],
     [canAccessIntegrations]
   );
@@ -166,6 +167,9 @@ const AdminSettings = () => {
                   );
                 })}
               </TabsList>
+              <div className="mt-6 px-4 text-[11px] text-white/30 font-medium tracking-wider">
+                Version 1.1
+              </div>
             </div>
 
             {/* Content */}

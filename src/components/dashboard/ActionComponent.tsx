@@ -13,6 +13,7 @@ import {
 import { usePermissions } from "@/hooks/usePermissions";
 import LongRunningTasksButton from "@/components/navigation/LongRunningTasksButton";
 import { AvatarFallback } from "@/components/ui/avatar-fallback";
+import { notificationSoundManager, loadSoundPreference } from "@/utils/notificationSound";
 
 // Helper function to get seen notifications from localStorage
 const getSeenNotifications = (): Set<string> => {
@@ -99,6 +100,20 @@ export const ActionComponent = () => {
   // Use custom hook for marking notification as read
   const markAsReadMutation = useMarkNotificationAsRead();
 
+  // Function to mark notification as read
+  const handleMarkAsRead = React.useCallback((notificationId: string) => {
+    // Find the notification to check if it's already read
+    const notification = notifications.find((n) => n._id === notificationId);
+
+    // If already read, don't do anything
+    if (notification?.is_read === "Yes") {
+      return;
+    }
+
+    // Call the mutation
+    markAsReadMutation.mutate(notificationId);
+  }, [notifications, markAsReadMutation]);
+
   // Show error toast if notifications fail to load
   useEffect(() => {
     if (notificationsError) {
@@ -119,36 +134,42 @@ export const ActionComponent = () => {
         notification.is_read === "No"
     );
 
-    // Show toast for each new notification
-    newNotifications.forEach((notification) => {
-      toast(notification.title || "New Notification", {
-        description: notification.message,
-        duration: 5000,
+    // Show toast for each new notification, play sound, and mark as read
+    if (newNotifications.length > 0) {
+      newNotifications.forEach((notification) => {
+        toast(notification.title || "New Notification", {
+          description: notification.message,
+          duration: 5000,
+          onDismiss: () => {
+            // Mark the notification as read when user closes the toast using the X button
+            handleMarkAsRead(notification._id);
+          },
+          onAutoClose: () => {
+            // Also mark as read when toast auto-closes
+            handleMarkAsRead(notification._id);
+          },
+        });
       });
-    });
+      
+      // Play notification sound once for new notifications
+      notificationSoundManager.play();
+    }
 
     // Update previous notification IDs and persist to localStorage
     previousNotificationIdsRef.current = currentNotificationIds;
     saveSeenNotifications(currentNotificationIds);
   }, [notifications]);
 
+  // Initialize sound preference on mount
+  useEffect(() => {
+    const savedSound = loadSoundPreference();
+    notificationSoundManager.setSound(savedSound);
+  }, []);
+
   const handleLogout = () => {
     dispatch(logout());
     toast.success("Logged out successfully");
     navigate("/");
-  };
-
-  const handleMarkAsRead = (notificationId: string) => {
-    // Find the notification to check if it's already read
-    const notification = notifications.find((n) => n._id === notificationId);
-
-    // If already read, don't do anything
-    if (notification?.is_read === "Yes") {
-      return;
-    }
-
-    // Call the mutation
-    markAsReadMutation.mutate(notificationId);
   };
 
   useEffect(() => {
@@ -235,7 +256,7 @@ export const ActionComponent = () => {
       <div className="flex items-center gap-1 p-2 px-4">
         <button
           aria-label="Toggle notifications"
-          className={`relative flex h-8 w-8 items-center justify-center rounded-full border border-white/10 text-white transition ${notificationsOpen ? "ring-2 ring-cyan-400/40" : ""
+          className={`relative flex h-8 w-8 items-center justify-center rounded-full border border-white/10 text-white !transition-none ${notificationsOpen ? "ring-2 ring-cyan-400/40" : ""
             }`}
           type="button"
           onClick={() => {
@@ -314,7 +335,7 @@ export const ActionComponent = () => {
                           <li
                             key={item._id}
                             className={`${isUnread ? "bg-white/5" : ""
-                              } cursor-pointer hover:bg-white/10 transition-colors`}
+                              } cursor-pointer hover:bg-white/10 !transition-none`}
                             onClick={() => handleMarkAsRead(item._id)}
                           >
                             <div className="flex items-start justify-between gap-2">
@@ -362,6 +383,9 @@ export const ActionComponent = () => {
                     </li>
                   ))}
                 </ul>
+                <div className="mt-4 px-3 text-[10px] text-white/30 font-medium tracking-wider">
+                  Version 1.1
+                </div>
               </>
             )}
           </div>

@@ -3,6 +3,7 @@ import ReactDOMServer from "react-dom/server";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ChevronDown,
+  ChevronRight,
   Loader2,
   MoreVertical,
   Send,
@@ -16,6 +17,7 @@ import {
   X,
   ArrowLeft,
   Paperclip,
+  CheckCircle2,
 } from "lucide-react";
 import { IoLogoWhatsapp, IoLocationSharp } from "react-icons/io5";
 import jsPDF from "jspdf";
@@ -47,6 +49,13 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Command,
   CommandEmpty,
   CommandGroup,
@@ -61,6 +70,71 @@ import { getUserData } from "@/utils/authHelpers";
 // Import Tamimi logos
 import tamimiLogoLight from "@/assets/tamimi-logo-light.png";
 import tamimiLogoDark from "@/assets/tamimi-logo-dark.png";
+
+interface HeadingNode {
+  heading: { level: number; text: string; original: string };
+  index: number;
+  children: HeadingNode[];
+}
+
+const HeadingTreeItem = ({
+  node,
+  onUpdate,
+  onCommit,
+}: {
+  node: HeadingNode;
+  onUpdate: (index: number, text: string) => void;
+  onCommit?: (index: number, text: string) => void;
+}) => {
+  const [isOpen, setIsOpen] = useState(true);
+
+  return (
+    <div className="flex flex-col gap-2 w-full">
+      <div className="flex items-center gap-2 p-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
+        {node.children.length > 0 ? (
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="p-1 hover:bg-white/10 rounded flex-shrink-0"
+          >
+            {isOpen ? (
+              <ChevronDown className="h-4 w-4 text-white/50" />
+            ) : (
+              <ChevronRight className="h-4 w-4 text-white/50" />
+            )}
+          </button>
+        ) : (
+          <div className="w-6 flex-shrink-0" />
+        )}
+        <div className="flex-1 min-w-0">
+          <input
+            type="text"
+            value={node.heading.text}
+            onChange={(e) => onUpdate(node.index, e.target.value)}
+            onBlur={(e) => onCommit && onCommit(node.index, e.target.value)}
+            className="w-full bg-transparent text-sm text-white border-none outline-none font-medium focus:ring-0 placeholder:text-white/30"
+            placeholder="Heading text"
+          />
+        </div>
+        <div className="text-[10px] text-white/30 font-mono px-2">
+          H{node.heading.level}
+        </div>
+      </div>
+
+      {isOpen && node.children.length > 0 && (
+        <div className="pl-6 flex flex-col gap-2 border-l border-white/10 ml-3">
+          {node.children.map((child) => (
+            <HeadingTreeItem
+              key={child.index}
+              node={child}
+              onUpdate={onUpdate}
+              onCommit={onCommit}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 type LeadChatProps = {
   lead?: Lead;
@@ -121,9 +195,14 @@ const normalizePhoneNumber = (raw?: string | null): string | null => {
     formatted = "+" + formatted.slice(2);
   }
 
+  // Add + prefix if missing (for international numbers)
   if (!formatted.startsWith("+")) {
     if (/^\d{10}$/.test(formatted)) {
+      // US 10-digit number - add +1
       formatted = "+1" + formatted;
+    } else if (/^\d{7,14}$/.test(formatted)) {
+      // International number without + - add it
+      formatted = "+" + formatted;
     } else {
       return null;
     }
@@ -170,6 +249,12 @@ const LeadChat = ({
     [whatsappNumber],
   );
 
+  const backendUrl = useMemo(() => {
+    const baseUrl =
+      import.meta.env.VITE_APP_BACKEND_URL || "http://localhost:3000/api";
+    return baseUrl.replace(/\/api$/, "");
+  }, []);
+
   const [smsInput, setSmsInput] = useState("");
   const [smsSendError, setSmsSendError] = useState<string | null>(null);
   const [whatsappInput, setWhatsappInput] = useState("");
@@ -196,6 +281,27 @@ const LeadChat = ({
   const [proposalCopied, setProposalCopied] = useState(false);
   const [isUpdatingStage, setIsUpdatingStage] = useState(false);
   const [isProposalEditable, setIsProposalEditable] = useState(false);
+  // V2 Proposal states
+  const [proposalVersion, setProposalVersion] = useState<"v1" | "v2">("v1");
+  const [v2Headings, setV2Headings] = useState<Array<{ level: number; text: string; original: string }>>([]);
+  const [v2EditedHeadings, setV2EditedHeadings] = useState<Array<{ level: number; text: string; original: string }>>([]);
+  const [v2CurrentSectionIndex, setV2CurrentSectionIndex] = useState<number>(0);
+  const [v2Sections, setV2Sections] = useState<Array<{ headingIndex: number; content: string; editedContent: string }>>([]);
+  const [v2Stage, setV2Stage] = useState<"headings" | "content" | "complete" | null>(null);
+  const [v2ProposalId, setV2ProposalId] = useState<string | null>(null);
+  const [isGeneratingV2Headings, setIsGeneratingV2Headings] = useState(false);
+  const [isGeneratingV2Section, setIsGeneratingV2Section] = useState(false);
+  const [generatingSectionIndex, setGeneratingSectionIndex] = useState<number | null>(null); // Track which section is being generated
+  const [isCompletingV2, setIsCompletingV2] = useState(false);
+  // V2 Section Edit with AI states
+  const [v2EditSectionIndex, setV2EditSectionIndex] = useState<number | null>(null);
+  const [showV2EditAIModal, setShowV2EditAIModal] = useState(false);
+  const [v2EditAIQuery, setV2EditAIQuery] = useState<string>("");
+  const [isEditingV2SectionWithAI, setIsEditingV2SectionWithAI] = useState(false);
+  // V2 Headings Edit with AI states
+  const [showHeadingsEditAIModal, setShowHeadingsEditAIModal] = useState(false);
+  const [headingsEditAIQuery, setHeadingsEditAIQuery] = useState<string>("");
+  const [isEditingHeadingsWithAI, setIsEditingHeadingsWithAI] = useState(false);
   const [selectedText, setSelectedText] = useState<string>("");
   const [lockedSelectedText, setLockedSelectedText] = useState<string>(""); // Locked version for modal
   const [selectionRange, setSelectionRange] = useState<{
@@ -213,6 +319,31 @@ const LeadChat = ({
   const [generationStatus, setGenerationStatus] = useState<string>("");
   const [currentHeading, setCurrentHeading] = useState<string>("");
   const proposalContentRef = useRef<HTMLDivElement>(null);
+
+  const headingTree = useMemo(() => {
+    const root: HeadingNode[] = [];
+    const stack: HeadingNode[] = [];
+
+    v2EditedHeadings.forEach((heading, index) => {
+      const node: HeadingNode = { heading, index, children: [] };
+
+      while (
+        stack.length > 0 &&
+        stack[stack.length - 1].heading.level >= heading.level
+      ) {
+        stack.pop();
+      }
+
+      if (stack.length === 0) {
+        root.push(node);
+      } else {
+        stack[stack.length - 1].children.push(node);
+      }
+      stack.push(node);
+    });
+
+    return root;
+  }, [v2EditedHeadings]);
 
   // Proposal list view states
   const [showProposalList, setShowProposalList] = useState(false);
@@ -298,43 +429,19 @@ const LeadChat = ({
     textarea.style.height = `${newHeight}px`;
   };
 
-  const {
-    data: whatsappConnectionsData,
-    isLoading: isWhatsAppConnectionLoading,
-    isError: isWhatsAppConnectionError,
-    error: whatsappConnectionsError,
-  } = useQuery({
-    queryKey: ["whatsapp-connections"],
-    queryFn: whatsappService.getConnections,
-    staleTime: 120000,
-  });
-
-  const whatsappConnections = whatsappConnectionsData?.credentials || EMPTY_ARRAY;
-  const primaryWhatsAppConnection = whatsappConnections[0] || null;
-  const whatsappPhoneNumberId = primaryWhatsAppConnection?.phoneNumber || null;
-  const whatsappReady = whatsappConnections.length > 0;
-
-  const whatsappConnectionErrorMessage = isWhatsAppConnectionError
-    ? sanitizeErrorMessage(
-      whatsappConnectionsError,
-      "Failed to load WhatsApp connection."
-    )
-    : null;
 
   const twilioReady = twilioConnection.ready;
   const twilioStatusLoading = twilioConnection.loading;
-  const whatsappStatusLoading = isWhatsAppConnectionLoading;
 
+  // WhatsApp is now globally configured via environment variables
+  // Just check if lead has a valid WhatsApp number
   const whatsappUnavailableMessage = !whatsappNumber
     ? "Add a WhatsApp number for this lead to start WhatsApp chats."
-    : whatsappConnectionErrorMessage
-      ? whatsappConnectionErrorMessage
-      : !normalizedLeadWhatsapp
-        ? "Lead WhatsApp number must include the country code."
-        : null;
+    : !normalizedLeadWhatsapp
+      ? "Lead WhatsApp number must include the country code."
+      : null;
 
   const whatsappInputsDisabled =
-    whatsappStatusLoading ||
     Boolean(whatsappUnavailableMessage) ||
     !normalizedLeadWhatsapp;
   const canGenerateWhatsAppMessage = Boolean(lead?.companyId && lead?._id);
@@ -344,15 +451,12 @@ const LeadChat = ({
     const hasWhatsapp = Boolean(whatsappNumber);
     const hasEmail = Boolean(emailAddress);
 
+    // WhatsApp is globally configured - show "Ready" when lead has valid WhatsApp number
     const whatsappStatus = !hasWhatsapp
       ? "Add WhatsApp number"
-      : isWhatsAppConnectionLoading
-        ? "Checking..."
-        : whatsappConnectionErrorMessage
-          ? "Error"
-          : whatsappReady
-            ? "Connected"
-            : "Not connected";
+      : !normalizedLeadWhatsapp
+        ? "Invalid format"
+        : "Ready";
 
     const smsStatus = !hasPhone
       ? "Add phone"
@@ -364,7 +468,7 @@ const LeadChat = ({
 
     const emailStatus = hasEmail ? "Connected" : "Unavailable";
 
-    const whatsappAvailable = hasWhatsapp;
+    const whatsappAvailable = hasWhatsapp && Boolean(normalizedLeadWhatsapp);
     const smsAvailable = hasPhone && (twilioReady || twilioStatusLoading);
     const aiCallAvailable = hasPhone;
     const meetingBotAvailable = true; // Always available as it depends on meetings, not phone/email
@@ -398,8 +502,8 @@ const LeadChat = ({
   }, [
     emailAddress,
     phoneNumber,
-    isWhatsAppConnectionLoading,
-    whatsappConnectionErrorMessage,
+    whatsappNumber,
+    normalizedLeadWhatsapp,
     twilioReady,
     twilioStatusLoading,
   ]);
@@ -769,6 +873,7 @@ const LeadChat = ({
       whatsappService.sendTextMessage({
         to: normalizedLeadWhatsapp as string,
         text: payload.text,
+        leadId: leadId || undefined,
       }),
     onSuccess: () => {
       setWhatsappInput("");
@@ -1389,6 +1494,390 @@ const LeadChat = ({
       toast.error("Failed to copy proposal.");
     }
   };
+
+  // V2 Proposal Generation Handlers
+  const handleGenerateV2Headings = async () => {
+    if (!lead?.companyId || !lead?._id) {
+      toast.error("Lead information is incomplete for generating proposals.");
+      return;
+    }
+
+    setIsGeneratingV2Headings(true);
+    try {
+      const response = await connectionMessagesService.generateV2ProposalHeadings({
+        companyId: lead.companyId,
+        personId: lead._id,
+        proposalExampleId: selectedExampleId || undefined,
+      });
+
+      if (response.success && response.data) {
+        setV2Headings(response.data.headings);
+        setV2EditedHeadings(response.data.headings);
+        setV2ProposalId(response.data.proposalId);
+        setV2Stage("headings");
+        toast.success("Headings generated successfully!");
+      }
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Failed to generate headings");
+    } finally {
+      setIsGeneratingV2Headings(false);
+    }
+  };
+
+  const handleSaveV2Headings = async (headingsToSave = v2EditedHeadings) => {
+    if (!v2ProposalId || headingsToSave.length === 0) {
+      toast.error("No headings to save.");
+      return;
+    }
+
+    try {
+      await connectionMessagesService.saveV2ProposalHeadings({
+        proposalId: v2ProposalId,
+        headings: headingsToSave,
+      });
+      // toast.success("Headings saved!");
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Failed to save headings");
+    }
+  };
+
+  const handleProceedToContent = async () => {
+    await handleSaveV2Headings();
+    setV2Stage("content");
+    // Find first content heading (level > 1)
+    const firstContentIndex = v2EditedHeadings.findIndex(h => h.level > 1);
+    if (firstContentIndex >= 0) {
+      setV2CurrentSectionIndex(0); // Set to 0 for content headings array index
+      // Auto-generate first section if it doesn't exist
+      const firstSection = v2Sections.find(s => s.headingIndex === firstContentIndex);
+      if (!firstSection) {
+        await handleGenerateV2Section(firstContentIndex);
+      }
+    }
+  };
+
+  const handleGenerateV2Section = async (sectionIndex: number, forceRegenerate = false) => {
+    if (!v2ProposalId) {
+      toast.error("Proposal ID is missing.");
+      return;
+    }
+
+    // Check if section already has content
+    const existingSection = v2Sections.find(s => s.headingIndex === sectionIndex);
+    if (!forceRegenerate && existingSection && existingSection.content && existingSection.content.trim()) {
+      // Section already has content, don't regenerate
+      return;
+    }
+
+    setIsGeneratingV2Section(true);
+    setGeneratingSectionIndex(sectionIndex);
+    try {
+      const response = await connectionMessagesService.generateV2ProposalSection({
+        proposalId: v2ProposalId,
+        sectionIndex,
+      });
+
+      if (response.success && response.data) {
+        const existingSectionIndex = v2Sections.findIndex(
+          s => s.headingIndex === sectionIndex
+        );
+        const newSection = {
+          headingIndex: sectionIndex,
+          content: response.data.content,
+          editedContent: response.data.content,
+        };
+
+        if (existingSectionIndex >= 0) {
+          const updatedSections = [...v2Sections];
+          updatedSections[existingSectionIndex] = newSection;
+          setV2Sections(updatedSections);
+        } else {
+          setV2Sections([...v2Sections, newSection]);
+        }
+        toast.success("Section generated successfully!");
+      }
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Failed to generate section");
+    } finally {
+      setIsGeneratingV2Section(false);
+      setGeneratingSectionIndex(null);
+    }
+  };
+
+  const handleSaveV2Section = async (sectionIndex: number, content: string) => {
+    if (!v2ProposalId) {
+      toast.error("Proposal ID is missing.");
+      return;
+    }
+
+    try {
+      // Convert HTML back to markdown if needed before saving
+      let contentToSave = content;
+      if (content.includes('<')) {
+        contentToSave = htmlToMarkdown(content);
+      }
+
+      await connectionMessagesService.saveV2ProposalSection({
+        proposalId: v2ProposalId,
+        sectionIndex,
+        content: contentToSave,
+      });
+
+      const existingSectionIndex = v2Sections.findIndex(
+        s => s.headingIndex === sectionIndex
+      );
+      if (existingSectionIndex >= 0) {
+        const updatedSections = [...v2Sections];
+        updatedSections[existingSectionIndex].editedContent = content;
+        setV2Sections(updatedSections);
+      }
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Failed to save section");
+    }
+  };
+
+  const handleEditV2SectionWithAI = async () => {
+    if (!v2ProposalId || v2EditSectionIndex === null) {
+      toast.error("Section information is missing.");
+      return;
+    }
+
+    if (!v2EditAIQuery.trim()) {
+      toast.error("Please provide instructions for editing.");
+      return;
+    }
+
+    setIsEditingV2SectionWithAI(true);
+    try {
+      // Use the existing editProposalPart endpoint with the section content
+      const section = v2Sections.find(s => s.headingIndex === v2EditSectionIndex);
+      if (!section) {
+        toast.error("Section not found.");
+        return;
+      }
+
+      const response = await connectionMessagesService.editProposalPart({
+        companyId: lead?.companyId || "",
+        personId: lead?._id || "",
+        originalProposal: section.editedContent,
+        selectedText: section.editedContent,
+        selectionStart: 0,
+        selectionEnd: section.editedContent.length,
+        instructions: v2EditAIQuery.trim(),
+      });
+
+      let editedContent = response.data?.editedPart || response.data?.proposal;
+      if (editedContent) {
+        // Remove markdown code blocks if present
+        editedContent = editedContent
+          .replace(/^```markdown\s*/i, "")
+          .replace(/^```\s*/, "")
+          .replace(/\s*```$/, "")
+          .trim();
+
+        const existingSectionIndex = v2Sections.findIndex(
+          s => s.headingIndex === v2EditSectionIndex
+        );
+        if (existingSectionIndex >= 0) {
+          const updatedSections = [...v2Sections];
+          updatedSections[existingSectionIndex].editedContent = editedContent;
+          updatedSections[existingSectionIndex].content = editedContent; // Update original too
+          setV2Sections(updatedSections);
+
+          // Save to backend
+          await handleSaveV2Section(v2EditSectionIndex, editedContent);
+        }
+        toast.success("Section updated successfully!");
+        setShowV2EditAIModal(false);
+        setV2EditAIQuery("");
+        setV2EditSectionIndex(null);
+      } else {
+        toast.error("No edited content was generated. Try again.");
+      }
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Failed to edit section");
+    } finally {
+      setIsEditingV2SectionWithAI(false);
+    }
+  };
+
+  const handleEditHeadingsWithAI = async () => {
+    if (!lead?.companyId || !lead?._id) {
+      toast.error("Lead information is missing.");
+      return;
+    }
+
+    if (!headingsEditAIQuery.trim()) {
+      toast.error("Please provide instructions for editing headings.");
+      return;
+    }
+
+    if (!v2ProposalId) {
+      toast.error("Proposal ID is missing.");
+      return;
+    }
+
+    setIsEditingHeadingsWithAI(true);
+    try {
+      // Convert current headings to markdown format for the AI to understand
+      const currentHeadingsMarkdown = v2EditedHeadings
+        .map((h) => `${"#".repeat(h.level)} ${h.text}`)
+        .join("\n");
+
+      // Use the editProposalPart endpoint to regenerate headings based on feedback
+      const response = await connectionMessagesService.editProposalPart({
+        companyId: lead.companyId,
+        personId: lead._id,
+        originalProposal: currentHeadingsMarkdown,
+        selectedText: currentHeadingsMarkdown,
+        selectionStart: 0,
+        selectionEnd: currentHeadingsMarkdown.length,
+        instructions: `Regenerate ONLY the proposal headings based on this feedback: ${headingsEditAIQuery.trim()}. Return ONLY headings in Markdown format (# for h1, ## for h2, etc.), no content. Keep the same structure depth but adjust titles based on the feedback.`,
+      });
+
+      let editedHeadings = response.data?.editedPart || response.data?.proposal;
+      if (editedHeadings) {
+        // Remove markdown code blocks if present
+        editedHeadings = editedHeadings
+          .replace(/^```markdown\s*/i, "")
+          .replace(/^```\s*/, "")
+          .replace(/\s*```$/, "")
+          .trim();
+
+        // Parse the headings from the markdown
+        const headingLines = editedHeadings
+          .split("\n")
+          .map((line) => line.trim())
+          .filter((line) => line.startsWith("#"))
+          .slice(0, 20);
+
+        const newHeadings = headingLines.map((line) => ({
+          level: (line.match(/^#+/)?.[0] || "").length,
+          text: line.replace(/^#+\s*/, "").trim(),
+          original: line,
+        }));
+
+        if (newHeadings.length === 0) {
+          toast.error("No valid headings were generated. Try again with different instructions.");
+          return;
+        }
+
+        setV2EditedHeadings(newHeadings);
+
+        // Save the updated headings to backend
+        await handleSaveV2Headings(newHeadings);
+
+        // Clear all sections since headings changed
+        setV2Sections([]);
+
+        toast.success("Headings updated successfully!");
+        setShowHeadingsEditAIModal(false);
+        setHeadingsEditAIQuery("");
+      } else {
+        toast.error("No edited headings were generated. Try again.");
+      }
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Failed to edit headings");
+    } finally {
+      setIsEditingHeadingsWithAI(false);
+    }
+  };
+
+  const handleCompleteV2Proposal = async () => {
+    if (!v2ProposalId) {
+      toast.error("Proposal ID is missing.");
+      return;
+    }
+
+    setIsCompletingV2(true);
+    try {
+      const response = await connectionMessagesService.completeV2Proposal({
+        proposalId: v2ProposalId,
+      });
+
+      if (response.success && response.data) {
+        setProposalContent(response.data.proposal);
+        setV2Stage("complete");
+        toast.success("Proposal completed!");
+      }
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Failed to complete proposal");
+    } finally {
+      setIsCompletingV2(false);
+    }
+  };
+
+  // Load v2 progress on mount
+  useEffect(() => {
+    const loadV2Progress = async () => {
+      if (!lead?.companyId || !lead?._id) return;
+
+      try {
+        const response = await connectionMessagesService.getV2ProposalProgress({
+          companyId: lead.companyId,
+          personId: lead._id,
+        });
+
+        if (response.success && response.data?.progress) {
+          // Auto-switch to v2 if progress found
+          setProposalVersion("v2");
+
+          // Restore selected template if exists
+          if (response.data.templateId) {
+            setSelectedExampleId(response.data.templateId);
+          }
+
+          const progress = response.data.progress;
+          setV2Headings(progress.headings || []);
+          const editedHeadings = progress.editedHeadings || progress.headings || [];
+          setV2EditedHeadings(editedHeadings);
+          setV2Sections(progress.sections || []);
+          setV2Stage(progress.stage || null);
+          setV2ProposalId(response.data.proposalId);
+
+          // Map currentSectionIndex (which is heading index) to content headings array index
+          if (progress.stage === "content" && editedHeadings.length > 0) {
+            const contentHeadings = editedHeadings
+              .map((h, idx) => ({ heading: h, index: idx }))
+              .filter(({ heading }) => heading.level > 1);
+            const currentHeadingIndex = progress.currentSectionIndex || 0;
+            const contentIndex = contentHeadings.findIndex(({ index }) => index === currentHeadingIndex);
+            setV2CurrentSectionIndex(contentIndex >= 0 ? contentIndex : 0);
+          } else {
+            setV2CurrentSectionIndex(0);
+          }
+        }
+      } catch (error) {
+        // Silently fail if no progress exists
+        console.log("No v2 progress found");
+      }
+    };
+
+    loadV2Progress();
+  }, [lead?.companyId, lead?._id]);
+
+  // Auto-generate current section if it doesn't exist when in content stage
+  useEffect(() => {
+    if (v2Stage === "content" && v2ProposalId && v2EditedHeadings.length > 0 && !isGeneratingV2Section && generatingSectionIndex === null) {
+      const contentHeadings = v2EditedHeadings
+        .map((h, idx) => ({ heading: h, index: idx }))
+        .filter(({ heading }) => heading.level > 1);
+
+      if (contentHeadings.length > 0 && v2CurrentSectionIndex >= 0 && v2CurrentSectionIndex < contentHeadings.length) {
+        const currentContentHeading = contentHeadings[v2CurrentSectionIndex];
+        const currentHeadingIndex = currentContentHeading?.index ?? -1;
+
+        if (currentHeadingIndex >= 0) {
+          const section = v2Sections.find(s => s.headingIndex === currentHeadingIndex);
+          // Only generate if section doesn't exist or has no content
+          if (!section || !section.content || !section.content.trim()) {
+            handleGenerateV2Section(currentHeadingIndex);
+          }
+        }
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [v2Stage, v2CurrentSectionIndex, v2ProposalId]);
 
   // Extract text from PDF file
   const extractTextFromPDF = async (file: File): Promise<string> => {
@@ -2835,7 +3324,35 @@ const LeadChat = ({
   };
 
   const handleDownloadPDF = async (isDarkMode: boolean) => {
-    if (!proposalContent) {
+    let contentToPrint = proposalContent;
+
+    // If no content but in V2 mode, try to reconstruct from sections
+    if (!contentToPrint && proposalVersion === "v2" && v2EditedHeadings.length > 0) {
+      let reconstructedContent = "";
+      for (let i = 0; i < v2EditedHeadings.length; i++) {
+        const heading = v2EditedHeadings[i];
+        reconstructedContent += heading.original + "\n\n";
+
+        if (heading.level === 1) {
+          continue; // Skip content for level 1 headings
+        }
+
+        const section = v2Sections.find(s => s.headingIndex === i);
+        if (section) {
+          // Convert HTML back to markdown if needed
+          let sectionContent = section.editedContent || section.content || "";
+          if (sectionContent.includes('<')) {
+            sectionContent = htmlToMarkdown(sectionContent);
+          }
+          reconstructedContent += sectionContent + "\n\n";
+        }
+      }
+      if (reconstructedContent.trim()) {
+        contentToPrint = reconstructedContent;
+      }
+    }
+
+    if (!contentToPrint) {
       toast.error("No proposal content to download");
       return;
     }
@@ -3244,7 +3761,63 @@ const LeadChat = ({
         return textarea.value;
       };
 
-      const decodedContent = decodeHtmlEntities(proposalContent);
+      // Helper function to parse inline markdown formatting and apply to PDF text
+      const addFormattedText = (textWithMarkdown: string, x: number, y: number, maxWidth: number, defaultFont: "normal" | "bold" | "italic" | "bolditalic" = "normal") => {
+        // Split text by markdown patterns: **bold**, *italic*, ***bold italic***
+        const parts: Array<{ text: string; style: "normal" | "bold" | "italic" | "bolditalic" }> = [];
+        let remaining = textWithMarkdown;
+
+        // Regular expression to match markdown formatting
+        const regex = /(\*\*\*(.+?)\*\*\*)|(\*\*(.+?)\*\*)|(\*(.+?)\*)|([^*]+)/g;
+        let match;
+
+        while ((match = regex.exec(remaining)) !== null) {
+          if (match[1]) { // ***text*** - bold italic
+            parts.push({ text: match[2], style: "bolditalic" });
+          } else if (match[3]) { // **text** - bold
+            parts.push({ text: match[4], style: "bold" });
+          } else if (match[5]) { // *text* - italic
+            parts.push({ text: match[6], style: "italic" });
+          } else if (match[7]) { // regular text
+            parts.push({ text: match[7], style: "normal" });
+          }
+        }
+
+        let currentX = x;
+        const originalFont = pdf.getFont();
+        const originalFontSize = pdf.getFontSize();
+
+        parts.forEach(part => {
+          if (part.text.trim()) {
+            // Set font style
+            switch (part.style) {
+              case "bold":
+                pdf.setFont("helvetica", "bold");
+                break;
+              case "italic":
+                pdf.setFont("helvetica", "italic");
+                break;
+              case "bolditalic":
+                pdf.setFont("helvetica", "bolditalic");
+                break;
+              default:
+                pdf.setFont("helvetica", defaultFont);
+            }
+
+            // Add text
+            const textLines = pdf.splitTextToSize(part.text, maxWidth);
+            textLines.forEach((textLine: string, idx: number) => {
+              pdf.text(textLine, currentX, y + (idx * lineHeight));
+            });
+          }
+        });
+
+        // Restore original font
+        pdf.setFont(originalFont.fontName, originalFont.fontStyle);
+        pdf.setFontSize(originalFontSize);
+      };
+
+      const decodedContent = decodeHtmlEntities(contentToPrint);
       const markdownLines = decodedContent.split("\n");
       const lineHeight = 6;
       const maxContentY = pageHeight - footerHeight - 10;
@@ -3271,6 +3844,10 @@ const LeadChat = ({
           addHeader();
           addFooter();
           currentY = margin + headerHeight;
+          // Reset font and color after adding header/footer
+          pdf.setFontSize(11);
+          pdf.setFont("helvetica", "normal");
+          pdf.setTextColor(...(textColor as [number, number, number]));
         }
 
         // Handle different markdown elements
@@ -3288,6 +3865,10 @@ const LeadChat = ({
               addHeader();
               addFooter();
               currentY = margin + headerHeight;
+              // Reset font and color after adding header/footer
+              pdf.setFontSize(16);
+              pdf.setFont("helvetica", "bold");
+              pdf.setTextColor(...(textColor as [number, number, number]));
             }
             pdf.text(textLine, margin, currentY);
             currentY += lineHeight + 2;
@@ -3307,6 +3888,10 @@ const LeadChat = ({
               addHeader();
               addFooter();
               currentY = margin + headerHeight;
+              // Reset font and color after adding header/footer
+              pdf.setFontSize(14);
+              pdf.setFont("helvetica", "bold");
+              pdf.setTextColor(...(textColor as [number, number, number]));
             }
             pdf.text(textLine, margin, currentY);
             currentY += lineHeight + 1;
@@ -3326,6 +3911,10 @@ const LeadChat = ({
               addHeader();
               addFooter();
               currentY = margin + headerHeight;
+              // Reset font and color after adding header/footer
+              pdf.setFontSize(12);
+              pdf.setFont("helvetica", "bold");
+              pdf.setTextColor(...(textColor as [number, number, number]));
             }
             pdf.text(textLine, margin, currentY);
             currentY += lineHeight + 1;
@@ -3367,6 +3956,10 @@ const LeadChat = ({
             addHeader();
             addFooter();
             currentY = margin + headerHeight;
+            // Reset font and color after adding header/footer
+            pdf.setFontSize(11);
+            pdf.setFont("helvetica", "normal");
+            pdf.setTextColor(...(textColor as [number, number, number]));
           }
 
           const bulletIndent = margin + 5;
@@ -3395,6 +3988,10 @@ const LeadChat = ({
                   addHeader();
                   addFooter();
                   currentY = margin + headerHeight;
+                  // Reset font and color after adding header/footer
+                  pdf.setFontSize(11);
+                  pdf.setFont("helvetica", "normal");
+                  pdf.setTextColor(...(textColor as [number, number, number]));
                 }
                 xOffset = bulletIndent; // Indent continuation
               }
@@ -3443,6 +4040,10 @@ const LeadChat = ({
               addHeader();
               addFooter();
               currentY = margin + headerHeight;
+              // Reset font and color after adding header/footer
+              pdf.setFontSize(11);
+              pdf.setFont("helvetica", "normal");
+              pdf.setTextColor(...(textColor as [number, number, number]));
             }
 
             let xOffset = margin;
@@ -3473,6 +4074,10 @@ const LeadChat = ({
                     addHeader();
                     addFooter();
                     currentY = margin + headerHeight;
+                    // Reset font and color after adding header/footer
+                    pdf.setFontSize(11);
+                    pdf.setFont("helvetica", segment.bold ? "bold" : "normal");
+                    pdf.setTextColor(...(textColor as [number, number, number]));
                   }
                   xOffset = numberIndent; // Indent continuation to align with text
                 }
@@ -3509,6 +4114,10 @@ const LeadChat = ({
               addHeader();
               addFooter();
               currentY = margin + headerHeight;
+              // Reset font and color after adding header/footer
+              pdf.setFontSize(11);
+              pdf.setFont("helvetica", "normal");
+              pdf.setTextColor(...(textColor as [number, number, number]));
             }
 
             // Render each cell
@@ -3555,25 +4164,48 @@ const LeadChat = ({
 
           if (hasBold) {
             // Handle bold text by splitting and rendering each part
-            const segments: { text: string; bold: boolean }[] = [];
+            const segments: { text: string; bold: boolean; italic: boolean }[] = [];
             let remaining = processedText;
-            const boldRegex = /\*\*(.+?)\*\*/g;
+            // Match ***bold italic***, **bold**, *italic*, or regular text
+            const formatRegex = /(\*\*\*(.+?)\*\*\*)|(\*\*(.+?)\*\*)|(\*(.+?)\*)|(​[^*]+)/g;
             let lastIndex = 0;
             let match;
 
-            while ((match = boldRegex.exec(processedText)) !== null) {
-              // Add text before bold
+            while ((match = formatRegex.exec(processedText)) !== null) {
+              // Add text before formatting
               if (match.index > lastIndex) {
                 segments.push({
                   text: processedText.substring(lastIndex, match.index),
                   bold: false,
+                  italic: false,
                 });
               }
-              // Add bold text
-              segments.push({
-                text: match[1],
-                bold: true,
-              });
+              // Add formatted text
+              if (match[1]) { // ***text*** - bold italic
+                segments.push({
+                  text: match[2],
+                  bold: true,
+                  italic: true,
+                });
+              } else if (match[3]) { // **text** - bold
+                segments.push({
+                  text: match[4],
+                  bold: true,
+                  italic: false,
+                });
+              } else if (match[5]) { // *text* - italic
+                segments.push({
+                  text: match[6],
+                  bold: false,
+                  italic: true,
+                });
+              } else if (match[7]) { // regular text
+                segments.push({
+                  text: match[7],
+                  bold: false,
+                  italic: false,
+                });
+              }
               lastIndex = match.index + match[0].length;
             }
             // Add remaining text
@@ -3581,13 +4213,19 @@ const LeadChat = ({
               segments.push({
                 text: processedText.substring(lastIndex),
                 bold: false,
+                italic: false,
               });
             }
 
             // Render with proper wrapping
             let xOffset = margin;
             segments.forEach((segment) => {
-              pdf.setFont("helvetica", segment.bold ? "bold" : "normal");
+              let fontStyle: "normal" | "bold" | "italic" | "bolditalic" = "normal";
+              if (segment.bold && segment.italic) fontStyle = "bolditalic";
+              else if (segment.bold) fontStyle = "bold";
+              else if (segment.italic) fontStyle = "italic";
+
+              pdf.setFont("helvetica", fontStyle);
               const words = segment.text.split(" ");
 
               words.forEach((word, idx) => {
@@ -3607,6 +4245,10 @@ const LeadChat = ({
                     addHeader();
                     addFooter();
                     currentY = margin + headerHeight;
+                    // Reset font and color after adding header/footer
+                    pdf.setFontSize(11);
+                    pdf.setFont("helvetica", fontStyle);
+                    pdf.setTextColor(...(textColor as [number, number, number]));
                   }
                   xOffset = margin;
                 }
@@ -3629,6 +4271,10 @@ const LeadChat = ({
                 addHeader();
                 addFooter();
                 currentY = margin + headerHeight;
+                // Reset font and color after adding header/footer
+                pdf.setFontSize(11);
+                pdf.setFont("helvetica", "normal");
+                pdf.setTextColor(...(textColor as [number, number, number]));
               }
               pdf.text(textLine, margin, currentY);
               currentY += lineHeight;
@@ -3785,12 +4431,7 @@ const LeadChat = ({
       <div className="flex flex-col w-full flex-1 min-h-0 px-1">
         {activeTab === "WhatsApp" ? (
           <div className="flex flex-1 flex-col min-h-0 relative">
-            {whatsappStatusLoading ? (
-              <div className="flex flex-1 flex-col items-center justify-center gap-3 py-20 text-white/70">
-                <Loader2 className="h-6 w-6 animate-spin text-white" />
-                <p>Checking WhatsApp connection...</p>
-              </div>
-            ) : whatsappUnavailableMessage ? (
+            {whatsappUnavailableMessage ? (
               <div className="flex w-full flex-1 items-center justify-center py-20 text-center text-white/70">
                 {whatsappUnavailableMessage}
               </div>
@@ -4066,8 +4707,8 @@ const LeadChat = ({
             ) : (
               <div className="flex flex-1 flex-col min-h-0">
                 {/* Header with Generate and Copy buttons */}
-                <div className="flex items-center justify-between gap-3 mb-4 px-1">
-                  <div className="flex items-center gap-2 flex-wrap flex-1">
+                <div className="flex items-center justify-between gap-3 mb-2 px-1">
+                  <div className={cn("flex items-center gap-2 flex-wrap flex-1", (v2Stage === "headings" || v2Stage === "content") && "hidden")}>
                     {/* Show back button if viewing a previously sent proposal */}
                     {selectedProposal && (
                       <button
@@ -4083,6 +4724,42 @@ const LeadChat = ({
                         <ArrowLeft className="h-4 w-4" />
                         Back to List
                       </button>
+                    )}
+
+                    {/* Version Selector */}
+                    {!selectedProposal && (
+                      <Select
+                        value={proposalVersion}
+                        onValueChange={(value: "v1" | "v2") => {
+                          setProposalVersion(value);
+                          // Clear proposal content when switching versions
+                          if (value === "v1") {
+                            setProposalContent("");
+                            setProposalHtmlContent("");
+                            setV2Headings([]);
+                            setV2EditedHeadings([]);
+                            setV2Sections([]);
+                            setV2Stage(null);
+                            setV2ProposalId(null);
+                          } else {
+                            setProposalContent("");
+                            setProposalHtmlContent("");
+                          }
+                        }}
+                        disabled={isGeneratingProposal || isGeneratingV2Headings || isGeneratingV2Section}
+                      >
+                        <SelectTrigger className="h-[34px] w-[120px] border-white/30 bg-white/10 text-xs text-white hover:bg-white/20">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[#1a1a1a] border-white/20 text-white">
+                          <SelectItem value="v1" className="text-xs text-white hover:bg-white/10">
+                            Version 1
+                          </SelectItem>
+                          {/* <SelectItem value="v2" className="text-xs text-white hover:bg-white/10">
+                            Version 2
+                          </SelectItem> */}
+                        </SelectContent>
+                      </Select>
                     )}
 
                     {/* Proposal Template Selector */}
@@ -4164,37 +4841,73 @@ const LeadChat = ({
                       </Popover>
                     )}
 
-                    <button
-                      type="button"
-                      className="flex items-center gap-2 rounded-lg bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] px-4 py-2 text-xs font-medium text-white transition hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed h-[34px]"
-                      onClick={handleGenerateProposal}
-                      disabled={
-                        isGeneratingProposal ||
-                        !!selectedProposal ||
-                        !selectedExampleId
-                      }
-                      title={
-                        selectedProposal
-                          ? "Cannot regenerate a sent proposal"
-                          : !selectedExampleId
-                            ? "Please select a template first"
-                            : ""
-                      }
-                    >
-                      {isGeneratingProposal ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          Generating...
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="h-4 w-4" />
-                          {proposalContent
-                            ? "Regenerate with AI"
-                            : "Generate with AI"}
-                        </>
-                      )}
-                    </button>
+                    {proposalVersion === "v1" ? (
+                      <button
+                        type="button"
+                        className="flex items-center gap-2 rounded-lg bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] px-4 py-2 text-xs font-medium text-white transition hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed h-[34px]"
+                        onClick={handleGenerateProposal}
+                        disabled={
+                          isGeneratingProposal ||
+                          !!selectedProposal ||
+                          !selectedExampleId
+                        }
+                        title={
+                          selectedProposal
+                            ? "Cannot regenerate a sent proposal"
+                            : !selectedExampleId
+                              ? "Please select a template first"
+                              : ""
+                        }
+                      >
+                        {isGeneratingProposal ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Generating...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="h-4 w-4" />
+                            {proposalContent
+                              ? "Regenerate with AI"
+                              : "Generate with AI"}
+                          </>
+                        )}
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className="flex items-center gap-2 rounded-lg bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] px-4 py-2 text-xs font-medium text-white transition hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed h-[34px]"
+                        onClick={v2Stage === "headings" || v2Stage === "content" ? undefined : handleGenerateV2Headings}
+                        disabled={
+                          isGeneratingV2Headings ||
+                          !!selectedProposal ||
+                          !selectedExampleId ||
+                          v2Stage === "headings" ||
+                          v2Stage === "content"
+                        }
+                        title={
+                          selectedProposal
+                            ? "Cannot regenerate a sent proposal"
+                            : !selectedExampleId
+                              ? "Please select a template first"
+                              : v2Stage === "headings" || v2Stage === "content"
+                                ? "Continue from current stage"
+                                : ""
+                        }
+                      >
+                        {isGeneratingV2Headings ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Generating...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="h-4 w-4" />
+                            {v2Stage ? "Continue" : "Generate Headings"}
+                          </>
+                        )}
+                      </button>
+                    )}
                     {proposalContent && (
                       <>
                         {/* Show View-Only indicator for sent proposals, or Edit/View button for new proposals */}
@@ -4343,7 +5056,240 @@ const LeadChat = ({
                 )}
 
                 {/* Proposal Content */}
-                {proposalContent || proposalAttachment || isGeneratingProposal ? (
+                {proposalVersion === "v2" && (v2Stage === "headings" || v2Stage === "content" || v2Stage === "complete") ? (
+                  <div className="flex-1 overflow-y-auto scrollbar-hide pb-4 relative">
+                    {/* V2 Headings Stage */}
+                    {v2Stage === "headings" && (
+                      <div className="flex flex-col gap-4 px-4 pt-2 pb-4">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-sm font-semibold text-white">Edit Proposal Headings</h3>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setShowHeadingsEditAIModal(true)}
+                              className="flex items-center gap-2 rounded-lg border border-purple-500/30 bg-purple-500/10 px-3 py-2 text-xs font-medium text-purple-300 transition hover:bg-purple-500/20"
+                            >
+                              <Sparkles className="h-3 w-3" />
+                              Edit with AI
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleProceedToContent}
+                              className="flex items-center gap-2 rounded-lg bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] px-4 py-2 text-xs font-medium text-white transition hover:opacity-90"
+                              disabled={v2EditedHeadings.length === 0}
+                            >
+                              Proceed to Content
+                            </button>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          {headingTree.map((node) => (
+                            <HeadingTreeItem
+                              key={node.index}
+                              node={node}
+                              onUpdate={(index, text) => {
+                                const updated = [...v2EditedHeadings];
+                                const level = updated[index].level;
+                                const original = "#".repeat(level) + " " + text;
+                                updated[index] = { ...updated[index], text, original };
+                                setV2EditedHeadings(updated);
+                              }}
+                              onCommit={async (index, text) => {
+                                const updated = [...v2EditedHeadings];
+                                const level = updated[index].level;
+                                const original = "#".repeat(level) + " " + text;
+                                updated[index] = { ...updated[index], text, original };
+
+                                await handleSaveV2Headings(updated, index);
+
+                                // Invalidate local section so it regenerates on visit
+                                setV2Sections(prev => prev.filter(s => s.headingIndex !== index));
+                              }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* V2 Content Stage */}
+                    {v2Stage === "content" && (() => {
+                      // Get all headings with level > 1 (content headings)
+                      const contentHeadings = v2EditedHeadings
+                        .map((h, idx) => ({ heading: h, index: idx }))
+                        .filter(({ heading }) => heading.level > 1);
+
+                      // Get current heading based on section index
+                      const currentContentHeading = contentHeadings[v2CurrentSectionIndex];
+                      const currentHeadingIndex = currentContentHeading?.index ?? -1;
+                      const currentHeading = currentContentHeading?.heading;
+                      const section = currentHeadingIndex >= 0 ? v2Sections.find(s => s.headingIndex === currentHeadingIndex) : null;
+                      const totalSections = contentHeadings.length;
+
+                      return (
+                        <div className="flex flex-col gap-4 px-4 pt-2 pb-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-3">
+                              <button
+                                type="button"
+                                onClick={() => setV2Stage("headings")}
+                                className="flex items-center gap-1.5 rounded-lg border border-white/20 bg-white/5 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-white/10"
+                                title="Back to Headings"
+                              >
+                                <ArrowLeft className="h-3.5 w-3.5" />
+                                Back
+                              </button>
+                              <h3 className="text-sm font-semibold text-white">
+                                {totalSections > 0 ? `Section ${v2CurrentSectionIndex + 1} of ${totalSections}` : "No sections to generate"}
+                              </h3>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {v2CurrentSectionIndex > 0 && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const prevIndex = v2CurrentSectionIndex - 1;
+                                    setV2CurrentSectionIndex(prevIndex);
+                                  }}
+                                  className="flex items-center gap-2 rounded-lg border border-white/30 bg-white/10 px-4 py-2 text-xs font-medium text-white transition hover:bg-white/20"
+                                >
+                                  Previous
+                                </button>
+                              )}
+
+                              {/* Download PDF button next to Previous in last section */}
+                              {v2CurrentSectionIndex === totalSections - 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleDownloadPDF(false)}
+                                  className="flex items-center gap-2 rounded-lg border border-blue-500/30 bg-blue-500/10 px-4 py-2 text-xs font-medium text-blue-300 transition hover:bg-blue-500/20"
+                                >
+                                  <Download className="h-3 w-3" />
+                                  Download PDF
+                                </button>
+                              )}
+
+                              {v2CurrentSectionIndex < totalSections - 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const nextIndex = v2CurrentSectionIndex + 1;
+                                    setV2CurrentSectionIndex(nextIndex);
+                                  }}
+                                  className="flex items-center gap-2 rounded-lg border border-white/30 bg-white/10 px-4 py-2 text-xs font-medium text-white transition hover:bg-white/20"
+                                >
+                                  Next Section
+                                </button>
+                              )}
+                            </div>
+                          </div>
+
+                          {currentHeading && (
+                            <div className="space-y-3">
+                              <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+                                <h4 className="text-sm font-semibold text-white mb-2">{currentHeading.text}</h4>
+                                {generatingSectionIndex === currentHeadingIndex ? (
+                                  <div className="flex flex-col items-center justify-center py-8 gap-3">
+                                    <Loader2 className="h-6 w-6 animate-spin text-blue-400" />
+                                    <p className="text-sm text-white/70">Generating content for this section...</p>
+                                  </div>
+                                ) : !section || !section.content || !section.content.trim() ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => currentHeadingIndex >= 0 && handleGenerateV2Section(currentHeadingIndex)}
+                                    disabled={isGeneratingV2Section}
+                                    className="w-full py-3 rounded-lg bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-40"
+                                  >
+                                    Generate Content
+                                  </button>
+                                ) : (
+                                  <div className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-xs text-white/60">Section Content</span>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setV2EditSectionIndex(currentHeadingIndex);
+                                          setShowV2EditAIModal(true);
+                                        }}
+                                        className="flex items-center gap-2 rounded-lg border border-purple-500/30 bg-purple-500/10 px-3 py-1.5 text-xs font-medium text-purple-300 transition hover:bg-purple-500/20"
+                                      >
+                                        <Sparkles className="h-3 w-3" />
+                                        Edit with AI
+                                      </button>
+                                    </div>
+                                    <RichTextEditor
+                                      value={section.editedContent.includes('<') ? section.editedContent : markdownToHtml(section.editedContent)}
+                                      onChange={(value) => {
+                                        const updated = [...v2Sections];
+                                        const sectionIndex = updated.findIndex(s => s.headingIndex === currentHeadingIndex);
+                                        if (sectionIndex >= 0) {
+                                          updated[sectionIndex].editedContent = value;
+                                        } else {
+                                          updated.push({
+                                            headingIndex: currentHeadingIndex,
+                                            content: section.content,
+                                            editedContent: value,
+                                          });
+                                        }
+                                        setV2Sections(updated);
+                                      }}
+                                      placeholder="Section content will appear here..."
+                                      height="200px"
+                                      className="min-h-[200px]"
+                                      toolbar={true}
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const latestSection = v2Sections.find(s => s.headingIndex === currentHeadingIndex);
+                                        if (currentHeadingIndex >= 0 && latestSection) {
+                                          handleSaveV2Section(currentHeadingIndex, latestSection.editedContent);
+                                        }
+                                      }}
+                                      className="w-full py-2 rounded-lg bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] text-xs font-medium text-white transition hover:opacity-90"
+                                    >
+                                      Save Section
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+
+
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
+
+                    {/* V2 Complete Stage */}
+                    {v2Stage === "complete" && proposalContent && (
+                      <div className="flex-1 overflow-y-auto scrollbar-hide pb-4 relative">
+                        <div className="proposal-content px-1">
+                          {isProposalEditable ? (
+                            <RichTextEditor
+                              ref={emailEditorRef}
+                              value={proposalHtmlContent}
+                              onChange={(value) => {
+                                setProposalHtmlContent(value);
+                                // Convert HTML back to markdown if needed
+                              }}
+                              placeholder="Proposal content..."
+                            />
+                          ) : (
+                            <div
+                              ref={proposalContentRef}
+                              className="prose prose-invert max-w-none text-white/90"
+                              onMouseUp={handleProposalSelection}
+                              onKeyUp={handleProposalSelection}
+                            >
+                              <ReactMarkdown>{proposalContent}</ReactMarkdown>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : proposalContent || proposalAttachment || isGeneratingProposal ? (
                   <div className="flex-1 overflow-y-auto scrollbar-hide pb-4 relative">
 
                     {/* Thinking / Status Indicator */}
@@ -4809,6 +5755,125 @@ const LeadChat = ({
                     </div>
                   </div>
                 )}
+
+                {/* V2 Section Edit with AI Modal */}
+                {showV2EditAIModal && v2EditSectionIndex !== null && (() => {
+                  const section = v2Sections.find(s => s.headingIndex === v2EditSectionIndex);
+                  const heading = v2EditedHeadings.find((h, idx) => idx === v2EditSectionIndex);
+                  return (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                      <div className="rounded-lg bg-[#1a1a1a] border border-white/20 p-6 max-w-2xl w-full mx-4">
+                        <h3 className="text-sm sm:text-base font-semibold text-white mb-2">
+                          Edit Section with AI
+                        </h3>
+                        <p className="text-xs text-white/70 mb-4">
+                          Section: <span className="text-white/90 font-medium">{heading?.text || "Unknown"}</span>
+                        </p>
+                        <div className="mb-4">
+                          <label className="block text-xs font-medium text-white/90 mb-2">
+                            How would you like AI to rewrite this section?
+                          </label>
+                          <textarea
+                            value={v2EditAIQuery}
+                            onChange={(e) => setV2EditAIQuery(e.target.value)}
+                            placeholder="e.g., Make it more professional, add more technical details, simplify the language, expand on the benefits..."
+                            className="w-full min-h-[120px] rounded-lg bg-white/10 border border-white/20 px-4 py-3 text-sm text-white placeholder:text-white/40 outline-none focus:border-white/40 transition-colors resize-none"
+                            autoFocus
+                          />
+                        </div>
+                        <div className="flex items-center gap-3 justify-end">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowV2EditAIModal(false);
+                              setV2EditAIQuery("");
+                              setV2EditSectionIndex(null);
+                            }}
+                            disabled={isEditingV2SectionWithAI}
+                            className="rounded-lg border border-white/30 px-4 py-2 text-xs text-white transition hover:bg-white/10 disabled:opacity-50"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleEditV2SectionWithAI}
+                            disabled={isEditingV2SectionWithAI || !v2EditAIQuery.trim()}
+                            className="rounded-lg bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] px-4 py-2 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-50 flex items-center gap-2"
+                          >
+                            {isEditingV2SectionWithAI ? (
+                              <>
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                Editing...
+                              </>
+                            ) : (
+                              <>
+                                <Sparkles className="h-4 w-4" />
+                                Edit with AI
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Headings Edit with AI Modal */}
+                {showHeadingsEditAIModal && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                    <div className="rounded-lg bg-[#1a1a1a] border border-white/20 p-6 max-w-2xl w-full mx-4">
+                      <h3 className="text-sm sm:text-base font-semibold text-white mb-2">
+                        Edit Headings with AI
+                      </h3>
+                      <p className="text-xs text-white/70 mb-4">
+                        Provide feedback on how you'd like to modify the proposal headings structure
+                      </p>
+                      <div className="mb-4">
+                        <label className="block text-xs font-medium text-white/90 mb-2">
+                          How would you like AI to adjust the headings?
+                        </label>
+                        <textarea
+                          value={headingsEditAIQuery}
+                          onChange={(e) => setHeadingsEditAIQuery(e.target.value)}
+                          placeholder="e.g., Add a section about pricing, remove the technical details section, make headings more customer-focused, add implementation timeline..."
+                          className="w-full min-h-[120px] rounded-lg bg-white/10 border border-white/20 px-4 py-3 text-sm text-white placeholder:text-white/40 outline-none focus:border-white/40 transition-colors resize-none"
+                          autoFocus
+                        />
+                      </div>
+                      <div className="flex items-center gap-3 justify-end">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowHeadingsEditAIModal(false);
+                            setHeadingsEditAIQuery("");
+                          }}
+                          disabled={isEditingHeadingsWithAI}
+                          className="rounded-lg border border-white/30 px-4 py-2 text-xs text-white transition hover:bg-white/10 disabled:opacity-50"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleEditHeadingsWithAI}
+                          disabled={isEditingHeadingsWithAI || !headingsEditAIQuery.trim()}
+                          className="rounded-lg bg-gradient-to-br from-[#3E65B4] to-[#68B3B7] px-4 py-2 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-50 flex items-center gap-2"
+                        >
+                          {isEditingHeadingsWithAI ? (
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              Regenerating...
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="h-4 w-4" />
+                              Regenerate Headings
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -4895,6 +5960,46 @@ const LeadChat = ({
                                 __html: emailBodyHtml,
                               }}
                             />
+                          )}
+
+                          {email.attachments && email.attachments.length > 0 && (
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              {email.attachments.map((attachment, idx) => (
+                                <div
+                                  key={idx}
+                                  className={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-[10px] transition-all border group cursor-pointer ${isOutbound
+                                      ? "bg-white/10 border-white/20 hover:bg-white/20 text-white"
+                                      : "bg-white/5 border-white/10 hover:bg-white/10 text-white/90"
+                                    }`}
+                                  onClick={() => {
+                                    if (attachment.url) {
+                                      const fullUrl = attachment.url.startsWith("http")
+                                        ? attachment.url
+                                        : `${backendUrl}${attachment.url}`;
+                                      window.open(fullUrl, "_blank");
+                                    }
+                                  }}
+                                  title={`Download ${attachment.filename}`}
+                                >
+                                  <Paperclip
+                                    size={12}
+                                    className="opacity-70 flex-shrink-0"
+                                  />
+                                  <span className="truncate max-w-[150px] font-medium">
+                                    {attachment.filename}
+                                  </span>
+                                  {attachment.size && (
+                                    <span className="text-[9px] opacity-50 flex-shrink-0">
+                                      ({(attachment.size / 1024).toFixed(1)} KB)
+                                    </span>
+                                  )}
+                                  <Download
+                                    size={12}
+                                    className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 flex-shrink-0"
+                                  />
+                                </div>
+                              ))}
+                            </div>
                           )}
                         </div>
                       </div>

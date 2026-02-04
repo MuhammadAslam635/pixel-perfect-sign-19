@@ -419,4 +419,70 @@ export const connectionMessagesService = {
     );
     return response.data;
   },
+
+  // V2 Proposal Generation
+  generateV2ProposalHeadings: async (payload: {
+    companyId: string;
+    personId: string;
+    proposalExampleId?: string;
+  }) => {
+    const response = await API.post(
+      "/connection-messages/proposal/v2/headings",
+      payload
+    );
+    return response.data;
+  },
+
+  saveV2ProposalHeadings: async (payload: {
+    proposalId: string;
+    headings: Array<{ level: number; text: string; original: string }>;
+    invalidatedSectionIndex?: number;
+  }) => {
+    const response = await API.post(
+      "/connection-messages/proposal/v2/headings/save",
+      payload
+    );
+    return response.data;
+  },
+
+  generateV2ProposalSection: async (payload: {
+    proposalId: string;
+    sectionIndex: number;
+  }) => {
+    const response = await API.post(
+      "/connection-messages/proposal/v2/section",
+      payload
+    );
+    return response.data;
+  },
+
+  saveV2ProposalSection: async (payload: {
+    proposalId: string;
+    sectionIndex: number;
+    content: string;
+  }) => {
+    const response = await API.post(
+      "/connection-messages/proposal/v2/section/save",
+      payload
+    );
+    return response.data;
+  },
+
+  getV2ProposalProgress: async (params: {
+    companyId: string;
+    personId: string;
+  }) => {
+    const response = await API.get("/connection-messages/proposal/v2/progress", {
+      params,
+    });
+    return response.data;
+  },
+
+  completeV2Proposal: async (payload: { proposalId: string }) => {
+    const response = await API.post(
+      "/connection-messages/proposal/v2/complete",
+      payload
+    );
+    return response.data;
+  },
 };

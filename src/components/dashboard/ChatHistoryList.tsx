@@ -1,23 +1,9 @@
-import {
-  Search,
-  MessageCircle,
-  Loader2,
-  PenSquare,
-  EllipsisVertical,
-  Trash2,
-} from "lucide-react";
+import { Search, MessageCircle, Loader2 } from "lucide-react";
 import { FC, useMemo } from "react";
 import { ChatSummary } from "@/types/chat.types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { cleanMarkdown } from "@/utils/commonFunctions";
+import ChatHistoryItem from "./ChatHistoryItem";
 
 type ChatHistoryListProps = {
   chats: ChatSummary[];
@@ -29,7 +15,6 @@ type ChatHistoryListProps = {
   isLoading?: boolean;
   onDeleteChat?: (chatId: string) => void;
   deletingChatId?: string | null;
-  streamingChatIds?: string[];
 };
 
 const ChatHistoryList: FC<ChatHistoryListProps> = ({
@@ -42,10 +27,7 @@ const ChatHistoryList: FC<ChatHistoryListProps> = ({
   isLoading = false,
   onDeleteChat,
   deletingChatId = null,
-  streamingChatIds = [],
 }) => {
-
-
   const filteredChats = useMemo(() => {
     if (!searchTerm) {
       return chats;
@@ -71,10 +53,6 @@ const ChatHistoryList: FC<ChatHistoryListProps> = ({
             onChange={(event) => onSearchTermChange(event.target.value)}
             placeholder="Search.."
             className="h-12 rounded-full border border-white/5 bg-transparent pl-12 text-sm text-white placeholder:text-white/40 focus-visible:ring-1 focus-visible:ring-white/30"
-            style={{
-              borderRadius: "9999px",
-              border: "1px solid rgba(255, 255, 255, 0.1)",
-            }}
           />
         </div>
       </div>
@@ -83,7 +61,6 @@ const ChatHistoryList: FC<ChatHistoryListProps> = ({
         Chats
       </div>
 
-      {/* <div className="h-[700px] bg-blue-600 overflow-hidden"> */}
       <div
         className="h-4/5 overflow-y-auto overflow-x-hidden pr-2"
         style={
@@ -96,130 +73,39 @@ const ChatHistoryList: FC<ChatHistoryListProps> = ({
           e.stopPropagation();
         }}
       >
-        <style>{`
-      .h-full.overflow-y-auto.overflow-x-hidden::-webkit-scrollbar {
-        display: none;
-      }
-    `}</style>
-        <div className="">
-          <div className="space-y-2">
-            {isLoading ? (
-              <div className="flex h-64 items-center justify-center text-muted-foreground/70">
-                <Loader2 className="size-5 animate-spin" />
-                <span className="ml-2 text-sm">Loading chats…</span>
-              </div>
-            ) : filteredChats.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-white/10 bg-white/5 p-6 text-center text-sm text-muted-foreground/70">
-                <MessageCircle className="mx-auto mb-3 size-6 text-muted-foreground/40" />
-                <p>No conversations found.</p>
-                <Button
-                  size="sm"
-                  className="mt-4 rounded-full bg-primary px-4"
-                  onClick={onStartNewChat}
-                >
-                  Start a new chat
-                </Button>
-              </div>
-            ) : (
-              filteredChats.map((chat) => {
-                const lastMessage = chat.messages?.at(-1);
-                const cleanedTitle = cleanMarkdown(chat.title || "Untitled Conversation");
-                const fullTitle = cleanedTitle;
-                const cleanedLastMessage = lastMessage
-                  ? cleanMarkdown(lastMessage.content)
-                  : "";
-                const isDeletingThisChat = deletingChatId === chat._id;
-                const isStreamingThisChat = streamingChatIds.includes(chat._id);
-
-                return (
-                  <div
-                    key={chat._id}
-                    className={cn(
-                      "group flex w-full items-center rounded-2xl border border-[#2B2A38]/40 bg-[#FFFFFF0A] px-4 py-4 shadow-[0_0_80px_rgba(0,0,0,0.08)] transition-all duration-300",
-                      selectedChatId === chat._id
-                        ? "border-white/60 bg-white/10 shadow-[0_0_90px_rgba(0,0,0,0.15)]"
-                        : "hover:border-white/30 hover:bg-white/12 hover:shadow-[0_0_90px_rgba(0,0,0,0.12)]"
-                    )}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => onSelectChat(chat._id)}
-                      className="flex min-w-0 flex-1 flex-col text-left"
-                    >
-                      <div className="flex items-center gap-2">
-                        {isStreamingThisChat && (
-                          <Loader2 className="size-3 animate-spin text-cyan-400 flex-shrink-0" />
-                        )}
-                        <p
-                          className="flex-1 truncate text-sm font-semibold text-white"
-                          title={fullTitle}
-                        >
-                          {fullTitle}
-                        </p>
-                      </div>
-                      {isStreamingThisChat ? (
-                        <p className="mt-1 text-[12px] text-cyan-400/80 animate-pulse">
-                          Generating response...
-                        </p>
-                      ) : lastMessage ? (
-                        <p
-                          className="mt-1 truncate text-[12px] text-white/60"
-                          title={cleanedLastMessage}
-                        >
-                          {cleanedLastMessage}
-                        </p>
-                      ) : (
-                        <p className="mt-1 text-[12px] text-white/45">
-                          No messages yet
-                        </p>
-                      )}
-                    </button>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button
-                          type="button"
-                          className={cn(
-                            "ml-3 flex size-7 items-center justify-center rounded-full border border-transparent transition",
-                            selectedChatId === chat._id
-                              ? "bg-white/20"
-                              : "hover:bg-white/10"
-                          )}
-                          aria-label="Chat options"
-                          onClick={(event) => event.stopPropagation()}
-                          disabled={isDeletingThisChat}
-                        >
-                          {isDeletingThisChat ? (
-                            <Loader2 className="size-4 animate-spin text-white" />
-                          ) : (
-                            <EllipsisVertical className="size-4 text-white" />
-                          )}
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-44">
-                        <DropdownMenuItem
-                          className="text-red-400 focus:text-red-300"
-                          onSelect={(event) => {
-                            event.preventDefault();
-                            event.stopPropagation();
-                            if (!isDeletingThisChat) {
-                              onDeleteChat?.(chat._id);
-                            }
-                          }}
-                        >
-                          <Trash2 className="mr-2 size-4" />
-                          Delete chat
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                );
-              })
-            )}
-          </div>
+        <div className="space-y-2">
+          {isLoading ? (
+            <div className="flex h-64 items-center justify-center text-muted-foreground/70">
+              <Loader2 className="size-5 animate-spin" />
+              <span className="ml-2 text-sm">Loading chats…</span>
+            </div>
+          ) : filteredChats.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-white/10 bg-white/5 p-6 text-center text-sm text-muted-foreground/70">
+              <MessageCircle className="mx-auto mb-3 size-6 text-muted-foreground/40" />
+              <p>No conversations found.</p>
+              <Button
+                size="sm"
+                className="mt-4 rounded-full bg-primary px-4"
+                onClick={onStartNewChat}
+              >
+                Start a new chat
+              </Button>
+            </div>
+          ) : (
+            filteredChats.map((chat) => (
+              <ChatHistoryItem
+                key={chat._id}
+                chat={chat}
+                selectedChatId={selectedChatId}
+                onSelectChat={onSelectChat}
+                onDeleteChat={onDeleteChat}
+                deletingChatId={deletingChatId}
+              />
+            ))
+          )}
         </div>
       </div>
     </div>
-    // </div>
   );
 };
 

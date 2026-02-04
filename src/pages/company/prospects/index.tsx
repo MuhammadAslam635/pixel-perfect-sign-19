@@ -1,25 +1,20 @@
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { MessageSquare, Activity } from "lucide-react";
 import ClientsTable from "./components/ClientsTable";
 import CustomerSupportQueriesTable from "./components/CustomerSupportQueriesTable";
-import { containerVariants, pageVariants, tabContainerVariants, tabContentVariants, titleVariants } from "@/helpers/customerSupport"
 
 const ProspectsPage = () => {
   const [activeTab, setActiveTab] = useState("sessions");
 
   return (
     <DashboardLayout>
-      <motion.main
-        variants={pageVariants}
-        initial="hidden"
-        animate="visible"
+      <main
         className="relative mt-10 px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12 2xl:px-16 py-6 sm:py-8 md:py-10 lg:py-12 xl:py-16 pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-6 sm:pb-8 flex flex-col gap-4 sm:gap-6 text-white min-h-0 overflow-y-auto scrollbar-hide"
       >
-        <motion.div
-          variants={containerVariants}
+        <div
           className="max-w-[1600px] mx-auto w-full min-h-0"
         >
           <Tabs
@@ -41,18 +36,14 @@ const ProspectsPage = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94], delay: 0.5 }}
                 >
-                  <motion.div
+                  <div
                     className="flex-1"
-                    variants={titleVariants}
-                    initial="hidden"
-                    animate="visible"
-                    transition={{ delay: 0.7 }}
                   >
-                    <motion.h1
+                    <h1
                       className="text-3xl font-bold text-white"
                     >
                       Customer Support
-                    </motion.h1>
+                    </h1>
                     <motion.p
                       className="text-gray-400 mt-2"
                       initial={{ opacity: 0 }}
@@ -61,12 +52,11 @@ const ProspectsPage = () => {
                     >
                       View and manage your customer support sessions and queries
                     </motion.p>
-                  </motion.div>
+                  </div>
 
                   {/* Inline Tab Buttons */}
-                  <motion.div
+                  <div
                     className="flex items-center gap-2"
-                    variants={tabContainerVariants}
                   >
                     <TabsList className="flex items-center gap-1 bg-transparent border-0 p-0">
                       <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} transition={{ duration: 0.2 }}>
@@ -83,7 +73,7 @@ const ProspectsPage = () => {
                         </TabsTrigger>
                       </motion.div>
                     </TabsList>
-                  </motion.div>
+                  </div>
                 </motion.div>
 
                 {/* Tab Content Area */}
@@ -93,48 +83,42 @@ const ProspectsPage = () => {
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.4, delay: 0.8, ease: [0.25, 0.46, 0.45, 0.94], }}
                 >
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={activeTab}
-                      variants={tabContentVariants}
-                      initial="hidden"
-                      animate="visible"
-                      exit="exit"
-                      className="h-full"
-                    >
-                      {activeTab === "sessions" && (
-                        <TabsContent value="sessions" className="mt-0 h-full">
-                          <motion.div
-                            className="h-full overflow-y-auto"
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.4, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94], }}
-                          >
-                            <ClientsTable viewType="sessions" />
-                          </motion.div>
-                        </TabsContent>
-                      )}
+                  <div
+                    key={activeTab}
+                    className="h-full"
+                  >
+                    {activeTab === "sessions" && (
+                      <TabsContent value="sessions" className="mt-0 h-full">
+                        <motion.div
+                          className="h-full overflow-y-auto"
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.4, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94], }}
+                        >
+                          <ClientsTable viewType="sessions" />
+                        </motion.div>
+                      </TabsContent>
+                    )}
 
-                      {activeTab === "queries" && (
-                        <TabsContent value="queries" className="mt-0 h-full">
-                          <motion.div
-                            className="h-full overflow-y-auto"
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.4, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94], }}
-                          >
-                            <CustomerSupportQueriesTable />
-                          </motion.div>
-                        </TabsContent>
-                      )}
-                    </motion.div>
-                  </AnimatePresence>
+                    {activeTab === "queries" && (
+                      <TabsContent value="queries" className="mt-0 h-full">
+                        <motion.div
+                          className="h-full overflow-y-auto"
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.4, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94], }}
+                        >
+                          <CustomerSupportQueriesTable />
+                        </motion.div>
+                      </TabsContent>
+                    )}
+                  </div>
                 </motion.div>
               </motion.div>
             </div>
           </Tabs>
-        </motion.div>
-      </motion.main>
+        </div>
+      </main>
     </DashboardLayout>
   );
 };

@@ -23,6 +23,7 @@ import { userService } from "@/services/user.service";
 import { rbacService } from "@/services/rbac.service";
 import { Role } from "@/types/rbac.types";
 import { TimezoneSelector } from "./TimezoneSelector";
+import { TimePicker } from "@/components/ui/time-picker";
 import { sanitizeErrorMessage } from "@/utils/errorMessages";
 
 interface ProfileErrors {
@@ -50,6 +51,11 @@ export const ProfileTab = () => {
   const [timezone, setTimezone] = useState<string | null>(null);
   const [isLoadingTimezone, setIsLoadingTimezone] = useState(true);
   const [isSavingTimezone, setIsSavingTimezone] = useState(false);
+  const [activeHours, setActiveHours] = useState({
+    start: "09:00",
+    end: "17:00",
+  });
+  const [isSavingActiveHours, setIsSavingActiveHours] = useState(false);
   
   const [errors, setErrors] = useState<ProfileErrors>({
     name: "",
@@ -91,6 +97,12 @@ export const ProfileTab = () => {
         const response = await userService.getUserPreferences();
         if (response.success && response.data?.preferences) {
           setTimezone(response.data.preferences.timezone || null);
+          if (response.data.preferences.activeHours) {
+            setActiveHours({
+              start: response.data.preferences.activeHours.start || "09:00",
+              end: response.data.preferences.activeHours.end || "17:00",
+            });
+          }
         }
       } catch (error) {
         console.error("Failed to load preferences:", error);
@@ -166,6 +178,46 @@ export const ProfileTab = () => {
       }
     } finally {
       setIsSavingTimezone(false);
+    }
+  };
+
+  const handleActiveHoursChange = async (
+    type: "start" | "end",
+    value: string
+  ) => {
+    const newActiveHours = {
+      ...activeHours,
+      [type]: value,
+    };
+    setActiveHours(newActiveHours);
+
+    try {
+      setIsSavingActiveHours(true);
+      const response = await userService.updateUserPreferences({
+        activeHours: newActiveHours,
+      });
+
+      if (response.success) {
+        toast({
+          title: "Active hours updated",
+          description: "Your active hours have been saved.",
+        });
+      } else {
+        toast({
+          title: "Update failed",
+          description: "Failed to update active hours. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error: unknown) {
+      console.error("Error updating active hours:", error);
+      toast({
+        title: "Error",
+        description: "An error occurred while updating active hours.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingActiveHours(false);
     }
   };
 
@@ -417,6 +469,35 @@ export const ProfileTab = () => {
             <p className="text-xs text-white/50">
               Your timezone is used by Skylar to provide accurate time information
               and scheduling assistance.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-white/80">Active Hours</Label>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <Label htmlFor="startTime" className="text-xs text-white/60">
+                  Start Time
+                </Label>
+                <TimePicker
+                  value={activeHours.start}
+                  onChange={(value) => handleActiveHoursChange("start", value)}
+                  disabled={isSavingActiveHours}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="endTime" className="text-xs text-white/60">
+                  End Time
+                </Label>
+                <TimePicker
+                  value={activeHours.end}
+                  onChange={(value) => handleActiveHoursChange("end", value)}
+                  disabled={isSavingActiveHours}
+                />
+              </div>
+            </div>
+            <p className="text-xs text-white/50">
+              Set your typical working hours using your local timezone.
             </p>
           </div>
         </CardContent>

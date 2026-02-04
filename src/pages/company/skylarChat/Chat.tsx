@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AxiosError } from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams, useLocation } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
@@ -11,7 +10,19 @@ import ChatMessages from "@/components/chat/ChatMessages";
 import ChatComposer from "@/components/chat/ChatComposer";
 import MultipleTabsWarning from "@/components/chat/MultipleTabsWarning";
 import { useTabIsolation } from "@/hooks/useTabIsolation";
-import { fetchChatById, fetchChatList, sendChatMessage, SendChatMessagePayload, deleteChatById, } from "@/services/chat.service";
+import { useStreamingSync } from "@/hooks/useStreamingSync";
+import { useChatSync } from "@/hooks/useChatSync";
+import { useChatDrafts } from "@/hooks/useChatDrafts";
+import {
+  fetchChatById,
+  fetchChatList,
+  sendChatMessage,
+  SendChatMessagePayload,
+  deleteChatById,
+  fetchUserChatList,
+  fetchUserChatDetail,
+  fetchCompanyUsers,
+} from "@/services/chat.service";
 import { ChatDetail, ChatSummary, ChatMessage } from "@/types/chat.types";
 import { useToast } from "@/components/ui/use-toast";
 import { sanitizeErrorMessage } from "@/utils/errorMessages";
@@ -20,14 +31,37 @@ import { X } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { StreamEvent, sendStreamingChatMessage } from "@/services/chat.service";
 import {
-  setSelectedChatId, setIsMobileListOpen, setSearchTerm, setPendingFile, setIsCreatingNewChat, setDeletingChatId, addOptimisticMessage, removeOptimisticMessages,
-  addStreamingEvent, clearStreamingEvents, addStreamingChat, removeStreamingChat, migrateStreamingEvents, createTemporaryChat, addMessageToTemporaryChat, clearTemporaryChat,
-  convertTemporaryChat, handleUrlMessage, updateTemporaryChatTitle, saveComposerValueToCache, setComposerValue, initializeTab,
+  setSelectedChatId,
+  setIsMobileListOpen,
+  setSearchTerm,
+  setPendingFile,
+  setIsCreatingNewChat,
+  setDeletingChatId,
+  addOptimisticMessage,
+  removeOptimisticMessages,
+  addStreamingEvent,
+  clearStreamingEvents,
+  addStreamingChat,
+  removeStreamingChat,
+  migrateStreamingEvents,
+  createTemporaryChat,
+  addMessageToTemporaryChat,
+  clearTemporaryChat,
+  convertTemporaryChat,
+  handleUrlMessage,
+  updateTemporaryChatTitle,
+  saveComposerValueToCache,
+  setComposerValue,
+  initializeTab,
+  selectIsChatStreaming,
+  selectStreamingChatIds,
 } from "@/store/slices/chatSlice";
 import { startStreamingTask, updateStreamingTask, completeStreamingTask, errorTask, cleanupOldTasks, updateTask, } from "@/store/slices/longRunningTasksSlice";
 import { composerVariants, deriveTitleFromMessages, pageVariants } from "@/helpers/skylarChat";
 
 const NEW_CHAT_KEY = "__new_chat__";
+// Delay the assistant response display slightly to avoid indicator flicker
+const RESPONSE_APPEAR_DELAY_MS = 1000;
 
 const ChatPage = () => {
   const { toast } = useToast();
@@ -37,8 +71,51 @@ const ChatPage = () => {
   const dispatch = useDispatch();
   // Tab isolation - prevents state conflicts between multiple tabs
   const { hasMultipleTabs } = useTabIsolation();
+  // Sync streaming status across tabs
+  const { broadcastEvent } = useStreamingSync();
+  // Sync chat list across tabs
+  const { triggerRefresh, triggerMigration } = useChatSync();
+  const { useRemoteDrafts } = useChatDrafts();
+
   // Redux selectors
   const selectedChatId = useSelector((state: RootState) => state.chat.selectedChatId);
+
+  // Keep ref in sync with selectedChatId for async operations
+  const selectedChatIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    selectedChatIdRef.current = selectedChatId;
+  }, [selectedChatId]);
+
+  // Listen for chat migration events (from other tabs)
+  useEffect(() => {
+    const handleMigration = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const { oldChatId, newChatId } = customEvent.detail;
+      console.log("[Chat] Handle migration event:", {
+        oldChatId,
+        newChatId,
+        currentSelected: selectedChatIdRef.current,
+      });
+
+      // Update streaming events map in this tab too
+      dispatch(
+        migrateStreamingEvents({
+          oldChatId: oldChatId,
+          newChatId: newChatId,
+        })
+      );
+
+      if (selectedChatIdRef.current === oldChatId) {
+        dispatch(setSelectedChatId(newChatId));
+      }
+    };
+
+    window.addEventListener("chat-migration", handleMigration);
+    return () => {
+      window.removeEventListener("chat-migration", handleMigration);
+    };
+  }, [dispatch]);
+
   const temporaryChat = useSelector((state: RootState) => state.chat.temporaryChat);
   const searchTerm = useSelector((state: RootState) => state.chat.searchTerm);
   const pendingFile = useSelector((state: RootState) => state.chat.pendingFile);
@@ -47,22 +124,81 @@ const ChatPage = () => {
   const deletingChatId = useSelector((state: RootState) => state.chat.deletingChatId);
   const optimisticMessagesByChat = useSelector((state: RootState) => state.chat.optimisticMessagesByChat);
   const streamingEventsByChat = useSelector((state: RootState) => state.chat.streamingEventsByChat);
-  const streamingChatIds = useSelector((state: RootState) => state.chat.streamingChatIds);
+
+  // Derived or legacy array for components that still need it (though we should minimize)
+  const streamingChatIds = useSelector((state: RootState) => selectStreamingChatIds(state));
+  // Granular status for the CURRENT selected chat
+  const isSelectedChatStreaming = useSelector((state: RootState) => selectIsChatStreaming(state, selectedChatId));
+
   const useStreaming = useSelector((state: RootState) => state.chat.useStreaming);
+  const remoteStreamingChatIds = useSelector((state: RootState) => state.chat.remoteStreamingChatIds);
+
+  // Get drafts for remote streaming chats so we can show content
+  const remoteDrafts = useRemoteDrafts(remoteStreamingChatIds || []);
 
   // Local state for timing (not in Redux as it's UI-specific)
   const streamingStartTimeRef = useRef<number | null>(null);
   const streamingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isStreamingRef = useRef<boolean>(false);
   const streamingChatIdRef = useRef<string | null>(null); // Track which chat is currently streaming
-  const selectedChatIdRef = useRef<string | null>(null); // Track the current selected chat
+  const [localStreamingChatId, setLocalStreamingChatId] = useState<
+    string | null
+  >(null); // State to trigger re-renders
+  const lastCompletionTimeRef = useRef<Record<string, number>>({}); // Track when we last finished a stream per chat
+  // Note: selectedChatIdRef is already declared and synced higher up via useEffect.
 
-  const { data: fetchedChatList = [], isLoading: isFetchedChatListLoading, isFetching: isChatListFetching, } = useQuery({
+  const authState = useSelector((state: RootState) => state.auth);
+  const currentUser = authState.user;
+
+  // Get user's role to determine if they're a company admin
+  const getUserRole = (): string | null => {
+    if (!currentUser) return null;
+    if (currentUser.roleId && typeof currentUser.roleId === "object") {
+      return (currentUser.roleId as any).name;
+    }
+    if (currentUser.role && typeof currentUser.role === "string") {
+      return currentUser.role;
+    }
+    return null;
+  };
+
+  const userRole = getUserRole();
+  const isCompanyAdmin = userRole === "CompanyAdmin" || userRole === "Company";
+
+  // Check if user is company owner (parentCompany === null) - only they can view other users' chats
+  const isCompanyOwner =
+    isCompanyAdmin &&
+    (!currentUser?.parentCompany || currentUser.parentCompany === null);
+
+  // Admin user view state
+  const [selectedAdminUserId, setSelectedAdminUserId] = useState<string | null>(
+    null
+  );
+  const [adminUserChats, setAdminUserChats] = useState<ChatSummary[]>([]);
+  const [selectedAdminChatId, setSelectedAdminChatId] = useState<string | null>(
+    null
+  );
+  const [adminChatDetail, setAdminChatDetail] = useState<ChatDetail | null>(
+    null
+  );
+  const [loadingAdminChats, setLoadingAdminChats] = useState(false);
+  const [loadingAdminChatDetail, setLoadingAdminChatDetail] = useState(false);
+  const [adminUsers, setAdminUsers] = useState<any[]>([]);
+  const [loadingAdminUsers, setLoadingAdminUsers] = useState(false);
+
+
+  const {
+    data: fetchedChatList = [],
+    isLoading: isFetchedChatListLoading,
+    isFetching: isChatListFetching,
+  } = useQuery({
     queryKey: ["chatList"],
     queryFn: fetchChatList,
     staleTime: 30_000,
-    select: (data) => data.filter(chat => !chat._id.startsWith("temp_")),
+    // Always filter out temp chats when reading from cache or fresh data
+    select: (data) => data.filter((chat) => !chat._id.startsWith("temp_")),
   });
+
   // Use the already filtered list
   const filteredChatList = fetchedChatList;
   const { data: selectedChat, isFetching: isChatDetailFetching, isLoading: isFetchedChatDetailLoading, } = useQuery<ChatDetail | null>({
@@ -93,24 +229,154 @@ const ChatPage = () => {
     }
     // Include ALL active temp chats (currently being processed)
     // Check all temp chats in optimisticMessagesByChat
-    Object.keys(optimisticMessagesByChat).forEach(chatId => {
-      if (chatId.startsWith("temp_") && optimisticMessagesByChat[chatId]?.length > 0) {
+    Object.keys(optimisticMessagesByChat).forEach((chatId) => {
+      if (
+        chatId.startsWith("temp_") &&
+        optimisticMessagesByChat[chatId]?.length > 0
+      ) {
         // Only include if not already in the list
-        if (!list.some(chat => chat._id === chatId)) {
-          const firstMessage = optimisticMessagesByChat[chatId][0];
-          list.unshift({
-            _id: chatId,
-            title: firstMessage.content.length > 50
-              ? firstMessage.content.substring(0, 50) + "..."
-              : firstMessage.content,
-            createdAt: firstMessage.createdAt,
-            updatedAt: firstMessage.createdAt,
-          });
+        if (!list.some((chat) => chat._id === chatId)) {
+          // Check for potential duplicates (real chats created very recently)
+          // Temp ID format: temp_TIMESTAMP_RANDOM
+          const parts = chatId.split("_");
+          let isDuplicate = false;
+
+          if (parts.length >= 2) {
+            const tempTimestamp = parseInt(parts[1]);
+            const firstMessage = optimisticMessagesByChat[chatId]?.[0];
+            const firstContent = firstMessage?.content?.trim();
+
+            if (!isNaN(tempTimestamp) && firstContent) {
+              isDuplicate = list.some((realChat) => {
+                // IMPORTANT: Never deduplicate against other temporary chats
+                if (
+                  realChat._id.startsWith("temp_") ||
+                  realChat._id === "__new_chat__"
+                ) {
+                  return false;
+                }
+
+                const realTime = new Date(realChat.createdAt).getTime();
+                // Check if created within 60 seconds of temp chat
+                const isTimeClose = Math.abs(realTime - tempTimestamp) < 60000;
+
+                if (!isTimeClose) return false;
+
+                // If time is close, verify content match to avoid false positives
+                // (e.g. user sending two different chats in quick succession)
+                if (realChat.messages && realChat.messages.length > 0) {
+                  const realFirstContent = realChat.messages[0].content.trim();
+                  // Return true only if content roughly matches
+                  return realFirstContent === firstContent;
+                }
+
+                // If no messages available in summary, rely on time overlap (fallback)
+                // But strictly requires time overlap
+                return true;
+              });
+            }
+          }
+
+          if (!isDuplicate) {
+            const firstMessage = optimisticMessagesByChat[chatId][0];
+            list.unshift({
+              _id: chatId,
+              title:
+                firstMessage.content.length > 50
+                  ? firstMessage.content.substring(0, 50) + "..."
+                  : firstMessage.content,
+              createdAt: firstMessage.createdAt,
+              updatedAt: firstMessage.createdAt,
+            });
+          }
         }
       }
     });
+
+    // Also include Remote Streaming Chats (that might not be in our local list yet)
+    if (remoteStreamingChatIds && remoteStreamingChatIds.length > 0) {
+      remoteStreamingChatIds.forEach((remoteId) => {
+        // Check if it's already in the list (as real or temp)
+        // Direct ID match
+        let exists = list.some((c) => c._id === remoteId);
+
+        // Fuzzy match for temp IDs against real chats
+        if (!exists && remoteId.startsWith("temp_")) {
+          const draft = remoteDrafts[remoteId];
+          const parts = remoteId.split("_");
+          if (parts.length >= 2) {
+            const tempTimestamp = parseInt(parts[1]);
+            const draftContent = draft?.message?.trim();
+
+            if (!isNaN(tempTimestamp)) {
+              exists = list.some((realChat) => {
+                // Don't match against other temps
+                if (realChat._id.startsWith("temp_")) return false;
+
+                const realTime = new Date(realChat.createdAt).getTime();
+                const isTimeClose = Math.abs(realTime - tempTimestamp) < 60000;
+
+                if (!isTimeClose) return false;
+
+                // If we have draft content, check that too
+                if (
+                  draftContent &&
+                  realChat.messages &&
+                  realChat.messages.length > 0
+                ) {
+                  const realFirstContent = realChat.messages[0].content.trim();
+                  // Loose match
+                  return realFirstContent === draftContent;
+                }
+
+                // Fallback to just time if no content to check
+                return true;
+              });
+            }
+          }
+        }
+
+        if (!exists) {
+          // It's a remote chat we don't know about yet (local temp chat in another tab)
+          const draft = remoteDrafts[remoteId];
+          const placeholderTitle = draft?.message
+            ? draft.message.length > 30
+              ? draft.message.substring(0, 30) + "..."
+              : draft.message
+            : "Thinking...";
+
+          const placeholderMessages: ChatMessage[] = draft
+            ? [
+              {
+                _id: `temp-${remoteId}`,
+                chatId: remoteId,
+                role: "user",
+                content: draft.message,
+                createdAt: draft.createdAt || new Date().toISOString(),
+              },
+            ]
+            : [];
+
+          list.unshift({
+            _id: remoteId,
+            title: placeholderTitle,
+            createdAt: draft?.createdAt || new Date().toISOString(),
+            updatedAt: draft?.createdAt || new Date().toISOString(),
+            messages: placeholderMessages,
+          });
+        }
+      });
+    }
+
     return list;
-  }, [chatList, temporaryChat, optimisticMessagesByChat]);
+  }, [
+    chatList,
+    temporaryChat,
+    optimisticMessagesByChat,
+    remoteStreamingChatIds,
+    remoteDrafts,
+    selectedChatId,
+  ]);
 
   // Note: Removed sync effects to prevent infinite loops
   // Components will use query data directly instead of Redux state for chat data
@@ -122,7 +388,7 @@ const ChatPage = () => {
       const hasMessages = optimisticMessagesByChat[selectedChatId]?.length > 0;
       if (!hasMessages) { dispatch(setSelectedChatId(null)); }
     }
-  }, [dispatch]);
+  }, [dispatch, selectedChatId, optimisticMessagesByChat]);
   // Cleanup old completed tasks every 5 minutes
   useEffect(() => {
     const cleanupInterval = setInterval(() => {
@@ -130,6 +396,92 @@ const ChatPage = () => {
     }, 5 * 60 * 1000); // 5 minutes
     return () => clearInterval(cleanupInterval);
   }, [dispatch]);
+  // Fetch company users for admin dropdown when admin is logged in
+  useEffect(() => {
+    if (!isCompanyOwner) {
+      return;
+    }
+
+    const fetchAdminUsers = async () => {
+      try {
+        setLoadingAdminUsers(true);
+        const users = await fetchCompanyUsers();
+        if (users) {
+          setAdminUsers(users);
+        }
+      } catch (error) {
+        console.error("Failed to fetch company users:", error);
+        toast({
+          description: "Failed to load company users",
+          variant: "destructive",
+        });
+      } finally {
+        setLoadingAdminUsers(false);
+      }
+    };
+
+    fetchAdminUsers();
+  }, [isCompanyOwner, toast]);
+
+  // Fetch admin user's chat list when selected
+  useEffect(() => {
+    if (!selectedAdminUserId) {
+      setAdminUserChats([]);
+      setSelectedAdminChatId(null);
+      return;
+    }
+
+    const fetchAdminChats = async () => {
+      try {
+        setLoadingAdminChats(true);
+        const data = await fetchUserChatList(selectedAdminUserId);
+        if (data?.chats) {
+          setAdminUserChats(data.chats);
+        }
+      } catch (error) {
+        console.error("Failed to fetch admin user chats:", error);
+        toast({
+          description: "Failed to load user chats",
+          variant: "destructive",
+        });
+      } finally {
+        setLoadingAdminChats(false);
+      }
+    };
+
+    fetchAdminChats();
+  }, [selectedAdminUserId, toast]);
+
+  // Fetch admin user's specific chat detail when selected
+  useEffect(() => {
+    if (!selectedAdminUserId || !selectedAdminChatId) {
+      setAdminChatDetail(null);
+      return;
+    }
+
+    const fetchAdminChatDetail = async () => {
+      try {
+        setLoadingAdminChatDetail(true);
+        const data = await fetchUserChatDetail(
+          selectedAdminUserId,
+          selectedAdminChatId
+        );
+        if (data) {
+          setAdminChatDetail(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch admin user chat detail:", error);
+        toast({
+          description: "Failed to load chat details",
+          variant: "destructive",
+        });
+      } finally {
+        setLoadingAdminChatDetail(false);
+      }
+    };
+
+    fetchAdminChatDetail();
+  }, [selectedAdminUserId, selectedAdminChatId, toast]);
   useEffect(() => {
     if (chatList.length === 0) {
       return;
@@ -195,19 +547,120 @@ const ChatPage = () => {
     }
   }, [location.state]);
 
-  // Keep ref in sync with selectedChatId for async operations
-  useEffect(() => {
-    selectedChatIdRef.current = selectedChatId;
-  }, [selectedChatId]);
+  // Helper to get the correct chat ID for looking up streaming events
+  const getStreamingChatId = useMemo(() => {
+    // First check if current chat is in streaming list (local or remote)
+    if (isSelectedChatStreaming && selectedChatId) {
+      return selectedChatId;
+    }
+    // Check local state (preferred over ref for rendering)
+    if (
+      localStreamingChatId &&
+      (localStreamingChatId === selectedChatId ||
+        selectedChatId === "__new_chat__")
+    ) {
+      return localStreamingChatId;
+    }
+
+    return selectedChatId || localStreamingChatId;
+  }, [isSelectedChatStreaming, selectedChatId, localStreamingChatId]);
+
+  // Determine if the typing/loading indicator should be shown for the current chat
+  const isCurrentChatSending = useMemo(() => {
+    // Check if THIS specific chat is streaming (local or remote)
+    // We already have isSelectedChatStreaming which is granular
+
+    // Also check for optimistic messages for this chat
+    const optimisticMessages =
+      (selectedChatId && optimisticMessagesByChat[selectedChatId]) || [];
+    const hasOptimisticMessages = optimisticMessages.length > 0;
+
+    // Check if we are currently in the middle of sending (local state)
+    const isStreamingLocal =
+      !!localStreamingChatId && localStreamingChatId === selectedChatId;
+
+    // Check if THIS specific chat is streaming (local or remote)
+    const isLocalStream = isSelectedChatStreaming || isStreamingLocal;
+    const isStreamingRemote =
+      remoteStreamingChatIds &&
+      remoteStreamingChatIds.includes(selectedChatId || "");
+
+    // Auto-fix for "Thinking..." stutter:
+    // If we just finished streaming locally (within last 3 seconds), ignore any "remote" status.
+    const lastCompletion = selectedChatId
+      ? lastCompletionTimeRef.current[selectedChatId] || 0
+      : 0;
+    const timeSinceLastCompletion = Date.now() - lastCompletion;
+    const isRecentlyFinished = timeSinceLastCompletion < 3000;
+
+    // We treat it as sending if:
+    // 1. Locally streaming (Redux or local state says yes)
+    // 2. Remote streaming (AND we didn't just finish it ourselves)
+    // 3. We have optimistic messages waiting
+    const result =
+      isLocalStream ||
+      (isStreamingRemote && !isRecentlyFinished) ||
+      hasOptimisticMessages;
+
+    // Debug logging as requested - using console.dir for full depth
+    const isCurrentChatSendingState = {
+      result,
+      selectedChatId,
+      isSelectedChatStreaming,
+      hasOptimisticMessages,
+      optimisticCount: optimisticMessages.length,
+      isStreamingLocal,
+      localStreamingChatId,
+      streamingChatIdRef: streamingChatIdRef.current,
+      isStreamingRemote,
+      isRecentlyFinished,
+      lastCompletion,
+      // Additional debug info
+      optimisticMessagesForChat: optimisticMessages,
+      remoteStreamingChatIds,
+    };
+    console.log(
+      "[ChatPage] isCurrentChatSending state:",
+      isCurrentChatSendingState
+    );
+    console.dir(isCurrentChatSendingState, { depth: null });
+
+    return result;
+  }, [
+    isSelectedChatStreaming,
+    optimisticMessagesByChat,
+    selectedChatId,
+    localStreamingChatId,
+    remoteStreamingChatIds,
+  ]);
+
+  // Typing indicator should reflect actual streaming/pending states, not optimistic bubbles.
+  const isThinkingIndicatorVisible = useMemo(() => {
+    const isStreamingLocal =
+      !!localStreamingChatId && localStreamingChatId === selectedChatId;
+    const isLocalStream = isSelectedChatStreaming || isStreamingLocal;
+    const isStreamingRemote =
+      remoteStreamingChatIds &&
+      remoteStreamingChatIds.includes(selectedChatId || "");
+
+    // Indicator should reflect actual streaming only; do not hold after completion.
+    // The assistant message display delay is handled in selectedMessages.
+    return isLocalStream || isStreamingRemote;
+  }, [
+    isSelectedChatStreaming,
+    selectedChatId,
+    localStreamingChatId,
+    remoteStreamingChatIds,
+  ]);
+
+  // Removed event-based title update effect as it caused re-renders
+  // Titles are handled by API success or Optimistic updates now.
 
   const selectChatFromList = (chatId: string) => {
     if (chatId !== "__new_chat__") {
       dispatch(setIsCreatingNewChat(false));
     }
-
-    // Save current composer value to cache before switching
     dispatch(saveComposerValueToCache());
-
     dispatch(setSelectedChatId(chatId));
     dispatch(setIsMobileListOpen(false));
   };
@@ -389,6 +842,7 @@ const ChatPage = () => {
       ? `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
       : selectedChatId;
     streamingChatIdRef.current = actualChatId; // Track which chat is streaming (local ref)
+    setLocalStreamingChatId(actualChatId); // Trigger re-render
 
     // CRITICAL: Store the chat ID we're sending from, to check later if user switched away
     const chatIdWhenSent = actualChatId;
@@ -438,7 +892,8 @@ const ChatPage = () => {
       // This ensures when we switch back, it's properly empty
       dispatch(setComposerValue(""));
     } else {
-      // Add to optimistic messages for existing chats
+      // CRITICAL: For existing chats, use actualChatId (not selectedChatId) to ensure consistency
+      // This prevents creating duplicate chats or adding messages to wrong chat
       dispatch(
         addOptimisticMessage({ chatId: actualChatId, message: tempMessage })
       );
@@ -448,9 +903,18 @@ const ChatPage = () => {
     streamingStartTimeRef.current = Date.now();
 
     // Set timeout to start long-running task only after 10 seconds if still processing
+    const taskCreatedRef = { current: false }; // Track if task was actually created
     streamingTimeoutRef.current = setTimeout(() => {
       if (isStreamingRef.current) {
         // Task is still running after 10 seconds, start tracking it
+        taskCreatedRef.current = true; // Mark that task was created
+        console.log(
+          "[CHAT] Creating long-running task (10s threshold reached):",
+          {
+            chatId: actualChatId,
+            messageId: tempMessage._id,
+          }
+        );
         dispatch(
           startStreamingTask({
             chatId: actualChatId,
@@ -474,18 +938,88 @@ const ChatPage = () => {
         },
         (event: StreamEvent) => {
           // Use actualChatId for events, but if we get a result event, we know the real chat ID
-          const eventChatId =
-            event.type === "result" && event.data?.chatId
-              ? event.data.chatId
-              : actualChatId;
+          // CRITICAL: If we get a real ID from ANY event (not just result), we should migrate immediately
+          const eventChatId = event.data?.chatId || actualChatId;
+          const realChatId = event.data?.chatId;
 
           dispatch(addStreamingEvent({ chatId: eventChatId, event }));
 
+          // If we have a real chat ID and we are currently tracking a temp ID, migrate to real ID
+          if (realChatId && realChatId !== actualChatId && isNewChat) {
+            // 1. Migrate events
+            dispatch(
+              migrateStreamingEvents({
+                oldChatId: actualChatId,
+                newChatId: realChatId,
+              })
+            );
+
+            // 2. Migrate streaming tracking
+            dispatch(removeStreamingChat(actualChatId));
+            dispatch(addStreamingChat(realChatId));
+
+            // 3. Update local ref
+            finalChatId = realChatId;
+
+            // 4. Trigger refresh in other tabs
+            triggerRefresh();
+
+            // 5. Update optimistic messages
+            const optimisticMsgs = optimisticMessagesByChat[actualChatId] || [];
+            if (optimisticMsgs.length > 0) {
+              optimisticMsgs.forEach((msg) => {
+                dispatch(
+                  addOptimisticMessage({
+                    chatId: realChatId,
+                    message: { ...msg, chatId: realChatId },
+                  })
+                );
+              });
+              dispatch(removeOptimisticMessages(actualChatId));
+            }
+
+            // 6. Switch selection to real chat if user hasn't switched away
+            const currentlyViewing = selectedChatIdRef.current;
+            const isStillOnSameChat =
+              currentlyViewing === chatIdWhenSent ||
+              currentlyViewing === realChatId ||
+              (chatIdWhenSent === "__new_chat__" &&
+                currentlyViewing === "__new_chat__") ||
+              (chatIdWhenSent === actualChatId &&
+                currentlyViewing === actualChatId);
+
+            if (isStillOnSameChat) {
+              dispatch(setSelectedChatId(realChatId));
+            }
+
+            // CRITICAL: Update long-running task's chatId to the real chat ID
+            // This ensures subsequent updateStreamingTask and completeStreamingTask calls can find the task
+            console.log("[CHAT] Updating task chatId during event migration:", {
+              messageId: tempMessage._id,
+              oldChatId: actualChatId,
+              newChatId: realChatId,
+            });
+            dispatch(
+              updateTask({
+                id: tempMessage._id,
+                updates: { chatId: realChatId },
+              })
+            );
+          }
+
           // Update long-running task with streaming progress
-          if (event.step) {
+          // Use the real chatId if available (after migration), otherwise use actualChatId
+          // Only update if task was actually created (i.e., processing took >10 seconds)
+          const taskChatId = finalChatId || actualChatId;
+          if (event.step && taskCreatedRef.current) {
+            console.log("[CHAT] Updating task step:", {
+              messageId: tempMessage._id,
+              chatId: taskChatId,
+              step: event.step,
+            });
             dispatch(
               updateStreamingTask({
-                chatId: actualChatId,
+                chatId: taskChatId,
                 messageId: tempMessage._id,
                 step: event.step,
               })
@@ -522,12 +1056,72 @@ const ChatPage = () => {
               });
             }
 
-            // Clear streaming state when result is received
-            dispatch(removeStreamingChat(realChatId));
-            // Clear events after a brief delay to allow UI to show completion
-            setTimeout(() => {
-              dispatch(clearStreamingEvents(realChatId));
-            }, 500);
+            // IMMEDIATE CLEANUP: Clean up streaming state as soon as result arrives
+            // This prevents the "Thinking..." indicator from lingering after the response is visible
+            console.log("[CHAT] Immediate cleanup on result event:", {
+              actualChatId,
+              finalChatId: realChatId,
+            });
+
+            // Update refs immediately
+            isStreamingRef.current = false;
+            if (
+              streamingChatIdRef.current === actualChatId ||
+              streamingChatIdRef.current === realChatId
+            ) {
+              streamingChatIdRef.current = null;
+              setLocalStreamingChatId(null);
+            }
+
+            // Defer optimistic cleanup to guarded effect once server data is confirmed.
+
+            // Clear streaming state for BOTH IDs to ensure complete cleanup
+            // This is critical: if actualChatId is a temp ID and realChatId is different,
+            // we need to clear streaming status for BOTH to prevent the thinking animation from persisting
+            dispatch(removeStreamingChat(actualChatId)); // Clear temp ID first
+            if (realChatId !== actualChatId) {
+              dispatch(removeStreamingChat(realChatId)); // Clear real ID if different
+            }
+            dispatch(clearStreamingEvents(actualChatId)); // Clear events for temp ID
+            if (realChatId !== actualChatId) {
+              dispatch(clearStreamingEvents(realChatId)); // Clear events for real ID if different
+            }
+
+            // Mark completion time for recent finish check
+            lastCompletionTimeRef.current[actualChatId] = Date.now();
+            if (realChatId !== actualChatId) {
+              lastCompletionTimeRef.current[realChatId] = Date.now();
+            }
+
+            // Complete or clear the long-running task
+            if (taskCreatedRef.current) {
+              console.log("[CHAT] Completing long-running task on result:", {
+                actualChatId,
+                finalChatId: realChatId,
+                messageId: tempMessage._id,
+              });
+              dispatch(
+                completeStreamingTask({
+                  chatId: realChatId,
+                  messageId: tempMessage._id,
+                })
+              );
+            } else {
+              console.log(
+                "[CHAT] Skipping task completion (completed in <10s):",
+                {
+                  actualChatId,
+                  finalChatId: realChatId,
+                  messageId: tempMessage._id,
+                }
+              );
+            }
+
+            // Clear timeout
+            if (streamingTimeoutRef.current) {
+              clearTimeout(streamingTimeoutRef.current);
+              streamingTimeoutRef.current = null;
+            }
           }
         }
       );
@@ -551,7 +1145,13 @@ const ChatPage = () => {
           // Only switch if user is still viewing this specific chat (by temp ID or already migrated ID)
           // This ensures we migrate temp_A → real_A only when user is on temp_A
           // If user switched to temp_B, currentlyViewing will be temp_B, and this won't match
-          if (currentlyViewing === chatIdWhenSent || currentlyViewing === newChatId) {
+          const isStillOnSameChat =
+            currentlyViewing === chatIdWhenSent ||
+            currentlyViewing === newChatId ||
+            (chatIdWhenSent === "__new_chat__" &&
+              currentlyViewing === "__new_chat__");
+
+          if (isStillOnSameChat) {
             // User is still on this chat - migrate to real ID
             dispatch(setSelectedChatId(newChatId));
           }
@@ -569,6 +1169,11 @@ const ChatPage = () => {
           updatedAt:
             (result.data.updatedAt as string) || new Date().toISOString(),
         });
+
+        // Trigger refresh in other tabs so they see the new chat immediately
+        triggerRefresh();
+
+        // Only add new chat to chatList if it's actually a new chat
 
         // Only add new chat to chatList if it's actually a new chat
         // For existing chats, just update the existing entry's updatedAt timestamp
@@ -640,14 +1245,21 @@ const ChatPage = () => {
             })
           );
 
-          // Temp chats are not in cache, no cleanup needed
+          // DON'T call convertTemporaryChat here - it re-adds optimistic messages!
+          // We already have real messages from the server, so just clear the temp chat
+          // and update the selected chat ID
+          dispatch(clearTemporaryChat());
 
-          dispatch(
-            convertTemporaryChat({
-              realChatId: newChatId,
-              title: computedTitle,
-            })
-          );
+          // Update selected chat ID if user is still on this chat
+          const currentlyViewing = selectedChatIdRef.current;
+          const isStillOnSameChat =
+            currentlyViewing === actualChatId ||
+            currentlyViewing === newChatId ||
+            currentlyViewing === "__new_chat__";
+
+          if (isStillOnSameChat) {
+            dispatch(setSelectedChatId(newChatId));
+          }
 
           // Update long-running task's chatId to the real chat ID if it exists
           if (tempMessage._id) {
@@ -659,18 +1271,12 @@ const ChatPage = () => {
             );
           }
 
-          // Clear optimistic messages after converting temporary chat (messages are now in server response)
-          dispatch(removeOptimisticMessages(newChatId));
-
-          // Clear streaming state for the new chat ID (result received)
-          dispatch(removeStreamingChat(newChatId));
-          dispatch(clearStreamingEvents(newChatId));
+          // Note: Optimistic messages and streaming state cleanup moved to finally block
+          // to prevent duplicate cleanup calls that can affect other active chats
         } else {
-          // For existing chats, clear optimistic messages after server response
-          dispatch(removeOptimisticMessages(actualChatId));
-          // Clear streaming state (result received)
-          dispatch(removeStreamingChat(actualChatId));
-          dispatch(clearStreamingEvents(actualChatId));
+          // Note: Optimistic messages and streaming state cleanup moved to finally block
+          // to prevent duplicate cleanup calls that can affect other active chats
+          lastCompletionTimeRef.current[actualChatId] = Date.now(); // Mark completion time
         }
 
         // Don't invalidate queries - we've already updated the cache with setQueryData
@@ -713,7 +1319,7 @@ const ChatPage = () => {
 
       // Don't invalidate queries - we've already updated the cache with setQueryData
       // Invalidating would cause a full refetch and refresh the whole chat
-    } catch (error: any) {
+    } catch (error) {
       console.error("Streaming error:", error);
 
       // Remove the failed optimistic message
@@ -744,33 +1350,82 @@ const ChatPage = () => {
         variant: "destructive",
       });
     } finally {
-      isStreamingRef.current = false;
-      // Only clear streaming chat ID if this was the chat that was streaming
-      if (streamingChatIdRef.current === actualChatId) {
-        streamingChatIdRef.current = null;
-      }
-      // Remove from streaming chats set (if not already removed in success handler)
-      dispatch(removeStreamingChat(finalChatId));
-      dispatch(clearStreamingEvents(finalChatId));
+      // FALLBACK CLEANUP: Only clean up if not already done in result event handler
+      // This handles error cases, timeouts, or if result event didn't trigger cleanup
 
-      // Complete or clear the long-running task
-      dispatch(
-        completeStreamingTask({
-          chatId: actualChatId,
-          messageId: tempMessage._id,
-        })
-      );
+      // Check if cleanup was already done (isStreamingRef will be false if result handler ran)
+      const needsCleanup = isStreamingRef.current;
 
-      // Clear timeout
-      if (streamingTimeoutRef.current) {
-        clearTimeout(streamingTimeoutRef.current);
-        streamingTimeoutRef.current = null;
+      if (needsCleanup) {
+        console.log("[CHAT] Finally block cleanup (error/timeout case):", {
+          actualChatId,
+          finalChatId,
+        });
+
+        isStreamingRef.current = false;
+        // Only clear streaming chat ID if this was the chat that was streaming
+        if (
+          streamingChatIdRef.current === actualChatId ||
+          streamingChatIdRef.current === finalChatId
+        ) {
+          streamingChatIdRef.current = null;
+          setLocalStreamingChatId(null);
+        }
+
+        // Defer optimistic cleanup; a guarded effect will remove them
+        // after confirming the server has the matching user message.
+
+        // Clear streaming state ONLY for the final chat ID (or actual if no migration)
+        const chatIdToClean = finalChatId || actualChatId;
+        dispatch(removeStreamingChat(chatIdToClean));
+        dispatch(clearStreamingEvents(chatIdToClean));
+
+        // Mark completion time for recent finish check
+        lastCompletionTimeRef.current[actualChatId] = Date.now();
+        if (finalChatId !== actualChatId) {
+          lastCompletionTimeRef.current[finalChatId] = Date.now();
+        }
+
+        // Complete or clear the long-running task
+        if (taskCreatedRef.current) {
+          console.log("[CHAT] Completing long-running task (error/timeout):", {
+            actualChatId,
+            finalChatId,
+            messageId: tempMessage._id,
+            usingChatId: finalChatId || actualChatId,
+          });
+          dispatch(
+            completeStreamingTask({
+              chatId: finalChatId || actualChatId,
+              messageId: tempMessage._id,
+            })
+          );
+        }
+
+        // Clear timeout
+        if (streamingTimeoutRef.current) {
+          clearTimeout(streamingTimeoutRef.current);
+          streamingTimeoutRef.current = null;
+        }
+      } else {
+        console.log(
+          "[CHAT] Skipping finally cleanup (already done in result handler):",
+          { actualChatId, finalChatId }
+        );
       }
+
       streamingStartTimeRef.current = null;
     }
   };
 
   const handleStartNewChat = () => {
+    // If viewing another user's chat as admin, go back to own chats first
+    if (selectedAdminUserId) {
+      setSelectedAdminUserId(null);
+      setSelectedAdminChatId(null);
+      setAdminChatDetail(null);
+    }
+
     // Save current composer value before switching
     dispatch(saveComposerValueToCache());
 
@@ -851,7 +1506,7 @@ const ChatPage = () => {
       });
 
       await queryClient.invalidateQueries({ queryKey: ["chatList"] });
-    } catch (error: any) {
+    } catch (error) {
       console.error("Failed to delete chat", error);
       toast({
         title: "Unable to delete chat",
@@ -866,6 +1521,11 @@ const ChatPage = () => {
   };
 
   const resolvedChatTitle = useMemo(() => {
+    // If viewing an admin user's chat, show their chat title
+    if (selectedAdminUserId && selectedAdminChatId && adminChatDetail) {
+      return adminChatDetail.title || "Chat";
+    }
+
     // Handle temporary chat
     if (selectedChatId === "__new_chat__" && temporaryChat) {
       return temporaryChat.title;
@@ -877,12 +1537,25 @@ const ChatPage = () => {
     const summary =
       fullChatList.find((chat) => chat._id === selectedChatId) ?? null;
     return summary?.title;
-  }, [fullChatList, selectedChat, selectedChatId, temporaryChat]);
+  }, [
+    fullChatList,
+    selectedChat,
+    selectedChatId,
+    temporaryChat,
+    selectedAdminUserId,
+    selectedAdminChatId,
+    adminChatDetail,
+  ]);
 
   const currentChatKey = selectedChatId ?? NEW_CHAT_KEY;
   const optimisticMessages = optimisticMessagesByChat[currentChatKey] ?? [];
 
   const selectedMessages = useMemo(() => {
+    // If viewing an admin user's chat, show their messages
+    if (selectedAdminUserId && selectedAdminChatId && adminChatDetail) {
+      return adminChatDetail.messages || [];
+    }
+
     // CRITICAL: Only use temporaryChat for "__new_chat__" (before first message is sent)
     // Once a message is sent, the chat gets a temp ID and messages go to optimisticMessagesByChat
     if (selectedChatId === "__new_chat__" && temporaryChat) {
@@ -894,13 +1567,50 @@ const ChatPage = () => {
     const isTempChatId = selectedChatId?.startsWith("temp_");
     if (isTempChatId) {
       // Return messages specific to this temp chat ID
-      return optimisticMessagesByChat[selectedChatId] || [];
+      const messages = optimisticMessagesByChat[selectedChatId] || [];
+
+      // If no local optimistic messages (e.g. this is a remote temp chat in another tab),
+      // try to find it in drafts to show the user query
+      if (messages.length === 0 && remoteDrafts[selectedChatId]) {
+        const draft = remoteDrafts[selectedChatId];
+        return [
+          {
+            _id: `temp-draft-${selectedChatId}`,
+            chatId: selectedChatId,
+            role: "user" as const,
+            content: draft.message,
+            createdAt: draft.createdAt,
+          },
+        ];
+      }
+
+      return messages;
     }
 
     // For real chat IDs, combine API messages with optimistic messages
     const apiMessages = selectedChat?.messages ?? [];
     const optimisticMessages =
       optimisticMessagesByChat[selectedChatId || ""] || [];
+
+    // If we have no messages at all (no API, no optimistic), check for a remote draft
+    // This handles page refresh where we haven't fetched messages yet but have a local draft
+    if (
+      !apiMessages.length &&
+      !optimisticMessages.length &&
+      selectedChatId &&
+      remoteDrafts[selectedChatId]
+    ) {
+      const draft = remoteDrafts[selectedChatId];
+      return [
+        {
+          _id: `temp-draft-${selectedChatId}`,
+          chatId: selectedChatId,
+          role: "user" as const,
+          content: draft.message,
+          createdAt: draft.createdAt,
+        },
+      ];
+    }
 
     if (!apiMessages.length) {
       return optimisticMessages;
@@ -948,12 +1658,126 @@ const ChatPage = () => {
       return true;
     });
 
-    return [...apiMessages, ...filteredOptimistic];
+    // Stabilize keys without mutating source objects
+    const optimisticUsersForKey = filteredOptimistic.filter(
+      (m) => m.role === "user"
+    );
+    const optimisticIdByContent = new Map<string, string>();
+    optimisticUsersForKey.forEach((m) => {
+      if (m.content) optimisticIdByContent.set(m.content, m._id);
+    });
+
+    const serverWithStableIds = apiMessages.map((m) => {
+      if (m.role === "user" && m.content) {
+        const optId = optimisticIdByContent.get(m.content);
+        if (optId) {
+          return { ...m, _id: optId };
+        }
+      }
+      return { ...m };
+    });
+
+    // Optionally delay showing the latest assistant response to avoid micro flicker
+    let delayedServer = serverWithStableIds;
+    if (selectedChatId) {
+      const lastCompletion = lastCompletionTimeRef.current[selectedChatId] || 0;
+      const withinDelay =
+        Date.now() - lastCompletion < RESPONSE_APPEAR_DELAY_MS;
+      if (withinDelay && serverWithStableIds.length > 0) {
+        const lastIdx = serverWithStableIds.length - 1;
+        const lastMsg = serverWithStableIds[lastIdx];
+        if (lastMsg.role === "assistant") {
+          delayedServer = serverWithStableIds.slice(0, lastIdx);
+        }
+      }
+    }
+
+    // After stabilizing server IDs, ensure no duplicate keys remain
+    const serverStableIds = new Set(delayedServer.map((m) => m._id));
+    const dedupedOptimistic = filteredOptimistic.filter(
+      (m) => !serverStableIds.has(m._id)
+    );
+
+    const combinedMessages = [...delayedServer, ...dedupedOptimistic];
+
+    // Final safeguard: ensure unique message IDs to prevent React key collisions
+    const seenIds = new Set<string>();
+    const uniqueCombined = combinedMessages.filter((m) => {
+      if (seenIds.has(m._id)) return false;
+      seenIds.add(m._id);
+      return true;
+    });
+
+    // Check if we have a pending draft (user query) that isn't shown yet
+    // This happens in other tabs where optimistic messages don't exist
+    if (selectedChatId && remoteDrafts[selectedChatId]) {
+      const draft = remoteDrafts[selectedChatId];
+      // Check if this draft is already in the messages (avoid duplication)
+      const lastMessage = combinedMessages[combinedMessages.length - 1];
+      const isDraftAlreadyShown =
+        lastMessage &&
+        (lastMessage.content === draft.message ||
+          (lastMessage.role === "user" &&
+            lastMessage.content === draft.message));
+
+      if (!isDraftAlreadyShown) {
+        combinedMessages.push({
+          _id: `temp-draft-${selectedChatId}-${Date.now()}`,
+          chatId: selectedChatId,
+          role: "user",
+          content: draft.message,
+          createdAt: draft.createdAt,
+        });
+      }
+    }
+
+    return uniqueCombined;
   }, [
-    optimisticMessages,
     selectedChat?.messages,
     temporaryChat,
+    optimisticMessagesByChat,
     selectedChatId,
+    remoteDrafts,
+    selectedAdminUserId,
+    selectedAdminChatId,
+    adminChatDetail,
+  ]);
+
+  // Guarded optimistic cleanup: only remove optimistic messages when the server
+  // contains the matching user message for this chat. This prevents the
+  // disappear/reappear effect during pending states.
+  useEffect(() => {
+    if (!selectedChatId) return;
+    const serverMsgs = selectedChat?.messages || [];
+    const optimisticMsgs = optimisticMessagesByChat[selectedChatId] || [];
+    if (!serverMsgs.length || !optimisticMsgs.length) return;
+
+    const hasMatch = optimisticMsgs.some((opt) => {
+      if (opt.role !== "user") return false;
+      const tempTs = opt._id.startsWith("temp-")
+        ? parseInt(opt._id.replace("temp-", ""))
+        : 0;
+      const signature = `${opt.role}-${opt.content}`;
+      return serverMsgs.some((sm) => {
+        if (`${sm.role}-${sm.content}` !== signature) return false;
+        const serverTs = new Date(sm.createdAt).getTime();
+        const diff = serverTs - tempTs;
+        return isNaN(tempTs) ? true : diff >= -2000 && diff <= 30000;
+      });
+    });
+
+    if (!hasMatch) return;
+
+    const timer = setTimeout(() => {
+      dispatch(removeOptimisticMessages(selectedChatId));
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [
+    selectedChat?.messages,
+    selectedChatId,
+    optimisticMessagesByChat,
+    dispatch,
   ]);
 
   const hasActiveConversation =
@@ -968,82 +1792,13 @@ const ChatPage = () => {
     (isChatDetailLoading || isChatDetailFetching) &&
     optimisticMessages.length === 0;
 
-  // Helper to get the correct chat ID for looking up streaming events
-  // This handles temp-to-real ID conversion
-  const getStreamingChatId = useMemo(() => {
-    // First check if current chat is in streaming list
-    if (streamingChatIds.includes(selectedChatId || "")) {
-      return selectedChatId;
-    }
-    // Check if any streaming chat ID matches (handles temp IDs)
-    const matchingStreamingId = streamingChatIds.find((id) => {
-      // If selectedChatId is a real ID and we have a temp ID streaming, check if they're related
-      if (
-        id.startsWith("temp_") &&
-        selectedChatId &&
-        !selectedChatId.startsWith("temp_")
-      ) {
-        // Events might have been migrated, so check both
-        return false; // Will check events by selectedChatId
-      }
-      return (
-        id === selectedChatId ||
-        (id.startsWith("temp_") && selectedChatId === "__new_chat__")
-      );
-    });
-    return matchingStreamingId || selectedChatId || streamingChatIdRef.current;
-  }, [streamingChatIds, selectedChatId]);
-
-  // Make sending state chat-specific - only show thinking indicator for the chat that's currently processing
-  const isCurrentChatSending = useMemo(() => {
-    // For new/empty chats, never show as sending unless it has optimistic messages
-    if (!selectedChatId || selectedChatId === "__new_chat__") {
-      // Check if we have a temporary chat with messages (means we sent a message)
-      const hasTemporaryChatMessages =
-        temporaryChat && temporaryChat.messages.length > 0;
-
-      // If we have temporary chat messages, check if any temp chat is streaming
-      if (hasTemporaryChatMessages) {
-        // Check if the temporary chat's ID is streaming (it would have been assigned when message was sent)
-        return streamingChatIds.some(id => id.startsWith("temp_"));
-      }
-
-      return false; // New empty chat is never sending
-    }
-
-    // For existing chats (with real IDs or temp IDs), check if THIS specific chat is streaming
-    const isStreamingThisChat =
-      streamingChatIds.includes(selectedChatId) ||
-      streamingChatIdRef.current === selectedChatId;
-
-    // For temporary chats, check if we have messages in temporary chat
-    const isTempChatId = selectedChatId?.startsWith("temp_");
-    const hasTemporaryChatMessages =
-      (isTempChatId) &&
-      temporaryChat &&
-      temporaryChat.messages.length > 0;
-
-    // For regular chats, check optimistic messages
-    const hasOptimisticMessages = optimisticMessages.length > 0;
-
-    // Show indicator if streaming for this specific chat OR if this chat has optimistic/temporary messages
-    return (
-      isStreamingThisChat || hasOptimisticMessages || hasTemporaryChatMessages
-    );
-  }, [
-    streamingChatIds,
-    optimisticMessages.length,
-    selectedChatId,
-    temporaryChat,
-  ]);
-
   return (
     <DashboardLayout>
       {/* Warning when multiple tabs are detected */}
       <MultipleTabsWarning show={hasMultipleTabs} />
       <Sheet open={isMobileListOpen} onOpenChange={(open) => dispatch(setIsMobileListOpen(open))} >
         <motion.main initial="hidden" animate="visible" exit="exit" variants={pageVariants} className="mt-28 flex w-full justify-center px-4 pb-6 sm:px-6 md:px-10 lg:fixed lg:inset-0 lg:mt-0 lg:px-12 lg:pt-28 xl:px-16">
-          <div className="flex w-full lg:h-full flex-col gap-6">
+          <div className="flex w-full lg:h-full flex-col gap-6 relative">
             <section className="flex flex-col gap-6 lg:h-full lg:flex-row lg:items-stretch lg:overflow-hidden">
               <div className="hidden lg:flex lg:h-full lg:shrink-0">
                 <div className="overflow-visible p-1 -m-1">
@@ -1059,7 +1814,15 @@ const ChatPage = () => {
                     onDeleteChat={handleDeleteChat}
                     deletingChatId={deletingChatId}
                     isCreatingNewChat={isCreatingNewChat}
-                    streamingChatIds={streamingChatIds}
+                    isCompanyAdmin={isCompanyOwner}
+                    selectedAdminUserId={selectedAdminUserId}
+                    onAdminUserChange={setSelectedAdminUserId}
+                    adminUsers={adminUsers}
+                    loadingAdminUsers={loadingAdminUsers}
+                    adminUserChats={adminUserChats}
+                    selectedAdminChatId={selectedAdminChatId}
+                    onSelectAdminChat={setSelectedAdminChatId}
+                    loadingAdminChats={loadingAdminChats}
                   />
                 </div>
               </div>
@@ -1069,32 +1832,53 @@ const ChatPage = () => {
                   chatTitle={resolvedChatTitle}
                   hasSelection={hasActiveConversation}
                   isLoading={isConversationLoading}
-                  isSending={isCurrentChatSending}
+                  isSending={isThinkingIndicatorVisible}
                   messages={selectedMessages}
                   onOpenChatList={() => dispatch(setIsMobileListOpen(true))}
-                  streamingEvents={
-                    streamingEventsByChat[getStreamingChatId || ""] ||
-                    streamingEventsByChat[selectedChatId || ""] ||
-                    streamingEventsByChat[streamingChatIdRef.current || ""] ||
-                    []
-                  }
-                  isStreaming={isCurrentChatSending}
+                  streamingEvents={(() => {
+                    const events =
+                      streamingEventsByChat[getStreamingChatId || ""] ||
+                      streamingEventsByChat[selectedChatId || ""] ||
+                      streamingEventsByChat[streamingChatIdRef.current || ""] ||
+                      [];
+
+                    // If we are sending/thinking but have no events (e.g. after refresh),
+                    // inject a placeholder event so the UI shows the "Thinking" state
+                    if (isThinkingIndicatorVisible && events.length === 0) {
+                      return [
+                        {
+                          id: "temp-thinking",
+                          type: "step",
+                          title: "Thinking...",
+                          status: "pending",
+                          message: "Processing request...",
+                        },
+                      ];
+                    }
+
+                    return events;
+                  })()}
+                  isStreaming={isThinkingIndicatorVisible}
+                  isReadOnly={!!selectedAdminUserId}
                 />
 
-                <AnimatePresence mode="sync">
-                  <motion.div
+
+                {selectedAdminUserId ? (
+                  <div
+                    className="rounded-2xl border border-white/10 bg-white/5 px-6 py-4 text-center"
+                  >
+                    <p className="text-sm text-white/60">
+                      Viewing user's chat in read-only mode. You cannot send
+                      messages on behalf of this user.
+                    </p>
+                  </div>
+                ) : (
+                  <div
                     key={hasActiveConversation ? "composer" : "empty"}
-                    initial="hidden"
-                    animate="visible"
-                    exit="hidden"
-                    variants={composerVariants}
                     className="space-y-3"
                   >
                     {pendingFile ? (
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
+                      <div
                         className="flex items-center justify-between rounded-2xl border border-primary/30 bg-primary/10 px-4 py-2 text-sm text-primary"
                       >
                         <span className="truncate">
@@ -1108,19 +1892,20 @@ const ChatPage = () => {
                         >
                           <X className="size-4" />
                         </Button>
-                      </motion.div>
+                      </div>
                     ) : null}
 
                     <ChatComposer
                       key={selectedChatId || "__new_chat__"}
                       onSend={handleSendMessage}
-                      isSending={isCurrentChatSending}
-                      isAwaitingResponse={isCurrentChatSending}
+                      isSending={isThinkingIndicatorVisible}
+                      isAwaitingResponse={isThinkingIndicatorVisible}
                       disabled={isConversationLoading}
                       onUploadFile={(file) => dispatch(setPendingFile(file))}
                     />
-                  </motion.div>
-                </AnimatePresence>
+                  </div>
+                )}
+
               </div>
             </section>
           </div>
@@ -1143,7 +1928,6 @@ const ChatPage = () => {
               onDeleteChat={handleDeleteChat}
               deletingChatId={deletingChatId}
               isCreatingNewChat={isCreatingNewChat}
-              streamingChatIds={streamingChatIds}
             />
           </div>
         </SheetContent>
