@@ -58,6 +58,7 @@ import {
 } from "@/store/slices/chatSlice";
 import { startStreamingTask, updateStreamingTask, completeStreamingTask, errorTask, cleanupOldTasks, updateTask, } from "@/store/slices/longRunningTasksSlice";
 import { composerVariants, deriveTitleFromMessages, pageVariants } from "@/helpers/skylarChat";
+import { motion } from "framer-motion";
 
 const NEW_CHAT_KEY = "__new_chat__";
 // Delay the assistant response display slightly to avoid indicator flicker

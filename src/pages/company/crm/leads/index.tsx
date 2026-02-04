@@ -14,7 +14,7 @@ import { connectionMessagesService, EmailMessage, EmailMessageMetadata, PhoneScr
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { StatsCards } from "../shared/components";
 import { buildStats } from "../shared/hooks";
-import LeadEnrichmentModal from "@/components/lead-enrichment/LeadEnrichmentModal";
+import LeadEnrichmentModal from "@/pages/company/crm/leads/lead-enrichment/LeadEnrichmentModal";
 import { useEnrichmentConfigs } from "@/hooks/useEnrichmentConfigs";
 import type { SeniorityLevel } from "@/types/leadEnrichment";
 import { SENIORITY_OPTIONS } from "@/types/leadEnrichment";

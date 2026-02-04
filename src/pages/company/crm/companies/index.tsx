@@ -15,8 +15,8 @@ import { useCompaniesPageData } from "../shared/hooks";
 import { CompaniesQueryParams } from "@/services/companies.service";
 import { StatsCards, SearchInput, FilterButton, CompanyFiltersInline } from "../shared/components";
 import { buildStats } from "../shared/hooks";
-import LeadEnrichmentModal from "@/components/lead-enrichment/LeadEnrichmentModal";
-import SeniorityQuickSelector from "@/components/lead-enrichment/SeniorityQuickSelector";
+import LeadEnrichmentModal from "@/pages/company/crm/leads/lead-enrichment/LeadEnrichmentModal";
+import SeniorityQuickSelector from "@/pages/company/crm/leads/lead-enrichment/SeniorityQuickSelector";
 import { useEnrichmentConfigs } from "@/hooks/useEnrichmentConfigs";
 import type { SeniorityLevel } from "@/types/leadEnrichment";
 import { SENIORITY_OPTIONS } from "@/types/leadEnrichment";
@@ -107,13 +107,13 @@ const Index = () => {
       prevSenioritiesRef.current = null;
       return;
     }
-    try {localStorage.setItem('selectedSeniorities', JSON.stringify(selectedSeniorities));} catch (e) {console.error("localStorage save error:", e);}
-    const timeoutId = setTimeout(() => {updatePreferencesMutation.mutate({ selectedSeniorities });}, 500);
+    try { localStorage.setItem('selectedSeniorities', JSON.stringify(selectedSeniorities)); } catch (e) { console.error("localStorage save error:", e); }
+    const timeoutId = setTimeout(() => { updatePreferencesMutation.mutate({ selectedSeniorities }); }, 500);
     return () => clearTimeout(timeoutId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedSeniorities, seniorityOptions.length, isInitialized]);
 
-  useEffect(() => {setCompaniesLimit(getLimitForView(viewMode));setCompaniesPage(1);}, [viewMode]);
+  useEffect(() => { setCompaniesLimit(getLimitForView(viewMode)); setCompaniesPage(1); }, [viewMode]);
 
   const companiesParams = useMemo(() => {
     const params: CompaniesQueryParams = {
@@ -139,8 +139,8 @@ const Index = () => {
   const allCompaniesForFilters = unifiedData?.allCompaniesForFilters || [];
 
   const hasCompaniesGeneratingLeads = useMemo(() => companies.some(c => c.leadsGenerationStatus === "in_progress"), [companies]);
-  useEffect(() => {if (!hasCompaniesGeneratingLeads) return;const intervalId = setInterval(refetch, 5000);return () => clearInterval(intervalId);}, [hasCompaniesGeneratingLeads, refetch]);
-  useEffect(() => {setCompaniesPage(1);}, [filters, companiesLimit]);
+  useEffect(() => { if (!hasCompaniesGeneratingLeads) return; const intervalId = setInterval(refetch, 5000); return () => clearInterval(intervalId); }, [hasCompaniesGeneratingLeads, refetch]);
+  useEffect(() => { setCompaniesPage(1); }, [filters, companiesLimit]);
 
   const industryOptions = useMemo(() => {
     const industries = new Set<string>();

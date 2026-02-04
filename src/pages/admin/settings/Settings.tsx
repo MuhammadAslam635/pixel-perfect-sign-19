@@ -3,13 +3,13 @@ import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AdminLayout } from "@/components/dashboard/DashboardLayout";
-import { AdminProfileTab } from "@/components/settings/AdminProfileTab";
+import { AdminProfileTab } from "@/pages/admin/settings/components/AdminProfileTab";
 import { SecurityTab } from "@/components/settings/SecurityTab";
-import { IntegrationsTab } from "@/components/settings/IntegrationsTab";
+import { IntegrationsTab } from "@/pages/company/settings/components/IntegrationsTab";
 import { NotificationsTab } from "@/components/settings/NotificationsTab";
-import { AdminGlobalIntegrationsTab } from "@/components/admin/integrations/AdminGlobalIntegrationsTab";
-import { AdminCompanyMailgunTab } from "@/components/admin/integrations/AdminCompanyMailgunTab";
-import { PerplexityPromptTab } from "@/components/settings/PerplexityPromptTab";
+import { AdminGlobalIntegrationsTab } from "@/pages/admin/settings/components/AdminGlobalIntegrationsTab";
+import { AdminCompanyMailgunTab } from "@/pages/admin/settings/components/AdminCompanyMailgunTab";
+import { PerplexityPromptTab } from "@/pages/company/settings/components/PerplexityPromptTab";
 import { Lock, Plug, User, Shield, Database, Sparkles, Bell } from "lucide-react";
 
 const FadeIn: React.FC<{ children: React.ReactNode; delay?: number }> = ({ children, delay = 0 }) => (

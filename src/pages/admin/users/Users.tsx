@@ -9,7 +9,7 @@ import { rbacService } from "@/services/rbac.service";
 import { Role } from "@/types/rbac.types";
 import { toast } from "sonner";
 import { sanitizeErrorMessage } from "@/utils/errorMessages";
-import { UserProvisioningModal } from "@/components/admin/UserProvisioningModal";
+import { UserProvisioningModal } from "@/pages/admin/users/components/UserProvisioningModal";
 import StatCard from "./components/StatCard";
 import { UsersByRoleCard } from "./components/UsersByRoleCard";
 import { useQuery } from "@tanstack/react-query";

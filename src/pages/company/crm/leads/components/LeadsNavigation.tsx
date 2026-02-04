@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { Layers, Sparkles } from "lucide-react";
-import SeniorityQuickSelector from "@/components/lead-enrichment/SeniorityQuickSelector";
+import SeniorityQuickSelector from "@/pages/company/crm/leads/lead-enrichment/SeniorityQuickSelector";
 import type { SeniorityLevel, SeniorityOption } from "@/types/leadEnrichment";
 import { Company } from "@/services/companies.service";
 import { CrmNavigation } from "../../shared/components/CrmNavigation";

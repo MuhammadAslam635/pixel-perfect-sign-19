@@ -1,19 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import {
-  X,
-  CheckCircle2,
-  FileText,
-  FileUp,
-  Building2,
-  Facebook,
-  Mail,
-  Circle,
-  Loader2,
-  ChevronDown,
-  ChevronUp,
-} from "lucide-react";
+import { X, CheckCircle2, FileText, FileUp, Building2, Facebook, Mail, Circle, Loader2, ChevronDown, ChevronUp, } from "lucide-react";
 import { RootState } from "@/store/store";
 import { useProfileCompletion } from "@/hooks/useProfileCompletion";
 import { ProfileTask, ProfileTaskId } from "@/types/profileCompletion.types";
@@ -21,10 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import {
-  updatePanelCollapsedState,
-  getPanelCollapsedState,
-} from "@/utils/profileCompletionStorage";
+import { updatePanelCollapsedState, getPanelCollapsedState, } from "@/utils/profileCompletionStorage";
 
 // Task configuration with routes and icons
 const PROFILE_TASKS: ProfileTask[] = [
@@ -82,38 +67,24 @@ export const CompleteProfilePanel = () => {
   const navigate = useNavigate();
   const currentUser = useSelector((state: RootState) => state.auth.user);
   const userId = currentUser?._id || "";
-  
-  // Load collapsed state from localStorage
-  // If panel was collapsed, restore it as visible
-  // But if coming from skip onboarding, open expanded
   const checkIfSkipped = () => {
     return sessionStorage.getItem("onboarding_skipped") === "true";
   };
-  
   const initialCollapsedState = checkIfSkipped() ? false : (userId ? getPanelCollapsedState(userId) : false);
   const [isVisible, setIsVisible] = useState(initialCollapsedState);
   const [isCollapsed, setIsCollapsed] = useState(initialCollapsedState);
   const [isCheckingStatuses, setIsCheckingStatuses] = useState(false);
 
-  const {
-    progress,
-    isComplete,
-    getTaskStatus,
-    checkAllTasksStatus,
-    isLoading,
-  } = useProfileCompletion();
+  const { progress, isComplete, getTaskStatus, checkAllTasksStatus, isLoading, } = useProfileCompletion();
 
   // Get user's role name
   const getUserRoleName = (): string | null => {
     if (!currentUser) return null;
 
-    // Check populated roleId (new RBAC system)
     if (currentUser.roleId && typeof currentUser.roleId === "object") {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return (currentUser.roleId as any).name;
     }
 
-    // Fallback to legacy role string
     if (currentUser.role && typeof currentUser.role === "string") {
       return currentUser.role;
     }
@@ -264,7 +235,7 @@ export const CompleteProfilePanel = () => {
       console.log(`[CompleteProfile] Task ${task.id} already completed, skipping navigation`);
       return;
     }
-    
+
     console.log(`[CompleteProfile] Navigating to task: ${task.id}, route: ${task.route}`);
     navigate(task.route);
     // Collapse panel when task is clicked (don't close completely)
@@ -349,9 +320,8 @@ export const CompleteProfilePanel = () => {
                   <p className="text-xs text-white/60">
                     {incompleteTasks.length === 0
                       ? "All tasks completed!"
-                      : `${incompleteTasks.length} ${
-                          incompleteTasks.length === 1 ? "task" : "tasks"
-                        } remaining`}
+                      : `${incompleteTasks.length} ${incompleteTasks.length === 1 ? "task" : "tasks"
+                      } remaining`}
                   </p>
                 )}
               </div>
@@ -423,75 +393,75 @@ export const CompleteProfilePanel = () => {
           {/* Task List - Hidden when collapsed */}
           {!isCollapsed && (
             <div className="flex-1 overflow-y-auto scrollbar-hide p-4">
-            {isLoading && (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-cyan-400" />
-                <span className="ml-2 text-sm text-white/60">
-                  Checking status...
-                </span>
-              </div>
-            )}
+              {isLoading && (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-cyan-400" />
+                  <span className="ml-2 text-sm text-white/60">
+                    Checking status...
+                  </span>
+                </div>
+              )}
 
-            {!isLoading && (
-              <div className="space-y-2">
-                {PROFILE_TASKS.map((task) => {
-                  const isCompleted = getTaskStatus(task.id);
-                  const Icon = task.icon;
+              {!isLoading && (
+                <div className="space-y-2">
+                  {PROFILE_TASKS.map((task) => {
+                    const isCompleted = getTaskStatus(task.id);
+                    const Icon = task.icon;
 
-                  return (
-                    <button
-                      key={task.id}
-                      onClick={() => handleTaskClick(task)}
-                      disabled={isCompleted}
-                      className={cn(
-                        "w-full p-4 rounded-xl border transition-all duration-200",
-                        "flex items-start gap-3 text-left group",
-                        isCompleted
-                          ? "bg-green-500/10 border-green-500/30 opacity-50 cursor-not-allowed"
-                          : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-cyan-400/50 hover:scale-[1.02] cursor-pointer"
-                      )}
-                    >
-                      {/* Icon */}
-                      <div
+                    return (
+                      <button
+                        key={task.id}
+                        onClick={() => handleTaskClick(task)}
+                        disabled={isCompleted}
                         className={cn(
-                          "flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center transition-all",
+                          "w-full p-4 rounded-xl border transition-all duration-200",
+                          "flex items-start gap-3 text-left group",
                           isCompleted
-                            ? "bg-green-500/20 text-green-400"
-                            : "bg-cyan-500/10 text-cyan-400 group-hover:bg-cyan-500/20"
+                            ? "bg-green-500/10 border-green-500/30 opacity-50 cursor-not-allowed"
+                            : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-cyan-400/50 hover:scale-[1.02] cursor-pointer"
                         )}
                       >
-                        {isCompleted ? (
-                          <CheckCircle2 className="h-5 w-5" />
-                        ) : (
-                          <Icon className="h-5 w-5" />
-                        )}
-                      </div>
+                        {/* Icon */}
+                        <div
+                          className={cn(
+                            "flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center transition-all",
+                            isCompleted
+                              ? "bg-green-500/20 text-green-400"
+                              : "bg-cyan-500/10 text-cyan-400 group-hover:bg-cyan-500/20"
+                          )}
+                        >
+                          {isCompleted ? (
+                            <CheckCircle2 className="h-5 w-5" />
+                          ) : (
+                            <Icon className="h-5 w-5" />
+                          )}
+                        </div>
 
-                      {/* Content */}
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-medium text-white mb-0.5">
-                          {task.title}
-                        </h4>
-                        <p className="text-xs text-white/60">
-                          {task.description}
-                        </p>
-                      </div>
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-sm font-medium text-white mb-0.5">
+                            {task.title}
+                          </h4>
+                          <p className="text-xs text-white/60">
+                            {task.description}
+                          </p>
+                        </div>
 
-                      {/* Status Indicator */}
-                      <div className="flex-shrink-0">
-                        {isCompleted ? (
-                          <div className="w-5 h-5 rounded-full bg-green-500/30 flex items-center justify-center">
-                            <div className="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.6)]" />
-                          </div>
-                        ) : (
-                          <Circle className="h-5 w-5 text-white/30" />
-                        )}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+                        {/* Status Indicator */}
+                        <div className="flex-shrink-0">
+                          {isCompleted ? (
+                            <div className="w-5 h-5 rounded-full bg-green-500/30 flex items-center justify-center">
+                              <div className="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.6)]" />
+                            </div>
+                          ) : (
+                            <Circle className="h-5 w-5 text-white/30" />
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
 

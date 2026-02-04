@@ -107,7 +107,7 @@ export const UserProvisioningModal = ({
         (error as { response?: { data?: { message?: string; error?: string; logs?: LogEntry[] } } })?.response?.data?.error ||
         (error as { message?: string })?.message ||
         "Failed to configure Twilio";
-      
+
       const errorResponse = (error as { response?: { data?: { message?: string; error?: string; logs?: LogEntry[] } } })?.response?.data;
       if (errorResponse?.logs) {
         setTwilioLogs(errorResponse.logs as LogEntry[]);
@@ -116,7 +116,7 @@ export const UserProvisioningModal = ({
           { type: "error" as const, message: errorMessage }
         ]);
       }
-      
+
       setTwilioStatus({ success: false, error: errorMessage });
       toast.error(errorMessage);
     } finally {
@@ -166,7 +166,7 @@ export const UserProvisioningModal = ({
         (error as { response?: { data?: { message?: string; error?: string; logs?: LogEntry[] } } })?.response?.data?.error ||
         (error as { message?: string })?.message ||
         "Failed to configure ElevenLabs";
-      
+
       const errorResponse = (error as { response?: { data?: { message?: string; error?: string; logs?: LogEntry[] } } })?.response?.data;
       if (errorResponse?.logs) {
         setElevenlabsLogs(errorResponse.logs as LogEntry[]);
@@ -175,7 +175,7 @@ export const UserProvisioningModal = ({
           { type: "error" as const, message: errorMessage }
         ]);
       }
-      
+
       setElevenlabsStatus({ success: false, error: errorMessage });
       toast.error(errorMessage);
     } finally {
@@ -286,13 +286,12 @@ export const UserProvisioningModal = ({
                       className={`h-5 w-5 ${twilioStatusDisplay.color}`}
                     />
                     <Badge
-                      className={`${
-                        twilioStatusDisplay.color === "text-green-400"
+                      className={`${twilioStatusDisplay.color === "text-green-400"
                           ? "bg-green-500/20 text-green-300 border-green-500/30"
                           : twilioStatusDisplay.color === "text-red-400"
-                          ? "bg-red-500/20 text-red-300 border-red-500/30"
-                          : "bg-yellow-500/20 text-yellow-300 border-yellow-500/30"
-                      } border rounded-full px-3 py-1 text-xs`}
+                            ? "bg-red-500/20 text-red-300 border-red-500/30"
+                            : "bg-yellow-500/20 text-yellow-300 border-yellow-500/30"
+                        } border rounded-full px-3 py-1 text-xs`}
                     >
                       {twilioStatusDisplay.text}
                     </Badge>
@@ -395,13 +394,12 @@ export const UserProvisioningModal = ({
                       className={`h-5 w-5 ${elevenlabsStatusDisplay.color}`}
                     />
                     <Badge
-                      className={`${
-                        elevenlabsStatusDisplay.color === "text-green-400"
+                      className={`${elevenlabsStatusDisplay.color === "text-green-400"
                           ? "bg-green-500/20 text-green-300 border-green-500/30"
                           : elevenlabsStatusDisplay.color === "text-red-400"
-                          ? "bg-red-500/20 text-red-300 border-red-500/30"
-                          : "bg-yellow-500/20 text-yellow-300 border-yellow-500/30"
-                      } border rounded-full px-3 py-1 text-xs`}
+                            ? "bg-red-500/20 text-red-300 border-red-500/30"
+                            : "bg-yellow-500/20 text-yellow-300 border-yellow-500/30"
+                        } border rounded-full px-3 py-1 text-xs`}
                     >
                       {elevenlabsStatusDisplay.text}
                     </Badge>

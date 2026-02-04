@@ -22,7 +22,7 @@ import { logout, updateUser } from "@/store/slices/authSlice";
 import { userService } from "@/services/user.service";
 import { rbacService } from "@/services/rbac.service";
 import { Role } from "@/types/rbac.types";
-import { TimezoneSelector } from "./TimezoneSelector";
+import { TimezoneSelector } from "../../../../components/settings/TimezoneSelector";
 import { TimePicker } from "@/components/ui/time-picker";
 import { sanitizeErrorMessage } from "@/utils/errorMessages";
 
@@ -56,7 +56,7 @@ export const ProfileTab = () => {
     end: "17:00",
   });
   const [isSavingActiveHours, setIsSavingActiveHours] = useState(false);
-  
+
   const [errors, setErrors] = useState<ProfileErrors>({
     name: "",
     firstName: "",
@@ -136,13 +136,13 @@ export const ProfileTab = () => {
 
   const handleTimezoneChange = async (newTimezone: string | null) => {
     setTimezone(newTimezone);
-    
+
     try {
       setIsSavingTimezone(true);
       const response = await userService.updateUserPreferences({
         timezone: newTimezone,
       });
-      
+
       if (response.success) {
         toast({
           title: "Timezone updated",
@@ -322,13 +322,13 @@ export const ProfileTab = () => {
   // CompanyAdmin MUST be allowed to edit Company Name
   const getUserRoleName = (): string | null => {
     if (!user) return null;
-    
+
     // PRIORITY 1: Check populated roleId (new RBAC system)
     if (user.roleId && typeof user.roleId === "object") {
       // @ts-ignore
       return (user.roleId as any).name;
     }
-    
+
     // PRIORITY 2: Check string roleId against fetched roles
     if (user.roleId && typeof user.roleId === "string") {
       const foundRole = availableRoles.find(r => r._id === user.roleId);
@@ -375,11 +375,10 @@ export const ProfileTab = () => {
               value={formState.name}
               onChange={handleInputChange}
               disabled={!canEditCompanyName}
-              className={`bg-white/[0.04] border-white/10 text-white ${
-                !canEditCompanyName
+              className={`bg-white/[0.04] border-white/10 text-white ${!canEditCompanyName
                   ? "opacity-60 cursor-not-allowed"
                   : ""
-              } placeholder:text-white/40`}
+                } placeholder:text-white/40`}
             />
             {!canEditCompanyName && (
               <p className="text-xs text-white/50">

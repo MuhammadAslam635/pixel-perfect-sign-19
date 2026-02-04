@@ -22,7 +22,7 @@ import { Upload, ImageIcon, Circle, CheckCircle2, Loader2 } from "lucide-react";
 import { CreateCampaignData, campaignsService, CampaignStreamEvent, DocumentCreationStep } from "@/services/campaigns.service";
 import { useToast } from "@/hooks/use-toast";
 import { sanitizeErrorMessage } from "@/utils/errorMessages";
-import ImageCarousel from "../../pages/company/campaigns/components/ImageCarousel";
+import ImageCarousel from "./ImageCarousel";
 
 interface CreateCampaignModalProps {
   isOpen: boolean;

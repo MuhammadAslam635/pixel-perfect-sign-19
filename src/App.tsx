@@ -14,7 +14,7 @@ import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { updateUser } from "./store/slices/authSlice";
 import { fetchAndSyncUser } from "./utils/authSync";
-import { CompleteProfilePanel } from "@/components/completeProfile/CompleteProfilePanel";
+import { CompleteProfilePanel } from "@/pages/shared/completeProfile/CompleteProfilePanel";
 
 const queryClient = new QueryClient({
   defaultOptions: {

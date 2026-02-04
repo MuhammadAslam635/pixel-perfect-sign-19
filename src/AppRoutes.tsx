@@ -18,9 +18,9 @@ const ChatPage = lazy(() => import("@/pages/company/skylarChat/Chat"));
 const AgentsPage = lazy(() => import("@/pages/company/agents"));
 const AgentDetails = lazy(() => import("@/pages/company/agents/components/AgentDetails"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
-const SettingsPage = lazy(() => import("@/pages/Settings"));
-const Feedback = lazy(() => import("@/pages/Feedback/Feedback"));
-const FeedbackChat = lazy(() => import("@/pages/Feedback/FeedbackChat"));
+const SettingsPage = lazy(() => import("@/pages/company/settings/Settings"));
+const Feedback = lazy(() => import("@/pages/shared/Feedback/Feedback"));
+const FeedbackChat = lazy(() => import("@/pages/shared/Feedback/FeedbackChat"));
 const CompanyKnowledge = lazy(() => import("@/pages/company/companyKnowledgeBase"));
 const CampaignsPage = lazy(() => import("@/pages/company/campaigns"));
 const FacebookCampaignsPage = lazy(() => import("@/pages/company/campaigns/facebook"));
@@ -29,15 +29,15 @@ const FacebookCampaignAnalysisPage = lazy(
 );
 const ProspectsPage = lazy(() => import("@/pages/company/prospects"));
 const NewsPage = lazy(() => import("@/pages/company/news/News"));
-const UserList = lazy(() => import("@/pages/users/UserList"));
-const UserCreate = lazy(() => import("@/pages/users/UserCreate"));
-const UserEdit = lazy(() => import("@/pages/users/UserEdit"));
+const UserList = lazy(() => import("@/pages/company/users/UserList"));
+const UserCreate = lazy(() => import("@/pages/company/users/UserCreate"));
+const UserEdit = lazy(() => import("@/pages/company/users/UserEdit"));
 // const ContactNow = lazy(() => import("@/pages/twilio-calling/ContactNow"));
 // const FollowupTemplatesPage = lazy(() => import("@/pages/company/crm/followups"));
 const FollowUp2Page = lazy(() => import("@/pages/company/crm/followups"));
 const LeadDetailView = lazy(() => import("@/pages/company/crm/leads/leaddetailview"));
-const RoleList = lazy(() => import("@/pages/roles/RoleList"));
-const RoleForm = lazy(() => import("@/pages/roles/RoleForm"));
+const RoleList = lazy(() => import("@/pages/company/roles/RoleList"));
+const RoleForm = lazy(() => import("@/pages/company/roles/RoleForm"));
 const ModuleList = lazy(() => import("@/pages/modules/ModuleList"));
 const InboxPage = lazy(() =>
   import("@/pages/company/crm/emails").then((module) => ({ default: module.InboxPage }))

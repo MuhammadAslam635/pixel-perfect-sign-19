@@ -4,15 +4,15 @@ import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
-import { ProfileTab as CompanyProfileTab } from "@/components/settings/ProfileTab";
+import { ProfileTab as CompanyProfileTab } from "@/pages/company/settings/components/ProfileTab";
 import { ProfileTabCompanyUser } from "@/components/settings/ProfileTabCompanyUser";
 import { NotificationsTab } from "@/components/settings/NotificationsTab";
-import { IntegrationsTab } from "@/components/settings/IntegrationsTab";
+import { IntegrationsTab } from "@/pages/company/settings/components/IntegrationsTab";
 import { SecurityTab } from "@/components/settings/SecurityTab";
-import { AdminProfileTab } from "@/components/settings/AdminProfileTab";
+import { AdminProfileTab } from "@/pages/admin/settings/components/AdminProfileTab";
 import { RootState } from "@/store/store";
 import { Lock, Plug, Settings as SettingsIcon, User, Sparkles } from "lucide-react";
-import { PerplexityPromptTab } from "@/components/settings/PerplexityPromptTab";
+import { PerplexityPromptTab } from "@/pages/company/settings/components/PerplexityPromptTab";
 
 const SettingsPage = () => {
   const location = useLocation();
@@ -105,8 +105,7 @@ const SettingsPage = () => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.6 }}
             >
-              Manage your account preferences, security, and integrations in one
-              place.
+              Manage your account preferences, security, and integrations in one place.
             </motion.p>
           </header>
 

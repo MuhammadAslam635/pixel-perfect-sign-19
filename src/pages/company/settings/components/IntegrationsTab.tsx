@@ -35,7 +35,7 @@ import {
   type FacebookAdAccount,
   type FacebookIntegration,
 } from "@/services/facebook.service";
-import { AdminGlobalIntegrationsTab } from "@/components/admin/integrations/AdminGlobalIntegrationsTab";
+import { AdminGlobalIntegrationsTab } from "@/pages/admin/settings/components/AdminGlobalIntegrationsTab";
 import facebookLogo from "@/assets/facebook-icon.svg";
 import mailgunLogo from "@/assets/mailgun-icon.png";
 
@@ -1294,8 +1294,8 @@ export const IntegrationsTab = () => {
                   {isMicrosoftStatusLoading
                     ? "Checking connection..."
                     : microsoftConnected
-                    ? "Connected"
-                    : "Connect Microsoft to sync contacts and calendars."}
+                      ? "Connected"
+                      : "Connect Microsoft to sync contacts and calendars."}
                 </p>
               </div>
             </div>
@@ -1337,8 +1337,8 @@ export const IntegrationsTab = () => {
                   {!canManageMicrosoft
                     ? "Restricted"
                     : isMicrosoftActionLoading
-                    ? "Opening..."
-                    : "Connect"}
+                      ? "Opening..."
+                      : "Connect"}
                 </Button>
               )}
             </div>
@@ -1395,8 +1395,8 @@ export const IntegrationsTab = () => {
                   {isIntegrationLoading
                     ? "Checking connection..."
                     : googleConnected
-                    ? "Connected"
-                    : "Connect Google account"}
+                      ? "Connected"
+                      : "Connect Google account"}
                 </p>
               </div>
             </div>
@@ -1479,9 +1479,8 @@ export const IntegrationsTab = () => {
                       className="text-white/70 hover:text-white flex-shrink-0"
                     >
                       <RefreshCw
-                        className={`h-4 w-4 ${
-                          isLoadingCustomers ? "animate-spin" : ""
-                        }`}
+                        className={`h-4 w-4 ${isLoadingCustomers ? "animate-spin" : ""
+                          }`}
                       />
                     </Button>
                   </div>
@@ -1536,8 +1535,8 @@ export const IntegrationsTab = () => {
                   {isFacebookStatusLoading
                     ? "Checking connection..."
                     : facebookConnected
-                    ? "Connected"
-                    : "Connect Facebook account"}
+                      ? "Connected"
+                      : "Connect Facebook account"}
                 </p>
               </div>
             </div>
@@ -1595,9 +1594,8 @@ export const IntegrationsTab = () => {
                     className="text-white/70 hover:text-white flex-shrink-0"
                   >
                     <RefreshCw
-                      className={`h-4 w-4 ${
-                        isRefreshingPages ? "animate-spin" : ""
-                      }`}
+                      className={`h-4 w-4 ${isRefreshingPages ? "animate-spin" : ""
+                        }`}
                     />
                   </Button>
                 </div>
@@ -1646,9 +1644,8 @@ export const IntegrationsTab = () => {
                   className="text-white/70 hover:text-white flex-shrink-0"
                 >
                   <RefreshCw
-                    className={`h-4 w-4 ${
-                      isBusinessAccountsLoading ? "animate-spin" : ""
-                    }`}
+                    className={`h-4 w-4 ${isBusinessAccountsLoading ? "animate-spin" : ""
+                      }`}
                   />
                 </Button>
               </div>
@@ -1670,7 +1667,7 @@ export const IntegrationsTab = () => {
                 </SelectTrigger>
                 <SelectContent>
                   {businessAccountsData?.data &&
-                  businessAccountsData.data.length > 0 ? (
+                    businessAccountsData.data.length > 0 ? (
                     businessAccountsData.data.map((account) => (
                       <SelectItem key={account.id} value={account.id}>
                         {account.name}
@@ -1728,9 +1725,8 @@ export const IntegrationsTab = () => {
                   className="text-white/70 hover:text-white flex-shrink-0"
                 >
                   <RefreshCw
-                    className={`h-4 w-4 ${
-                      isLoadingAdAccounts ? "animate-spin" : ""
-                    }`}
+                    className={`h-4 w-4 ${isLoadingAdAccounts ? "animate-spin" : ""
+                      }`}
                   />
                 </Button>
               </div>
@@ -1812,8 +1808,8 @@ export const IntegrationsTab = () => {
                     {isLoadingMailgun
                       ? "Checking configuration..."
                       : mailgunConfigured
-                      ? "Configured"
-                      : "Configure Mailgun API settings for email functionality."}
+                        ? "Configured"
+                        : "Configure Mailgun API settings for email functionality."}
                   </p>
                 </div>
               </div>
@@ -1839,10 +1835,10 @@ export const IntegrationsTab = () => {
                   {!canManageMailgun
                     ? "Restricted"
                     : showMailgunForm
-                    ? "Close"
-                    : mailgunConfigured
-                    ? "Edit Configuration"
-                    : "Configure"}
+                      ? "Close"
+                      : mailgunConfigured
+                        ? "Edit Configuration"
+                        : "Configure"}
                 </Button>
               </div>
             </div>

@@ -17,7 +17,7 @@ import { getUserData } from "@/utils/authHelpers";
 import { RootState } from "@/store/store";
 import { logout, updateUser } from "@/store/slices/authSlice";
 import { userService } from "@/services/user.service";
-import { TimezoneSelector } from "./TimezoneSelector";
+import { TimezoneSelector } from "../../../../components/settings/TimezoneSelector";
 import { sanitizeErrorMessage } from "@/utils/errorMessages";
 
 interface AdminProfileForm {
@@ -98,13 +98,13 @@ export const AdminProfileTab = () => {
 
   const handleTimezoneChange = async (newTimezone: string | null) => {
     setTimezone(newTimezone);
-    
+
     try {
       setIsSavingTimezone(true);
       const response = await userService.updateUserPreferences({
         timezone: newTimezone,
       });
-      
+
       if (response.success) {
         toast({
           title: "Timezone updated",

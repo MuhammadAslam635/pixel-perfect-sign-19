@@ -4,7 +4,7 @@ import { MobileNavigation } from "./MobileNavigation";
 import Logo from "../Logo";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { CompleteProfileButton } from "@/components/completeProfile/CompleteProfileButton";
+import { CompleteProfileButton } from "@/pages/shared/completeProfile/CompleteProfileButton";
 
 const DashboardHeader = () => {
   const [isScrolled, setIsScrolled] = useState(false);
