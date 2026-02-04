@@ -86,7 +86,7 @@ export const CrmNavigation = () => {
   };
 
   return (
-    <nav className="hidden lg:flex scrollbar-hide  min-w-0 w-full w-auto items-center justify-start gap-2 overflow-x-auto flex-nowrap snap-x snap-mandatory ">
+    <nav className="hidden md:flex scrollbar-hide  min-w-0 w-full w-auto items-center justify-start gap-2 overflow-x-auto flex-nowrap snap-x snap-mandatory ">
       {visibleLinks.map((link) => {
         const Icon = link.icon;
         const isActive = activeNav === link.id;

@@ -1628,54 +1628,54 @@ const ChatPage = () => {
       if (apiMessageIds.has(message._id)) {
         return false;
       }
-
-      // If this is a temp message, check if it should be replaced by a server message
-      if (message._id.startsWith("temp-")) {
-        const tempTimestamp = parseInt(message._id.replace("temp-", ""));
-        const signature = `${message.role}-${message.content}`;
-
-        // Only match with server messages created within 30 seconds after the temp message
-        const matchingServerMessage = apiMessages.find((serverMsg) => {
-          if (`${serverMsg.role}-${serverMsg.content}` !== signature) {
-            return false;
-          }
-          const serverTimestamp = new Date(serverMsg.createdAt).getTime();
-          const timeDiff = serverTimestamp - tempTimestamp;
-          // Server message should be created after temp message, within 30 seconds
-          return timeDiff >= 0 && timeDiff <= 30000;
-        });
-
-        // If we found a matching recent server message, filter out the temp message
-        if (matchingServerMessage) {
-          return false;
-        }
-
-        // Keep temp messages for up to 30 seconds, then remove them (in case of errors)
-        const tempAge = Date.now() - tempTimestamp;
-        return tempAge < 30000;
-      }
-
-      // For non-temp messages, keep them if ID doesn't match
       return true;
     });
 
-    // Stabilize keys without mutating source objects
-    const optimisticUsersForKey = filteredOptimistic.filter(
-      (m) => m.role === "user"
-    );
-    const optimisticIdByContent = new Map<string, string>();
-    optimisticUsersForKey.forEach((m) => {
-      if (m.content) optimisticIdByContent.set(m.content, m._id);
+    // Map content to list of messages to handle duplicates, sorted by creation time
+    const optimisticMsgsByContent = new Map<string, ChatMessage[]>();
+    filteredOptimistic.forEach((m) => {
+      if (m.role === "user" && m.content) {
+        const list = optimisticMsgsByContent.get(m.content) || [];
+        list.push(m);
+        optimisticMsgsByContent.set(m.content, list);
+      }
     });
 
-    const serverWithStableIds = apiMessages.map((m) => {
-      if (m.role === "user" && m.content) {
-        const optId = optimisticIdByContent.get(m.content);
-        if (optId) {
-          return { ...m, _id: optId };
+    const serverWithStableIds = apiMessages.map((sm) => {
+      if (sm.role === "user" && sm.content) {
+        const candidates = optimisticMsgsByContent.get(sm.content);
+        if (candidates && candidates.length > 0) {
+          // Only stabilize if the server message is temporally related to the optimistic message
+          // This prevents old server messages from "stealing" the ID of new pending messages
+          const smTime = new Date(sm.createdAt).getTime();
+
+          // Find the first candidate that could plausibly be this message
+          // We expect server message to be created after or very close to optimistic message
+          const matchIndex = candidates.findIndex((optMsg) => {
+            let optTime = new Date(optMsg.createdAt).getTime();
+            // Try to extract more precise timestamp from temp ID if available
+            if (optMsg._id.startsWith("temp-")) {
+              const parts = optMsg._id.split("-");
+              if (parts.length >= 2) {
+                const ts = parseInt(parts[1]);
+                if (!isNaN(ts)) optTime = ts;
+              }
+            }
+
+            const diff = smTime - optTime;
+            // Allow server message to be up to 30s newer, and allow slight negative (100ms) for clock skew
+            // We must be strict on the lower bound to prevent matching old server messages with new pending messages
+            return diff >= -100 && diff <= 30000;
+          });
+
+          if (matchIndex !== -1) {
+            const match = candidates[matchIndex];
+            candidates.splice(matchIndex, 1); // Consume this candidate
+            return { ...sm, _id: match._id };
+          }
         }
       }
-      return { ...m };
+      return { ...sm };
     });
 
     // Optionally delay showing the latest assistant response to avoid micro flicker
