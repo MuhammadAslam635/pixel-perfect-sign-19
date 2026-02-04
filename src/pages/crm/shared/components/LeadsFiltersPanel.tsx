@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/multi-select";
 import { CountrySelect } from "@/components/ui/country-select";
 import countryList from "react-select-country-list";
+import { Save, Check } from "lucide-react";
+import { toast } from "sonner";
 
 // Predefined seniority levels (common across most organizations)
 const PREDEFINED_SENIORITY_OPTIONS: MultiSelectOption[] = [
@@ -27,6 +29,32 @@ const PREDEFINED_SENIORITY_OPTIONS: MultiSelectOption[] = [
   { value: "intern", label: "Intern" },
 ];
 
+// LocalStorage key for saved seniority filter
+const SAVED_SENIORITY_FILTER_KEY = "savedSeniorityFilter";
+
+// Utility functions for localStorage persistence
+const saveSeniorityFilter = (filter: string[]) => {
+  try {
+    localStorage.setItem(SAVED_SENIORITY_FILTER_KEY, JSON.stringify(filter));
+    return true;
+  } catch (error) {
+    console.error("Failed to save seniority filter:", error);
+    return false;
+  }
+};
+
+const loadSeniorityFilter = (): string[] => {
+  try {
+    const saved = localStorage.getItem(SAVED_SENIORITY_FILTER_KEY);
+    if (saved) {
+      return JSON.parse(saved);
+    }
+  } catch (error) {
+    console.error("Failed to load seniority filter:", error);
+  }
+  return [];
+};
+
 interface LeadsFiltersInlineProps {
   // Country filter
   countryFilter: string[];
@@ -35,6 +63,7 @@ interface LeadsFiltersInlineProps {
   // Seniority filter
   seniorityFilter: string[];
   onSeniorityFilterChange: (value: string[]) => void;
+  onLoadSavedSeniority?: () => void;
 
   // Stage filter
   stageFilter: string[];
@@ -82,9 +111,46 @@ export const LeadsFiltersInline = ({
   onSortByChange,
   hasFavouriteFilter,
   onHasFavouriteFilterChange,
+  onLoadSavedSeniority,
 }: LeadsFiltersInlineProps) => {
   // Use predefined seniority options
   const seniorityOptions = PREDEFINED_SENIORITY_OPTIONS;
+  const [savedFilter, setSavedFilter] = useState<string[]>([]);
+  const [isSaved, setIsSaved] = useState(false);
+
+  // Load saved filter on mount
+  useEffect(() => {
+    const saved = loadSeniorityFilter();
+    setSavedFilter(saved);
+    // Check if current filter matches saved filter
+    setIsSaved(
+      JSON.stringify([...seniorityFilter].sort()) ===
+        JSON.stringify([...saved].sort())
+    );
+  }, [seniorityFilter]);
+
+  const handleSaveSeniorityFilter = () => {
+    if (saveSeniorityFilter(seniorityFilter)) {
+      setSavedFilter([...seniorityFilter]);
+      setIsSaved(true);
+      toast.success("Seniority filter saved");
+    } else {
+      toast.error("Failed to save seniority filter");
+    }
+  };
+
+  const handleLoadSavedSeniority = () => {
+    const saved = loadSeniorityFilter();
+    if (saved.length > 0) {
+      onSeniorityFilterChange(saved);
+      if (onLoadSavedSeniority) {
+        onLoadSavedSeniority();
+      }
+      toast.success("Saved seniority filter loaded");
+    } else {
+      toast.info("No saved seniority filter found");
+    }
+  };
 
   const countryOptions = useMemo(
     () => countryList().getData().map((c) => ({ value: c.label, label: c.label })).sort((a, b) => {
@@ -157,19 +223,49 @@ export const LeadsFiltersInline = ({
         <label className="text-[11px] uppercase tracking-[0.08em] text-gray-400 whitespace-nowrap">
           Seniority:
         </label>
-        <div className="w-32">
-          <MultiSelect
-            options={seniorityOptions}
-            value={seniorityFilter}
-            onChange={onSeniorityFilterChange}
-            placeholder="All seniorities"
-            searchPlaceholder="Search seniority..."
-            emptyMessage="No seniority levels found."
-            className="h-8 text-xs"
-            maxDisplayItems={1}
-            popoverWidth="w-[280px]"
-            showCount={true}
-          />
+        <div className="flex items-center gap-1">
+          <div className="w-32">
+            <MultiSelect
+              options={seniorityOptions}
+              value={seniorityFilter}
+              onChange={onSeniorityFilterChange}
+              placeholder="All seniorities"
+              searchPlaceholder="Search seniority..."
+              emptyMessage="No seniority levels found."
+              className="h-8 text-xs"
+              maxDisplayItems={1}
+              popoverWidth="w-[280px]"
+              showCount={true}
+            />
+          </div>
+          <Button
+            size="sm"
+            variant="ghost"
+            className={`h-8 w-8 p-0 ${
+              isSaved
+                ? "text-green-400 hover:text-green-300"
+                : "text-gray-400 hover:text-white"
+            }`}
+            onClick={handleSaveSeniorityFilter}
+            title="Save seniority filter"
+          >
+            {isSaved ? (
+              <Check className="h-4 w-4" />
+            ) : (
+              <Save className="h-4 w-4" />
+            )}
+          </Button>
+          {savedFilter.length > 0 && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-8 px-2 text-xs text-gray-400 hover:text-white"
+              onClick={handleLoadSavedSeniority}
+              title="Load saved seniority filter"
+            >
+              Load
+            </Button>
+          )}
         </div>
       </div>
 
@@ -262,6 +358,7 @@ interface LeadsFiltersPanelProps {
   // Seniority filter
   seniorityFilter: string[];
   onSeniorityFilterChange: (value: string[]) => void;
+  onLoadSavedSeniority?: () => void;
 
   // Checkbox filters
   hasEmailFilter: boolean;
@@ -291,9 +388,46 @@ export const LeadsFiltersPanel = ({
   hasFilters,
   onResetFilters,
   onClose,
+  onLoadSavedSeniority,
 }: LeadsFiltersPanelProps) => {
   // Use predefined seniority options
   const seniorityOptions = PREDEFINED_SENIORITY_OPTIONS;
+  const [savedFilter, setSavedFilter] = useState<string[]>([]);
+  const [isSaved, setIsSaved] = useState(false);
+
+  // Load saved filter on mount
+  useEffect(() => {
+    const saved = loadSeniorityFilter();
+    setSavedFilter(saved);
+    // Check if current filter matches saved filter
+    setIsSaved(
+      JSON.stringify([...seniorityFilter].sort()) ===
+        JSON.stringify([...saved].sort())
+    );
+  }, [seniorityFilter]);
+
+  const handleSaveSeniorityFilter = () => {
+    if (saveSeniorityFilter(seniorityFilter)) {
+      setSavedFilter([...seniorityFilter]);
+      setIsSaved(true);
+      toast.success("Seniority filter saved");
+    } else {
+      toast.error("Failed to save seniority filter");
+    }
+  };
+
+  const handleLoadSavedSeniority = () => {
+    const saved = loadSeniorityFilter();
+    if (saved.length > 0) {
+      onSeniorityFilterChange(saved);
+      if (onLoadSavedSeniority) {
+        onLoadSavedSeniority();
+      }
+      toast.success("Saved seniority filter loaded");
+    } else {
+      toast.info("No saved seniority filter found");
+    }
+  };
   return (
     <div className="flex flex-col gap-3 text-gray-100 text-xs">
       <div>
@@ -308,9 +442,41 @@ export const LeadsFiltersPanel = ({
         />
       </div>
       <div>
-        <p className="text-[11px] uppercase tracking-[0.08em] text-gray-400 mb-2">
-          Seniority Level
-        </p>
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-[11px] uppercase tracking-[0.08em] text-gray-400">
+            Seniority Level
+          </p>
+          <div className="flex items-center gap-1">
+            <Button
+              size="sm"
+              variant="ghost"
+              className={`h-7 w-7 p-0 ${
+                isSaved
+                  ? "text-green-400 hover:text-green-300"
+                  : "text-gray-400 hover:text-white"
+              }`}
+              onClick={handleSaveSeniorityFilter}
+              title="Save seniority filter"
+            >
+              {isSaved ? (
+                <Check className="h-3.5 w-3.5" />
+              ) : (
+                <Save className="h-3.5 w-3.5" />
+              )}
+            </Button>
+            {savedFilter.length > 0 && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-7 px-2 text-xs text-gray-400 hover:text-white"
+                onClick={handleLoadSavedSeniority}
+                title="Load saved seniority filter"
+              >
+                Load
+              </Button>
+            )}
+          </div>
+        </div>
         <MultiSelect
           options={seniorityOptions}
           value={seniorityFilter}
