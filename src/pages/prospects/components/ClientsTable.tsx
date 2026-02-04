@@ -173,9 +173,8 @@ const ClientsTable: React.FC<ClientsTableProps> = ({
                 }}
               ></div>
               <RefreshCwIcon
-                className={`h-4 w-4 flex-shrink-0 text-white drop-shadow-[0_8px_18px_rgba(62,100,180,0.45)] !transition-none ${
-                  isRefetching || isLoading ? "animate-spin" : ""
-                }`}
+                className={`h-4 w-4 flex-shrink-0 text-white drop-shadow-[0_8px_18px_rgba(62,100,180,0.45)] !transition-none ${isRefetching || isLoading ? "animate-spin" : ""
+                  }`}
               />
               <span className="whitespace-nowrap relative z-10">
                 {isRefetching || isLoading ? "Refreshing..." : "Refresh"}
@@ -248,87 +247,87 @@ const ClientsTable: React.FC<ClientsTableProps> = ({
             </div>
 
             {/* Table Body - Scrollable Container */}
-            <div className="w-full max-h-[150px] overflow-hidden flex flex-col min-h-0">
+            <div className="w-full max-h-[600px] overflow-hidden flex flex-col min-h-0">
               <div className="flex-1 min-h-0 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                 <div
                   className="rounded-2xl overflow-hidden bg-[#FFFFFF03]"
                 >
 
-                {data?.data.docs.map((client, index) => (
-                  <div
-                    key={client._id}
-                    className="grid grid-cols-[1.5fr_1fr_0.8fr_0.8fr_0.8fr_0.6fr_80px] items-center gap-4 px-6 py-4 border-b border-[#FFFFFF0D] last:border-b-0 cursor-pointer relative overflow-hidden hover:bg-white/10 hover:shadow-[0_8px_25px_rgba(0,0,0,0.15)] !transition-none"
-                  >
+                  {data?.data.docs.map((client, index) => (
                     <div
-                      className="font-medium text-white truncate font-mono text-sm"
-                      title={client.sessionId}
+                      key={client._id}
+                      className="grid grid-cols-[1.5fr_1fr_0.8fr_0.8fr_0.8fr_0.6fr_80px] items-center gap-4 px-6 py-4 border-b border-[#FFFFFF0D] last:border-b-0 cursor-pointer relative overflow-hidden hover:bg-white/10 hover:shadow-[0_8px_25px_rgba(0,0,0,0.15)] !transition-none"
                     >
-                      {client.sessionId}
-                    </div>
-                    <div
-                      className="text-gray-300 text-sm"
-                    >
-                      {formatDate(client.startTime)}
-                    </div>
-                    <div
-                      className="text-gray-300 text-sm"
-                    >
-                      {formatDuration(client.duration)}
-                    </div>
-                    <div>
-                      <Badge
-                        className={`${getStatusColor(
-                          client.status
-                        )} rounded-full px-3`}
+                      <div
+                        className="font-medium text-white truncate font-mono text-sm"
+                        title={client.sessionId}
                       >
-                        {client.status}
-                      </Badge>
-                    </div>
-                    <div
-                      className="text-gray-300 text-sm text-center"
-                    >
-                      {client.messagesTotal}
-                    </div>
-                    <div
-                      className="text-gray-300 text-sm"
-                    >
-                      {client.averageResponse}ms
-                    </div>
-                    <div className="flex justify-center">
-                      <TooltipProvider>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button
-                              className="p-2 rounded-full text-gray-300 hover:bg-white/10 !transition-none"
+                        {client.sessionId}
+                      </div>
+                      <div
+                        className="text-gray-300 text-sm"
+                      >
+                        {formatDate(client.startTime)}
+                      </div>
+                      <div
+                        className="text-gray-300 text-sm"
+                      >
+                        {formatDuration(client.duration)}
+                      </div>
+                      <div>
+                        <Badge
+                          className={`${getStatusColor(
+                            client.status
+                          )} rounded-full px-3`}
+                        >
+                          {client.status}
+                        </Badge>
+                      </div>
+                      <div
+                        className="text-gray-300 text-sm text-center"
+                      >
+                        {client.messagesTotal}
+                      </div>
+                      <div
+                        className="text-gray-300 text-sm"
+                      >
+                        {client.averageResponse}ms
+                      </div>
+                      <div className="flex justify-center">
+                        <TooltipProvider>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                className="p-2 rounded-full text-gray-300 hover:bg-white/10 !transition-none"
+                              >
+                                <MoreVertical className="h-5 w-5" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent
+                              align="end"
+                              className="bg-[#1a1a1a] border-[#2a2a2a] text-gray-200 shadow-lg rounded-lg w-40"
                             >
-                              <MoreVertical className="h-5 w-5" />
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent
-                            align="end"
-                            className="bg-[#1a1a1a] border-[#2a2a2a] text-gray-200 shadow-lg rounded-lg w-40"
-                          >
                               <DropdownMenuItem
                                 onClick={() => handleViewDetails(client)}
                                 className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-white/10 !transition-none"
                               >
                                 <EyeIcon size={16} /> View Details
                               </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TooltipProvider>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TooltipProvider>
+                      </div>
                     </div>
-                  </div>
-                ))}
-                {data && data.data.docs.length === 0 && (
-                  <div
-                    className="text-center text-gray-400 py-8"
-                  >
-                    {debouncedSearch
-                      ? `No sessions found matching "${debouncedSearch}"`
-                      : "No sessions found"}
-                  </div>
-                )}
+                  ))}
+                  {data && data.data.docs.length === 0 && (
+                    <div
+                      className="text-center text-gray-400 py-8"
+                    >
+                      {debouncedSearch
+                        ? `No sessions found matching "${debouncedSearch}"`
+                        : "No sessions found"}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -398,17 +397,16 @@ const ClientsTable: React.FC<ClientsTableProps> = ({
                               }
                               size="sm"
                               onClick={() => setCurrentPage(pageNumber)}
-                              className={`w-9 h-9 p-0 ${
-                                pageNumber === currentPage
-                                  ? "bg-white/20 text-white"
-                                  : "bg-[#FFFFFF1A] border-0 text-gray-300 hover:bg-white/10"
-                              }`}
+                              className={`w-9 h-9 p-0 ${pageNumber === currentPage
+                                ? "bg-white/20 text-white"
+                                : "bg-[#FFFFFF1A] border-0 text-gray-300 hover:bg-white/10"
+                                }`}
                               style={
                                 pageNumber !== currentPage
                                   ? {
-                                      boxShadow:
-                                        "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
-                                    }
+                                    boxShadow:
+                                      "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                                  }
                                   : undefined
                               }
                             >
