@@ -97,19 +97,17 @@ const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
         <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-white/5 pointer-events-none" />
 
         <div className="relative z-10 overflow-y-auto scrollbar-hide h-full p-6">
-          <div>
-            <SheetHeader className="mb-6 pb-4 border-b border-white/10 px-6 pt-6">
-              <SheetTitle className="text-2xl font-bold text-white drop-shadow-lg">
-                Session Details
-              </SheetTitle>
-              <SheetDescription className="text-gray-300/80 mt-2">
-                Complete information about this{" "}
-                {viewType === "queries" ? "query" : "session"}
-              </SheetDescription>
-            </SheetHeader>
-          </div>
+          <SheetHeader className="mb-6 pb-4 border-b border-white/10">
+            <SheetTitle className="text-2xl font-bold text-white drop-shadow-lg">
+              Session Details
+            </SheetTitle>
+            <SheetDescription className="text-gray-300/80 mt-2">
+              Complete information about this{" "}
+              {viewType === "queries" ? "query" : "session"}
+            </SheetDescription>
+          </SheetHeader>
 
-          <div className="space-y-6">
+          <div className="space-y-6 mt-6">
             {/* Contact Information - Only show for queries view */}
             {viewType === "queries" && contactInfo && (
               <div>
@@ -120,7 +118,7 @@ const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
                       Contact Information
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-4 px-6 pb-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <p className="text-sm text-gray-300/80 flex items-center gap-2">
@@ -172,7 +170,7 @@ const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
                     Session Information
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 px-6 pb-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-gray-300/80">Session ID</p>
@@ -228,7 +226,7 @@ const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
                     Session Metrics
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="px-6 pb-6">
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     <div
                       className="text-center p-4 bg-white/5 border border-white/10 rounded-lg"
@@ -290,7 +288,7 @@ const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
                     Conversation Transcript
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="px-6 pb-6">
                   <div
                     className="bg-white/5 border border-white/10 p-4 rounded-lg max-h-64 overflow-y-auto scrollbar-hide"
                   >
@@ -312,7 +310,7 @@ const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
                       Session Events
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="px-6 pb-6">
                     <div
                       className="space-y-2 max-h-64 overflow-y-auto scrollbar-hide"
                     >
@@ -370,7 +368,7 @@ const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
                     Timestamps
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="px-6 pb-6">
                   <div className="space-y-2 text-sm">
                     <div
                       className="flex justify-between"
