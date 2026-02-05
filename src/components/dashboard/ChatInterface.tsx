@@ -72,7 +72,7 @@ const getConfidenceScore = (message: ChatMessage): number | null => {
   // Pattern 1: XML tag format: <CONFIDENCE_SCORE>85</CONFIDENCE_SCORE>
   // Also catch typos like <CNFIDENCE_SCORE> (missing O), <CONFIDENCE_SCOR> (missing E), etc.
   const xmlMatch = content.match(
-    /<C[ON]?FIDENCE[_\s]*SCOR[E]?\s*(\d+)\s*<\/?C[ON]?FIDENCE[_\s]*SCOR[E]?>/i
+    /<C[ON]?FIDENCE[_\s]*SCOR[E]?\s*(\d+)\s*<\/?C[ON]?FIDENCE[_\s]*SCOR[E]?>/i,
   );
   if (xmlMatch) {
     const score = parseInt(xmlMatch[1], 10);
@@ -81,7 +81,7 @@ const getConfidenceScore = (message: ChatMessage): number | null => {
 
   // Pattern 2: "CONFIDENCE_SCORE : 85%" or "CONFIDENCE_SCORE: 85%"
   const underscoreMatch = content.match(
-    /C[ON]?FIDENCE[_\s]*SCOR[E]?\s*:\s*(\d+)[%)]?/i
+    /C[ON]?FIDENCE[_\s]*SCOR[E]?\s*:\s*(\d+)[%)]?/i,
   );
   if (underscoreMatch) {
     const score = parseInt(underscoreMatch[1], 10);
@@ -90,7 +90,7 @@ const getConfidenceScore = (message: ChatMessage): number | null => {
 
   // Pattern 3: "Confidence Score: 85%" (explicit pattern - check this FIRST for "Score" variant)
   const scoreColonMatch = content.match(
-    /Confidence\s+Score\s*:\s*(\d+)[%)]?\s*[✓✔]?/i
+    /Confidence\s+Score\s*:\s*(\d+)[%)]?\s*[✓✔]?/i,
   );
   if (scoreColonMatch) {
     const score = parseInt(scoreColonMatch[1], 10);
@@ -106,7 +106,7 @@ const getConfidenceScore = (message: ChatMessage): number | null => {
 
   // Pattern 4: "Confidence 65%" (without colon)
   const noColonMatch = content.match(
-    /Confidence(?:\s+Score)?\s+(\d+)[%)]?\s*[✓✔]?/i
+    /Confidence(?:\s+Score)?\s+(\d+)[%)]?\s*[✓✔]?/i,
   );
   if (noColonMatch) {
     const score = parseInt(noColonMatch[1], 10);
@@ -115,7 +115,7 @@ const getConfidenceScore = (message: ChatMessage): number | null => {
 
   // Pattern 5: Any number followed by % after "Confidence" (very flexible)
   const flexibleMatch = content.match(
-    /Confidence(?:\s+Score)?[:\s]+(\d+)[%)]/i
+    /Confidence(?:\s+Score)?[:\s]+(\d+)[%)]/i,
   );
   if (flexibleMatch) {
     const score = parseInt(flexibleMatch[1], 10);
@@ -131,7 +131,7 @@ const getConfidenceScore = (message: ChatMessage): number | null => {
 
   // Pattern 7: Table format - look for numbers in table rows with confidence
   const tableMatch = content.match(
-    /\|[^\n]*confidence[^\n]*\|\s*(\d+)[^\n]*\|/i
+    /\|[^\n]*confidence[^\n]*\|\s*(\d+)[^\n]*\|/i,
   );
   if (tableMatch) {
     const score = parseInt(tableMatch[1], 10);
@@ -173,25 +173,25 @@ const removeConfidenceText = (content: string): string => {
   // Use flexible pattern: C(?:ON|N)? matches C, CO, CON, or CN (for typos)
   cleanedContent = cleanedContent.replace(
     /<C(?:ON|N)?FIDENCE[_\s]*SCOR[E]?\s*\d+\s*<\/?C(?:ON|N)?FIDENCE[_\s]*SCOR[E]?>/gi,
-    ""
+    "",
   );
 
   // Remove patterns like "CONFIDENCE_SCORE : 85%" or "CONFIDENCE_SCORE: 85%" (uppercase with underscore)
   cleanedContent = cleanedContent.replace(
     /C(?:ON|N)?FIDENCE[_\s]*SCOR[E]?\s*:\s*\d+[%)]?/gi,
-    ""
+    "",
   );
 
   // Remove patterns containing the XML Tag (Label + Tag, Code Block + Tag, or just Tag)
   cleanedContent = cleanedContent.replace(
     /(?:(?:\n|^)\s*(?:##\s*|[*_]+|[|]\s*)?Confidence(?: Score)?[\s\S]*?)?(?:```|`)?<C(?:ON|N)?FIDENCE[_\s]*SCOR[E]?\s*\d+\s*<\/?C(?:ON|N)?FIDENCE[_\s]*SCOR[E]?>(?:```|`)?/gi,
-    ""
+    "",
   );
 
   // Remove markdown headers for confidence (any level: #, ##, ###, etc.)
   cleanedContent = cleanedContent.replace(
     /^#{1,6}\s*Confidence\s*(?:Score)?\s*$/gim,
-    ""
+    "",
   );
 
   // Remove standalone "Confidence" headers
@@ -203,103 +203,103 @@ const removeConfidenceText = (content: string): string => {
   // This catches "Confidence Score: 85%" anywhere in the text
   cleanedContent = cleanedContent.replace(
     /Confidence\s+Score\s*:\s*\d+[%)]?\s*[✓✔]?/gi,
-    ""
+    "",
   );
   cleanedContent = cleanedContent.replace(
     /Confidence\s*:\s*\d+[%)]?\s*[✓✔]?/gi,
-    ""
+    "",
   );
   cleanedContent = cleanedContent.replace(
     /Confidence\s+Score\s+\d+[%)]?\s*[✓✔]?/gi,
-    ""
+    "",
   );
   cleanedContent = cleanedContent.replace(
     /Confidence\s+\d+[%)]?\s*[✓✔]?/gi,
-    ""
+    "",
   );
 
   // PASS 2: Remove XML-style confidence tags (case insensitive)
   cleanedContent = cleanedContent.replace(
     /<CONFIDENCE_SCORE>\s*\d+\s*<\/CONFIDENCE_SCORE>/gi,
-    ""
+    "",
   );
 
   // Remove patterns like "CONFIDENCE_SCORE : 85%" or "CONFIDENCE_SCORE: 85%" (uppercase with underscore)
   cleanedContent = cleanedContent.replace(
     /CONFIDENCE_SCORE\s*:\s*\d+[%)]?/gi,
-    ""
+    "",
   );
 
   // Remove patterns containing the XML Tag (Label + Tag, Code Block + Tag, or just Tag)
   cleanedContent = cleanedContent.replace(
     /(?:(?:\n|^)\s*(?:##\s*|[*_]+|[|]\s*)?Confidence(?: Score)?[\s\S]*?)?(?:```|`)?<CONFIDENCE_SCORE>\s*\d+\s*<\/CONFIDENCE_SCORE>(?:```|`)?/gi,
-    ""
+    "",
   );
 
   // PASS 3: Remove markdown headers for confidence (any level: #, ##, ###, etc.)
   cleanedContent = cleanedContent.replace(
     /^#{1,6}\s*Confidence\s*(?:Score)?\s*$/gim,
-    ""
+    "",
   );
   cleanedContent = cleanedContent.replace(/^#{1,6}\s*Confidence\s*$/gim, "");
 
   // PASS 4: Remove lines containing confidence (with newlines)
   cleanedContent = cleanedContent.replace(
     /(?:^|\n)\s*Confidence(?:\s+Score)?\s*:\s*\d+[%)]?\s*[✓✔]?\s*(?:\n|$)/gi,
-    "\n"
+    "\n",
   );
   cleanedContent = cleanedContent.replace(
     /(?:^|\n)\s*Confidence(?:\s+Score)?\s*[:]?\s*\d+[%)]?\s*[✓✔]?\s*(?:\n|$)/gi,
-    "\n"
+    "\n",
   );
 
   // PASS 5: Remove "Metadata" sections that contain confidence scores
   cleanedContent = cleanedContent.replace(
     /##\s*Metadata\s*\n[\s\S]*?Confidence(?:\s+Score)?\s*[:]?\s*\d+[%)]?\s*[✓✔]?[\s\S]*?(?=\n##|\n\n|$)/gi,
-    ""
+    "",
   );
   cleanedContent = cleanedContent.replace(
     /###\s*Metadata\s*\n[\s\S]*?Confidence(?:\s+Score)?\s*[:]?\s*\d+[%)]?\s*[✓✔]?[\s\S]*?(?=\n##|\n###|\n\n|$)/gi,
-    ""
+    "",
   );
 
   // PASS 6: Remove bold markdown confidence
   cleanedContent = cleanedContent.replace(
     /(?:^|\n)\s*\*\*?Confidence(?:\s+Score)?\*\*?\s*[:]?\s*\d+[%)]?\s*[✓✔]?\s*(?:\n|$)/gi,
-    "\n"
+    "\n",
   );
 
   // PASS 7: Remove confidence at end of lines/paragraphs
   cleanedContent = cleanedContent.replace(
     /\.\s*Confidence(?:\s+Score)?\s*:\s*\d+[%)]?\s*[✓✔]?/gi,
-    "."
+    ".",
   );
   cleanedContent = cleanedContent.replace(
     /\s+Confidence(?:\s+Score)?\s*:\s*\d+[%)]?\s*[✓✔]?\s*$/gm,
-    ""
+    "",
   );
 
   // Remove table rows containing confidence information
   // Pattern: | FIELD | VALUE | with confidence-related content
   cleanedContent = cleanedContent.replace(
     /\|[^\n]*\b(?:Reported\s+)?confidence\s*(?:tag|score)?\b[^\n]*\|[^\n]*\|/gi,
-    ""
+    "",
   );
   cleanedContent = cleanedContent.replace(
     /\|[^\n]*\|\s*[^\n]*\b(?:Reported\s+)?confidence\s*(?:tag|score)?\b[^\n]*\|/gi,
-    ""
+    "",
   );
 
   // Remove entire table rows that contain confidence (more comprehensive)
   cleanedContent = cleanedContent.replace(
     /\|[^\n]*confidence[^\n]*\|[^\n]*\n/gi,
-    ""
+    "",
   );
 
   // Remove "Interpretation: 70 (as reported)" or similar patterns
   cleanedContent = cleanedContent.replace(
     /Interpretation\s*:\s*\d+\s*\([^)]*\)/gi,
-    ""
+    "",
   );
   cleanedContent = cleanedContent.replace(/Interpretation\s*:\s*\d+/gi, "");
 
@@ -309,23 +309,23 @@ const removeConfidenceText = (content: string): string => {
   // Remove patterns in code blocks or backticks
   cleanedContent = cleanedContent.replace(
     /```[\s\S]*?Confidence(?:\s+Score)?\s*[:]?\s*\d+[%)]?[\s\S]*?```/gi,
-    ""
+    "",
   );
   cleanedContent = cleanedContent.replace(
     /`Confidence(?:\s+Score)?\s*[:]?\s*\d+[%)]?`/gi,
-    ""
+    "",
   );
 
   // Remove any remaining confidence text patterns (more aggressive)
   cleanedContent = cleanedContent.replace(
     /(?:^|\n)\s*(?:##\s*|[*_]+|[|]\s*)?Confidence(?:\s+Score)?[\s:]*[\s`]*\d+[%)]*(?:\s*[|])?(?:\s*\n|$)/gi,
-    "\n"
+    "\n",
   );
 
   // Remove empty table rows or tables with only confidence info
   cleanedContent = cleanedContent.replace(
     /\|\s*FIELD\s*\|\s*VALUE\s*\|\s*\n\|\s*[-:]+\s*\|\s*[-:]+\s*\|\s*\n\|\s*[^\n]*confidence[^\n]*\|[^\n]*\|/gi,
-    ""
+    "",
   );
 
   // Clean up multiple consecutive newlines
@@ -334,7 +334,7 @@ const removeConfidenceText = (content: string): string => {
   // Clean up extra newlines and formatting
   cleanedContent = cleanedContent.replace(
     /\n\s*---\s*\n\s*---\s*\n/g,
-    "\n\n---\n\n"
+    "\n\n---\n\n",
   );
   cleanedContent = cleanedContent.replace(/\n\s*---\s*\n\s*$/g, "");
   cleanedContent = cleanedContent.trim();
@@ -364,7 +364,7 @@ const transformCompanyTable = (content: string): string => {
     const websiteIndex = headerRow.findIndex(
       (header) =>
         header.toLowerCase().includes("website") ||
-        header.toLowerCase().includes("domain")
+        header.toLowerCase().includes("domain"),
     );
 
     // If no Website/Domain column found, return original table
@@ -372,7 +372,7 @@ const transformCompanyTable = (content: string): string => {
 
     // Find NAME column index
     const nameIndex = headerRow.findIndex((header) =>
-      header.toLowerCase().includes("name")
+      header.toLowerCase().includes("name"),
     );
 
     // Process separator row (second line)
@@ -558,7 +558,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
 
   // Redux selectors
   const selectedChatId = useSelector(
-    (state: RootState) => state.chat.selectedChatId
+    (state: RootState) => state.chat.selectedChatId,
   );
 
   // Use Redux selectedChatId if currentChatId is not provided (for widget)
@@ -572,31 +572,31 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
 
   // Granular subscription - checks if THIS SPECIFIC chat is streaming
   const isStreamingCurrentChat = useSelector((state: RootState) =>
-    selectIsChatStreaming(state, activeChatId)
+    selectIsChatStreaming(state, activeChatId),
   );
 
   // Still need events for this chat to auto-scroll or show partials
   const streamingEventsByChat = useSelector(
-    (state: RootState) => state.chat.streamingEventsByChat
+    (state: RootState) => state.chat.streamingEventsByChat,
   );
 
   // Need optimistic messages for this chat
   const optimisticMessagesByChat = useSelector(
-    (state: RootState) => state.chat.optimisticMessagesByChat
+    (state: RootState) => state.chat.optimisticMessagesByChat,
   );
 
   const temporaryChat = useSelector(
-    (state: RootState) => state.chat.temporaryChat
+    (state: RootState) => state.chat.temporaryChat,
   );
 
   const composerValue = useSelector(
-    (state: RootState) => state.chat.composerValue
+    (state: RootState) => state.chat.composerValue,
   );
 
   // For other tabs (sync), we still check the list of remote IDs mostly for "is ANY remote streaming"
   // But for "is THIS chat streaming in another tab", we check inclusion
   const remoteStreamingChatIds = useSelector(
-    (state: RootState) => state.chat.remoteStreamingChatIds
+    (state: RootState) => state.chat.remoteStreamingChatIds,
   );
 
   // Use Redux composerValue for message input, but keep local state for interim transcript
@@ -614,8 +614,8 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
     queryFn: () => fetchChatById(activeChatId ?? ""),
     enabled: Boolean(
       activeChatId &&
-        activeChatId !== NEW_CHAT_KEY &&
-        !activeChatId.startsWith("temp_")
+      activeChatId !== NEW_CHAT_KEY &&
+      !activeChatId.startsWith("temp_"),
     ),
     staleTime: 1000, // Reduced from 10s to 1s to allow quicker refetches
     refetchOnMount: "always", // Always refetch when component mounts to get latest data
@@ -639,7 +639,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
 
       if (hasPendingResponse && !isStreamingCurrentChat && !justFinished) {
         console.log(
-          "[ChatInterface] Detected pending response, starting polling..."
+          "[ChatInterface] Detected pending response, starting polling...",
         );
         setIsPendingResponse(true);
 
@@ -687,7 +687,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
           isStreamingCurrentChat,
           isPendingResponse,
           remoteStreamingChatIds,
-        }
+        },
       );
       return result;
     };
@@ -745,7 +745,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
       // Logic fix: if only 'isStreamingRemote' is true and we recently finished, we swallow it.
       return logState(
         true,
-        `Active: local=${isLocalStream}, remote=${isStreamingRemote} (recent=${isRecentlyFinished}), opt=${hasOptimistic}, pending=${isPendingResponse}`
+        `Active: local=${isLocalStream}, remote=${isStreamingRemote} (recent=${isRecentlyFinished}), opt=${hasOptimistic}, pending=${isPendingResponse}`,
       );
     }
 
@@ -829,7 +829,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
     if (prevStreamingRef.current && !isStreamingCurrentChat && activeChatId) {
       console.log(
         "[ChatInterface] Streaming completed, invalidating query for:",
-        activeChatId
+        activeChatId,
       );
       queryClient.invalidateQueries({ queryKey: ["chatDetail", activeChatId] });
       lastCompletionTimeRef.current[activeChatId] = Date.now(); // Mark completion time
@@ -853,7 +853,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
     const optimisticS =
       (streamingId && optimisticMessagesByChat[streamingId]) || [];
     const candidates = [...optimisticA, ...optimisticS].filter(
-      (m) => m.role === "user"
+      (m) => m.role === "user",
     );
     if (!candidates.length) return;
 
@@ -1040,7 +1040,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
           clearTimeout(maxListeningTimeoutRef.current);
           maxListeningTimeoutRef.current = null;
         }
-      }
+      },
     );
 
     if (success) {
@@ -1255,18 +1255,48 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
     // Stabilize keys: if a server message matches an optimistic user message, reuse optimistic _id
     // IMPORTANT: never mutate source objects (Redux/Query data may be frozen)
     const optimisticUsers = filteredOptimistic.filter((m) => m.role === "user");
-    const optimisticIdByContent = new Map<string, string>();
+    // Map content to list of messages to handle duplicates, sorted by creation time
+    const optimisticMsgsByContent = new Map<string, ChatMessage[]>();
     optimisticUsers.forEach((m) => {
       if (m.content) {
-        optimisticIdByContent.set(m.content, m._id);
+        const list = optimisticMsgsByContent.get(m.content) || [];
+        list.push(m);
+        optimisticMsgsByContent.set(m.content, list);
       }
     });
 
     const serverWithStableIds = apiMessages.map((sm) => {
       if (sm.role === "user" && sm.content) {
-        const optId = optimisticIdByContent.get(sm.content);
-        if (optId) {
-          return { ...sm, _id: optId };
+        const candidates = optimisticMsgsByContent.get(sm.content);
+        if (candidates && candidates.length > 0) {
+          // Only stabilize if the server message is temporally related to the optimistic message
+          // This prevents old server messages from "stealing" the ID of new pending messages
+          const smTime = new Date(sm.createdAt).getTime();
+
+          // Find the first candidate that could plausibly be this message
+          // We expect server message to be created after or very close to optimistic message
+          const matchIndex = candidates.findIndex((optMsg) => {
+            let optTime = new Date(optMsg.createdAt).getTime();
+            // Try to extract more precise timestamp from temp ID if available
+            if (optMsg._id.startsWith("temp-")) {
+              const parts = optMsg._id.split("-");
+              if (parts.length >= 2) {
+                const ts = parseInt(parts[1]);
+                if (!isNaN(ts)) optTime = ts;
+              }
+            }
+
+            const diff = smTime - optTime;
+            // Allow server message to be up to 30s newer, and allow slight negative (100ms) for clock skew
+            // We must be strict on the lower bound to prevent matching old server messages with new pending messages
+            return diff >= -100 && diff <= 30000;
+          });
+
+          if (matchIndex !== -1) {
+            const match = candidates[matchIndex];
+            candidates.splice(matchIndex, 1); // Consume this candidate
+            return { ...sm, _id: match._id };
+          }
         }
       }
       return { ...sm };
@@ -1275,7 +1305,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
     // Deduplicate optimistic messages against stabilized server IDs to avoid duplicate keys
     const serverStableIds = new Set(serverWithStableIds.map((m) => m._id));
     const dedupedOptimistic = filteredOptimistic.filter(
-      (m) => !serverStableIds.has(m._id)
+      (m) => !serverStableIds.has(m._id),
     );
 
     const combined = [...serverWithStableIds, ...dedupedOptimistic];
@@ -1382,7 +1412,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
       // Use the actualChatId (temp ID) as the chat key for optimistic messages
       // This keeps the widget's new chat isolated from the chat page
       dispatch(
-        addOptimisticMessage({ chatId: actualChatId, message: tempMessage })
+        addOptimisticMessage({ chatId: actualChatId, message: tempMessage }),
       );
 
       // Update the chat ID to the temp ID so messages show immediately
@@ -1394,7 +1424,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
       // For existing chats, add optimistic message using the actual chat ID
       // CRITICAL: Use actualChatId instead of currentChatKey to ensure consistency
       dispatch(
-        addOptimisticMessage({ chatId: actualChatId, message: tempMessage })
+        addOptimisticMessage({ chatId: actualChatId, message: tempMessage }),
       );
     }
 
@@ -1419,7 +1449,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
                 : trimmedMessage
             }"`,
             description: "",
-          })
+          }),
         );
       }
     }, 10000);
@@ -1452,7 +1482,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
               migrateStreamingEvents({
                 oldChatId: actualChatId,
                 newChatId: realChatId,
-              })
+              }),
             );
             console.log("[ChatInterface] Migrating temp stream to real chat:", {
               oldChatId: actualChatId,
@@ -1486,7 +1516,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
                   addOptimisticMessage({
                     chatId: realChatId,
                     message: { ...msg, chatId: realChatId },
-                  })
+                  }),
                 );
               });
               dispatch(removeOptimisticMessages(actualChatId));
@@ -1507,7 +1537,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
                 chatId: actualChatId,
                 messageId: tempMessage._id,
                 step: event.step,
-              })
+              }),
             );
           }
 
@@ -1522,7 +1552,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
                 migrateStreamingEvents({
                   oldChatId: actualChatId,
                   newChatId: realChatId,
-                })
+                }),
               );
             }
 
@@ -1561,10 +1591,10 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
               completeStreamingTask({
                 chatId: realChatId,
                 messageId: tempMessage._id,
-              })
+              }),
             );
           }
-        }
+        },
       );
 
       // Redundant Broadcast: Ensure the final result is broadcasted even if onEvent missed it or race conditions occurred.
@@ -1617,7 +1647,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
             if (isNewChatCreated) {
               // Remove the optimistic chat (with temp ID) and add the real chat
               const filteredList = oldChatList.filter(
-                (chat) => chat._id !== actualChatId
+                (chat) => chat._id !== actualChatId,
               );
               const newChat: ChatSummary = {
                 _id: newChatId,
@@ -1645,7 +1675,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
 
               // Move the updated chat to the top
               const updatedChat = updatedChatList.find(
-                (chat) => chat._id === newChatId
+                (chat) => chat._id === newChatId,
               );
               if (updatedChat) {
                 return [
@@ -1656,7 +1686,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
 
               return updatedChatList;
             }
-          }
+          },
         );
 
         // Clear optimistic messages for the old chat key and move to new chat
@@ -1666,7 +1696,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
             migrateStreamingEvents({
               oldChatId: actualChatId,
               newChatId: newChatId,
-            })
+            }),
           );
 
           // Defer optimistic cleanup: let the guarded effect handle removal
@@ -1679,7 +1709,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
               updateTask({
                 id: tempMessage._id,
                 updates: { chatId: newChatId },
-              })
+              }),
             );
           }
         } else {
@@ -1705,7 +1735,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
         errorTask({
           id: tempMessage._id,
           errorMessage: sanitizeErrorMessage(error, "Failed to send message"),
-        })
+        }),
       );
 
       dispatch(setComposerValue(trimmedMessage));
@@ -1714,7 +1744,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
         title: "Unable to send message",
         description: sanitizeErrorMessage(
           error,
-          "We could not deliver your message. Please check your internet connection and try again."
+          "We could not deliver your message. Please check your internet connection and try again.",
         ),
         variant: "destructive",
       });
@@ -1756,8 +1786,8 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
         ) {
           dispatch(
             setRemoteStreamingChatIds(
-              remoteStreamingChatIds.filter((id) => id !== actualChatId)
-            )
+              remoteStreamingChatIds.filter((id) => id !== actualChatId),
+            ),
           );
         }
         lastCompletionTimeRef.current[actualChatId] = Date.now(); // Mark completion time for this chat only
@@ -1774,7 +1804,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
           completeStreamingTask({
             chatId: finalChatId,
             messageId: tempMessage._id,
-          })
+          }),
         );
       }
       // Also complete for actualChatId if different
@@ -1783,7 +1813,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
           completeStreamingTask({
             chatId: actualChatId,
             messageId: tempMessage._id,
-          })
+          }),
         );
       }
 
@@ -1837,7 +1867,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
                 key={msg._id}
                 className={cn(
                   "flex w-full",
-                  isAssistant ? "justify-start" : "justify-end"
+                  isAssistant ? "justify-start" : "justify-end",
                 )}
               >
                 <div
@@ -1845,7 +1875,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
                     "rounded-2xl px-3 py-2 text-sm leading-relaxed shadow-lg",
                     isAssistant
                       ? "max-w-[90%] sm:max-w-[90%] rounded-bl-md bg-white/5 text-white flex flex-col"
-                      : "max-w-[100%] sm:max-w-[100%] rounded-br-md bg-[linear-gradient(226.23deg,_#3E65B4_0%,_#68B3B7_100%)] text-white"
+                      : "max-w-[100%] sm:max-w-[100%] rounded-br-md bg-[linear-gradient(226.23deg,_#3E65B4_0%,_#68B3B7_100%)] text-white",
                   )}
                 >
                   <div className="text-left max-w-none flex-1">
@@ -2175,7 +2205,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
               isListening && "bg-red-500 text-white animate-pulse",
               (isSendingMessage || isCurrentChatSending) &&
                 "opacity-50 cursor-not-allowed",
-              !(isSendingMessage || isCurrentChatSending) && "cursor-pointer"
+              !(isSendingMessage || isCurrentChatSending) && "cursor-pointer",
             )}
             style={{ marginBottom: "5px" }}
             onClick={
@@ -2189,7 +2219,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({
           <div
             className={cn(
               "round-icon-btn cursor-pointer",
-              isListening && "opacity-50 cursor-not-allowed"
+              isListening && "opacity-50 cursor-not-allowed",
             )}
             style={{ marginBottom: "4px" }}
             onClick={handleSendMessage}

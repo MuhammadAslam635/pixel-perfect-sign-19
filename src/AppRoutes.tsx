@@ -16,10 +16,13 @@ const Dashboard = lazy(() => import("@/pages/Dashboard"));
 const CompanyDetail = lazy(() => import("@/pages/crm/companies"));
 const ChatPage = lazy(() => import("@/pages/Chat"));
 const AgentsPage = lazy(() => import("@/pages/agents"));
-const AgentDetails = lazy(() => import("@/pages/agents/components/AgentDetails"));
+const AgentDetails = lazy(
+  () => import("@/pages/agents/components/AgentDetails")
+);
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const SettingsPage = lazy(() => import("@/pages/Settings"));
-const Feedback = lazy(() => import("@/pages/Feedback/Feedback"))
+const Feedback = lazy(() => import("@/pages/Feedback/Feedback"));
+const FeedbackChat = lazy(() => import("@/pages/Feedback/FeedbackChat"));
 const CompanyKnowledge = lazy(() => import("@/pages/companyKnowledgeBase"));
 const CampaignsPage = lazy(() => import("@/pages/campaigns"));
 const FacebookCampaignsPage = lazy(() => import("@/pages/campaigns/facebook"));
@@ -209,6 +212,14 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute moduleName="settings">
               <SettingsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/feedback/:feedbackId/chat"
+          element={
+            <ProtectedRoute moduleName="feedback">
+              <FeedbackChat />
             </ProtectedRoute>
           }
         />
@@ -491,7 +502,7 @@ const AppRoutes = () => {
         <Route
           path="/admin/feedbacks"
           element={
-            <ProtectedRoute allowedRoles={["Admin"]}>
+            <ProtectedRoute allowedRoles={["Admin", "CompanyAdmin", "Company"]}>
               <AdminFeedbacks />
             </ProtectedRoute>
           }
@@ -499,7 +510,7 @@ const AppRoutes = () => {
         <Route
           path="/admin/feedbacks/user/:userId"
           element={
-            <ProtectedRoute allowedRoles={["Admin"]}>
+            <ProtectedRoute allowedRoles={["Admin", "CompanyAdmin", "Company"]}>
               <UserFeedbackList key={window.location.pathname} />
             </ProtectedRoute>
           }
@@ -507,7 +518,7 @@ const AppRoutes = () => {
         <Route
           path="/admin/feedbacks/:feedbackId"
           element={
-            <ProtectedRoute allowedRoles={["Admin"]}>
+            <ProtectedRoute allowedRoles={["Admin", "CompanyAdmin", "Company"]}>
               <FeedbackDetail />
             </ProtectedRoute>
           }

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -330,35 +330,23 @@ const index = () => {
 
   return (
     <DashboardLayout>
-      <motion.main
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
+      <main
         className="relative px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12 2xl:px-16 pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-6 sm:pb-8 flex flex-col gap-4 sm:gap-6 text-white h-screen overflow-hidden"
       >
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+        <div
           className="max-w-[1600px] mx-auto w-full flex flex-col flex-1 relative min-h-0"
         >
           {/* Single Line Header - Navigation, Enrich Section, and Filters */}
           <div className="flex items-center justify-between gap-2 sm:gap-3 mb-4 flex-wrap">
             {/* Page Header with Navigation */}
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: "easeOut", delay: 0.4 }}
+            <div
               className="flex-shrink-0"
             >
               <CrmNavigation />
-            </motion.div>
+            </div>
 
             {/* Right Side Container: Enrich Leads + Filters */}
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: "easeOut", delay: 0.4 }}
+            <div
               className="flex items-center gap-2 flex-1 justify-end min-w-0"
             >
               {/* Enrich Leads Section - Always Visible */}
@@ -389,31 +377,21 @@ const index = () => {
               <div className="flex items-center min-w-0 flex-1 justify-end">
                 <AnimatePresence mode="wait">
                   {!companyFiltersOpen ? (
-                    <motion.div
-                      key="filter-button"
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      transition={{ duration: 0.15 }}
-                      className="flex items-center gap-2 flex-shrink-0"
-                    >
-                      <SearchInput
-                        placeholder="Search companies..."
-                        value={companiesSearch}
-                        onChange={setCompaniesSearch}
-                      />
-                      <FilterButton
-                        hasFilters={hasCompanyAdvancedFilters}
-                        onClick={() => setCompanyFiltersOpen(true)}
-                      />
-                    </motion.div>
+                      <div
+                        className="flex items-center gap-2 flex-shrink-0"
+                      >
+                        <SearchInput
+                          placeholder="Search companies..."
+                          value={companiesSearch}
+                          onChange={setCompaniesSearch}
+                        />
+                        <FilterButton
+                          hasFilters={hasCompanyAdvancedFilters}
+                          onClick={() => setCompanyFiltersOpen(true)}
+                        />
+                      </div>
                   ) : (
-                    <motion.div
-                      key="filters-inline"
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.2, ease: "easeOut" }}
+                    <div
                       className="flex items-center gap-2 overflow-x-auto scrollbar-hide max-w-full"
                     >
                       <CompanyFiltersInline
@@ -440,10 +418,7 @@ const index = () => {
                         hasFilters={hasCompanyAdvancedFilters}
                         onResetFilters={resetCompanyAdvancedFilters}
                       />
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.1, duration: 0.15 }}
+                      <div
                         className="flex-shrink-0"
                       >
                         <Button
@@ -466,12 +441,12 @@ const index = () => {
                             />
                           </svg>
                         </Button>
-                      </motion.div>
-                    </motion.div>
+                      </div>
+                    </div>
                   )}
                 </AnimatePresence>
               </div>
-            </motion.div>
+            </div>
           </div>
           {/* Stats Cards */}
           <StatsCards stats={stats} isLoading={loading} />
@@ -514,7 +489,7 @@ const index = () => {
               onClose={() => setSelectedCompanyId(null)}
             />
           </div>
-        </motion.div>
+        </div>
 
         {/* Lead Enrichment Modal */}
         <LeadEnrichmentModal
@@ -531,7 +506,7 @@ const index = () => {
             setEnrichmentModalOpen(false);
           }}
         />
-      </motion.main>
+      </main>
     </DashboardLayout>
   );
 };

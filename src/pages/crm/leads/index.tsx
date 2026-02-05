@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { MultiSelect } from "@/components/ui/multi-select";
@@ -115,8 +115,22 @@ const index = () => {
   }, [viewMode]);
 
   const [leadsCountryFilter, setLeadsCountryFilter] = useState<string[]>([]);
+  
+  // Load saved seniority filter from localStorage on mount
+  const loadSavedSeniorityFilter = (): string[] => {
+    try {
+      const saved = localStorage.getItem("savedSeniorityFilter");
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (error) {
+      console.error("Failed to load saved seniority filter:", error);
+    }
+    return [];
+  };
+
   const [leadsSeniorityFilter, setLeadsSeniorityFilter] = useState<string[]>(
-    []
+    () => loadSavedSeniorityFilter()
   );
   const [leadsCompanyFilter, setLeadsCompanyFilter] = useState<string[]>([]);
   const [leadsStageFilter, setLeadsStageFilter] = useState<string[]>([]);
@@ -126,10 +140,22 @@ const index = () => {
   const [leadsHasFavouriteFilter, setLeadsHasFavouriteFilter] = useState(false);
   const [leadsSortBy, setLeadsSortBy] = useState<string>("newest");
 
+  // Ensure saved seniority filter persists across page remounts
+  // The initial state already loads from localStorage, but this ensures it stays in sync
+  useEffect(() => {
+    const saved = loadSavedSeniorityFilter();
+    // If we have a saved filter and current filter is empty, restore it
+    if (saved.length > 0 && leadsSeniorityFilter.length === 0) {
+      setLeadsSeniorityFilter(saved);
+    }
+  }, []); // Only run on mount
+
   // Reset filters
   const resetLeadAdvancedFilters = () => {
     setLeadsCountryFilter([]);
-    setLeadsSeniorityFilter([]);
+    // Preserve saved seniority filter instead of clearing it
+    const savedFilter = loadSavedSeniorityFilter();
+    setLeadsSeniorityFilter(savedFilter);
     setLeadsStageFilter([]);
     setLeadsHasEmailFilter(false);
     setLeadsHasPhoneFilter(false);
@@ -746,37 +772,25 @@ const index = () => {
 
   return (
     <DashboardLayout>
-      <motion.main
+      <main
         ref={pageContentRef}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
         className="relative px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12 2xl:px-16 pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-6 sm:pb-8 flex flex-col gap-4 sm:gap-6 text-white h-screen overflow-hidden"
       >
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+        <div
           className="max-w-[1600px] mx-auto w-full flex flex-col flex-1 relative min-h-0"
         >
           {/* Wrapper with space-between */}
           <div className="flex items-center justify-between gap-4 mb-4">
             {/* Page Header with Companies Button */}
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: "easeOut", delay: 0.4 }}
+            <div
               className="flex-shrink-0"
             >
               {/* <h1 className="text-2xl font-bold text-white">Leads</h1> */}
               <CrmNavigation />
-            </motion.div>
+            </div>
 
             {/* Filters Bar */}
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: "easeOut", delay: 0.4 }}
+            <div
               className="flex flex-col sm:flex-row justify-end items-stretch sm:items-center gap-1.5 sm:gap-2 md:gap-3 min-w-0 flex-1"
             >
               {/* Enrich Leads Section - Always Visible */}
@@ -837,30 +851,18 @@ const index = () => {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <AnimatePresence mode="wait">
                         {!leadFiltersOpen ? (
-                          <motion.div
-                            key="filter-button"
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            transition={{ duration: 0.15 }}
-                          >
-                            <FilterButton
+                            <div
+                        className="flex items-center gap-2 flex-shrink-0"
+                      >          <FilterButton
                               hasFilters={hasLeadAdvancedFilters}
                               onClick={() => setLeadFiltersOpen(true)}
                             />
-                          </motion.div>
+                          </div>
                         ) : (
-                          <motion.div
-                            key="filters-inline"
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                            transition={{ duration: 0.2, ease: "easeOut" }}
-                            className="flex items-center gap-2"
-                          >
-                            <LeadsFiltersInline
+                          <div
+                      className="flex items-center gap-2 overflow-x-auto scrollbar-hide max-w-full"
+                    >        <LeadsFiltersInline
                               countryFilter={leadsCountryFilter}
                               onCountryFilterChange={setLeadsCountryFilter}
                               seniorityFilter={leadsSeniorityFilter}
@@ -884,12 +886,9 @@ const index = () => {
                               hasFilters={hasLeadAdvancedFilters}
                               onResetFilters={resetLeadAdvancedFilters}
                             />
-                            <motion.div
-                              initial={{ opacity: 0, scale: 0.8 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              transition={{ delay: 0.1, duration: 0.15 }}
-                            >
-                              <Button
+                            <div
+                        className="flex-shrink-0"
+                      >        <Button
                                 size="sm"
                                 variant="ghost"
                                 className="h-8 w-8 p-0 bg-accent text-white hover:bg-accent/80 rounded-full flex items-center justify-center"
@@ -909,15 +908,14 @@ const index = () => {
                                   />
                                 </svg>
                               </Button>
-                            </motion.div>
-                          </motion.div>
+                      </div>
+                          </div>
                         )}
-                      </AnimatePresence>
                     </div>
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </div>
           </div>
 
           {/* Stats Cards */}
@@ -967,8 +965,8 @@ const index = () => {
               />
             </div>
           </div>
-        </motion.div>
-      </motion.main>
+        </div>
+      </main>
 
       {/* Email Draft Modal */}
       <EmailDraftModal

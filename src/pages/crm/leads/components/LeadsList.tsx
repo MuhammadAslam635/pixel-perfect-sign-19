@@ -1,6 +1,5 @@
 import { FC, MouseEvent, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -84,7 +83,7 @@ type LeadsListProps = {
 };
 
 const getIconButtonClasses = (isDisabled: boolean) =>
-  `h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center border transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary/40 ${
+  `h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary/40 !transition-none ${
     isDisabled
       ? "bg-white/5 border-white/10 text-white/30 cursor-not-allowed"
       : "bg-white border-white text-gray-900 hover:bg-white/80 hover:text-gray-950"
@@ -383,10 +382,7 @@ const LeadsList: FC<LeadsListProps> = ({
 
   // Render loading state with skeleton placeholders
   const renderLoading = () => (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
+    <div
       className={
         viewMode === "card"
           ? "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"
@@ -394,15 +390,8 @@ const LeadsList: FC<LeadsListProps> = ({
       }
     >
       {Array.from({ length: viewMode === "card" ? 8 : 5 }).map((_, index) => (
-        <motion.div
+        <div
           key={index}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{
-            duration: 0.4,
-            delay: index * 0.1,
-            ease: "easeOut",
-          }}
           className={
             viewMode === "card"
               ? "w-full aspect-[3/1] rounded-lg border-0 bg-gradient-to-br from-gray-800/50 to-gray-900/30 border-white/10 overflow-hidden"
@@ -441,9 +430,9 @@ const LeadsList: FC<LeadsListProps> = ({
               </>
             )}
           </div>
-        </motion.div>
+        </div>
       ))}
-    </motion.div>
+    </div>
   );
 
   // Render empty state
@@ -505,7 +494,7 @@ const LeadsList: FC<LeadsListProps> = ({
       return (
         <Card
           key={lead._id}
-          className={`relative flex items-center gap-3 overflow-hidden border-0 rounded-xl p-2 pb-3 transition-all duration-300 hover:bg-white/5 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] cursor-pointer backdrop-blur-[22.6px]`}
+          className={`relative flex items-center gap-3 overflow-hidden border-0 rounded-xl p-2 pb-3 hover:bg-white/5 hover:shadow-[0_20px_45px_rgba(0,0,0,0.32)] cursor-pointer backdrop-blur-[22.6px] !transition-none`}
           style={{
             background: `linear-gradient(180deg, rgba(104, 177, 184, 0.1) 0%, rgba(104, 177, 184, 0.08) 100%), radial-gradient(50% 100% at 50% 0%, rgba(104, 177, 184, 0.1) 0%, rgba(104, 177, 184, 0) 100%)`,
           }}
@@ -515,7 +504,7 @@ const LeadsList: FC<LeadsListProps> = ({
           <Tooltip>
             <TooltipTrigger asChild>
               <button
-                className="absolute top-2 right-2 z-10 h-6 w-6 rounded-full flex items-center justify-center transition-all duration-200 hover:bg-white/10"
+                className="absolute top-2 right-2 z-10 h-6 w-6 rounded-full flex items-center justify-center hover:bg-white/10 !transition-none"
                 onClick={(e) => handleToggleFavourite(lead, e)}
                 disabled={isTogglingFav}
                 aria-label={
@@ -528,7 +517,7 @@ const LeadsList: FC<LeadsListProps> = ({
                   <Loader2 className="w-3.5 h-3.5 text-yellow-400 animate-spin" />
                 ) : (
                   <Star
-                    className={`w-3.5 h-3.5 transition-all ${
+                    className={`w-3.5 h-3.5 ${
                       lead.isFavourite
                         ? "fill-yellow-400 text-yellow-400"
                         : "text-white/40 hover:text-yellow-400"
@@ -600,7 +589,7 @@ const LeadsList: FC<LeadsListProps> = ({
           <Tooltip>
             <TooltipTrigger asChild>
               <button
-                className="absolute bottom-2 right-2 z-10 h-6 w-6 rounded-full flex items-center justify-center border border-white bg-white text-gray-900 hover:bg-white/80 hover:text-gray-950 transition-colors duration-200"
+                className="absolute bottom-2 right-2 z-10 h-6 w-6 rounded-full flex items-center justify-center border border-white bg-white text-gray-900 hover:bg-white/80 hover:text-gray-950 !transition-none"
                 onClick={(e) => handleDeleteClick(lead, e)}
                 aria-label="Delete lead"
               >
@@ -620,7 +609,7 @@ const LeadsList: FC<LeadsListProps> = ({
     return (
       <Card
         key={lead._id}
-        className={`relative flex flex-col md:flex-row items-start md:items-center justify-between gap-1 sm:gap-1.5 md:gap-2 border-0 rounded-[16px] sm:rounded-[20px] md:rounded-[26px] px-3 sm:px-4 md:px-5 py-1.5 sm:py-2 overflow-hidden transition-all duration-300 hover:bg-white/5 hover:shadow-[0_18px_40px_rgba(0,0,0,0.3)] ${
+        className={`relative flex flex-col md:flex-row items-start md:items-center justify-between gap-1 sm:gap-1.5 md:gap-2 border-0 rounded-[16px] sm:rounded-[20px] md:rounded-[26px] px-3 sm:px-4 md:px-5 py-1.5 sm:py-2 overflow-hidden hover:bg-white/5 hover:shadow-[0_18px_40px_rgba(0,0,0,0.3)] !transition-none ${
           viewMode !== "compact" ? "backdrop-blur-[22.6px]" : ""
         }`}
         style={{
@@ -1094,66 +1083,34 @@ const LeadsList: FC<LeadsListProps> = ({
     >
       {renderPageSizeSelector("top")}
       <div className="w-full pb-4 flex-1 min-h-0 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={viewMode}
-            className="w-full"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{
-              duration: 0.2,
-              ease: "easeInOut",
-            }}
-            layout
-          >
-            <AnimatePresence mode="wait">
-              {(() => {
+        <div
+          key={viewMode}
+          className="w-full"
+        >
+          {(() => {
                 if (loading) return renderLoading();
                 if (leads.length === 0) return renderEmpty();
 
                 return (
-                  <motion.div
+                  <div
                     key="leads-list"
-                    initial={{
-                      opacity: 1,
-                    }}
-                    animate={{
-                      opacity: 1,
-                    }}
-                    exit={{
-                      opacity: 0,
-                      transition: { duration: 0.2, ease: "easeIn" },
-                    }}
                     className={
                       viewMode === "card"
                         ? "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"
                         : "space-y-2"
                     }
-                    layout
                   >
                     {leads.map((lead, index) => (
-                      <motion.div
+                      <div
                         key={lead._id}
-                        layout
-                        initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                        transition={{
-                          duration: 0.3,
-                          ease: "easeOut",
-                          delay: index * 0.05,
-                        }}
                       >
                         {renderLeadCard(lead)}
-                      </motion.div>
+                      </div>
                     ))}
-                  </motion.div>
+                  </div>
                 );
               })()}
-            </AnimatePresence>
-          </motion.div>
-        </AnimatePresence>
+          </div>
       </div>
 
       {/* Delete Confirmation Dialog */}

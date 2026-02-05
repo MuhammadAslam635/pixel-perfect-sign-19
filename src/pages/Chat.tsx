@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AxiosError } from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams, useLocation } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
@@ -215,44 +214,7 @@ const ChatPage = () => {
   const [adminUsers, setAdminUsers] = useState<any[]>([]);
   const [loadingAdminUsers, setLoadingAdminUsers] = useState(false);
 
-  // Animation variants for page transitions
-  const pageVariants = {
-    hidden: {
-      opacity: 0,
-      scale: 0.98,
-    },
-    visible: {
-      opacity: 1,
-      scale: 1,
-      transition: {
-        duration: 0.4,
-        ease: "easeOut",
-      },
-    },
-    exit: {
-      opacity: 0,
-      scale: 0.98,
-      transition: {
-        duration: 0.3,
-      },
-    },
-  } as any;
 
-  const composerVariants = {
-    hidden: {
-      opacity: 0,
-      y: 20,
-    },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.3,
-        ease: "easeOut",
-        delay: 0.1,
-      },
-    } as any,
-  };
 
   // Helper to derive a conversation title from messages when server doesn't provide one
   const deriveTitleFromMessages = (messages: any[] | undefined) => {
@@ -1757,54 +1719,54 @@ const ChatPage = () => {
       if (apiMessageIds.has(message._id)) {
         return false;
       }
-
-      // If this is a temp message, check if it should be replaced by a server message
-      if (message._id.startsWith("temp-")) {
-        const tempTimestamp = parseInt(message._id.replace("temp-", ""));
-        const signature = `${message.role}-${message.content}`;
-
-        // Only match with server messages created within 30 seconds after the temp message
-        const matchingServerMessage = apiMessages.find((serverMsg) => {
-          if (`${serverMsg.role}-${serverMsg.content}` !== signature) {
-            return false;
-          }
-          const serverTimestamp = new Date(serverMsg.createdAt).getTime();
-          const timeDiff = serverTimestamp - tempTimestamp;
-          // Server message should be created after temp message, within 30 seconds
-          return timeDiff >= 0 && timeDiff <= 30000;
-        });
-
-        // If we found a matching recent server message, filter out the temp message
-        if (matchingServerMessage) {
-          return false;
-        }
-
-        // Keep temp messages for up to 30 seconds, then remove them (in case of errors)
-        const tempAge = Date.now() - tempTimestamp;
-        return tempAge < 30000;
-      }
-
-      // For non-temp messages, keep them if ID doesn't match
       return true;
     });
 
-    // Stabilize keys without mutating source objects
-    const optimisticUsersForKey = filteredOptimistic.filter(
-      (m) => m.role === "user"
-    );
-    const optimisticIdByContent = new Map<string, string>();
-    optimisticUsersForKey.forEach((m) => {
-      if (m.content) optimisticIdByContent.set(m.content, m._id);
+    // Map content to list of messages to handle duplicates, sorted by creation time
+    const optimisticMsgsByContent = new Map<string, ChatMessage[]>();
+    filteredOptimistic.forEach((m) => {
+      if (m.role === "user" && m.content) {
+        const list = optimisticMsgsByContent.get(m.content) || [];
+        list.push(m);
+        optimisticMsgsByContent.set(m.content, list);
+      }
     });
 
-    const serverWithStableIds = apiMessages.map((m) => {
-      if (m.role === "user" && m.content) {
-        const optId = optimisticIdByContent.get(m.content);
-        if (optId) {
-          return { ...m, _id: optId };
+    const serverWithStableIds = apiMessages.map((sm) => {
+      if (sm.role === "user" && sm.content) {
+        const candidates = optimisticMsgsByContent.get(sm.content);
+        if (candidates && candidates.length > 0) {
+          // Only stabilize if the server message is temporally related to the optimistic message
+          // This prevents old server messages from "stealing" the ID of new pending messages
+          const smTime = new Date(sm.createdAt).getTime();
+
+          // Find the first candidate that could plausibly be this message
+          // We expect server message to be created after or very close to optimistic message
+          const matchIndex = candidates.findIndex((optMsg) => {
+            let optTime = new Date(optMsg.createdAt).getTime();
+            // Try to extract more precise timestamp from temp ID if available
+            if (optMsg._id.startsWith("temp-")) {
+              const parts = optMsg._id.split("-");
+              if (parts.length >= 2) {
+                const ts = parseInt(parts[1]);
+                if (!isNaN(ts)) optTime = ts;
+              }
+            }
+
+            const diff = smTime - optTime;
+            // Allow server message to be up to 30s newer, and allow slight negative (100ms) for clock skew
+            // We must be strict on the lower bound to prevent matching old server messages with new pending messages
+            return diff >= -100 && diff <= 30000;
+          });
+
+          if (matchIndex !== -1) {
+            const match = candidates[matchIndex];
+            candidates.splice(matchIndex, 1); // Consume this candidate
+            return { ...sm, _id: match._id };
+          }
         }
       }
-      return { ...m };
+      return { ...sm };
     });
 
     // Optionally delay showing the latest assistant response to avoid micro flicker
@@ -1931,11 +1893,7 @@ const ChatPage = () => {
         open={isMobileListOpen}
         onOpenChange={(open) => dispatch(setIsMobileListOpen(open))}
       >
-        <motion.main
-          initial="hidden"
-          animate="visible"
-          exit="exit"
-          variants={pageVariants}
+        <main
           className="mt-28 flex w-full justify-center px-4 pb-6 sm:px-6 md:px-10 lg:fixed lg:inset-0 lg:mt-0 lg:px-12 lg:pt-28 xl:px-16"
         >
           <div className="flex w-full lg:h-full flex-col gap-6 relative">
@@ -2002,33 +1960,23 @@ const ChatPage = () => {
                   isReadOnly={!!selectedAdminUserId}
                 />
 
-                <AnimatePresence mode="sync">
+
                   {selectedAdminUserId ? (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 10 }}
+                    <div
                       className="rounded-2xl border border-white/10 bg-white/5 px-6 py-4 text-center"
                     >
                       <p className="text-sm text-white/60">
                         Viewing user's chat in read-only mode. You cannot send
                         messages on behalf of this user.
                       </p>
-                    </motion.div>
+                    </div>
                   ) : (
-                    <motion.div
+                    <div
                       key={hasActiveConversation ? "composer" : "empty"}
-                      initial="hidden"
-                      animate="visible"
-                      exit="hidden"
-                      variants={composerVariants}
                       className="space-y-3"
                     >
                       {pendingFile ? (
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.95 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.95 }}
+                        <div
                           className="flex items-center justify-between rounded-2xl border border-primary/30 bg-primary/10 px-4 py-2 text-sm text-primary"
                         >
                           <span className="truncate">
@@ -2042,7 +1990,7 @@ const ChatPage = () => {
                           >
                             <X className="size-4" />
                           </Button>
-                        </motion.div>
+                        </div>
                       ) : null}
 
                       <ChatComposer
@@ -2053,13 +2001,13 @@ const ChatPage = () => {
                         disabled={isConversationLoading}
                         onUploadFile={(file) => dispatch(setPendingFile(file))}
                       />
-                    </motion.div>
+                    </div>
                   )}
-                </AnimatePresence>
+
               </div>
             </section>
           </div>
-        </motion.main>
+        </main>
 
         <SheetContent
           side="left"
