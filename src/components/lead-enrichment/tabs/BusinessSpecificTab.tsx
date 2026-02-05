@@ -41,7 +41,7 @@ const BusinessSpecificTab = ({
   const [keyword, setKeyword] = useState("");
   const [locationType, setLocationType] = useState<"country" | "region">("country");
   const [selectedLocation, setSelectedLocation] = useState("");
-  const [maxResults, setMaxResults] = useState(20);
+  const [maxResults, setMaxResults] = useState(10);
   const [isSearching, setIsSearching] = useState(false);
   const [isEnriching, setIsEnriching] = useState(false);
   const [businesses, setBusinesses] = useState<BusinessSearchResult[]>([]);
@@ -136,7 +136,7 @@ const BusinessSpecificTab = ({
     setSelectedLocation("");
     setBusinesses([]);
     setSelectedDomains(new Set());
-    setMaxResults(20);
+    setMaxResults(10);
     toast.info("Cleared");
   };
 
@@ -222,20 +222,20 @@ const BusinessSpecificTab = ({
       </div>
 
       <div className="space-y-3">
-        <label className="text-sm font-medium text-white/70">Max results (1–50)</label>
+        <label className="text-sm font-medium text-white/70">Max results (1–20)</label>
         <Input
           type="number"
           min={1}
-          max={50}
+          max={20}
           value={maxResults}
           onChange={(e) => {
             const v = parseInt(e.target.value, 10);
-            if (e.target.value === "") setMaxResults(20);
-            else if (!Number.isNaN(v)) setMaxResults(Math.min(50, Math.max(1, v)));
+            if (e.target.value === "") setMaxResults(10);
+            else if (!Number.isNaN(v)) setMaxResults(Math.min(20, Math.max(1, v)));
           }}
           className="bg-gradient-to-br from-gray-800/50 to-gray-900/30 border border-white/10 text-white w-24"
         />
-        <p className="text-xs text-white/50">Maximum number of companies to return from search.</p>
+        <p className="text-xs text-white/50">Tavily API returns up to 20 results per search.</p>
       </div>
 
       <div className="flex gap-3">
