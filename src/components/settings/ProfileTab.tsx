@@ -25,6 +25,8 @@ import { Role } from "@/types/rbac.types";
 import { TimezoneSelector } from "./TimezoneSelector";
 import { TimePicker } from "@/components/ui/time-picker";
 import { sanitizeErrorMessage } from "@/utils/errorMessages";
+import { AvailabilitySettings } from "./AvailabilitySettings";
+import { Calendar, Copy, RefreshCw, ExternalLink } from "lucide-react";
 
 interface ProfileErrors {
   name: string;
@@ -56,6 +58,11 @@ export const ProfileTab = () => {
     end: "17:00",
   });
   const [isSavingActiveHours, setIsSavingActiveHours] = useState(false);
+  const [availabilityDialogOpen, setAvailabilityDialogOpen] = useState(false);
+  const [bookingLink, setBookingLink] = useState<string | null>(null);
+  const [bookingSlug, setBookingSlug] = useState<string | null>(null);
+  const [loadingBookingLink, setLoadingBookingLink] = useState(false);
+  const [regeneratingLink, setRegeneratingLink] = useState(false);
   
   const [errors, setErrors] = useState<ProfileErrors>({
     name: "",
@@ -111,6 +118,34 @@ export const ProfileTab = () => {
       }
     };
     fetchPreferences();
+  }, []);
+
+  // Fetch booking link on mount
+  useEffect(() => {
+    const fetchBookingLink = async () => {
+      try {
+        setLoadingBookingLink(true);
+        const user = JSON.parse(localStorage.getItem("user") || "{}");
+        const response = await axios.get(
+          `${import.meta.env.VITE_APP_BACKEND_URL}/users/booking-link`,
+          {
+            headers: {
+              Authorization: `Bearer ${user.token}`,
+              "ngrok-skip-browser-warning": "true",
+            },
+          }
+        );
+        if (response.data?.success) {
+          setBookingLink(response.data.data.bookingUrl);
+          setBookingSlug(response.data.data.slug);
+        }
+      } catch (error) {
+        console.error("Failed to load booking link:", error);
+      } finally {
+        setLoadingBookingLink(false);
+      }
+    };
+    fetchBookingLink();
   }, []);
 
   useEffect(() => {
@@ -218,6 +253,50 @@ export const ProfileTab = () => {
       });
     } finally {
       setIsSavingActiveHours(false);
+    }
+  };
+
+  const handleCopyBookingLink = () => {
+    if (bookingLink) {
+      navigator.clipboard.writeText(bookingLink);
+      toast({
+        title: "Copied!",
+        description: "Booking link copied to clipboard",
+      });
+    }
+  };
+
+  const handleRegenerateLink = async () => {
+    try {
+      setRegeneratingLink(true);
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      const response = await axios.post(
+        `${import.meta.env.VITE_APP_BACKEND_URL}/users/booking-link/regenerate`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+      if (response.data?.success) {
+        setBookingLink(response.data.data.bookingUrl);
+        setBookingSlug(response.data.data.slug);
+        toast({
+          title: "Link regenerated",
+          description: "Your booking link has been updated",
+        });
+      }
+    } catch (error: any) {
+      console.error("Error regenerating link:", error);
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "Failed to regenerate link",
+        variant: "destructive",
+      });
+    } finally {
+      setRegeneratingLink(false);
     }
   };
 
@@ -455,7 +534,7 @@ export const ProfileTab = () => {
               rows={4}
             />
           </div>
-
+ 
           <div className="space-y-2">
             <Label htmlFor="timezone" className="text-white/80">
               Timezone
@@ -472,8 +551,90 @@ export const ProfileTab = () => {
             </p>
           </div>
 
+          {/* Availability Settings Section */}
+          <div className="space-y-3 pt-4 border-t border-white/10">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-white/80 text-base">Availability Settings</Label>
+                <p className="text-xs text-white/50 mt-1">
+                  Manage your weekly working hours in Microsoft Calendar
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setAvailabilityDialogOpen(true)}
+                className="bg-white/[0.06] border-white/20 text-white hover:bg-white/[0.1]"
+              >
+                <Calendar className="w-4 h-4 mr-2" />
+                Set Availability
+              </Button>
+            </div>
+          </div>
+
+          {/* Booking Link Section */}
+          <div className="space-y-3 pt-4 border-t border-white/10">
+            <div>
+              <Label className="text-white/80 text-base">Meeting Booking Link</Label>
+              <p className="text-xs text-white/50 mt-1">
+                Share this link with leads to let them book meetings with you
+              </p>
+            </div>
+            
+            {loadingBookingLink ? (
+              <div className="flex items-center justify-center py-4">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white/60"></div>
+              </div>
+            ) : bookingLink ? (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={bookingLink}
+                    readOnly
+                    className="bg-white/[0.04] border-white/10 text-white/80 cursor-default flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={handleCopyBookingLink}
+                    className="bg-white/[0.06] border-white/20 text-white hover:bg-white/[0.1] shrink-0"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={handleRegenerateLink}
+                    disabled={regeneratingLink}
+                    className="bg-white/[0.06] border-white/20 text-white hover:bg-white/[0.1] shrink-0"
+                  >
+                    <RefreshCw className={`w-4 h-4 ${regeneratingLink ? "animate-spin" : ""}`} />
+                  </Button>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-white/60">
+                  <span>Slug: {bookingSlug}</span>
+                  <span>•</span>
+                  <a
+                    href={bookingLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 hover:text-white/90 transition-colors"
+                  >
+                    Preview page
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-white/50">Failed to load booking link</p>
+            )}
+          </div>
+
+{/* 
           <div className="space-y-2">
-            <Label className="text-white/80">Active Hours</Label>
+            <Label className="text-white/80">Active Hours (Legacy)</Label>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
                 <Label htmlFor="startTime" className="text-xs text-white/60">
@@ -497,9 +658,10 @@ export const ProfileTab = () => {
               </div>
             </div>
             <p className="text-xs text-white/50">
-              Set your typical working hours using your local timezone.
+              Note: Use "Set Availability" above to manage your Microsoft Calendar working hours.
             </p>
           </div>
+          */}
         </CardContent>
         <CardFooter className="justify-end border-t border-white/10 bg-white/[0.02]">
           <Button
@@ -514,6 +676,12 @@ export const ProfileTab = () => {
           </Button>
         </CardFooter>
       </Card>
+
+      {/* Availability Settings Dialog */}
+      <AvailabilitySettings
+        open={availabilityDialogOpen}
+        onOpenChange={setAvailabilityDialogOpen}
+      />
     </form>
   );
 };
