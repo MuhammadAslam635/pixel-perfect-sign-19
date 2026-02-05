@@ -4765,9 +4765,9 @@ const LeadChat = ({
                           <SelectItem value="v1" className="text-xs text-white hover:bg-white/10">
                             Version 1
                           </SelectItem>
-                          {/* <SelectItem value="v2" className="text-xs text-white hover:bg-white/10">
+                          <SelectItem value="v2" className="text-xs text-white hover:bg-white/10">
                             Version 2
-                          </SelectItem> */}
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     )}
