@@ -173,7 +173,7 @@ export const useProfileCompletion = (): UseProfileCompletionReturn => {
 
   // Calculate progress
   const progress = calculateProgress(completionData);
-  const isComplete = true;
+    const isComplete = isProfileComplete(completionData);
 
   // Log completion status changes
   useEffect(() => {
