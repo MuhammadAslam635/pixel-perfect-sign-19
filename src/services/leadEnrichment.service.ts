@@ -6,8 +6,10 @@ import type {
   DomainEnrichmentResponse,
   QueryEnrichmentRequest,
   QueryEnrichmentResponse,
-  BusinessEnrichmentRequest,
-  BusinessEnrichmentResponse,
+  BusinessSearchRequest,
+  BusinessSearchResponse,
+  EnrichByDomainsRequest,
+  EnrichByDomainsResponse,
   EnrichmentStatusResponse,
 } from "@/types/leadEnrichment";
 
@@ -81,15 +83,28 @@ export const leadEnrichmentService = {
   },
 
   /**
-   * Business Specific Enrichment (Tab 3)
-   * Search companies by business query and location
+   * Business search by keyword (Tab 3 - Step 1)
+   * Uses Tavily to search LinkedIn and return business names + domains.
    *
-   * @param request - Business enrichment request with query and location
+   * @param request - query, optional location, maxResults
    */
-  enrichByBusiness: async (
-    request: BusinessEnrichmentRequest
-  ): Promise<BusinessEnrichmentResponse> => {
-    const response = await API.post("/leads/enrichment/business", request);
+  searchBusinessesByKeyword: async (
+    request: BusinessSearchRequest
+  ): Promise<BusinessSearchResponse> => {
+    const response = await API.post("/leads/enrichment/business/search", request);
+    return response.data;
+  },
+
+  /**
+   * Enrich selected domains (Tab 3 - Step 2)
+   * User has selected domains from search results; start Apollo enrichment.
+   *
+   * @param request - domains array, optional selectedSeniorities
+   */
+  enrichBySelectedDomains: async (
+    request: EnrichByDomainsRequest
+  ): Promise<EnrichByDomainsResponse> => {
+    const response = await API.post("/leads/enrichment/business/domains", request);
     return response.data;
   },
 
