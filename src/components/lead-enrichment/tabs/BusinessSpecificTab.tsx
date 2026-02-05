@@ -163,10 +163,12 @@ const BusinessSpecificTab = ({
       <Alert className="bg-gradient-to-br from-gray-800/30 to-gray-900/20 border border-white/10">
         <Briefcase className="w-4 h-4 text-[#69B4B7]" />
         <AlertDescription className="text-white/70 text-sm">
-          <strong className="text-[#69B4B7]">Business search (Tavily):</strong>{" "}
-          Enter a keyword (e.g. &quot;construction companies&quot;, &quot;SaaS&quot;).
-          We search LinkedIn for matching businesses and their domains. Then
-          select which domains to enrich with Apollo lead gen.
+          <strong className="text-[#69B4B7]">How it works:</strong> Enter a business
+          keyword (e.g. &quot;construction companies&quot;, &quot;SaaS&quot;). Optionally
+          pick a <strong>country</strong> or <strong>region</strong> to filter results.
+          We search LinkedIn via Tavily and return company names and domains.
+          <strong> Max results</strong> (1–50) limits how many companies are returned.
+          Select the domains you want, then click &quot;Enrich selected with Apollo&quot; to run lead gen.
         </AlertDescription>
       </Alert>
 
@@ -220,15 +222,20 @@ const BusinessSpecificTab = ({
       </div>
 
       <div className="space-y-3">
-        <label className="text-sm font-medium text-white/70">Max results</label>
+        <label className="text-sm font-medium text-white/70">Max results (1–50)</label>
         <Input
           type="number"
           min={1}
           max={50}
           value={maxResults}
-          onChange={(e) => setMaxResults(Math.min(50, Math.max(1, parseInt(e.target.value) || 20)))}
+          onChange={(e) => {
+            const v = parseInt(e.target.value, 10);
+            if (e.target.value === "") setMaxResults(20);
+            else if (!Number.isNaN(v)) setMaxResults(Math.min(50, Math.max(1, v)));
+          }}
           className="bg-gradient-to-br from-gray-800/50 to-gray-900/30 border border-white/10 text-white w-24"
         />
+        <p className="text-xs text-white/50">Maximum number of companies to return from search.</p>
       </div>
 
       <div className="flex gap-3">
