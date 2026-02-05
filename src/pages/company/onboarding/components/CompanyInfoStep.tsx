@@ -206,11 +206,10 @@ const CompanyInfoStep = ({
           placeholder="Enter your company name"
           minLength={2}
           maxLength={200}
-          className={`bg-white/[0.06] text-white placeholder:text-white/40 text-sm rounded-lg h-12 ${
-            errors.companyName
+          className={`bg-white/[0.06] text-white placeholder:text-white/40 text-sm rounded-lg h-12 ${errors.companyName
               ? "border-red-500 ring-offset-red-500"
               : "border-cyan-400/50"
-          }`}
+            }`}
         />
         {errors.companyName && (
           <p className="text-red-500 text-sm mt-1">{errors.companyName}</p>
@@ -235,11 +234,10 @@ const CompanyInfoStep = ({
           placeholder="Describe your business in 2-3 sentences..."
           minLength={10}
           maxLength={1000}
-          className={`bg-white/[0.06] text-white placeholder:text-white/40 min-h-[100px] scrollbar-hide text-sm rounded-lg ${
-            errors.businessDescription
+          className={`bg-white/[0.06] text-white placeholder:text-white/40 min-h-[100px] scrollbar-hide text-sm rounded-lg ${errors.businessDescription
               ? "border-red-500 ring-offset-red-500"
               : "border-cyan-400/50"
-          }`}
+            }`}
         />
         {errors.businessDescription && (
           <p className="text-red-500 text-sm mt-1">
@@ -260,11 +258,10 @@ const CompanyInfoStep = ({
             value={formData.address || ""}
             onChange={(e) => updateFormData({ address: e.target.value })}
             placeholder="Enter company address"
-            className={`bg-white/[0.06] text-white placeholder:text-white/40 text-sm rounded-lg h-12 ${
-              errors.address
+            className={`bg-white/[0.06] text-white placeholder:text-white/40 text-sm rounded-lg h-12 ${errors.address
                 ? "border-red-500 ring-offset-red-500"
                 : "border-cyan-400/50"
-            }`}
+              }`}
           />
           {errors.address && (
             <p className="text-red-500 text-sm mt-1">{errors.address}</p>
@@ -281,11 +278,10 @@ const CompanyInfoStep = ({
             value={formData.postalCode || ""}
             onChange={(e) => updateFormData({ postalCode: e.target.value })}
             placeholder="Enter postal code"
-            className={`bg-white/[0.06] text-white placeholder:text-white/40 text-sm rounded-lg h-12 ${
-              errors.postalCode
+            className={`bg-white/[0.06] text-white placeholder:text-white/40 text-sm rounded-lg h-12 ${errors.postalCode
                 ? "border-red-500 ring-offset-red-500"
                 : "border-cyan-400/50"
-            }`}
+              }`}
           />
           {errors.postalCode && (
             <p className="text-red-500 text-sm mt-1">{errors.postalCode}</p>
@@ -302,11 +298,10 @@ const CompanyInfoStep = ({
             value={formData.country || ""}
             onChange={(e) => updateFormData({ country: e.target.value })}
             placeholder="Enter country"
-            className={`bg-white/[0.06] text-white placeholder:text-white/40 text-sm rounded-lg h-12 ${
-              errors.country
+            className={`bg-white/[0.06] text-white placeholder:text-white/40 text-sm rounded-lg h-12 ${errors.country
                 ? "border-red-500 ring-offset-red-500"
                 : "border-cyan-400/50"
-            }`}
+              }`}
           />
           {errors.country && (
             <p className="text-red-500 text-sm mt-1">{errors.country}</p>
@@ -360,11 +355,10 @@ const CompanyInfoStep = ({
           }
           maxLength={500}
           disabled={isGenerating}
-          className={`bg-white/[0.06] text-white placeholder:text-white/40 text-sm rounded-lg h-12 ${
-            errors.coreOfferings
+          className={`bg-white/[0.06] text-white placeholder:text-white/40 text-sm rounded-lg h-12 ${errors.coreOfferings
               ? "border-red-500 ring-offset-red-500"
               : "border-cyan-400/50"
-          }`}
+            }`}
         />
         {isGenerating && (
           <p className="text-xs text-cyan-400/70 flex items-center gap-1">
@@ -393,11 +387,10 @@ const CompanyInfoStep = ({
           placeholder="Select preferred countries or regions"
           searchPlaceholder="Search countries..."
           emptyMessage="No countries found."
-          className={`bg-white/[0.06] text-white placeholder:text-white/40 text-sm h-12 ${
-            errors.preferredCountries
+          className={`bg-white/[0.06] text-white placeholder:text-white/40 text-sm h-12 ${errors.preferredCountries
               ? "border-red-500 ring-offset-red-500"
               : "border-cyan-400/50"
-          }`}
+            }`}
           maxDisplayItems={3}
         />
         {errors.preferredCountries && (

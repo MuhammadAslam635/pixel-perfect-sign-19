@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
-import Logo from "./Logo";
 import gridPattern from "@/assets/grid-pattern.png";
 import cardIcon from "@/assets/card-icon.png";
+import Logo from "@/components/Logo";
 
 type AuthLayoutProps = {
   title: string;

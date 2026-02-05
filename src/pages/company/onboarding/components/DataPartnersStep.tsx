@@ -40,11 +40,11 @@ const DataPartnersStep = ({
     if (!files || files.length === 0) return;
 
     const fileArray = Array.from(files);
-    
+
     // Validate file types
     const allowedTypes = [
       "image/jpeg",
-      "image/jpg", 
+      "image/jpg",
       "image/png",
       "image/gif",
       "application/pdf",
@@ -133,11 +133,10 @@ const DataPartnersStep = ({
           placeholder="What key advantages or differentiators set you apart from competitors? (Optional - min 10 characters if provided)"
           minLength={10}
           maxLength={500}
-          className={`bg-white/[0.06] text-white placeholder:text-white/40 min-h-[120px] scrollbar-hide text-sm rounded-lg ${
-            errors.differentiators
+          className={`bg-white/[0.06] text-white placeholder:text-white/40 min-h-[120px] scrollbar-hide text-sm rounded-lg ${errors.differentiators
               ? "border-red-500 ring-offset-red-500"
               : "border-cyan-400/50"
-          }`}
+            }`}
         />
         {errors.differentiators && (
           <p className="text-red-500 text-sm mt-1">{errors.differentiators}</p>
@@ -234,4 +233,3 @@ const DataPartnersStep = ({
 };
 
 export default DataPartnersStep;
-

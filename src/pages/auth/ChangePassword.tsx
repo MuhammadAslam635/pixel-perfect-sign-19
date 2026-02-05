@@ -7,9 +7,9 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { loginSuccess } from "@/store/slices/authSlice";
-import AuthLayout from "@/components/AuthLayout";
 import { authService } from "@/services/auth.service";
 import { getUserData, clearAuthData } from "@/utils/authHelpers";
+import AuthLayout from "./AuthLayout";
 
 const ChangePassword = () => {
   const [password, setPassword] = useState("");

@@ -70,7 +70,7 @@ const LeadChat = lazy(
 );
 const LeadsPage = lazy(() => import("@/pages/company/crm/leads"));
 const CalendarPage = lazy(() => import("@/pages/company/crm/calendar"));
-const OnboardingPage = lazy(() => import("@/pages/onboarding"));
+const OnboardingPage = lazy(() => import("@/pages/company/onboarding"));
 const AdminDashboard = lazy(() => import("@/pages/admin/dashboard/Dashboard"));
 const AdminPrompts = lazy(() => import("@/pages/admin/prompts"));
 const AdminSettings = lazy(() => import("@/pages/admin/settings/Settings"));

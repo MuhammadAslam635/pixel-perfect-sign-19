@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import AuthLayout from "@/components/AuthLayout";
+import AuthLayout from "./AuthLayout";
 import { AuthInput } from "@/components/ui/auth-input";
 import {
   authService,
@@ -22,10 +22,10 @@ const SignUp = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  
+
   // Detect browser timezone on component mount using Luxon
   const [browserTimezone, setBrowserTimezone] = useState<string | null>(null);
-  
+
   useEffect(() => {
     // Get browser timezone using utility function
     const timezone = getBrowserTimezone();
@@ -267,7 +267,7 @@ const SignUp = () => {
       if (response.success) {
         toast.success(
           response.message ||
-            "Verification email sent! Please check your inbox."
+          "Verification email sent! Please check your inbox."
         );
         setFirstName("");
         setLastName("");
@@ -301,8 +301,8 @@ const SignUp = () => {
       ? "Submitting..."
       : "Registering..."
     : isInviteFlow
-    ? "Accept Invitation"
-    : "Register";
+      ? "Accept Invitation"
+      : "Register";
   const invitationExpiryDisplay = invitationDetails
     ? new Date(invitationDetails.expiresAt).toLocaleString()
     : "";

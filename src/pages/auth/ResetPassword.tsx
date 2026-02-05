@@ -5,7 +5,7 @@ import { AuthInput } from "@/components/ui/auth-input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import AuthLayout from "@/components/AuthLayout";
+import AuthLayout from "./AuthLayout";
 import { authService } from "@/services/auth.service";
 
 const ResetPassword = () => {

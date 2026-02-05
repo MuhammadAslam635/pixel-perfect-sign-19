@@ -13,11 +13,11 @@ import {
 import { AppDispatch, RootState } from "@/store/store";
 import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
-import AuthLayout from "./AuthLayout";
 import { authService } from "@/services/auth.service";
 import { leadsService } from "@/services/leads.service";
 import { onboardingService } from "@/services/onboarding.service";
 import { fetchUserPermissions } from "@/store/slices/permissionsSlice";
+import AuthLayout from "./AuthLayout";
 
 const SignIn = () => {
   const [email, setEmail] = useState("");
@@ -91,7 +91,7 @@ const SignIn = () => {
           sessionStorage.removeItem("has_redirected_to_onboarding");
           sessionStorage.removeItem("onboarding_skipped");
           sessionStorage.removeItem("onboarding_just_completed");
-          
+
           setCheckingOnboarding(true);
           try {
             const onboardingResponse =
@@ -140,10 +140,10 @@ const SignIn = () => {
         }
 
         toast.success("Login successful!");
-        
+
         // Redirect to appropriate dashboard based on user role
-        const dashboardPath = response.user.role === "Admin" 
-          ? "/admin/dashboard" 
+        const dashboardPath = response.user.role === "Admin"
+          ? "/admin/dashboard"
           : "/dashboard";
         navigate(dashboardPath);
       } else {

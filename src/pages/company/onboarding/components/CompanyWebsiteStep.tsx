@@ -1,7 +1,6 @@
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { OnboardingQuestions } from "@/types/onboarding.types";
-import { Globe } from "lucide-react";
 
 interface CompanyWebsiteStepProps {
   formData: OnboardingQuestions;
@@ -39,9 +38,8 @@ const CompanyWebsiteStep = ({
           onChange={(e) => updateFormData({ website: e.target.value })}
           onKeyPress={handleKeyPress}
           placeholder="Enter Your website link"
-          className={`bg-white/[0.06] text-white placeholder:text-white/40 text-sm rounded-lg h-14 ${
-            error ? "border-red-500 ring-offset-red-500" : "border-cyan-400/50"
-          }`}
+          className={`bg-white/[0.06] text-white placeholder:text-white/40 text-sm rounded-lg h-14 ${error ? "border-red-500 ring-offset-red-500" : "border-cyan-400/50"
+            }`}
         />
         {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
       </div>

@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import AuthLayout from "@/components/AuthLayout";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { authService } from "@/services/auth.service";
 import { toast } from "sonner";
 import { CheckCircle2, Clock, AlertCircle } from "lucide-react";
+import AuthLayout from "./AuthLayout";
 
 const VerifyEmail = () => {
   const [searchParams] = useSearchParams();
