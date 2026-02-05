@@ -74,15 +74,14 @@ const CustomerSupportQueriesTable: React.FC = () => {
 
 
   return (
-    <motion.div
+    <div
       className="w-full"
-      variants={containerVariantsClients}
-      initial="hidden"
-      animate="visible"
     >
       <div
-        className="border border-[#FFFFFF0D] p-6 rounded-xl" style={{
-          background: "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
+        className="border border-[#FFFFFF0D] p-6 rounded-xl"
+        style={{
+          background:
+            "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
         }}
       >
         <Card className="mb-6 bg-transparent border-[#FFFFFF1A]">
@@ -104,7 +103,7 @@ const CustomerSupportQueriesTable: React.FC = () => {
             <button
               onClick={handleRefresh}
               disabled={isRefetching || isLoading}
-              className="group relative overflow-hidden flex items-center justify-center h-10 rounded-full border border-white/40 px-3.5 gap-2 text-xs font-medium tracking-wide transition-all duration-400 ease-elastic text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/15 before:to-transparent before:transition-all before:duration-300 before:ease-in-out hover:before:from-white/25 hover:before:duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="group relative overflow-hidden flex items-center justify-center h-10 rounded-full border border-white/40 px-3.5 gap-2 text-xs font-medium tracking-wide text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/15 before:to-transparent !transition-none hover:before:from-white/25 disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
                 background: "#FFFFFF1A",
                 boxShadow:
@@ -121,7 +120,7 @@ const CustomerSupportQueriesTable: React.FC = () => {
                 }}
               ></div>
               <RefreshCwIcon
-                className={`h-4 w-4 flex-shrink-0 transition-[color,filter] duration-250 ease-in-out text-white drop-shadow-[0_8px_18px_rgba(62,100,180,0.45)] ${isRefetching || isLoading ? "animate-spin" : ""
+                className={`h-4 w-4 flex-shrink-0 text-white drop-shadow-[0_8px_18px_rgba(62,100,180,0.45)] !transition-none ${isRefetching || isLoading ? "animate-spin" : ""
                   }`}
               />
               <span className="whitespace-nowrap relative z-10">
@@ -149,7 +148,7 @@ const CustomerSupportQueriesTable: React.FC = () => {
         onClose={handleCloseModal}
         viewType="queries"
       />
-    </motion.div>
+    </div>
   );
 };
 

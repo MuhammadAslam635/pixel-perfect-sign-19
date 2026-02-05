@@ -8,7 +8,6 @@ import type { Client } from "@/services/clients.service";
 import ClientDetailsModal from "./ClientDetailsModal";
 import { useToast } from "@/hooks/use-toast";
 import { sanitizeErrorMessage } from "@/utils/errorMessages";
-import { containerVariantsClients } from "@/helpers/customerSupport";
 import ClientSessionTable from "./ClientSessionTable";
 
 interface ClientsTableProps {
@@ -72,8 +71,14 @@ const ClientsTable: React.FC<ClientsTableProps> = ({ viewType = "sessions" }) =>
   }
 
   return (
-    <motion.div className="w-full" variants={containerVariantsClients} initial="hidden" animate="visible">
-      <div className="border border-[#FFFFFF0D] p-6 rounded-xl" style={{ background: "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)", }}>
+    <div className="w-full">
+      <div
+        className="border border-[#FFFFFF0D] p-6 rounded-xl"
+        style={{
+          background:
+            "linear-gradient(173.83deg, rgba(255, 255, 255, 0.08) 4.82%, rgba(255, 255, 255, 0.00002) 38.08%, rgba(255, 255, 255, 0.00002) 56.68%, rgba(255, 255, 255, 0.02) 95.1%)",
+        }}
+      >
         <Card className="mb-6 bg-transparent border-[#FFFFFF1A]">
           <CardContent className="flex flex-col md:flex-row md:items-center gap-4 p-4">
             <div className="flex-1 relative">
@@ -83,13 +88,39 @@ const ClientsTable: React.FC<ClientsTableProps> = ({ viewType = "sessions" }) =>
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 w-full rounded-full bg-[#FFFFFF1A] border border-white/40 text-gray-300 placeholder:text-gray-500 focus:ring-0"
-                style={{ boxShadow: "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset", borderRadius: "9999px", }}
+                style={{
+                  boxShadow:
+                    "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+                  borderRadius: "9999px",
+                }}
               />
             </div>
-            <button onClick={handleSync} disabled={isSyncing} className="group relative overflow-hidden flex items-center justify-center h-10 rounded-full border border-white/40 px-3.5 gap-2 text-xs font-medium tracking-wide transition-all duration-400 ease-elastic text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/15 before:to-transparent before:transition-all before:duration-300 before:ease-in-out hover:before:from-white/25 hover:before:duration-200 disabled:opacity-50 disabled:cursor-not-allowed" style={{ background: "#FFFFFF1A", boxShadow: "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset", }}>
-              <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[100px] h-[100px] rounded-full pointer-events-none" style={{ background: "linear-gradient(180deg, #67B0B7 0%, #4066B3 100%)", filter: "blur(20px)", WebkitFilter: "blur(20px)", }}></div>
-              <RefreshCwIcon className={`h-4 w-4 flex-shrink-0 transition-[color,filter] duration-250 ease-in-out text-white drop-shadow-[0_8px_18px_rgba(62,100,180,0.45)] ${isSyncing ? "animate-spin" : ""}`}></RefreshCwIcon>
-              <span className="whitespace-nowrap relative z-10">{isSyncing ? "Syncing..." : "Sync"}</span>
+            <button
+              onClick={handleSync}
+              disabled={isSyncing || isLoading}
+              className="group relative overflow-hidden flex items-center justify-center h-10 rounded-full border border-white/40 px-3.5 gap-2 text-xs font-medium tracking-wide text-white shadow-[0_16px_28px_rgba(0,0,0,0.35)] before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-2/5 before:rounded-t-full before:bg-gradient-to-b before:from-white/15 before:to-transparent !transition-none hover:before:from-white/25 disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                background: "#FFFFFF1A",
+                boxShadow:
+                  "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
+              }}
+            >
+              <div
+                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[100px] h-[100px] rounded-full pointer-events-none"
+                style={{
+                  background:
+                    "linear-gradient(180deg, #67B0B7 0%, #4066B3 100%)",
+                  filter: "blur(20px)",
+                  WebkitFilter: "blur(20px)",
+                }}
+              ></div>
+              <RefreshCwIcon
+                className={`h-4 w-4 flex-shrink-0 text-white drop-shadow-[0_8px_18px_rgba(62,100,180,0.45)] !transition-none ${isSyncing || isLoading ? "animate-spin" : ""
+                  }`}
+              />
+              <span className="whitespace-nowrap relative z-10">
+                {isSyncing || isLoading ? "Syncing..." : "Sync"}
+              </span>
             </button>
           </CardContent>
         </Card>
@@ -111,7 +142,7 @@ const ClientsTable: React.FC<ClientsTableProps> = ({ viewType = "sessions" }) =>
         onClose={handleCloseModal}
         viewType={viewType}
       />
-    </motion.div>
+    </div>
   );
 };
 
