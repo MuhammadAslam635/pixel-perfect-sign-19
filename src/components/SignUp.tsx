@@ -122,6 +122,7 @@ const SignUp = () => {
     if (/[A-Z]/.test(pass)) score++;
     if (/[0-9]/.test(pass)) score++;
     if (/[^A-Za-z0-9]/.test(pass)) score++;
+    if (pass.length >= 8) score++;
     return score;
   };
 
@@ -162,7 +163,7 @@ const SignUp = () => {
       } else if (password.length < 8) {
         newErrors.password = "Password must be at least 8 characters";
         hasError = true;
-      } else if (calculateStrength(password) < 4) {
+      } else if (calculateStrength(password) < 5) {
         newErrors.password = "Password must meet all strength requirements";
         hasError = true;
       }
@@ -249,7 +250,7 @@ const SignUp = () => {
     } else if (password.length < 8) {
       newErrors.password = "Password must be at least 8 characters";
       hasError = true;
-    } else if (calculateStrength(password) < 4) {
+    } else if (calculateStrength(password) < 5) {
       newErrors.password = "Password must meet all strength requirements";
       hasError = true;
     }
@@ -562,17 +563,19 @@ const SignUp = () => {
                 <span className={`text-xs font-medium ${
                    (() => {
                     const score = calculateStrength(password);
-                    if (score <= 1) return "text-red-400";
-                    if (score === 2) return "text-orange-400";
-                    if (score === 3) return "text-yellow-400";
+                    if (score <= 1) return "text-red-500";
+                    if (score === 2) return "text-red-400";
+                    if (score === 3) return "text-orange-400";
+                    if (score === 4) return "text-yellow-400";
                     return "text-green-400";
                   })()
                 }`}>
                   {(() => {
                     const score = calculateStrength(password);
-                    if (score <= 1) return "Weak";
-                    if (score === 2) return "Fair";
-                    if (score === 3) return "Good";
+                    if (score <= 1) return "Very Weak";
+                    if (score === 2) return "Weak";
+                    if (score === 3) return "Fair";
+                    if (score === 4) return "Good";
                     return "Strong";
                   })()}
                 </span>
@@ -582,15 +585,20 @@ const SignUp = () => {
                   className={`h-full transition-all duration-500 ease-out rounded-full ${
                     (() => {
                       const score = calculateStrength(password);
-                      if (score <= 1) return "bg-red-500 w-[25%]";
-                      if (score === 2) return "bg-orange-500 w-[50%]";
-                      if (score === 3) return "bg-yellow-500 w-[75%]";
+                      if (score <= 1) return "bg-red-500 w-[20%]";
+                      if (score === 2) return "bg-red-400 w-[40%]";
+                      if (score === 3) return "bg-orange-500 w-[60%]";
+                      if (score === 4) return "bg-yellow-500 w-[80%]";
                       return "bg-green-500 w-[100%]";
                     })()
                   }`}
                 />
               </div>
               <ul className="mt-2 space-y-1">
+                 <li className={`text-xs flex items-center gap-2 ${password.length >= 8 ? "text-green-400" : "text-white/40"}`}>
+                    <div className={`w-1.5 h-1.5 rounded-full ${password.length >= 8 ? "bg-green-400" : "bg-white/20"}`}></div>
+                    At least 8 characters
+                 </li>
                  <li className={`text-xs flex items-center gap-2 ${/[a-z]/.test(password) ? "text-green-400" : "text-white/40"}`}>
                     <div className={`w-1.5 h-1.5 rounded-full ${/[a-z]/.test(password) ? "bg-green-400" : "bg-white/20"}`}></div>
                     Lowercase letter
