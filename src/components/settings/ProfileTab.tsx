@@ -666,7 +666,7 @@ export const ProfileTab = () => {
         <CardFooter className="justify-end border-t border-white/10 bg-white/[0.02]">
           <Button
             type="submit"
-            className="mt-4 bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:from-[#30cfd0] hover:to-[#2a9cb3]"
+            className="mt-4 bg-gradient-to-r from-cyan-500/60 to-[#1F4C55] text-white hover:brightness-110 transition-all"
             style={{
               boxShadow:
                 "0px 3.43px 3.43px 0px #FFFFFF29 inset, 0px -3.43px 3.43px 0px #FFFFFF29 inset",
@@ -681,6 +681,7 @@ export const ProfileTab = () => {
       <AvailabilitySettings
         open={availabilityDialogOpen}
         onOpenChange={setAvailabilityDialogOpen}
+        profileTimezone={timezone}
       />
     </form>
   );
