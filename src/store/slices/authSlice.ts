@@ -60,6 +60,8 @@ const authSlice = createSlice({
       state.user = null;
       state.loading = false;
       state.error = null;
+      state.mfaRequired = false;
+      state.mfaToken = null;
       
       // 2. Clear Persistence
       clearAuthData();
