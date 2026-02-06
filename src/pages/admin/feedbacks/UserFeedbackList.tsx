@@ -58,7 +58,17 @@ const UserFeedbackList = () => {
 
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [loading, setLoading] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  
+  // Initialize from localStorage or default to 'all'
+  const [statusFilter, setStatusFilter] = useState<string>(() => {
+    return localStorage.getItem("adminFeedbackStatusFilter") || "all";
+  });
+
+  // Sync to localStorage whenever filter changes
+  useEffect(() => {
+    localStorage.setItem("adminFeedbackStatusFilter", statusFilter);
+  }, [statusFilter]);
+
   const [userInfo, setUserInfo] = useState<{ name: string; email: string }>({
     name: "",
     email: "",
