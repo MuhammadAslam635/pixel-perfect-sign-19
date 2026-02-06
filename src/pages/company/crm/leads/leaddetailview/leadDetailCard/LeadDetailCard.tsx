@@ -6,8 +6,8 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { usePermissions } from "@/hooks/usePermissions";
 import { convertLeadTimeToUserTime, convertTimezoneLocalToUTC, formatDateTimeLocalInTimezone, getCurrentTimeInTimezone, getDefaultSearchEndInTimezone, getTimezoneAbbreviation, getTimezoneOffset } from "@/utils/commonFunctions";
-import { LeadScheduleMeetingDialog } from "./LeadScheduleMeetingDialog";
-import LeadInformation from "./LeadInformation";
+import { LeadScheduleMeetingDialog } from "./components/LeadScheduleMeetingDialog";
+import LeadInformation from "./components/LeadInformation";
 
 type ScheduleMeetingForm = {
   subject: string;

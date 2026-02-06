@@ -11,10 +11,10 @@ import {
   elevenlabsService,
 } from "@/services/twilio.service";
 import API from "@/utils/api";
-import { SelectedCallLogView } from "../index";
+import { SelectedCallLogView } from "../../index";
 import { ActiveNavButton } from "@/components/ui/primary-btn";
 import { RefreshCcw, Loader2, Sparkles } from "lucide-react";
-import EditableFollowupSuggestion from "@/pages/company/crm/leads/leaddetailview/components/EditableFollowupSuggestion";
+import EditableFollowupSuggestion from "./EditableFollowupSuggestion";
 import {
   useCreateFollowupPlanFromCall,
   useUpdateFollowupPlan,

@@ -12,13 +12,13 @@ import { leadSummaryService, LeadSummaryResponse } from "@/services/leadSummary.
 import ConfirmDialog from "@/components/ui/confirm-dialog";
 import { calendarService, LeadMeetingRecord, AvailableSlot, SyncMeetingsResponse, } from "@/services/calendar.service";
 import { SelectedCallLogView } from "..";
-import CompanyTab from "./CompanyTab";
-import CallScriptTab from "./CallScriptTab";
-import AgentResearchTab from "./AgentResearchTab";
-import NotesTab from "./NotesTab";
-import SummaryTab from "./SummaryTab";
-import FollowupTab from "./FollowupTab";
-import CalendarTab from "./CalendarTab";
+import CompanyTab from "./components/CompanyTab";
+import CallScriptTab from "./components/CallScriptTab";
+import AgentResearchTab from "./components/AgentResearchTab";
+import NotesTab from "./components/NotesTab";
+import SummaryTab from "./components/SummaryTab";
+import FollowupTab from "./components/FollowupTab";
+import CalendarTab from "./components/CalendarTab";
 import { useUserTimeZone } from "@/hooks/useUserTimeZone";
 
 type ActivityProps = {

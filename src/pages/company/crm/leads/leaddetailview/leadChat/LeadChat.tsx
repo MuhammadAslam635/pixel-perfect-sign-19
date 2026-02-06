@@ -1,39 +1,17 @@
 import { RefObject, useEffect, useMemo, useRef, useState } from "react";
 import ReactDOMServer from "react-dom/server";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  ChevronDown,
-  ChevronRight,
-  Loader2,
-  MoreVertical,
-  Send,
-  Sparkles,
-  Trash2,
-  Copy,
-  Check,
-  Download,
-  MessageCircle,
-  MapPin,
-  X,
-  ArrowLeft,
-  Paperclip,
-  CheckCircle2,
-} from "lucide-react";
-import { IoLogoWhatsapp, IoLocationSharp } from "react-icons/io5";
+import { ChevronDown, ChevronRight, Loader2, MoreVertical, Send, Sparkles, Trash2, Copy, Check, Download, X, ArrowLeft, Paperclip, } from "lucide-react";
 import jsPDF from "jspdf";
-import { ActiveNavButton } from "@/components/ui/primary-btn";
 import { Button } from "@/components/ui/button";
 import { Lead, leadsService } from "@/services/leads.service";
 import { emailService } from "@/services/email.service";
 import { Email } from "@/types/email.types";
 import { twilioService, LeadSmsMessage } from "@/services/twilio.service";
 import API from "@/utils/api";
-import { CallView } from "./CallView";
-import MeetingBotTab from "./MeetingBotTab";
-import {
-  whatsappService,
-  WhatsAppMessage as WhatsAppChatMessage,
-} from "@/services/whatsapp.service";
+import { CallView } from "./components/CallView";
+import MeetingBotTab from "./components/MeetingBotTab";
+import { whatsappService, WhatsAppMessage as WhatsAppChatMessage } from "@/services/whatsapp.service";
 import { connectionMessagesService } from "@/services/connectionMessages.service";
 import { SelectedCallLogView } from "../index";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
@@ -41,28 +19,10 @@ import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import { AvatarFallback } from "@/components/ui/avatar-fallback";
 import { proposalService, Proposal } from "@/services/proposal.service";
-import { proposalExampleService } from "@/services/proposalExample.service";
 import { useProposalExamplesData } from "@/pages/company/companyKnowledgeBase/hooks";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import { sanitizeErrorMessage } from "@/utils/errorMessages";
 import { getUserData } from "@/utils/authHelpers";
@@ -77,11 +37,7 @@ interface HeadingNode {
   children: HeadingNode[];
 }
 
-const HeadingTreeItem = ({
-  node,
-  onUpdate,
-  onCommit,
-}: {
+const HeadingTreeItem = ({ node, onUpdate, onCommit }: {
   node: HeadingNode;
   onUpdate: (index: number, text: string) => void;
   onCommit?: (index: number, text: string) => void;
@@ -5968,8 +5924,8 @@ const LeadChat = ({
                                 <div
                                   key={idx}
                                   className={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-[10px] transition-all border group cursor-pointer ${isOutbound
-                                      ? "bg-white/10 border-white/20 hover:bg-white/20 text-white"
-                                      : "bg-white/5 border-white/10 hover:bg-white/10 text-white/90"
+                                    ? "bg-white/10 border-white/20 hover:bg-white/20 text-white"
+                                    : "bg-white/5 border-white/10 hover:bg-white/10 text-white/90"
                                     }`}
                                   onClick={() => {
                                     if (attachment.url) {

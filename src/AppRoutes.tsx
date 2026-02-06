@@ -66,7 +66,7 @@ const StatsPage = lazy(() =>
   import("@/pages/company/crm/emails").then((module) => ({ default: module.StatsPage }))
 );
 const LeadChat = lazy(
-  () => import("@/pages/company/crm/leads/leaddetailview/components/LeadChat")
+  () => import("@/pages/company/crm/leads/leaddetailview/leadChat/LeadChat")
 );
 const LeadsPage = lazy(() => import("@/pages/company/crm/leads"));
 const CalendarPage = lazy(() => import("@/pages/company/crm/calendar"));
