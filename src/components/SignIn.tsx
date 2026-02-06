@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { AxiosError } from "axios";
@@ -9,6 +9,7 @@ import {
   loginStart,
   loginSuccess,
   loginFailure,
+  setMfaRequired,
 } from "@/store/slices/authSlice";
 import { AppDispatch, RootState } from "@/store/store";
 import { toast } from "sonner";
@@ -22,52 +23,30 @@ import { fetchUserPermissions } from "@/store/slices/permissionsSlice";
 const SignIn = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [mfaCode, setMfaCode] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [checkingOnboarding, setCheckingOnboarding] = useState(false);
   const [errors, setErrors] = useState({
     email: "",
     password: "",
+    mfaCode: "",
   });
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const { loading } = useSelector((state: RootState) => state.auth);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrors({ email: "", password: "" });
+  // Reset MFA state when landing on login page to ensure fresh start
+  useEffect(() => {
+    dispatch(setMfaRequired({ required: false, token: null }));
+  }, [dispatch]);
 
-    // Validate fields
-    const newErrors = { email: "", password: "" };
-    let hasError = false;
+  const { loading, mfaRequired, mfaToken } = useSelector((state: RootState) => state.auth);
 
-    if (!email) {
-      newErrors.email = "Email is required";
-      hasError = true;
-    }
-    if (!password) {
-      newErrors.password = "Password is required";
-      hasError = true;
-    }
-
-    if (hasError) {
-      setErrors(newErrors);
-      return;
-    }
-
-    dispatch(loginStart());
-
-    try {
-      const response = await authService.login({
-        email,
-        password,
-      });
-
-      if (response.success && response.user) {
+  const handleLoginSuccess = async (responseUser: any) => {
         dispatch(
           loginSuccess({
-            email: response.user.email,
-            name: response.user.name || response.user.email,
-            ...response.user,
+            email: responseUser.email,
+            name: responseUser.name || responseUser.email,
+            ...responseUser,
           })
         );
         dispatch(fetchUserPermissions());
@@ -77,7 +56,7 @@ const SignIn = () => {
         sessionStorage.removeItem("onboarding_skipped");
 
         // Check if user needs to change password
-        if (response.user.requiresPasswordChange) {
+        if (responseUser.requiresPasswordChange) {
           toast.info("Please change your temporary password to continue.");
           navigate("/change-password");
           return;
@@ -85,7 +64,7 @@ const SignIn = () => {
 
         // Check onboarding status before allowing dashboard access
         // Only check for Company and CompanyAdmin roles
-        const userRole = response.user.role;
+        const userRole = responseUser.role;
         if (userRole === "Company" || userRole === "CompanyAdmin") {
           // Clear any previous session flags on new login
           sessionStorage.removeItem("has_redirected_to_onboarding");
@@ -142,10 +121,68 @@ const SignIn = () => {
         toast.success("Login successful!");
         
         // Redirect to appropriate dashboard based on user role
-        const dashboardPath = response.user.role === "Admin" 
+        const dashboardPath = responseUser.role === "Admin" 
           ? "/admin/dashboard" 
           : "/dashboard";
         navigate(dashboardPath);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrors({ email: "", password: "", mfaCode: "" });
+
+    // Validate fields
+    const newErrors = { email: "", password: "", mfaCode: "" };
+    let hasError = false;
+
+    if (mfaRequired) {
+      if (!mfaCode) {
+        newErrors.mfaCode = "Code is required";
+        hasError = true;
+      }
+    } else {
+      if (!email) {
+        newErrors.email = "Email is required";
+        hasError = true;
+      }
+      if (!password) {
+        newErrors.password = "Password is required";
+        hasError = true;
+      }
+    }
+
+    if (hasError) {
+      setErrors(newErrors);
+      return;
+    }
+
+    dispatch(loginStart());
+
+    try {
+      let response;
+      
+      if (mfaRequired && mfaToken) {
+         response = await authService.verifyLogin2FA({
+           mfaToken,
+           token: mfaCode
+         });
+      } else {
+         response = await authService.login({
+          email,
+          password,
+        });
+      }
+
+      if (response.success) {
+        if ((response as any).mfaRequired) {
+          dispatch(setMfaRequired({ required: true, token: (response as any).mfaToken }));
+          toast.info(response.message || "Please enter 2FA code");
+          return;
+        }
+
+        if (response.user) {
+          await handleLoginSuccess(response.user);
+        }
       } else {
         dispatch(loginFailure(response.message || "Login failed"));
         toast.error(response.message || "Login failed");
@@ -169,6 +206,9 @@ const SignIn = () => {
     } else if (name === "password") {
       setPassword(value);
       setErrors((prev) => ({ ...prev, password: "" }));
+    } else if (name === "mfaCode") {
+      setMfaCode(value);
+      setErrors((prev) => ({ ...prev, mfaCode: "" }));
     }
   };
 
@@ -193,67 +233,100 @@ const SignIn = () => {
         </div>
       )}
       <form onSubmit={handleSubmit} className="space-y-5 font-[Poppins]">
-        {/* Email */}
-        <div className="space-y-2">
-          <Label htmlFor="email" className="text-base font-light text-white">
-            Email
-          </Label>
-          <AuthInput
-            id="email"
-            type="email"
-            name="email"
-            placeholder="Enter Your Email"
-            value={email}
-            onChange={handleChange}
-            className="text-base font-normal text-white/70"
-            disabled={loading}
-          />
-          {errors.email && (
-            <p className="text-sm text-red-400">{errors.email}</p>
-          )}
-        </div>
-
-        {/* Password */}
-        <div className="space-y-2">
-          <Label htmlFor="password" className="text-base font-light text-white">
-            Password
-          </Label>
-          <div className="relative">
+        {mfaRequired ? (
+           <div className="space-y-2">
+            <Label htmlFor="mfaCode" className="text-base font-light text-white">
+              Two-Factor Authentication Code
+            </Label>
             <AuthInput
-              id="password"
-              type={showPassword ? "text" : "password"}
-              name="password"
-              placeholder="Enter Your Password"
-              value={password}
+              id="mfaCode"
+              type="text"
+              name="mfaCode"
+              placeholder="Enter 6-digit code"
+              value={mfaCode}
               onChange={handleChange}
               className="text-base font-normal text-white/70"
               disabled={loading}
+              autoFocus
             />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 transition-colors hover:text-white z-20 cursor-pointer"
-              aria-label="Toggle password visibility"
-            >
-              {showPassword ? (
-                <EyeOff className="h-5 w-5" />
-              ) : (
-                <Eye className="h-5 w-5" />
+            {errors.mfaCode && (
+              <p className="text-sm text-red-400">{errors.mfaCode}</p>
+            )}
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => dispatch(setMfaRequired({ required: false, token: null }))}
+                className="text-sm font-medium text-white hover:text-white/80 transition-colors"
+              >
+                Back to Login
+              </button>
+            </div>
+           </div>
+        ) : (
+          <>
+            {/* Email */}
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-base font-light text-white">
+                Email
+              </Label>
+              <AuthInput
+                id="email"
+                type="email"
+                name="email"
+                placeholder="Enter Your Email"
+                value={email}
+                onChange={handleChange}
+                className="text-base font-normal text-white/70"
+                disabled={loading}
+              />
+              {errors.email && (
+                <p className="text-sm text-red-400">{errors.email}</p>
               )}
-            </button>
-          </div>
-          {errors.password && (
-            <p className="text-sm text-red-400">{errors.password}</p>
-          )}
-          <div className="flex justify-end">
-            <Link
-              to="/forgot-password"
-              className="text-sm font-medium text-white hover:text-white/80 transition-colors"
-            >
-              Forgot password?
-            </Link>
-          </div>
-        </div>
+            </div>
+
+            {/* Password */}
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-base font-light text-white">
+                Password
+              </Label>
+              <div className="relative">
+                <AuthInput
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  placeholder="Enter Your Password"
+                  value={password}
+                  onChange={handleChange}
+                  className="text-base font-normal text-white/70"
+                  disabled={loading}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 transition-colors hover:text-white z-20 cursor-pointer"
+                  aria-label="Toggle password visibility"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
+              {errors.password && (
+                <p className="text-sm text-red-400">{errors.password}</p>
+              )}
+              <div className="flex justify-end">
+                <Link
+                  to="/forgot-password"
+                  className="text-sm font-medium text-white hover:text-white/80 transition-colors"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+            </div>
+          </>
+        )}
 
         {/* Submit Button */}
         <Button
