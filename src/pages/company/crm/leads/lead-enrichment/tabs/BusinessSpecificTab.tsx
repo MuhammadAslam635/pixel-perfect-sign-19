@@ -2,9 +2,12 @@ import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   Briefcase,
-  AlertCircle,
   Loader2,
   MapPin,
+  Search,
+  CheckSquare,
+  Square,
+  Globe,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,7 +25,7 @@ import leadEnrichmentService from "@/services/leadEnrichment.service";
 import { COUNTRIES, REGIONS } from "@/types/leadEnrichment";
 import { toast } from "sonner";
 import type {
-  BusinessEnrichmentRequest,
+  BusinessSearchResult,
   SeniorityLevel,
 } from "@/types/leadEnrichment";
 
@@ -35,84 +38,119 @@ const BusinessSpecificTab = ({
   selectedSeniorities = [],
   onEnrichmentStart,
 }: BusinessSpecificTabProps) => {
-  const [businessQuery, setBusinessQuery] = useState("");
+  const [keyword, setKeyword] = useState("");
   const [locationType, setLocationType] = useState<"country" | "region">("country");
   const [selectedLocation, setSelectedLocation] = useState("");
-  const [maxCompanies, setMaxCompanies] = useState(3);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [maxResults, setMaxResults] = useState(5);
+  const [isSearching, setIsSearching] = useState(false);
+  const [isEnriching, setIsEnriching] = useState(false);
+  const [businesses, setBusinesses] = useState<BusinessSearchResult[]>([]);
+  const [selectedDomains, setSelectedDomains] = useState<Set<string>>(new Set());
 
-  const handleEnrich = async () => {
-    // Validation
-    if (!businessQuery.trim()) {
-      toast.error("Please enter a business description or search query");
+  const selectableBusinesses = useMemo(
+    () => businesses.filter((b) => b.domain != null && b.domain.trim() !== ""),
+    [businesses]
+  );
+
+  const handleSearch = async () => {
+    if (!keyword.trim()) {
+      toast.error("Please enter a business keyword");
       return;
     }
-
-    if (!selectedLocation) {
-      toast.error("Please select a location");
-      return;
-    }
-
-    if (maxCompanies < 1 || maxCompanies > 50) {
-      toast.error("Maximum companies must be between 1 and 50");
-      return;
-    }
-
-    setIsSubmitting(true);
-
+    setIsSearching(true);
+    setBusinesses([]);
+    setSelectedDomains(new Set());
     try {
-      const request: BusinessEnrichmentRequest = {
-        query: businessQuery.trim(),
-        location: selectedLocation,
-        maxCompanies,
-        selectedSeniorities: selectedSeniorities.length > 0 ? selectedSeniorities : undefined,
-      };
+      const response = await leadEnrichmentService.searchBusinessesByKeyword({
+        query: keyword.trim(),
+        location: selectedLocation || undefined,
+        maxResults,
+      });
+      if (response.success && response.data.businesses.length > 0) {
+        setBusinesses(response.data.businesses);
+        toast.success(`Found ${response.data.businesses.length} businesses`);
+      } else if (response.success) {
+        toast.info("No businesses found. Try a different keyword or location.");
+      } else {
+        toast.error(response.message || "Search failed");
+      }
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
+      toast.error(err.response?.data?.message || "Failed to search businesses");
+    } finally {
+      setIsSearching(false);
+    }
+  };
 
-      const response = await leadEnrichmentService.enrichByBusiness(request);
+  const toggleDomain = (domain: string) => {
+    setSelectedDomains((prev) => {
+      const next = new Set(prev);
+      if (next.has(domain)) next.delete(domain);
+      else next.add(domain);
+      return next;
+    });
+  };
 
+  const toggleAllSelectable = () => {
+    if (selectedDomains.size === selectableBusinesses.length) {
+      setSelectedDomains(new Set());
+    } else {
+      setSelectedDomains(
+        new Set(selectableBusinesses.map((b) => b.domain as string))
+      );
+    }
+  };
+
+  const handleEnrichSelected = async () => {
+    const domains = Array.from(selectedDomains);
+    if (domains.length === 0) {
+      toast.error("Select at least one domain to enrich");
+      return;
+    }
+    setIsEnriching(true);
+    try {
+      const response = await leadEnrichmentService.enrichBySelectedDomains({
+        domains,
+        selectedSeniorities:
+          selectedSeniorities.length > 0 ? selectedSeniorities : undefined,
+      });
       if (response.success) {
-        toast.success(
-          `Found ${response.data.companiesFound} companies! Starting enrichment...`
-        );
+        toast.success(`Enrichment started for ${domains.length} companies`);
         onEnrichmentStart(
           response.data.searchId,
           response.data.estimatedTime
         );
       } else {
-        toast.error("Failed to start enrichment");
+        toast.error(response.message || "Failed to start enrichment");
       }
-    } catch (error: any) {
-      console.error("Enrichment error:", error);
-      toast.error(
-        error.response?.data?.message || "Failed to start enrichment"
-      );
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
+      toast.error(err.response?.data?.message || "Failed to start enrichment");
     } finally {
-      setIsSubmitting(false);
+      setIsEnriching(false);
     }
   };
 
   const handleClear = () => {
-    setBusinessQuery("");
+    setKeyword("");
     setSelectedLocation("");
-    setMaxCompanies(10);
-    toast.info("Form cleared");
+    setBusinesses([]);
+    setSelectedDomains(new Set());
+    setMaxResults(5);
+    toast.info("Cleared");
   };
 
-  // Memoize location options for better performance
   const regionOptions = useMemo(() => {
-    const uniqueRegions = [...new Set(REGIONS)].sort();
-    return uniqueRegions.map(region => ({
+    return [...new Set(REGIONS)].sort().map((region) => ({
       label: region,
       value: region,
     }));
   }, []);
 
   const countryOptions = useMemo(() => {
-    const sortedCountries = [...COUNTRIES].sort((a, b) => a.name.localeCompare(b.name));
-    return sortedCountries.map(country => ({
-      label: country.name,
-      value: country.name,
-    }));
+    return [...COUNTRIES]
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map((c) => ({ label: c.name, value: c.name }));
   }, []);
 
   return (
@@ -122,54 +160,47 @@ const BusinessSpecificTab = ({
       exit={{ opacity: 0, y: -20 }}
       className="space-y-6"
     >
-      {/* Description */}
       <Alert className="bg-gradient-to-br from-gray-800/30 to-gray-900/20 border border-white/10">
         <Briefcase className="w-4 h-4 text-[#69B4B7]" />
         <AlertDescription className="text-white/70 text-sm">
-          <strong className="text-[#69B4B7]">Smart Business Search:</strong>{" "}
-          <div className="mt-2 space-y-1">
-            <div>✓ <strong>Exact Company:</strong> "tamimipeb" → finds ONLY tamimipeb with ALL executives</div>
-            <div>✓ <strong>Industry Type:</strong> "construction companies" → finds up to {maxCompanies} companies</div>
-            <div className="text-white/50 text-xs mt-2">System prioritizes exact company match first, then falls back to industry search.</div>
-          </div>
+          <strong className="text-[#69B4B7]">How it works:</strong> Enter a business
+          keyword (e.g. &quot;construction companies&quot;, &quot;SaaS&quot;). Optionally
+          pick a <strong>country</strong> or <strong>region</strong> to filter results.
+          We search LinkedIn via Tavily and return company names and domains.
+          <strong> Max results</strong> (1–50) limits how many companies are returned.
+          Select the domains you want, then click &quot;Enrich selected with Apollo&quot; to run lead gen.
         </AlertDescription>
       </Alert>
 
-      {/* Business Query Input */}
+      {/* Keyword + optional location */}
       <div className="space-y-3">
         <label className="text-sm font-medium text-white/70 flex items-center gap-2">
-          <Briefcase className="w-4 h-4 text-blue-400" />
-          Business Description / Search Query
+          <Search className="w-4 h-4 text-blue-400" />
+          Business keyword
         </label>
         <Input
           type="text"
-          placeholder="e.g., AI startups, SaaS companies, Healthcare providers..."
-          value={businessQuery}
-          onChange={(e) => setBusinessQuery(e.target.value)}
+          placeholder="e.g., construction companies, AI startups, healthcare..."
+          value={keyword}
+          onChange={(e) => setKeyword(e.target.value)}
           className="bg-gradient-to-br from-gray-800/50 to-gray-900/30 border border-white/10 text-white placeholder:text-white/30"
         />
-        <p className="text-xs text-white/50">
-          Describe the type of business or industry you're looking for
-        </p>
       </div>
 
-      <Separator className="bg-white/10" />
-
-      {/* Location Type Selector */}
       <div className="space-y-3">
         <label className="text-sm font-medium text-white/70 flex items-center gap-2">
           <MapPin className="w-4 h-4 text-green-400" />
-          Location Type
+          Location (optional)
         </label>
         <Select
           value={locationType}
-          onValueChange={(value: "country" | "region") => {
-            setLocationType(value);
-            setSelectedLocation(""); // Reset location when type changes
+          onValueChange={(v: "country" | "region") => {
+            setLocationType(v);
+            setSelectedLocation("");
           }}
         >
           <SelectTrigger className="bg-gradient-to-br from-gray-800/50 to-gray-900/30 border border-white/10 text-white">
-            <SelectValue placeholder="Select location type" />
+            <SelectValue placeholder="Type" />
           </SelectTrigger>
           <SelectContent className="bg-gray-800 border-gray-700">
             <SelectItem value="country" className="text-white hover:bg-gray-700">
@@ -180,107 +211,175 @@ const BusinessSpecificTab = ({
             </SelectItem>
           </SelectContent>
         </Select>
-      </div>
-
-      {/* Location Selector */}
-      <div className="space-y-3">
-        <label className="text-sm font-medium text-white/70">
-          {locationType === "country" ? "Select Country" : "Select Region"}
-        </label>
         <SearchableSelect
           options={locationType === "country" ? countryOptions : regionOptions}
           value={selectedLocation}
           onValueChange={setSelectedLocation}
           placeholder={`Select ${locationType}...`}
-          searchPlaceholder={`Search ${locationType}s...`}
+          searchPlaceholder={`Search ${locationType}...`}
           emptyMessage={`No ${locationType} found.`}
         />
-        <p className="text-xs text-white/50">
-          {locationType === "country"
-            ? "Filter companies by specific country"
-            : "Filter companies by geographic region"}
-        </p>
       </div>
 
-      <Separator className="bg-white/10" />
-
-      {/* Max Companies */}
       <div className="space-y-3">
-        <label className="text-sm font-medium text-white/70">
-          Maximum Companies to Find
-        </label>
+        <label className="text-sm font-medium text-white/70">Max results (1–20)</label>
         <Input
           type="number"
           min={1}
-          max={50}
-          value={maxCompanies}
-          onChange={(e) => setMaxCompanies(parseInt(e.target.value) || 3)}
-          className="bg-gradient-to-br from-gray-800/50 to-gray-900/30 border border-white/10 text-white"
+          max={20}
+          value={maxResults}
+          onChange={(e) => {
+            const v = parseInt(e.target.value, 10);
+            if (e.target.value === "") setMaxResults(5);
+            else if (!Number.isNaN(v)) setMaxResults(Math.min(20, Math.max(1, v)));
+          }}
+          className="bg-gradient-to-br from-gray-800/50 to-gray-900/30 border border-white/10 text-white w-24"
         />
-        <p className="text-xs text-white/50">
-          Maximum 50 companies per search (recommended: 10-20 for faster results)
-        </p>
+        <p className="text-xs text-white/50">Tavily API returns up to 20 results per search.</p>
       </div>
 
-      {/* Query Summary */}
-      {businessQuery && selectedLocation && (
-        <div className="p-3 bg-gradient-to-br from-gray-800/30 to-gray-900/20 border border-white/10 rounded-lg space-y-2">
-          <p className="text-xs text-white/70">
-            <strong className="text-[#69B4B7]">Search Strategy:</strong>
-          </p>
-          <div className="text-xs text-white/60 space-y-1 ml-2">
-            <div>1️⃣ Try exact match for "<strong>{businessQuery}</strong>" in <strong>{selectedLocation}</strong></div>
-            <div className="ml-4 text-white/50">→ If found: Enrich ONLY that company with ALL executives</div>
-            <div>2️⃣ If not found: Search by business type/industry</div>
-            <div className="ml-4 text-white/50">→ Find up to <strong>{maxCompanies}</strong> matching companies</div>
-            {selectedSeniorities.length > 0 && (
-              <div className="mt-2 pt-2 border-t border-white/10">
-                Filter executives: <strong>{selectedSeniorities.length}</strong> seniority levels selected
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Action Buttons */}
-      <div className="pt-4 flex justify-end gap-3">
-        {(businessQuery || selectedLocation) && (
+      <div className="flex gap-3">
+        <Button
+          onClick={handleSearch}
+          disabled={!keyword.trim() || isSearching}
+          className="bg-gradient-to-r from-[#69B4B7] via-[#5486D0] to-[#3E64B3] hover:brightness-110"
+        >
+          {isSearching ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Searching...
+            </>
+          ) : (
+            <>
+              <Search className="w-4 h-4 mr-2" />
+              Search businesses
+            </>
+          )}
+        </Button>
+        {(keyword || businesses.length > 0) && (
           <Button
             variant="ghost"
             onClick={handleClear}
             className="text-white/50 hover:text-white hover:bg-white/5"
           >
-            Clear Form
+            Clear
           </Button>
         )}
-        <Button
-          onClick={handleEnrich}
-          disabled={
-            !businessQuery.trim() ||
-            !selectedLocation ||
-            isSubmitting ||
-            maxCompanies < 1 ||
-            maxCompanies > 50
-          }
-          className="bg-gradient-to-r from-[#69B4B7] via-[#5486D0] to-[#3E64B3] hover:brightness-110 px-8"
-        >
-          {isSubmitting ? (
-            <>
-              <motion.div
-                className="w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-              />
-              Discovering Companies...
-            </>
-          ) : (
-            <>
-              <Briefcase className="w-4 h-4 mr-2" />
-              Discover & Enrich Companies
-            </>
-          )}
-        </Button>
       </div>
+
+      {/* Results: business name + domain, checkbox for selectable rows */}
+      {businesses.length > 0 && (
+        <>
+          <Separator className="bg-white/10" />
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-white/70 flex items-center gap-2">
+                <Globe className="w-4 h-4" />
+                Results – select domains to enrich
+              </label>
+              {selectableBusinesses.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={toggleAllSelectable}
+                  className="text-white/60 hover:text-white text-xs"
+                >
+                  {selectedDomains.size === selectableBusinesses.length
+                    ? "Deselect all"
+                    : "Select all"}
+                </Button>
+              )}
+            </div>
+            <div className="rounded-lg border border-white/10 overflow-hidden max-h-64 overflow-y-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-white/5 sticky top-0">
+                  <tr>
+                    <th className="text-left py-2 px-3 text-white/60 font-medium w-10">
+                      #
+                    </th>
+                    <th className="text-left py-2 px-3 text-white/60 font-medium">
+                      Company
+                    </th>
+                    <th className="text-left py-2 px-3 text-white/60 font-medium">
+                      Domain
+                    </th>
+                    <th className="text-left py-2 px-3 text-white/60 font-medium w-16">
+                      Select
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {businesses.map((b, i) => {
+                    const hasDomain = b.domain != null && b.domain.trim() !== "";
+                    const isSelected = hasDomain && selectedDomains.has(b.domain!);
+                    return (
+                      <tr
+                        key={`${b.companyName}-${b.domain ?? i}`}
+                        className="text-white/80 hover:bg-white/5"
+                      >
+                        <td className="py-2 px-3 text-white/50">{i + 1}</td>
+                        <td className="py-2 px-3">{b.companyName}</td>
+                        <td className="py-2 px-3 text-white/70">
+                          {b.domain ?? (
+                            <span className="text-white/40">—</span>
+                          )}
+                        </td>
+                        <td className="py-2 px-3">
+                          {hasDomain ? (
+                            <button
+                              type="button"
+                              onClick={() => toggleDomain(b.domain!)}
+                              className="p-0.5 rounded hover:bg-white/10"
+                            >
+                              {isSelected ? (
+                                <CheckSquare className="w-4 h-4 text-[#69B4B7]" />
+                              ) : (
+                                <Square className="w-4 h-4 text-white/40" />
+                              )}
+                            </button>
+                          ) : (
+                            <span className="text-white/30 text-xs">N/A</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            {selectableBusinesses.length === 0 && businesses.length > 0 && (
+              <p className="text-xs text-white/50">
+                No domains found for these results. Try another keyword.
+              </p>
+            )}
+          </div>
+
+          {selectedDomains.size > 0 && (
+            <div className="pt-2 flex items-center justify-between">
+              <p className="text-sm text-white/60">
+                {selectedDomains.size} domain(s) selected
+              </p>
+              <Button
+                onClick={handleEnrichSelected}
+                disabled={isEnriching}
+                className="bg-gradient-to-r from-[#69B4B7] via-[#5486D0] to-[#3E64B3] hover:brightness-110"
+              >
+                {isEnriching ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Starting...
+                  </>
+                ) : (
+                  <>
+                    <Briefcase className="w-4 h-4 mr-2" />
+                    Enrich selected with Apollo
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
+        </>
+      )}
     </motion.div>
   );
 };

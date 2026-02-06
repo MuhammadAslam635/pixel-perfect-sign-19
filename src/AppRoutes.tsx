@@ -90,6 +90,7 @@ const UserFeedbackList = lazy(
 const FeedbackDetail = lazy(
   () => import("@/pages/admin/feedbacks/FeedbackDetail")
 );
+const PublicBookingPage = lazy(() => import("@/pages/PublicBookingPage").then((module) => ({ default: module.PublicBookingPage })));
 
 // Loading component for suspense fallback
 const PageLoadingFallback = () => (
@@ -167,6 +168,9 @@ const AppRoutes = () => {
             </PublicRoute>
           }
         />
+
+        {/* Public Booking Page - No authentication required */}
+        <Route path="/book/:userSlug" element={<PublicBookingPage />} />
 
         {/* Protected Routes - Only accessible when logged in */}
         <Route

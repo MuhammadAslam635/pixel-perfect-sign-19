@@ -181,22 +181,43 @@ export interface QueryEnrichmentResponse {
 // BUSINESS SPECIFIC ENRICHMENT (TAB 3)
 // ========================================
 
-export interface BusinessEnrichmentRequest {
-  query: string; // Business description/search query
-  location?: string; // Country or region
-  maxCompanies?: number;
+/** Single business from Tavily search (name + domain) */
+export interface BusinessSearchResult {
+  companyName: string;
+  domain: string | null;
+}
+
+/** Request to search businesses by keyword (Tavily) */
+export interface BusinessSearchRequest {
+  query: string;
+  location?: string;
+  maxResults?: number;
+}
+
+/** Response from business search - list of businesses with domains */
+export interface BusinessSearchResponse {
+  success: boolean;
+  message: string;
+  data: {
+    businesses: BusinessSearchResult[];
+    total: number;
+  };
+}
+
+/** Request to enrich selected domains (step 2 of Business tab) */
+export interface EnrichByDomainsRequest {
+  domains: string[];
   selectedSeniorities?: SeniorityLevel[];
 }
 
-export interface BusinessEnrichmentResponse {
+/** Response when enrichment is started for selected domains */
+export interface EnrichByDomainsResponse {
   success: boolean;
   message: string;
   data: {
     searchId: string;
-    companiesFound: number;
-    domainsExtracted: number;
+    domainsCount: number;
     estimatedTime: string;
-    query: string;
   };
 }
 
