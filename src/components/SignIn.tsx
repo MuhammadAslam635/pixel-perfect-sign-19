@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { AxiosError } from "axios";
@@ -33,6 +33,12 @@ const SignIn = () => {
   });
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
+
+  // Reset MFA state when landing on login page to ensure fresh start
+  useEffect(() => {
+    dispatch(setMfaRequired({ required: false, token: null }));
+  }, [dispatch]);
+
   const { loading, mfaRequired, mfaToken } = useSelector((state: RootState) => state.auth);
 
   const handleLoginSuccess = async (responseUser: any) => {
